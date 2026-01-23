@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
@@ -95,7 +95,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
     //POCOR-7512 end
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -105,11 +105,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        $User = TableRegistry::get('User.Users');
-        $nationalities = TableRegistry::get('FieldOption.Nationalities');
-        $examinations = TableRegistry::get('Institution.InstitutionExaminations');
+        $User = TableRegistry::getTableLocator()->get('User.Users');
+        $nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+        $examinations = TableRegistry::getTableLocator()->get('Institution.InstitutionExaminations');
         $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $examinationId = ($this->request->getQuery('examination_id')) ? $this->request->getQuery('examination_id') : 0;
 
@@ -162,8 +162,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-                $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+                $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+                $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
                 $statuses = $StudentStatuses->findCodeList();
                 $repeatedStatus = $statuses['REPEATED'];
 
@@ -183,7 +183,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     //->autoFields(true)
                     ->first();
 
-                $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+                $StudentTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
                 $approvedStatuses = $StudentTransfers->getStudentTransferWorkflowStatuses('APPROVED');
                 $institutionStudentTransfer = $StudentTransfers
                     ->find()
@@ -223,7 +223,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -301,7 +301,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetExaminationId(Event $event, Entity $entity)
+    public function onExcelGetExaminationId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('examination')) {
             return $entity->examination->code_name;
@@ -310,7 +310,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelGetExaminationCentreId(Event $event, Entity $entity)
+    public function onExcelGetExaminationCentreId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('examination_centre')) {
             return $entity->examination_centre->code_name;
@@ -319,7 +319,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('institution')) {
             return $entity->institution->code_name;
@@ -328,7 +328,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
     // use for testing purpose by anubhav POCOR-7485
-    /*public function onExcelGetDob(Event $event, Entity $entity) {
+    /*public function onExcelGetDob(EventInterface $event, Entity $entity) {
         echo "<pre>"; print_r($this->formatDate($entity->dob));
         die;
         return $this->formatDate($entity->dob);
@@ -341,7 +341,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->institutionId = $this->getInstitutionID();
         //work around for export button showing in pages not specified
@@ -352,7 +352,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
@@ -450,7 +450,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         //POCOR-7509 end
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         $query->select([
@@ -485,7 +485,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('examination_id', ['type' => 'select', 'onChangeReload' => true]);
@@ -513,7 +513,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         ]);
     }
     //POCOR-7512 start
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $subjectTable = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjects');
         $subjectData = $subjectTable->find('all')->select([
@@ -529,7 +529,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         )->where([$subjectTable->aliasField('student_id') => $entity->student_id])->toArray();
         $entity['examination_subjects'] = $subjectData;
     }  //POCOR-7512 end
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
@@ -540,7 +540,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeAcademicPeriodId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (array_key_exists($this->getAlias(), $data)) {
             if (array_key_exists('examination_id', $data[$this->getAlias()])) {
@@ -555,7 +555,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $examinationOptions = [];
         $this->institutionId = $this->getInstitutionID();
@@ -604,7 +604,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeExaminationId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
@@ -616,7 +616,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationEducationGrade(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $educationGrade = '';
         if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
@@ -635,14 +635,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationCentreId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $examCentreOptions = [];
             if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
                 $selectedExamination = $request->getData()[$this->getAlias()]['examination_id'];
 
-                $LinkedInstitutions = TableRegistry::get('Examination.ExaminationCentresExaminationsInstitutions');
+                $LinkedInstitutions = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsInstitutions');
                 $examCentreOptions = $LinkedInstitutions
                     ->find('list', [
                         'keyField' => 'examination_centre_id',
@@ -665,13 +665,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSpecialNeeds(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $specialNeeds = [];
 
         if (!empty($request->getData()[$this->getAlias()]['examination_centre_id'])) {
             $examinationCentreId = $request->getData()[$this->getAlias()]['examination_centre_id'];
-            $ExaminationCentreSpecialNeeds = TableRegistry::get('Examination.ExaminationCentreSpecialNeeds');
+            $ExaminationCentreSpecialNeeds = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreSpecialNeeds');
             $query = $ExaminationCentreSpecialNeeds
                 ->find('list', [
                     'keyField' => 'special_need_type_id',
@@ -689,7 +689,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $classes = [];
         if ($action == 'add') {
@@ -698,7 +698,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
                 $academicPeriodId = $request->getData()[$this->getAlias()]['academic_period_id'];
 
-                $InstitutionClass = TableRegistry::get('Institution.InstitutionClasses');
+                $InstitutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
                 $classes = $InstitutionClass
                     ->find('list')
                     ->matching('ClassGrades')
@@ -715,7 +715,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $students = [];
         if ($action == 'add') {
@@ -723,10 +723,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 $academicPeriodId = $request->getData($this->getAlias())['academic_period_id'];
                 $examinationId = $request->getData($this->getAlias())['examination_id'];
                 $institutionClassId = $request->getData($this->getAlias())['institution_class_id'];
-                $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+                $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');
                 $examinationCentreId = $request->getData($this->getAlias())['examination_centre_id'];
 
-                $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
                 $students = $ClassStudents->find()
                     ->matching('EducationGrades')
                     ->leftJoin(['InstitutionExaminationStudents' => 'examination_centres_examinations_students'], [
@@ -754,7 +754,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
         return $attr;
     }
-    public function onUpdateFieldSubjectId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $subjects = [];
         if ($action == 'add') {
@@ -772,14 +772,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $requestData[$this->getAlias()]['student_id'] = 0;
     }  //POCOR-7512 start
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        $examinationStudentSubjects = TableRegistry::get('Examination.ExaminationStudentSubjects');
+        $examinationStudentSubjects = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjects');
         $examinationSubjects = $examinationStudentSubjects
             ->find()
             ->where(['student_id' => $entity->student_id])
@@ -796,7 +796,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }  //POCOR-7512 end
 
-    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function addBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
             $errors = $entity->getErrors();
@@ -881,7 +881,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     $this->ExaminationCentresExaminations->updateAll(['total_registered' => $studentCount], ['examination_centre_id' => $entity->examination_centre_id, 'examination_id' => $entity->examination_id]);
                     //POCOR-7511 start
                     if ($entity->examination_subjects) {
-                        $examinationStudentSubjects = TableRegistry::get('Examination.ExaminationStudentSubjects');
+                        $examinationStudentSubjects = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjects');
                         if (!empty($listOfSelectedStudents)) {
                             $entities = [];
                             foreach ($listOfSelectedStudents as $stu) {
@@ -932,7 +932,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                                     'examination_centre_id' => $examCentreRoomStudent['examination_centre_id']
                                 ];
 
-                                $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
+                                $ExaminationCentreRoomStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRoomsExaminationsStudents');
                                 $examCentreRoomStudentEntity = $ExaminationCentreRoomStudents->newEntity($newEntity);
                                 $saveSucess = $ExaminationCentreRoomStudents->save($examCentreRoomStudentEntity);
                                 $counter--;
@@ -958,7 +958,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
 
     //POCOR-7512 start
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $subjectTable = TableRegistry::getTableLocator()->get('Examination.ExaminationSubjects');
         $subjectData = $subjectTable
@@ -985,7 +985,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
 
     //POCOR-9169 start
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'registration_number':
@@ -999,12 +999,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     /**
      * Update action buttons for the entity
      *
-     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\Event\EventInterface $event The event instance.
      * @param \Cake\ORM\Entity $entity The entity object.
      * @param array $buttons The array of existing buttons.
      * @return array Modified buttons array.
      */
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $referrerUrl = $this->request->referer();
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -1045,11 +1045,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     /**
      * Get sync status for the entity
      *
-     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\Event\EventInterface $event The event instance.
      * @param \Cake\ORM\Entity $entity The entity object.
      * @return string|null The sync status value.
      */
-    public function onGetSyncStatus(Event $event, Entity $entity)
+    public function onGetSyncStatus(EventInterface $event, Entity $entity)
     {
 
         switch ($entity->sync_status) {
@@ -1065,11 +1065,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     /**
      * Get last synced timestamp formatted
      *
-     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\Event\EventInterface $event The event instance.
      * @param \Cake\ORM\Entity $entity The entity object.
      * @return string|null The formatted last synced date.
      */
-    public function onGetLastSynced(Event $event, Entity $entity)
+    public function onGetLastSynced(EventInterface $event, Entity $entity)
     {
         if ($entity->last_synced instanceof FrozenTime || $entity->last_synced instanceof \DateTime) {
             return $entity->last_synced->format('Y-m-d H:i:s');
@@ -1080,10 +1080,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     /**
      * Modify visible fields after the index action
      *
-     * @param \Cake\Event\Event $event The event instance.
+     * @param \Cake\Event\EventInterface $event The event instance.
      * @param mixed $data The data (not used here).
      */
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
 
         $this->field('date_of_birth', ['visible' => false]);

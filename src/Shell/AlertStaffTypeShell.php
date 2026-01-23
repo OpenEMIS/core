@@ -15,7 +15,7 @@ class AlertStaffTypeShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('Institution.Staff');
+        $this->Staff = $this->fetchTable('Institution.Staff');
     }
 
     public function main()

@@ -4,7 +4,7 @@ namespace Schedule\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -48,7 +48,7 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $lessonType = $data['lesson_type'];
         if ($lessonType == self::NON_CURRICULUM_LESSON) {
@@ -61,7 +61,7 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
             ];
         }
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 //        $this->log('beforeSave');
 //        $this->log($event);
@@ -117,8 +117,8 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
         $lesson_type = $options['lesson_type'];
         $institution_room_id = $options['institution_room_id'];
         $institution_subject_id = $options['institution_subject_id'];
-        $ScheduleCurriculumLessons = TableRegistry::get('Schedule.ScheduleCurriculumLessons');
-        $ScheduleLessonRooms = TableRegistry::get('Schedule.ScheduleLessonRooms');
+        $ScheduleCurriculumLessons = TableRegistry::getTableLocator()->get('Schedule.ScheduleCurriculumLessons');
+        $ScheduleLessonRooms = TableRegistry::getTableLocator()->get('Schedule.ScheduleLessonRooms');
         $query
             ->select(['count' => $query->func()->count('*')])
             ->contain([
@@ -140,11 +140,11 @@ class ScheduleLessonDetailsTable extends ControllerActionTable
     public function findDeleteTimetableLessionDetailsData(Query $query, array $options){
         $lessionId = $options['lession_id'];
         
-        TableRegistry::get('Schedule.ScheduleCurriculumLessons')
+        TableRegistry::getTableLocator()->get('Schedule.ScheduleCurriculumLessons')
                 ->deleteAll(['institution_schedule_lesson_detail_id' => $lessionId]);
-        TableRegistry::get('Schedule.ScheduleNonCurriculumLessons')
+        TableRegistry::getTableLocator()->get('Schedule.ScheduleNonCurriculumLessons')
                 ->deleteAll(['institution_schedule_lesson_detail_id' => $lessionId]);
-        TableRegistry::get('Schedule.ScheduleLessonRooms')
+        TableRegistry::getTableLocator()->get('Schedule.ScheduleLessonRooms')
                 ->deleteAll(['institution_schedule_lesson_detail_id' => $lessionId]);
         $this->deleteAll(['id' => $lessionId]);
         return $query;

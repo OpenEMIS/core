@@ -2,7 +2,7 @@
 namespace Directory\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -44,7 +44,7 @@ class AccountsTable extends AppTable {
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
@@ -53,10 +53,10 @@ class AccountsTable extends AppTable {
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) 
     {
-        $userActivities = TableRegistry::get('User.UserActivities');
-        $userTable = TableRegistry::get('User.Users');
+        $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities');
+        $userTable = TableRegistry::getTableLocator()->get('User.Users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
@@ -89,7 +89,7 @@ class AccountsTable extends AppTable {
         $save =  $userActivities->save($entity);
     }
 
-     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'username') {
             return __('Username');
@@ -102,7 +102,7 @@ class AccountsTable extends AppTable {
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
 
         $message = __('Your password has been reset successfully.');
         $this->Alert->success($message, ['type' => 'string', 'reset' => true]);

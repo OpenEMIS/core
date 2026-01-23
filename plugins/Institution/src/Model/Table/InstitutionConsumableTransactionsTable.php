@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 
 //POCOR-8873
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -17,7 +17,6 @@ use Cake\I18n\Date;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 
@@ -68,7 +67,7 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
        
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $entity->institution_consumable_id = $this->ControllerAction->getQueryString('consumable_id');
 
@@ -76,13 +75,13 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
@@ -117,17 +116,17 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
         
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('balance', ['type' => 'hidden']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('balance', ['type' => 'hidden']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $id = $this->ControllerAction->getQueryString('consumable_id');
        
@@ -136,7 +135,7 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'item_type_id') {
             return  __('Type(Description)');
@@ -181,7 +180,7 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $institution_consumable_id = $this->ControllerAction->getQueryString('consumable_id');
-        $transactions = TableRegistry::get('Institution.InstitutionConsumableTransactions');
+        $transactions = TableRegistry::getTableLocator()->get('Institution.InstitutionConsumableTransactions');
         $lastBalance = $transactions->find()
             ->select(['balance'])
             ->where([$this->aliasField('institution_consumable_id') => $institution_consumable_id])
@@ -195,7 +194,7 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
     }
 
 
-    public function onGetBalance(Event $event, Entity $entity)
+    public function onGetBalance(EventInterface $event, Entity $entity)
     {
         $content = "";
         if ($entity->balance < $entity->institution_consumable->minimum) {

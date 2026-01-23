@@ -2,7 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -24,7 +24,7 @@ class StaffSalariesTable extends AppTable {
         $this->addBehavior('AcademicPeriod.Period');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -34,14 +34,14 @@ class StaffSalariesTable extends AppTable {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         /*POCOR-6295 Starts*/
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $conditions = [];
         if (!empty($institutionId) && $institutionId > 0) {
             $conditions['InstitutionStaff.institution_id'] = $institutionId; 
@@ -66,7 +66,7 @@ class StaffSalariesTable extends AppTable {
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
         $newArray[] = [

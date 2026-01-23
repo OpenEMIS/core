@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use User\Model\Entity\User;
 use Cake\I18n\I18n;
@@ -69,7 +69,7 @@ class UserBehavior extends Behavior
         return $events;
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $dataArray = $data->getArrayCopy();
         if (array_key_exists($this->_table->getAlias(), $dataArray)) {
@@ -79,7 +79,7 @@ class UserBehavior extends Behavior
         }
     }
 
-    public function onExcelGetStatus(Event $event, Entity $entity)
+    public function onExcelGetStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->status == 1) {
             return __('Active');
@@ -88,12 +88,12 @@ class UserBehavior extends Behavior
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $this->trimFields($data);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // POCOR-9101 start
         if(trim($entity->email) == ''){
@@ -119,9 +119,9 @@ class UserBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion == '4.0';
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configData = $ConfigItems->find('all', ['conditions' => ['name LIKE' => '%' . 'Date of Death' . '%']])->first();
         $schema = $this->_table->getSchema();
         $columns = $schema->columns();
@@ -403,7 +403,7 @@ class UserBehavior extends Behavior
     }
     //POCOR-5668 add identity section ends
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         if ($this->_table->getTable() == 'security_users') {
             $this->_table->fields['is_student']['value'] = 0;
@@ -412,7 +412,7 @@ class UserBehavior extends Behavior
         }
     }
 
-    public function indexAfterAction(Event $event)
+    public function indexAfterAction(EventInterface $event)
     {
         $plugin = $this->_table->controller->getPlugin();
         $name = $this->_table->controller->getName();
@@ -510,7 +510,7 @@ class UserBehavior extends Behavior
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['auto_search'] = false;
         // $extra['auto_contain'] = false;
@@ -527,12 +527,12 @@ class UserBehavior extends Behavior
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options)
     {
         $this->indexBeforeQuery($event, $query, $options);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity instanceof User) {
@@ -545,7 +545,7 @@ class UserBehavior extends Behavior
         return $value;
     }
 
-    public function onGetIdentity(Event $event, Entity $entity)
+    public function onGetIdentity(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity instanceof User) {
@@ -558,7 +558,7 @@ class UserBehavior extends Behavior
         return $value;
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity instanceof User) {
@@ -571,14 +571,14 @@ class UserBehavior extends Behavior
         return $value;
     }
 
-    public function onGetGenderId(Event $event, Entity $entity)
+    public function onGetGenderId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('gender') && $entity->gender->name) {
             return __($entity->gender->name);
         }
     }
 
-    public function onGetPhotoContent(Event $event, Entity $entity)
+    public function onGetPhotoContent(EventInterface $event, Entity $entity)
     {
         // check file name instead of file content
         $fileContent = null;
@@ -659,7 +659,7 @@ class UserBehavior extends Behavior
         return $value;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'email') {
             return __('Email');
@@ -737,7 +737,7 @@ class UserBehavior extends Behavior
             }
         }
         // POCOR-8286 start
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $systemDateFormat = $ConfigItems->value('date_format');
         try {
             $dob = $data['date_of_birth'] ?? null;

@@ -13,7 +13,7 @@ class EducationProgramme extends Entity
         if ($this->has('education_cycle') && $this->education_cycle->has('name')) {
     		$name = __($this->education_cycle->name) . ' - ' . __($name);
     	} else {
-    		$table = TableRegistry::get('Education.EducationCycles');
+    		$table = TableRegistry::getTableLocator()->get('Education.EducationCycles');
     		$cycleId = $this->education_cycle_id;
             //POCOR-5908 starts
             $checkCycleData =  $table->find()

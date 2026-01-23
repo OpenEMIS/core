@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use App\Controller\PageController;
 
@@ -12,7 +12,7 @@ class InfrastructureWashHygienesController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
         $this->Page->loadElementsFromTable($this->InfrastructureWashHygienes);
         $this->Page->disable(['search']); // to disable the search function
     }

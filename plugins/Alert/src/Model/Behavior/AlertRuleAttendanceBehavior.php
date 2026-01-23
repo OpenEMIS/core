@@ -7,7 +7,7 @@ use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class AlertRuleAttendanceBehavior extends AlertRuleBehavior
 {
@@ -52,7 +52,7 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
         parent::initialize($config);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
@@ -71,12 +71,12 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
         }
     }
 
-    public function onAttendanceSetupFields(Event $event, Entity $entity)
+    public function onAttendanceSetupFields(EventInterface $event, Entity $entity)
     {
         $this->onAlertRuleSetupFields($event, $entity);
     }
 
-    public function onUpdateFieldAttendanceThreshold(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAttendanceThreshold(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['visible'] = true;
 

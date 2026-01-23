@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Session;
 use App\Model\Table\AppTable;
@@ -15,7 +15,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Datasource\ConnectionManager;
 
 /**
- * Get the Staff  details in excel file 
+ * Get the Staff  details in excel file
  * POCOR-6581
  */
 class InstitutionStaffPositionProfileTable extends AppTable
@@ -41,10 +41,18 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
-
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'staff_create',
+                'entity_delete' => 'staff_delete',
+                'entity_update' => 'staff_update',
+                'table_alias' => 'Institution.InstitutionStaff',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -55,7 +63,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $institutions_crumb = __('Institutions');
         $parent_crumb       = __('Statistics');
         $reportName         = __('Standard');
-        
+
         //# START: Crumb
         $this->Navigation->removeCrumb($this->getHeader($this->alias));
         $this->Navigation->addCrumb($institutions_crumb . ' ' . $parent_crumb);
@@ -63,12 +71,12 @@ class InstitutionStaffPositionProfileTable extends AppTable
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
@@ -82,7 +90,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
@@ -95,11 +103,11 @@ class InstitutionStaffPositionProfileTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData[$this->getAlias()]['feature'])) {
             $feature                = $this->request->getData($this->alias())['feature'];
-            $AcademicPeriodTable    = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriodTable    = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions  = $AcademicPeriodTable->getYearList();
             $currentPeriod          = $AcademicPeriodTable->getCurrent();
             $attr['options']        = $academicPeriodOptions;
@@ -113,7 +121,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         }
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -123,13 +131,13 @@ class InstitutionStaffPositionProfileTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData           = json_decode($settings['process']['params']);
         $academicPeriodId      = $requestData->academic_period_id;
         $institutionId         = $requestData->institution_id;
-        $subject = TableRegistry::get('Institution.InstitutionSubjects');
-        $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $subject = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $academic_period = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $getyear = $academic_period->find('all')
                    ->select(['start_year'=>$academic_period->aliasField('start_year')])
                    ->where(['id'=>$academicPeriodId])
@@ -137,12 +145,12 @@ class InstitutionStaffPositionProfileTable extends AppTable
         foreach($getyear->toArray() as $val) {
             $year  = $val['start_year'];
         }
-        $institution = TableRegistry::get('Institutions');
-        $staffStatus = TableRegistry::get('Staff.StaffStatuses');
-        $positions = TableRegistry::get('Institution.InstitutionPositions');
-        $grade = TableRegistry::get('Institution.StaffPositionGrades');
-        $title = TableRegistry::get('Institution.StaffPositionTitles');
-        $SecurityUser = TableRegistry::get('User.Users');
+        $institution = TableRegistry::getTableLocator()->get('Institutions');
+        $staffStatus = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $grade = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
+        $title = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
         $OR = [
                 [$this->aliasField('end_year IS NULL')]
             ];
@@ -240,7 +248,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                     ]
                 ])
         ->andWhere([$this->aliasfield('institution_id') => $institutionId]);
-        
+
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
         {
@@ -263,10 +271,10 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 return $row;
             });
         });
-        
+
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [
@@ -287,14 +295,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'type'  => 'string',
             'label' => __('Grade'),
         ];
-        /**POCOR-6886 starts - added Institutions code colunm to report*/ 
+        /**POCOR-6886 starts - added Institutions code colunm to report*/
         $newFields[] = [
             'key' => 'Institutions.code',
             'field' => 'Institutions_code',
             'type' => 'string',
             'label' =>__('Institution Code'),
         ];
-        /**POCOR-6886 ends*/ 
+        /**POCOR-6886 ends*/
         $newFields[] = [
             'key' => 'Institutions.name',
             'field' => 'Institutions_name',
@@ -343,14 +351,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'type'  => 'string',
             'label' => __('Identity Type'),
         ];
-        
+
         $newFields[] = [
             'key' => 'identity_number',
             'field' => 'identity_number',
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-        
+
         $newFields[] = [
             'key'   => 'academic_period',
             'field' => 'academic_period',
@@ -382,13 +390,13 @@ class InstitutionStaffPositionProfileTable extends AppTable
     /**
      * Get staff absences days
      */
-    public function onExcelGetStaffAbsenceDay(Event $event, Entity $entity)
+    public function onExcelGetStaffAbsenceDay(EventInterface $event, Entity $entity)
     {
         $userid =  $entity->staff_id;
         $academicPeriodId =  $entity->academic_id;//POCOR-6924
         $institution_id = $entity->institutionId; //POCOR-6924
-        $Institutionstaff = TableRegistry::get('Institution.InstitutionStaff');
-        $staffleave = TableRegistry::get('Institution.InstitutionStaffLeave');
+        $Institutionstaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $staffleave = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffLeave');
         $absenceDay = $staffleave->find()
             ->leftJoin(['InstitutionStaff' => 'institution_staff'], ['InstitutionStaff.staff_id = '. $staffleave->aliasField('staff_id')])
             ->select([
@@ -406,19 +414,19 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 foreach($data as $key=>$val){
                     $entity->staff_absence_day = $val['days'];
                 }
-                 
+
             }
             return $entity->staff_absence_day;
     }
 
-    public function onExcelGetInstitutionClasses(Event $event, Entity $entity)
+    public function onExcelGetInstitutionClasses(EventInterface $event, Entity $entity)
     {
         $classname = [];
         $homeRoomteacher = $entity->is_home;
         if($homeRoomteacher == "1"){
-            if ($entity->staff_id) 
+            if ($entity->staff_id)
             {
-                $class = TableRegistry::get('Institution.InstitutionClasses');
+                $class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
                 $getclass = $class->find()
                             ->select(['name'])
                             ->where(['staff_id'=> $entity->staff_id ,
@@ -436,9 +444,9 @@ class InstitutionStaffPositionProfileTable extends AppTable
         }
     }
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
-        /**POCOR-6886 starts - modified query to fetch only default identity of staff*/ 
+        /**POCOR-6886 starts - modified query to fetch only default identity of staff*/
         $userIdentities = TableRegistry::get('User.Identities');
         $identityTypes  = TableRegistry::get('FieldOption.IdentityTypes');
         $entity->custom_identity_number = '';
@@ -463,7 +471,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         return $entity->custom_identity_name;
         /**POCOR-6886 ends*/
     }
-    
+
     public function onExcelGetIdentityNumber(Event $event, Entity $entity)
     {
         return $entity->custom_identity_number;

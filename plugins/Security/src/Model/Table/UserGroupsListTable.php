@@ -2,7 +2,7 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -56,7 +56,7 @@ class UserGroupsListTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('security_group_id', [
@@ -91,7 +91,7 @@ class UserGroupsListTable extends ControllerActionTable
     }
 
     /** Start POCOR 7323 */
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $buttons['remove'] = [
@@ -119,13 +119,13 @@ class UserGroupsListTable extends ControllerActionTable
     }
     /** End POCOR 7323 */
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', [
             'visible' => true]);
         $this->setFieldOrder(['openemis_no','security_user_id', 'security_role_id']);
     }
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userGroupId = $this->request->getQuery('userGroupId');
         $this->userGroupId = $userGroupId;
@@ -146,23 +146,23 @@ class UserGroupsListTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSecurityRoleId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $userGroupId = $this->request->getQuery('userGroupId');
             $attr['type'] = 'select';
-            $attr['options'] = TableRegistry::get('Security.SecurityRoles')->getUserRolesList($userGroupId);
+            $attr['options'] = TableRegistry::getTableLocator()->get('Security.SecurityRoles')->getUserRolesList($userGroupId);
         }
 
         return $attr;
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
-    public function onUpdateFieldSecurityUserId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSecurityUserId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'autocomplete';
@@ -200,7 +200,7 @@ class UserGroupsListTable extends ControllerActionTable
         if ($this->request->is(['ajax'])) {
             $term = $this->request->getQuery('term');
 
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $this->Users
                 ->find()
@@ -242,9 +242,9 @@ class UserGroupsListTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-//        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+//        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userGroupId = $this->request->getQuery('userGroupId');
         $entity->security_group_id = $userGroupId;
     }
@@ -285,14 +285,14 @@ class UserGroupsListTable extends ControllerActionTable
 
     // Start POCOR-7342
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $securityGroup = TableRegistry::get('Security.SecurityGroups');
+        $securityGroup = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
         $securityGroupData = $securityGroup->find()
         ->where([$securityGroup->aliasField('id') =>$entity->security_group_id])
         ->first();
 
-        $securityGroupUsersTbl = TableRegistry::get('Security.SecurityGroupUsers');
+        $securityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $securityGroupUsers = $securityGroupUsersTbl->find()
         ->where([
             $securityGroupUsersTbl->aliasField('security_group_id') => $entity->security_group_id,
@@ -302,7 +302,7 @@ class UserGroupsListTable extends ControllerActionTable
         $entity->showDeletedValueAs = $securityGroupData->name;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'to_be_deleted') {
             return __('To Be Deleted');

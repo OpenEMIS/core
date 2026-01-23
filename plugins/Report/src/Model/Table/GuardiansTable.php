@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -27,7 +27,7 @@ class GuardiansTable extends AppTable
         ]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
 
         $sheets[] = [
@@ -38,7 +38,7 @@ class GuardiansTable extends AppTable
         ];
     }
 
-    public function onExcelGetStudentNameByGuardian(Event $event, Entity $entity)
+    public function onExcelGetStudentNameByGuardian(EventInterface $event, Entity $entity)
     {
         $securityUsers = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
 
@@ -59,7 +59,7 @@ class GuardiansTable extends AppTable
         return '';
     }
 
-    public function onExcelGetGuardianFatherName(Event $event, Entity $entity)
+    public function onExcelGetGuardianFatherName(EventInterface $event, Entity $entity)
     {
 
         $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
@@ -85,7 +85,7 @@ class GuardiansTable extends AppTable
         return $name;
     }
 
-    public function onExcelGetFatherEmail(Event $event, Entity $entity)
+    public function onExcelGetFatherEmail(EventInterface $event, Entity $entity)
     {
 
         $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
@@ -111,7 +111,7 @@ class GuardiansTable extends AppTable
         return $fatherEmail;
     }
 
-    public function onExcelGetFatherAddress(Event $event, Entity $entity)
+    public function onExcelGetFatherAddress(EventInterface $event, Entity $entity)
     {
 
         $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
@@ -137,7 +137,7 @@ class GuardiansTable extends AppTable
         return $fatherAddress;
     }
 
-    public function onExcelGetGuardianMotherName(Event $event, Entity $entity)
+    public function onExcelGetGuardianMotherName(EventInterface $event, Entity $entity)
     {
 
         $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
@@ -164,7 +164,7 @@ class GuardiansTable extends AppTable
         return $motherName;
     }
 
-    public function onExcelGetMotherEmail(Event $event, Entity $entity)
+    public function onExcelGetMotherEmail(EventInterface $event, Entity $entity)
     {
 
         $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
@@ -190,7 +190,7 @@ class GuardiansTable extends AppTable
         return $motherEmail;
     }
 
-    public function onExcelGetMotherAddress(Event $event, Entity $entity)
+    public function onExcelGetMotherAddress(EventInterface $event, Entity $entity)
     {
 
         $guardianData = self::getDynamicTableInstance('Security.Users'); //POCOR-9005
@@ -216,7 +216,7 @@ class GuardiansTable extends AppTable
         return $motherAddress;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 
         $requestData = json_decode($settings['process']['params']);
@@ -330,7 +330,7 @@ class GuardiansTable extends AppTable
     //POCOR-9005 removed map
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $cloneFields = $fields->getArrayCopy();
 

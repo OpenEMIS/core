@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Http\ServerRequest;
@@ -33,7 +33,7 @@ class SetupTextBehavior extends SetupBehavior
         ];
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
@@ -44,7 +44,7 @@ class SetupTextBehavior extends SetupBehavior
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->field_type == $this->fieldTypeCode) {
             $this->buildTextValidator();
@@ -124,7 +124,7 @@ class SetupTextBehavior extends SetupBehavior
             ]);
     }
 
-    public function onSetTextElements(Event $event, Entity $entity)
+    public function onSetTextElements(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
 
@@ -252,7 +252,7 @@ class SetupTextBehavior extends SetupBehavior
         }
     }
 
-    public function onGetTextValidationRule(Event $event, Entity $entity)
+    public function onGetTextValidationRule(EventInterface $event, Entity $entity)
     {
         $value = '';
         $selectedValidationRule = $entity->has('text_validation_rule') ? $entity->text_validation_rule : key($this->ruleOptions);
@@ -261,7 +261,7 @@ class SetupTextBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onGetTextLengthValidation(Event $event, Entity $entity)
+    public function onGetTextLengthValidation(EventInterface $event, Entity $entity)
     {
         $value = '';
         $selectedLengthValidation = $entity->has('text_length_validation') ? $entity->text_length_validation : key($this->lengthValidationOptions);
@@ -270,7 +270,7 @@ class SetupTextBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onUpdateFieldTextValidationRule(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTextValidationRule(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -281,7 +281,7 @@ class SetupTextBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTextLengthValidation(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTextLengthValidation(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -293,7 +293,7 @@ class SetupTextBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
             if (isset($data['text_validation_rule'])) {

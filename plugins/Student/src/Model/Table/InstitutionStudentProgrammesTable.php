@@ -5,7 +5,7 @@ namespace Student\Model\Table;
 // POCOR-8870
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;

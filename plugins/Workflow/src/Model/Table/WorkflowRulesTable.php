@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
@@ -51,12 +51,12 @@ class WorkflowRulesTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'workflow_id';
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         // enables all events to be deleted
         if (!$data->offsetExists('workflow_rule_events')) {
@@ -80,7 +80,7 @@ class WorkflowRulesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         $this->field('rule_events');
@@ -135,7 +135,7 @@ class WorkflowRulesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->matching('Workflows')
@@ -159,24 +159,24 @@ class WorkflowRulesTable extends ControllerActionTable
         }
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->extractRuleFromEntity($entity);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->matching('Workflows')
             ->contain('WorkflowRuleEvents');
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
@@ -207,7 +207,7 @@ class WorkflowRulesTable extends ControllerActionTable
         $this->setFieldOrder(['feature', 'workflow_id', 'rule']);
     }
 
-    public function onWorkflowRuleSetupFields(Event $event, Entity $entity, ArrayObject $extra)
+    public function onWorkflowRuleSetupFields(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->has('feature') && !empty($entity->feature)) {
             $ruleConfig = $this->getRuleConfigByFeature($entity->feature);
@@ -240,19 +240,19 @@ class WorkflowRulesTable extends ControllerActionTable
         return $options;
     }
 
-    public function onGetFeature(Event $event, Entity $entity)
+    public function onGetFeature(EventInterface $event, Entity $entity)
     {
         return Inflector::humanize(Inflector::underscore($entity->feature));
     }
 
-    public function onGetWorkflowId(Event $event, Entity $entity)
+    public function onGetWorkflowId(EventInterface $event, Entity $entity)
     {
         if (isset($entity->_matchingData['Workflows'])) {
             return $entity->_matchingData['Workflows']->code_name;
         }
     }
 
-    public function onGetRule(Event $event, Entity $entity)
+    public function onGetRule(EventInterface $event, Entity $entity)
     {
         // temporary solution
         $origEntity = $this->get($entity->id);
@@ -267,7 +267,7 @@ class WorkflowRulesTable extends ControllerActionTable
         }
     }
 
-    public function onGetRuleEvents(Event $event, Entity $entity)
+    public function onGetRuleEvents(EventInterface $event, Entity $entity)
     {
         $feature = $entity->getOriginal('feature');
         $eventOptions = $this->getEvents($feature);
@@ -281,7 +281,7 @@ class WorkflowRulesTable extends ControllerActionTable
         return implode(', ', $eventArray);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $featureOptions = $this->getFeatureOptions();
@@ -300,7 +300,7 @@ class WorkflowRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldWorkflowId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedFeature = $this->request->getQuery('feature');
@@ -325,7 +325,7 @@ class WorkflowRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeFeature(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->getQuery['feature']);
@@ -339,7 +339,7 @@ class WorkflowRulesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldWorkflowRuleEvents(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldWorkflowRuleEvents(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $entity = $attr['attr']['entity'];
@@ -403,7 +403,7 @@ class WorkflowRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnAddEvent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddEvent(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (array_key_exists($this->getAlias(), $data)) {
             if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
@@ -551,7 +551,7 @@ class WorkflowRulesTable extends ControllerActionTable
         } else {
 
             $registryAlias = $this->getRegistryAliasByFeature($feature);
-            $subject = TableRegistry::get($registryAlias);
+            $subject = TableRegistry::getTableLocator()->get($registryAlias);
             $eventsObject = new ArrayObject();
             $subjectEvent = $subject->dispatchEvent('Workflow.getRuleEvents', [$eventsObject], $subject);
             if ($subjectEvent->isStopped()) {

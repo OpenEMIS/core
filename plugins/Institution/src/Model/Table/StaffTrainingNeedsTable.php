@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Staff\Model\Table\TrainingNeedsAppTable;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
@@ -28,7 +28,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -81,7 +81,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
 		// End POCOR-5188
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
         /** Start POCOR-7158 */
@@ -98,12 +98,12 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
     }
 
     // POCOR-6137 start
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->session();
         $staffId = $session->read('Staff.Staff.id');
         $status = $this->request->query('category');
-        $workflowSteps = TableRegistry::get('workflow_steps');
+        $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
 
         $query
         ->innerJoin([$workflowSteps->alias() => $workflowSteps->table()],[
@@ -121,7 +121,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'StaffTrainingNeeds.status_id',
@@ -157,7 +157,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'type') {
             return __('Type');

@@ -15,10 +15,10 @@ class POCOR7016 extends AbstractMigration
      */
     public function up()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
         $WorkflowsId = $WorkflowsTable->find()->select(['id' => $WorkflowsTable->aliasField('id')])->where([$WorkflowsTable->aliasField('code')=>'POSITION-1001'])->first();
 
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $WorkflowStepsIdA = $WorkflowStepsTable->find()->select(['id' => $WorkflowStepsTable->aliasField('id')])->where([$WorkflowStepsTable->aliasField('workflow_id')=>$WorkflowsId['id'],$WorkflowStepsTable->aliasField('name')=>'Pending For Approval'])->first();
 
         $WorkflowStepsIdB = $WorkflowStepsTable->find()->select(['id' => $WorkflowStepsTable->aliasField('id')])->where([$WorkflowStepsTable->aliasField('workflow_id')=>$WorkflowsId['id'],$WorkflowStepsTable->aliasField('name')=>'Pending For Deactivation'])->first();
@@ -33,7 +33,7 @@ class POCOR7016 extends AbstractMigration
         $this->execute('CREATE TABLE `z_7016_workflow_actions` LIKE `workflow_actions`');
         $this->execute('INSERT INTO `z_7016_workflow_actions` SELECT * FROM `workflow_actions`');
 
-        $WorkflowActionTable = TableRegistry::get('Workflow.WorkflowActions');
+        $WorkflowActionTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowActions');
         $this->execute("UPDATE workflow_actions SET `event_key` = 'Workflow.onApprovalofEnableStaffAssignment' WHERE `next_workflow_step_id`=$WorkflowStepsIdOna and `workflow_step_id`=$WorkflowStepsIda");
         $this->execute("UPDATE workflow_actions SET `event_key` = 'Workflow.onApprovalofDisableStaffAssignment' WHERE `next_workflow_step_id`=$WorkflowStepsIdOnb and `workflow_step_id`=$WorkflowStepsIdb");
         

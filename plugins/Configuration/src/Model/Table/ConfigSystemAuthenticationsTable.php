@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -76,7 +76,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
             //End POCOR-6697
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $authenticationTypeId = $data[$this->getAlias()]['authentication_type_id'];
         $idpType = isset($this->authenticationTypeOptions[$authenticationTypeId]) ? $this->authenticationTypeOptions[$authenticationTypeId] : '';
@@ -160,7 +160,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['Google', 'Saml', 'OAuth']);
@@ -173,21 +173,21 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $this->field('authentication_type_id');
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $data = $this->request->getData();
         $data[$this->getAlias()]['code'] = uniqid('IDP');
         $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $data = $this->request->getData(); 
         $data[$this->getAlias()]['code'] = $entity->code;
         $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['elements']['controls'] = $this->buildSystemConfigFilters();
         $extra['config']['selectedLink'] = ['controller' => 'Configurations', 'action' => 'index'];
@@ -205,7 +205,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         $this->field('mapped_email', ['type' => 'hidden', 'attr' => ['label' => __('Email Mapping')]]);
     }
 
-    public function onUpdateFieldAuthenticationTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAuthenticationTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
         $attr['onChangeReload'] = true;
@@ -232,7 +232,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $count = $this
             ->find()
@@ -241,7 +241,7 @@ class ConfigSystemAuthenticationsTable extends ControllerActionTable
             ])
             ->count();
 
-        $enableLocalLogin = TableRegistry::get('Configuration.ConfigItems')->value('enable_local_login');
+        $enableLocalLogin = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('enable_local_login');
 
         if (!$enableLocalLogin && $count == 1 && $entity->status == 1) {
             $event->stopPropagation();

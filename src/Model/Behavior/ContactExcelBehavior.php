@@ -3,7 +3,7 @@ namespace App\Model\Behavior;
 
 use Cake\ORM\TableRegistry;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -448,7 +448,7 @@ class ContactExcelBehavior extends Behavior
 
     private function getFooter()
     {
-        $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $ConfigItem =   $ConfigItemTable
                             ->find()
                             ->select(['zonevalue' => 'ConfigItems.value'])
@@ -617,7 +617,7 @@ class ContactExcelBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
         if (in_array($action, $this->getConfig('pages'))) {
@@ -644,7 +644,7 @@ class ContactExcelBehavior extends Behavior
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];

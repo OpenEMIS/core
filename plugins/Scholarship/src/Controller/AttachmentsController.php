@@ -1,7 +1,7 @@
 <?php
 namespace Scholarship\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
 use Page\Model\Entity\PageElement;
@@ -12,10 +12,10 @@ class AttachmentsController extends PageController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Security.Users');
-        $this->loadModel('Scholarship.ApplicationAttachments');
-        $this->loadModel('Scholarship.AttachmentTypes');
-        $this->loadModel('Scholarship.ScholarshipsScholarshipAttachmentTypes');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->ApplicationAttachments = $this->fetchTable('Scholarship.ApplicationAttachments');
+        $this->AttachmentTypes = $this->fetchTable('Scholarship.AttachmentTypes');
+        $this->ScholarshipsScholarshipAttachmentTypes = $this->fetchTable('Scholarship.ScholarshipsScholarshipAttachmentTypes');
 
         $this->loadComponent('Scholarship.ScholarshipTabs');
 
@@ -163,7 +163,7 @@ class AttachmentsController extends PageController
         $page->getTab('Attachments')->setActive('true');
     }
 
-    public function onRenderMandatory(Event $event, Entity $entity, PageElement $element)
+    public function onRenderMandatory(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 

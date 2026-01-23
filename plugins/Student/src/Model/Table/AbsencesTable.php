@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\Database\Schema\Table;
 use Cake\Datasource\ConnectionManager;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -57,13 +57,13 @@ class AbsencesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         // $this->fields['student_absence_reason_id']['type'] = 'select';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         if ($this->action == 'remove') {
             $institutionId = $this->getInstitutionID();
@@ -159,7 +159,7 @@ class AbsencesTable extends ControllerActionTable
         }
     }
     /*POCOR-6313 starts*/
-    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $settings)
     {
         $this->fields['institution_student_absence_day_id']['visible'] = false;
         $this->fields['education_grade_id']['visible'] = false;
@@ -180,15 +180,15 @@ class AbsencesTable extends ControllerActionTable
         $this->addExtraButtons($settings);
     }
 
-    public function onGetDate(Event $event, Entity $entity)
+    public function onGetDate(EventInterface $event, Entity $entity)
     {
         $this->Session->write('leave_date', $entity->date);
         return $this->Date = date_format($entity->date, 'F d, Y');
     }
 
-    public function onGetClass(Event $event, Entity $entity)
+    public function onGetClass(EventInterface $event, Entity $entity)
     {
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $result = $InstitutionClasses
             ->find()
             ->select(['name'])
@@ -197,9 +197,9 @@ class AbsencesTable extends ControllerActionTable
         return $this->class = $result->name;
     }
     /*POCOR-6313 ends*/
-    public function onGetPeriods(Event $event, Entity $entity)
+    public function onGetPeriods(EventInterface $event, Entity $entity)
     {
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+        $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
         $result = $StudentAttendancePerDayPeriods
             ->find()
             ->select(['name'])
@@ -208,9 +208,9 @@ class AbsencesTable extends ControllerActionTable
         return $this->periods = $result->name;
     }
 
-    public function onGetSubjects(Event $event, Entity $entity)
+    public function onGetSubjects(EventInterface $event, Entity $entity)
     {
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $result = $InstitutionSubjects
             ->find()
             ->select(['name'])
@@ -219,11 +219,11 @@ class AbsencesTable extends ControllerActionTable
         return $this->subjects = $result->name;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->getInstitutionID();
         if ($this->request->getQuery('user_id') !== null) {
@@ -399,7 +399,7 @@ class AbsencesTable extends ControllerActionTable
         // die;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['edit']);
@@ -419,12 +419,12 @@ class AbsencesTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Absences');
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         $this->setupTabElements();
     }
 
-    public function beforeFind( Event $event, Query $query )
+    public function beforeFind( EventInterface $event, Query $query )
     {
 		$userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267
@@ -480,7 +480,7 @@ class AbsencesTable extends ControllerActionTable
 
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['toolbarButtons']['remove']['type'] = 'hidden';
         $this->fields['institution_student_absence_day_id']['visible'] = false;
@@ -521,7 +521,7 @@ class AbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onGetStudent(Event $event, Entity $entity)
+    public function onGetStudent(EventInterface $event, Entity $entity)
     {
         if (isset($entity->user->name_with_id)) {
             if ($this->action == 'view') {
@@ -538,7 +538,7 @@ class AbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onGetAcademicPeriod(Event $event, Entity $entity)
+    public function onGetAcademicPeriod(EventInterface $event, Entity $entity)
     {
         $result = $this->AcademicPeriods
             ->find()
@@ -582,7 +582,7 @@ class AbsencesTable extends ControllerActionTable
         }
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
-        $AssessmentItemResultsArchived = TableRegistry::get('Student.ArchivedAbsences');
+        $AssessmentItemResultsArchived = TableRegistry::getTableLocator()->get('Student.ArchivedAbsences');
         $count = $AssessmentItemResultsArchived->find()
 //            ->distinct([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL
             ->select([$AssessmentItemResultsArchived->aliasField('student_id')])// POCOR-7339-HINDOL

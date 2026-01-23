@@ -17,9 +17,9 @@ class InstitutionClassSubjectsShell extends Shell {
 		
 		ini_set('memory_limit', '-1'); 
 
-		$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+		$InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
 
-		$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+		$InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
 		$data = $InstitutionClassSubjects
 				->find()
 				->select([
@@ -36,13 +36,13 @@ class InstitutionClassSubjectsShell extends Shell {
 		}
 
 
-		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+		$InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 		$classesData = $InstitutionClasses->find()
 				->where([$InstitutionClasses->aliasField('id').' NOT IN ' => $class_subjects])
 				->toArray();
 		
 		foreach ($classesData as $key => $arr) {			
-		$InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+		$InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
          $educationGradesData = $InstitutionClassGrades
                                 ->find()
                                 ->where([
@@ -54,7 +54,7 @@ class InstitutionClassSubjectsShell extends Shell {
         $grade = $educationGradesData[0]->education_grade_id;
         $grades = array($grade);
       
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
             /**
              * from the list of grades, find the list of subjects group by grades in (education_grades_subjects) where visible = 1
              */
@@ -104,7 +104,7 @@ class InstitutionClassSubjectsShell extends Shell {
                 /**
                  * for each education subjects, find the primary key of institution_classes using (entity->academic_period_id and institution_id and education_subject_id)
                  */
-                $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+                $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
                 $institutionSubjects = $InstitutionSubjects->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'education_subject_id'
@@ -128,7 +128,7 @@ class InstitutionClassSubjectsShell extends Shell {
                  * else create a record in institution_subjects (InstitutionSubjects)
                  * and link to the subject in institution_class_subjects (InstitutionClassSubjects) with status 1
                  */
-                $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+                $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
                 $newSchoolSubjects = [];
                 foreach ($educationSubjects as $key => $educationSubject) {                 
                         $existingSchoolSubjects = $InstitutionClassSubjects->find()
@@ -160,7 +160,7 @@ class InstitutionClassSubjectsShell extends Shell {
                        
                         //POCOR 5001
                         $institutionProgramGradeSubjects = 
-                            TableRegistry::get('InstitutionProgramGradeSubjects')
+                            TableRegistry::getTableLocator()->get('InstitutionProgramGradeSubjects')
                             ->find('list')
                             ->where(['InstitutionProgramGradeSubjects.education_grade_id' => $subject->education_grade_id,
                                 'InstitutionProgramGradeSubjects.education_grade_subject_id' => $subject->education_subject_id,

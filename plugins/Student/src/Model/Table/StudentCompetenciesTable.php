@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use App\Model\Table\ControllerActionTable;
 
@@ -79,7 +79,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         // ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action != 'index') {
             $tabElements = $this->controller->getCompetencyTabElements();
@@ -100,7 +100,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Start:POCOR-6781
         //if($this->request->params['plugin'] == "Profile"){
@@ -140,7 +140,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession(); 
         $academicPeriodId = $this->request->getQuery('period'); 
@@ -160,13 +160,13 @@ class StudentCompetenciesTable extends ControllerActionTable
             $studentId = $this->getStudentID();
         }	
        
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $Competencies = TableRegistry::get('Competency.CompetencyTemplates');
-        $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $Competencies = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
+        $CompetencyPeriods = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         
         $query
             ->select([
@@ -302,7 +302,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Class Name');
@@ -325,18 +325,18 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
     }
 
-    public function onGetEducationGrade(Event $event, Entity $entity)
+    public function onGetEducationGrade(EventInterface $event, Entity $entity)
     {
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
 
         return $grade->programme_grade_name;
     }
 
-    public function onGetCompetencyTemplate(Event $event, Entity $entity)
+    public function onGetCompetencyTemplate(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
+            $CompetencyTemplates = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
             $competencyEntity = $CompetencyTemplates->find()
                 ->where([
                     $CompetencyTemplates->aliasField('id') => $this->competencyTemplateId,
@@ -348,7 +348,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['AcademicPeriods'])
@@ -359,12 +359,12 @@ class StudentCompetenciesTable extends ControllerActionTable
             ]);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         unset($extra['toolbarButtons']['edit']);
         $this->setupFields($entity);
@@ -377,7 +377,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $params = $this->getQueryString();
         unset($params['competency_item_id']); // item must be unset if new period is chosen
 
-        $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+        $CompetencyPeriods = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods');
         $results = $CompetencyPeriods->find()
             ->where([
                 $CompetencyPeriods->aliasField('academic_period_id') => $this->academicPeriodId,
@@ -419,7 +419,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $params = $this->getQueryString();
 
         if (!is_null($this->competencyPeriodId)) {
-            $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+            $CompetencyPeriods = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods');
             $results = $CompetencyPeriods->find()
                 ->contain(['CompetencyItems'])
                 ->where([
@@ -464,7 +464,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $params = $this->getQueryString();
 
         if (!is_null($this->classId)) {
-            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
             $StudentStatuses = $ClassStudents->StudentStatuses;
 
@@ -517,7 +517,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         return $studentOptions;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomCriteriasElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         $session = $this->request->getSession();
         if ($this->controller->getName() == 'Profiles') {
@@ -547,9 +547,9 @@ class StudentCompetenciesTable extends ControllerActionTable
             $tableHeaders[] = $value['name'] . ' ' . __('Criteria');
             $tableHeaders[] = '';
             $tableHeaders[] = __('Comments');
-            $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
-            $CompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults');
-            $ItemComments = TableRegistry::get('Institution.InstitutionCompetencyItemComments');
+            $CompetencyCriterias = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
+            $CompetencyResults = TableRegistry::getTableLocator()->get('Institution.InstitutionCompetencyResults');
+            $ItemComments = TableRegistry::getTableLocator()->get('Institution.InstitutionCompetencyItemComments');
 
             $criteriaResults = $CompetencyCriterias->find()
                 ->select([
@@ -665,7 +665,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'academic_period_id', 'competency_template', 'competency_periods','institution_id','student']); //POCOR-6718
     }
 
-    public function onUpdateActionButtons_old(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons_old(EventInterface $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $queryString = $this->getQueryString();
         $entity->institution_id = $queryString['institution_id'];
@@ -688,7 +688,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     }
 
     private function getCompetencyGradingTypes() {
-        $CompetencyGradingTypes = TableRegistry::get('Competency.CompetencyGradingTypes');
+        $CompetencyGradingTypes = TableRegistry::getTableLocator()->get('Competency.CompetencyGradingTypes');
         $competencyGradingTypeResults = $CompetencyGradingTypes
             ->find()
             ->contain(['GradingOptions'])
@@ -724,9 +724,9 @@ class StudentCompetenciesTable extends ControllerActionTable
         @return array
         POCOR-6718
     */
-    public function onGetCompetencyPeriods(Event $event, Entity $entity)
+    public function onGetCompetencyPeriods(EventInterface $event, Entity $entity)
     {
-        $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+        $CompetencyPeriods = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods');
         if ($this->action == 'view') {
             $competencyPeriodsId = $this->getQueryString('competency_periods_id');
             $competencyEntity = $CompetencyPeriods->find()

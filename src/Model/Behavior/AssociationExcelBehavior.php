@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -16,13 +16,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use Cake\Http\Session;
 // Events
-// public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
-// public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
-// public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {}
-// public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {}
-// public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {}
-// public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
-// public function onExcelGetLabel(Event $event, $column) {}
+// public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelGenerate(EventInterface $event, $writer, ArrayObject $settings) {}
+// public function onExcelGenerateComplete(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {}
+// public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {}
+// public function onExcelEndSheet(EventInterface $event, ArrayObject $settings, $totalProcessed) {}
+// public function onExcelGetLabel(EventInterface $event, $column) {}
 
 class AssociationExcelBehavior extends Behavior
 {
@@ -179,7 +179,7 @@ class AssociationExcelBehavior extends Behavior
         $paramsDecodedArray = $this->_table->paramsDecode($params);
         $institution_id = !empty($paramsDecodedArray) ? $paramsDecodedArray['institution_id'] : 0;
         $condition = [];
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');//POCOR-8556
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');//POCOR-8556
         $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
         $academic_period_id = !is_null($this->_table->request->getQuery('academic_period_id')) ? $this->_table->request->getQuery('academic_period_id') : $currentAcademicPeriod;
         if(!is_null($academic_period_id)){
@@ -809,7 +809,7 @@ class AssociationExcelBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
         //POCOR-5852 starts add  || $action == 'index' condition
@@ -838,7 +838,7 @@ class AssociationExcelBehavior extends Behavior
         //POCOR-5852 ends
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];

@@ -3,7 +3,7 @@ namespace Examination\Model\Table;
 
 use ArrayObject;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
@@ -46,7 +46,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $this->queryString = $request->getQuery['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
@@ -57,7 +57,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $Navigation->addCrumb('Linked Institutions');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
@@ -71,7 +71,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $this->fields['examination_id']['type'] = 'integer';
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
@@ -80,7 +80,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('linked_institution', ['sort' => ['field' => 'Institutions.name']]);
         $this->setFieldOrder(['linked_institution', 'examination_id']);
@@ -106,7 +106,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // set queryString for page refresh
         $this->controller->set('queryString', $this->queryString);
@@ -144,13 +144,13 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('linked_institution', ['type' => 'integer']);
         $this->setFieldOrder(['linked_institution', 'examination_id']);
     }
 
-    public function onGetLinkedInstitution(Event $event, Entity $entity)
+    public function onGetLinkedInstitution(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('institution')) {
@@ -160,7 +160,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         return $value;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 //        $this->field('academic_period_id'); // POCOR-9515
         $this->field('institutions');
@@ -184,7 +184,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 //        return $attr;
 //    }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationCentreId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $examCentre = $this->ExaminationCentres->get($this->examCentreId)->code_name;
         $attr['type'] = 'readonly';
@@ -192,7 +192,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         return $attr;
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $examinationOptions = $this->ExaminationCentresExaminations
@@ -211,7 +211,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         }
     }
 
-    public function onUpdateFieldInstitutions(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutions(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $institutionOptions = $this->Institutions
@@ -221,7 +221,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
                 ]);
 
             if (!empty($request->getData()[$this->getAlias()]['examination_id'])) {
-                $Institutions = TableRegistry::get('Institution.Institutions');
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $examinationId = $request->getData()[$this->getAlias()]['examination_id'];
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
 
@@ -245,13 +245,13 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         }
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $requestData[$this->getAlias()]['institution_id'] = 0;
         $requestData[$this->getAlias()]['examination_centre_id'] = $this->examCentreId;
     }
 
-    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function addBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
             if (isset($requestData[$model->getAlias()]['institutions']) && !empty($requestData[$model->getAlias()]['institutions'])) {
@@ -271,7 +271,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         return $process;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'linked_institution') {
             return __('Linked Institution');

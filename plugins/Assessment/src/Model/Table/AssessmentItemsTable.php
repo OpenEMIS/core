@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Validation\Validator;
@@ -63,7 +63,7 @@ class AssessmentItemsTable extends AppTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'index' || $action == 'view') {
             // check for the user permission to view here
@@ -96,7 +96,7 @@ class AssessmentItemsTable extends AppTable
 
     public function populateAssessmentItemsArray($gradeId)
     {
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+        $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
         $gradeSubjects = $EducationGradesSubjects->find()
             ->contain('EducationSubjects')
             ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])
@@ -153,12 +153,12 @@ class AssessmentItemsTable extends AppTable
         $data = json_decode($newVaridable);
         $institutionId = $data->institution_id;
         $academinPeriod = $data->academic_period_id;
-        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $educationSubject = TableRegistry::get('Education.EducationSubjects');
+        $ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $educationSubject = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
         $assessmentId = $options['assessment_id'];
         $classId = $options['class_id'];
-        $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $staffSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
 
         if (isset($options['class_id']) && isset($options['staff_id'])) {
             $classId = $options['class_id'];
@@ -202,8 +202,8 @@ class AssessmentItemsTable extends AppTable
 
     public function findAssessmentItemsInClass(Query $query, array $options)
     {
-        $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $assessmentId = $options['assessment_id'];
         $classId = $options['class_id'];
 
@@ -585,12 +585,12 @@ class AssessmentItemsTable extends AppTable
         // delete all AssessmentItemsGradingTypes by education_subject_id and assessment_id
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $entity['assessment_items'] = array();
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $entity['assessment_items'] = array();
     }

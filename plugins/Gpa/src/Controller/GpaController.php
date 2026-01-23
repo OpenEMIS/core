@@ -4,7 +4,7 @@ namespace Gpa\Controller;
 
 use App\Controller\AppController;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 

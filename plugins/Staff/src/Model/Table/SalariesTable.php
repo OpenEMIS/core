@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -43,7 +43,7 @@ class SalariesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         if (!empty($this->staffId)) {
             $query->contain(['Users'])
@@ -52,7 +52,7 @@ class SalariesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields[] = [
             'key' => 'Salaries.staff_id',
@@ -113,7 +113,7 @@ class SalariesTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //$session = $this->Session;
         //if ($session->check('Staff.Staff.id')) {
@@ -166,12 +166,12 @@ class SalariesTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $totalAddition = 0;
         $totalDeduction = 0;
 
-        $SalaryAdditions = TableRegistry::get('Staff.SalaryAdditions');
+        $SalaryAdditions = TableRegistry::getTableLocator()->get('Staff.SalaryAdditions');
         $present = [];
         if ($entity->has('salary_additions')) {
             foreach ($entity->salary_additions as $key => $value) {
@@ -193,7 +193,7 @@ class SalariesTable extends ControllerActionTable
         }
         $SalaryAdditions->deleteAll($deleteOptions);
 
-        $SalaryDeductions = TableRegistry::get('Staff.SalaryDeductions');
+        $SalaryDeductions = TableRegistry::getTableLocator()->get('Staff.SalaryDeductions');
         $present = [];
         if ($entity->has('salary_deductions')) {
             foreach ($entity->salary_deductions as $key => $value) {
@@ -220,7 +220,7 @@ class SalariesTable extends ControllerActionTable
         $entity = $this->patchEntity($entity, $data);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         if (array_key_exists($this->getAlias(), (array) $data)) { //POCOR-9300[START] added array in second param
             if (!array_key_exists('salary_additions', $data[$this->getAlias()])) {
@@ -233,7 +233,7 @@ class SalariesTable extends ControllerActionTable
     }
 
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['gross_salary']['type'] = 'float';
         $this->fields['net_salary']['type'] = 'float';
@@ -243,16 +243,16 @@ class SalariesTable extends ControllerActionTable
         $this->setFieldOrder(['salary_date', 'gross_salary', 'additions', 'deductions', 'net_salary']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->order($this->aliasField('salary_date DESC'));
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //$paramsPass = $this->paramsDecode($this->ControllerAction->getParam('Pass')[1]);cakephp 3
         $paramsPass = $this->paramsDecode($this->request->getParam('pass.1'));
-        $SalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
+        $SalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
         $findData = $SalaryTransactions->find()
                     ->select([
                       $SalaryTransactions->aliasField('salary_addition_type_id'),
@@ -283,7 +283,7 @@ class SalariesTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['additions']['visible'] = false;
         $this->fields['deductions']['visible'] = false;
@@ -299,8 +299,8 @@ class SalariesTable extends ControllerActionTable
         //$this->fields['net_salary']['attr']['min'] = 0.00;
         $this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
 
-        $SalaryAdditionType = TableRegistry::get('Staff.SalaryAdditionTypes')->getList();
-        $SalaryDeductionType = TableRegistry::get('Staff.SalaryDeductionTypes')->getList();
+        $SalaryAdditionType = TableRegistry::getTableLocator()->get('Staff.SalaryAdditionTypes')->getList();
+        $SalaryDeductionType = TableRegistry::getTableLocator()->get('Staff.SalaryDeductionTypes')->getList();
 
         $this->field('addition_set', [
             'type' => 'element',
@@ -322,7 +322,7 @@ class SalariesTable extends ControllerActionTable
         $this->setFieldOrder(['salary_date', 'gross_salary', 'net_salary', 'addition_set', 'deduction_set', 'comment']);
     }
 
-    public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddRow(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $data[$this->getAlias()]['salary_additions'][] = ['amount' => '0.00'];
         $options['associated'] = [
@@ -332,7 +332,7 @@ class SalariesTable extends ControllerActionTable
         //echo "<pre>";print_r( $options);die();
     }
 
-    public function addEditOnDeductRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnDeductRow(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $data[$this->getAlias()]['salary_deductions'][] = ['amount' => '0.00'];
         $options['associated'] = [
@@ -355,7 +355,7 @@ class SalariesTable extends ControllerActionTable
         ;
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['gross_salary']['type'] = 'float';
         $this->fields['net_salary']['type'] = 'float';
@@ -378,12 +378,12 @@ class SalariesTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         $this->setupTabElements();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'salary_date') {
             return __('Salary Date');

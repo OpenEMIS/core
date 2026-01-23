@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
@@ -44,7 +44,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 			->add('staff_duties_id', 'not-blank', ['rule' => 'notBlank']);
 	}
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
@@ -72,20 +72,20 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         //print_r($field); exit;
 
     }
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
 
         $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment','institutions.name']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('Institution');
         $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment','Institution']);
     }
 
-    public function onGetStaffId(Event $event, Entity $entity)
+    public function onGetStaffId(EventInterface $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])
@@ -99,7 +99,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     ** addEdit action methods
     **
     ******************************************************************************************************************/
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(EventInterface $event)
     {
 
         $this->setFieldOrder([
@@ -108,7 +108,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         ]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $staffOption = $this->getStaffList();
 //        print_r($staffOption);die();
@@ -131,7 +131,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     public function getStaffList () {
 
         $institutionId = $this->getInstitutionID();
-        $Staff = TableRegistry::get('Institution.Staff');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $staffOptions = array();
         $result = $Staff->find()
                     ->where([$Staff->aliasField('institution_id')=>$institutionId])
@@ -154,7 +154,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             return $staffOptions;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
      
         $extraField[] = [
@@ -194,22 +194,22 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    public function onExcelGetInstitutionName(EventInterface $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
         return $InstitutionName['name'];
     }
-    public function onGetInstitution(Event $event, Entity $entity)
+    public function onGetInstitution(EventInterface $event, Entity $entity)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $InstitutionName=$Institutions->find()->select('name')->where(['id' => $entity->institution_id])->first();
         return $InstitutionName['name'];
     }
 
-    public function onExcelGetStaffId(Event $event, Entity $entity)
+    public function onExcelGetStaffId(EventInterface $event, Entity $entity)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $result = $Users
             ->find()
             ->select(['first_name','last_name'])

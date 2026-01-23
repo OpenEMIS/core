@@ -1,7 +1,7 @@
 <?php
 namespace Workflow\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
@@ -29,7 +29,7 @@ class WorkflowTransitionsTable extends AppTable {
 			$origAssigneeName = $unassigned;
 		}
 		if ($assigneeId != 0) {
-			$Users = TableRegistry::get('User.Users');
+			$Users = TableRegistry::getTableLocator()->get('User.Users');
 			$assigneeEntity = $Users
 				->find()
 				->select([
@@ -53,7 +53,7 @@ class WorkflowTransitionsTable extends AppTable {
 			} elseif (!is_null($affectedEntity->_matchingData) && !is_null($affectedEntity->_matchingData['Statuses'])) {
 				$stepName = $affectedEntity->_matchingData['Statuses']->name;
 			} elseif ($affectedEntity->has('status_id')) {
-				$WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+				$WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 				$statusId = $affectedEntity->status_id;
 				$stepEntity = $WorkflowStepsTable
 					->find()
@@ -92,7 +92,7 @@ class WorkflowTransitionsTable extends AppTable {
 			$origAssigneeName = $unassigned;
 		}
 		if ($assigneeId != 0) {
-			$Users = TableRegistry::get('User.Users');
+			$Users = TableRegistry::getTableLocator()->get('User.Users');
 			$assigneeEntity = $Users
 				->find()
 				->select([
@@ -116,7 +116,7 @@ class WorkflowTransitionsTable extends AppTable {
 			} elseif (!is_null($affectedEntity->_matchingData) && !is_null($affectedEntity->_matchingData['Statuses'])) {
 				$stepName = $affectedEntity->_matchingData['Statuses']->name;
 			} elseif ($affectedEntity->has('status_id')) {
-				$WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+				$WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 				$statusId = $affectedEntity->status_id;
 				$stepEntity = $WorkflowStepsTable
 					->find()
@@ -146,9 +146,9 @@ class WorkflowTransitionsTable extends AppTable {
 		//}
 	}
 
-	public function onWorkflowAddAfterSave(Event $event, Entity $entity)
+	public function onWorkflowAddAfterSave(EventInterface $event, Entity $entity)
 	{
-		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+		$WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 		$stepEntity = $WorkflowSteps
 			->find()
 			->matching('Workflows.WorkflowModels')

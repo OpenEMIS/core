@@ -441,7 +441,7 @@ return [
 
     private function createUser($password)
     {
-        $UserTable = TableRegistry::get('User.Users');
+        $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $userData = $UserTable
             ->find()
             ->where([$UserTable->aliasField('username') => 'admin'])
@@ -494,7 +494,7 @@ return [
 
     private function createArea($name, $code)
     {
-        $AreasTable = TableRegistry::get('Area.Areas');
+        $AreasTable = TableRegistry::getTableLocator()->get('Area.Areas');
         $areaData = $AreasTable
             ->find()
             ->where([$AreasTable->aliasField('code') => $code, $AreasTable->aliasField('name') => $name])

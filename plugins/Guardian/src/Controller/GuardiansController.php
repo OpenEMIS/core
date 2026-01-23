@@ -3,7 +3,7 @@ namespace Guardian\Controller;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -75,7 +75,7 @@ class GuardiansController extends AppController
     public function beforeFilter(Event|\Cake\Event\EventInterface $event)
     {
         parent::beforeFilter($event);
-        $User = TableRegistry::get('User.Users');
+        $User = TableRegistry::getTableLocator()->get('User.Users');
 
         $session = $this->request->getSession();
         $institutionName = $session->read('Institution.Institutions.name');
@@ -118,7 +118,7 @@ class GuardiansController extends AppController
             $this->ControllerAction->paramsEncode(['id' => $studentId])]);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $guardianName = $session->read('Guardian.Guardians.name');
@@ -135,7 +135,7 @@ class GuardiansController extends AppController
         }
     }
 
-    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    public function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->getSession();
 
@@ -151,7 +151,7 @@ class GuardiansController extends AppController
             }
     }
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    public function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
     {
         $this->beforePaginate($event, $model, $query, $extra);
     }

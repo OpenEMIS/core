@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\i18n\Time;
@@ -42,7 +42,7 @@ class ExtraDataSourceAttributesTable extends ControllerActionTable
 
     public function findAttributes(Query $query, array $options = [])
     {
-        $ConfigItemTable = TableRegistry::get('ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
             ->select([$ConfigItemTable->aliasField('value')])
@@ -89,7 +89,7 @@ class ExtraDataSourceAttributesTable extends ControllerActionTable
 
     public function findUri(Query $query, array $options = [])
     {
-        $ConfigItemTable = TableRegistry::get('ConfigItems');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('ConfigItems');
         $externalSourceType = $ConfigItemTable
             ->find()
             ->select([$ConfigItemTable->aliasField('value')])

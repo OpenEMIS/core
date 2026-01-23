@@ -1,7 +1,7 @@
 <?php
 namespace Scholarship\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Page\Model\Entity\PageElement;
@@ -14,13 +14,13 @@ class ScholarshipRecipientCollectionsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Scholarship.RecipientCollections');
-        $this->loadModel('Scholarship.Scholarships');
-        $this->loadModel('Scholarship.ScholarshipRecipients');
-        $this->loadModel('Scholarship.FinancialAssistanceTypes');
-        $this->loadModel('Security.Users');
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('Configuration.ConfigItems');
+        $this->RecipientCollections = $this->fetchTable('Scholarship.RecipientCollections');
+        $this->Scholarships = $this->fetchTable('Scholarship.Scholarships');
+        $this->ScholarshipRecipients = $this->fetchTable('Scholarship.ScholarshipRecipients');
+        $this->FinancialAssistanceTypes = $this->fetchTable('Scholarship.FinancialAssistanceTypes');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
+        $this->ConfigItems = $this->fetchTable('Configuration.ConfigItems');
         $this->Page->loadElementsFromTable($this->RecipientCollections);
 
         $this->loadComponent('Scholarship.ScholarshipTabs');

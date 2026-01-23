@@ -4,7 +4,7 @@ namespace Survey\Model\Table;
 use CustomField\Model\Table\CustomFormsFieldsTable;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use ArrayObject;
 use Cake\Log\Log;
@@ -38,8 +38,8 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
         ]);
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$SurveyRules = TableRegistry::get('Survey.SurveyRules');
+	public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
+		$SurveyRules = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
 		$entities = $SurveyRules
 			->find()
 			->where([

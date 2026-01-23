@@ -9,7 +9,7 @@ use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -48,7 +48,7 @@ class ImportStaffSalariesTable extends AppTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
         if ($plugin == 'Institution') {
@@ -56,13 +56,13 @@ class ImportStaffSalariesTable extends AppTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) 
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona) 
     {
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if (isset($buttons[1])) {
             $buttons[1]['url'] = $this->ControllerAction->url('index');
@@ -70,9 +70,9 @@ class ImportStaffSalariesTable extends AppTable
         }
     }
 
-    public function onImportPopulateSalaryAdditionTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateSalaryAdditionTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
         $result = $lookedUpTable
             ->find('all')
@@ -100,9 +100,9 @@ class ImportStaffSalariesTable extends AppTable
         }
     }
 
-    public function onImportPopulateSalaryDeductionTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateSalaryDeductionTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
         $result = $lookedUpTable
             ->find('all')
@@ -130,9 +130,9 @@ class ImportStaffSalariesTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     { 
-        $staffData = TableRegistry::get('Security.Users');
+        $staffData = TableRegistry::getTableLocator()->get('Security.Users');
         $data = $staffData->find()
                 ->where([$staffData->aliasField('openemis_no') => $originalRow[0]])->toArray();
         
@@ -145,12 +145,12 @@ class ImportStaffSalariesTable extends AppTable
         $grossSal = $tempRow['gross_salary'];
         $addAmount = $tempRow['amount_addition'];
         $deductAmount = $tempRow['amount_deduction'];
-        $StaffSalaries = TableRegistry::get('Institution.Salaries');
+        $StaffSalaries = TableRegistry::getTableLocator()->get('Institution.Salaries');
         $id = $StaffSalaries->find()->last()->id;
-        $StaffSalaries = TableRegistry::get('Institution.Salaries');
+        $StaffSalaries = TableRegistry::getTableLocator()->get('Institution.Salaries');
         $tempRow['net_salary'] =  $grossSal + $addAmount - $deductAmount;
         if (!empty($addAmount)) {
-                $StaffSalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
+                $StaffSalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
                 $data = $StaffSalaryTransactions->newEntity();
                 $data->amount = $addAmount;
                 $data->salary_addition_type_id = $tempRow['salary_addition_type_id'];
@@ -159,7 +159,7 @@ class ImportStaffSalariesTable extends AppTable
                 $StaffSalaryTransactions->save($data);
         }
         if (!empty($deductAmount)) {
-                $StaffSalaryTransactions = TableRegistry::get('Staff.StaffSalaryTransactions');
+                $StaffSalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
                 $data = $StaffSalaryTransactions->newEntity();
                 $data->amount = $deductAmount;
                 $data->salary_addition_type_id = 0;

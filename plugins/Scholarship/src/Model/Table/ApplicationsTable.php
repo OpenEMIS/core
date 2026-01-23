@@ -7,7 +7,7 @@ use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
@@ -76,7 +76,7 @@ class ApplicationsTable extends ControllerActionTable
         ]);
 
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
-        $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
+        $this->currency = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('currency');
         $this->addBehavior('User.UserTab', [
 
             'appliedAction' => ['ScholarshipApplications' =>
@@ -100,10 +100,10 @@ class ApplicationsTable extends ControllerActionTable
         return $events;
     }
     //POCOR-7937 start
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $workflows = TableRegistry::get('Workflow.Workflows');
-        $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $workflowResults = $workflows->find()
                 ->select(['workflowSteps_id' => $workflowSteps->aliasField('id')])
                 ->LeftJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()], [
@@ -115,7 +115,7 @@ class ApplicationsTable extends ControllerActionTable
                 ])
                 ->first();
         if($workflowResults->workflowSteps_id == $entity->status_id){
-            $ScholarshipsScholarshipAttachmentTypes = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
+            $ScholarshipsScholarshipAttachmentTypes = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
             $mandatoryAttachments = $ScholarshipsScholarshipAttachmentTypes->find()->contain('AttachmentTypes')->where([
                 $ScholarshipsScholarshipAttachmentTypes->aliasField('scholarship_id') => $entity->scholarship_id,
                 $ScholarshipsScholarshipAttachmentTypes->aliasField('is_mandatory') => 1
@@ -180,7 +180,7 @@ class ApplicationsTable extends ControllerActionTable
             ]);
     }
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    public function getWorkflowEvents(EventInterface $event, ArrayObject $eventsObject)
     {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
@@ -189,7 +189,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    // public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    // public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona)
     // {
     //     $title = __($this->getHeader($this->alias()));
 
@@ -205,7 +205,7 @@ class ApplicationsTable extends ControllerActionTable
     //     }
     // }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'scholarship_id';
         $searchableFields[] = 'openemis_no';
@@ -213,7 +213,7 @@ class ApplicationsTable extends ControllerActionTable
         $searchableFields[] = 'identity_number';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     { 
         //echo "<pre>"; print_r($extra); die;
         if (in_array($this->action, ['view', 'edit'])) {
@@ -230,7 +230,7 @@ class ApplicationsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add']['url'])) {
             $extra['toolbarButtons']['add']['url']['action'] = 'UsersDirectory';
@@ -277,7 +277,7 @@ class ApplicationsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->select([
@@ -364,7 +364,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function addEditOnChangeFinancialAssistanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeFinancialAssistanceType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $data[$this->getAlias()]['scholarship_id'] = '';
         $data['scholarship'] = [];
@@ -380,7 +380,7 @@ class ApplicationsTable extends ControllerActionTable
         ];
     }
 
-    public function addEditOnChangeScholarship(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeScholarship(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $data['scholarship'] = [];
 
@@ -395,7 +395,7 @@ class ApplicationsTable extends ControllerActionTable
         ];
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // remove queryString when redirect
         if (isset($extra['redirect']['queryString'])) {
@@ -413,7 +413,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    /*public function onUpdateFieldAssigneeId(Event $event, array $attr,  $action, ServerRequest $request)
+    /*public function onUpdateFieldAssigneeId(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -428,7 +428,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }*/
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->isNew()) {
             $entity->unsetProperty('scholarship');
@@ -458,7 +458,7 @@ class ApplicationsTable extends ControllerActionTable
         $this->setupScholarshipFields($entity);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // remove queryString for index page
         if (isset($extra['toolbarButtons']['list']['url']['queryString'])) {
@@ -466,7 +466,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // remove queryString for index page
         if (isset($extra['toolbarButtons']['back']['url']['queryString'])) {
@@ -474,7 +474,7 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->select([
@@ -571,12 +571,12 @@ class ApplicationsTable extends ControllerActionTable
             ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupScholarshipFields($entity);
     }
 
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // remove queryString when redirect
         if (isset($extra['redirect']['queryString'])) {
@@ -585,7 +585,7 @@ class ApplicationsTable extends ControllerActionTable
     }
 
     // index fields
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'scholarship_id') {
             return __('Scholarship Name');
@@ -635,82 +635,82 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->applicant->openemis_no;
     }
 
-    public function onGetDateOfBirth(Event $event, Entity $entity)
+    public function onGetDateOfBirth(EventInterface $event, Entity $entity)
     {
         return $this->formatDate($entity->applicant->date_of_birth);
     }
 
-    public function onGetGender(Event $event, Entity $entity)
+    public function onGetGender(EventInterface $event, Entity $entity)
     {
         return $entity->applicant->gender->name;
     }
 
-    public function onGetIdentityType(Event $event, Entity $entity)
+    public function onGetIdentityType(EventInterface $event, Entity $entity)
     {
         if ($entity->has('applicant') && $entity->applicant->has('main_identity_type')) {
             return $entity->applicant->main_identity_type->name;
         }
     }
 
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         return $entity->applicant->identity_number;
     }
 
     // view fields
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
     }
 
-    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
+    public function onGetFinancialAssistanceTypeId(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->financial_assistance_type->name;
     }
 
-    public function onGetDescription(Event $event, Entity $entity)
+    public function onGetDescription(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->description;
     }
 
-    public function onGetMaximumAwardAmount(Event $event, Entity $entity)
+    public function onGetMaximumAwardAmount(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->maximum_award_amount;
     }
 
-    public function onGetDuration(Event $event, Entity $entity)
+    public function onGetDuration(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->duration . ' ' . __('Years');
     }
 
-    public function onGetBond(Event $event, Entity $entity)
+    public function onGetBond(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->bond . ' ' . __('Years');
     }
 
-    public function onGetRequirements(Event $event, Entity $entity)
+    public function onGetRequirements(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->requirements;
     }
 
-    public function onGetInstructions(Event $event, Entity $entity)
+    public function onGetInstructions(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->instructions;
     }
 
-    public function onGetInterestRate(Event $event, Entity $entity)
+    public function onGetInterestRate(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             return $entity->scholarship->loan->interest_rate;
         }
     }
 
-    public function onGetInterestRateType(Event $event, Entity $entity)
+    public function onGetInterestRateType(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             $interestRateType = $entity->scholarship->loan->interest_rate_type;
@@ -719,21 +719,21 @@ class ApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
+    public function onGetScholarshipPaymentFrequencyId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             return $entity->scholarship->loan->payment_frequency->name;
         }
     }
 
-    public function onGetLoanTerm(Event $event, Entity $entity)
+    public function onGetLoanTerm(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             return $entity->scholarship->loan->loan_term . ' ' . __('Years');
         }
     }
 
-    public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDateOfBirth(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -751,10 +751,10 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFinancialAssistanceTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+            $FinancialAssistanceTypesTable = TableRegistry::getTableLocator()->get('Scholarship.FinancialAssistanceTypes');
             $financialAssistanceTypeOptions = $FinancialAssistanceTypesTable->getList()->toArray();
 
             $attr['type'] = 'select';
@@ -771,7 +771,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldScholarshipId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $entity = $attr['entity'];
@@ -798,7 +798,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBond(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldBond(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -815,7 +815,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDuration(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDuration(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -832,7 +832,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInterestRateType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -850,7 +850,7 @@ class ApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldLoanTerm(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -903,7 +903,7 @@ class ApplicationsTable extends ControllerActionTable
     public function setupScholarshipFields($entity = null)
     {
         $isLoan = false;
-        $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+        $FinancialAssistanceTypesTable = TableRegistry::getTableLocator()->get('Scholarship.FinancialAssistanceTypes');
         if ($entity->has('financial_assistance_type_id')) {
             // for add
             $isLoan = $FinancialAssistanceTypesTable->is($entity->financial_assistance_type_id, 'LOAN');
@@ -1006,7 +1006,7 @@ class ApplicationsTable extends ControllerActionTable
         return __($label) . ' (' . $this->currency . ')';
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -1027,12 +1027,12 @@ class ApplicationsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function onApproveScholarship(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onApproveScholarship(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
-        $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
-        $RecipientActivities = TableRegistry::get('Scholarship.RecipientActivities');
-        $RecipientActivityStatuses = TableRegistry::get('Scholarship.RecipientActivityStatuses');
+        $ScholarshipRecipients = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipRecipients');
+        $RecipientActivities = TableRegistry::getTableLocator()->get('Scholarship.RecipientActivities');
+        $RecipientActivityStatuses = TableRegistry::getTableLocator()->get('Scholarship.RecipientActivityStatuses');
 
         $recipientActivityStatusEntity = $RecipientActivityStatuses->find()
             ->where([
@@ -1062,10 +1062,10 @@ class ApplicationsTable extends ControllerActionTable
         $RecipientActivities->save($newActivityEntity);
     }
 
-    public function onWithdrawScholarship(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onWithdrawScholarship(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
-        $ScholarshipRecipients = TableRegistry::get('Scholarship.ScholarshipRecipients');
-        $RecipientActivities = TableRegistry::get('Scholarship.RecipientActivities');
+        $ScholarshipRecipients = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipRecipients');
+        $RecipientActivities = TableRegistry::getTableLocator()->get('Scholarship.RecipientActivities');
 
         $entity = $this->find()->where([$this->aliasField('id') => $id])->first();
         $existingRecipient = [
@@ -1222,13 +1222,13 @@ class ApplicationsTable extends ControllerActionTable
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr,  $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Scholarships > Applications';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
@@ -1256,12 +1256,12 @@ class ApplicationsTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');

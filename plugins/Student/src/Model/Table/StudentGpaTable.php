@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Authentication\IdentityInterface;
@@ -31,7 +31,7 @@ class StudentGpaTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         $this->field('institution_id', ['type' => 'hidden']);
         $this->field('education_grades_gpa_id', ['type' => 'hidden']);
@@ -55,17 +55,17 @@ class StudentGpaTable extends ControllerActionTable
         $this->controller->set('selectedAction', $selectedAlias);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $institutionGrade = TableRegistry::get('Institution.InstitutionGrades');
+        $institutionGrade = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         if($this->request->getParam('controller') == 'Profiles') {
             $userId = $this->Auth->user()['id'];
-            $Classes = TableRegistry::get('Institution.InstitutionClasses');
-            $classStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-            $institution = TableRegistry::get('Institution.Institutions');
-            $gpaGrades = TableRegistry::get('Gpa.GpaSystem');
+            $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $classStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+            $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+            $institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $gpaGrades = TableRegistry::getTableLocator()->get('Gpa.GpaSystem');
 
             // Academic Periods filter
             $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -153,7 +153,7 @@ class StudentGpaTable extends ControllerActionTable
             $classOptions = ['-1' => '-- ' . __('All Institution Class') . ' --'] + $classOptions;
             $this->controller->set(compact('classOptions', 'selectedClass'));
 
-            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $encodedQueryString = $this->request->getParam('pass')[1];
 
             $extra['elements']['controls'] = [
@@ -199,10 +199,10 @@ class StudentGpaTable extends ControllerActionTable
             $queryString = $this->getQueryString();
             $studentId = $this->getQueryString('student_id');
             $encodedQueryString = $this->paramsEncode($queryString);
-            $Classes = TableRegistry::get('Institution.InstitutionClasses');
-            $classStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $gpaGrades = TableRegistry::get('Gpa.GpaSystem');
+            $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $classStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+            $gpaGrades = TableRegistry::getTableLocator()->get('Gpa.GpaSystem');
             $institutionId = $this->getInstitutionID();
 
             // Academic Periods filter
@@ -261,7 +261,7 @@ class StudentGpaTable extends ControllerActionTable
             $where[$this->aliasField('education_grade_id')] = $selectedGrade;
            
             //End
-            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $encodedQueryString = $this->request->getParam('pass')[1];
 
             $extra['elements']['controls'] = ['name' => 'Profile.Gpa/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
@@ -317,7 +317,7 @@ class StudentGpaTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'gpa') {
             return __('GPA');
@@ -332,10 +332,10 @@ class StudentGpaTable extends ControllerActionTable
         }
     }
 
-    public function onGetGpaNameOld(Event $event, Entity $entity)
+    public function onGetGpaNameOld(EventInterface $event, Entity $entity)
     {
-        $studentGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        $gpaTable = TableRegistry::get('Gpa.GpaSystem');
+        $studentGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa');
+        $gpaTable = TableRegistry::getTableLocator()->get('Gpa.GpaSystem');
         $gpaRecord = $studentGpa->find()
                         ->select(['name' => $gpaTable->aliasField('name')])
                         ->leftJoin(
@@ -359,10 +359,10 @@ class StudentGpaTable extends ControllerActionTable
     }
 
     //POCOR-8962 -- function updated for null conditions
-    public function onGetGpaName(Event $event, Entity $entity)
+    public function onGetGpaName(EventInterface $event, Entity $entity)
     {
-        $studentGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
-        $gpaTable = TableRegistry::get('Gpa.GpaSystem');
+        $studentGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa');
+        $gpaTable = TableRegistry::getTableLocator()->get('Gpa.GpaSystem');
 
         $conditions = [
             $studentGpa->aliasField('academic_period_id') => $entity->academic_period_id,
@@ -393,7 +393,7 @@ class StudentGpaTable extends ControllerActionTable
     }
 
     //POCOR-9226
-    public function onGetInstitutionName(Event $event, Entity $entity)
+    public function onGetInstitutionName(EventInterface $event, Entity $entity)
     {
         return $entity->institution->name;
     }

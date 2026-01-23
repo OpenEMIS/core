@@ -3,7 +3,7 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class StaffProfileBehavior extends Behavior
 {
@@ -14,7 +14,7 @@ class StaffProfileBehavior extends Behavior
         return $events;
     }
 
-    public function staffPositionProfilesGetAssociatedModelData(Event $event, ArrayObject $params)
+    public function staffPositionProfilesGetAssociatedModelData(EventInterface $event, ArrayObject $params)
     {
         $model = $this->_table;
         $alias = $model->getAlias();

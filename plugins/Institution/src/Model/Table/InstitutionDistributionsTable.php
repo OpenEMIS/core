@@ -6,7 +6,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -35,7 +35,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         // $this->belongsTo('MealRatings', ['className' => 'Meal.MealRatings', 'foreignKey' => 'meal_rating_id']);//POCOR-7363 // Commented for POCOR-7484
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
-        $this->MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
+        $this->MealProgrammes = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
 
             // POCOR-6153 start
             $this->addBehavior('Excel', [
@@ -52,7 +52,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     }
     //START:POCOR-6681
-    // public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    // public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
 	// {
 	// 	$this->setupFields($entity);
 	// }
@@ -83,9 +83,9 @@ class InstitutionDistributionsTable extends ControllerActionTable
     * return boolean
     * ticket POCOR-6681
     */
-    // public function beforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    // public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
     //     if ($entity->isNew()) {
-    //         $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+    //         $MealProgrammesData = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
     //         $MealProgrammesResult = $MealProgrammesData
     //         ->find()
     //         ->select(['amount'])
@@ -111,7 +111,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     //             return false;
     //         }
     //     }else{
-    //         $MealProgrammesData = TableRegistry::get('Meal.MealProgrammes');
+    //         $MealProgrammesData = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
     //         $MealProgrammesResult = $MealProgrammesData
     //         ->find()
     //         ->select(['amount'])
@@ -130,7 +130,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     * return boolean
     * ticket POCOR-6681
     */
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'date_received':
@@ -162,7 +162,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
 
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $request = $this->request;
         //academic period filter
@@ -258,7 +258,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $hasSearchKey = $this->request->getSession()->read($this->getRegistryAlias().'.search.key');
         $institutions = $this->getInstitutionID();
@@ -301,7 +301,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
      }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['select' => false]);
         $this->field('meal_programmes_id',['select' => false]);
@@ -313,7 +313,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
          $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'comment']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
@@ -363,7 +363,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldMealProgrammesId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldMealProgrammesId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -388,7 +388,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDateReceived(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldDateReceived(EventInterface $event, array $attr, $action, ServerRequest $request){
 
         $institutionId = $this->getInstitutionID();
         $data = $request->getData[$this->getAlias()];
@@ -415,9 +415,9 @@ class InstitutionDistributionsTable extends ControllerActionTable
         }
         //END: POCOR-6609
 
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
 
-        $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
+        $MealProgramme = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
         $levelOptions = $MealProgramme
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
@@ -440,7 +440,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         return compact('levelOptions', 'selectedLevel');
     }
 
-    public function onUpdateFieldDeliveryStatusId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldDeliveryStatusId(EventInterface $event, array $attr, $action, $request)
     {
 
         list($levelOptions, $selectedLevel) = array_values($this->getDeliveryStatusOptions());
@@ -465,7 +465,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         return compact('levelOptions', 'selectedLevel');
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $data){
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data){
         if($entity->delivery_status_id == 4){
              $this->updateAll(['date_received' => date("Y-m-d H:i:s")],['id' => $entity->id]);
                  return;
@@ -508,12 +508,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
     * return file
     * ticket POCOR-6681
     */
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId =  ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $AcademicPeriod->getCurrent();
         $session = $this->request->getSession();
         $institutionId  = $this->getInstitutionID();
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
         $query
         ->innerJoin(
             [$MealInstitutionProgrammes->getAlias() => $MealInstitutionProgrammes->getTable()], [
@@ -526,7 +526,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         ]);
     }
     //POCOR-7363 start
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 		$this->field('meal_rating_id',["type"=>"select"]);
         $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'meal_rating_id','comment']);

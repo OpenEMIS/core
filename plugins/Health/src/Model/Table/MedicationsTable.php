@@ -3,7 +3,7 @@ namespace Health\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 
@@ -51,7 +51,7 @@ class MedicationsTable extends ControllerActionTable
             // ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -136,7 +136,7 @@ class MedicationsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'end_date','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
@@ -144,13 +144,13 @@ class MedicationsTable extends ControllerActionTable
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'end_date','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'name',
@@ -191,7 +191,7 @@ class MedicationsTable extends ControllerActionTable
     }
 
     // POCOR-6131   
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
         $userID = $this->getUserID();
         $query
         ->where([
@@ -200,7 +200,7 @@ class MedicationsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Name');
@@ -226,7 +226,7 @@ class MedicationsTable extends ControllerActionTable
     }
 
     //POCOR-8293
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;

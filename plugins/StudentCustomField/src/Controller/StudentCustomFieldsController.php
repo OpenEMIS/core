@@ -4,9 +4,8 @@ namespace StudentCustomField\Controller;
 use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
-use Cake\Event\Event;
-use Cake\Utility\Inflector;
 use Cake\Event\EventInterface;
+use Cake\Utility\Inflector;
 
 class StudentCustomFieldsController extends AppController
 {
@@ -57,7 +56,7 @@ class StudentCustomFieldsController extends AppController
         $this->set('selectedAction', $this->request->getParam('action'));
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Custom Field (Student)');
 

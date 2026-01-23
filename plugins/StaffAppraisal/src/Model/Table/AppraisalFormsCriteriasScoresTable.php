@@ -3,7 +3,7 @@ namespace StaffAppraisal\Model\Table;
 
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -54,7 +54,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         return $events;
     }
 
-    public function updateAppraisalScore(Event $event, Entity $entity, ArrayObject $requestData, $alias)
+    public function updateAppraisalScore(EventInterface $event, Entity $entity, ArrayObject $requestData, $alias)
     {
         // Form ID
         $requestData[$this->getAlias()]['id'] = $entity->id;
@@ -63,7 +63,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
     }
 
     // All the slider criteria has been save to DB already, when it come until here therefore now "retrieve" all the question from DB and all the "SCORE" type and calculate then save back to db for the score fields.
-    public function calculateScore(Event $event, Entity $entity)
+    public function calculateScore(EventInterface $event, Entity $entity)
     {
         $formId = $entity->appraisal_form_id;
         $institutionStaffAppraisalId = $entity->id;
@@ -193,7 +193,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
     private function saveCriteriaScoreAnswers(ArrayObject $proccessedCriteriaScore, ArrayObject $params)
     {
-        $AppraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
+        $AppraisalScoreAnswers = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalScoreAnswers');
         $data = [];
 
         // Calculated all the score fields, time to save to DB
@@ -219,7 +219,7 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
 
     private function createAppraisalFormsCriteriasScoresRecord($requestData)
     {
-        $appraisalFormsCriteriasScores = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScores');
+        $appraisalFormsCriteriasScores = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScores');
 
         if (array_key_exists("appraisal_criterias", $requestData['AppraisalForms']) && !empty($requestData['AppraisalForms']['appraisal_criterias'])) {
 
@@ -263,9 +263,9 @@ class AppraisalFormsCriteriasScoresTable extends AppTable
         $formId = $requestData['AppraisalForms']['id'];
         $criteriaIdFromTable = [];
 
-        $appraisalFormsCriterias = TableRegistry::get('StaffAppraisal.AppraisalFormsCriterias');
-        $appraisalFormsCriteriasScores = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScores');
-        $appraisalFormsCriteriasScoresLinks = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
+        $appraisalFormsCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriterias');
+        $appraisalFormsCriteriasScores = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScores');
+        $appraisalFormsCriteriasScoresLinks = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
 
         // Get all the criterias score records
         $appraisalFormCriteriasEntity = $appraisalFormsCriterias

@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -30,7 +30,7 @@ class ClassAttendanceRecordsTable extends AppTable
         return $events;
     }
 
-    public function markedRecordAfterSave(Event $event, Entity $entity)
+    public function markedRecordAfterSave(EventInterface $event, Entity $entity)
     {
         $institutionClassId = $entity->institution_class_id;
         $educationGradeId = $entity->education_grade_id;
@@ -42,7 +42,7 @@ class ClassAttendanceRecordsTable extends AppTable
         $month = $date->format('n');
         $day = $date->format('j');
 
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
         $totalMarkedCount = $StudentAttendanceMarkedRecords
             ->find()
             ->where([
@@ -54,7 +54,7 @@ class ClassAttendanceRecordsTable extends AppTable
             ])
             ->count();
 
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($institutionClassId, $academicPeriodId);
         if ($totalMarkedCount >= $attendancePerDay) {
             $markedType = self::MARKED;
@@ -74,7 +74,7 @@ class ClassAttendanceRecordsTable extends AppTable
         $this->save($entity);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $invalidDays = $this->getInvalidDaysForMonth($entity->month, $entity->year);

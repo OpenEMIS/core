@@ -3,7 +3,7 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Institution\Model\Behavior\UndoBehavior;
 
 class UndoCurrentBehavior extends UndoBehavior {
@@ -17,7 +17,7 @@ class UndoCurrentBehavior extends UndoBehavior {
 		return $events;
 	}
 
-	public function processSaveCurrentStudents(Event $event, Entity $entity, ArrayObject $data) 
+	public function processSaveCurrentStudents(EventInterface $event, Entity $entity, ArrayObject $data) 
 	{
 		$model = $this->model;
 		$studentIds = [];

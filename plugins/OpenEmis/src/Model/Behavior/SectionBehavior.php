@@ -4,7 +4,7 @@ namespace OpenEmis\Model\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 /**
@@ -56,15 +56,15 @@ class SectionBehavior extends Behavior {
 		return $events;
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function indexAfterAction(EventInterface $event, $data) {
 		$this->_fieldSetup();
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(EventInterface $event, Entity $entity) {
 		$this->_fieldSetup();
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(EventInterface $event, Entity $entity) {
 		$this->_fieldSetup();
 	}
 
@@ -78,7 +78,7 @@ class SectionBehavior extends Behavior {
 		}
 	}
 
-	public function onGetSectionElement(Event $event, $action, Entity $entity, $attr, $options) {
+	public function onGetSectionElement(EventInterface $event, $action, Entity $entity, $attr, $options) {
 		$html = '';
 
 		if (!isset($attr['title'])) {

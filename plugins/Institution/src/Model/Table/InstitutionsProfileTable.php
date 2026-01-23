@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
 
@@ -94,7 +94,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -187,7 +187,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('institution_name', ['sort' => ['field' => 'name']]);
         $this->field('institution_code', ['sort' => ['field' => 'code']]);
@@ -200,7 +200,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $this->fields['student_status_id']['visible'] = false;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
         $this->setFieldOrder(['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
@@ -246,7 +246,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $session = $this->request->getSession();
@@ -314,13 +314,13 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'institution_name';
         $searchableFields[] = 'institution_code';
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->has('report_card_status')) {
             $value = $this->statusOptions[$entity->report_card_status];
@@ -330,7 +330,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStartedOn(Event $event, Entity $entity)
+    public function onGetStartedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
 
@@ -342,7 +342,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCompletedOn(Event $event, Entity $entity)
+    public function onGetCompletedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
 
@@ -354,7 +354,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetReportQueue(Event $event, Entity $entity)
+    public function onGetReportQueue(EventInterface $event, Entity $entity)
     {
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
@@ -380,7 +380,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         }
     }
 
-    public function onGetProfileName(Event $event, Entity $entity)
+    public function onGetProfileName(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('report_card_id')) {
@@ -399,7 +399,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $value;
     }
 
-    public function downloadExcel(Event $event, ArrayObject $extra)
+    public function downloadExcel(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->InstitutionReportCards;
         $ids = $this->getQueryString();
@@ -433,7 +433,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         exit();
     }
 
-    public function downloadPDF(Event $event, ArrayObject $extra)
+    public function downloadPDF(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->InstitutionReportCards;
         $ids = $this->getQueryString();
@@ -474,7 +474,7 @@ class InstitutionsProfileTable extends ControllerActionTable
     * @ticket POCOR-6667
     */
 
-    public function viewPDF(Event $event, ArrayObject $extra)
+    public function viewPDF(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->InstitutionReportCards;
         $ids = $this->getQueryString();
@@ -508,7 +508,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         exit();
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
@@ -523,13 +523,13 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function generateAll(Event $event, ArrayObject $extra)
+    public function generateAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
-            $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
+            $InstitutionReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.InstitutionReportCardProcesses');
             $inProgress = $InstitutionReportCardProcesses->find()
                 ->where([
                     $InstitutionReportCardProcesses->aliasField('report_card_id') => $params['report_card_id'],
@@ -554,7 +554,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function downloadAllPdf(Event $event, ArrayObject $extra)
+    public function downloadAllPdf(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -609,7 +609,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         }
     }
 
-    public function downloadAll(Event $event, ArrayObject $extra)
+    public function downloadAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -658,7 +658,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         }
     }
 
-    public function publish(Event $event, ArrayObject $extra)
+    public function publish(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $result = $this->InstitutionReportCards->updateAll(['status' => self::PUBLISHED], $params);
@@ -667,7 +667,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function publishAll(Event $event, ArrayObject $extra)
+    public function publishAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -687,7 +687,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function unpublish(Event $event, ArrayObject $extra)
+    public function unpublish(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $result = $this->InstitutionReportCards->updateAll(['status' => self::NEW_REPORT], $params);
@@ -696,7 +696,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function unpublishAll(Event $event, ArrayObject $extra)
+    public function unpublishAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         // only unpublish report cards with published status to new status
@@ -719,8 +719,8 @@ class InstitutionsProfileTable extends ControllerActionTable
     {
         Log::write('debug', 'Initialize Add All Institution Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.FrozenTime::now().')');
 
-        $InstitutionReportCardProcesses = TableRegistry::get('ReportCard.InstitutionReportCardProcesses');
-        $InstitutionTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.InstitutionReportCardProcesses');
+        $InstitutionTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $where = [];
         if (!is_null($institutionId)) {
             $where[$InstitutionTable->aliasField('id')] = $institutionId;
@@ -784,7 +784,7 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     private function triggerGenerateAllReportCardsShell($academicPeriodId, $reportCardId, $institutionId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
 
         foreach ($runningProcess as $key => $processData) {
@@ -835,7 +835,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         return $file;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'institution_name') {
             return __('Institution Name');

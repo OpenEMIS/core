@@ -1,7 +1,7 @@
 <?php
 namespace Training\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -23,7 +23,7 @@ class TrainingNeedSubStandardsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $parentFieldOptions = $this->TrainingNeedStandards->find('list')->toArray();
         $selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
@@ -35,12 +35,12 @@ class TrainingNeedSubStandardsTable extends ControllerActionTable
         $this->controller->set(compact('parentFieldOptions', 'selectedParentFieldOption'));
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         $this->field('training_need_standard_id', ['type' => 'select']);
     }
 
-    public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingNeedStandardId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $query = $this->TrainingNeedStandards
                 ->find('list')
@@ -54,19 +54,19 @@ class TrainingNeedSubStandardsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

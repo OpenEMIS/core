@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 // Starts POCOR-6593
@@ -28,7 +28,7 @@ class TrainingSessionsTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -38,14 +38,14 @@ class TrainingSessionsTable extends AppTable  {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {  
          // Starts POCOR-6593
         $requestData = json_decode($settings['process']['params']);
         //print_r($requestData);die;
         $selectedStatus = $requestData->status;
-        $areas = TableRegistry::get('Area.Areas');
-        $TrainingCourses = TableRegistry::get('Training.TrainingCourses');
+        $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $TrainingCourses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
          $area_education_id=$requestData->area_education_id->_ids;
           //print_r($area_education_id);die;
          if($area_education_id[0] == -1){
@@ -87,7 +87,7 @@ class TrainingSessionsTable extends AppTable  {
          // Ends POCOR-6593
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         // starts POCOR-6593

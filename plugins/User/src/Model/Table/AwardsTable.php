@@ -4,7 +4,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 
@@ -29,7 +29,7 @@ class AwardsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];    
@@ -39,7 +39,7 @@ class AwardsTable extends ControllerActionTable
         }
     }
     
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
         if(empty($userId)){
@@ -177,12 +177,12 @@ class AwardsTable extends ControllerActionTable
     }
 
     //Function Uncommented for ask POCOR-6267
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'modified_user_id') {
             return __('Modified By');

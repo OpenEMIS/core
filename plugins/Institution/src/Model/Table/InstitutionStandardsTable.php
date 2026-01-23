@@ -6,7 +6,7 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
@@ -58,7 +58,7 @@ class InstitutionStandardsTable extends AppTable
         return $events;
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
 
         $this->fields = [];
@@ -83,7 +83,7 @@ class InstitutionStandardsTable extends AppTable
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('feature', ['type' => 'select']);
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
@@ -130,7 +130,7 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $params = $this->getQueryString();
@@ -145,7 +145,7 @@ class InstitutionStandardsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         /*
@@ -168,11 +168,11 @@ class InstitutionStandardsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature                = $this->request->getData($this->getAlias())['feature'];
-            $AcademicPeriodTable    = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriodTable    = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions  = $AcademicPeriodTable->getYearList();
             $currentPeriod          = $AcademicPeriodTable->getCurrent();
             $attr['options']        = $academicPeriodOptions;
@@ -197,14 +197,14 @@ class InstitutionStandardsTable extends AppTable
      * POCOR-6631,POCOR-6632
      * Fetch Education Grade  based on institute, acadmic period
      */
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $report = ($this->request->getData($this->getAlias())['feature']);
         if ($report == 'Institution.InstitutionStandardStudentAbsences' || $report == 'Institution.InstitutionStandardStudentAbsenceType') {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
             $institutionId = $this->request->getData($this->getAlias())['institution_id'];
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
             $gradeOptions = $InstitutionGrades
                 ->find('list', [
                     'keyField' => 'id',
@@ -236,13 +236,13 @@ class InstitutionStandardsTable extends AppTable
      * POCOR-6630
      * get Assessment name list
      */
-    public function onUpdateFieldAssessmentId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssessmentId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $report = $this->request->getData($this->getAlias())['feature'];
         if ($report == 'Institution.InstitutionStandardMarksEntered') {
             $academicPeriodId =  $this->request->getData($this->getAlias())['academic_period_id'];
             //POCOR-7474-HINDOL TYPO FIX
-            $AssessmentTable    = TableRegistry::get('Assessment.Assessments');
+            $AssessmentTable    = TableRegistry::getTableLocator()->get('Assessment.Assessments');
             $assessmentList = $AssessmentTable->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name'
@@ -264,15 +264,15 @@ class InstitutionStandardsTable extends AppTable
      * POCOR-6632, POCOR-6631
      * fetch class name based on institute, acadmic period, education grade id
      */
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $report = ($this->request->getData($this->getAlias())['feature']);
         if ($report == 'Institution.InstitutionStandardStudentAbsences' || $report == 'Institution.InstitutionStandardStudentAbsenceType') {
             $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
             $educationgradeid = $this->request->getData($this->getAlias())['education_grade_id'];
             $institutionId = $this->request->getData($this->getAlias())['institution_id'];
-            $InstitutionClass = TableRegistry::get('Institution.InstitutionClasses');
-            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+            $InstitutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
             $classes = $InstitutionClass
                 ->find('list')
                 ->select([
@@ -297,14 +297,14 @@ class InstitutionStandardsTable extends AppTable
     * POCOR-6630
     * get Assessment period list
     */
-    public function onUpdateFieldAssessmentPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssessmentPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $report = ($this->request->getData($this->getAlias())['feature']);
         if ($report == 'Institution.InstitutionStandardMarksEntered') {
             $feature  = $this->request->getData($this->getAlias())['feature'];
             $assessmentId =  $this->request->getData($this->getAlias())['assessment_id'];
             $academicPeriodId =  $this->request->getData($this->getAlias())['academic_period_id'];
-            $academic_period = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $academic_period = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $getyear = $academic_period->find('all')
                 ->select(['name' => $academic_period->aliasField('name')]);
             // ->where(['id'=>$academicPeriodId]) //POCOR-8485
@@ -316,7 +316,7 @@ class InstitutionStandardsTable extends AppTable
                 $year  = $val['name'];
             }
             //POCOR-7474-HINDOL TYPO FIX
-            $AssessmentPeriodTable    = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriodTable    = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
             $where = [];
             if ($assessmentId != 0) {
                 $where[$AssessmentPeriodTable->aliasField('assessment_id')] = $assessmentId;
@@ -338,7 +338,7 @@ class InstitutionStandardsTable extends AppTable
         }
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheet_tabs = [
             'Student',
@@ -358,18 +358,18 @@ class InstitutionStandardsTable extends AppTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData           = json_decode($settings['process']['params']);
         $sheetData             = $settings['sheet']['sheetData'];
         $sheet_tab_name        = $sheetData['student_tabs_type'];
         $academicPeriodId      = $requestData->academic_period_id;
         $institutionId         = $requestData->institution_id;
-        $ClassStudents         = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Classes               = TableRegistry::get('Institution.InstitutionClasses');
-        $UserIdentitiesTable   = TableRegistry::get('User.Identities');
-        $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
-        $AssessmentItemResults = TableRegistry::get('Institution.AssessmentItemResults');
+        $ClassStudents         = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Classes               = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $UserIdentitiesTable   = TableRegistry::getTableLocator()->get('User.Identities');
+        $IdentityTypesTable    = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $AssessmentItemResults = TableRegistry::getTableLocator()->get('Institution.AssessmentItemResults');
         $conditions            = [];
         $selectable            = [];
         $group_by              = [];
@@ -558,7 +558,7 @@ class InstitutionStandardsTable extends AppTable
             return $results->map(function ($row) use ($sheet_tab_name) {
                 // START : Student tab formating
                 if ($sheet_tab_name == 'Student') {
-                    $Guardians = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
+                    $Guardians = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
                     $guardianData = $Guardians->find()
                         ->select([
                             'id'                             => $Guardians->aliasField('id'),
@@ -627,9 +627,9 @@ class InstitutionStandardsTable extends AppTable
     /**
      * Generate the all Header for sheet tab wise
      */
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType         = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType         = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity             = $IdentityType->getDefaultEntity();
         $settings['identity'] = $identity;
         $sheetData            = $settings['sheet']['sheetData'];
@@ -825,7 +825,7 @@ class InstitutionStandardsTable extends AppTable
             'label' => __('End Date'),
         ];
 
-        $student_custom_fields_table = TableRegistry::get('StudentCustomField.StudentCustomFields');
+        $student_custom_fields_table = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
         $customFieldData = $student_custom_fields_table->find()->select([
             'custom_field_id' => $student_custom_fields_table->aliasfield('id'),
             'custom_field' => $student_custom_fields_table->aliasfield('name')
@@ -937,12 +937,12 @@ class InstitutionStandardsTable extends AppTable
         return $validator;
     }
 
-    public function onUpdateFieldAppraisalFormId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAppraisalFormId(EventInterface $event, array $attr, $action, $request)
     {
         $alias = $this->getAlias();
         $data = $this->request->getData($alias);
         if (($data['feature']) == 'StaffAppraisal.Appraisals') {
-            $appraisalFormsOption = TableRegistry::get('StaffAppraisal.AppraisalForms')
+            $appraisalFormsOption = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalForms')
                 ->find('list')
                 ->select([
                     'id' => 'id',
@@ -959,7 +959,7 @@ class InstitutionStandardsTable extends AppTable
     /**
      * POCOR-6631
      */
-    public function onUpdateFieldMonth(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldMonth(EventInterface $event, array $attr, $action, $request)
     {
         $alias = $this->getAlias();
         $data = $this->request->getData($alias);
@@ -972,7 +972,7 @@ class InstitutionStandardsTable extends AppTable
             return $attr;
         }
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':
@@ -997,7 +997,7 @@ class InstitutionStandardsTable extends AppTable
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $params = $this->getQueryString();
         $encodedQueryParams = $this->ControllerAction->paramsEncode($params);
@@ -1014,7 +1014,7 @@ class InstitutionStandardsTable extends AppTable
         }
     }
 
-    public function addAfterSave(Event $event, Entity|\Cake\ORM\Entity $entity, ArrayObject $data) //POCOR-8485
+    public function addAfterSave(EventInterface $event, Entity|\Cake\ORM\Entity $entity, ArrayObject $data) //POCOR-8485
     {
         $param = $this->request->getParam('pass')[1];
         $url = ['plugin' => $this->request->getParam('plugin'), 'controller' => $this->request->getParam('controller'), 'action' =>  'InstitutionStandards', '0' => 'index', '1' => $param];

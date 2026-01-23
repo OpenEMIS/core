@@ -1,6 +1,8 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Outcomes', ['plugin' => 'Outcome', 'controller' => 'Outcomes'], function ($routes) {
-    $routes->connect('/:action/*');
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Outcomes', ['plugin' => 'Outcome', 'controller' => 'Outcomes'], function (RouteBuilder $routes) {
+        $routes->connect('/:action/*');
+    });
+};

@@ -4,7 +4,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -30,7 +30,7 @@ class DemographicTable extends ControllerActionTable
         //$this->toggle('remove', false); // POCOR-7934
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $userId = $this->getUserID();
@@ -127,7 +127,7 @@ class DemographicTable extends ControllerActionTable
 
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $demographicTypes = TableRegistry::getTableLocator()->get('FieldOption.DemographicTypes');
         $demographicTypesArray = $demographicTypes
@@ -164,7 +164,7 @@ class DemographicTable extends ControllerActionTable
         return $IndigenousOptions;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'demographic_types_id') {
             return __('Wealth Quintile');
@@ -176,14 +176,14 @@ class DemographicTable extends ControllerActionTable
     }
 
     /*POCOR-6395 starts*/
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;
     }
 
     //POCOR-6395 ends
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userId])
@@ -191,14 +191,14 @@ class DemographicTable extends ControllerActionTable
     }
 
 
-    public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function editBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;
 
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;

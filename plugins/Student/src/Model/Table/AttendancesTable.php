@@ -4,7 +4,7 @@ namespace Student\Model\Table;
 
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -60,7 +60,7 @@ class AttendancesTable extends ControllerActionTable
     }
 
     public function getTypeList($tableAlias) {
-        $TypesTable = TableRegistry::get($tableAlias);
+        $TypesTable = TableRegistry::getTableLocator()->get($tableAlias);
         $result = $TypesTable
             ->find('list')
             ->toArray();
@@ -76,7 +76,7 @@ class AttendancesTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', 'Absences');
     }
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         extract($this->getAcademicPeriodOptions());
 
@@ -158,7 +158,7 @@ class AttendancesTable extends ControllerActionTable
         return compact('monthOptions', 'academicPeriodList', 'selectedPeriod');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra){
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra){
         $this->setupFields();
         $this->setupTabElements();
     }
@@ -190,13 +190,13 @@ class AttendancesTable extends ControllerActionTable
 
 
 
-    public function onGetComment(Event $event, Entity $entity)
+    public function onGetComment(EventInterface $event, Entity $entity)
     {
 //        dd($entity);
         return $this->getShortComment($entity->comment);
     }
 
-    public function onGetPeriodName(Event $event, Entity $entity)
+    public function onGetPeriodName(EventInterface $event, Entity $entity)
     {
         // POCOR-9025 start
         if(is_numeric($entity->subject_id) && $entity->subject_id > 0){
@@ -208,7 +208,7 @@ class AttendancesTable extends ControllerActionTable
 //        return $this->getShortComment($entity->comment);
     }
 
-    public function onExcelGetPeriodName(Event $event, Entity $entity)
+    public function onExcelGetPeriodName(EventInterface $event, Entity $entity)
     {
         return __('Period {0}', $entity->period);
 //        return $this->getShortComment($entity->comment);
@@ -245,7 +245,7 @@ class AttendancesTable extends ControllerActionTable
      */
     private function setIndexQuery(Query $query, string $selectedMonth = null, $selectedYear = null): Query
     {
-        $Types = TableRegistry::get('Institution.AbsenceTypes');
+        $Types = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
         if(!$selectedYear){
             $selectedYear = $this->AcademicPeriods->getCurrent();
         }
@@ -337,7 +337,7 @@ class AttendancesTable extends ControllerActionTable
         return $query;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $selectedMonth = $this->request->getQuery('month') ?? null;
         $selectedPeriod = $this->request->getQuery('academic_period_id') ?? null;
@@ -357,7 +357,7 @@ class AttendancesTable extends ControllerActionTable
 //        dd($query);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
 
         $extraField = [

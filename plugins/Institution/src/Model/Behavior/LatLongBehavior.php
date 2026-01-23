@@ -14,7 +14,7 @@ class LatLongBehavior extends Behavior
 
     public function LatLongValidation()
     {    
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
        // $LatLongPermission = $ConfigItems->value("latitude_longitude");
         $LatLongPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
         $LongPermission = $ConfigItems->value("longitude_mandatory"); //POCOR-7045

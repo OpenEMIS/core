@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -28,7 +28,7 @@ class RecipientPaymentStructuresTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -105,7 +105,7 @@ class RecipientPaymentStructuresTable extends AppTable  {
             ->order([$this->aliasField('recipient_id'), $this->aliasField('scholarship_id'), $this->aliasField('id')]);
     }
     
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
     {       
         $newArray = [];
         $newArray[] = [
@@ -200,7 +200,7 @@ class RecipientPaymentStructuresTable extends AppTable  {
         $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetTotalEstimatedAmounts(Event $event, Entity $entity)
+    public function onExcelGetTotalEstimatedAmounts(EventInterface $event, Entity $entity)
     {
         $value = $this->RecipientPaymentStructureEstimates->getEstimatedAmount($entity->id);
         return $value;

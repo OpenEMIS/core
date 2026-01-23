@@ -7,7 +7,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Table\AppTable;
@@ -54,14 +54,14 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         ;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureUtilityInternets';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('utility_internet_type_id');
         $this->field('utility_internet_condition_id');
@@ -111,7 +111,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         }
         // End POCOR-5188
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'comment':
@@ -139,7 +139,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
         /* ->select([
@@ -150,12 +150,12 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
         ->orderDesc($this->aliasField('created'));
     }
-    public function onGetInternetPurpose(Event $event, Entity $entity)
+    public function onGetInternetPurpose(EventInterface $event, Entity $entity)
     {
         return $this->internetPurpose[$entity->internet_purpose];
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $internetPurposeOptions = $this->getPurposeOptions();
@@ -178,7 +178,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         $this->field('utility_internet_bandwidth_id', ['attr' => ['label' => __('Bandwidth')]]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
      
         $extraField[] = [
@@ -212,7 +212,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 		//$institutionId  = $this->Session->read('Institution.Institutions.id');
         $institutionId  = $this->getInstitutionID();

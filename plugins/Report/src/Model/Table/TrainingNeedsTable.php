@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Http\ServerRequest;
@@ -32,7 +32,7 @@ class TrainingNeedsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -42,7 +42,7 @@ class TrainingNeedsTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedStatus = $requestData->status;
@@ -89,7 +89,7 @@ class TrainingNeedsTable extends AppTable
         $query->where([$this->aliasField('type') => $selectedNeedType]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
@@ -252,7 +252,7 @@ class TrainingNeedsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetInstitutionCode(Event $event, Entity $entity)
+    public function onExcelGetInstitutionCode(EventInterface $event, Entity $entity)
     {
         //if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
             $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
@@ -281,14 +281,14 @@ class TrainingNeedsTable extends AppTable
         //} // POCOR-6597
     }
 
-    public function onExcelGetInstitutionName(Event $event, Entity $entity)
+    public function onExcelGetInstitutionName(EventInterface $event, Entity $entity)
     {
         if ($entity->has('institution_name')) {
             return $entity->institution_name;
         }
     }
 
-    /*public function onExcelGetIdentityType(Event $event, Entity $entity)
+    /*public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
         $userIdentitiesResult = $userIdentities->find()
@@ -316,29 +316,29 @@ class TrainingNeedsTable extends AppTable
         return $entity->custom_identity_name;
     }
 
-    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    public function onExcelGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         return $entity->custom_identity_number;
     }
 
-    public function onExcelGetOtherIdentity(Event $event, Entity $entity)
+    public function onExcelGetOtherIdentity(EventInterface $event, Entity $entity)
     {
         return $entity->custom_identity_other_data;
     }*/
 
-    public function onExcelGetGender(Event $event, Entity $entity)
+    public function onExcelGetGender(EventInterface $event, Entity $entity)
     {
         $gender = TableRegistry::getTableLocator()->get('User.Genders');
         $gender_data = $gender->find()->select(['name'])->where([$gender->aliasField('id') => $entity->staff_user_gender_id])->first(); // POCOR-6597
         return $gender_data->name;
     }
 
-    public function onExcelGetStaffFullName(Event $event, Entity $entity)
+    public function onExcelGetStaffFullName(EventInterface $event, Entity $entity)
     {
         return $entity->staff_full_name; // POCOR-6597
     }
 
-    public function onExcelGetAreaName(Event $event, Entity $entity)
+    public function onExcelGetAreaName(EventInterface $event, Entity $entity)
     {
         // if ($entity->has('staff') && !empty($entity->staff)) { // POCOR-6597
             $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
@@ -367,7 +367,7 @@ class TrainingNeedsTable extends AppTable
         // } // POCOR-6597
     }
 
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         // START: POCOR-6597
         $Users = TableRegistry::getTableLocator()->get('User.Users');
@@ -378,7 +378,7 @@ class TrainingNeedsTable extends AppTable
         // END: POCOR-6597
     }
 
-    public function onExcelGetStaffSubjects(Event $event, Entity $entity)
+    public function onExcelGetStaffSubjects(EventInterface $event, Entity $entity)
     {
         $return = [];
         
@@ -419,7 +419,7 @@ class TrainingNeedsTable extends AppTable
     /**
      * POCOR-6877
     */ 
-    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    public function onExcelGetUserIdentitiesDefault(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -440,7 +440,7 @@ class TrainingNeedsTable extends AppTable
     /**
      * POCOR-6877
     */ 
-    public function onExcelGetUserIdentities(Event $event, Entity $entity)
+    public function onExcelGetUserIdentities(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {

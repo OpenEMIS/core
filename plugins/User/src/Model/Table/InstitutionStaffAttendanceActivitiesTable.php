@@ -4,7 +4,7 @@ namespace User\Model\Table;
 use ArrayObject;
 
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -35,7 +35,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('field');
         $this->field('old_value', ['sort' => false]);
         $this->field('new_value', ['sort' => false]);
@@ -66,11 +66,11 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
         ];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Setup period options
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $params = $this->getQueryString();
         $institutionId = $params['institution_id'];//POCOR-8359
@@ -137,7 +137,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
             // end setup weeks
 
             // Setup day options
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
             $daysPerWeek = $ConfigItems->value('days_per_week');
             $schooldays = [];
@@ -246,7 +246,7 @@ class InstitutionStaffAttendanceActivitiesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'created_user_id') {
             return __('Last Modified By');

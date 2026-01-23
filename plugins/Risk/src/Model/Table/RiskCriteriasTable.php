@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
@@ -42,7 +42,7 @@ class RiskCriteriasTable extends ControllerActionTable
             ;
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $riskCriteriaId = $entity->id;
         $this->StudentRisksCriterias->deleteAll(['risk_criteria_id' => $riskCriteriaId]);
@@ -50,7 +50,7 @@ class RiskCriteriasTable extends ControllerActionTable
 
     public function findActiveRiskCriteria(Query $query, array $options)
     {
-        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        $InstitutionRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionRisks');
 
         $activeRiskId = [];
         $activeRisksData = $InstitutionRisks->find()

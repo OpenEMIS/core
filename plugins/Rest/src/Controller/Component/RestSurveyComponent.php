@@ -5,7 +5,7 @@ namespace Rest\Controller\Component;
 use ArrayObject;
 use Cake\Controller\Component;
 use Cake\Core\Configure;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 use Cake\Http\Exception\NotFoundException;
@@ -35,13 +35,23 @@ class RestSurveyComponent extends Component
     public $controller;
     public $action;
 
-    public $components = ['Paginator', 'Workflow'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     public $allowedActions = array('listing', 'schools', 'download' . 'downloadUrl', 'studentlist',
                                 'stafflist','checkIns');
 
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['Paginator', 'Workflow'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         $this->controller = $this->_registry->getController();
         $this->action = $this->getController()->getRequest()->getParam('action');
         $this->response = $this->getController()->getResponse();
@@ -49,7 +59,7 @@ class RestSurveyComponent extends Component
         $models = $this->getConfig('models');
         foreach ($models as $key => $model) {
             if (!is_null($model)) {
-                $this->{$key} = TableRegistry::get((string)$model);
+                $this->{$key} = TableRegistry::getTableLocator()->get((string)$model);
                 $this->{lcfirst($key) . 'Key'} = Inflector::underscore(Inflector::singularize($this->{$key}->getAlias())) . '_id';
             } else {
                 $this->{$key} = null;
@@ -135,11 +145,11 @@ class RestSurveyComponent extends Component
     public function getXXList($instanceId, $id, $insCode, $acamic)
     {
         $title = $this->Form->get($id)->name;
-        $institutionSurveysTbl = TableRegistry::get('Institution.InstitutionSurveys');
-        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $institutionSurveysTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveys');
+        $institutionTbl = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
         $insId = $insData->id;
-        $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodTbl = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
         $apId = $apData->id;
 
@@ -253,7 +263,7 @@ class RestSurveyComponent extends Component
             Log::write('debug', (string)$data);
             
             if (array_key_exists('response', $data)) {
-                $CustomRecords = TableRegistry::get('Institution.InstitutionSurveys');
+                $CustomRecords = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveys');
                 $formAlias = $this->Form->getAlias();
                 $fieldAlias = $this->Field->getAlias();
 
@@ -302,7 +312,7 @@ class RestSurveyComponent extends Component
                 $institutionCode = $xml->{$formAlias}->Institutions->__toString();
                 // checking institutionId
 
-                $Institutions = TableRegistry::get('Institution.Institutions');
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $institutionResult = $Institutions
                     ->find()
                     ->where([
@@ -320,7 +330,7 @@ class RestSurveyComponent extends Component
                 $institutionId = $institutionRecord->id;
                 // end of check for institutionId
 
-                $SecurityUser = TableRegistry::get('User.Users');
+                $SecurityUser = TableRegistry::getTableLocator()->get('User.Users');
                 $userEntity = $SecurityUser->get($userId);
 
                 // checking of access only if the user is not super admin
@@ -388,7 +398,7 @@ class RestSurveyComponent extends Component
                 $this->deleteQuestionWithRules($formId, $institutionSurveyId);
 
                 // Rules
-                $RulesTable = TableRegistry::get('Survey.SurveyRules');
+                $RulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
                 $rules = $RulesTable
                     ->find('SurveyRulesList', [
                         'survey_form_id' => $formId
@@ -457,7 +467,7 @@ class RestSurveyComponent extends Component
 
     private function deleteQuestionWithRules($surveyFormId, $recordId)
     {
-        $RulesTable = TableRegistry::get('Survey.SurveyRules');
+        $RulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
         $questions = $RulesTable
             ->find()
             ->select([
@@ -570,8 +580,8 @@ class RestSurveyComponent extends Component
     {
         $thresholdDataaa = json_decode($extra['value'], true);
 
-        $InstitutionStudentSurveysTbl = TableRegistry::get('Institution.InstitutionStudentSurveys');
-        $InstitutionStudentSurveyAnswersTbl = TableRegistry::get('Institution.InstitutionStudentSurveyAnswers');
+        $InstitutionStudentSurveysTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentSurveys');
+        $InstitutionStudentSurveyAnswersTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentSurveyAnswers');
         $students = $thresholdDataaa;
         foreach ($students as $w => $stu) {
             $alreadyExistData = $InstitutionStudentSurveysTbl->find('all', ['conditions' => [
@@ -789,9 +799,9 @@ class RestSurveyComponent extends Component
 
     private function uploadRepeater($field, $entity, $extra)
     {
-        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-        $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
-        $RepeaterSurveyTableCells = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells');
+        $RepeaterSurveys = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
+        $RepeaterSurveyAnswers = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyAnswers');
+        $RepeaterSurveyTableCells = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyTableCells');
         $repeaterRecordKey = 'institution_repeater_survey_id';
 
         $data = $extra['data'];
@@ -916,7 +926,7 @@ class RestSurveyComponent extends Component
         $fieldNode->addAttribute("oe-dependency", $this->getRef($instanceId, [$this->Form->getAlias(), 'Institutions']));
         $fieldNode->addChild("label", "Academic Period", NS_XF);
 
-        $SurveyForms = TableRegistry::get('Survey.SurveyForms');
+        $SurveyForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
         $SurveyStatuses = $SurveyForms->SurveyStatuses;
         $todayDate = date("Y-m-d");
 
@@ -957,7 +967,7 @@ class RestSurveyComponent extends Component
         $schemaNode = $modelNode->addChild("schema", null, NS_XSD);
 
         // relevancy rules
-        $RulesTable = TableRegistry::get('Survey.SurveyRules');
+        $RulesTable = TableRegistry::getTableLocator()->get('Survey.SurveyRules');
         $rules = $RulesTable
             ->find('SurveyRulesList', [
                 'survey_form_id' => $id
@@ -1021,16 +1031,16 @@ class RestSurveyComponent extends Component
     {
 
         $title = $this->Form->get($id)->name;
-        $institutionClassStudentsTbl = TableRegistry::get('Institution.InstitutionClassStudents');
-        $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $institutionStudentSurveysTbl = TableRegistry::get('Institution.StudentSurveys');
-        $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
-        $institution_student_survey_answers_tbl = TableRegistry::get('institution_student_survey_answers');
+        $institutionClassStudentsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $SurveyFormsQuestionsTbl = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $institutionStudentSurveysTbl = TableRegistry::getTableLocator()->get('Institution.StudentSurveys');
+        $surveyQuestionChoicesTbl = TableRegistry::getTableLocator()->get('Survey.SurveyQuestionChoices');
+        $institution_student_survey_answers_tbl = TableRegistry::getTableLocator()->get('institution_student_survey_answers');
 
-        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $institutionTbl = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
         $insId = $insData->id;
-        $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodTbl = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
         $apId = $apData->id;
 
@@ -2119,7 +2129,7 @@ class RestSurveyComponent extends Component
 
     private function deleteExpiredResponse()
     { 
-        $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+        $SurveyResponses = TableRegistry::getTableLocator()->get('Survey.SurveyResponses');
         $expiryDate = new Time();
         $expiryDate->subDays(3);
         $SurveyResponses->deleteAll([
@@ -2131,7 +2141,7 @@ class RestSurveyComponent extends Component
     private function addResponse($xmlResponse)
     {
 
-        $SurveyResponses = TableRegistry::get('Survey.SurveyResponses');
+        $SurveyResponses = TableRegistry::getTableLocator()->get('Survey.SurveyResponses');
         $responseData = [
             'id' => Text::uuid(),
             'response' => $xmlResponse
@@ -2190,16 +2200,16 @@ class RestSurveyComponent extends Component
     {
 
         $title = $this->Form->get($id)->name;
-        $institutionStaffTbl = TableRegistry::get('Institution.Staff');
-        $SurveyFormsQuestionsTbl = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $institutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
-        $surveyQuestionChoicesTbl = TableRegistry::get('Survey.SurveyQuestionChoices');
-        $institution_staff_survey_answers_tbl = TableRegistry::get('Staff.StaffSurveyAnswers');
+        $institutionStaffTbl = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $SurveyFormsQuestionsTbl = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $institutionStaffSurveysTbl = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');
+        $surveyQuestionChoicesTbl = TableRegistry::getTableLocator()->get('Survey.SurveyQuestionChoices');
+        $institution_staff_survey_answers_tbl = TableRegistry::getTableLocator()->get('Staff.StaffSurveyAnswers');
 
-        $institutionTbl = TableRegistry::get('Institution.Institutions');
+        $institutionTbl = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $insData = $institutionTbl->find('all', ['conditions' => ['code' => $insCode]])->first();
         $insId = $insData->id;
-        $academicPeriodTbl = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodTbl = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $apData = $academicPeriodTbl->find('all', ['conditions' => ['name' => $acamic]])->first();
         $apId = $apData->id;
 
@@ -2496,8 +2506,8 @@ class RestSurveyComponent extends Component
     {
         $thresholdDataaa = json_decode($extra['value'], true);
 
-        $InstitutionStaffSurveysTbl = TableRegistry::get('Staff.StaffSurveys');
-        $InstitutionStaffSurveyAnswersTbl = TableRegistry::get('Staff.StaffSurveyAnswers');
+        $InstitutionStaffSurveysTbl = TableRegistry::getTableLocator()->get('Staff.StaffSurveys');
+        $InstitutionStaffSurveyAnswersTbl = TableRegistry::getTableLocator()->get('Staff.StaffSurveyAnswers');
         $staffData = $thresholdDataaa;
         foreach ($staffData as $w => $staff) {
             $alreadyExistData =  $InstitutionStaffSurveysTbl->find('all', ['conditions' => [

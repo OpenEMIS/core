@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class WorkflowInstitutionTable extends AppTable
@@ -29,7 +29,7 @@ class WorkflowInstitutionTable extends AppTable
         ]);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         /*POCOR-6296 starts*/
         $requestData = json_decode($settings['process']['params']);

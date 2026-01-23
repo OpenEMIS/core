@@ -3,7 +3,7 @@ namespace Security\Model\Table;
 
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 
 class SecurityGroupAreasTable extends AppTable
@@ -25,7 +25,7 @@ class SecurityGroupAreasTable extends AppTable
         return $events;
     }
 
-    public function institutionAfterSave(Event $event, Entity $entity)
+    public function institutionAfterSave(EventInterface $event, Entity $entity)
     {
         // check if security group id is dirty instead of new entity as the security group id is save
         // on the institution entity marking the isNew flag false
@@ -54,7 +54,7 @@ class SecurityGroupAreasTable extends AppTable
 
     public function getAreasByUser($userId)
     {
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $groupIds = $SecurityGroupUsers
         ->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])
         ->where([$SecurityGroupUsers->aliasField('security_user_id') => $userId])

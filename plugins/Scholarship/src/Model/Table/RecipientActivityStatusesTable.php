@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class RecipientActivityStatusesTable extends ControllerActionTable
@@ -21,7 +21,7 @@ class RecipientActivityStatusesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if($entity->international_code == 'APPLICATION_APPROVED') {
             if (isset($extra['toolbarButtons']['edit'])) {
@@ -34,7 +34,7 @@ class RecipientActivityStatusesTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
        if($entity->international_code == 'APPLICATION_APPROVED') {
             $url = $this->url('index');
@@ -43,7 +43,7 @@ class RecipientActivityStatusesTable extends ControllerActionTable
        }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -54,19 +54,19 @@ class RecipientActivityStatusesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

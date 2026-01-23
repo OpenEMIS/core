@@ -8,7 +8,7 @@ use DatePeriod;
 use DateTime;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
@@ -60,14 +60,14 @@ class MealDetailsTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $requestData = json_decode($settings['process']['params']);
         $sheetsData = $this->generateSheetsData($requestData);
         $sheets->exchangeArray($sheetsData);        
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $sheetData = $settings['sheet']['sheetData'];
@@ -106,7 +106,7 @@ class MealDetailsTable extends AppTable
             
             $institutionIds = [];
             if (!$superAdmin) {
-                $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
                 if (isset($instituitionData)) {
                     foreach ($instituitionData as $key => $value) {
@@ -217,7 +217,7 @@ class MealDetailsTable extends AppTable
                 ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $newFields = $this->getMealDetailFields($event, $settings, $fields);
@@ -247,7 +247,7 @@ class MealDetailsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function getMealDetailFields(Event $event, ArrayObject $settings, $fields)
+    public function getMealDetailFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -325,7 +325,7 @@ class MealDetailsTable extends AppTable
     }
 
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id

@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 // this file is used solely for Preferences/Preferences
@@ -17,7 +17,7 @@ class PreferencesTable extends ControllerActionTable
         $this->table('security_users');
         parent::initialize($config);
 
-        $Locales = TableRegistry::get('Locales');
+        $Locales = TableRegistry::getTableLocator()->get('Locales');
         $this->loginLanguages = $Locales->find('list', [
                 'keyField' => 'iso',
                 'valueField' => 'name'
@@ -28,7 +28,7 @@ class PreferencesTable extends ControllerActionTable
         $this->toggle('add', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $shownField = ['preferred_language'];
 
@@ -41,7 +41,7 @@ class PreferencesTable extends ControllerActionTable
         }
     }
 
-    public function onGetPreferredLanguage(Event $event, Entity $entity)
+    public function onGetPreferredLanguage(EventInterface $event, Entity $entity)
     {
         if (isset($this->loginLanguages[$entity->preferred_language])) {
             return $this->loginLanguages[$entity->preferred_language];
@@ -50,7 +50,7 @@ class PreferencesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldPreferredLanguage(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreferredLanguage(EventInterface $event, array $attr, $action, Request $request)
     {
         $session = $this->request->session();
         if ($session->read('System.language_menu')) {
@@ -69,7 +69,7 @@ class PreferencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // Remove the back toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -88,7 +88,7 @@ class PreferencesTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // remove the list toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -100,7 +100,7 @@ class PreferencesTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         // To change the language of the UI
         $url = $this->url('view');

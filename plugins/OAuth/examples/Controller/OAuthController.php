@@ -14,7 +14,7 @@ class OAuthController extends AbstractOAuthController
         $this->loadComponent('RequestHandler');
 
         // Load the model that contains the Credentials
-        //$this->loadModel('ApiCredentials');
+        //$this->ApiCredentials = $this->fetchTable('ApiCredentials');
     }
 
     /**

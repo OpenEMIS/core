@@ -233,7 +233,7 @@ class POCOR4829 extends AbstractMigration
         $this->execute('CREATE TABLE `z_4829_workflow_steps` LIKE `workflow_steps`');
         $this->execute('INSERT INTO `z_4829_workflow_steps` SELECT * FROM `workflow_steps`');
 
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
         $workflowId = $WorkflowsTable
             ->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $modelId])
@@ -279,7 +279,7 @@ class POCOR4829 extends AbstractMigration
         $this->execute('CREATE TABLE `z_4829_workflow_actions` LIKE `workflow_actions`');
         $this->execute('INSERT INTO `z_4829_workflow_actions` SELECT * FROM `workflow_actions`');
 
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 
         $openStepId = $WorkflowStepsTable->find()
             ->where([

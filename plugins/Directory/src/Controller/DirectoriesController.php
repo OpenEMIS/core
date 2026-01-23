@@ -3,7 +3,7 @@
 namespace Directory\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
@@ -12,7 +12,6 @@ use Cake\Utility\Inflector;
 use App\Controller\AppController;
 use Cake\Http\Response;
 use Cake\Http\Client;
-use Cake\Event\EventInterface;
 
 class DirectoriesController extends AppController
 {
@@ -52,9 +51,9 @@ class DirectoriesController extends AppController
         $this->loadComponent('Configuration.Configuration');
         $this->loadComponent('User.Image');
         $this->loadComponent('Institution.CreateUsers');
-        $this->loadModel('FieldOption.Nationalities');
-        $this->loadModel('Directory.Directories');
-        $this->loadModel('Area.AreaAdministratives');
+        $this->Nationalities = $this->fetchTable('FieldOption.Nationalities');
+        $this->Directories = $this->fetchTable('Directory.Directories');
+        $this->AreaAdministratives = $this->fetchTable('Area.AreaAdministratives');
         $this->attachAngularModules();
         $this->attachAngularModulesForDirectory();
         //POCOR-5672 it is used for removing csrf token mismatch condition in directory external search
@@ -602,7 +601,7 @@ class DirectoriesController extends AppController
             $this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
 
             // Start POCOR-5188
-            $manualTable = TableRegistry::get('Manuals');
+            $manualTable = TableRegistry::getTableLocator()->get('Manuals');
             $ManualContent = $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Assessments',
                 $manualTable->aliasField('module') => 'Directory',
@@ -673,7 +672,7 @@ class DirectoriesController extends AppController
             $this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
 
             // Start POCOR-5188
-            $manualTable = TableRegistry::get('Manuals');
+            $manualTable = TableRegistry::getTableLocator()->get('Manuals');
             $ManualContent = $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Examinations',
                 $manualTable->aliasField('module') => 'Directory',
@@ -704,7 +703,7 @@ class DirectoriesController extends AppController
         $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
 
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals');
         $ManualContent = $manualTable->find()->select(['url'])->where([
             $manualTable->aliasField('function') => 'Attendances',
             $manualTable->aliasField('module') => 'Directory',
@@ -870,7 +869,7 @@ class DirectoriesController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $getQuery = $this->request->getParam('pass');
         $action = $this->request->getParam('action');
@@ -1083,12 +1082,12 @@ class DirectoriesController extends AppController
         }
     }
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    public function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
     {
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
-    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    public function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->getSession();
         if ($model->getAlias() != 'Directories') {
@@ -1672,7 +1671,7 @@ class DirectoriesController extends AppController
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         $pass = $this->request->getAttribute('params')['pass'];
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
@@ -1725,9 +1724,9 @@ class DirectoriesController extends AppController
 
     public function getStaffCustomData($staff_id = null)
     {
-        $staffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-        $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
-        $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
+        $staffCustomFieldValues = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
+        $staffCustomFieldOptions = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldOptions');
+        $staffCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
         $staffCustomData = $staffCustomFieldValues->find()
             ->select([
                 'id' => $staffCustomFieldValues->aliasField('id'),
@@ -1792,9 +1791,9 @@ class DirectoriesController extends AppController
 
     public function getStudentCustomData($student_id = null)
     {
-        $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues');
-        $studentCustomFieldOptions = TableRegistry::get('StudentCustomField.StudentCustomFieldOptions');
-        $studentCustomFields = TableRegistry::get('StudentCustomField.StudentCustomFields');
+        $studentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+        $studentCustomFieldOptions = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldOptions');
+        $studentCustomFields = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFields');
         $studentCustomData = $studentCustomFieldValues->find()
             ->select([
                 'id' => $studentCustomFieldValues->aliasField('id'),
@@ -1861,11 +1860,11 @@ class DirectoriesController extends AppController
 
     public function getCountInernalSearch($conditions = [], $identityNumber, $identityCondition = [], $userTypeCondition = [])
     {
-        $security_users = TableRegistry::get('Security.Users');
-        $userIdentities = TableRegistry::get('User.Identities');
-        $genders = TableRegistry::get('User.Genders');
-        $mainIdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $mainNationalities = TableRegistry::get('User.Nationalities');
+        $security_users = TableRegistry::getTableLocator()->get('Security.Users');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $genders = TableRegistry::getTableLocator()->get('User.Genders');
+        $mainIdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $mainNationalities = TableRegistry::getTableLocator()->get('User.Nationalities');
         if ($identityNumber == '') {
             $security_users_result = $security_users
                 ->find()
@@ -2454,7 +2453,7 @@ class DirectoriesController extends AppController
 
     public function getRedirectToGuardian()
     {
-        $config_items = TableRegistry::get('Configuration.ConfigItems');
+        $config_items = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $config_items_result = $config_items
             ->find()
             ->where(['code' => 'RedirectToGuardian'])

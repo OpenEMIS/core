@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class WorkflowStaffTrainingNeedTable extends AppTable  
@@ -37,7 +37,7 @@ class WorkflowStaffTrainingNeedTable extends AppTable
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query) {
         $query
             ->contain([
                 'TrainingCourses' => [

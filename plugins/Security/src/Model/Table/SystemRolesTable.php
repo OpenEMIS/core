@@ -4,7 +4,7 @@ namespace Security\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
@@ -28,7 +28,7 @@ class SystemRolesTable extends AppTable
         ]);
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $controller = $this->controller;
         $tabElements = [
@@ -51,29 +51,29 @@ class SystemRolesTable extends AppTable
         $this->ControllerAction->setFieldOrder(['security_group_id', 'name', 'visible']);
     }
 
-    public function onGetVisible(Event $event, Entity $entity)
+    public function onGetVisible(EventInterface $event, Entity $entity)
     {
         return $entity->visible == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onGetPermissions(Event $event, Entity $entity)
+    public function onGetPermissions(EventInterface $event, Entity $entity)
     {
         $subject = $event->getSubject(); // ControllerActionHelper
         return '';
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->setFieldOrder(['visible', 'name', 'permissions']);
     }
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         // $options['conditions'][$this->aliasField('security_group_id')] = [0, -1];
         $query->where([$this->aliasField('security_group_id') . ' IN ' => [0, -1]]);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('visible', ['type' => 'hidden', 'value' => 1, 'visible' => true]);
         $this->ControllerAction->field('order', ['type' => 'hidden', 'value' => 0, 'visible' => true]);

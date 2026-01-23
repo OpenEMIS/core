@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -61,7 +61,7 @@ class InstitutionClassesTable extends AppTable
         // POCOR-9126 end
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
@@ -70,13 +70,13 @@ class InstitutionClassesTable extends AppTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
         return $attr;
     }
 
-    public function onExcelGetInstitutionShiftId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionShiftId(EventInterface $event, Entity $entity)
     {
         return $entity->shift_name;
     }
@@ -96,7 +96,7 @@ class InstitutionClassesTable extends AppTable
         return $count;
     }
 
-    public function onExcelGetEducationGrades(Event $event, Entity $entity)
+    public function onExcelGetEducationGrades(EventInterface $event, Entity $entity)
     {
         $classGrades = [];
         if ($entity->education_grades) {
@@ -107,7 +107,7 @@ class InstitutionClassesTable extends AppTable
         return implode(', ', $classGrades); //display as comma seperated
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
@@ -299,7 +299,7 @@ class InstitutionClassesTable extends AppTable
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         //redeclare all for sorting purpose.
         $newFields[] = [

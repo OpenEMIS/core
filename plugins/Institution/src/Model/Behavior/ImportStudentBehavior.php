@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 
@@ -25,13 +25,13 @@ class ImportStudentBehavior extends Behavior
         return $events;
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->_table->ControllerAction->field('feature');
         $this->_table->ControllerAction->setFieldOrder(['feature', 'select_file']);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $request = $this->_table->request;
@@ -51,7 +51,7 @@ class ImportStudentBehavior extends Behavior
         }
     }
 
-    public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeFeature(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $table = $this->_table;
         $request = $this->_table->request;

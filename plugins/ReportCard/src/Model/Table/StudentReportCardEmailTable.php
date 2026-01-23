@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 
@@ -50,7 +50,7 @@ class StudentReportCardEmailTable extends ControllerActionTable
             ->allowEmpty('end_date');
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (isset($toolbarButtonsArray['back'])) {
@@ -72,7 +72,7 @@ class StudentReportCardEmailTable extends ControllerActionTable
         $this->setupFields($event, $entity);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -85,13 +85,13 @@ class StudentReportCardEmailTable extends ControllerActionTable
             ]);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
         $this->setupFields($event, $entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -104,7 +104,7 @@ class StudentReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -118,7 +118,7 @@ class StudentReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -139,7 +139,7 @@ class StudentReportCardEmailTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    private function setupFields(Event $event, Entity $entity)
+    private function setupFields(EventInterface $event, Entity $entity)
     {
         $this->field('report_card_information', ['type' => 'section']);
         $this->field('code', ['type' => 'readonly', 'attr' => ['required' => false]]);

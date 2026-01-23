@@ -5,7 +5,7 @@ namespace App\Model\Table;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
 use App\Model\Traits\OptionsTrait;

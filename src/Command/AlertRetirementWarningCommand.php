@@ -55,7 +55,7 @@ class AlertRetirementWarningCommand extends AlertCommandBase
 
     protected function getPendingItems(string $featureKey): array
     {
-        $this->loadModel('Institution.Staff');
+        $this->Staff = $this->fetchTable('Institution.Staff');
         $userId = $this->userId;
         $isSuperAdmin = $this->Users->get($userId)->super_admin;
         $threshold = json_decode($this->rule['threshold'], true);

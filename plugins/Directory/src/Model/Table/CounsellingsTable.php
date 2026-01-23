@@ -6,7 +6,7 @@ use stdClass;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
@@ -54,11 +54,11 @@ class CounsellingsTable extends ControllerActionTable
 
         return $validator->allowEmpty('file_content');
     }
-    public function addEditBeforeAction(Event $event, ArrayObject $extra){
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra){
         // $session = $this->request->getSession();
         // $StudentId = $session->read('Student.Students.id');
         $StudentId = $this->getUserID();
-        $table=TableRegistry::get('Institution.InstitutionStudents');
+        $table=TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $institutionStudent = $table->find('all')->select('institution_id')->where([
             $table->aliasField('student_id')=>$StudentId,
             $table->aliasField('student_status_id')=>1
@@ -86,7 +86,7 @@ class CounsellingsTable extends ControllerActionTable
     {
       
         // get the staff that assigned from the institution from security user
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         $counselorOptions = $this->Counselors
             ->find('list', [
@@ -114,11 +114,11 @@ class CounsellingsTable extends ControllerActionTable
     public function getRequesterOptions($institutionId)
     {        
        
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $UserData = TableRegistry::get('User.Users');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $UserData = TableRegistry::getTableLocator()->get('User.Users');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = $AcademicPeriods->getCurrent();
         $join = [];
         $join[''] = [
@@ -177,7 +177,7 @@ class CounsellingsTable extends ControllerActionTable
     
         }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'file_content':
@@ -216,13 +216,13 @@ class CounsellingsTable extends ControllerActionTable
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
       
     }
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_content', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);

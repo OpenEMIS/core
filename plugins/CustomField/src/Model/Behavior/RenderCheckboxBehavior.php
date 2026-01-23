@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderCheckboxBehavior extends RenderBehavior
@@ -13,7 +13,7 @@ class RenderCheckboxBehavior extends RenderBehavior
         parent::initialize($config);
     }
 
-    public function onGetCustomCheckboxElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomCheckboxElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $value = '';
 
@@ -83,7 +83,7 @@ class RenderCheckboxBehavior extends RenderBehavior
         return $value;
     }
 
-    public function processCheckboxValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    public function processCheckboxValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $settings['valueKey'] = 'number_value';
 

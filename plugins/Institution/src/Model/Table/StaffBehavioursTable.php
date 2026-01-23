@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -100,7 +100,7 @@ class StaffBehavioursTable extends ControllerActionTable
         ;
     }*/
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $event->getSubject()->Html->link($entity->staff->openemis_no, [
@@ -115,7 +115,7 @@ class StaffBehavioursTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no');
         $this->field('academic_period_id', ['visible' => false]);
@@ -157,14 +157,14 @@ class StaffBehavioursTable extends ControllerActionTable
 
 
     // Start POCOR-7441
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]);
         // $this->field('action', ['type' => 'text', 'after' => 'description','visible' => true]);
     }
     // End POCOR-7441
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
         $periodOptions = $this->AcademicPeriods->getYearList();
@@ -224,7 +224,7 @@ class StaffBehavioursTable extends ControllerActionTable
         //POCOR-6670:end
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('openemis_no', ['entity' => $entity]);
         $this->field('action', ['visible' => true]); // POCOR-7441
@@ -232,7 +232,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('staff_id', ['entity' => $entity]);
@@ -243,12 +243,12 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-6670
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['AcademicPeriods', 'Staff', 'StaffBehaviourCategories', 'BehaviourClassifications']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('staff_id', ['entity' => $entity]);
@@ -260,7 +260,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour','description','action','assignee_id']);//POCOR-6670
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {   
         /*POCOR-starts*/
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
@@ -276,7 +276,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $entity->showDeletedValueAs = $entity->description;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $entity = $attr['entity'];
@@ -309,7 +309,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDateOfBehaviour(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -351,7 +351,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $staffOptions = [];
@@ -382,7 +382,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffBehaviourCategoryId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffBehaviourCategoryId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -395,7 +395,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldBehaviourClassificationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -408,7 +408,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]); // POCOR-7441
         $tabElements = $this->getStaffBehaviourTabElements();
@@ -416,7 +416,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function onSetCustomCaseTitle(Event $event, Entity $entity)
+    public function onSetCustomCaseTitle(EventInterface $event, Entity $entity)
     {
         $recordEntity = $this->get($entity->id, [
             'contain' => ['Staff', 'StaffBehaviourCategories', 'Institutions', 'BehaviourClassifications']
@@ -427,7 +427,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return [$title, true];
     }
 
-    public function onSetCustomCaseSummary(Event $event, $id = null)
+    public function onSetCustomCaseSummary(EventInterface $event, $id = null)
     {
         $recordEntity = $this->get($id, [
             'contain' => ['Staff', 'StaffBehaviourCategories', 'Institutions', 'BehaviourClassifications']
@@ -438,7 +438,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $summary;
     }
 
-    public function onIncludeCustomExcelFields(Event $event, $newFields)
+    public function onIncludeCustomExcelFields(EventInterface $event, $newFields)
     {
         $newFields[] = [
             'key' => 'Staff.openemis_no',
@@ -457,7 +457,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $newFields;
     }
 
-    public function onBuildCustomQuery(Event $event, $query)
+    public function onBuildCustomQuery(EventInterface $event, $query)
     {
         $query
             ->select([
@@ -499,7 +499,7 @@ class StaffBehavioursTable extends ControllerActionTable
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key' => 'Students.openemis_no',
@@ -545,7 +545,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // POCOR-6155
         $academicPeriod = ($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
@@ -609,7 +609,7 @@ class StaffBehavioursTable extends ControllerActionTable
     /**
      * POCOR-6670 Assignee id
     */
-    public function onGetAssigneeId(Event $event, Entity $entity)
+    public function onGetAssigneeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->assignee->name;
@@ -620,7 +620,7 @@ class StaffBehavioursTable extends ControllerActionTable
      * POCOR-6670 Assignee id
      *add assignee dropdown in edit and view page
     */
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Behaviour > Staff';
@@ -811,7 +811,7 @@ class StaffBehavioursTable extends ControllerActionTable
     }
 
 
-    /*public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    /*public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {   
         $id = $this->request->data['primaryKey'];
         $jsonData = base64_decode($id);
@@ -845,7 +845,7 @@ class StaffBehavioursTable extends ControllerActionTable
     }*/
     /*POCOR-5177 ends*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'student_behaviour_category_id':

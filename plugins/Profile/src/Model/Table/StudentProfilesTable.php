@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 
@@ -73,10 +73,10 @@ class StudentProfilesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 
-		$this->StudentTemplates = TableRegistry::get('ProfileTemplate.StudentTemplates');
-        $this->InstitutionStudentsProfileTemplates = TableRegistry::get('Institution.InstitutionStudentsProfileTemplates');
-        $this->StudentReportCardProcesses = TableRegistry::get('ReportCard.StudentReportCardProcesses');
-        $this->StudentReportCardEmailProcesses = TableRegistry::get('ReportCard.StudentReportCardEmailProcesses');
+		$this->StudentTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StudentTemplates');
+        $this->InstitutionStudentsProfileTemplates = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsProfileTemplates');
+        $this->StudentReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardProcesses');
+        $this->StudentReportCardEmailProcesses = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardEmailProcesses');
 
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
@@ -108,7 +108,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['view']);
@@ -197,7 +197,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_id', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
@@ -208,7 +208,7 @@ class StudentProfilesTable extends ControllerActionTable
         $this->field('email_status');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
         $this->setFieldOrder(['openemis_no', 'student_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
@@ -234,9 +234,9 @@ class StudentProfilesTable extends ControllerActionTable
             ->toArray();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $session = $this->request->getSession();
         $institutionId = $session->read('Institution.Institutions.id');
         // Academic Periods filter
@@ -327,7 +327,7 @@ class StudentProfilesTable extends ControllerActionTable
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $reportCardId = $this->request->getQuery('student_profile_template_id');
         $institutionId = $this->request->getQuery('institution_id');
@@ -391,7 +391,7 @@ class StudentProfilesTable extends ControllerActionTable
                 $generateButton['label'] = '<i class="fa fa-refresh"></i>';
                 $generateButton['attr'] = $toolbarAttr;
                 $generateButton['attr']['title'] = __('Generate All');
-                //$ReportCards = TableRegistry::get('ReportCard.ReportCards');
+                //$ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
                 if (!is_null($this->request->getQuery('student_profile_template_id'))) {
                     $reportCardId = $this->request->getQuery('student_profile_template_id');
                 }
@@ -456,19 +456,19 @@ class StudentProfilesTable extends ControllerActionTable
         }
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
 
-	public function viewBeforeAction(Event $event, ArrayObject $extra)
+	public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['academic_period_id', 'openemis_no', 'student_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 		$this->setFieldVisible(['view'], ['academic_period_id', 'openemis_no', 'student_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->getQuery();
         $session = $this->request->getSession();
@@ -500,7 +500,7 @@ class StudentProfilesTable extends ControllerActionTable
             ->autoFields(true);
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->has('report_card_status')) {
             $value = $this->statusOptions[$entity->report_card_status];
@@ -510,7 +510,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStartedOn(Event $event, Entity $entity)
+    public function onGetStartedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
 
@@ -522,7 +522,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCompletedOn(Event $event, Entity $entity)
+    public function onGetCompletedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
 
@@ -534,7 +534,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetReportQueue(Event $event, Entity $entity)
+    public function onGetReportQueue(EventInterface $event, Entity $entity)
     {
         if ($entity->has('student_profile_template_id')) {
             $reportCardId = $entity->student_profile_template_id;
@@ -559,7 +559,7 @@ class StudentProfilesTable extends ControllerActionTable
         }
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -568,7 +568,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetProfileName(Event $event, Entity $entity)
+    public function onGetProfileName(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('student_profile_template_id')) {
@@ -587,7 +587,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEmailStatus(Event $event, Entity $entity)
+    public function onGetEmailStatus(EventInterface $event, Entity $entity)
     {
         $emailStatuses = $this->StudentReportCardEmailProcesses->getEmailStatus();
         $value = '<i class="fa fa-minus"></i>';
@@ -603,12 +603,12 @@ class StudentProfilesTable extends ControllerActionTable
         return $value;
     }
 
-	public function downloadExcel(Event $event, ArrayObject $extra)
+	public function downloadExcel(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -645,12 +645,12 @@ class StudentProfilesTable extends ControllerActionTable
         exit();
     }
 
-	public function downloadPDF(Event $event, ArrayObject $extra)
+	public function downloadPDF(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -696,12 +696,12 @@ class StudentProfilesTable extends ControllerActionTable
     * @ticket POCOR-6667
     */
 
-    public function viewPDF(Event $event, ArrayObject $extra)
+    public function viewPDF(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->InstitutionStudentsProfileTemplates;
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -741,12 +741,12 @@ class StudentProfilesTable extends ControllerActionTable
         exit();
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -768,7 +768,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function generateAll(Event $event, ArrayObject $extra)
+    public function generateAll(EventInterface $event, ArrayObject $extra)
     {
 
         $params = $this->getQueryString();
@@ -776,7 +776,7 @@ class StudentProfilesTable extends ControllerActionTable
         $hasTemplate = $this->StudentTemplates->checkIfHasTemplate($params['student_profile_template_id']);
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -788,7 +788,7 @@ class StudentProfilesTable extends ControllerActionTable
             $institutionId = $userData->institution_id;
         }
         if ($hasTemplate) {
-            $StudentReportCardProcesses = TableRegistry::get('ReportCard.StudentReportCardProcesses');
+            $StudentReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardProcesses');
             $inProgress = $StudentReportCardProcesses->find()
                 ->where([
                     $StudentReportCardProcesses->aliasField('student_profile_template_id') => $params['student_profile_template_id'],
@@ -814,12 +814,12 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-	public function downloadAllPdf(Event $event, ArrayObject $extra)
+	public function downloadAllPdf(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -882,12 +882,12 @@ class StudentProfilesTable extends ControllerActionTable
         }
     }
 
-    public function downloadAll(Event $event, ArrayObject $extra)
+    public function downloadAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -943,7 +943,7 @@ class StudentProfilesTable extends ControllerActionTable
         }
     }
 
-    public function publish(Event $event, ArrayObject $extra)
+    public function publish(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $result = $this->InstitutionStudentsProfileTemplates->updateAll(['status' => self::PUBLISHED], $params);
@@ -952,7 +952,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function publishAll(Event $event, ArrayObject $extra)
+    public function publishAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -972,7 +972,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function unpublish(Event $event, ArrayObject $extra)
+    public function unpublish(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $result = $this->InstitutionStudentsProfileTemplates->updateAll(['status' => self::NEW_REPORT], $params);
@@ -981,7 +981,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function unpublishAll(Event $event, ArrayObject $extra)
+    public function unpublishAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
@@ -1001,12 +1001,12 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function email(Event $event, ArrayObject $extra)
+    public function email(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -1025,12 +1025,12 @@ class StudentProfilesTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function emailAll(Event $event, ArrayObject $extra)
+    public function emailAll(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $userObj = $this->Auth->user();
         $studentId = $userObj['id'];
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $userData = $InstitutionStudents->find()
                     ->matching('StudentStatuses',
                         function ($q) {
@@ -1068,8 +1068,8 @@ class StudentProfilesTable extends ControllerActionTable
     {
         Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to processes ('.Time::now().')');
 
-        $StudentReportCardProcesses = TableRegistry::get('ReportCard.StudentReportCardProcesses');
-        $institutionClassStudents = TableRegistry::get('institution_class_students');
+        $StudentReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StudentReportCardProcesses');
+        $institutionClassStudents = TableRegistry::getTableLocator()->get('institution_class_students');
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id')] = $educationGradeId;
         $where[$institutionClassStudents->aliasField('academic_period_id')] = $academicPeriodId;
@@ -1160,7 +1160,7 @@ class StudentProfilesTable extends ControllerActionTable
 
     private function GenerateAllStudentReportCards($institutionId, $educationGradeId, $academicPeriodId, $reportCardId, $studentId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->registryAlias());
 
         foreach ($runningProcess as $key => $processData) {
@@ -1208,7 +1208,7 @@ class StudentProfilesTable extends ControllerActionTable
     {
         Log::write('debug', 'Initialize Add All Student Profile Report Cards '.$reportCardId.' for Grade '.$educationGradeId.' to email processes ('.Time::now().')');
 
-		$institutionClassStudents = TableRegistry::get('institution_class_students');
+		$institutionClassStudents = TableRegistry::getTableLocator()->get('institution_class_students');
         $where = [];
         $where[$institutionClassStudents->aliasField('education_grade_id')] = $educationGradeId;
         $where[$institutionClassStudents->aliasField('academic_period_id')] = $academicPeriodId;
@@ -1268,7 +1268,7 @@ class StudentProfilesTable extends ControllerActionTable
 
     private function triggerEmailAllReportCardsShell($institutionId, $educationGradeId, $institutionClassId, $reportCardId, $studentId = null)
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->StudentReportCardEmailProcesses->registryAlias());
 
         // to-do: add logic to purge shell which is 30 minutes old
@@ -1317,7 +1317,7 @@ class StudentProfilesTable extends ControllerActionTable
         return $file;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

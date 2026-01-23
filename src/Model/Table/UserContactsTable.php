@@ -3,7 +3,7 @@ namespace App\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use User\Model\Table\ContactsTable as BaseTable;
 
@@ -15,7 +15,7 @@ class UserContactsTable extends BaseTable
 		$this->setEntityClass('User.Contact');
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra)
+	public function beforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		parent::beforeAction($event, $extra);
 		$tabElements = $this->controller->getUserTabElements();
@@ -24,7 +24,7 @@ class UserContactsTable extends BaseTable
 		$this->controller->set('selectedAction', 'Contacts');
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		$userId = $this->Auth->user('id');
 		$query->where([$this->aliasField('security_user_id') => $userId]);

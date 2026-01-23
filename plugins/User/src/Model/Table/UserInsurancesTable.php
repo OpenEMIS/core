@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\Validation\Validator;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -42,7 +42,7 @@ class UserInsurancesTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -62,14 +62,14 @@ class UserInsurancesTable extends ControllerActionTable
         ;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'UserInsurances';
         $userType = '';
         $this->controller->changeStudentHealthHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('start_date', ['attr' => ['label' => __('Start date')]]);
         $this->field('end_date', ['attr' => ['label' => __('End date')]]);
@@ -103,14 +103,14 @@ class UserInsurancesTable extends ControllerActionTable
     }
 
     /* POCOR-6131 */
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
     /* POCOR-6131 */
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'start_date':
@@ -126,7 +126,7 @@ class UserInsurancesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $extra, Query $query){
         $session = $this->request->session();
         if($this->request->param('action') == 'StudentInsurances'){
             $staffUserId = $session->read('Institution.StudentUser.primaryKey.id');
@@ -137,7 +137,7 @@ class UserInsurancesTable extends ControllerActionTable
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'start_date',
@@ -170,7 +170,7 @@ class UserInsurancesTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('start_date',['attr' => ['label' => __('Start Date')]]);
         $this->field('end_date',['attr' => ['label' => __('End Date')]]);

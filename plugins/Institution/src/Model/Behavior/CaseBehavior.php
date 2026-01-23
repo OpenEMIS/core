@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 class CaseBehavior extends Behavior
@@ -26,7 +26,7 @@ class CaseBehavior extends Behavior
         return $events;
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $model = $this->_table;
 
@@ -39,7 +39,7 @@ class CaseBehavior extends Behavior
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $showFieldBefore = isset($model->fields['modified_user_id']) ? 'modified_user_id' : 'create__user_id';
@@ -57,7 +57,7 @@ class CaseBehavior extends Behavior
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $showFieldBefore = $entity->has('modified_user_id') ? 'modified_user_id' : 'create__user_id';
 
@@ -80,7 +80,7 @@ class CaseBehavior extends Behavior
         
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $linkedCaseQuery = $this->getLinkedCaseQuery($entity);
         $linkedCaseCount = $linkedCaseQuery->count();
@@ -88,7 +88,7 @@ class CaseBehavior extends Behavior
         $extra['associatedRecords'][] = ['model' => 'Linked Cases', 'count' => $linkedCaseCount];
     }
 
-    public function onGetCustomLinkedCasesElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomLinkedCasesElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $model = $this->_table;
 

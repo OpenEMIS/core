@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -31,7 +31,7 @@ class ImportSalariesTable extends AppTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
         $controller = $toolbarButtons['back']['url']['controller'];
@@ -53,7 +53,7 @@ class ImportSalariesTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         if (empty($this->staffId)) {
             $rowInvalidCodeCols['staff_id'] = __('No active staff');

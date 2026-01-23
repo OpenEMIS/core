@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 use App\Model\Table\ControllerActionTable;
@@ -60,7 +60,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
             ->requirePresence('grading_options');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $options = $this->getSelectOptions($this->aliasField('result_type'));
         $this->field('result_type', ['type' => 'select', 'options' => $options]);
         $this->field('max', [
@@ -89,7 +89,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
         $is_manual_exist = $this->getManualUrl('Administration','Grading Types','Assessments');       
@@ -112,7 +112,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
         
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
         if ($this->action=='edit') {
             $this->fields['visible']['visible'] = false;
         }
@@ -123,10 +123,10 @@ class GpaGradingTypesTable extends ControllerActionTable {
         ]);
     }
 
-    public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction (EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
-        $AssessmentGradingOptions = TableRegistry::get('Gpa.GpaGradingOptions');
+        $AssessmentGradingOptions = TableRegistry::getTableLocator()->get('Gpa.GpaGradingOptions');
         $gradingOptions = [];
         if (!is_null($entity->grading_options)) {
             foreach ($entity->grading_options as $key => $gradingOption) {
@@ -142,7 +142,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
         $this->controller->set('gradingOptions', $gradingOptions);
     }
 
-   public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+   public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
 
         if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
@@ -151,7 +151,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
         $entity->assessment_grading_type_id = 0;
     }
 
-    public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+    public function addEditOnReload(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
         $groupOptionData = $this->GradingOptions->getFormFields();
         if (!empty($entity->id)) {
             $groupOptionData['gpa_grading_type_id'] = $entity->id;
@@ -165,7 +165,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
             $patchOptions['associated'] = $newOptions;
         }
     }
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
@@ -173,7 +173,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
         $entity->assessment_grading_type_id = 0;
     }
 
-    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function beforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -187,10 +187,10 @@ class GpaGradingTypesTable extends ControllerActionTable {
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         // get the array of the original gradeOptions
-        $AssessmentGradingOptions = TableRegistry::get('Gpa.GpaGradingOptions');
+        $AssessmentGradingOptions = TableRegistry::getTableLocator()->get('Gpa.GpaGradingOptions');
         $query = $AssessmentGradingOptions
             ->find()
             ->where(['gpa_grading_type_id' => $entity->id])
@@ -234,19 +234,19 @@ class GpaGradingTypesTable extends ControllerActionTable {
             }
         }
     }
-    public function viewBeforeAction(Event $event, ArrayObject $extra) {
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
         $this->setFieldOrder([
             'code', 'name', 'pass_mark', 'max', 'result_type', 'grading_options', 'visible',
         ]);
     }
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $query->contain([
             $this->GradingOptions->getAlias()
         ]);
     }
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->GradingOptions->getAlias()
@@ -254,7 +254,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
     }
 
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getGpaTab();
         
@@ -274,9 +274,9 @@ class GpaGradingTypesTable extends ControllerActionTable {
         return $this->getList($query);
     }
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $this->Gpa = TableRegistry::get('Gpa.GpaSystem');
+        $this->Gpa = TableRegistry::getTableLocator()->get('Gpa.GpaSystem');
         // Check if any associated records exist in any related tables.
         $associatedRecordsExist = 
             $this->Gpa->exists(['gpa_grading_type_id' => $entity->id]);
@@ -293,7 +293,7 @@ class GpaGradingTypesTable extends ControllerActionTable {
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

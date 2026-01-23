@@ -33,7 +33,7 @@ class CopyMassGraduationShell extends Shell
     {
         $checkEnrolledStudents = false;
 
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $count =  $InstitutionStudents->find()
             ->where([
                 'student_status_id' => 1, // Enrolled students
@@ -55,15 +55,15 @@ class CopyMassGraduationShell extends Shell
     public function copyProcess($copyFrom, $copyTo)
     {
         $connection = ConnectionManager::get('default');
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         //Check which automated service to use
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $checkAutoEnrollmentType = $ConfigItems->value('student_automated_enrollment');
         $this->out('*************************************************');  
         $this->out('Auto Enrollment Type is : ' . $checkAutoEnrollmentType);
         $this->out('*************************************************');    
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodData = $AcademicPeriods->find()
             ->select([
                 $AcademicPeriods->aliasField('start_date'), 
@@ -141,7 +141,7 @@ class CopyMassGraduationShell extends Shell
         }
         $this->out('*********************END - STUDENT GRADUATION FROM CURRENT INSTITUTION****************************');  
         
-        $SecurityUsers = TableRegistry::get('SecurityUsers'); // SecurityUsers table for the users
+        $SecurityUsers = TableRegistry::getTableLocator()->get('SecurityUsers'); // SecurityUsers table for the users
         $students = $InstitutionStudents->find()
             ->select(['InstitutionStudents.student_id', 'InstitutionStudents.id', 'InstitutionStudents.institution_id',
              'SecurityUsers.address_area_id', 'InstitutionStudents.education_grade_id', 'InstitutionStudents.created'])
@@ -314,7 +314,7 @@ class CopyMassGraduationShell extends Shell
     // Function to get next education grades based on current grade and academic period
     private function getNextEducationGrades($currentGradeId, $nextPeriodId)
     {
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $nextGradeOptions = $EducationGrades->getNextEducationGrades(
             $currentGradeId, $nextPeriodId, true, true, false
         );
@@ -325,7 +325,7 @@ class CopyMassGraduationShell extends Shell
     // Function to check if next grade is available in the same institution
     private function getNextGradeInInstitution($nextGradeId, $nextPeriodId, $institutionId)
     {
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $inInstGradeCheck = $InstitutionGrades->checkGradeInInstitution(
             $nextGradeId, $nextPeriodId, $institutionId
         );
@@ -339,7 +339,7 @@ class CopyMassGraduationShell extends Shell
     private function getFeederInstitutionData($nextGradeId, $nextPeriodId, $institutionId) 
     {
        // echo "here";exit;
-        $FeederInstitutions = TableRegistry::get('Institution.FeederOutgoingInstitutions');
+        $FeederInstitutions = TableRegistry::getTableLocator()->get('Institution.FeederOutgoingInstitutions');
         //echo "<pre>";print_r($FeederInstitutions);exit;
         $connection = ConnectionManager::get('default'); // Get the default database connection
 
@@ -364,7 +364,7 @@ class CopyMassGraduationShell extends Shell
 
     private function getStudentAddressAreaData($nextGradeId, $nextPeriodId) 
     {
-        $studentAreaAddress = TableRegistry::get('Configurations.ConfigAutomatedStudentEnrollments');
+        $studentAreaAddress = TableRegistry::getTableLocator()->get('Configurations.ConfigAutomatedStudentEnrollments');
         $connection = ConnectionManager::get('default'); // Get the default database connection
         $sql = "
             SELECT ai.`id`, ai.`academic_period_id`, ai.`institution_id`, eg.`name`, aig.`area_administrative_id` 

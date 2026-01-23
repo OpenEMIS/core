@@ -6,7 +6,7 @@ use stdClass;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
@@ -53,7 +53,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'association_staff':
@@ -69,7 +69,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controllerAction = $extra['indexButtons']['view']['url']['action'];
         $query = $this->request->getQuery();
@@ -122,7 +122,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         }
 		// End POCOR-5188
     }
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('AssociationStudent') && empty($data['AssociationStudent'])) { //only utilize save by association when class student empty.
             $data['association_student'] = [];
@@ -138,7 +138,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
     **
     ******************************************************************************************************************/
 
-    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function deleteAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if(!empty($this->controllerAction) && ($this->controllerAction == 'Associations')) {
             // Delete Students related to associations
@@ -183,7 +183,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
     ** index action methods
     **
     ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 //        $query = $this->request->query; // POCOR-7988
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -210,7 +210,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
 
@@ -245,12 +245,12 @@ class InstitutionAssociationsTable extends ControllerActionTable
         }
     }
 
-    public function onGetTotalStudents(Event $event, Entity $entity)
+    public function onGetTotalStudents(EventInterface $event, Entity $entity)
     {
         return $entity->total_male_students + $entity->total_female_students;
     }
 
-    public function onGetAssociationStaff(Event $event, Entity $entity)
+    public function onGetAssociationStaff(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $paramsEncoded = $this->request->getAttribute('params')['pass'][1];
@@ -290,7 +290,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
     ** view action methods
     **
     ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($extra['selectedAcademicPeriodId'] == -1) {
             return $this->controller->redirect([
@@ -316,7 +316,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         ]);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['selectedGrade'] = -1;
         $extra['selectedStatus'] = -1;
@@ -381,7 +381,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         //generate student filter.
@@ -524,7 +524,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
     **
     ******************************************************************************************************************/
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
         if ($entity->isNew()) {
@@ -605,7 +605,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
         }
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $id = $entity->id;
         $countMale = $this->AssociationStudent->getMaleCountByAssociations($id);
@@ -615,7 +615,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     private function getAcademicPeriodOptions($institutionId)
     {
-        $InstitutionStudentsTable = TableRegistry::get('Institution.InstitutionStudents');
+        $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $InstitutionStudentsYears = $InstitutionStudentsTable
             ->find('all')
             ->where(['institution_id' => $institutionId])

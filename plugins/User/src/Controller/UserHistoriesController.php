@@ -2,7 +2,7 @@
 
 namespace User\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 use App\Controller\PageController;
@@ -12,9 +12,9 @@ class UserHistoriesController extends PageController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Institution.Institutions');
-        $this->loadModel('Security.Users');
-        $this->loadModel('User.UserHistories');
+        $this->Institutions = $this->fetchTable('Institution.Institutions');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->UserHistories = $this->fetchTable('User.UserHistories');
         $this->Page->loadElementsFromTable($this->UserHistories);
         $this->Page->disable(['add', 'edit', 'view', 'delete']);
     }

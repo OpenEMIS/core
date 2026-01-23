@@ -9,7 +9,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Utility\Inflector;
 use DatePeriod;
 use DateInterval;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -66,7 +66,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setInstitutionStaffIDs();
 
@@ -78,7 +78,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('start_time', ['visible' => false]);
         $this->field('end_time', ['visible' => false]);
@@ -97,7 +97,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['edit']);
@@ -105,12 +105,12 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $this->setInstitutionStaffIDs();
         $staffId = $this->staffId;
@@ -127,13 +127,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetTime(Event $event, Entity $entity)
+    public function onGetTime(EventInterface $event, Entity $entity)
     {
         $time = "<i class='fa fa-minus'></i>";
         $isFullDay = $entity->full_day;
@@ -146,13 +146,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetFullDay(Event $event, Entity $entity)
+    public function onGetFullDay(EventInterface $event, Entity $entity)
     {
         $fullDay = "<i class='fa fa-times'></i>";
         $isFullDay = $entity->full_day;
@@ -163,13 +163,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetComments(Event $event, Entity $entity)
+    public function onGetComments(EventInterface $event, Entity $entity)
     {
         $comments = "<i class='fa fa-minus'></i>";
         $isComments = $entity->comments;
@@ -192,7 +192,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         if(!$relatedField){
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             $name = strval($related->name);
@@ -215,7 +215,7 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
         if(!$relatedField){
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             $name = strval($related->nameWithId);
@@ -228,13 +228,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
 
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetStaffId(Event $event, Entity $entity)
+    public function onGetStaffId(EventInterface $event, Entity $entity)
     {
         $tableName = 'User.Users';
         $relatedField = $entity->staff_id;
@@ -243,13 +243,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetAssigneeId(Event $event, Entity $entity)
+    public function onGetAssigneeId(EventInterface $event, Entity $entity)
     {
         $tableName = 'User.Users';
         $relatedField = $entity->assignee_id;
@@ -258,13 +258,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetStatusId(Event $event, Entity $entity)
+    public function onGetStatusId(EventInterface $event, Entity $entity)
     {
         $tableName = 'Workflow.WorkflowSteps';
         $relatedField = $entity->status_id;
@@ -273,13 +273,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetStaffLeaveTypeId(Event $event, Entity $entity)
+    public function onGetStaffLeaveTypeId(EventInterface $event, Entity $entity)
     {
         $tableName = 'Staff.StaffLeaveTypes';
         $relatedField = $entity->staff_leave_type_id;
@@ -288,13 +288,13 @@ class ArchivedStaffLeaveTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return string
      * common proc to show related field in the index table
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         $tableName = 'AcademicPeriod.AcademicPeriods';
         $relatedField = $entity->academic_period_id;

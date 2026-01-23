@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -64,7 +64,7 @@ class ScholarshipsTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event) 
+    public function beforeAction(EventInterface $event) 
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -73,13 +73,13 @@ class ScholarshipsTable extends AppTable  {
         $this->ControllerAction->field('scholarship_financial_assistance_type_id');
     }
     
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         $attr['onChangeReload'] = true;
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request) 
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request) 
     {
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['default'] = $this->AcademicPeriods->getCurrent();
@@ -87,7 +87,7 @@ class ScholarshipsTable extends AppTable  {
     }
 
     //POCOR-6637::START
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         if ($entity->has('feature')) {
             $feature = $entity->feature;
@@ -149,7 +149,7 @@ class ScholarshipsTable extends AppTable  {
     }
     //POCOR-6637::END
 
-    public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, ServerRequest $request) 
+    public function onUpdateFieldScholarshipFinancialAssistanceTypeId(EventInterface $event, array $attr, $action, ServerRequest $request) 
     {
         $financialAssistanceTypeOptions = $this->FinancialAssistanceTypes->getList()->toArray();
         $financialAssistanceTypeOptions = ['-1' => __('All Types')] + $financialAssistanceTypeOptions;
@@ -161,7 +161,7 @@ class ScholarshipsTable extends AppTable  {
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -226,7 +226,7 @@ class ScholarshipsTable extends AppTable  {
             ->where($conditions); 
     }
     
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
     {       
         $newArray = [];
 
@@ -353,7 +353,7 @@ class ScholarshipsTable extends AppTable  {
         $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetInterestRateType(Event $event, Entity $entity)
+    public function onExcelGetInterestRateType(EventInterface $event, Entity $entity)
     {   
         $value = '';
         if ($entity->has('interest_rate_type')) {
@@ -365,7 +365,7 @@ class ScholarshipsTable extends AppTable  {
         return $value;
     }
 
-    public function onExcelGetAllAttachmentTypes(Event $event, Entity $entity)
+    public function onExcelGetAllAttachmentTypes(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('attachment_types')) {
@@ -378,7 +378,7 @@ class ScholarshipsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetAllFieldOfStudies(Event $event, Entity $entity)
+    public function onExcelGetAllFieldOfStudies(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('field_of_studies')) {
@@ -396,7 +396,7 @@ class ScholarshipsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

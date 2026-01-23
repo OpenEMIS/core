@@ -7,7 +7,7 @@ use DatePeriod;
 use DateTime;
 use App\Model\Table\AppTable;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -50,16 +50,16 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             ]
         ]);
 
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
     }
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $requestData = json_decode($settings['process']['params']);
         $sheetsData = $this->generateSheetsData($requestData);
@@ -67,7 +67,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $sheetData = $settings['sheet']['sheetData'];
@@ -236,7 +236,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
 
 
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $newFields = $this->getClassFields();
@@ -265,12 +265,12 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetInstitutionShiftId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionShiftId(EventInterface $event, Entity $entity)
     {
         return $entity->shift_name;
     }
 
-    public function onExcelGetEducationGrades(Event $event, Entity $entity)
+    public function onExcelGetEducationGrades(EventInterface $event, Entity $entity)
     {
         $classGrades = [];
         if ($entity->education_grades) {
@@ -286,8 +286,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
     {
         $sortable = isset($options['sort']) ? $options['sort'] : false;
 
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationStages = TableRegistry::get('Education.EducationStages');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationStages = TableRegistry::getTableLocator()->get('Education.EducationStages');
 
         $gradeId = $options['education_grade_id'];
         $join = [
@@ -484,7 +484,7 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
      * @return array Updated list of area IDs including the children.
     */
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                         ->where([$Areas->aliasField('parent_id') => $id
                             ])->toArray();

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
@@ -32,7 +32,7 @@ class GoogleAuthenticationBehavior extends Behavior
         return $events;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $entity->getErrors($entity->getErrors('google'), null, true);
         $requestData = $this->_table->request->getData()[$this->_table->getAlias()];
@@ -58,7 +58,7 @@ class GoogleAuthenticationBehavior extends Behavior
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'hd', 'allow_create_user']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
         $this->model->field('client_secret', ['attr' => ['required' => true]]);
@@ -67,7 +67,7 @@ class GoogleAuthenticationBehavior extends Behavior
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'hd', 'allow_create_user']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->model->fields['name']['type'] = 'readonly';
         $this->model->fields['redirect_uri']['value'] = $entity->google->redirect_uri;
@@ -77,27 +77,27 @@ class GoogleAuthenticationBehavior extends Behavior
         $this->model->fields['hd']['attr']['value'] = $entity->google->hd;
     }
 
-    public function onGetClientId(Event $event, Entity $entity)
+    public function onGetClientId(EventInterface $event, Entity $entity)
     {
         return $entity->google->client_id;
     }
 
-    public function onGetClientSecret(Event $event, Entity $entity)
+    public function onGetClientSecret(EventInterface $event, Entity $entity)
     {
         return $entity->google->client_secret;
     }
 
-    public function onGetRedirectUri(Event $event, Entity $entity)
+    public function onGetRedirectUri(EventInterface $event, Entity $entity)
     {
         return $entity->google->redirect_uri;
     }
 
-    public function onGetHd(Event $event, Entity $entity)
+    public function onGetHd(EventInterface $event, Entity $entity)
     {
         return $entity->google->hd;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra = null)
+    public function beforeAction(EventInterface $event, ArrayObject $extra = null)
     {
 
     }

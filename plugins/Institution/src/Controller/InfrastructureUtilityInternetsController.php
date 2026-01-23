@@ -2,7 +2,7 @@
 namespace Institution\Controller;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 use App\Controller\PageController;
@@ -17,7 +17,7 @@ class InfrastructureUtilityInternetsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
 
