@@ -3,7 +3,7 @@ namespace FieldOption\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -39,12 +39,12 @@ class QualificationSpecialisationsTable extends ControllerActionTable
             ->requirePresence('education_field_of_study_id');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('education_field_of_study_id', ['type' => 'select']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $parentFieldOptions = $this->EducationFieldOfStudies->find('list')->toArray();
         $selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
@@ -60,14 +60,14 @@ class QualificationSpecialisationsTable extends ControllerActionTable
         $this->controller->set(compact('parentFieldOptions', 'selectedParentFieldOption'));
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'name', 'education_field_of_study_id', 'default', 'international_code', 'national_code'
         ]);
     } 
     
-    public function onUpdateFieldEducationFieldOfStudyId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationFieldOfStudyId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $parentFieldOptions = $this->EducationFieldOfStudies->find('list')->toArray();
@@ -77,19 +77,19 @@ class QualificationSpecialisationsTable extends ControllerActionTable
         }
         return $attr;
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

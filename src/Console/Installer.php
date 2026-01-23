@@ -27,11 +27,11 @@ class Installer
     /**
      * Does some routine installation tasks so people don't have to.
      *
-     * @param \Composer\Script\Event $event The composer event object.
+     * @param \Composer\Script\EventInterface $event The composer event object.
      * @throws \Exception Exception raised by validator.
      * @return void
      */
-    public static function postInstall(Event $event)
+    public static function postInstall(EventInterface $event)
     {
         $io = $event->getIO();
 

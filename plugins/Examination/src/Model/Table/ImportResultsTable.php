@@ -4,7 +4,7 @@ namespace Examination\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -37,10 +37,10 @@ class ImportResultsTable extends AppTable
         return $events;
     }
 
-    public function onImportPopulateExaminationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateExaminationsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $AcademicPeriods->aliasField('code'), $AcademicPeriods->aliasField('name')];
         // $order = [$lookupModel.'.name', $lookupModel.'.code'];
@@ -66,12 +66,12 @@ class ImportResultsTable extends AppTable
         }
     }
 
-    public function onImportPopulateExaminationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateExaminationSubjectsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $Examinations = TableRegistry::get('Examination.Examinations');
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
+        $Examinations = TableRegistry::getTableLocator()->get('Examination.Examinations');
 
-        $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjects');
+        $ExaminationCentreSubjects = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsSubjects');
         $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('weight'), $Examinations->aliasField('id'), ];
 
         $order = ['AcademicPeriods.order DESC', $lookedUpTable->aliasField('name'), $lookupModel.'.name', $lookupModel.'.code'];
@@ -100,11 +100,11 @@ class ImportResultsTable extends AppTable
         }
     }
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         // $order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $selectFields = ['openemis_no', $lookupColumn];
         $modelData = $lookedUpTable->find('all')
                                 ->select($selectFields)
@@ -124,10 +124,10 @@ class ImportResultsTable extends AppTable
         // unset($data[$columnOrder]);
     }
 
-    public function onImportPopulateExaminationGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateExaminationGradingOptionsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $ExaminationGradingTypes = TableRegistry::get('Examination.ExaminationGradingTypes');
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
+        $ExaminationGradingTypes = TableRegistry::getTableLocator()->get('Examination.ExaminationGradingTypes');
         $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $ExaminationGradingTypes->aliasField('code'), $ExaminationGradingTypes->aliasField('name')];
         $order = [$ExaminationGradingTypes->aliasField('name'), $lookupModel.'.order'];
         $modelData = $lookedUpTable->find('all')
@@ -150,11 +150,11 @@ class ImportResultsTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         if ($tempRow->offsetExists('examination_id') && $tempRow->offsetExists('examination_subject_id') && $tempRow->offsetExists('student_id')) {
             if (!empty($tempRow['examination_id']) && !empty($tempRow['examination_subject_id']) && !empty($tempRow['student_id'])) {
-                $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
+                $ExaminationSubjects = TableRegistry::getTableLocator()->get('Examination.ExaminationSubjects');
                 $ExaminationStudentSubjectResults = $ExaminationSubjects
                     ->find()
                     ->contain(['ExaminationGradingTypes.GradingOptions'])
@@ -172,7 +172,7 @@ class ImportResultsTable extends AppTable
                     $examinationItemEntity = $ExaminationStudentSubjectResults->first();
                     $tempRow['education_subject_id'] = $examinationItemEntity->education_subject_id;
 
-                    $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+                    $ExaminationCentreStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
                     $registeredStudentQuery = $ExaminationCentreStudents
                         ->find()
                         ->where([
@@ -283,7 +283,7 @@ class ImportResultsTable extends AppTable
         return true;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'file_input') {
             return  __('File');

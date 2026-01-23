@@ -5,7 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 class RubricCriteriasTable extends AppTable
@@ -36,7 +36,7 @@ class RubricCriteriasTable extends AppTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'name';
     }
@@ -57,7 +57,7 @@ class RubricCriteriasTable extends AppTable
         return $validator;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         //Add new fields
         $this->ControllerAction->field('criterias', [
@@ -69,7 +69,7 @@ class RubricCriteriasTable extends AppTable
 
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         //Add controls filter to index page
         $toolbarElements = [
@@ -79,17 +79,17 @@ class RubricCriteriasTable extends AppTable
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->setFieldOrder();
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain($this->_contain);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $selectedCriteriaType = $entity->type;
 
@@ -102,7 +102,7 @@ class RubricCriteriasTable extends AppTable
         return $entity;
     }
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(EventInterface $event)
     {
         //Setup fields
         list($sectionOptions, , $criteriaTypeOptions, ) = array_values($this->getSelectOptions());
@@ -117,7 +117,7 @@ class RubricCriteriasTable extends AppTable
         $this->setFieldOrder();
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         //Required by patchEntity for associated data
         $newOptions = [];
@@ -128,7 +128,7 @@ class RubricCriteriasTable extends AppTable
         $options->exchangeArray($arrayOptions);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(EventInterface $event, Entity $entity)
     {
         $selectedCriteriaType = $entity->type;
 
@@ -141,7 +141,7 @@ class RubricCriteriasTable extends AppTable
         return $entity;
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         //Initialize field values
         list(, $selectedSection, , $selectedCriteriaType) = array_values($this->getSelectOptions());
@@ -152,7 +152,7 @@ class RubricCriteriasTable extends AppTable
         return $entity;
     }
 
-    public function addEditOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnReload(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $selectedSection = $data[$this->getAlias()]['rubric_section_id'];
         $selectedCriteriaType = $data[$this->getAlias()]['type'];
@@ -190,7 +190,7 @@ class RubricCriteriasTable extends AppTable
         }
     }
 
-    public function onGetType(Event $event, Entity $entity)
+    public function onGetType(EventInterface $event, Entity $entity)
     {
         list(, , $criteriaTypeOptions, ) = array_values($this->getSelectOptions());
 
@@ -227,19 +227,19 @@ class RubricCriteriasTable extends AppTable
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'type') {
             return __('Type');

@@ -9,6 +9,7 @@ use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Http\Session;
@@ -196,7 +197,7 @@ class ImportBehavior extends Behavior
     }
 
     // POCOR-9080 start
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $this->setupDownloadUrlIfAddAction($action, $toolbarButtons, $buttons);
         $this->setupBackButtonUrl($toolbarButtons);
@@ -283,7 +284,7 @@ class ImportBehavior extends Behavior
     }
     // POCOR-9080 end
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $buttons[0]['name'] = '<i class="fa kd-import"></i> ' . __('Import');
     }
@@ -355,26 +356,26 @@ class ImportBehavior extends Behavior
 
     /**
      * addBeforePatch turns off the validation when patching entity with post data, and check the uploaded file size.
-     * @param Event $event [description]
+     * @param EventInterface $event [description]
      * @param Entity $entity [description]
      * @param ArrayObject $data [description]
      * @param ArrayObject $options [description]
      *
      * Refer to phpFileUploadErrors below for the list of file upload errors defination.
      */
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $options['validate'] = 'importFile';
     }
 
     /**
      * Actual Import business logics reside in this function
-     * @param Event $event Event object
+     * @param EventInterface $event Event object
      * @param Entity $entity Entity object containing the uploaded file parameters
      * @param ArrayObject $data Event object
      * @return Response             Response object
      */
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         /**
          * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds
@@ -427,7 +428,7 @@ class ImportBehavior extends Behavior
             $dataPassed = [];
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
-            $activeModel = TableRegistry::get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
+            $activeModel = TableRegistry::getTableLocator()->get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
             $activeModel->addBehavior('DefaultValidation');
 
             $maxRows = $this->getConfig('max_rows');
@@ -508,7 +509,7 @@ class ImportBehavior extends Behavior
                 if ($extra['entityValidate'] == true) {
                     //POCOR-9394[START]
                     //POCOR-9417[START]
-                    $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                    $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                     $academic_period_id = $AcademicPeriods->getCurrent();
                     if (isset($tempRow['academic_period_id'])) { //POCOR-9417
                         $academic_period_id = $tempRow['academic_period_id'];
@@ -562,7 +563,7 @@ class ImportBehavior extends Behavior
                         //POCOR-9294[START]
                         // $checkRequest = $this->_table->request->getData()['ImportStudentAdmission']['feature'];
                         // if($checkRequest == 'Institution.Institutions.ImportStudentAdmission'){
-                        //     $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                        //     $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                         //     $AcademicPeriodsData = $AcademicPeriods
                         //             ->find('all')
                         //             ->select([$AcademicPeriods->aliasField('start_year'), $AcademicPeriods->aliasField('end_year')])
@@ -572,8 +573,8 @@ class ImportBehavior extends Behavior
                         //     $tableEntity['student_status_id'] = 1;
                         //     $tableEntity['start_year'] = $AcademicPeriodsData->start_year;
                         //     $tableEntity['end_year'] = $AcademicPeriodsData->end_year;
-                        //     $activeModel = TableRegistry::get('Institution.InstitutionStudents');
-                        //     $supprtiveModel = TableRegistry::get('Institution.InstitutionClassStudents');
+                        //     $activeModel = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+                        //     $supprtiveModel = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
                         //     $newEntity = $activeModel->save($tableEntity);
                         // }else{
                         //     $newEntity = $activeModel->save($tableEntity); // Initial code
@@ -1397,7 +1398,7 @@ class ImportBehavior extends Behavior
                 $lookupPlugin = $mappingRow->lookup_plugin;
                 $lookupModel = $mappingRow->lookup_model;
                 $lookupColumn = $mappingRow->lookup_column;
-                $lookupModelObj = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '.' . $lookupModel]);
+                $lookupModelObj = TableRegistry::getTableLocator()->get($lookupModel, ['className' => $lookupPlugin . '.' . $lookupModel]);
 
                 $lookupValues = $lookupModelObj->getList($lookupModelObj->find());
                 $emptyCodeRecords = $lookupValues;
@@ -1455,7 +1456,7 @@ class ImportBehavior extends Behavior
             $modelData = [];
             if ($foreignKey == self::FIELD_OPTION) {
                 if (TableRegistry::exists($lookupModel)) {
-                    $relatedModel = TableRegistry::get($lookupModel);
+                    $relatedModel = TableRegistry::getTableLocator()->get($lookupModel);
                 } elseif ($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
                     $institutionId = 0;
                     $session = $this->_table->Session;
@@ -1463,9 +1464,9 @@ class ImportBehavior extends Behavior
                         $institutionId = $session->read('Institution.Institutions.id');
                     }
 
-                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel . 'Table'])->findStudents($institutionId);
+                    $relatedModel = TableRegistry::getTableLocator()->get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel . 'Table'])->findStudents($institutionId);
                 } else {
-                    $relatedModel = TableRegistry::get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel . 'Table']);
+                    $relatedModel = TableRegistry::getTableLocator()->get($lookupModel, ['className' => $lookupPlugin . '\Model\Table\\' . $lookupModel . 'Table']);
                 }
 
                 if ($mappingModel == 'Student.Extracurriculars' && $lookupModel == 'Users') {
@@ -1857,10 +1858,10 @@ class ImportBehavior extends Behavior
 
                     if ($registryAlias == '.InstitutionSubjects' && $mappingModel == 'Institution.StudentAbsencesPeriodDetails'){
                         $registryAlias = 'Institution.InstitutionSubjects';
-                        $excelLookupModel = TableRegistry::get($registryAlias);
+                        $excelLookupModel = TableRegistry::getTableLocator()->get($registryAlias);
                         $this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
                     }else{
-                        $excelLookupModel = TableRegistry::get($registryAlias);
+                        $excelLookupModel = TableRegistry::getTableLocator()->get($registryAlias);
                         $this->directTables[$registryAlias] = ['excelLookupModel' => $excelLookupModel];
                     }
 

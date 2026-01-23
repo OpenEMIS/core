@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 
@@ -34,7 +34,7 @@ class RubricsReportBehavior extends Behavior {
     	$events = array_merge($events, $this->getConfig('events'));
     	return $events;
 	}
-	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+	public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets) {
 		$requestData = json_decode($settings['process']['params']);
 		$templateId = $requestData->rubric_template_id;
 		$academicPeriodId = $requestData->academic_period_id;
@@ -53,7 +53,7 @@ class RubricsReportBehavior extends Behavior {
         $userId = $requestData->user_id;
         $institutionIds = [];
         if (!$superAdmin) {
-            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
             if (isset($instituitionData)) {
                 foreach ($instituitionData as $key => $value) {
@@ -91,7 +91,7 @@ class RubricsReportBehavior extends Behavior {
     	];
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
 		$sheet = $settings['sheet'];
 		$templateId = $sheet['templateId'];
 
@@ -201,7 +201,7 @@ class RubricsReportBehavior extends Behavior {
 		];
 	}
 
-	public function onExcelRenderRubrics(Event $event, Entity $entity, array $attr) {
+	public function onExcelRenderRubrics(EventInterface $event, Entity $entity, array $attr) {
 		$type = $attr['field'];
 		// To rewrite this part
 		if (method_exists($this, $type)) {

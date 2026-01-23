@@ -14,7 +14,7 @@ class InstitutionAssociationStaffTable extends AppTable
         $this->addBehavior('CompositeKey');
     }
 
-     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         // $options = ['type' => 'staff'];
         // $tabElements = $this->controller->getCareerTabElements($options);

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 // use ControllerAction\Model\Traits\EventTrait;
@@ -30,7 +30,7 @@ class HideButtonBehavior extends Behavior
         return $events;
     }
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(EventInterface $event)
     {
         // button already hidden, user access from url
         $model = $this->_table;
@@ -44,7 +44,7 @@ class HideButtonBehavior extends Behavior
         $model->controller->redirect($url);
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if (isset($toolbarButtons['add'])) {
             $toolbarButtons->offsetUnset('add');
@@ -59,7 +59,7 @@ class HideButtonBehavior extends Behavior
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 

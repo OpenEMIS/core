@@ -53,14 +53,14 @@ class POCOR8434 extends AbstractMigration
         $this->execute('INSERT INTO `z_8434_custom_modules` SELECT * FROM `custom_modules`');
                 
         //create new record for `Student Enrolment` in `workflow_models` table 
-        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
         $WorkflowModelsRes = $WorkflowModelsTable->find()->order([$WorkflowModelsTable->aliasField('id')=> 'DESC'])->first();
         if(!empty($WorkflowModelsRes)){
             $id = $WorkflowModelsRes->id + 1;
             $this->execute("INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES ($id, 'Institutions > Students > Student Enrolment', 'Institution.StudentEnrolment', NULL, '1', '1', NOW());");
         }
         
-        $WorkflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
+        $WorkflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
         $WorkflowModels = $WorkflowModelsTable->find()->select(['id' => $WorkflowModelsTable->aliasField('id')])->where([$WorkflowModelsTable->aliasField('name')=> 'Institutions > Students > Student Enrolment'])->first();
         if(!empty($WorkflowModels)){
             $WorkflowModelId = $WorkflowModels['id'];
@@ -69,7 +69,7 @@ class POCOR8434 extends AbstractMigration
             $this->execute("INSERT INTO `workflows` (`id`, `code`, `name`, `message`, `workflow_model_id`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES (NULL, 'STUDENT-Enrolment-1001', 'Student Enrolment', NULL, $WorkflowModelId, NULL, NULL, '1', NOW());");
             
             //get workflow id of `Student Enrolment`
-            $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+            $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $Workflows = $WorkflowsTable->find()->select(['id' => $WorkflowsTable->aliasField('id')])->where([ $WorkflowsTable->aliasField('code')=> 'STUDENT-Enrolment-1001' ])->first();
             if(!empty($Workflows)){
                 $WorkflowId = $Workflows['id'];
@@ -90,7 +90,7 @@ class POCOR8434 extends AbstractMigration
                 
 
                 //get workflow_step_ids of `Student Enrolment`
-                $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+                $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
                 $WorkflowStepsData = $WorkflowStepsTable->find('list', ['keyField' => 'id', 'valueField' => 'name'])->where([ $WorkflowStepsTable->aliasField('workflow_id') => $WorkflowId ])->toArray();
                 if(!empty($WorkflowStepsData)){
                     $statusMap = [

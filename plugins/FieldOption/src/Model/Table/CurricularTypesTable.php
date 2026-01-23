@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
@@ -25,9 +25,9 @@ class CurricularTypesTable extends ControllerActionTable
 
     }
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $curricularStudent = TableRegistry::get('Institution.InstitutionCurriculars'); 
+        $curricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars'); 
         $checktype =  $curricularStudent->find()->where([$curricularStudent->aliasField('curricular_type_id')=>$entity->id])->first();     
              
         if(!empty($checktype)){
@@ -37,14 +37,14 @@ class CurricularTypesTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('category');
         $this->setFieldOrder([
             'name','default','category', 'international_code','national_code']);
     }
 
-    public function onUpdateFieldCategory(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCategory(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $categories = array(1 =>'Co-Curricular', 0=>'Extracurricular'); //POCOR-7751
         $entity = $attr['entity'];
@@ -64,24 +64,24 @@ class CurricularTypesTable extends ControllerActionTable
         }
         return $attr;
     }
-    public function onGetCategory(Event $event, Entity $entity)
+    public function onGetCategory(EventInterface $event, Entity $entity)
     {
         return $entity->category ? __('Co-Curricular') : __('Extracurricular'); //POCOR-7751
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

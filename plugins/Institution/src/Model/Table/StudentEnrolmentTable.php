@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
@@ -285,7 +285,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         foreach ($this->associations() as $assoc) {
             $associatedModel = $assoc->getTarget();
             $fieldName = $assoc->getForeignKey();
-            //$associatedModel = TableRegistry::get($assoc->className());//not use in cakephp 4
+            //$associatedModel = TableRegistry::getTableLocator()->get($assoc->className());//not use in cakephp 4
             //$fieldName = $assoc->foreignKey();//not use in cakephp 4
             if(!in_array($fieldName, $excludedFields)) {
                 $rules->add($rules->existsIn($fieldName, $associatedModel, $fieldName.' does not exists.'));
@@ -308,7 +308,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         return $events;
     }
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    public function getWorkflowEvents(EventInterface $event, ArrayObject $eventsObject)
     {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
@@ -317,14 +317,14 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function onApprove(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onApprove(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         // add student into institution_students
         $entity = $this->get($id);
         $this->addInstitutionStudent($entity);
     }
 
-    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onCancel(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
         $Students = self::getDynamicTableInstance('Institution.Students');
@@ -480,7 +480,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     }
 
-    public function studentsAfterSave(Event $event, $student)
+    public function studentsAfterSave(EventInterface $event, $student)
     {
         $StudentStatuses = self::getDynamicTableInstance('Student.StudentStatuses');
         $statusList = $StudentStatuses->findCodeList();
@@ -577,7 +577,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function studentsAfterDelete(Event $event, Entity $student)
+    public function studentsAfterDelete(EventInterface $event, Entity $student)
     {
         // check for enrolled status and delete admission record
         $this->removePendingAdmission($student->student_id, $student->institution_id);
@@ -621,7 +621,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         // Generate encoded query string once
         $queryString = $this->getQueryString();
@@ -641,7 +641,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
         $session = $this->request->getSession();
@@ -680,7 +680,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('comment', ['type' => 'hidden']);
         $this->field('start_date', ['type' => 'hidden']);
@@ -796,7 +796,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         $toolbarButtons1->exchangeArray($toolbarButtons);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // search
         $search = $this->getSearchKey();
@@ -806,7 +806,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('student_id', ['type' => 'readonly', 'attr' => ['value' => $this->Users->get($entity->student_id)->name_with_id]]);
         $this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
@@ -818,13 +818,13 @@ class StudentEnrolmentTable extends ControllerActionTable
         $this->setFieldOrder(['student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('openemis_no');//POCOR-7738
         $this->setFieldOrder(['status_id', 'assignee_id', 'student_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'start_date', 'end_date', 'comment']);
     }
 
-    public function onGetStudentId(Event $event, Entity $entity)
+    public function onGetStudentId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -840,7 +840,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         return $value;
     }
     //POCOR-7738 start
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -857,7 +857,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($value, $url);
     }
     //POCOR-7738 end
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -876,7 +876,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
             $endDate = $attr['entity']->end_date;
@@ -887,7 +887,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -908,7 +908,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         //this is meant to force gender_id validation
         if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
@@ -966,7 +966,7 @@ class StudentEnrolmentTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
         if ($entity->isNew()) {
@@ -1143,7 +1143,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Students > Student Enrolment';

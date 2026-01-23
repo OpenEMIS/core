@@ -3,7 +3,7 @@ namespace Assessment\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 
@@ -33,7 +33,7 @@ class AssessmentItemsGradingTypesTable extends AppTable {
        
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();

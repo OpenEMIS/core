@@ -2,7 +2,7 @@
 namespace Examination\Model\Table;
 
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use ArrayObject;
 use Cake\Validation\Validator;

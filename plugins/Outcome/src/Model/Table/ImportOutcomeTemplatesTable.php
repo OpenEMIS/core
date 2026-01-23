@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
@@ -31,9 +31,9 @@ class ImportOutcomeTemplatesTable extends AppTable {
             'backUrl' => ['plugin' => 'Outcome', 'controller' => 'Outcomes', 'action' => 'Templates']
         ]);
 
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $this->competencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $this->competencyTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
     }
     
     public function implementedEvents(): array {
@@ -48,7 +48,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         return $events;
     }
 
-    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
         $columns = new Collection($columns);
@@ -59,7 +59,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         $outcomeTemplateCodeIndex = key($extractedOutcomeTemplateCode->toArray());
         $outcomeTemplateCode = $sheet->getCellByColumnAndRow($outcomeTemplateCodeIndex, $row)->getValue();
         
-        $CompetencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $CompetencyTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
         $competencyTemplatesObject = $CompetencyTemplates->find()->where([
             'code' => $outcomeTemplateCode,
             'academic_period_id' => $selectedPeriod
@@ -71,7 +71,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
     
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->ControllerAction->field('academic_period_id', [
             'type' => 'select',
@@ -91,7 +91,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriod($this->request->getQuery('period'), true));
 
@@ -103,7 +103,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         
@@ -133,12 +133,12 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
 
         if ($action == 'add') {
-			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 			if(!empty($this->request->getQuery('period')) && empty($this->request->getData()($this->aliasField('academic_period_id')))) {
 				$academicPeriodId = $this->request->getQuery('period');
 			} else {
@@ -158,7 +158,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeEducationProgrammeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         $request = $request->withQueryParams(array_diff_key($request->getQueryParams(), ['programme' => '']));
@@ -174,7 +174,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
     }
 
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         list($gradeOption, $selectedGrade) = array_values($this->getEducationGrade($this->request->getQuery('grade'), true));
 
@@ -198,7 +198,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeEducationGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         if ($request->is(['post', 'put'])) {
@@ -232,9 +232,9 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
 
-    public function onImportPopulateEducationProgrammesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateEducationProgrammesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];        
@@ -251,10 +251,10 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }        
     }
 
-    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateEducationSubjectsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $gradeId = (int) $this->request->getQuery('grade');
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
@@ -275,9 +275,9 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
 
-    public function onImportPopulateOutcomeGradingTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateOutcomeGradingTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'code');
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
@@ -294,10 +294,10 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
         foreach ($this->_currentData AS $criteriaData) {
-            $competencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+            $competencyTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
             $latest = $competencyTemplates->find()->where([
                 'code' => $criteriaData['outcome_template_code'],
                 'academic_period_id' => $criteriaData['academic_period_id']
@@ -305,7 +305,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
 
             if ($latest) {
                 $competencyTemplateInsertedId = $latest->id;
-                $ContactTable = TableRegistry::get('Outcome.OutcomeCriterias');
+                $ContactTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
                 $data = [
                     'code' => $criteriaData['criteria_code'],
                     'name' => $criteriaData['criteria_name'],
@@ -321,9 +321,9 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }  
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        $CompetencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $CompetencyTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
         $selectedPeriod = $this->getAcademicPeriod($this->request->getQuery('period'));
         $selectedGrade = $this->getEducationGrade($this->request->getQuery('grade'));
         $tempRow['code'] = $tempRow['outcome_template_code'];
@@ -385,7 +385,7 @@ class ImportOutcomeTemplatesTable extends AppTable {
         ])->first();
         
         if ($CompetencyTemplatesCriteria) {
-            $outcomeCriteria = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriteria = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $outcomeCriteriaCount = $outcomeCriteria->find()->where([
                 'code' => $tempRow['criteria_code'],
                 'academic_period_id' => $selectedPeriod,
@@ -422,13 +422,13 @@ class ImportOutcomeTemplatesTable extends AppTable {
 
         /** START: Insert the Outcome criterias */
         /*
-        $competencyTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
+        $competencyTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
         $latest = $competencyTemplates->find()->order($competencyTemplates->aliasField('id') . ' DESC')->first();
         $competencyTemplateInsertedId = $latest->id + 1;
         if ($CompetencyTemplatesCriteria) {
             $competencyTemplateInsertedId = $CompetencyTemplatesCriteria->id;
         }
-        $ContactTable = TableRegistry::get('Outcome.OutcomeCriterias');
+        $ContactTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
         $creatable = [
             'code' => $tempRow['criteria_code'],
             'name' => $tempRow['criteria_name'],

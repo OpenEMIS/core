@@ -72,12 +72,15 @@ class Application extends BaseApplication
         // Custom Plugins
 
         // Essential Plugins
-        $this->addPlugin('User', ['autoload' => true]);
         $this->addPlugin('OpenEmis', ['autoload' => true]);
         $this->addPlugin('ControllerAction', ['autoload' => true]);
         $this->addPlugin('Angular', ['routes' => true, 'autoload' => true]);
-        $this->addPlugin('Page', ['routes' => true, 'autoload' => true]); //POCOR-8074
-//        $this->addPlugin('korditpteltd/ikpge-cakephp-page', ['path' => 'vendor/korditpteltd/ikpge-cakephp-page']);
+        // Register Page plugin from vendor directory
+        $this->addPlugin('Page', [
+            'path' => ROOT . DS . 'vendor' . DS . 'korditpteltd' . DS . 'ikpge-cakephp-page' . DS,
+            'routes' => true, 
+            'autoload' => true
+        ]); //POCOR-8074
 
         // Localizations
         $this->addPlugin('Localization', ['routes' => true, 'autoload' => true]);
@@ -116,10 +119,25 @@ class Application extends BaseApplication
         $this->addPlugin('Map', ['routes' => true, 'autoload' => true]);
         $this->addPlugin('Health', ['routes' => true, 'autoload' => true]);
         $this->addPlugin('Cache', ['routes' => true, 'autoload' => true]);
-        $this->addPlugin('Restful');
+        // Register Restful plugin from vendor directory
+        $this->addPlugin('Restful', [
+            'path' => ROOT . DS . 'vendor' . DS . 'korditpteltd' . DS . 'ikrst-cakephp-restful' . DS,
+            'routes' => true,
+            'autoload' => true
+        ]);
         // $this->addPlugin('ADmad/JwtAuth');
-        $this->addPlugin('SSO');
-        // $this->addPlugin('Webhook', ['routes' => true, 'autoload' => true]);
+        // Register SSO plugin from vendor directory
+        $this->addPlugin('SSO', [
+            'path' => ROOT . DS . 'vendor' . DS . 'korditpteltd' . DS . 'iksso-cakephp-sso' . DS,
+            'routes' => true,
+            'autoload' => true
+        ]);
+        // Register Webhook plugin from vendor directory (commented out, uncomment if needed)
+        // $this->addPlugin('Webhook', [
+        //     'path' => ROOT . DS . 'vendor' . DS . 'korditpteltd' . DS . 'kd-cakephp-webhooks' . DS,
+        //     'routes' => true,
+        //     'autoload' => true
+        // ]);
         $this->addPlugin('System', ['routes' => true, 'autoload' => true]);
         $this->addPlugin('InstitutionRepeater', ['routes' => true, 'autoload' => true]);
         $this->addPlugin('Examination', ['routes' => true, 'autoload' => true]);

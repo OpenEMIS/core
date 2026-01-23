@@ -15,7 +15,7 @@ class TrainingComponent extends Component
 
     public function getCourseList($params = [])
     {
-        $Courses = TableRegistry::get('Training.TrainingCourses');
+        $Courses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
 
         $query = $Courses->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
 
@@ -48,7 +48,7 @@ class TrainingComponent extends Component
         $listAll = isset($params['listAll']) ? $params['listAll'] : false;
         $courseId = isset($params['training_course_id']) ? $params['training_course_id'] : false;
 
-        $Sessions = TableRegistry::get('Training.TrainingSessions');
+        $Sessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $query = $Sessions->find('list', ['keyField' => 'id', 'valueField' => 'code_name']);
 
         if (!$listAll) {

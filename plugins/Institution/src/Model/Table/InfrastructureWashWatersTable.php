@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -36,7 +36,7 @@ class InfrastructureWashWatersTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureWashWaters';
         $userType = '';
@@ -45,7 +45,7 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             ->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('infrastructure_wash_water_type_id');
         $this->field('infrastructure_wash_water_functionality_id');
@@ -96,7 +96,7 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field)
         {
@@ -117,12 +117,12 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this
             ->AcademicPeriods
@@ -151,11 +151,11 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         $this->field('infrastructure_wash_water_accessibility_id', ['attr' => ['label' => __('Accessibility') ]]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $infrastructureTabsData = $this->infrastructureTabsData;
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $institutionStudentId = $settings['id'];
 
         foreach ($infrastructureTabsData as $key => $val)
@@ -171,7 +171,7 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             , 'orientation' => 'landscape'];
         }
     }
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
@@ -248,7 +248,7 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this
             ->request
@@ -262,9 +262,9 @@ class InfrastructureWashWatersTable extends ControllerActionTable
             ->getCurrent();
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
-        $areaAdministratives = TableRegistry::get('Area.AreaAdministratives');
-        $institutions = TableRegistry::get('Institution.Institutions');
-        $area = TableRegistry::get('Area.Areas');
+        $areaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $area = TableRegistry::getTableLocator()->get('Area.Areas');
         /* $query->select(['institutions_name'=>'institutions.name','institutions_code'=>'institutions.code','area_administratives_name'=>'area_administratives.name','area_name'=>'areas.name'])
              ->LeftJoin([$institutions->getAlias() => $institutions->getTable()],[
                 $institutions->aliasField('id').' = ' . $this->aliasField('institution_id')
@@ -282,12 +282,12 @@ class InfrastructureWashWatersTable extends ControllerActionTable
 
         if ($infrastructureType == 'Water')
         {
-            $infrastructureWashWaterTypes = TableRegistry::get('Institution.InfrastructureWashWaterTypes');
-            $infrastructureWashWaterProximities = TableRegistry::get('Institution.InfrastructureWashWaterProximities');
-            $infrastructureWashWaterFunctionalities = TableRegistry::get('Institution.InfrastructureWashWaterFunctionalities');
-            $infrastructureWashWaterQualities = TableRegistry::get('Institution.InfrastructureWashWaterQualities');
-            $infrastructureWashWaterQuantities = TableRegistry::get('Institution.InfrastructureWashWaterQuantities');
-            $infrastructureWashWaterAccessibilities = TableRegistry::get('Institution.InfrastructureWashWaterAccessibilities');
+            $infrastructureWashWaterTypes = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWaterTypes');
+            $infrastructureWashWaterProximities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWaterProximities');
+            $infrastructureWashWaterFunctionalities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWaterFunctionalities');
+            $infrastructureWashWaterQualities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWaterQualities');
+            $infrastructureWashWaterQuantities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWaterQuantities');
+            $infrastructureWashWaterAccessibilities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWaterAccessibilities');
             $res = $query->select(['water_type' => $infrastructureWashWaterTypes->aliasField('name'), 'water_functionality' => $infrastructureWashWaterFunctionalities->aliasField('name'), 'water_proximity' => $infrastructureWashWaterProximities->aliasField('name'), 'water_quality' => $infrastructureWashWaterQualities->aliasField('name'), 'water_quantity' => $infrastructureWashWaterQuantities->aliasField('name'), 'water_accessbility' => $infrastructureWashWaterAccessibilities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
                 ->LeftJoin([$infrastructureWashWaterTypes->getAlias() => $infrastructureWashWaterTypes->getTable() ], [$this->aliasField('infrastructure_wash_water_type_id') . ' = ' . $infrastructureWashWaterTypes->aliasField('id') ])
                 ->LeftJoin([$infrastructureWashWaterProximities->getAlias() => $infrastructureWashWaterProximities->getTable() ], [$this->aliasField('infrastructure_wash_water_proximity_id') . ' = ' . $infrastructureWashWaterProximities->aliasField('id') ])
@@ -303,11 +303,11 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         }
         if ($infrastructureType == 'Sanitation')
         {
-            $infrastructureWashSanitations = TableRegistry::get('Institution.InfrastructureWashSanitations');
-            $infrastructureWashSanitationTypes = TableRegistry::get('Institution.InfrastructureWashSanitationTypes');
-            $infrastructureWashSanitationUses = TableRegistry::get('Institution.InfrastructureWashSanitationUses');
-            $infrastructureWashSanitationQualities = TableRegistry::get('Institution.InfrastructureWashSanitationQualities');
-            $infrastructureWashSanitationAccessibilities = TableRegistry::get('Institution.InfrastructureWashSanitationAccessibilities');
+            $infrastructureWashSanitations = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitations');
+            $infrastructureWashSanitationTypes = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationTypes');
+            $infrastructureWashSanitationUses = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationUses');
+            $infrastructureWashSanitationQualities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationQualities');
+            $infrastructureWashSanitationAccessibilities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationAccessibilities');
 
             $res = $query->select(['sanitation_name' => $infrastructureWashSanitationTypes->aliasField('name'), 'sanitation_use_name' => $infrastructureWashSanitationUses->aliasField('name'), 'total_male' => $infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_total_male'), 'total_female' => $infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_total_female'), 'total_mixed' => $infrastructureWashSanitations->aliasField('infrastructure_wash_sanitation_total_mixed'), 'quality' => $infrastructureWashSanitationQualities->aliasField('name'), 'accessibility' => $infrastructureWashSanitationAccessibilities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
             // Sanitation Name
@@ -336,10 +336,10 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         }
         if ($infrastructureType == 'Hygiene')
         {
-            $infrastructureWashHygienes = TableRegistry::get('Institution.InfrastructureWashHygienes');
-            $infrastructureWashHygieneTypes = TableRegistry::get('Institution.InfrastructureWashHygieneTypes');
-            $infrastructureWashHygieneSoapashAvailabilities = TableRegistry::get('Institution.InfrastructureWashHygieneSoapashAvailabilities');
-            $infrastructureWashHygieneEducations = TableRegistry::get('Institution.InfrastructureWashHygieneEducations');
+            $infrastructureWashHygienes = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashHygienes');
+            $infrastructureWashHygieneTypes = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashHygieneTypes');
+            $infrastructureWashHygieneSoapashAvailabilities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashHygieneSoapashAvailabilities');
+            $infrastructureWashHygieneEducations = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashHygieneEducations');
             $res = $query->select(['hygiene_type_name' => $infrastructureWashHygieneTypes->aliasField('name'), 'soap_ash_availability' => $infrastructureWashHygieneSoapashAvailabilities->aliasField('name'), 'hygiene_education' => $infrastructureWashHygieneEducations->aliasField('name'), 'hygeine_total_male' => $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_total_male'), 'hygeine_total_female' => $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_total_female'), 'hygeine_total_mixed' => $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_total_mixed'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
                 ->LeftJoin([$infrastructureWashHygienes->getAlias() => $infrastructureWashHygienes->getTable() ], [$infrastructureWashHygienes->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashHygienes->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
                 ->LeftJoin([$infrastructureWashHygieneTypes->getAlias() => $infrastructureWashHygieneTypes->getTable() ], [$infrastructureWashHygieneTypes->aliasField('id') . ' = ' . $infrastructureWashHygienes->aliasField('infrastructure_wash_hygiene_type_id') ])
@@ -354,9 +354,9 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         }
         if ($infrastructureType == 'Waste')
         {
-            $infrastructureWashWastes = TableRegistry::get('Institution.InfrastructureWashWastes');
-            $infrastructureWashWasteTypes = TableRegistry::get('Institution.InfrastructureWashWasteTypes');
-            $infrastructureWashWasteFunctionalities = TableRegistry::get('Institution.InfrastructureWashWasteFunctionalities');
+            $infrastructureWashWastes = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWastes');
+            $infrastructureWashWasteTypes = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWasteTypes');
+            $infrastructureWashWasteFunctionalities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashWasteFunctionalities');
 
             $res = $query->select(['waste_type' => $infrastructureWashWasteTypes->aliasField('name'), 'waste_functionality' => $infrastructureWashWasteFunctionalities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
                 ->LeftJoin([$infrastructureWashWastes->getAlias() => $infrastructureWashWastes->getTable() ], [$infrastructureWashWastes->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashWastes->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
@@ -369,9 +369,9 @@ class InfrastructureWashWatersTable extends ControllerActionTable
         }
         if ($infrastructureType == 'Sewage')
         {
-            $infrastructureWashSewages = TableRegistry::get('Institution.InfrastructureWashSewages');
-            $infrastructureWashSewageTypes = TableRegistry::get('Institution.InfrastructureWashSewageTypes');
-            $infrastructureWashSewageFunctionalities = TableRegistry::get('Institution.InfrastructureWashSewageFunctionalities');
+            $infrastructureWashSewages = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSewages');
+            $infrastructureWashSewageTypes = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSewageTypes');
+            $infrastructureWashSewageFunctionalities = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSewageFunctionalities');
             $res = $query->select(['sewage_type' => $infrastructureWashSewageTypes->aliasField('name'), 'sewage_functionality' => $infrastructureWashSewageFunctionalities->aliasField('name'), 'institutions_name' => $institutions->aliasField('name'), 'institutions_code' => $institutions->aliasField('code'), 'area_administratives_name' => $areaAdministratives->aliasField('name'), 'area_name' => $area->aliasField('name')])
                 ->LeftJoin([$infrastructureWashSewages->getAlias() => $infrastructureWashSewages->getTable() ], [$infrastructureWashSewages->aliasField('institution_id') . ' = ' . $this->aliasField('institution_id') , $infrastructureWashSewages->aliasField('academic_period_id') . ' = ' . $this->aliasField('academic_period_id') ])
                 ->LeftJoin([$infrastructureWashSewageTypes->getAlias() => $infrastructureWashSewageTypes->getTable() ], [$infrastructureWashSewageTypes->aliasField('id') . ' = ' . $infrastructureWashSewages->aliasField('infrastructure_wash_sewage_type_id') ])

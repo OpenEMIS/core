@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Profile\Controller\BodyMassesController as BaseController;
 
 class StaffBodyMassesController extends BaseController

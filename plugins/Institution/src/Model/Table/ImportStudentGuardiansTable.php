@@ -5,7 +5,7 @@ use App\Model\Table\AppTable;
 use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use DateTimeInterface;
@@ -36,7 +36,7 @@ class ImportStudentGuardiansTable extends AppTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
         if ($plugin == 'Institution') {
@@ -44,22 +44,22 @@ class ImportStudentGuardiansTable extends AppTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona)
     {
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         if (!empty($data[$columnOrder])) {
             unset($data[$columnOrder]);
         }
     }
 
-    public function onImportPopulateGuardianRelationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateGuardianRelationsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'Relation');
 
@@ -84,10 +84,10 @@ class ImportStudentGuardiansTable extends AppTable
 
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $institutionId = !empty($this->request->param('institutionId')) ? $this->paramsDecode($this->request->param('institutionId'))['id'] : $this->request->session()->read('Institution.Institutions.id');
-        $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+        $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
         $tempRow['institution_id'] = $institutionId;
 
         $student = $InstitutionStudentsTable->find()
@@ -106,7 +106,7 @@ class ImportStudentGuardiansTable extends AppTable
             return false;
         }
 
-        $studentGuardiansTable = TableRegistry::get('Student.StudentGuardians');
+        $studentGuardiansTable = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
 
         $exitsRecord = $studentGuardiansTable->find()
             ->where([

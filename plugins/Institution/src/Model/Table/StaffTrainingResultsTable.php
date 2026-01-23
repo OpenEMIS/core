@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -41,7 +41,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		$this->controller->changeUserHeader($this, $modelAlias, $userType);
 	}
 
-	public function onGetStatus(Event $event, Entity $entity)
+	public function onGetStatus(EventInterface $event, Entity $entity)
 	{
 		$SessionResults = $this->Sessions->SessionResults;
 		$sessionResult = $SessionResults
@@ -55,9 +55,9 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		return '<span class="status highlight">' . $sessionResult->_matchingData['Statuses']->name . '</span>';
 	}
 
-	public function onGetStartDate(Event $event, Entity $entity)
+	public function onGetStartDate(EventInterface $event, Entity $entity)
 	{
-		$training_sessions = TableRegistry::get('Training.TrainingSessions');
+		$training_sessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
 		$attendanceType = $training_sessions
                               ->find()
                               ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
@@ -70,9 +70,9 @@ class StaffTrainingResultsTable extends ControllerActionTable
 	}
 	
 
-	public function onGetEndDate(Event $event, Entity $entity)
+	public function onGetEndDate(EventInterface $event, Entity $entity)
 	{
-		$training_sessions = TableRegistry::get('Training.TrainingSessions');
+		$training_sessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
 		$attendanceType = $training_sessions
                               ->find()
                               ->where([$training_sessions->aliasField('id') => $entity->training_session_id])
@@ -84,9 +84,9 @@ class StaffTrainingResultsTable extends ControllerActionTable
         return '';
 	}
 
-	public function onGetCreditHours(Event $event, Entity $entity)
+	public function onGetCreditHours(EventInterface $event, Entity $entity)
 	{
-		$training_courses = TableRegistry::get('Training.TrainingCourses');
+		$training_courses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
 		$attendanceType = $training_courses
                               ->find()
                               ->where([$training_courses->aliasField('id') => $entity['session']['training_course_id']])
@@ -94,7 +94,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		return $attendanceType[0]['credit_hours'];
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'start_date':
@@ -116,24 +116,24 @@ class StaffTrainingResultsTable extends ControllerActionTable
         }
     }
 
-	public function onGetTrainingCourse(Event $event, Entity $entity)
+	public function onGetTrainingCourse(EventInterface $event, Entity $entity)
 	{
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->course->name;
 	}
 
-	public function onGetTrainingProvider(Event $event, Entity $entity)
+	public function onGetTrainingProvider(EventInterface $event, Entity $entity)
 	{
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->_matchingData['TrainingProviders']->name;
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->setupFields();
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
 		$session = $this->request->getSession();
 		$sessionKey = 'Staff.Staff.id';
 		if ($session->check($sessionKey)) {
@@ -176,7 +176,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		}
 	}
 
-	public function viewBeforeAction(Event $event, ArrayObject $extra) {
+	public function viewBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->setupFields();
 	}
 
@@ -203,7 +203,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
-	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+	public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
 	{
 		$this->setupTabElements();
 		// Start POCOR-5188
@@ -227,7 +227,7 @@ class StaffTrainingResultsTable extends ControllerActionTable
 		// End POCOR-5188
 	}
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
 		$extraField[] = [
             'key' => 'WorkflowSteps.name',
@@ -274,16 +274,16 @@ class StaffTrainingResultsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         $staffUserId = $this->getUserID();
-        $trainingSession = TableRegistry::get('Training.TrainingSessions');
-        $trainingCourses = TableRegistry::get('Training.TrainingCourses');
-        $trainingLevels = TableRegistry::get('Training.TrainingLevels');
-        $trainingProviders = TableRegistry::get('Training.TrainingProviders');
-        $trainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
-        $workflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $trainingSession = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
+        $trainingCourses = TableRegistry::getTableLocator()->get('Training.TrainingCourses');
+        $trainingLevels = TableRegistry::getTableLocator()->get('Training.TrainingLevels');
+        $trainingProviders = TableRegistry::getTableLocator()->get('Training.TrainingProviders');
+        $trainingSessionResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionResults');
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 
 		$query
         ->select([

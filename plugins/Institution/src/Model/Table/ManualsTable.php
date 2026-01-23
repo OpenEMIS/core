@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use User\Model\Table\ContactsTable as BaseTable;
 use App\Model\Table\ControllerActionTable;

@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
@@ -35,7 +35,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 		}
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(EventInterface $event) {
 
 		$this->fields['end_date']['visible'] = false;
 		$this->fields['hours']['visible'] = false;
@@ -53,7 +53,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function addEditBeforeAction(EventInterface $event) {
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
@@ -83,13 +83,13 @@ class ExtracurricularsTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
-	public function afterAction(Event $event, $data) {
+	public function afterAction(EventInterface $event, $data) {
 		$this->setupTabElements();
 	}
 
 	//POCOR-8795  refactored code
 	/*POCOR-6474 - commenting function because this function was enabling users to edit and view correct record*/
-	// public function beforeFind( Event $event, Query $query )
+	// public function beforeFind( EventInterface $event, Query $query )
 	// {
 	// 	//if ($this->controller->getName() == 'Profiles' && $this->request->query['type'] == 'student') {
 	// 	$session = $this->request->getSession();
@@ -144,7 +144,7 @@ class ExtracurricularsTable extends ControllerActionTable {
 	// 	}
 	// }
 
-	public function beforeFind(Event $event, Query $query, \ArrayObject $options, $primary)
+	public function beforeFind(EventInterface $event, Query $query, \ArrayObject $options, $primary)
 	{
 		if ($this->getAlias() == 'Extracurriculars') {
 			$conditions = [];
@@ -170,7 +170,7 @@ class ExtracurricularsTable extends ControllerActionTable {
      * @return array
      * @ticket POCOR-6700
     */
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
     	//academic period filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);

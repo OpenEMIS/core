@@ -4,7 +4,7 @@ namespace CustomExcel\Controller\Component;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class ExcelReportComponent extends Component
 {
@@ -21,7 +21,7 @@ class ExcelReportComponent extends Component
 		$this->controller->autoRender = false;
 
 		$className = $params['className'];
-		$model = TableRegistry::get($className);
+		$model = TableRegistry::getTableLocator()->get($className);
 
 		if ($model->behaviors()->has('ExcelReport') && isset($params['format'])) {
 			$model->behaviors()->get('ExcelReport')->setConfig(
@@ -43,7 +43,7 @@ class ExcelReportComponent extends Component
 		$this->controller->autoRender = false;
 
 		$className = $params['className'];
-		$model = TableRegistry::get($className);
+		$model = TableRegistry::getTableLocator()->get($className);
 
 		$extra = new ArrayObject([]);
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onGetExcelTemplateVars', [$extra], $this->controller);

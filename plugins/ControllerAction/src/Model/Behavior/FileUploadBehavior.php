@@ -22,7 +22,7 @@ namespace ControllerAction\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 
@@ -133,7 +133,7 @@ class FileUploadBehavior extends Behavior
 ** ControllerActionComponent events
 **
 ******************************************************************************************************************/
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -141,14 +141,14 @@ class FileUploadBehavior extends Behavior
         $session->delete($model->getRegistryAlias().'.parseUpload');
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         $session = $model->request->getSession();
         $session->delete($model->getRegistryAlias().'.parseUpload');
     }
 
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         if (isset($this->_table->fields[$this->getConfig('content')])) {
             $comment = '* ' . sprintf(__('File size should not be larger than %s.'), $this->getConfig('size'));
@@ -157,14 +157,14 @@ class FileUploadBehavior extends Behavior
         }
     }
 
-    public function editBeforeAction(Event $event)
+    public function editBeforeAction(EventInterface $event)
     {
         if (!$this->getConfig('contentEditable')) {
             unset($this->_table->fields[$this->getConfig('content')]);
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (!$this->getConfig('contentEditable')) {
             if (isset($data[$this->_table->aliasField($this->getConfig('content'))])) {
@@ -176,7 +176,7 @@ class FileUploadBehavior extends Behavior
     /**
      * @todo if user wants the file or image to be removed, it should be emptied from the record.
      */
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $fileNameField = $this->getConfig('name');
         $fileContentField = $this->getConfig('content');

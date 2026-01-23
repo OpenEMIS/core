@@ -4,7 +4,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -41,7 +41,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $contentHeader = $this->controller->viewVars['contentHeader'];
         list($studentName, $module) = explode(' - ', $contentHeader);
@@ -59,7 +59,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $this->studentId = $studentId;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->fields['student_status_id']['visible'] = false;
@@ -81,7 +81,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         // Start POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-7201[START]
         $institutionId = $this->getInstitutionID();
@@ -157,14 +157,14 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $query->find('all')->where([$where]);
     }
 
-    public function onGetAssessmentsName(Event $event, Entity $entity)
+    public function onGetAssessmentsName(EventInterface $event, Entity $entity)
     {
         return $entity->assessment_code . ' - ' . $entity->assessment_name;
     }
 
-    public function onGetTotalMark(Event $event, Entity $entity)
+    public function onGetTotalMark(EventInterface $event, Entity $entity)
     {
-        $ItemResults = TableRegistry::get('Institution.AssessmentItemResultsArchived');
+        $ItemResults = TableRegistry::getTableLocator()->get('Institution.AssessmentItemResultsArchived');
         $studentId = $entity->student_id;
         $academicPeriodId = $entity->academic_period_id;
         $educationSubjectId = $entity->education_subject_id;
@@ -176,7 +176,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         return round($totalMark->calculated_total, 2);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
@@ -207,7 +207,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         //POCOR-7474-HINDOL
         $this->setupTabElements();
@@ -317,7 +317,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
     {
 // Academic Periods filter
 
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 //
         $institutionId = $this->institutionId;
         $studentId = $this->studentId;
@@ -360,7 +360,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
      */
     private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
     {
-        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $this->AcademicPeriodId = $selectedAcademicPeriod;
         $whereArchive = ['academic_period_id' => $selectedAcademicPeriod,
             'institution_id' => $this->institutionId,
@@ -390,7 +390,7 @@ class ArchivedAssessmentsTable extends ControllerActionTable
 
     private function setAssessmentPeriodOptions($selectedAssessment = -1, $selectedAssessmentPeriod = -1)
     {
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
 //        $where = [];
         $whereArchive = [
             'academic_period_id' => $this->AcademicPeriodId,

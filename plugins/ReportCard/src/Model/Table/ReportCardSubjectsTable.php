@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 
@@ -30,12 +30,12 @@ class ReportCardSubjectsTable extends ControllerActionTable
         $staffId = $options['user']['id'];
         $checkType = $options['type'];
         $staffType = $options['staffType'];
-        $staffSubject = TableRegistry::get('Institution.InstitutionSubjectStaff');
+        $staffSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
         $reportCardId = $options['report_card_id'];
         $classId = $options['institution_class_id'];
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         if ($options['user']['super_admin'] != 1) {
            $orWhere[$staffSubject->aliasField('staff_id')] = $staffId;
            //$orWhere[$InstitutionClasses->aliasField('staff_id')] = $staffId;//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject

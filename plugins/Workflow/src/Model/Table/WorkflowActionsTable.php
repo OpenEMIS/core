@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 class WorkflowActionsTable extends AppTable
@@ -24,7 +24,7 @@ class WorkflowActionsTable extends AppTable
         $this->belongsTo('NextWorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'next_workflow_step_id']);
     }
 
-    public function onGetNextWorkflowStepId(Event $event, Entity $entity)
+    public function onGetNextWorkflowStepId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if (empty($entity->next_workflow_step_id)) {
@@ -34,17 +34,17 @@ class WorkflowActionsTable extends AppTable
         return $value;
     }
 
-    public function onGetCommentRequired(Event $event, Entity $entity)
+    public function onGetCommentRequired(EventInterface $event, Entity $entity)
     {
         return $entity->comment_required == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onGetAllowByAssignee(Event $event, Entity $entity)
+    public function onGetAllowByAssignee(EventInterface $event, Entity $entity)
     {
         return $entity->allow_by_assignee == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onGetPostEvents(Event $event, Entity $entity)
+    public function onGetPostEvents(EventInterface $event, Entity $entity)
     {
         $workflowSteps = $entity->workflow_step;
         $selectedWorkflow = $workflowSteps->workflow_id;
@@ -59,19 +59,19 @@ class WorkflowActionsTable extends AppTable
         return implode(', ', $eventArray);
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('action', ['visible' => false]);
         $this->ControllerAction->field('event_key', ['visible' => false]);
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('post_events');
         $this->ControllerAction->setFieldOrder(['visible', 'name', 'description', 'workflow_step_id', 'next_workflow_step_id', 'comment_required', 'allow_by_assignee', 'post_events']);
     }
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $where = [];
         $where[$this->aliasField('workflow_step_id')] = -1;
@@ -106,7 +106,7 @@ class WorkflowActionsTable extends AppTable
         $query->where($where);
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         $session = $this->request->getSession();
 
@@ -118,12 +118,12 @@ class WorkflowActionsTable extends AppTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query->matching('WorkflowSteps');
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         // POCOR-8128
         if (!property_exists($this, 'request') || !$this->request) {
@@ -136,7 +136,7 @@ class WorkflowActionsTable extends AppTable
         $this->request = $this->request->withQueryParams($queryParams);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         $events = $this->convertEventKeysToEvents($entity);
         if (!empty($events)) {
@@ -148,7 +148,7 @@ class WorkflowActionsTable extends AppTable
         }
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
+    public function onBeforeDelete(EventInterface $event, ArrayObject $options, $ids)
     {
         $entity = $this->get($ids);
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
@@ -168,23 +168,23 @@ class WorkflowActionsTable extends AppTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $eventKeys = $this->convertEventsToEventKeys($data);
         $data[$this->getAlias()]['event_key'] = $eventKeys;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldWorkflowModelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'edit') {
             $attr['visible'] = false;
@@ -199,7 +199,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldWorkflowId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'edit') {
             $attr['visible'] = false;
@@ -215,7 +215,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldWorkflowStepId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldWorkflowStepId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedWorkflow = $request->getQuery('workflow');
@@ -236,7 +236,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldNextWorkflowStepId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNextWorkflowStepId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -257,7 +257,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldCommentRequired(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCommentRequired(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -268,7 +268,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAllowByAssignee(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAllowByAssignee(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -279,7 +279,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldPostEvents(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPostEvents(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $entity = $attr['attr']['entity'];
@@ -371,7 +371,7 @@ class WorkflowActionsTable extends AppTable
         return $attr;
     }
 
-    public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeModel(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // POCOR-8128
         if (!property_exists($this, 'request') || !$this->request) {
@@ -397,7 +397,7 @@ class WorkflowActionsTable extends AppTable
     }
 
 
-    public function addEditOnChangeWorkflow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeWorkflow(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // POCOR-8128
         if (!property_exists($this, 'request') || !$this->request) {
@@ -422,7 +422,7 @@ class WorkflowActionsTable extends AppTable
     }
 
 
-    public function addEditOnChangeWorkflowStep(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeWorkflowStep(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // POCOR-8128
         if (!property_exists($this, 'request') || !$this->request) {
@@ -446,7 +446,7 @@ class WorkflowActionsTable extends AppTable
     }
 
 
-    public function addEditOnAddEvent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddEvent(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (array_key_exists($this->getAlias(), (array)$data)) {
             if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
@@ -509,7 +509,7 @@ class WorkflowActionsTable extends AppTable
     public function getEventTriggeringStep($selectedModel = null, $eventKey = null)
     {
         if(!empty($selectedModel) && !empty($eventKey)) {
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workflowResult = $Workflows
                 ->find()
                 ->select([
@@ -529,7 +529,7 @@ class WorkflowActionsTable extends AppTable
 
     public function getWorkflowModelOptions()
     {
-        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+        $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
         $modelOptions = $WorkflowModels->getList()->order([ //POCOR-8033 readable
             $WorkflowModels->aliasField('name')
         ])->toArray();
@@ -543,7 +543,7 @@ class WorkflowActionsTable extends AppTable
             return [];
         } else {
 
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workflowOptions = $Workflows
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                 ->where([
@@ -604,7 +604,7 @@ class WorkflowActionsTable extends AppTable
         if (is_null($selectedWorkflow) || empty($selectedWorkflow)) {
             return $emptyOptions;
         } else {
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workflow = $Workflows
                 ->find()
                 ->matching('WorkflowModels')
@@ -614,7 +614,7 @@ class WorkflowActionsTable extends AppTable
                 ->first();
 
             $registryAlias = $workflow->_matchingData['WorkflowModels']->model;
-            $subject = TableRegistry::get($registryAlias);
+            $subject = TableRegistry::getTableLocator()->get($registryAlias);
             $eventsObject = new ArrayObject();
             $subjectEvent = $subject->dispatchEvent('Workflow.getEvents', [$eventsObject], $subject);
             //POCOR-7016 start
@@ -705,7 +705,7 @@ class WorkflowActionsTable extends AppTable
     {
         $eventName = $event['value'];
 
-        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $existingEventCount = $WorkflowSteps->find()
             ->matching('WorkflowActions', function ($q) use ($eventName) {
                 return $q->where(['event_key LIKE ' => '%' . $eventName . '%']);
@@ -716,7 +716,7 @@ class WorkflowActionsTable extends AppTable
         return ($existingEventCount == 0);
     }
     //POCOR-8434 starts
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
         // POCOR-8128, POCOR-9047
         if (!property_exists($this, 'request') || !method_exists($this, 'getRequest') || !$this->getRequest()) {
             return;

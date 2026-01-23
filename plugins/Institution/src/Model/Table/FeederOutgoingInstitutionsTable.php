@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
@@ -49,12 +49,12 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
         $extra['selectedAcademicPeriod'] = $this->getSelectedAcademicPeriod($this->request);
@@ -79,7 +79,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
     }
 
     /* POCOR-6182 starts */
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         if (isset($buttons['view']) && $this->AccessControl->check(['Institutions', 'FeederOutgoingInstitutions', 'delete']) &&$this->Auth->user()['super_admin'] != 1) {
             $icon = '<i class="fa fa-trash"></i>';
@@ -114,7 +114,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return parent::onUpdateActionButtons($event, $entity, $buttons);
     }
     /* POCOR-6182 Ends */
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'Institutions' => [
@@ -132,7 +132,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['auto_contain'] = false;
 
@@ -168,7 +168,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('code');
         $this->field('recipient_institution');
@@ -186,7 +186,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         ]);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'Institutions' => [
@@ -203,13 +203,13 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         ]);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $entity->academic_period_id = $this->AcademicPeriods->getCurrent();
         $entity->feeder_institution_id = $this->institutionId;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', [
             'type' => 'select',
@@ -243,7 +243,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         ]);
     }
 
-    public function onGetCode(Event $event, Entity $entity)
+    public function onGetCode(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('institution') && $entity->institution->has('code')) {
@@ -252,7 +252,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $value;
     }
 
-    public function onGetRecipientInstitution(Event $event, Entity $entity)
+    public function onGetRecipientInstitution(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('institution') && $entity->institution->has('name')) {
@@ -261,7 +261,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $value;
     }
 
-    public function onGetAreaEducation(Event $event, Entity $entity)
+    public function onGetAreaEducation(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'index') {
             $areaName = $entity->institution->area->name;
@@ -294,7 +294,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'area_education' && ($this->action == 'index' || $this->action == 'view')) {
             // Getting the system value for the area
@@ -336,7 +336,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action = 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList();
@@ -347,7 +347,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $gradeList = [];
@@ -399,7 +399,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $areaEducationList = [];
@@ -465,7 +465,7 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $institutionList = [];

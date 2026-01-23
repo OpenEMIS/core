@@ -3,7 +3,7 @@ namespace Survey\Model\Table;
 
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
@@ -45,14 +45,14 @@ class SurveyRulesTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'survey_form_id';
         $searchableFields[] = 'survey_question_id';
         $searchableFields[] = 'dependent_question_id';
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // POCOR-8921, POCOR-9104 start
 //        Log::debug(print_r($entity,true));
@@ -67,7 +67,7 @@ class SurveyRulesTable extends ControllerActionTable
         $entity->id = Text::uuid();
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         if ($this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit'])) {
@@ -110,7 +110,7 @@ class SurveyRulesTable extends ControllerActionTable
     // End POCOR-5188
     }
 
-    public function onGetShowOptions(Event $event, Entity $entity)
+    public function onGetShowOptions(EventInterface $event, Entity $entity)
     {
         $showOptions = $entity->show_options;
         $showOptions = $event->getSubject() // POCOR-8465
@@ -131,7 +131,7 @@ class SurveyRulesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event,$entity,$buttons);
         if (isset($buttons['edit'])) {
@@ -140,13 +140,13 @@ class SurveyRulesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function onGetEnabled(Event $event, Entity $entity)
+    public function onGetEnabled(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('general.yesno');
         return $options[$entity->enabled];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         $surveyFormId = $serverRequest->getQuery('survey_form_id') ?? null;
@@ -278,7 +278,7 @@ class SurveyRulesTable extends ControllerActionTable
             ->group(['question']);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'survey_form_id') {
             return __('Survey Form');

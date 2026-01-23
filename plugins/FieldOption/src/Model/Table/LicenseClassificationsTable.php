@@ -3,7 +3,7 @@ namespace FieldOption\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
@@ -43,7 +43,7 @@ class LicenseClassificationsTable extends ControllerActionTable
             ]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $parentFieldOptions = $this->getLicenseTypes();
         $selectedParentFieldOption = $this->queryString('parent_field_option_id', $parentFieldOptions);
@@ -55,12 +55,12 @@ class LicenseClassificationsTable extends ControllerActionTable
         $this->controller->set(compact('parentFieldOptions', 'selectedParentFieldOption'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('license_type_id');
     }
 
-    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldLicenseTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $parentFieldOptions = $this->getLicenseTypes();
@@ -84,19 +84,19 @@ class LicenseClassificationsTable extends ControllerActionTable
         return $licenseTypes;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

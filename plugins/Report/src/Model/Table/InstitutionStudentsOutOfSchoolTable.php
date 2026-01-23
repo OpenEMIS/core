@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -30,10 +30,10 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ]);
     }
 
-    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery (EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
         //POCOR-7631::Start
         $join =[];
@@ -175,7 +175,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         
     }
 
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
+    public function onExcelRenderAge(EventInterface $event, Entity $entity, $attr) {
         $age = '';
         if ($entity->has('date_of_birth')) {
             if (!empty($entity->date_of_birth)) {
@@ -188,12 +188,12 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         return $age;
     }
 
-    public function onExcelGetStudentStatus(Event $event, Entity $entity) {
+    public function onExcelGetStudentStatus(EventInterface $event, Entity $entity) {
         return (!$entity->has('StudentStatus') || empty($entity->StudentStatus))? $this->getMessage('Institution.InstitutionStudents.notInSchool'): $entity->StudentStatus;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
@@ -387,12 +387,12 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelGetComment(Event $event, Entity $entity)
+    public function onExcelGetComment(EventInterface $event, Entity $entity)
     {
         $academicPeriods = $this->getIdByAcademicPeriods($entity->AcademicPeriod);
         $userId = $entity->id;
 
-        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+        $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
         $comment = $studentWithdraw
         ->find()
         ->where([
@@ -405,15 +405,15 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         return !empty($comment->comment) ? $comment->comment : '';
     }
 
-    public function onExcelGetReasonId(Event $event, Entity $entity)
+    public function onExcelGetReasonId(EventInterface $event, Entity $entity)
     {
         $academicPeriods = $this->getIdByAcademicPeriods($entity->AcademicPeriod);
         $userId = $entity->id;
 
-        $StudentWithdrawReasons = TableRegistry::get('Student.StudentWithdrawReasons');
-        $Statuses = TableRegistry::get('Student.StudentStatuses');
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $studentWithdraw = TableRegistry::get('Institution.InstitutionStudentWithdraw');
+        $StudentWithdrawReasons = TableRegistry::getTableLocator()->get('Student.StudentWithdrawReasons');
+        $Statuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentWithdraw');
         $reason = $studentWithdraw
         ->find()
         ->select([
@@ -437,7 +437,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
 
     public function getIdByAcademicPeriods($code)
     {
-        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $academicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $entity = $academicPeriods->find()
             ->where([$academicPeriods->aliasField('name') => $code])
             ->first();
@@ -446,13 +446,13 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     }
 
 
-    public function onExcelGetStudentContactId(Event $event, Entity $entity)
+    public function onExcelGetStudentContactId(EventInterface $event, Entity $entity)
     {
         $userId = $entity->id;
 
         $contact = [];
         $guardianContact = [];
-        $UserContacts = TableRegistry::get('User.Contacts');
+        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         //START: POCOR-6511
         $conditionForStudent[] = $UserContacts->aliasField("contact_type_id  IN (1,2,15) ");
         //END: POCOR-6511
@@ -480,11 +480,11 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     * @ticket POCOR-6511
     */
 
-    public function onExcelGetGuardianContactId(Event $event, Entity $entity)
+    public function onExcelGetGuardianContactId(EventInterface $event, Entity $entity)
     {
         $userId = $entity->id;
         $guardianContact = [];
-        $StudentGuardiansContact = TableRegistry::get('Student.StudentGuardians');
+        $StudentGuardiansContact = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
         $StudentGuardiansContactResult = $StudentGuardiansContact
         ->find()
         ->select($StudentGuardiansContact->aliasField('guardian_id'))                     
@@ -494,7 +494,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ->first();
 
         
-        $UserContacts = TableRegistry::get('User.Contacts');
+        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id IN (1,2,15) ");
         $userContactResults = $UserContacts
         ->find()
@@ -520,13 +520,13 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     * @ticket POCOR-6511
     */
 
-    public function onExcelGetStudentEmail(Event $event, Entity $entity)
+    public function onExcelGetStudentEmail(EventInterface $event, Entity $entity)
     {
         $userId = $entity->id;
 
         $contact = [];
         $guardianContact = [];
-        $UserContacts = TableRegistry::get('User.Contacts');
+        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $conditionForStudent[] = $UserContacts->aliasField("contact_type_id = 8 ");
         $userContactResults = $UserContacts
         ->find()
@@ -552,11 +552,11 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
     * @ticket POCOR-6511
     */
 
-    public function onExcelGetGuardianEmail(Event $event, Entity $entity)
+    public function onExcelGetGuardianEmail(EventInterface $event, Entity $entity)
     {
         $userId = $entity->id;
         $guardianContact = [];
-        $StudentGuardiansContact = TableRegistry::get('Student.StudentGuardians');
+        $StudentGuardiansContact = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
         $StudentGuardiansContactResult = $StudentGuardiansContact
         ->find()
         ->select($StudentGuardiansContact->aliasField('guardian_id'))                     
@@ -566,7 +566,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ->first();
 
         
-        $UserContacts = TableRegistry::get('User.Contacts');
+        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
         $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id = 8 ");
         $userContactResults = $UserContacts
         ->find()
@@ -585,7 +585,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         return implode(',', $guardianContact);
     }
 
-    public function onExcelGetStudentName(Event $event, Entity $entity)
+    public function onExcelGetStudentName(EventInterface $event, Entity $entity)
     {
         $studentName = [];
         ($entity->first_name) ? $studentName[] = $entity->first_name : '';
@@ -596,7 +596,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         return implode(' ', $studentName);
     }
 
-    public function onExcelGetDateOfBirth(Event $event, Entity $entity)
+    public function onExcelGetDateOfBirth(EventInterface $event, Entity $entity)
     {
         $dateOfBirth = '';
         if ($entity->has('date_of_birth')) {

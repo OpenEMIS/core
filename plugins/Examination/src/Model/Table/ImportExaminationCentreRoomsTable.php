@@ -4,7 +4,7 @@ namespace Examination\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -25,7 +25,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         ]);
 
         // POCOR-8919
-        $this->ExaminationCentres = TableRegistry::get('Examination.ExaminationCentres');
+        $this->ExaminationCentres = TableRegistry::getTableLocator()->get('Examination.ExaminationCentres');
     }
 
     public function implementedEvents(): array
@@ -38,9 +38,9 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
 // POCOR-8919
 
-    public function onImportPopulateExaminationCentresData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateExaminationCentresData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 // POCOR-8919
 
         $selectFields = [
@@ -81,7 +81,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
 // POCOR-8919
 

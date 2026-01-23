@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use Cake\Network\Request;
@@ -57,7 +57,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         ]
     ];
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    public function getWorkflowEvents(EventInterface $event, ArrayObject $eventsObject)
     {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
@@ -75,12 +75,12 @@ class TrainingApplicationsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onWithdrawTrainingSession(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onWithdrawTrainingSession(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
         $staffId = $entity->staff_id;
         $sessionId = $entity->training_session_id;
-        $TrainingSessionsTraineesTable = TableRegistry::get('Training.TrainingSessionsTrainees');
+        $TrainingSessionsTraineesTable = TableRegistry::getTableLocator()->get('Training.TrainingSessionsTrainees');
         $trainingSessionsTraineeArr = [
             'training_session_id' => $sessionId,
             'trainee_id' => $staffId,
@@ -92,11 +92,11 @@ class TrainingApplicationsTable extends ControllerActionTable
 
     /**
      * POCOR-8033
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @param ArrayObject $extra
      */
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('institution_id', ['type' => 'select', 'after' => '', 'entity' => $entity]);
         $this->field('assignee_id', ['type' => 'select', 'after' => 'staff_id', 'entity' => $entity]);
@@ -104,7 +104,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->field('training_session_id', ['type' => 'select', 'after' => 'assignee_id', 'entity' => $entity]);
     }
 
-    public function onAssignTrainingSession(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onAssignTrainingSession(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
         $staffId = $entity->staff_id;
@@ -114,12 +114,12 @@ class TrainingApplicationsTable extends ControllerActionTable
             'trainee_id' => $staffId,
             'status' => 1
         ];
-        $TrainingSessionsTraineesTable = TableRegistry::get('Training.TrainingSessionsTrainees');
+        $TrainingSessionsTraineesTable = TableRegistry::getTableLocator()->get('Training.TrainingSessionsTrainees');
         $newEntity = $TrainingSessionsTraineesTable->newEntity($trainingSessionsTraineeArr);
         $TrainingSessionsTraineesTable->save($newEntity);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
 
@@ -144,7 +144,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['Sessions.Courses', 'Staff', 'Assignees', 'Institutions']);
         $search = $this->getSearchKey();
@@ -169,7 +169,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         // POCOR-8033:end
     }
 
-    public function indexbeforeAction(Event $event, ArrayObject $extra)
+    public function indexbeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('status_id');
@@ -190,14 +190,14 @@ class TrainingApplicationsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetTrainingCourseId(Event $event, Entity $entity)
+    public function onGetTrainingCourseId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'index') {
             return $entity->session->course->name;
         }
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('assignee_id', ['visible' => true]);
         $this->setFieldOrder([
@@ -307,14 +307,14 @@ class TrainingApplicationsTable extends ControllerActionTable
 
     //POCOR-8033 start
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
      * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action != 'add' && $action != 'edit') {
             return $attr;
@@ -365,14 +365,14 @@ class TrainingApplicationsTable extends ControllerActionTable
 
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
      * @author Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $alias = $this->getAlias();
 //        $this->log($request['data'][$alias], 'debug');
@@ -395,7 +395,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($action == 'add') {
@@ -416,8 +416,8 @@ class TrainingApplicationsTable extends ControllerActionTable
      */
     private function getInstitutionOptions($areaList = null)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionStatuses = TableRegistry::getTableLocator()->get('Institution.Statuses');
         $institutionQuery = $Institutions
             ->find('list', [
                 'keyField' => 'id',
@@ -451,11 +451,11 @@ class TrainingApplicationsTable extends ControllerActionTable
      */
     private function getStaffOptions(Entity $entity)
     {
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
 
         $institutionId = isset($entity['institution_id']) ? $entity['institution_id'] : 0;
-        $Staff = TableRegistry::get('Institution.Staff');
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $staffOptions = $Staff
             ->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
             ->matching('Users')
@@ -477,10 +477,10 @@ class TrainingApplicationsTable extends ControllerActionTable
     private function findAssigneeOptions($filter_id, $institutionId = 0)
     {
         $workflowModel = 'Administration > Training > Applications';
-        $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-        $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $workflowFiltersTable = TableRegistry::get('Workflow.WorkflowsFilters');
-        $Workflows = TableRegistry::get('Workflow.Workflows');
+        $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $workflowFiltersTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
+        $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
 
 
         $workModels = $Workflows
@@ -514,12 +514,12 @@ class TrainingApplicationsTable extends ControllerActionTable
 
         $assigneeOptions = [];
         if (!is_null($stepId)) {
-            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+            $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
             $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
             if (!empty($stepRoles)) {
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $Areas = TableRegistry::get('Area.Areas');
-                $Institutions = TableRegistry::get('Institution.Institutions');
+                $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 if ($isSchoolBased) {
                     if (is_null($institutionId)) {
                         Log::write('debug', 'Institution Id not found.');
@@ -559,7 +559,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         return $assigneeOptions;
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -568,7 +568,7 @@ class TrainingApplicationsTable extends ControllerActionTable
     }
     //POCOR-8033: end
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'status_id') {
             return __('Status');

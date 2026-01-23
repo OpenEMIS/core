@@ -6,10 +6,9 @@ use App\Controller\AppController;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
-use Cake\Event\EventInterface;
 
 class RubricsController extends AppController
 {
@@ -82,7 +81,7 @@ class RubricsController extends AppController
         $this->set('selectedAction', $this->request->getParam('action'));
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Rubric');
 
@@ -93,12 +92,12 @@ class RubricsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    public function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
         if ($model->getAlias() == 'Sections' || $model->getAlias() == 'Criterias' || $model->getAlias() == 'Options') {
             $request = $this->request;
 
-            $RubricTemplates = TableRegistry::get('Rubric.RubricTemplates');
+            $RubricTemplates = TableRegistry::getTableLocator()->get('Rubric.RubricTemplates');
             $templateOptions = $RubricTemplates
                 ->find('list')
                 ->toArray();
@@ -106,7 +105,7 @@ class RubricsController extends AppController
 
             $columns = $model->getSchema()->columns();
             if (in_array('rubric_section_id', $columns)) {
-                $RubricSections = TableRegistry::get('Rubric.RubricSections');
+                $RubricSections = TableRegistry::getTableLocator()->get('Rubric.RubricSections');
                 $sectionOptions = $RubricSections
                     ->find('list')
                     ->find('order')

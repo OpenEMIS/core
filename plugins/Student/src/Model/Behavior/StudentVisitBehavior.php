@@ -6,7 +6,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class StudentVisitBehavior extends Behavior {
     private $_tabFeatures = [
@@ -25,7 +25,7 @@ class StudentVisitBehavior extends Behavior {
         return $events;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
@@ -113,7 +113,7 @@ class StudentVisitBehavior extends Behavior {
 
     private function getStudentData($studentId = null)
     {
-        $StudentData = TableRegistry::get('User.Users')
+        $StudentData = TableRegistry::getTableLocator()->get('User.Users')
                 ->find()
                 ->where([
                     'id' => $studentId,

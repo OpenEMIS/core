@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\Utility\Security;
 
@@ -33,13 +33,13 @@ class ExaminationStudentSubjectResultsTable extends AppTable
         $this->addBehavior('CompositeKey');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
         $this->getExamGrading($entity);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes the mark or grade
         $marks = $entity->marks;
@@ -49,7 +49,7 @@ class ExaminationStudentSubjectResultsTable extends AppTable
         }
 
         // save total marks
-        $listeners = [TableRegistry::get('Examination.ExaminationCentresExaminationsSubjectsStudents')];
+        $listeners = [TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsSubjectsStudents')];
         $this->dispatchEventToModels('Model.ExaminationResults.afterSave', [$entity], $this, $listeners);
     }
 

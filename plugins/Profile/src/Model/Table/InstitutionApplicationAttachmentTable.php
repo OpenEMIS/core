@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
@@ -50,7 +50,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         return $events;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString  = $this->getQueryString('scholarship_id');
         $scholarshipId = $queryString;
@@ -61,7 +61,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
             ->order(['AcademicPeriods.name' => 'DESC']);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $encodedQueryString = $this->request->getParam('pass')[1];
         $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
@@ -83,7 +83,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         ];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('is_mandatory', ['attr' => ['label' => __('Mandatory')]]);
         $this->field('created', ['visible' => true]);
@@ -97,17 +97,17 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {   
         $this->Navigation->substituteCrumb($this->getHeader($this->getAlias()), __('Attachments'));
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'scholarship_attachment_type_id') {
             return __('Type');
@@ -127,7 +127,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
     }
 
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         
         if ($entity->getDirty('is_selected')) {
@@ -155,13 +155,13 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
 
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) 
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $applicantId = $this->getQueryString('applicant_id');
@@ -222,7 +222,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
     }
 
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('country_id', ['visible' => 'false']);
         $this->field('file_name', ['visible' => 'false']);
@@ -235,13 +235,13 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $applicantId = $this->getQueryString('applicant_id');
 
         $scholarshipId = $this->getQueryString('scholarship_id');
 
-        $this->AttachmentTypes = TableRegistry::get('Scholarship.AttachmentTypes');
+        $this->AttachmentTypes = TableRegistry::getTableLocator()->get('Scholarship.AttachmentTypes');
         $listOptions = $this->AttachmentTypes
             ->find('availableAttachmentTypes', [
                 'applicant_id' => $applicantId,
@@ -277,10 +277,10 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
             ->notEmptyString('scholarship_attachment_type_id', __('Please select a scholarship attachment type.'));  // Ensures the field is not empty
     }
 
-    public function onGetIsMandatory(Event $event, Entity $entity)
+    public function onGetIsMandatory(EventInterface $event, Entity $entity)
     {
         
-        $this->ScholarshipsScholarshipAttachmentTypes = TableRegistry::get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
+        $this->ScholarshipsScholarshipAttachmentTypes = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipsScholarshipAttachmentTypes');
         $attachmentType = $this->ScholarshipsScholarshipAttachmentTypes
             ->find()
             ->where([
@@ -296,7 +296,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
             return $isMandatory ? "<i class='fa fa-check'></i>" : "<i class='fa fa-close'></i>";
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('created', ['attr' => ['label' => __('Created By')]]);
         $this->field('created_user_id', ['attr' => ['label' => __('Created On')]]);
@@ -310,16 +310,16 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         $this->setFieldOrder(['scholarship_attachment_type_id','file_content','modified', 'modified_user_id','created','created_user_id']);
     }
 
-    public function onGetFileContent(Event $event, Entity $entity)
+    public function onGetFileContent(EventInterface $event, Entity $entity)
     {
        return $entity->file_name;
     }
 
-    public function onUpdateFieldScholarshipAttachmentTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldScholarshipAttachmentTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
         $recordId = $this->getQueryString('id');
-        $ScholarshipAttachmentType = TableRegistry::get('Scholarship.ScholarshipAttachmentType');
+        $ScholarshipAttachmentType = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipAttachmentType');
 
         $scholarshipAttachmentTypeRecord = $this->find()
             ->select(['id' => $ScholarshipAttachmentType->aliasField('id'),'name' => $ScholarshipAttachmentType->aliasField('name')])
@@ -340,7 +340,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         return $attr;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $queryString = $this->getQueryString();
         $entity->applicant_id = $queryString['applicant_id']; 
@@ -366,7 +366,7 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         }
     }
 
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if($this->action == 'remove'){
             $applicantId = $this->getQueryString('applicant_id');

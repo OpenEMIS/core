@@ -3,7 +3,7 @@ namespace Profile\Model\Table;
 
 use ArrayObject;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -55,21 +55,21 @@ class GuardiansTable extends ControllerActionTable
         return $events;
     }
 
-    public function afterAction(Event $event, $data)
+    public function afterAction(EventInterface $event, $data)
     {
         $this->setFieldOrder([
             'photo_content', 'openemis_no', 'guardian_id', 'guardian_relation_id'
         ]);
     }
 
-    public function onGetGuardianId(Event $event, Entity $entity)
+    public function onGetGuardianId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('_matchingData')) {
             return $entity->_matchingData['Users']->name;
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         if ($this->controller->getName() == 'Directories') {
             $studentId = $this->Session->read('Directory.Directories.id');
@@ -84,7 +84,7 @@ class GuardiansTable extends ControllerActionTable
         $this->field('guardian_relation_id', ['type' => 'select']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-5881 starts
 
@@ -112,7 +112,7 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addAfterPatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $errors = $entity->getErrors();
         if (!empty($errors)) {
@@ -121,23 +121,23 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('id', ['value' => Text::uuid()]);
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->field('photo_content', ['type' => 'image', 'order' => 0]);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
 
-    public function editBeforeQuery(Event $event, Query $query)
+    public function editBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain(['StudentUser', 'Users']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('guardian_id', [
             //'type' => 'readonly',
@@ -146,7 +146,7 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGuardianId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'autocomplete';
@@ -169,12 +169,12 @@ class GuardiansTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $this->Session->delete('Student.Guardians.new');
     }
 
-    public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnNew(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $options['validate']=true;
         $patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
@@ -233,7 +233,7 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -266,7 +266,7 @@ class GuardiansTable extends ControllerActionTable
         $this->editButtonAction = $action;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'guardian_id') {
             return __('Guardian');

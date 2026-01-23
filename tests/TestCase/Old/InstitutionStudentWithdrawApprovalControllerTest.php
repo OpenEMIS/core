@@ -72,7 +72,7 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
         ];
         $this->postData($testUrl, $data);
 
-        $WithdrawTable = TableRegistry::get('Institutions.institution_student_withdraw');
+        $WithdrawTable = TableRegistry::getTableLocator()->get('Institutions.institution_student_withdraw');
         $approvedRecord = $WithdrawTable->find()
             ->where([$WithdrawTable->aliasField('id') => $data['StudentWithdraw']['id'],
                 $WithdrawTable->aliasField('effective_date') => $data['StudentWithdraw']['effective_date'],
@@ -81,11 +81,11 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
             ->first();
         $this->assertEquals(true, (!empty($approvedRecord)));
 
-        $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $withdrawStatus = $StudentStatusesTable->getIdByCode('WITHDRAWN');
 
         // check that student status is changed to withdraw
-        $StudentsTable = TableRegistry::get('Institutions.institution_students');
+        $StudentsTable = TableRegistry::getTableLocator()->get('Institutions.institution_students');
         $withdrawStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentWithdraw']['student_id'],
                 $StudentsTable->aliasField('institution_id') => $data['StudentWithdraw']['institution_id'],
@@ -120,11 +120,11 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
         $errors = $postData->errors();
         $this->assertEquals(true, (array_key_exists('effective_date', $errors)));
 
-        $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $currentStatus = $StudentStatusesTable->getIdByCode('CURRENT');
 
         // check that student status is not changed to withdraw / still current
-        $StudentsTable = TableRegistry::get('Institutions.institution_students');
+        $StudentsTable = TableRegistry::getTableLocator()->get('Institutions.institution_students');
         $currentStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentWithdraw']['student_id'],
                 $StudentsTable->aliasField('institution_id') => $data['StudentWithdraw']['institution_id'],
@@ -154,18 +154,18 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
         ];
         $this->postData($testUrl, $data);
 
-        $WithdrawTable = TableRegistry::get('Institutions.institution_student_withdraw');
+        $WithdrawTable = TableRegistry::getTableLocator()->get('Institutions.institution_student_withdraw');
         $rejectedRecord = $WithdrawTable->find()
             ->where([$WithdrawTable->aliasField('id') => $data['StudentWithdraw']['id'],
                 $WithdrawTable->aliasField('status') => $this->rejectedStatus])
             ->first();
         $this->assertEquals(true, (!empty($rejectedRecord)));
 
-        $StudentStatusesTable = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $currentStatus = $StudentStatusesTable->getIdByCode('CURRENT');
 
         // check that student status is not changed to withdraw / still current
-        $StudentsTable = TableRegistry::get('Institutions.institution_students');
+        $StudentsTable = TableRegistry::getTableLocator()->get('Institutions.institution_students');
         $currentStudentRecord = $StudentsTable->find()
             ->where([$StudentsTable->aliasField('student_id') => $data['StudentWithdraw']['student_id'],
                 $StudentsTable->aliasField('institution_id') => $data['StudentWithdraw']['institution_id'],

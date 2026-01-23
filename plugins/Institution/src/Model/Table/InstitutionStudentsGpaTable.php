@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 
 class InstitutionStudentsGpaTable extends ControllerActionTable

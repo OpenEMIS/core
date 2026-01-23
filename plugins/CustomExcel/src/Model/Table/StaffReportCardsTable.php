@@ -3,7 +3,7 @@ namespace CustomExcel\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
@@ -74,9 +74,9 @@ class StaffReportCardsTable extends AppTable
 		return $events;
     }
 
-    public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateBeforeGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
-        $StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
+        $StaffReportCards = TableRegistry::getTableLocator()->get('Institution.StaffReportCards');
         if (!$StaffReportCards->exists($params)) {
             // insert staff report card record if it does not exist
             $params['status'] = $StaffReportCards::IN_PROGRESS;
@@ -92,9 +92,9 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateAfterGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
-        $StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
+        $StaffReportCards = TableRegistry::getTableLocator()->get('Institution.StaffReportCards');
 		$StaffReportCardData = $StaffReportCards
             ->find()
             ->select([
@@ -164,7 +164,7 @@ class StaffReportCardsTable extends AppTable
         ]);
     }
 
-    public function afterRenderExcelTemplate(Event $event, ArrayObject $extra, $controller)
+    public function afterRenderExcelTemplate(EventInterface $event, ArrayObject $extra, $controller)
     {
         $params = $extra['params'];
         $url = [
@@ -181,10 +181,10 @@ class StaffReportCardsTable extends AppTable
         return $controller->redirect($url);
     }
 
-	public function onExcelTemplateInitialiseProfiles(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseProfiles(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['staff_profile_template_id'])) {
-            $StaffTemplates = TableRegistry::get('ProfileTemplate.StaffTemplates');
+            $StaffTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StaffTemplates');
             $entity = $StaffTemplates->get($params['staff_profile_template_id'], ['contain' => ['AcademicPeriods']]);
 
             $extra['report_card_start_date'] = $entity->start_date;
@@ -194,19 +194,19 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseInstitutions(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types']]);
             return $entity;
         }
     }
 
-	public function onExcelTemplateInitialiseStaffUsers(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffUsers(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $Staff = TableRegistry::get('Institution.Staff');
+            $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
             $entity = $Staff
                 ->find()
@@ -273,10 +273,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffDemographics(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffDemographics(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $Staff = TableRegistry::get('Institution.Staff');
+            $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
             $entity = $Staff
                 ->find()
@@ -304,10 +304,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffContacts(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffContacts(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $UserContacts = TableRegistry::get('user_contacts');
+            $UserContacts = TableRegistry::getTableLocator()->get('user_contacts');
 
             $entity = $UserContacts
                 ->find()
@@ -323,10 +323,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffNationalities(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffNationalities(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $UserNationalities = TableRegistry::get('user_nationalities');
+            $UserNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
 
             $entity = $UserNationalities
                 ->find()
@@ -347,10 +347,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffSalaries(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffSalaries(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $StaffSalaries = TableRegistry::get('staff_salaries');
+            $StaffSalaries = TableRegistry::getTableLocator()->get('staff_salaries');
 
             $entity = $StaffSalaries
                 ->find()
@@ -365,10 +365,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffAreas(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffAreas(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $SecurityUsers = TableRegistry::get('security_users');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('security_users');
 
             $entity = $SecurityUsers
                 ->find()
@@ -396,11 +396,11 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffClasses(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffClasses(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $InstitutionClasses = TableRegistry::get('institution_classes');
-            $InstitutionClassesSecondaryStaff = TableRegistry::get('institution_classes_secondary_staff');
+            $InstitutionClasses = TableRegistry::getTableLocator()->get('institution_classes');
+            $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('institution_classes_secondary_staff');
 
 			$InstitutionClassesData = [];
             $InstitutionClassesData = $InstitutionClasses
@@ -482,10 +482,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffSubjects(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffSubjects(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $InstitutionSubjectStaff = TableRegistry::get('institution_subject_staff');
+            $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('institution_subject_staff');
 
 			$entity = [];
             $entity = $InstitutionSubjectStaff
@@ -532,10 +532,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffQualifications(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffQualifications(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $StaffQualifications = TableRegistry::get('staff_qualifications');
+            $StaffQualifications = TableRegistry::getTableLocator()->get('staff_qualifications');
 
             $entity = $StaffQualifications->find()
 				->select([
@@ -564,10 +564,10 @@ class StaffReportCardsTable extends AppTable
         }
     }
 
-	public function onExcelTemplateInitialiseStaffAwards(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateInitialiseStaffAwards(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
-            $UserAwards = TableRegistry::get('user_awards');
+            $UserAwards = TableRegistry::getTableLocator()->get('user_awards');
 
             $entity = $UserAwards->find()
 				->select([
@@ -583,7 +583,7 @@ class StaffReportCardsTable extends AppTable
         }
     }
     //POCOR-9128 starts
-    public function onExcelTemplateInitialiseStaffLicense(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStaffLicense(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (empty($params['staff_id'])) {
             return [];
@@ -629,7 +629,7 @@ class StaffReportCardsTable extends AppTable
         return $entity;
     }
     
-    public function onExcelTemplateInitialiseInstitutionStaff(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStaff(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (empty($params['staff_id'])) {
             return [];
@@ -668,7 +668,7 @@ class StaffReportCardsTable extends AppTable
         return $entity;
     }
 
-    public function onExcelTemplateInitialiseStaffLeave(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStaffLeave(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (empty($params['staff_id'])) {
             return [];
@@ -699,7 +699,7 @@ class StaffReportCardsTable extends AppTable
         return $entity;
     }
 
-    public function onExcelTemplateInitialiseStaffTraining(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStaffTraining(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (empty($params['staff_id'])) {
             return [];

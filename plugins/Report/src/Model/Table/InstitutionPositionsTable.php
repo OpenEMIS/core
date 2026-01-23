@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Log\Log;
@@ -43,14 +43,14 @@ class InstitutionPositionsTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     { 
         /*POCOR-6534 starts*/
-        //$identity_types = TableRegistry::get('FieldOption.IdentityTypes'); //POCOR-6887
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-        $IdentityTypesTable    = TableRegistry::get('FieldOption.IdentityTypes');
-        $UserIdentitiesTable   = TableRegistry::get('User.Identities');
-        $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+        //$identity_types = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes'); //POCOR-6887
+        $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $IdentityTypesTable    = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserIdentitiesTable   = TableRegistry::getTableLocator()->get('User.Identities');
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
         //Start POCOR-6605  JO UAT environment is not working blank birthCertificateId
         //$birthCertificateId = $IdentityTypesTable->getIdByName('Birth Certificate');
         //$birth_certificate_code_id = !empty($birthCertificateId) ? $birthCertificateId : 0;
@@ -242,12 +242,12 @@ class InstitutionPositionsTable extends AppTable
         /*POCOR-6534 ends*/
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $positionFilter = $requestData->position_filter;
 
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
@@ -396,7 +396,7 @@ class InstitutionPositionsTable extends AppTable
     }
 
     
-    public function onExcelGetStaffPositionId(Event $event, Entity $entity)
+    public function onExcelGetStaffPositionId(EventInterface $event, Entity $entity)
     {
         $options = $this->getSelectOptions('Staff.position_types');
         $staffPositionTitleType = '';
@@ -418,17 +418,17 @@ class InstitutionPositionsTable extends AppTable
         return $staffPositionTitleType;
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionId(EventInterface $event, Entity $entity)
     {
         return $entity->institution->code_name;
     }
 
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
+    public function onExcelGetIsHomeroom(EventInterface $event, Entity $entity)
     {
         return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
 
-    public function onExcelGetStaffName(Event $event, Entity $entity)
+    public function onExcelGetStaffName(EventInterface $event, Entity $entity)
     {
         if ($entity->has('_matchingData')) {
             return $entity->_matchingData['Users']->name;
@@ -549,7 +549,7 @@ class InstitutionPositionsTable extends AppTable
     */
 
 
-    public function onExcelGetGender(Event $event, Entity $entity)
+    public function onExcelGetGender(EventInterface $event, Entity $entity)
     {
         $gender = '';
         if (!empty($entity->user->gender->name) ) {
@@ -565,9 +565,9 @@ class InstitutionPositionsTable extends AppTable
         *POCOR-6951
     */
 
-    public function onExcelGetStaffPositionCategoriesId(Event $event, Entity $entity)
+    public function onExcelGetStaffPositionCategoriesId(EventInterface $event, Entity $entity)
     {
-        $StaffPositionCategories =  TableRegistry::get('Staff.StaffPositionCategories');
+        $StaffPositionCategories =  TableRegistry::getTableLocator()->get('Staff.StaffPositionCategories');
         $categories = '';
 
         if ($entity->has('staff_position_title')) {
@@ -588,7 +588,7 @@ class InstitutionPositionsTable extends AppTable
     }
 
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id

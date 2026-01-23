@@ -4,7 +4,7 @@ namespace Rubric\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
@@ -40,7 +40,7 @@ class RubricTemplatesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -58,7 +58,7 @@ class RubricTemplatesTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Setup fields
         list($weightingTypeOptions) = array_values($this->getSelectOptions());
@@ -67,7 +67,7 @@ class RubricTemplatesTable extends ControllerActionTable
         $this->fields['weighting_type']['options'] = $weightingTypeOptions;
     }
 
-    public function onGetWeightingType(Event $event, Entity $entity)
+    public function onGetWeightingType(EventInterface $event, Entity $entity)
     {
         list($weightingTypeOptions) = array_values($this->getSelectOptions());
 
@@ -86,7 +86,7 @@ class RubricTemplatesTable extends ControllerActionTable
         return compact('weightingTypeOptions', 'selectedWeightingType');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'template') {
             return __('Template');
@@ -109,7 +109,7 @@ class RubricTemplatesTable extends ControllerActionTable
         }
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

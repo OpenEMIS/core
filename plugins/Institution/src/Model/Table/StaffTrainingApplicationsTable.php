@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
@@ -48,7 +48,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         /*
         $modelAlias = 'Applications';
@@ -102,7 +102,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $InstitutionStaff->find()->where(['InstitutionStaff.staff_id' => $this->Auth->user('id')])->first()->institution_id;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $query = $this->ControllerAction->getQueryString();
 
@@ -164,7 +164,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return false;
     }
 
-    public function indexbeforeAction(Event $event, ArrayObject $extra)
+    public function indexbeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['redirect']['query'])) {
             unset($extra['redirect']['query']);
@@ -178,7 +178,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $user_id = ( empty($extra['staffId']) || $extra['staffId'] == '' ) ? $this->Auth->user('id') : $extra['staffId'];
         $query
@@ -194,7 +194,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->field('course');
         $this->field('training_level');
@@ -209,12 +209,12 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         ]);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['Sessions.Courses.TrainingFieldStudies', 'Sessions.Courses.TrainingCourseTypes', 'Sessions.Courses.TrainingModeDeliveries', 'Sessions.Courses.TrainingRequirements', 'Sessions.Courses.TrainingLevels', 'Sessions.Courses.TargetPopulations', 'Sessions.Courses.TrainingProviders', 'Sessions.Courses.CoursePrerequisites', 'Sessions.Courses.Specialisations', 'Sessions.Courses.ResultTypes']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields = [];
         $this->field('code');
@@ -244,7 +244,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetCode(Event $event, Entity $entity)
+    public function onGetCode(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->session->has('course')) {
@@ -254,7 +254,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCourse(Event $event, Entity $entity)
+    public function onGetCourse(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -264,7 +264,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetSessionsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetSessionsElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'view') {
             $trainingSession = $entity->session;
@@ -282,7 +282,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function onGetDescription(Event $event, Entity $entity)
+    public function onGetDescription(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -292,7 +292,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetObjective(Event $event, Entity $entity)
+    public function onGetObjective(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -302,7 +302,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCreditHours(Event $event, Entity $entity)
+    public function onGetCreditHours(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -312,7 +312,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetDuration(Event $event, Entity $entity)
+    public function onGetDuration(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -322,7 +322,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetExperiences(Event $event, Entity $entity)
+    public function onGetExperiences(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -332,7 +332,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetFieldOfStudy(Event $event, Entity $entity)
+    public function onGetFieldOfStudy(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -342,7 +342,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCourseType(Event $event, Entity $entity)
+    public function onGetCourseType(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -352,7 +352,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetModeOfDelivery(Event $event, Entity $entity)
+    public function onGetModeOfDelivery(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -362,7 +362,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetTrainingRequirement(Event $event, Entity $entity)
+    public function onGetTrainingRequirement(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -372,7 +372,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetTrainingLevel(Event $event, Entity $entity)
+    public function onGetTrainingLevel(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -382,7 +382,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetTargetPopulations(Event $event, Entity $entity)
+    public function onGetTargetPopulations(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -399,7 +399,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetTrainingProviders(Event $event, Entity $entity)
+    public function onGetTrainingProviders(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -416,7 +416,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCoursePrerequisites(Event $event, Entity $entity)
+    public function onGetCoursePrerequisites(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -433,7 +433,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetSpecialisations(Event $event, Entity $entity)
+    public function onGetSpecialisations(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -450,7 +450,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetResultTypes(Event $event, Entity $entity)
+    public function onGetResultTypes(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -467,7 +467,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetAttachment(Event $event, Entity $entity)
+    public function onGetAttachment(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
@@ -492,7 +492,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $cloneFields = $fields->getArrayCopy();
         $newFields = [];
@@ -538,7 +538,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
     
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
@@ -585,7 +585,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'course') {
             return __('Course');

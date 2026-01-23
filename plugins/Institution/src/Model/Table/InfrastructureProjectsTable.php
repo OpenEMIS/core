@@ -8,7 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 use App\Model\Table\AppTable;
@@ -72,7 +72,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -122,14 +122,14 @@ class InfrastructureProjectsTable extends ControllerActionTable
     }
 
     /* POCOR-6151 */
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureProjects';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('code');
         $this->field('name');
@@ -199,7 +199,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         //$institutionId  = $session->read('Institution.Institutions.id');
@@ -235,7 +235,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         });
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // determine if download button is shown
         $showFunc = function () use ($entity) {
@@ -251,7 +251,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         $this->setupFields($entity, $extra);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         //$institutionId = $session->read('Institution.Institutions.id');
@@ -321,7 +321,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
     // NEEDS segment for view POCOR-6151
     private function getAssociatedRecords($entity)
     {
-        $InfrastructureProjectsNeeds = TableRegistry::get('Institution.InfrastructureProjectsNeeds');
+        $InfrastructureProjectsNeeds = TableRegistry::getTableLocator()->get('Institution.InfrastructureProjectsNeeds');
         
         $needData = $InfrastructureProjectsNeeds->find()
         ->contain(['InfrastructureNeeds'])
@@ -358,7 +358,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
     // NEEDS segment for view
 
     // for getting multiple selected Dropdown in edit
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'InfrastructureNeeds'
@@ -392,7 +392,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
     }
 
     // POCOR-6151 Export Functionality
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         //$institutionId  = $session->read('Institution.Institutions.id');
@@ -428,7 +428,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         }); 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'InfrastructureProjects.code',
@@ -468,7 +468,7 @@ class InfrastructureProjectsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }// POCOR-6151 Export Functionality
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'code':

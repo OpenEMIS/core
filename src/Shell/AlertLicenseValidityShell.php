@@ -15,7 +15,7 @@ class AlertLicenseValidityShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('Staff.Licenses');
+        $this->Licenses = $this->fetchTable('Staff.Licenses');
     }
 
     public function main()

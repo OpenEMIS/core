@@ -1,7 +1,7 @@
 <?php
 namespace Profile\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
 use Page\Model\Entity\PageElement; //POCOR-6255
@@ -11,8 +11,8 @@ class BodyMassesController extends PageController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('User.UserBodyMasses');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
+        $this->UserBodyMasses = $this->fetchTable('User.UserBodyMasses');
         $this->Page->loadElementsFromTable($this->UserBodyMasses);
         $this->Page->disable(['search']); // to disable the search function
         $this->Page->enable(['download']);

@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Network\Session;
@@ -41,7 +41,7 @@ class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name', ['type' => 'readonly']);
         $this->field('visible', ['visible' => false]);
@@ -55,12 +55,12 @@ class ConfigAdministrativeBoundariesTable extends ControllerActionTable {
         $this->field('value', ['sort' => false]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('type') => 'Administrative Boundaries']);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'value') {
             return __('URL');

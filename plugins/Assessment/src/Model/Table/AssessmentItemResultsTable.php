@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
 use Cake\Log\Log;
@@ -71,7 +71,7 @@ class AssessmentItemResultsTable extends AppTable
     //     return $events;
     // }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-6824 start
         $institutionId = $entity->institution_id;
@@ -158,7 +158,7 @@ class AssessmentItemResultsTable extends AppTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes the mark or grading
         $marks = $entity->marks;
@@ -343,7 +343,7 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     // result criteria for indexes will be hide for now.
-    // public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    // public function institutionStudentIndexCalculateIndexValue(EventInterface $event, ArrayObject $params)
     // {
     //     $institutionId = $params['institution_id'];
     //     $studentId = $params['student_id'];
@@ -682,7 +682,7 @@ class AssessmentItemResultsTable extends AppTable
      * @ticket - POCOR-6912
      * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
      */
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         if (isset($_SERVER['REQUEST_URI']) && !empty($_SERVER['REQUEST_URI'])) {//POCOR-5227 only `if` condition use for this issue, not affected poonam's work on POCOR-6912
             $url = $_SERVER['REQUEST_URI'];
@@ -708,7 +708,7 @@ class AssessmentItemResultsTable extends AppTable
     /**POCOR-6912 ends*/
 
     /*
-     * $assessmentItemResults = Cake\ORM\TableRegistry::get('Assessment.AssessmentItemResults');
+     * $assessmentItemResults = Cake\ORM\TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
      * $options = ["student_id" => 45, "academic_period_id" => 32, "education_grade_id" => 189, "education_subject_id" => 60];
      * $mark = $assessmentItemResults::getLastMark($options);
      */

@@ -2,7 +2,7 @@
 namespace Institution\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Date;
@@ -22,7 +22,7 @@ class InstitutionInactiveComponent extends Component
     {
         $institutionId = $this->controller->paramsDecode($this->getController()->getRequest()->getAttribute('params')['institutionId'])['id'];
 
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $institution = $Institutions->get($institutionId, ['contain' => 'Statuses']);
 

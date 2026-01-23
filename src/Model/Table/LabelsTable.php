@@ -6,7 +6,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Cache\Cache;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Filesystem\Folder;
 use Cake\Log\Log;
@@ -87,7 +87,7 @@ class LabelsTable extends AppTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         Cache::clear('labels');
         Log::debug('LabelsTable::afterSave()');
@@ -111,7 +111,7 @@ class LabelsTable extends AppTable
         return $keyValue;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //do not save empty strings
         if ($entity->code == "") {

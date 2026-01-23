@@ -1,7 +1,7 @@
 <?php
 namespace Directory\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Profile\Controller\InsurancesController as BaseController;
 
 class DirectoryInsurancesController extends BaseController

@@ -3,7 +3,7 @@ namespace Attendance\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -31,7 +31,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->toggle('reorder', false);
 
         // $this->removeBehavior('Reorder');
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $this->defaultMarkType = $StudentAttendanceMarkTypes->getDefaultMarkType();
         $this->setDeleteStrategy('restrict');
     }
@@ -51,7 +51,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         return $validator;
     }    
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {    
         if (!is_null($requestData[$this->getAlias()]['student_attendance_type_id']) && !is_null($requestData[$this->getAlias()]['code'])
         ) {
@@ -59,7 +59,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             $attendancePerDay = $requestData[$this->getAlias()]['attendance_per_day'];
             $attendanceTypeId = $requestData[$this->getAlias()]['student_attendance_type_id'];
 
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
             $attendanceType = $StudentAttendanceTypes
                               ->find()
                               ->select([$StudentAttendanceTypes->aliasField('code')])
@@ -94,7 +94,7 @@ class StudentMarkTypesTable extends ControllerActionTable
 
             $student_attendance_mark_type_id = $studentMarkData[0]->id;
             
-            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
             $dataWithOrder = array_keys($requestData['period']);
             $orderData = array_flip($dataWithOrder);
 
@@ -133,7 +133,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         } 
        
         if ($attendanceType[0]->code == 'SUBJECT') {
-            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
             $StudentAttendancePerDayPeriods->deleteAll(['student_attendance_mark_type_id' => $student_attendance_mark_type_id]);
         }
         }         
@@ -141,7 +141,7 @@ class StudentMarkTypesTable extends ControllerActionTable
 
 
     //POCOR-9353
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
 
         $associatedRecordsExist = 
             $this->exists(['code ' => $data['StudentMarkTypes']['code']]);
@@ -153,7 +153,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
         $student_attendance_type_id = $entity->student_attendance_type_id; 
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
         $attendanceType = $StudentAttendanceTypes
                         ->find()
                         ->select([
@@ -169,7 +169,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         if (!is_null($requestData[$this->getAlias()]['name']) && !is_null($requestData[$this->getAlias()]['student_attendance_type_id']) && !is_null($requestData[$this->getAlias()]['code'])
         ) {             
@@ -183,7 +183,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                     ->toArray();
 
             $student_attendance_mark_type_id = $studentMarkData[0]->id;
-            $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
             $dataWithOrder = array_keys($requestData['period']);
             $orderData = array_flip($dataWithOrder);
 
@@ -201,7 +201,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }         
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupField();
         // Start POCOR-5188
@@ -225,16 +225,16 @@ class StudentMarkTypesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {        
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+        $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
         if (!empty($entity->attendance_per_day)) {
             $attendance_per_day = $entity->attendance_per_day;
         } else {
             $attendance_per_day = $this->defaultMarkType['attendance_per_day'];
         }
         $id = $entity->id;
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+        $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
         $StudentAttendancePerDayPeriodsData = $StudentAttendancePerDayPeriods
         ->find('all')
         ->where([
@@ -249,7 +249,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->controller->set('attendance_per_day', $attendance_per_day);
         $this->setupField($entity);
         $student_attendance_type_id = $entity->student_attendance_type_id;
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
         $attendanceType = $StudentAttendanceTypes
                           ->find()
                           ->select([$StudentAttendanceTypes->aliasField('code')])
@@ -267,7 +267,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $student_attendance_type_id = $entity->student_attendance_type_id;
         if (!empty($entity->attendance_per_day)) {
@@ -280,7 +280,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->setupField($entity);
 
         if (!empty($student_attendance_type_id)) {
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
             $attendanceType = $StudentAttendanceTypes
                               ->find()
                               ->select([$StudentAttendanceTypes->aliasField('code')])
@@ -297,7 +297,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
 
         if (!empty($entity->attendanceTypeId)) {
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
             $attendanceTypeEntity = $StudentAttendanceTypes
                               ->find()
                               ->select([$StudentAttendanceTypes->aliasField('code')])
@@ -313,14 +313,14 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $student_attendance_type_id = $entity->student_attendance_type_id;
         $entity->student_attendance_type_id = $student_attendance_type_id;
         
         $id = $entity->id;
 
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+        $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
         $StudentAttendancePerDayPeriodsData = $StudentAttendancePerDayPeriods
                                         ->find('all')
                                         ->where([
@@ -340,7 +340,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->setupField($entity);
 
         if (!empty($student_attendance_type_id)) {
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
             $attendanceType = $StudentAttendanceTypes
                               ->find()
                               ->select([$StudentAttendanceTypes->aliasField('code')])
@@ -357,7 +357,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
 
         if (!empty($entity->attendanceTypeId)) {
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
             $attendanceTypeEntity = $StudentAttendanceTypes
                               ->find()
                               ->select([$StudentAttendanceTypes->aliasField('code')])
@@ -373,7 +373,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldName(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $attr['type'] = 'readonly';
@@ -382,7 +382,7 @@ class StudentMarkTypesTable extends ControllerActionTable
     }
 
 
-    /* Public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    /* Public function onUpdateFieldCode(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $attr['type'] = 'readonly';
@@ -390,15 +390,15 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     } */
 
-    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action)
+    // public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action)
     {
         
     }
 
 
-    // public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldStudentAttendanceTypeId(Event $event, array $attr, $action)
+    // public function onUpdateFieldStudentAttendanceTypeId(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStudentAttendanceTypeId(EventInterface $event, array $attr, $action)
     {
             $entity = $attr['entity'];
             if (!empty($entity)) {                
@@ -407,7 +407,7 @@ class StudentMarkTypesTable extends ControllerActionTable
                 $markTypeId = $this->defaultMarkType['student_attendance_type_id'];
             }           
 
-            $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+            $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
             $attendanceOptions = $StudentAttendanceTypes
                 ->find('list')
                 ->toArray();
@@ -420,10 +420,10 @@ class StudentMarkTypesTable extends ControllerActionTable
             return $attr;
     }
 
-    // public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAttendancePerDay(Event $event, array $attr, $action)
+    // public function onUpdateFieldAttendancePerDay(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAttendancePerDay(EventInterface $event, array $attr, $action)
     {
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         
             $entity = $attr['entity'];
 
@@ -450,7 +450,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             return $attr;           
     }    
 
-    public function onGetStudentAttendanceTypeId(Event $event, Entity $entity)
+    public function onGetStudentAttendanceTypeId(EventInterface $event, Entity $entity)
     {
         if (!empty($entity)) {
             $attendanceTypeEntity = $entity;
@@ -459,7 +459,7 @@ class StudentMarkTypesTable extends ControllerActionTable
             $attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
         }
 
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
         $markTypeEntity = $StudentAttendanceTypes
             ->find()
             ->select([$StudentAttendanceTypes->aliasField('name')])
@@ -474,7 +474,7 @@ class StudentMarkTypesTable extends ControllerActionTable
 
     }
 
-    public function onGetAttendancePerDay(Event $event, Entity $entity)
+    public function onGetAttendancePerDay(EventInterface $event, Entity $entity)
     {
         if (!empty($entity)) {
             $attendanceTypeId = $entity->attendanceTypeId;
@@ -517,7 +517,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'code', 'student_attendance_type_id', 'attendance_per_day', 'periods']);
     }
 
-    public function addEditOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeAcademicPeriodId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         $period = $request->getQuery('period');
@@ -536,7 +536,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function addEditOnChangeAttendancePerDay(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAttendancePerDay(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
 
@@ -546,10 +546,10 @@ class StudentMarkTypesTable extends ControllerActionTable
         $entity->attendanceTypeId = $this->defaultMarkType['student_attendance_type_id'];
     }
 
-    public function addEditOnChangeAttendanceType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAttendanceType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $attendanceTypeId = $data[$this->getAlias()]['student_attendance_type_id'];
-        $StudentAttendanceTypes = TableRegistry::get('Attendance.StudentAttendanceTypes');
+        $StudentAttendanceTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceTypes');
         $entity->attendanceTypeId = $attendanceTypeId;
         $attendanceType = $StudentAttendanceTypes
                           ->find()
@@ -572,18 +572,18 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {   
         $id = $entity->id;
         if(!empty($id)){
-            $studentAttendancePerDayPeriodsTable = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+            $studentAttendancePerDayPeriodsTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
             $studentAttendancePerDayPeriodsTable->deleteAll([
                 $studentAttendancePerDayPeriodsTable->aliasField('student_attendance_mark_type_id') => $id
             ]);
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'name') {
             return __('Name');
         }elseif ($field == 'code') {
@@ -615,7 +615,7 @@ class StudentMarkTypesTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -623,7 +623,7 @@ class StudentMarkTypesTable extends ControllerActionTable
 
 
     //POCOR-9353
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // Check if any associated records exist in related tables.
         $associatedRecordsExist = 

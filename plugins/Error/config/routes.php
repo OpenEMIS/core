@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Error', ['plugin' => 'Error'], function ($routes) {
-	Router::connect('/Errors', ['plugin' => 'Error', 'controller' => 'Errors']);
-	Router::connect('/Errors/:action/*', ['plugin' => 'Error', 'controller' => 'Errors']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Error', ['plugin' => 'Error'], function (RouteBuilder $routes) {
+    	$routes->connect('/Errors', ['plugin' => 'Error', 'controller' => 'Errors']);
+    	$routes->connect('/Errors/:action/*', ['plugin' => 'Error', 'controller' => 'Errors']);
+    });
+};

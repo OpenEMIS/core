@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class InstitutionCommitteesTable extends AppTable
 {
@@ -33,7 +33,7 @@ class InstitutionCommitteesTable extends AppTable
             ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'name':

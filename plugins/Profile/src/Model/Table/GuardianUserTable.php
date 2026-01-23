@@ -3,7 +3,7 @@ namespace Profile\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -16,7 +16,7 @@ use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable
 {
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (!$entity->getErrors()) {
             $sessionKey = 'Student.Guardians.new';
@@ -24,7 +24,7 @@ class GuardianUserTable extends UserTable
                 $guardianData = $this->Session->read($sessionKey);
                 $guardianData['guardian_id'] = $entity->id;
 
-                $Guardians = TableRegistry::get('Student.Guardians');
+                $Guardians = TableRegistry::getTableLocator()->get('Student.Guardians');
                 $Guardians->save($Guardians->newEntity($guardianData));
                 $this->Session->delete($sessionKey);
             }
@@ -39,9 +39,9 @@ class GuardianUserTable extends UserTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $Guardians = TableRegistry::get('Profile.Guardians');
+        $Guardians = TableRegistry::getTableLocator()->get('Profile.Guardians');
         $params = $this->paramsDecode($this->request->getParam('pass')[1]);
         $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
 
@@ -54,19 +54,19 @@ class GuardianUserTable extends UserTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extra['toolbarButtons']['back']['url']['action'] = 'ProfileGuardians';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $userType = $this->request->getQuery('user_type');
         $userType = UserTable::GUARDIAN;
         $this->field('guardian_relation_id', ['before' => 'openemis_no']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields['nationality_id']['type'] = 'readonly';
         if (!empty($entity->main_nationality)) {
@@ -83,7 +83,7 @@ class GuardianUserTable extends UserTable
         $extra['toolbarButtons']['list']['url']['action'] = 'ProfileGuardians';
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $options['type'] = 'student';
 
@@ -96,11 +96,11 @@ class GuardianUserTable extends UserTable
         $extra['toolbarButtons']['back']['url'][0] = 'add';
     }
 
-    public function onGetGuardianRelationId(Event $event, Entity $entity)
+    public function onGetGuardianRelationId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            $Guardians = TableRegistry::get('Profile.Guardians');
-            $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
+            $Guardians = TableRegistry::getTableLocator()->get('Profile.Guardians');
+            $GuardianRelations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
 
             $params = $this->paramsDecode($this->request->getParam('pass')[1]);
             $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
@@ -118,10 +118,10 @@ class GuardianUserTable extends UserTable
         }
     }
 
-    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGuardianRelationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $Guardians = TableRegistry::get('Profile.Guardians');
-        $GuardianRelations = TableRegistry::get('Student.GuardianRelations');
+        $Guardians = TableRegistry::getTableLocator()->get('Profile.Guardians');
+        $GuardianRelations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
 
         $attr['type'] = 'select';
 

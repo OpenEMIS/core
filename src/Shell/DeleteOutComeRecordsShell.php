@@ -30,7 +30,7 @@ class DeleteOutComeRecordsShell extends Shell
 
     private function deleteRecords($student_id, $outcome_period_id, $education_grade_id, $education_subject_id, $institution_id, $academic_period_id, $outcome_criteria_id, $outcome_template_id)
     {
-        $InstitutionOutcomeResults = TableRegistry::get('Institution.InstitutionOutcomeResults');
+        $InstitutionOutcomeResults = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeResults');
         $InstitutionOutcomeResults->deleteAll([
             'student_id' => $student_id,
             'outcome_period_id' => $outcome_period_id,

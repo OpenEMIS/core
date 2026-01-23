@@ -1,7 +1,7 @@
 <?php
 namespace Directory\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Profile\Controller\BodyMassesController as BaseController;
 
 class DirectoryBodyMassesController extends BaseController

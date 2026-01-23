@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 
@@ -47,7 +47,7 @@ class HealthReportsTable extends AppTable
         $this->addBehavior('Report.AreaList');//POCOR-7827-new
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
 
@@ -55,13 +55,13 @@ class HealthReportsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 //        $this->log(__FUNCTION__, 'debug');
 
@@ -221,7 +221,7 @@ class HealthReportsTable extends AppTable
 //        }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
 
@@ -1028,8 +1028,8 @@ class HealthReportsTable extends AppTable
     private function addStudentClassField(Query $query)
     {
 //        $this->log(__FUNCTION__, 'debug');
-        $classes = TableRegistry::get('institution_classes');
-        $class_students = TableRegistry::get('institution_class_students');
+        $classes = TableRegistry::getTableLocator()->get('institution_classes');
+        $class_students = TableRegistry::getTableLocator()->get('institution_class_students');
         $query->leftJoin([$class_students->alias() => $class_students->table()], [
             $class_students->aliasField('student_id = ') . $this->aliasField('student_id'),
             $class_students->aliasField('institution_id = ') . $this->aliasField('institution_id'),
@@ -1287,7 +1287,7 @@ class HealthReportsTable extends AppTable
     {
 //        $this->log(__FUNCTION__, 'debug');
         if ($query) {
-            $allFamilies = TableRegistry::get('user_health_families');
+            $allFamilies = TableRegistry::getTableLocator()->get('user_health_families');
             $FamilyDetailed = $allFamilies->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'family_current' => 'current',
@@ -1358,7 +1358,7 @@ class HealthReportsTable extends AppTable
 //        $this->log(__FUNCTION__, 'debug');
 
         if ($query) {
-            $allImmunizations = TableRegistry::get('user_health_immunizations');
+            $allImmunizations = TableRegistry::getTableLocator()->get('user_health_immunizations');
             $ImmunizationDetailed = $allImmunizations->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'immunization_date' => 'date',
@@ -1416,7 +1416,7 @@ class HealthReportsTable extends AppTable
     {
 //        $this->log(__FUNCTION__, 'debug');
         if ($query) {
-            $allMedications = TableRegistry::get('user_health_medications');
+            $allMedications = TableRegistry::getTableLocator()->get('user_health_medications');
             $MedicationDetailed = $allMedications->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'medication_name' => 'name',
@@ -1470,7 +1470,7 @@ class HealthReportsTable extends AppTable
 //        $this->log(__FUNCTION__, 'debug');
 
         if ($query) {
-            $allTests = TableRegistry::get('user_health_tests');
+            $allTests = TableRegistry::getTableLocator()->get('user_health_tests');
             $TestDetailed = $allTests->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'test_date' => 'date',
@@ -1530,7 +1530,7 @@ class HealthReportsTable extends AppTable
 //        $this->log(__FUNCTION__, 'debug');
 
         if ($query) {
-            $allInsurances = TableRegistry::get('user_insurances');
+            $allInsurances = TableRegistry::getTableLocator()->get('user_insurances');
             $InsuranceDetailed = $allInsurances->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'insurance_start_date' => 'start_date',
@@ -1601,7 +1601,7 @@ class HealthReportsTable extends AppTable
     {
 //        $this->log(__FUNCTION__, 'debug');
         if ($query) {
-            $allHistories = TableRegistry::get('user_health_histories');
+            $allHistories = TableRegistry::getTableLocator()->get('user_health_histories');
             $HistoryDetailed = $allHistories->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'history_current' => 'current',
@@ -1657,7 +1657,7 @@ class HealthReportsTable extends AppTable
     {
         if ($query) {
             $academic_period_id = $this->academic_period_id;
-            $allBodyMasses = TableRegistry::get('user_body_masses');
+            $allBodyMasses = TableRegistry::getTableLocator()->get('user_body_masses');
             $BodyMassDetails = $allBodyMasses->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'body_mass_date' => 'date',
@@ -1712,7 +1712,7 @@ class HealthReportsTable extends AppTable
     {
 //        $this->log(__FUNCTION__, 'debug');
         if ($query) {
-            $allConsultations = TableRegistry::get('user_health_consultations');
+            $allConsultations = TableRegistry::getTableLocator()->get('user_health_consultations');
             $sumConsultations = $allConsultations->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'consultation_details' => "GROUP_CONCAT(IF(LENGTH(user_health_consultations.treatment) = 0, CONCAT(health_consultation_types.name, ' on ', user_health_consultations.date), CONCAT(health_consultation_types.name, ' (', user_health_consultations.treatment, ') on ', user_health_consultations.date)))",
@@ -1747,7 +1747,7 @@ class HealthReportsTable extends AppTable
     {
 //        $this->log(__FUNCTION__, 'debug');
         if ($query) {
-            $allFamilies = TableRegistry::get('user_health_families');
+            $allFamilies = TableRegistry::getTableLocator()->get('user_health_families');
             $sumFamilies = $allFamilies->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'health_relationships_details' => "GROUP_CONCAT(CONCAT(health_relationships.name, '(', health_conditions.name, ')'))",
@@ -1789,7 +1789,7 @@ class HealthReportsTable extends AppTable
     {
 //        $this->log(__FUNCTION__, 'debug');
         if ($query) {
-            $allConditions = TableRegistry::get('user_health_histories');
+            $allConditions = TableRegistry::getTableLocator()->get('user_health_histories');
             $sumConditions = $allConditions->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'conditions_details' => $query->func()->group_concat(['DISTINCT health_conditions.name' => 'literal']),
@@ -1823,7 +1823,7 @@ class HealthReportsTable extends AppTable
     private function addHealthImmunizationFields(Query $query)
     {
         if ($query) {
-            $allImmunizations = TableRegistry::get('user_health_immunizations');
+            $allImmunizations = TableRegistry::getTableLocator()->get('user_health_immunizations');
             $sumImmunizations = $allImmunizations->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'immunization_details' => "GROUP_CONCAT(CONCAT(health_immunization_types.name, ' on ', user_health_immunizations.date))",
@@ -1883,7 +1883,7 @@ class HealthReportsTable extends AppTable
     private function addHealthMedicationFields(Query $query)
     {
         if ($query) {
-            $allMedications = TableRegistry::get('user_health_medications');
+            $allMedications = TableRegistry::getTableLocator()->get('user_health_medications');
             $sumMedications = $allMedications->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'medication_details' => "GROUP_CONCAT(CONCAT(user_health_medications.name, ' (', user_health_medications.dosage, IF(user_health_medications.end_date IS NULL, CONCAT(') on ', user_health_medications.start_date), CONCAT(') - active from ', user_health_medications.start_date, ' to ', user_health_medications.end_date))))",
@@ -1936,7 +1936,7 @@ class HealthReportsTable extends AppTable
     private function addHealthTestFields(Query $query)
     {
         if ($query) {
-            $allTests = TableRegistry::get('user_health_tests');
+            $allTests = TableRegistry::getTableLocator()->get('user_health_tests');
             $sumTests = $allTests->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'test_details' => "GROUP_CONCAT(IF(LENGTH(user_health_tests.result) = 0, CONCAT(health_test_types.name, ' on ', user_health_tests.date), CONCAT(health_test_types.name, ' (', user_health_tests.result, ') on ', user_health_tests.date)))",
@@ -1970,7 +1970,7 @@ class HealthReportsTable extends AppTable
     {
         if ($query) {
             $academic_period_id = $this->academic_period_id;
-            $allBodyMasses = TableRegistry::get('user_body_masses');
+            $allBodyMasses = TableRegistry::getTableLocator()->get('user_body_masses');
             $sumBodyMasses = $allBodyMasses->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'body_mass_details' => "GROUP_CONCAT('Weight: ', user_body_masses.weight, 'kg - Height: ', user_body_masses.height, 'cm - BMI: ', user_body_masses.body_mass_index, ' on ', user_body_masses.date)",
@@ -2045,7 +2045,7 @@ class HealthReportsTable extends AppTable
      */
     private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
     {
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->find('list')
                 ->select(['id', 'name'])

@@ -2,7 +2,7 @@
 namespace User\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -11,7 +11,7 @@ use Cake\Http\ServerRequest;
 
 class AdvancedPositionSearchBehavior extends Behavior {
 
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) {
+	public function onBuildQuery(EventInterface $event, Query $query, $advancedSearchHasMany) {
 		if (isset($advancedSearchHasMany['position'])) {
 			$search = $advancedSearchHasMany['position'];
 		} else {
@@ -66,7 +66,7 @@ class AdvancedPositionSearchBehavior extends Behavior {
 		return $events;
 	}
 
-	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
+	public function onSetupFormField(EventInterface $event, ArrayObject $searchables, $advanceSearchModelData) {
 		$turnOn = false;
 		$userType = $this->_table->request->getQuery('user_type');
 		if (!is_null($userType)) {
@@ -87,9 +87,9 @@ class AdvancedPositionSearchBehavior extends Behavior {
 		}
 	}
 
-	public function onGetPositions(Event $event, Entity $entity) {
+	public function onGetPositions(EventInterface $event, Entity $entity) {
 		$userId = $entity->id;
-		$Positions = TableRegistry::get('Staff.Positions');
+		$Positions = TableRegistry::getTableLocator()->get('Staff.Positions');
 		$staffPositions = $Positions->find()
 			->contain(['InstitutionPositions'])
 			->where([

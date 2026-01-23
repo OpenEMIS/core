@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -21,7 +21,7 @@ class StudentGuardiansTable extends AppTable {
         ]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets) {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -30,7 +30,7 @@ class StudentGuardiansTable extends AppTable {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;
 
@@ -88,7 +88,7 @@ class StudentGuardiansTable extends AppTable {
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields) {
         $cloneFields = $fields->getArrayCopy();
 
         $extraFields[] = [

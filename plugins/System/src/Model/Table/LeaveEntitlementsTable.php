@@ -4,7 +4,7 @@ namespace System\Model\Table;
 
 use ArrayObject;
 use Cake\Utility\Inflector;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
@@ -40,7 +40,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
         return $events;
     }
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
@@ -48,7 +48,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->controller->Navigation->substituteCrumb(__('Systems'), __('Staff'));
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no');
         $this->field('staff_id', ['sort' => true]);
@@ -60,7 +60,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->field('modified', ['visible' => true]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         $queryParams = $this->request->getQuery();
@@ -82,12 +82,12 @@ class LeaveEntitlementsTable extends ControllerActionTable
 
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
 
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('staff')) {
@@ -95,12 +95,12 @@ class LeaveEntitlementsTable extends ControllerActionTable
         }
         return $value;
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
 //        $this->setupFields($entity);
 //        $this->setfieldOrder($this->fieldsOrder);
@@ -114,17 +114,17 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->field('staff_leave_type_id', ['entity' => $entity, 'sort' => true]);
         $this->field('adjustment', ['sort' => true]);
     }
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffLeaveTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -132,7 +132,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if ($action == 'edit'){
@@ -183,7 +183,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
         if ($this->request->is(['ajax'])) {
             $term = $this->request->getQuery('term');
 
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $this->Staff
                 ->find()
@@ -273,7 +273,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 //        Log::debug(print_r($entity, true));
 //        Log::debug(print_r($options, true));
@@ -282,7 +282,7 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 //        Log::debug(print_r($entity, true));
 //        Log::debug(print_r($options, true));

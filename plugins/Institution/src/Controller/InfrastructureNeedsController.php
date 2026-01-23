@@ -2,7 +2,7 @@
 namespace Institution\Controller;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 use App\Controller\PageController;
@@ -18,7 +18,7 @@ class InfrastructureNeedsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Institution.InfrastructureProjectsNeeds');
+        $this->InfrastructureProjectsNeeds = $this->fetchTable('Institution.InfrastructureProjectsNeeds');
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
 
@@ -82,7 +82,7 @@ class InfrastructureNeedsController extends PageController
 
         // set field
         $page->exclude(['description', 'date_determined', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id']);
-        $Users = TableRegistry::get('labels');
+        $Users = TableRegistry::getTableLocator()->get('labels');
         $result = $Users
             ->find()
             ->where(['module' => 'InfrastructureNeeds', 'field_name' => 'Need Type'])
@@ -93,7 +93,7 @@ class InfrastructureNeedsController extends PageController
             $page->get('infrastructure_need_type_id')->setSortable(false)->setLabel('Need Type');
         }
 
-        $Users = TableRegistry::get('labels');
+        $Users = TableRegistry::getTableLocator()->get('labels');
         $result = $Users
             ->find()
             ->where(['module' => 'InfrastructureNeeds', 'field_name' => 'Priority'])

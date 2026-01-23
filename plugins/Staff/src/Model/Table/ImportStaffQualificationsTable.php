@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -36,7 +36,7 @@ class ImportStaffQualificationsTable extends AppTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
         $controller = $toolbarButtons['back']['url']['controller'];
@@ -56,9 +56,9 @@ class ImportStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onImportPopulateQualificationTitlesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateQualificationTitlesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
                                 ->select(['name', $lookupColumn])
                                 ->order($lookupModel.'.order');
@@ -76,9 +76,9 @@ class ImportStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onImportPopulateEducationFieldOfStudiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateEducationFieldOfStudiesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
                                 ->select(['name', $lookupColumn])
                                 ->order($lookupModel.'.order');
@@ -96,9 +96,9 @@ class ImportStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onImportPopulateCountriesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateCountriesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
                                 ->select(['name', $lookupColumn])
                                 ->order($lookupModel.'.order');
@@ -116,9 +116,9 @@ class ImportStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onImportPopulateQualificationSpecialisationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateQualificationSpecialisationsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
                                    ->select('EducationFieldOfStudies.name')
                                    ->select($lookedUpTable)
@@ -148,9 +148,9 @@ class ImportStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateEducationSubjectsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')
                                     ->order($lookupModel.'.order');
 
@@ -168,7 +168,7 @@ class ImportStaffQualificationsTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
     	if (empty($this->staffId)) {
             $rowInvalidCodeCols['staff_id'] = __('No active staff');
@@ -178,7 +178,7 @@ class ImportStaffQualificationsTable extends AppTable
             $tempRow['staff_id'] = $this->staffId;
         }
         if (!empty($tempRow['qualification_specialisation_id'])) {
-        $QualificationSpecialisations = TableRegistry::get('FieldOption.QualificationSpecialisations');
+        $QualificationSpecialisations = TableRegistry::getTableLocator()->get('FieldOption.QualificationSpecialisations');
         $Specialisations = $QualificationSpecialisations
                            ->find()
                            ->where(['QualificationSpecialisations.id' => $tempRow['qualification_specialisation_id'],

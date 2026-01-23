@@ -3,7 +3,7 @@
 namespace Outcome\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -49,7 +49,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
             ]);
     }
     //POCOR-9293 end
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getOutcomeTabs();
 
@@ -74,17 +74,17 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupFields();
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupFields();
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if ($this->request->getParam('action') == 'GradingTypes') {
             $query->contain(['GradingOptions']);
@@ -93,7 +93,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $criteriaForm = $this->getQueryString(null, 'criteriaForm');
 
@@ -108,14 +108,14 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
         }
     }
 
-    public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddOption(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists($this->getAlias())) {
             if (!array_key_exists('grading_options', $data[$this->getAlias()])) { //POCOR-9154
@@ -140,7 +140,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
     }
 
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         // enables all options to be deleted
         if (!$data->offsetExists('grading_options')) {
@@ -148,7 +148,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         // set save button to redirect to Criterias add page (when Create New from Criterias add page)
         if ($extra->offsetExists('criteriaForm')) {
@@ -161,7 +161,7 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         }
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->getAlias()]['grading_options']) || empty($data[$this->getAlias()]['grading_options'])) {
             $this->Alert->warning($this->aliasField('noGradingOptions'));
@@ -178,14 +178,14 @@ class OutcomeGradingTypesTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'grading_options']);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->GradingOptions->alias()
         ];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');

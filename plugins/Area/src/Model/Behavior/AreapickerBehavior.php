@@ -4,7 +4,7 @@ namespace Area\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Http\Session;
@@ -29,7 +29,7 @@ class AreapickerBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function onGetAreapickerElement(Event $event, $action, Entity $entity, $attr, $options)
+    public function onGetAreapickerElement(EventInterface $event, $action, Entity $entity, $attr, $options)
     {
         $fieldName = $attr['model'] . '.' . $attr['field'];
         $HtmlField = $event->getSubject();
@@ -96,7 +96,7 @@ class AreapickerBehavior extends Behavior
         return $value;
     }
 
-    public function editAfterQuery(Event $event, Entity $entity)
+    public function editAfterQuery(EventInterface $event, Entity $entity)
     {
         $userId = $this->_table->Auth->user('id');
         $areasByUser = $this->_table->AccessControl->getAreasByUser($userId);
@@ -108,7 +108,7 @@ class AreapickerBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $areasByUser = $this->areaByUser;
         // $areasByUser will always be empty for system groups because system groups are linked directly to schools
@@ -143,7 +143,7 @@ class AreapickerBehavior extends Behavior
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         foreach ($this->_table->fields as $field => $attr) {
             if ($attr['type'] == 'areapicker') {
@@ -180,7 +180,7 @@ class AreapickerBehavior extends Behavior
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // to prevent html injection on area_id
         if ($entity->has('area_restricted') && $entity->area_restricted == true) {

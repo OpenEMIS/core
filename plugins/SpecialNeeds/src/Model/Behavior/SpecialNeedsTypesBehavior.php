@@ -1,7 +1,7 @@
 <?php
 namespace SpecialNeeds\Model\Behavior;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
 
@@ -14,7 +14,7 @@ class SpecialNeedsTypesBehavior extends Behavior
        
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         
     }

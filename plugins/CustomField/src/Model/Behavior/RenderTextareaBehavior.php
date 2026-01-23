@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderTextareaBehavior extends RenderBehavior {
@@ -11,7 +11,7 @@ class RenderTextareaBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-	public function onGetCustomTextareaElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomTextareaElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
         // for edit
@@ -59,7 +59,7 @@ class RenderTextareaBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function processTextareaValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processTextareaValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $settings['valueKey'] = 'textarea_value';
         $this->processValues($entity, $data, $settings);
     }

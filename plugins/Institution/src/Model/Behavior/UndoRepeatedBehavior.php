@@ -3,7 +3,7 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Institution\Model\Behavior\UndoBehavior;
 
 class UndoRepeatedBehavior extends UndoBehavior {
@@ -18,11 +18,11 @@ class UndoRepeatedBehavior extends UndoBehavior {
 		return $events;
 	}
 
-	public function onGetRepeatedStudents(Event $event, $data) {
+	public function onGetRepeatedStudents(EventInterface $event, $data) {
 		return $this->getStudents($data);
 	}
 
-	public function processSaveRepeatedStudents(Event $event, Entity $entity, ArrayObject $data) 
+	public function processSaveRepeatedStudents(EventInterface $event, Entity $entity, ArrayObject $data) 
 	{
 		$studentIds = [];
 

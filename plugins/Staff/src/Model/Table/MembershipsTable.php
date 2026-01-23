@@ -3,7 +3,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class MembershipsTable extends ControllerActionTable {
@@ -30,7 +30,7 @@ class MembershipsTable extends ControllerActionTable {
 			]);
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra)
+	public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
@@ -43,7 +43,7 @@ class MembershipsTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
-	public function afterAction(Event $event, ArrayObject $extra) {
+	public function afterAction(EventInterface $event, ArrayObject $extra) {
 		$this->setFieldOrder(['membership', 'issue_date', 'expiry_date', 'comment']);
 		$this->setupTabElements();
 
@@ -89,7 +89,7 @@ class MembershipsTable extends ControllerActionTable {
 		// End POCOR-5188
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'membership') {
             return __('Membership');

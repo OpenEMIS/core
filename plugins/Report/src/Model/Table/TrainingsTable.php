@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -42,7 +42,7 @@ class TrainingsTable extends AppTable
     
 
     //POCOR - 7415 start
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name']]);
     }
@@ -66,7 +66,7 @@ class TrainingsTable extends AppTable
             });
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         // fix header and breadcrumbs
         $controllerName = $this->controller->getName();
@@ -135,7 +135,7 @@ class TrainingsTable extends AppTable
         // End POCOR-6596 Changed position of format field
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $option = $this->controller->getFeatureOptions($this->getAlias());
@@ -151,7 +151,7 @@ class TrainingsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldTrainingNeedType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingNeedType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -168,7 +168,7 @@ class TrainingsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingCourseId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -187,7 +187,7 @@ class TrainingsTable extends AppTable
         }
     }
 
-    public function addOnChangeTrainingCourseId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeTrainingCourseId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (array_key_exists($this->getAlias(), $data)) {
             if (array_key_exists('training_session_id', $data[$this->getAlias()])) {
@@ -196,7 +196,7 @@ class TrainingsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldTrainingSessionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingSessionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -220,7 +220,7 @@ class TrainingsTable extends AppTable
         }
     }
     //POCOR-6637::START
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         if ($entity->has('feature')) {
             $feature = $entity->feature;
@@ -247,7 +247,7 @@ class TrainingsTable extends AppTable
     }
     //POCOR-6637::END
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $excludedFeature = ['Report.TrainingSessionParticipants', 'Report.TrainingTrainers', 'Report.TrainersSessions', 'Report.ReportTrainingNeedStatistics','Report.TrainingEmployeeQualification']; // POCOR-6569
 
@@ -296,7 +296,7 @@ class TrainingsTable extends AppTable
     * @ticket POCOR-6592
     */
     // Starts POCOR-6592
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGuardianId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             
@@ -343,7 +343,7 @@ class TrainingsTable extends AppTable
         return $events;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':
@@ -383,7 +383,7 @@ class TrainingsTable extends AppTable
         }
     }
     //ENDS POCOR-6592
-    public function onUpdateFieldInstitutionStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $includedFeature     = ['Report.ReportTrainingNeedStatistics'];
         $InstitutionStatuses = TableRegistry::getTableLocator()->get('Institution.Statuses');
@@ -405,7 +405,7 @@ class TrainingsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $includedFeature = ['Report.ReportTrainingNeedStatistics','Report.TrainingTrainers','Report.TrainingSessionParticipants'];//POCOR-6828 add 'Report.TrainingSessionParticipants'
         if (isset($request->getData($this->getAlias())['feature'])) {
@@ -431,7 +431,7 @@ class TrainingsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6569
      */
-    public function onUpdateFieldTrainerName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainerName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $includedFeature = ['Report.TrainersSessions'];
         if (isset($request->getData($this->getAlias())['feature'])) {
@@ -483,7 +483,7 @@ class TrainingsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, $request)
     {
         $feature = $this->request->getData($this->getAlias())['feature'];
         $includedFeature = ['Report.TrainersSessions', 'Report.TrainingResults'];
@@ -501,7 +501,7 @@ class TrainingsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, $request)
     {
         $feature = $this->request->getData($this->getAlias())['feature'];
         $includedFeature = ['Report.TrainersSessions', 'Report.TrainingResults'];
@@ -531,7 +531,7 @@ class TrainingsTable extends AppTable
      * @ticket POCOR-6593
      */
     // Starts POCOR-6593
-    public function onUpdateFieldSessionStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSessionStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $feature = $this->request->getData($this->getAlias())['feature'];
         if ($feature!='Report.TrainingSessions') {
@@ -540,7 +540,7 @@ class TrainingsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldSessionEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSessionEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $feature = $this->request->getData($this->getAlias())['feature'];
         if ($feature!='Report.TrainingSessions') {
@@ -549,7 +549,7 @@ class TrainingsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     { 
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -589,7 +589,7 @@ class TrainingsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onUpdateFieldSessionName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSessionName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $includedFeature = ['Report.TrainingResults'];
         if (isset($request->getData($this->getAlias())['feature'])) {
@@ -618,7 +618,7 @@ class TrainingsTable extends AppTable
      * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
      * @ticket POCOR-6596
      */
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $includedFeature = ['Report.TrainingResults'];
         if (isset($request->getData($this->getAlias())['feature'])) {
@@ -640,11 +640,11 @@ class TrainingsTable extends AppTable
     {
         $this->controller->autoRender = false;
         $this->ControllerAction->autoRender = false;
-        $Users = TableRegistry::get('Security.Users');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
 
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $Users
                 ->find()

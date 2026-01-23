@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -25,7 +25,7 @@ class InstitutionStudentEnrollmentsTable extends AppTable  {
 		]);
 	}
 
-	public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+	public function onExcelBeforeQuery (EventInterface $event, ArrayObject $settings, Query $query) {
 		// Setting request data and modifying fetch condition
 		$requestData = json_decode($settings['process']['params']);
 		$statusId = $requestData->status;
@@ -65,7 +65,7 @@ class InstitutionStudentEnrollmentsTable extends AppTable  {
 		]);
 	}
 
-	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+	public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets) {
 		$sheets[] = [
 			'name' => $this->getAlias(),
 			'table' => $this,
@@ -74,8 +74,8 @@ class InstitutionStudentEnrollmentsTable extends AppTable  {
 		];
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
-		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
+		$IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
 		$identity = $IdentityType->getDefaultEntity();
 
 		$settings['identity'] = $identity;

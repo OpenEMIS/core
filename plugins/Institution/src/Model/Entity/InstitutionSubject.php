@@ -13,7 +13,7 @@ class InstitutionSubject extends Entity
     // protected function _getTeachers() {
     //     pr($this);die;
     // $value = '';
-    // $table = TableRegistry::get('Institution.InstitutionSubjectStaff');
+    // $table = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
     // $rawList = $table
     //             ->find()
     //             ->contain('Users')
@@ -65,12 +65,12 @@ class InstitutionSubject extends Entity
     //         if ($this->has('institution_class')) {
     //             $value = $this->education_subject->code;
     //         } else {
-    //             $table = TableRegistry::get('Education.EducationSubjects');
+    //             $table = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
     //             $id = $this->education_subject_id;
     //             $value = $table->get($id)->code;
     //         }
     //     } else {
-    //         $table = TableRegistry::get('Education.EducationSubjects');
+    //         $table = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
     //         $id = $this->education_subject_id;
     //         $value = $table->get($id)->code;
     //     }

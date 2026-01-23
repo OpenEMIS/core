@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\I18n\Date;
@@ -37,16 +37,16 @@ class ImportInstitutionSurveysTable extends AppTable {
 
         $this->addBehavior('Import.Import', ['plugin'=>'Institution', 'model'=>'InstitutionSurveys']);
 
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
-        $this->InstitutionSurveyAnswers = TableRegistry::get('Institution.InstitutionSurveyAnswers');
-        $this->InstitutionSurveyTableCells = TableRegistry::get('Institution.InstitutionSurveyTableCells');
-        $this->SurveyForms = TableRegistry::get('Survey.SurveyForms');
-        $this->CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionSurveys = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveys');
+        $this->InstitutionSurveyAnswers = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveyAnswers');
+        $this->InstitutionSurveyTableCells = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveyTableCells');
+        $this->SurveyForms = TableRegistry::getTableLocator()->get('Survey.SurveyForms');
+        $this->CustomFieldTypes = TableRegistry::getTableLocator()->get('CustomField.CustomFieldTypes');
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
         if (isset($toolbarButtons['back'])) {
             $toolbarButtons['back']['url'] = $this->ControllerAction->url('view');
             $toolbarButtons['back']['url']['action'] = 'Surveys';
@@ -106,8 +106,8 @@ class ImportInstitutionSurveysTable extends AppTable {
         return $events;
     }
 
-    // public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona) {
-    public function onGetBreadcrumb(Event $event, $request, Component $Navigation, $persona) {
+    // public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona) {
+    public function onGetBreadcrumb(EventInterface $event, $request, Component $Navigation, $persona) {
         $crumbTitle = $this->getHeader($this->getAlias());
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Surveys'];
         $Navigation->substituteCrumb($crumbTitle, 'Surveys', $url);

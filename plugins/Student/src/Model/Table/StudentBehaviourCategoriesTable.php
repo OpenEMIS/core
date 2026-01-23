@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -31,17 +31,17 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     }
     //POCOR-8866 start
 
-    // public function beforeAction(Event $event, ArrayObject $extra)
+    // public function beforeAction(EventInterface $event, ArrayObject $extra)
     // {
     //    $this->field('behaviour_classification_id', ['after' => 'editable', 'type' => 'select']);
     // }
 
-    // public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    // public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     // {
     //     $this->field('behaviour_classification_id', ['after' => 'name']);
     // }
 
-    // public function viewBeforeAction(Event $event, ArrayObject $extra)
+    // public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     // {
     //     $this->field('behaviour_classification_id', ['after' => 'name']);
     // }
@@ -73,7 +73,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     /**
      * POCOR-7196
     **/ 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         if($this->checkStudentRecords($entity)) {
@@ -100,20 +100,20 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         $connection->execute('SET FOREIGN_KEY_CHECKS = 0');
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

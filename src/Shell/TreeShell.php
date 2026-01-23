@@ -3,7 +3,7 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Exception;
 
 class TreeShell extends Shell {
@@ -18,7 +18,7 @@ class TreeShell extends Shell {
 
 		try {
 			list($plugin, $modelName) = explode(".", $registryAlias, 2);
-			$model = TableRegistry::get($registryAlias);
+			$model = TableRegistry::getTableLocator()->get($registryAlias);
 			$processInfo = $plugin . ' > ' . $model->alias();
 			$this->out($processInfo . ' - Processing ...');
 			$model->recover();

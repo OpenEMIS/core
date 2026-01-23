@@ -4,7 +4,7 @@ namespace System\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -22,7 +22,7 @@ class ApiCredentialsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name', ['required' => true]);  //  POCOR-7312 V4
         $this->field('message', ['visible' => false]);
@@ -42,14 +42,14 @@ class ApiCredentialsTable extends ControllerActionTable
         return $validator;
     }
 
-    /*public function indexBeforeAction(Event $event, ArrayObject $extra)
+    /*public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
         $this->field('public_key', ['visible' => false]);
     }*/
     //  POCOR-7312 V4 end
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         if (!isset($queryParams['sort'])) {
@@ -60,19 +60,19 @@ class ApiCredentialsTable extends ControllerActionTable
 
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
 
     }
 
     //POCOR-9256 start
-    public function onUpdateActionButtons(Event $event, $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, $entity, array $buttons)
     {
         return $buttons;
     }
     //POCOR-9256 end
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'client_id':
@@ -82,7 +82,7 @@ class ApiCredentialsTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         //$this->setfieldOrder($this->fieldsOrder); //POCOR-7312 V4
     }

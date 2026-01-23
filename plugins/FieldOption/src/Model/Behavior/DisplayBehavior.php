@@ -2,7 +2,7 @@
 namespace FieldOption\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -26,28 +26,28 @@ class DisplayBehavior extends Behavior {
 		$this->defaultFieldOrder = $this->_table->defaultFieldOrder;
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $settings) {
         $query = $settings['query'];
-		$table = TableRegistry::get($this->fieldOptionName);
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		$query = $table->find();
 		$this->displayFields($table);
 		return $query;
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$table = TableRegistry::get($this->fieldOptionName);
+	public function viewBeforeAction(EventInterface $event) {
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		$this->displayFields($table);
 		return $table;
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$table = TableRegistry::get($this->fieldOptionName);
+	public function addEditBeforeAction(EventInterface $event) {
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		$this->displayFields($table);
 		return $table;
 	}
 
 	public function displayFields($table) {
-		$table = TableRegistry::get($this->fieldOptionName);
+		$table = TableRegistry::getTableLocator()->get($this->fieldOptionName);
 		/**
 		 * ugly hack
 		 */

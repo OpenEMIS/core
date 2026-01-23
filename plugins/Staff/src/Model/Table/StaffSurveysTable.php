@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 use Cake\ORM\Table;
@@ -59,7 +59,7 @@ class StaffSurveysTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Add controls filter to index, view and edit page
         $indexElements = [
@@ -139,7 +139,7 @@ class StaffSurveysTable extends ControllerActionTable
         $this->_redirect($institutionId, $staffId, $selectedPeriod, $selectedForm);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $indexElements = [];
         $toolbarButtons = $extra['toolbarButtons'];
@@ -152,12 +152,12 @@ class StaffSurveysTable extends ControllerActionTable
         $this->controller->set('indexElements', $indexElements);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
     }
@@ -185,7 +185,7 @@ class StaffSurveysTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->alias());
     }
 
-    public function institutionSurveyAfterSave(Event $event, Entity $institutionSurveyEntity)
+    public function institutionSurveyAfterSave(EventInterface $event, Entity $institutionSurveyEntity)
     {
         $this->updateAll(
             ['status_id' => $institutionSurveyEntity->status_id],

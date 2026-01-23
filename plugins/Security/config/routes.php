@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Securities', ['plugin' => 'Security'], function ($routes) {
-	Router::connect('/Securities', ['plugin' => 'Security', 'controller' => 'Securities']);
-	Router::connect('/Securities/:action/*', ['plugin' => 'Security', 'controller' => 'Securities']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Securities', ['plugin' => 'Security'], function (RouteBuilder $routes) {
+        $routes->connect('/Securities', ['plugin' => 'Security', 'controller' => 'Securities']);
+        $routes->connect('/Securities/:action/*', ['plugin' => 'Security', 'controller' => 'Securities']);
+    });
+};

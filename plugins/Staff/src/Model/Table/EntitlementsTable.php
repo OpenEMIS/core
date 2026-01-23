@@ -4,7 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -50,9 +50,9 @@ class EntitlementsTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $StaffLeave = TableRegistry::get('Institution.StaffLeave');
+        $StaffLeave = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
         $entity = $StaffLeave->getNumberOfDays($entity);
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
@@ -61,7 +61,7 @@ class EntitlementsTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //POCOR-7485 use for remove reserved LEAVE keyword starts
         $connection = $this->getConnection();
@@ -109,7 +109,7 @@ class EntitlementsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('time', ['after' => 'date_to']);
         $this->setFieldOrder(['status_id','assignee_id','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'time', 'full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
@@ -123,7 +123,7 @@ class EntitlementsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $selectedAction);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_leave_type_id');
         $this->field('start_time', ['entity' => $entity]);
@@ -137,12 +137,12 @@ class EntitlementsTable extends ControllerActionTable
         $this->setFieldOrder(['institution_id', 'staff_leave_type_id', 'academic_period_id','date_from', 'date_to', 'full_day', 'start_time', 'end_time','number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['status_id','assignee_id','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
     }
 
-    public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
+    public function indexHistoricalBeforeQuery(EventInterface $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -275,12 +275,12 @@ class EntitlementsTable extends ControllerActionTable
             ]);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $this->dispatchEvent('Excel.Historical.beforeQuery', [$query, new ArrayObject([])], $this);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [
@@ -383,30 +383,30 @@ class EntitlementsTable extends ControllerActionTable
 
         $fields->exchangeArray($newFields);
     }
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
         return $rowEntity->openemis_no;
     }
 
-    public function onExcelGetName(Event $event, Entity $entity)
+    public function onExcelGetName(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'user');
         return $rowEntity->name;
     }
 
-    public function onExcelGetStaffLeaveTypeId(Event $event, Entity $entity)
+    public function onExcelGetStaffLeaveTypeId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'staff_leave_type');
         return isset($rowEntity->name) ? $rowEntity->name : '-';
     }
 
-    public function onExcelGetFullDay(Event $event, Entity $entity)
+    public function onExcelGetFullDay(EventInterface $event, Entity $entity)
     {
         return $this->getSelectOptions('general.yesno')[$entity->full_day];
     }
 
-    public function onExcelRenderTime(Event $event, Entity $entity, $attr)
+    public function onExcelRenderTime(EventInterface $event, Entity $entity, $attr)
     {
         $searchKey = $attr['field'];
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, $searchKey);
@@ -414,25 +414,25 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'institution');
         return $rowEntity->code_name;
     }
 
-    public function onExcelGetAssigneeId(Event $event, Entity $entity)
+    public function onExcelGetAssigneeId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'assignee');
         return isset($rowEntity->name) ? $rowEntity->name : '-';
     }
 
-    public function onExcelGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onExcelGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         $rowEntity = $this->getFieldEntity($entity->is_historical, $entity->id, 'academic_period');
         return isset($rowEntity->name) ? $rowEntity->name : '-';
     }
 
-    public function onExcelGetStatusId(Event $event, Entity $entity)
+    public function onExcelGetStatusId(EventInterface $event, Entity $entity)
     {
         if ($entity->is_historical){
             $statusName = 'Historical';
@@ -443,7 +443,7 @@ class EntitlementsTable extends ControllerActionTable
         return $statusName;
     }
 
-    public function onGetStatusId(Event $event, Entity $entity)
+    public function onGetStatusId(EventInterface $event, Entity $entity)
     {
 
         if ($this->action == 'view') {
@@ -459,7 +459,7 @@ class EntitlementsTable extends ControllerActionTable
         return '<span class="status highlight">' . $statusName . '</span>';
     }
 
-    public function onGetAssigneeId(Event $event, Entity $entity)
+    public function onGetAssigneeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->assignee->name;
@@ -469,7 +469,7 @@ class EntitlementsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action != 'add' && $action != 'edit'){
             return $attr;
@@ -479,7 +479,7 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->institution->code_name;
@@ -489,7 +489,7 @@ class EntitlementsTable extends ControllerActionTable
         }
     }
 
-    public function onGetStaffLeaveTypeId(Event $event, Entity $entity)
+    public function onGetStaffLeaveTypeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->staff_leave_type->name;
@@ -499,7 +499,7 @@ class EntitlementsTable extends ControllerActionTable
         }
     }
 
-    public function onGetStartTime(Event $event, Entity $entity)
+    public function onGetStartTime(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->start_time;
@@ -509,7 +509,7 @@ class EntitlementsTable extends ControllerActionTable
         }
     }
 
-    public function onGetEndTime(Event $event, Entity $entity)
+    public function onGetEndTime(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->end_time;
@@ -519,12 +519,12 @@ class EntitlementsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFullDay(Event $event, Entity $entity)
+    public function onGetFullDay(EventInterface $event, Entity $entity)
     {
         return $this->getSelectOptions('general.yesno')[$entity->full_day];
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->academic_period->name;
@@ -534,7 +534,7 @@ class EntitlementsTable extends ControllerActionTable
         }
     }
 
-    public function onGetTime(Event $event, Entity $entity)
+    public function onGetTime(EventInterface $event, Entity $entity)
     {
         $time = '-';
         $isFullDay = $this->getFieldEntity($entity->is_historical, $entity->id, 'full_day');
@@ -546,7 +546,7 @@ class EntitlementsTable extends ControllerActionTable
         return $time;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr,  $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -557,7 +557,7 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFullDay(Event $event, array $attr,  $action, ServerRequest $request)
+    public function onUpdateFieldFullDay(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['select'] = false;
@@ -567,7 +567,7 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr,  $action, ServerRequest $request)
+    public function onUpdateFieldStaffLeaveTypeId(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add' ) {
             $attr['type'] = 'select';
@@ -576,7 +576,7 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr,  $action, ServerRequest $request)
+    public function onUpdateFieldStartTime(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($request->getData()[$this->getAlias()]['full_day'])) {
@@ -595,7 +595,7 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr,  $action, ServerRequest $request)
+    public function onUpdateFieldEndTime(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData()[$this->getAlias()]['full_day'])) {
@@ -614,7 +614,7 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr,  $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr,  $action, ServerRequest $request)
     {
         $all_instittutions = $this->Institutions->find('list', [
             'keyField' => 'id',
@@ -630,7 +630,7 @@ class EntitlementsTable extends ControllerActionTable
             if ($this->controller->getName() === 'Profiles') {
                 $staffId = $this->Auth->user('id');
             }
-            $StaffTable = TableRegistry::get('Institution.Staff');
+            $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
             $institutionOptions = $StaffTable
                 ->find('list', ['keyField' => 'institution.id', 'valueField' => 'institution.name'])
                 ->select([
@@ -655,7 +655,7 @@ class EntitlementsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         //echo "<pre>"; print_r($entity);die;
         if (isset($buttons['view'])) {
@@ -712,7 +712,7 @@ class EntitlementsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Institution');

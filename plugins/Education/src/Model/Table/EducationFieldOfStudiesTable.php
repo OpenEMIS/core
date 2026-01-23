@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
@@ -46,18 +46,18 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['education_programme_orientation_id']['sort'] = ['field' => 'ProgrammeOrientations.name'];
     }
 
-    public function addEditBeforeAction(Event $event) {
+    public function addEditBeforeAction(EventInterface $event) {
         $this->fields['education_programme_orientation_id']['type'] = 'select';
         $connection = $this->getConnection(); //POCOR-8495
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // POCOR-4079 if no manual sorting, will be sort by order.
         $requestQuery = $this->request->getQuery();
@@ -93,7 +93,7 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
         return parent::findOptionList($query, $options);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Name');
@@ -117,13 +117,13 @@ class EducationFieldOfStudiesTable extends ControllerActionTable
     }
 
     //POCOR-8495 --start
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

@@ -9,7 +9,7 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Database\ValueBinder;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
@@ -73,14 +73,14 @@ class LicensesTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
 		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->field('comments', ['visible' => false]);
         $this->field('license_type_id', ['after' => 'assignee_id']);
@@ -128,17 +128,17 @@ class LicensesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain(['Users', 'LicenseTypes', 'Classifications']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         $license_type_id = $entity->license_type_id;
         $alias = $this->getAlias();
@@ -147,13 +147,13 @@ class LicensesTable extends ControllerActionTable
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
 
     /*POCOR-5833 starts*/
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields['license_type_id']['type'] = 'select';
         $this->fields['license_type_id']['attr']['value'] = $entity->license_type_id;
@@ -169,12 +169,12 @@ class LicensesTable extends ControllerActionTable
 
     /*POCOR-5833 ends*/
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldLicenseTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['onChangeReload'] = 'changeLicenseType';
@@ -185,11 +185,11 @@ class LicensesTable extends ControllerActionTable
             $data = $request->getData();
             $alias = $this->getAlias();
             $licenseTypeId = $data[$alias]['license_type_id'];
-            $StaffLicensesTable = TableRegistry::get('Staff.Licenses');
-            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
-            $WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-            $LicenseTypes = TableRegistry::get('FieldOption.LicenseTypes');
+            $StaffLicensesTable = TableRegistry::getTableLocator()->get('Staff.Licenses');
+            $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+            $WorkflowsFilters = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
+            $LicenseTypes = TableRegistry::getTableLocator()->get('FieldOption.LicenseTypes');
             $getData = $StaffLicensesTable->find()
                 ->select([$WorkflowSteps->aliasField('workflow_id')])
                 ->leftJoin([$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()], [
@@ -221,7 +221,7 @@ class LicensesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldClassifications(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldClassifications(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $classificationOptions = [];
@@ -259,7 +259,7 @@ class LicensesTable extends ControllerActionTable
 
         $StaffTableQuery = clone $query;
         $staffTableInnerJoinQuery = $StaffTableQuery->select([$table->aliasField('staff_id')]);
-        $staffTable = TableRegistry::get('Institution.Staff');
+        $staffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $innerJoinArray = [
             'StaffUser.Staff__staff_id = ' . $this->aliasField('security_user_id'),//POCOR-7528
         ];
@@ -430,13 +430,13 @@ class LicensesTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Professional Development > Licenses';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                 ->find()
                 ->select(['id' => $workflowModelsTable->aliasField('id'),
@@ -464,12 +464,12 @@ class LicensesTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
@@ -515,7 +515,7 @@ class LicensesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'status_id') {
             return __('Status');

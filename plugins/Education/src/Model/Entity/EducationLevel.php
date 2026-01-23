@@ -14,7 +14,7 @@ class EducationLevel extends Entity
     	if ($this->has('education_system') && $this->education_system->has('name')) {
     		$name = $this->education_system->name . ' - ' . $name;
     	} else {
-    		$table = TableRegistry::get('Education.EducationSystems');
+    		$table = TableRegistry::getTableLocator()->get('Education.EducationSystems');
     		$systemId = $this->education_system_id;
     		$name = $table->get($systemId)->name . ' - ' . $name;
     	}

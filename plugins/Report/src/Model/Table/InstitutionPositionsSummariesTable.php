@@ -3,7 +3,7 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use DateTime;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -37,13 +37,13 @@ class InstitutionPositionsSummariesTable extends AppTable
     }
 
     // query change in POCOR-7460
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicperiodid = $requestData->academic_period_id;
         $area_level_id = $requestData->area_level_id;
         $statusFilter = $requestData->position_status;  //POCOR-7445
-        $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
@@ -81,7 +81,7 @@ class InstitutionPositionsSummariesTable extends AppTable
                 $where['institutions.area_id IN'] = $allselectedAreas;
                 $selectArea = "AND institutions.area_id IN = ".$allselectedAreas;
         }
-        $this->InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $this->InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $join = [];
         //POCOR-7407 end
         $query->select([
@@ -143,7 +143,7 @@ class InstitutionPositionsSummariesTable extends AppTable
     $query->join($join);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
         $newFields[] = [
@@ -214,7 +214,7 @@ class InstitutionPositionsSummariesTable extends AppTable
 
     //POCOR-7407
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id

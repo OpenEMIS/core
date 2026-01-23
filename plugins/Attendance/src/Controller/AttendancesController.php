@@ -3,7 +3,7 @@ namespace Attendance\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -55,7 +55,7 @@ class AttendancesController extends AppController
         $this->set('selectedAction', $setupTab);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         if ($model->alias == 'StudentMarkTypes') {
             $header = 'Attendances';

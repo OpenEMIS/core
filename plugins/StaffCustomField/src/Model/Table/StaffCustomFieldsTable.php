@@ -1,6 +1,6 @@
 <?php
 namespace StaffCustomField\Model\Table;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 use CustomField\Model\Table\CustomFieldsTable;
@@ -24,7 +24,7 @@ class StaffCustomFieldsTable extends CustomFieldsTable {
 		]);
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'field_type') {
             return __('Field Type');

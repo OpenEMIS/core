@@ -2,7 +2,7 @@
 namespace FieldOption\Model\Table;
 
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
@@ -27,7 +27,7 @@ class NationalitiesTable extends ControllerActionTable
         ]);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('identity_type_id', [
             'type' => 'select',
@@ -37,7 +37,7 @@ class NationalitiesTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldIdentityTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $Nationalities = $this;
         $identityTypes = $this->IdentityTypes
@@ -49,20 +49,20 @@ class NationalitiesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
     //POCOR-7980
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':
@@ -97,11 +97,11 @@ class NationalitiesTable extends ControllerActionTable
     }
     //POCOR-7980
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //update information on security user table
         $listeners = [
-            TableRegistry::get('User.Users')
+            TableRegistry::getTableLocator()->get('User.Users')
         ];
         $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
     }

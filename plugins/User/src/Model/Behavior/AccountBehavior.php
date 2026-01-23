@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
@@ -98,7 +98,7 @@ class AccountBehavior extends Behavior
 
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->_table->ControllerAction->field('roles', [
             'type' => 'role_table',
@@ -110,7 +110,7 @@ class AccountBehavior extends Behavior
         $this->afterActionCode($event, $entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->_table->ControllerAction->field('username');
         $this->_table->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
@@ -119,7 +119,7 @@ class AccountBehavior extends Behavior
     }
 
     // called manually cos need to use $entity
-    private function afterActionCode(Event $event, Entity $entity)
+    private function afterActionCode(EventInterface $event, Entity $entity)
     {
         $fieldsNeeded = ['username','password', 'roles', 'new_password', 'retype_password'];
         foreach ($this->_table->fields as $key => $value) {
@@ -163,7 +163,7 @@ class AccountBehavior extends Behavior
         return $events;
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // trimming passwords
         $dataArray = $data->getArrayCopy();
@@ -174,14 +174,14 @@ class AccountBehavior extends Behavior
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query)
+    public function viewBeforeQuery(EventInterface $event, Query $query)
     {
         $options['auto_contain'] = false;
         $query->contain(['Roles']);
     }
 
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($action == 'view') {
             if ($toolbarButtons->offsetExists('back')) {
@@ -190,7 +190,7 @@ class AccountBehavior extends Behavior
         }
     }
 
-    public function onUpdateFieldUsername(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldUsername(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $isAdmin = $this->_table->AccessControl->isAdmin();
         $permission = is_array($this->getConfig('permission')) ? $this->getConfig('permission') : [];
@@ -204,7 +204,7 @@ class AccountBehavior extends Behavior
         return $attr;
     }
 
-    public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetRoleTableElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Groups'), __('Roles')];
         $tableCells = [];
@@ -217,7 +217,7 @@ class AccountBehavior extends Behavior
                 $institutionId = '';
             }
 
-            $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');//POCOR-7309
             //POCOR-7309 starts
             if($this->_table->getAlias() == 'StaffAccount'){

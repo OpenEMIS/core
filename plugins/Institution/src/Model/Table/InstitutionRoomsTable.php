@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
@@ -70,7 +70,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         ]);
         $this->addBehavior('Institution.InfrastructureShift');
 
-        $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $this->Levels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
         $this->accessibilityOptions = $this->getSelectOptions('InstitutionAssets.accessibility');
         $this->accessibilityTooltip = $this->getMessage('InstitutionInfrastructures.accessibilityOption');
@@ -166,7 +166,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         // POCOR-8037 removed academic period code
         $institutionSubjectId = $options['institution_subject_id'];
-        $classSubjectsTable = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $classSubjectsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
         $institution = $classSubjectsTable->find()->contain('InstitutionClasses.InstitutionShifts')->where([$classSubjectsTable->aliasField('institution_subject_id') => $institutionSubjectId])->first();
         return $query
             ->find('inUse', ['institution_id' => $institution->institution_class->institution_shift->institution_id,
@@ -212,18 +212,18 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
     // POCOR-8060::end
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         self::setLastDateForStartDate($data);
         self::setLastDateForEmptyStartDate($data);
     }
 
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //Start:POCOR-7597
         if(!empty($entity['institution_floor_id'])){
-            $InstitutionFloors = TableRegistry::get('Institution.InstitutionFloors');
+            $InstitutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
             $InstitutionFloor = $InstitutionFloors->get($entity['institution_floor_id']);
         }
         if($entity['area'] >= $InstitutionFloor['area']){
@@ -248,28 +248,28 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // logic to copy custom fields (general only) where new room is created when change in room type
         $this->processCopy($entity);
     }
 
-    public function onGetInfrastructureLevel(Event $event, Entity $entity)
+    public function onGetInfrastructureLevel(EventInterface $event, Entity $entity)
     {
         return $this->levelOptions[$this->roomLevel];
     }
 
-    public function onGetAccessibility(Event $event, Entity $entity)
+    public function onGetAccessibility(EventInterface $event, Entity $entity)
     {
         return $this->accessibilityOptions[$entity->accessibility];
     }
 
-    public function onGetSubjects(Event $event, Entity $entity)
+    public function onGetSubjects(EventInterface $event, Entity $entity)
     {
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         // POCOR-8037 added academic period code for subjects start
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         if ($entity->has('subjects')) {
             $resultArray = [];
@@ -290,7 +290,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Owner');
@@ -323,7 +323,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         // unset edit_type so that will always default to Update Details
@@ -341,7 +341,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
         $this->field('area', ['attr' => ['label' => __('Size')]]);
@@ -349,7 +349,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->Navigation->substituteCrumb(__('Institution Rooms'), __('Institution Rooms'));
     }
 
-    public function onUpdateFieldInstitutionFloorId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionFloorId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'hidden';
         if ($action == 'add') {
@@ -358,7 +358,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->roomLevel = $this->Levels->getFieldByCode('ROOM', 'id');
         $this->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
@@ -380,7 +380,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $extra['elements']['control'] = $this->addControlFilterElement();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // get the list of owner institution id
         $ownerInstitutionIds = $this->getOwnerInstitutionId();
@@ -442,7 +442,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         ];
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 
@@ -454,13 +454,13 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // POCOR-8037 removed academic period code
         $query->contain(['RoomTypes', 'InfrastructureConditions', 'Subjects']);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 
@@ -472,7 +472,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
@@ -511,7 +511,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
@@ -537,25 +537,25 @@ class InstitutionRoomsTable extends ControllerActionTable
     // POCOR-8037 removed academic period code
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         //$selectedEditType = $this->request->getQuery('edit_type');
         $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
@@ -568,7 +568,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldChangeType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldChangeType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
@@ -592,7 +592,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldRoomStatusId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldRoomStatusId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
@@ -604,7 +604,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldInstitutionInfrastructureId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldInstitutionInfrastructureId(EventInterface $event, array $attr, $action, Request $request)
     // {
     //     if ($action == 'view') {
     //         $entity = $attr['entity'];
@@ -645,7 +645,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     // }
 
     // POCOR-8037 removed academic period code
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index' || $action == 'view') {
             if (!empty($this->getOwnerInstitutionId())) {
@@ -656,7 +656,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCode(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $parentId = $this->getQueryString('institution_floor_id');
@@ -671,7 +671,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             //$selectedEditType = $request->getQuery('edit_type');
@@ -684,7 +684,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldRoomTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldRoomTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
@@ -722,7 +722,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $today = new DateTime();
         // POCOR-8037 removed academic period code
@@ -732,7 +732,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-8037 removed academic period code start
         if ($action == 'view') {
@@ -762,7 +762,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAccessibility(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAccessibility(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == 'add') {
             $attr['options'] = $this->accessibilityOptions;
@@ -771,7 +771,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInfrastructureConditionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             //$selectedEditType = $request->getQuery('edit_type');
@@ -784,7 +784,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSubjects(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSubjects(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
         $entity = $attr['entity'];
@@ -816,7 +816,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewRoomType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewRoomType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -848,7 +848,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
 
@@ -871,7 +871,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeRoomType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeRoomType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->getQuery['type']);
@@ -1209,7 +1209,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     }
 
     // POCOR-8037 removed academic period code
-    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    public function addDeleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $model = $this;

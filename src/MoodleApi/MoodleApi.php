@@ -218,7 +218,7 @@ class MoodleApi
 
     private function _apiLog($action, $param, $response, $callback, $callbackData)
     {
-        $apiLogTable = TableRegistry::get("MoodleApi.MoodleApiLog");
+        $apiLogTable = TableRegistry::getTableLocator()->get("MoodleApi.MoodleApiLog");
         // Pass an empty array to newEntity() if you don't have initial data to populate
         $apiInstance = $apiLogTable->newEntity([]);
 
@@ -362,7 +362,7 @@ class MoodleApi
 
     public function saveStaffToMoodleCourse(array $staffList = [], int $courseId): void
     {
-        $Users = TableRegistry::get('Security.Users');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
 
         $moodleEnrolledUsersResponse = $this->get('core_enrol_get_enrolled_users', ['courseid' => $courseId]);
 
@@ -482,7 +482,7 @@ class MoodleApi
 
     public function saveStudentToMoodleCourse(array $studentList = [], int $courseId): void
     {
-        $Users = TableRegistry::get('Security.Users');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
 
         $moodleEnrolledUsersResponse = $this->get('core_enrol_get_enrolled_users', ['courseid' => $courseId]);
 

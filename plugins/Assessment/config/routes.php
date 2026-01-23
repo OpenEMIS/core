@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Assessments', ['plugin' => 'Assessment'], function ($routes) {
-	Router::connect('/Assessments', ['plugin' => 'Assessment', 'controller' => 'Assessments']);
-	Router::connect('/Assessments/:action/*', ['plugin' => 'Assessment', 'controller' => 'Assessments']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Assessments', ['plugin' => 'Assessment'], function (RouteBuilder $routes) {
+        $routes->connect('/Assessments', ['plugin' => 'Assessment', 'controller' => 'Assessments']);
+        $routes->connect('/Assessments/:action/*', ['plugin' => 'Assessment', 'controller' => 'Assessments']);
+    });
+};

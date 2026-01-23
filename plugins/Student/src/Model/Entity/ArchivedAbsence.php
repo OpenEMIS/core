@@ -11,7 +11,7 @@ class ArchivedAbsence extends Entity
 	
     protected function _getDays() {
     	$name = '';
-    	$InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+    	$InstitutionStudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
     	$settingWeekdays = $InstitutionStudentAbsences->getWeekdaysBySetting();
 		
 		$stampFirstDateAbsent = strtotime($this->start_date);
@@ -31,7 +31,7 @@ class ArchivedAbsence extends Entity
     	$name = '';
 		$timeStr = '';
     	if ($this->has('full_day')) {
-    		$InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+    		$InstitutionStudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
     		$settingWeekdays = $InstitutionStudentAbsences->getWeekdaysBySetting();
 
     		if ($this->full_day) {

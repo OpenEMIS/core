@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
@@ -62,7 +62,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('marks', ['visible' => false]);
         $this->field('assessment_grading_option_id', ['visible' => false]);
@@ -78,7 +78,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $classId = $this->getQueryString('class_id');
         $assessmentId = $this->getQueryString('assessment_id');
@@ -118,7 +118,7 @@ class ReportCardGenerateTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldInstitutionClassesId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionClassesId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $classId = $this->getQueryString('class_id');
@@ -130,7 +130,7 @@ class ReportCardGenerateTable extends ControllerActionTable
             $periodId = empty($academicPeriodId) ? $request->getData($this->getAlias())['academic_period_id'] : $academicPeriodId;
             $educationGradeId = $request->getData($this->getAlias())['education_grade_id'];
             //$institutionId = $session->read('Institution.Institutions.id');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
             $userId = $this->Auth->user('id');
             $classQuery = $this->InstitutionClasses
                 ->find('list', ['keyField' => 'id',
@@ -160,7 +160,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudents(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $studentsOptions = [
@@ -177,7 +177,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, $request)
     {
         $classId = $this->getQueryString('class_id');
         $assessmentId = $this->getQueryString('assessment_id');
@@ -192,7 +192,7 @@ class ReportCardGenerateTable extends ControllerActionTable
                 $institutionId = $request->getData()['ReportCardGenerate']['institution_id'];
             }
             if ($classId) {
-                $grades = TableRegistry::get('Institution.InstitutionClassGrades');
+                $grades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
             }
             if(!empty( $academicPeriodId)) {
                 $where = [
@@ -206,7 +206,7 @@ class ReportCardGenerateTable extends ControllerActionTable
             if ($classId) {
                 $where[$grades->aliasField('institution_class_id')] = $classId;
             }
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
             $periodGrades = $EducationGrades->find('list', ['keyField' => 'id',
                 'valueField' => 'programme_grade_name'])
                 ->find('visible')
@@ -233,7 +233,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStudentStatusId(EventInterface $event, array $attr, $action, $request)
     {
 
         $statusNames = $this->StudentStatuses->find('list')->toArray();
@@ -243,7 +243,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldListOfStudents(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldListOfStudents(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
 
@@ -273,8 +273,8 @@ class ReportCardGenerateTable extends ControllerActionTable
             }
             $educationGradeId = $data['education_grade_id'];
             $statusId = $data['student_status_id'];
-            $InstitutionStudents = TableRegistry::get('Institution.Students');
-            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+            $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $where = [];
             if ($statusId > 0) {
                 $where[] = $InstitutionClassStudents->aliasField("student_status_id = ") . $statusId;
@@ -336,7 +336,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $data = $requestData['ReportCardGenerate'];
         $queryString = $this->request->getQuery('queryString');
@@ -365,7 +365,7 @@ class ReportCardGenerateTable extends ControllerActionTable
         return preg_replace("/^http:/i", "https:", $fullUrl);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->request->getQuery('queryString');
         $button = [

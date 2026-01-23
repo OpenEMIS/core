@@ -28,7 +28,7 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
 
     protected function getPendingItems(string $featureKey): array
     {
-        $this->loadModel('System.SystemUpdates');
+        $this->SystemUpdates = $this->fetchTable('System.SystemUpdates');
         $latestVersion = $this->SystemUpdates->find()
             ->order([$this->SystemUpdates->aliasField('id') => 'desc'])
             ->first();

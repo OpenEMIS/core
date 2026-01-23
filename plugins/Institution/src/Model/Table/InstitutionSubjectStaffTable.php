@@ -7,7 +7,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -81,7 +81,7 @@ class InstitutionSubjectStaffTable extends AppTable
         return $result;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($this->isSubjectExistData) {
             $entity->start_date = $this->isSubjectExistData->start_date;
@@ -90,7 +90,7 @@ class InstitutionSubjectStaffTable extends AppTable
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $institution_subject_id = isset($data['institution_subject_id']) ? $data['institution_subject_id'] : 0;//POCOR-8324
         $existingRecords = $this->find()->where([
@@ -125,7 +125,7 @@ class InstitutionSubjectStaffTable extends AppTable
         return $deleteCount;
     }
 
-    public function staffAfterSave(Event $event, $staff)
+    public function staffAfterSave(EventInterface $event, $staff)
     {
         $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
@@ -594,7 +594,7 @@ class InstitutionSubjectStaffTable extends AppTable
     * @return json
     * @ticket - POCOR-6807
     */
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         $url = $_SERVER['REQUEST_URI'];
         $url_components = parse_url($url);

@@ -5,7 +5,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Core\Configure;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -184,7 +184,7 @@ class StudentUserExportTable extends ControllerActionTable
     // POCOR-5684
     // POCOR-6130 adding tabs in sheet
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $options['associated']['Nationalities'] = [
             'validate' => 'AddByAssociation'
@@ -196,7 +196,7 @@ class StudentUserExportTable extends ControllerActionTable
 
     // POCOR-6130
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // this value comes from the list page from StudentsTable->onUpdateActionButtons
         $institutionStudentId = $this->getQueryString('institution_student_id');
@@ -207,7 +207,7 @@ class StudentUserExportTable extends ControllerActionTable
         $extra['institutionId'] = $institutionId;
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $studentsTabsData = $this->studentsTabsData;
@@ -235,7 +235,7 @@ class StudentUserExportTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $StudentType = $sheetData['student_tabs_type'];
@@ -521,7 +521,7 @@ class StudentUserExportTable extends ControllerActionTable
 
     }
 
-    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    public function onExcelGetIdentityNumber(EventInterface $event, Entity $entity)
     {
 
         $users = self::getDynamicTableInstance('user_identities');
@@ -530,14 +530,14 @@ class StudentUserExportTable extends ControllerActionTable
 
     }
 
-    public function onExcelGetDateOfBirth(Event $event, Entity $entity)
+    public function onExcelGetDateOfBirth(EventInterface $event, Entity $entity)
     {
         return $this->formatDate($entity->date_of_birth);
     }
 
     // needs to migrate
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 //        self::debug($settings);
         $params = $this->getQueryString();

@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/InstitutionRepeaters', ['plugin' => 'InstitutionRepeater'], function ($routes) {
-	Router::connect('/InstitutionRepeaters', ['plugin' => 'InstitutionRepeater', 'controller' => 'InstitutionRepeaters']);
-	Router::connect('/InstitutionRepeaters/:action/*', ['plugin' => 'InstitutionRepeater', 'controller' => 'InstitutionRepeaters']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/InstitutionRepeaters', ['plugin' => 'InstitutionRepeater'], function (RouteBuilder $routes) {
+    	$routes->connect('/InstitutionRepeaters', ['plugin' => 'InstitutionRepeater', 'controller' => 'InstitutionRepeaters']);
+    	$routes->connect('/InstitutionRepeaters/:action/*', ['plugin' => 'InstitutionRepeater', 'controller' => 'InstitutionRepeaters']);
+    });
+};

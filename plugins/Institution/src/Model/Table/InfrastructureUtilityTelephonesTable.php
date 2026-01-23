@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
@@ -33,7 +33,7 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
     	$modelAlias = 'InfrastructureUtilityTelephones';
         $userType = '';
@@ -50,7 +50,7 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         ;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('utility_telephone_type_id');
         $this->field('utility_telephone_condition_id');
@@ -77,14 +77,14 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         // end element control
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
         ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         
@@ -99,7 +99,7 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         $this->field('utility_telephone_condition_id', ['attr' => ['label' => __('Condition')]]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'comment':
@@ -123,7 +123,7 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         }
     }
 
-    // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    // public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     // {
     //     $encodedString = $this->request->getAttribute('params')['pass'][1];
     //     $query = $this->request->getQuery();

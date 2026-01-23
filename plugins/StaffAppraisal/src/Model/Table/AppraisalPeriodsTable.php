@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -69,7 +69,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
             ]);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $typeOptions = $this->AppraisalTypes->find('list')->toArray();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -80,17 +80,17 @@ class AppraisalPeriodsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['AcademicPeriods', 'AppraisalTypes', 'AppraisalForms']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['AppraisalTypes']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $appraisalTypes = $this->getAppraisalTypes($entity);
 
@@ -100,13 +100,13 @@ class AppraisalPeriodsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->academic_period_id, 'attr' => ['value' => $entity->academic_period->name]]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('appraisal_types');
         $this->setFieldOrder(['name', 'appraisal_form_id', 'appraisal_types', 'academic_period_id', 'date_enabled', 'date_disabled']);
     }
 
-    public function onGetAppraisalTypes(Event $event, Entity $entity)
+    public function onGetAppraisalTypes(EventInterface $event, Entity $entity)
     {
         return $this->getAppraisalTypes($entity);
     }
@@ -122,7 +122,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
         return implode(', ', $types);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->AppraisalTypes->getAlias()
@@ -130,7 +130,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
     }
 
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $is_manual_exist = $this->getManualUrl('Administration','Periods','Staff Appraisals');       
         if(!empty($is_manual_exist)){
@@ -151,7 +151,7 @@ class AppraisalPeriodsTable extends ControllerActionTable
         }
     }// End POCOR-5188
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

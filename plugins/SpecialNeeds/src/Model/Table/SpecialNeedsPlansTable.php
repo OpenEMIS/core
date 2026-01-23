@@ -3,7 +3,7 @@ namespace SpecialNeeds\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -62,7 +62,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
                 ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
         $this->field('special_needs_plan_types_id');
@@ -152,7 +152,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $sentData = $this->request->getData();
         $alias = $this->getAlias();
@@ -190,17 +190,17 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -220,7 +220,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'special_needs_plan_types_id', 'plan_name', 'file_name', 'file_content', 'comment']);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $userId = $this->getUserID();
         $query
@@ -229,7 +229,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'special_needs_plan_types_id':
@@ -248,7 +248,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
     }
 
     // Start POCOR-7467
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Academic Periods Filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);

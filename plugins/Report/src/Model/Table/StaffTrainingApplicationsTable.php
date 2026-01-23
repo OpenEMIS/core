@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\AppTable;
 
@@ -25,7 +25,7 @@ class StaffTrainingApplicationsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedStatus = $requestData->status;
@@ -48,7 +48,7 @@ class StaffTrainingApplicationsTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 

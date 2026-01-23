@@ -4,12 +4,12 @@ namespace Institution\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class InstitutionWorkflowAccessControlBehavior extends Behavior {
 
     public function initialize(array $config): void {
-    	$this->Institutions = TableRegistry::get('Institution.Institutions');
+    	$this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
     }
 
 	public function implementedEvents(): array {
@@ -18,7 +18,7 @@ class InstitutionWorkflowAccessControlBehavior extends Behavior {
 		return $events;
 	}
 
-	public function onWorkflowUpdateRoles(Event $event) {
+	public function onWorkflowUpdateRoles(EventInterface $event) {
 		$session = $this->_table->Session;
 		$controller = $this->_table->controller;
 		$restrictedController = ['Institutions', 'Students', 'Staff'];

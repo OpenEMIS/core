@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -41,7 +41,7 @@ class ImportInstitutionTextbooksTable extends AppTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'TextbookStatuses') {
             return __('Status');
@@ -52,9 +52,9 @@ class ImportInstitutionTextbooksTable extends AppTable
         }
     }
 
-    public function onImportPopulateTextbooksData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateTextbooksData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $selectFields = [$lookedUpTable->aliasField('title'), $lookedUpTable->aliasField('code'), $lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('ISBN')];
         $order = [$lookedUpTable->aliasField('title')];
 
@@ -77,14 +77,14 @@ class ImportInstitutionTextbooksTable extends AppTable
         }
     }
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         unset($data[$columnOrder]);
     }
 
-    public function onImportPopulateTextbookStatusesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateTextbookStatusesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $selectFields = [$lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn)];
         $order = [$lookedUpTable->aliasField('name')];
 
@@ -109,7 +109,7 @@ class ImportInstitutionTextbooksTable extends AppTable
 
     public function getAssignedStaffId(){
 
-        $staff = TableRegistry::get('Institution.InstitutionStaff');
+        $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $query = $staff->find()
                 ->select([
                     'su.id'
@@ -145,7 +145,7 @@ class ImportInstitutionTextbooksTable extends AppTable
 
         public function getEnrolledStudentId(){
 
-            $staff = TableRegistry::get('Institution.InstitutionStudents');
+            $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
             $query = $staff->find()
                     ->select([
                         'su.id'
@@ -180,7 +180,7 @@ class ImportInstitutionTextbooksTable extends AppTable
      // POCOR-7362 ends
 
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $tempRow['security_user_id'] = $tempRow['student_id'];
          // POCOR-7362 starts
@@ -207,7 +207,7 @@ class ImportInstitutionTextbooksTable extends AppTable
         $tempRow['institution_id'] = $this->institutionId;
 
         if ($tempRow->offsetExists('textbook_id') && !empty($tempRow['textbook_id'])) {
-            $Textbooks = TableRegistry::get('Textbook.Textbooks');
+            $Textbooks = TableRegistry::getTableLocator()->get('Textbook.Textbooks');
             $textbookResults = $Textbooks
                 ->find()
                 ->where([$Textbooks->aliasField('id') => $tempRow['textbook_id']])
@@ -222,7 +222,7 @@ class ImportInstitutionTextbooksTable extends AppTable
                 $tempRow['education_subject_id'] = $textbookEntity->education_subject_id;
                 $tempRow['education_grade_id'] = $textbookEntity->education_grade_id;
                 //check for student being assigned 2 same book.
-                $InstitutionTextbooks = TableRegistry::get('Institution.InstitutionTextbooks');
+                $InstitutionTextbooks = TableRegistry::getTableLocator()->get('Institution.InstitutionTextbooks');
 
                 if ($tempRow->offsetExists('code') && empty($tempRow['code'])) {
                     $InstitutionTextbookData = $InstitutionTextbooks->find('all', [

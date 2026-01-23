@@ -4,7 +4,7 @@ namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -63,7 +63,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
             $this->field('visible', ['visible' => false]);
@@ -121,7 +121,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value_name', ['visible' => true]);
         $this->field('value', ['visible' => false]);
@@ -133,7 +133,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
         }
     }
 
-    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
+    public function onGetCustomExternalSourceElement(EventInterface $event, $action, Entity $entity, $attr, $options = [])
     {
 
         $printer = $entity->value;
@@ -187,7 +187,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValue(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if (in_array($action, ['edit', 'add'])) {
@@ -201,7 +201,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
         return $attr;
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra): void
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra): void
     {
 
         $alias = $this->getAlias();
@@ -215,7 +215,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
         $errors = $entity->getErrors();
         $source = $entity->name;
@@ -240,7 +240,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $source = $entity->value;
@@ -295,7 +295,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
     }
 
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
@@ -305,7 +305,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->select(
@@ -317,11 +317,11 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
             ]);
     }
 
-    public function onGetValueName(Event $event, Entity $entity)
+    public function onGetValueName(EventInterface $event, Entity $entity)
     {
             return $this->options[$entity->value];
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'value_name') {
             return __('Printer');
@@ -334,7 +334,7 @@ class ConfigPrintingServicePdfTable extends ControllerActionTable
 
     //POCOR-7981:End
 
-    public function onGetLabel(Event $event, Entity $entity)
+    public function onGetLabel(EventInterface $event, Entity $entity)
     {
         return __($entity->label);
     }

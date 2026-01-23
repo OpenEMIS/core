@@ -5,7 +5,7 @@ use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class TrainingsController extends AppController
 {
@@ -15,7 +15,7 @@ class TrainingsController extends AppController
 
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
-        $this->loadModel('Training.TrainingSessionTraineeResults');//5695
+        $this->TrainingSessionTraineeResults = $this->fetchTable('Training.TrainingSessionTraineeResults');//5695
         $this->ControllerAction->models = [
             'ImportTrainees'    => ['className' => 'Training.ImportTrainees', 'actions' => ['add']],
             'ImportTrainingSessionTraineeResults' => ['className' => 'Training.ImportTrainingSessionTraineeResults', 'actions' => ['add']] //5695
@@ -31,7 +31,7 @@ class TrainingsController extends AppController
     public function Results() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Training.TrainingSessionResults']); }
     // End
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Training');
 

@@ -4,7 +4,7 @@ namespace App\Model\Behavior;
 use ArrayObject;
 use Cake\Log\Log;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -43,12 +43,12 @@ class TrackActivityBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
-public function beforeSave(Event $event, Entity $entity) {
+public function beforeSave(EventInterface $event, Entity $entity) {
 	if (!empty($entity->id) && $entity->isDirty() && $this->_table->trackActivity && isset($this->_table->fields)) { // edit operation
 		$model = $this->_table;
 		$schema = $model->getSchema();
 		$session = $this->_session->read($this->getConfig('session'));
-		$ActivityModel = TableRegistry::get($this->getConfig('target'));
+		$ActivityModel = TableRegistry::getTableLocator()->get($this->getConfig('target'));
 		$obj = [
 			'model' => $model->getAlias(),
 			'model_reference' => $entity->id,
@@ -148,7 +148,7 @@ public function beforeSave(Event $event, Entity $entity) {
 	return true;
 }
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+	public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
 		if (!empty($entity->id) && $this->_table->trackActivity) {
 			$alias = $this->_table->getAlias();
 			$id = $entity->id;

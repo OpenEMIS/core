@@ -2,7 +2,7 @@
 namespace Examination\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use ArrayObject;
 use Cake\Validation\Validator;
@@ -33,7 +33,7 @@ class ExaminationCentreRoomsExaminationsStudentsTable extends ControllerActionTa
         $this->setDeleteStrategy('restrict');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('examination_id', ['visible' => false]);
         $this->field('examination_centre_id', ['visible' => false]);

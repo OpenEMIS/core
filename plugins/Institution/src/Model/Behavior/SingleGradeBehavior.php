@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 use Cake\Utility\Text;//POCOR-8538
@@ -34,7 +34,7 @@ class SingleGradeBehavior extends Behavior
 ** add action methods
 **
 ******************************************************************************************************************/
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         /**
          * add form setup
@@ -72,13 +72,13 @@ class SingleGradeBehavior extends Behavior
             $selectedEducationGradeId = 0;
         }
 
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $session = $this->_table->Session;
         // Call a method from another behavior attached to the same table
         $institutionId =  $this->_table->getBehavior('InstitutionTab')->getInstitutionID();
         // $institutionId = $session->read('Institution.Institutions.id');
 
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $gradeOptions = [0 => '-- '.__('Select').' --'] + $gradeOptions;
         //echo 'ssssss';print_r($institutionShiftId);die;
         $this->_table->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
@@ -143,7 +143,7 @@ class SingleGradeBehavior extends Behavior
         //POCOR-7680 end
 
         //POCOR-7803::Start
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configItemsData = $configItems->find()->where(['type'=>'Fields for Institutions Classes Details Page'])->toArray();
         foreach($configItemsData as $configItemsData1){
             if(($configItemsData1['code'] == 'class_ins_unit') && ($configItemsData1['value'] == 0)){
@@ -159,7 +159,7 @@ class SingleGradeBehavior extends Behavior
         }
         //POCOR-7803::End
 
-        $LabelTable = TableRegistry::get('Labels');
+        $LabelTable = TableRegistry::getTableLocator()->get('Labels');
         $unitname = $LabelTable->find()->where(['module_name' =>'Institutions -> Classes' , 'field_name' =>'Unit'])->first();
         if($unitname != null){
            $unit =  $unitname->name;
@@ -207,7 +207,7 @@ class SingleGradeBehavior extends Behavior
         ]);
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
 //        echo "<pre>";
 //        print_r(__FUNCTION__);
@@ -302,7 +302,7 @@ class SingleGradeBehavior extends Behavior
         return $process;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
         $errors = $entity->getErrors();

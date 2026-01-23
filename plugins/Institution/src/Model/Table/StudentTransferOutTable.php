@@ -3,7 +3,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -100,14 +100,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     }
 
     // to get correct set of unassigned records for each workflow model in UpdateAssigneeShell
-    public function onSetSchoolBasedConditions(Event $event, Entity $entity, $where)
+    public function onSetSchoolBasedConditions(EventInterface $event, Entity $entity, $where)
     {
         $where[$this->aliasField('previous_institution_id')] = $entity->id;
         unset($where[$this->aliasField('institution_id')]);
         return $where;
     }
 
-    public function studentsAfterSave(Event $event, $student)
+    public function studentsAfterSave(EventInterface $event, $student)
     {
         if ($student->isNew()) {
             // close other pending SENDING transfer applications (in same education system) if the student is successfully transferred in one school
@@ -256,7 +256,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     // POCOR-9457 end
 
     // POCOR-3649
-    public function associated(Event $event, ArrayObject $extra)
+    public function associated(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -294,7 +294,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         return $entity;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         // Generate encoded query string once
         $queryString = $this->getQueryString();
@@ -314,7 +314,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     }
 
-    public function onGetAssociatedRecordsElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetAssociatedRecordsElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $fieldKey = 'associated_records';
         $dataBetweenDate = [];
@@ -392,13 +392,13 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //        return $dataBetweenDate;
 //    }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         parent::beforeAction($event, $extra);
         $this->field('institution_class_id', ['type' => 'hidden']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         /*if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
@@ -421,7 +421,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         // End bulk Student Transfer Out button POCOR-6028 end
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $paramInstitutionId = $this->request->getAttribute('params')['institutionId'];
@@ -448,7 +448,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->addSections();
         if (empty($entity->start_date)) {
@@ -541,7 +541,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         //POCOR-5944 ends
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $studentId = $this->getQueryString('institution_student_id');
         $userId = $this->getQueryString('user_id');
@@ -634,7 +634,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('previous_academic_period_id') && $data->offsetExists('academic_period_id')) {
             $previousAcademicPeriodId = $data->offsetGet('previous_academic_period_id');
@@ -646,7 +646,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     }
 
     //POCOR-7881 commented out the function
-//    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+//    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
 //    {
 //        if (empty($entity->errors())) {
 //            // get the data between requested date and today date (if its back date)
@@ -666,7 +666,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //    }
 
     //POCOR-7881 commented out the function
-//    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+//    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
 //    {
 //
 //        if (empty($entity->errors())) {
@@ -687,12 +687,12 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 //        }
 //    }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'EducationGrades', 'PreviousEducationGrades', 'AcademicPeriods', 'PreviousAcademicPeriods']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -721,7 +721,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         ]);
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
             $entity = $attr['entity'];
@@ -737,7 +737,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreviousAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -755,7 +755,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreviousInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -773,7 +773,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldPreviousEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreviousEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -791,7 +791,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldRequestedDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldRequestedDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //Single transfer
         if (in_array($action, ['add', 'edit', 'approve', 'associated'])) {
@@ -857,7 +857,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -868,7 +868,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -880,14 +880,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
      * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         $next_period_id = $entity->academic_period_id;
@@ -947,14 +947,14 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
      * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //single student
         // POCOR-8946 start
@@ -1097,7 +1097,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -1113,7 +1113,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit', 'approve'])) {
             $entity = $attr['entity'];
@@ -1129,7 +1129,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'associated') {
             $sessionKey = $this->getRegistryAlias() . '.associatedData';
@@ -1222,7 +1222,7 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
     }
 
     //POCOR-6981
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add', 'approve'])) { // POCOR-8411 start
             $workflowModel = 'Institutions > Student Transfer > Sending';

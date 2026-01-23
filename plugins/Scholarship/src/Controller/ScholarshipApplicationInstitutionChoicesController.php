@@ -1,7 +1,7 @@
 <?php
 namespace Scholarship\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;

@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -25,39 +25,39 @@ class LandTypesTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Infrastructure.Types');
 
-        $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $InfrastructureLevels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $InfrastructureLevels->find('list')->toArray();
         $this->landLevel = $InfrastructureLevels->getFieldByCode('LAND', 'id');
         $this->setDeleteStrategy('restrict');
     }
 
-    public function onGetInfrastructureLevel(Event $event, Entity $entity)
+    public function onGetInfrastructureLevel(EventInterface $event, Entity $entity)
     {
         return $this->levelOptions[$this->landLevel];
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Infrastructures', 'action' => 'Fields'];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('infrastructure_level', ['after' => 'national_code']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    // public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action)
+    // public function onUpdateFieldInfrastructureLevel(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInfrastructureLevel(EventInterface $event, array $attr, $action)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';
@@ -73,7 +73,7 @@ class LandTypesTable extends ControllerActionTable
         $this->field('infrastructure_level', ['type' => 'select']);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'infrastructure_level') {
             return __('Infrastructure Level');
@@ -108,14 +108,14 @@ class LandTypesTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         unset($entity->infrastructure_level); // POCOR-9074
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

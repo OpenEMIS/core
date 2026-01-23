@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
@@ -132,7 +132,7 @@ class StaffAppraisalsTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (in_array($this->action, ['view', 'edit', 'delete'])) {
             $modelAlias = 'Staff Appraisals';
@@ -167,7 +167,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('institution_id', ['type' => 'hidden', 'value' => $institutionId]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
 
@@ -192,13 +192,13 @@ class StaffAppraisalsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('staff_id') => $this->staff->id]);
         $this->field('final_score');
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
         $listeners = [];
@@ -302,7 +302,7 @@ class StaffAppraisalsTable extends ControllerActionTable
      * If 'params' is null or does not contain a known formula, the answer is excluded.
      */
 
-    public function onGetFinalScore(Event $event, Entity $entity)
+    public function onGetFinalScore(EventInterface $event, Entity $entity)
     {
         $institutionStaffAppraisalsId = $entity->id;
 
@@ -375,7 +375,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     }
 
 
-    /*public function onGetFinalScore(Event $event, Entity $entity)
+    /*public function onGetFinalScore(EventInterface $event, Entity $entity)
     {
         $institutionStaffAppraisalsId = $entity->id;
         $AppraisalFormsCriteriasScores = $this->AppraisalForms->AppraisalFormsCriteriasScores;
@@ -425,13 +425,13 @@ class StaffAppraisalsTable extends ControllerActionTable
 
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, $attr, $action, ServerRequest $request) // POCOR-9123
+    public function onUpdateFieldAssigneeId(EventInterface $event, $attr, $action, ServerRequest $request) // POCOR-9123
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Career > Appraisals';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
@@ -460,12 +460,12 @@ class StaffAppraisalsTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
@@ -511,7 +511,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
@@ -545,7 +545,7 @@ class StaffAppraisalsTable extends ControllerActionTable
     }
 
     //POCOR-8627 Start
-    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDate(EventInterface $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
 
@@ -562,7 +562,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $query->contain([
             'AppraisalPeriods.AcademicPeriods', 'AppraisalForms',
@@ -570,7 +570,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $fields[] = [
             'key' => 'AppraisalPeriods.AcademicPeriods.AcademicPeriods',
@@ -580,7 +580,7 @@ class StaffAppraisalsTable extends ControllerActionTable
         ];
     }
 
-    public function onExcelGetCode(Event $event, Entity $entity)
+    public function onExcelGetCode(EventInterface $event, Entity $entity)
     {
        return $entity->appraisal_period->academic_period->name;
     }
