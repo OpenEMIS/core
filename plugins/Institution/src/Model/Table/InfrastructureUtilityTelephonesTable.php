@@ -174,9 +174,9 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         //Always resolve ROOT id
         $rootId = $entity->parent_id ?? $entity->id;
 
-        //Expire ALL current records
+        //Expire current records
         $this->updateAll(
-            ['is_current' => 0],
+            ['is_current' => false],
             [
                 'OR' => [
                     ['id' => $rootId],

@@ -41,7 +41,7 @@ class POCOR9475 extends AbstractMigration
                 ADD COLUMN `start_date` DATE NULL AFTER `academic_period_id`,
                 ADD COLUMN `end_date` DATE NULL AFTER `start_date`,
                 ADD COLUMN `is_current` TINYINT(1) NOT NULL DEFAULT 0 AFTER `end_date`,
-                ADD COLUMN `is_parent` TINYINT(1) NULL AFTER `is_current`
+                ADD COLUMN `parent_id` INT(11) NULL AFTER `is_current`
             ");
         }
         
@@ -71,44 +71,39 @@ class POCOR9475 extends AbstractMigration
                 t.end_date   = ap.end_date
         ");
 
+        $this->execute("UPDATE infrastructure_utility_electricities SET is_current = 0");
+        $this->execute("UPDATE infrastructure_utility_internets SET is_current = 0");
+        $this->execute("UPDATE infrastructure_utility_telephones SET is_current = 0");
+
         
         //Set is_current using date-range form academic_periods table
 
         $this->execute("
             UPDATE infrastructure_utility_electricities e
-            JOIN academic_periods ap ON ap.id = e.academic_period_id
             JOIN (
                 SELECT MAX(id) AS id
                 FROM infrastructure_utility_electricities
                 GROUP BY institution_id, academic_period_id, utility_electricity_type_id
             ) latest ON latest.id = e.id
-            SET e.is_current = 1
-            WHERE CURDATE() BETWEEN ap.start_date AND ap.end_date;
-        ");
+            SET e.is_current = 1;");
 
         $this->execute("
             UPDATE infrastructure_utility_internets i
-            JOIN academic_periods ap ON ap.id = i.academic_period_id
             JOIN (
                 SELECT MAX(id) AS id
                 FROM infrastructure_utility_internets
                 GROUP BY institution_id, academic_period_id
             ) latest ON latest.id = i.id
-            SET i.is_current = 1
-            WHERE CURDATE() BETWEEN ap.start_date AND ap.end_date;
-        ");
+            SET i.is_current = 1;");
 
         $this->execute("
             UPDATE infrastructure_utility_telephones t
-            JOIN academic_periods ap ON ap.id = t.academic_period_id
             JOIN (
                 SELECT MAX(id) AS id
                 FROM infrastructure_utility_telephones
                 GROUP BY institution_id, academic_period_id
             ) latest ON latest.id = t.id
-            SET t.is_current = 1
-            WHERE CURDATE() BETWEEN ap.start_date AND ap.end_date;
-        ");
+            SET t.is_current = 1;");
         
         //Enforce NOT NULL on start_date
         
