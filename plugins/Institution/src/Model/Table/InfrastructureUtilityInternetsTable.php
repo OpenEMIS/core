@@ -365,4 +365,12 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         return $buttons;
     }
 
+    //POCOR-9475
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+
+        return $this->controller->redirect($this->url('index'));
+        
+    }
+
 }
