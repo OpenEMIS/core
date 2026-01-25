@@ -532,7 +532,7 @@ class SecurityRolesTable extends ControllerActionTable
      * function returns the list + user roles for the group
      * @param $userGroupId
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getUserRolesList($userGroupId)
     {

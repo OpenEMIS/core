@@ -1565,7 +1565,7 @@ class StudentUserTable extends ControllerActionTable
     /**
      * @param string $tableName
      * @return Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

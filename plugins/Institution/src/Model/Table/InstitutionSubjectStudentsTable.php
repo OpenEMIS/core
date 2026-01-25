@@ -380,7 +380,7 @@ class InstitutionSubjectStudentsTable extends AppTable
      */
     public function findStudentResults(Query $query, array $options)
     {
-        //POCOR-7419-KHINDOL
+        //POCOR-7419-KH
         $institution_id = self::getFromArray($options, 'institution_id');
         $institution_class_id = self::getFromArray($options, 'institution_class_id'); //568
         $assessment_id = self::getFromArray($options, 'assessment_id');
@@ -437,7 +437,7 @@ class InstitutionSubjectStudentsTable extends AppTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public static function getRelatedRecord($tableName, $relatedField)
     {
@@ -458,7 +458,7 @@ class InstitutionSubjectStudentsTable extends AppTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public static function getRelatedName($tableName, $relatedField)
     {

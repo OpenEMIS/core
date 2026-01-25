@@ -575,7 +575,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-    
+
     public static function addGpaReportCards(
         $studentId,
         $academicPeriodId,
@@ -1117,7 +1117,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 subq.institution_id,
                 subq.student_id,
                 ROUND(
-                    SUM(IFNULL(gpa_grading_options.point, 0)) 
+                    SUM(IFNULL(gpa_grading_options.point, 0))
                     /
                     COUNT(DISTINCT subq.education_subject_id),
                 2
@@ -1298,7 +1298,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $result['gpa'] ?? 0.00;
     }
 
-    //Commenting Dr.Khindol's logic as the exemption scenario is not working as expected.
+    //Commenting Dr.Kh's logic as the exemption scenario is not working as expected.
     //DO NOT DELETE -- Needed for reference.
     public static function getGpaForStudentGpaOriginal(
         int $institutionId,

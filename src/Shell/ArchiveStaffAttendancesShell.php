@@ -20,7 +20,7 @@ use PDOException;
  * Archive following tables
  * institution_staff_attendances
  * institution_staff_leave
- * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+ *
  */
 class ArchiveStaffAttendancesShell extends Shell
 {
@@ -33,7 +33,7 @@ class ArchiveStaffAttendancesShell extends Shell
     public $recordsInArchive;
 
     /**
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function initialize(): void
     {
@@ -44,8 +44,8 @@ class ArchiveStaffAttendancesShell extends Shell
     }
 
     /**
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * POCOR-7521-KH
+     *
      */
     public function main()
     {

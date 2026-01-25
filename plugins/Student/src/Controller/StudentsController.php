@@ -444,7 +444,7 @@ class StudentsController extends AppController
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public
     function getInstitutionID($debugString = "")

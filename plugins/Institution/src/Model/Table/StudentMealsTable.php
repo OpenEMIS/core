@@ -64,7 +64,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param array $options
      * @return array|Query|mixed
      * refactured for POCOR-7908
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function findClassStudentsWithMeal(Query $query, array $options)
     {
@@ -276,7 +276,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return array|Query|mixed
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
         public function findClassStudentsWithMealSave(Query $query, array $options)
     {
@@ -326,7 +326,7 @@ class StudentMealsTable extends ControllerActionTable
                     $currentDate = date('Y-m-d');
                     $connection->execute("INSERT INTO institution_meal_students (student_id, academic_period_id, institution_class_id, institution_id, meal_programmes_id, date, meal_benefit_id, meal_received_id, paid, comment, modified_user_id, modified, created_user_id, created) VALUES ($studentID, $academicPeriodId, $institutionClassId, $institutionId, $mealProgramId, '$currentDate', NULL, $defaultMealReceiveId, NULL, NULL, 2, '$currentDate', 2, '$currentDate');");
                     //Version 4[END]
-                    
+
                     //Version 3[START]
                     // $entity = $InstitutionMealStudents->newEntity($data);
                     // $InstitutionMealStudents->save($entity);
@@ -346,7 +346,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return array|Query|mixed
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function findClassStudentWithMealSave(Query $query, array $options)
     {
@@ -618,7 +618,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param null $studentID
      * @param null $ID
      * @return array|Query
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function getMealsMainQuery(Query $query,
                                        $academicPeriodId,
@@ -675,7 +675,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param Query $query
      * @param $default_meal_receive_id
      * @return mixed
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function getDailyMealData(Query $query, $default_meal_receive_id)
     {
@@ -695,7 +695,7 @@ class StudentMealsTable extends ControllerActionTable
     /**
      * POCOR-7908
      * @return mixed
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function getDefaultMealReceiveID()
     {
@@ -717,7 +717,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param $day
      * @param \Cake\ORM\Table $StudentMealMarkedRecords
      * @return bool|\Cake\Datasource\EntityInterface|mixed
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function markDay($institutionId, $institutionClassId, $mealProgramId, $academicPeriodId, $day, \Cake\ORM\Table $StudentMealMarkedRecords)
     {

@@ -2175,7 +2175,7 @@ class ReportCardsTable extends AppTable
      * @param \ArrayAccess $extra Extra context data (assessment_id, assessment_period_ids, etc.)
      * @return array The search results.
      *
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onExcelTemplateInitialiseAssessmentItemResults(EventInterface $event, array $params, ArrayObject $extra): array
     {

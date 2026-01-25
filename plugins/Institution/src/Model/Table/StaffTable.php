@@ -81,12 +81,12 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
-        //POCOR-9532 start 
+        //POCOR-9532 start
         $requestUri = $_SERVER['REQUEST_URI'] ?? '';
         if (strpos($requestUri, 'ImportStaff') === false) {
             $this->addBehavior('User.MoodleCreateUser');
         } //POCOR-9523 end
-        
+
         $this->addBehavior('Excel', [  //POCOR-6898 change Excel to ContactExcel Behaviour
             'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
             'pages' => ['index'],
@@ -437,7 +437,7 @@ class StaffTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public static function getRelatedRecord($tableName, $relatedField)
     {
@@ -897,7 +897,7 @@ class StaffTable extends ControllerActionTable
          * Get all those custom fields of a student
          * Page: Administartion > System Setup > Custom Fields > Student > Page
          * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
-         * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+         *
          * Ticket: POCOR-6531
          * Ticket: POCOR-7732
          */
@@ -2679,7 +2679,7 @@ class StaffTable extends ControllerActionTable
     /*
     * Function to get number of staff attendance for the given institution dashboard
     *  (for highcharts)
-    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>, Khindol Madraimov <khindol.madraimov@gmail.com>
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
     * @return array
     * @ticket POCOR-8007
     * @ticket POCOR-9111
@@ -4220,7 +4220,7 @@ class StaffTable extends ControllerActionTable
 
     /**
      * function to get a value from array or null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getFromArray($array, $key)
     {
@@ -4825,7 +4825,7 @@ class StaffTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public static function getRelatedName($tableName, $relatedField)
     {

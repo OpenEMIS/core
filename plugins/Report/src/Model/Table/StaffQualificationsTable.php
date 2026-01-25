@@ -100,10 +100,10 @@ class StaffQualificationsTable extends AppTable  {
                 ];
         }
         if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InstitutionStaff.institution_id'] = $institutionId; 
+            $conditions['InstitutionStaff.institution_id'] = $institutionId;
         }
         if (!empty($areaId) && $areaId != -1) {
-            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId; 
+            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId;
         }
         $query
             ->select([
@@ -195,8 +195,8 @@ class StaffQualificationsTable extends AppTable  {
             ->where([$conditions])
             ->order(['QualificationLevels.order'=>'ASC']);   //POCOR-6551
             //Start:POCOR-6078
-            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
-                return $results->map(function ($row) { 
+            $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
+                return $results->map(function ($row) {
                     //For Default ID NO
                     $identity_typesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                     $identity_types = $identity_typesTable->find() //POCOR-8882
@@ -214,7 +214,7 @@ class StaffQualificationsTable extends AppTable  {
                 });
             });
             //End:POCOR-6078
-            
+
         if (!$superAdmin) {
             $query->find('ByAccess', ['user_id' => $userId, 'institution_field_alias' => 'Institutions.id']);
         }
@@ -239,7 +239,7 @@ class StaffQualificationsTable extends AppTable  {
      * @param $tableName
      * @param $relatedField
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
@@ -257,7 +257,7 @@ class StaffQualificationsTable extends AppTable  {
     }
 
     /**
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getFromArray($array, $key)
     {
@@ -265,7 +265,7 @@ class StaffQualificationsTable extends AppTable  {
     }
 
     /**
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
@@ -289,7 +289,7 @@ class StaffQualificationsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
         $newFields[] = [
@@ -319,7 +319,7 @@ class StaffQualificationsTable extends AppTable  {
             'label' => ''
         ];
         //POCOR-9244 add gender
-        $newFields[] = [ 
+        $newFields[] = [
             'key' => '',
             'field' => 'gender_name',
             'type' => 'string',
@@ -415,7 +415,7 @@ class StaffQualificationsTable extends AppTable  {
             'type' => 'string',
             'label' => ''
         ];
-        
+
 //        $newFields[] = [
 //            'key' => 'Users.identity_type_id',
 //            'field' => 'identity_type_id',
@@ -436,7 +436,7 @@ class StaffQualificationsTable extends AppTable  {
             'type' => 'string',
             'label' => ''
         ];
-        
+
         $fields->exchangeArray($newFields);
     }
 

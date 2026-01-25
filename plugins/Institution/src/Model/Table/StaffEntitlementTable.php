@@ -282,7 +282,7 @@ class StaffEntitlementTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getRelatedName($tableName, $relatedField)
     {
@@ -323,7 +323,7 @@ class StaffEntitlementTable extends ControllerActionTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \RuntimeException If there is an issue retrieving the table instance.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): \Cake\ORM\Table
     {
