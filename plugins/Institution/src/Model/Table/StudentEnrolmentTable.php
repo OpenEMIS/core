@@ -1231,7 +1231,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     /**
      * POCOR-7146
      * POCOR-7224 refactored
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * assign Role and group to student while creating student
      **/
     private static function assignStudentRoleGroup($institution_id, $student_id)
@@ -1267,7 +1267,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @param $student_id
      * @param $security_group_id
      * @param $previous_security_group_id
@@ -1290,7 +1290,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @param $institution_id
      * @param $student_id
      * @param $institutionTbl
@@ -1335,7 +1335,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @param $student_id
      * @param $student_role_id
      * @return array
@@ -1355,7 +1355,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     }
 
     /**
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @return int
      */
     private static function getStudentSecurityRoleId()
@@ -1372,7 +1372,7 @@ class StudentEnrolmentTable extends ControllerActionTable
     /**
      * @param $institution_id
      * @return integer
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getInstitutionSecurityGroupId($institution_id)
     {
@@ -1412,7 +1412,7 @@ class StudentEnrolmentTable extends ControllerActionTable
      * @param $student_id
      * @param $security_group_id
      * @param $student_role_id
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {

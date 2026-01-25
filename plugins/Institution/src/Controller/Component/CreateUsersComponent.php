@@ -31,7 +31,7 @@ class CreateUsersComponent extends Component
     /**
      * Get response for User Data from CSPD api
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @return array
      * @ticket POCOR-6930, POCOR-7916
      **/

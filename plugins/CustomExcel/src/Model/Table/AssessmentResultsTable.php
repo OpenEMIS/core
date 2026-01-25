@@ -565,7 +565,7 @@ class AssessmentResultsTable extends AppTable
      * @param $array
      * @param $key
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getFromArray($array, $key)
     {
@@ -575,7 +575,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getMarksForClass(array $params)
     {
@@ -626,7 +626,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getExemptsForClass(array $params)
     {
@@ -681,7 +681,7 @@ class AssessmentResultsTable extends AppTable
      * @param array $marks
      * @param array $exempt
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getMarksWithSubjectClassificationWeight(array $marks, array $exempts = [])
     {
@@ -812,7 +812,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $marksWithSubjectClassificationWeight
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getMarksPerStudentPerTermArray(array $marksWithSubjectClassificationWeight)
     {
@@ -849,7 +849,7 @@ class AssessmentResultsTable extends AppTable
      * @param array $marksPerStudent
      * @param array $assessmentItemsTotalMarks
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getTotalMarksPerStudent(array $marksPerStudent, array $assessmentItemsTotalMarks): array
     {
@@ -967,7 +967,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $marks
      * @return int
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getGroupAssessmentPeriodCount(array $marks)
     {
@@ -1016,7 +1016,7 @@ class AssessmentResultsTable extends AppTable
      * @param array $averageStudentSubjectResults
      * @param $groupAssessmentPeriodCount
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getAverageRecords(array $averageStudentSubjectResults, $groupAssessmentPeriodCount)
     {
@@ -1049,7 +1049,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $marksWithSubjectClassificationWeight
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getAverageStudentSubjectResults(array $marksWithSubjectClassificationWeight)
     {
@@ -1086,7 +1086,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getGroupAssessmentItemResults(array $params)
     {
@@ -1115,7 +1115,7 @@ class AssessmentResultsTable extends AppTable
      * @param $tableName
      * @param $relatedField
      * @return array|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public static function getRelatedRecord($tableName, $relatedField)
     {
@@ -1136,7 +1136,7 @@ class AssessmentResultsTable extends AppTable
      * @param $tableName
      * @param $where
      * @return array|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public static function getRecordByOptions($tableName, $where)
     {
@@ -1159,7 +1159,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param $function
      * @param $args
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function measureExecutionTime($function, $args) {
         $startTime = microtime(true);
@@ -1173,7 +1173,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function initialiseAssessments(array $params)
     {
@@ -1191,7 +1191,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function initialiseAssessmentItems(array $params)
     {
@@ -1260,7 +1260,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function initialiseAssessmentPeriods(array $params)
     {

@@ -1886,7 +1886,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //     * @param $fieldName
 //     * @param $newId
 //     * @param $oldId
-//     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+//     *
 //     */
 //    private function copyCustomFields(\Cake\Datasource\ConnectionInterface $connection, $tableName, $fieldName, $newId, $oldId)
 //    {

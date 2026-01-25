@@ -22,7 +22,7 @@ class NavigationComponent extends Component
     {
         // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
         $this->components = ['AccessControl'];
-        
+
         $this->controller = $this->_registry->getController();
         $this->action = $this->getRequest()->getParam('action');
     }
@@ -4169,7 +4169,7 @@ class NavigationComponent extends Component
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private
     function getInstitutionID($debug = "")
