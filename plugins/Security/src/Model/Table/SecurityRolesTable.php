@@ -84,7 +84,7 @@ class SecurityRolesTable extends ControllerActionTable
         ); // for webhook
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         $this->saveRelatedSecurityFunctions($entity);
 

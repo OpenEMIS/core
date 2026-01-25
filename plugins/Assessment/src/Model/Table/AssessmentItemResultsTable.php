@@ -1327,7 +1327,7 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     //POCOR-9477
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['student_id'])) {
 

@@ -120,7 +120,7 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // Ensure auto-quoting for DB safety (kept from your original)
         $this->getConnection()->getDriver()->enableAutoQuoting();

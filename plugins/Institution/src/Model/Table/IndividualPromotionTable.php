@@ -197,7 +197,7 @@ class IndividualPromotionTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $studentId = $attr['entity']->student_id;
 

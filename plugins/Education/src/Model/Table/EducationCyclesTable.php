@@ -129,7 +129,7 @@ class EducationCyclesTable extends ControllerActionTable
 		$this->field('admission_age', ['after' => 'name', 'attr' => ['min' => 0, 'max' => 99]]);
 	}
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // --- andle admission age cascade update ---
         if (!$entity->isNew()) {

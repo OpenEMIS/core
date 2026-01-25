@@ -15,6 +15,8 @@ use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Log\Log;
+use Google\Service\Contentwarehouse\EventIdMessage;
+use Cake\Event\EventInterface;
 
 class ConfigExternalDataWebhookTable extends ControllerActionTable
 {
@@ -281,7 +283,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
         $errors = $entity->getErrors();
         $source = $entity->name;
