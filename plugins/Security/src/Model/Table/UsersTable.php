@@ -15,6 +15,7 @@ use Cake\I18n\FrozenTime;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\Table;
 use Cake\Log\Log;
+use Cake\Event\EventInterface;
 
 class UsersTable extends ControllerActionTable
 {
@@ -212,7 +213,7 @@ class UsersTable extends ControllerActionTable
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }//POCOR-6922 ends
 
-    public function studentsAfterSave(Event $event, Entity $entity)
+    public function studentsAfterSave(EventInterface $event, Entity $entity)
     {
         if ($entity->isNew()) {
             $this->updateAll(['is_student' => 1], ['id' => $entity->student_id]);

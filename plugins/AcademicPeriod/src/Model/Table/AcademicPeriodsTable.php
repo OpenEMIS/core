@@ -320,7 +320,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
 
 

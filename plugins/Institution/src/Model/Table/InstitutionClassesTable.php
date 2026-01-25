@@ -540,7 +540,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // POCOR-9403 cleancoded
         $this->handleClassCustomFields($entity);
