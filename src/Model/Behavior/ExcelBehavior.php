@@ -38,7 +38,7 @@ class ExcelBehavior extends Behavior
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
         'sheet_limit' =>  1000000, // 1 mil rows and header row
-        'auto_contain' => true  
+        'auto_contain' => true
     ];
 
     public function initialize(array $config): void
@@ -84,7 +84,7 @@ class ExcelBehavior extends Behavior
         $this->generateXLXS($ids);
     }
 
-    public function excelV4(Event $mainEvent, ArrayObject $extra)
+    public function excelV4(EventInterface $mainEvent, ArrayObject $extra)
     {
         $id = 0;
         $break = false;
@@ -229,7 +229,7 @@ class ExcelBehavior extends Behavior
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
                 //POCOR-8627 End
-            //POCOR-8515 starts    
+            //POCOR-8515 starts
             }else{
                 if (isset($settings['id'])) {
                     $id = $settings['id'];
@@ -239,7 +239,7 @@ class ExcelBehavior extends Behavior
                     }
                 }
             }//POCOR-8515 ends
-            
+
             if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
@@ -522,7 +522,7 @@ class ExcelBehavior extends Behavior
                 if ($event && method_exists($event, 'getResult')) {
                     $result = $event->getResult();
                     // Explicitly check for null to allow 0 //POCOR-9272
-                    if ($result !== null) { 
+                    if ($result !== null) {
                         $returnedResult = $event->getResult();
                         if (is_array($returnedResult)) {
                             $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
@@ -557,7 +557,7 @@ class ExcelBehavior extends Behavior
         }
 
         $specialCharacters = ['=', '@'];
-        //POCOR-8515 commented this code because of getting error to generate report starts 
+        //POCOR-8515 commented this code because of getting error to generate report starts
         //$firstCharacter = substr($value, 0, 1);
         // if (in_array($firstCharacter, $specialCharacters)) {
         //     // append single quote to escape special characters
@@ -565,7 +565,7 @@ class ExcelBehavior extends Behavior
         // }//POCOR-8515 ends
 
         //return ['rowData' => __($value), 'style' => $style];
-        return ['rowData' => $value, 'style' => $style];//POCOR-8515 
+        return ['rowData' => $value, 'style' => $style];//POCOR-8515
     }
 
     private function isForeignKey($table, $field)
