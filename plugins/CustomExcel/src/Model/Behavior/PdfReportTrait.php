@@ -1110,7 +1110,7 @@ trait PdfReportTrait
         $authPass = $attributes['password'] ?? null;
         $apiParams = $attributes['api_params'] ?? null;
         $deleteOriginal = $attributes['delete_original'] ?? 1;
-        $sheetPath = $baseFileName . '.xlsx';
+        $sheetPath = $baseFileName . '.xls';
         $pdfFile = basename($baseFileName) . '.pdf';
         $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile . '?delete=true';
 //        $authUser = 'user';
@@ -1126,9 +1126,9 @@ trait PdfReportTrait
                     }
                     $limitedSpreadsheet->addSheet($cloned);
                 }
-                $objWriter = IOFactory::createWriter($limitedSpreadsheet, 'Xlsx');
+                $objWriter = IOFactory::createWriter($limitedSpreadsheet, 'Xls');
             } else {
-                $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+                $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xls');
             }
 
             $objWriter->save($sheetPath);
@@ -1206,13 +1206,13 @@ trait PdfReportTrait
     {
 
         $tempDir = TMP; // or "/tmp"
-        $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
+        $baseFileName = basename($baseFileName, '.xls'); // safe name, no path
 //        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
 //        Log::debug($tempDir);
         try {
             $unique = uniqid('libo_', true);
             // 1. Save XLSX
-            $xlsxPath       = $tempDir . $unique . '.xlsx';
+            $xlsxPath       = $tempDir . $unique . '.xls';
             $pdfExpectedPath = $tempDir . $unique . '.pdf';
 
             $ss = $objSpreadsheet;
@@ -1274,7 +1274,7 @@ trait PdfReportTrait
             $ss->garbageCollect();
 
 // Write XLSX
-            $writer = IOFactory::createWriter($ss, 'Xlsx');
+            $writer = IOFactory::createWriter($ss, 'Xls');
 // $writer->setPreCalculateFormulas(false); // enable if formula calc causes issues
             $writer->save($xlsxPath);
 
