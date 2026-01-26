@@ -945,9 +945,9 @@ class ImportStudentAdmissionTable extends AppTable
     }
 
     //POCOR-9404
-    public function onImportPopulateIdentityTypesData(EventInterface $event,$lookupPlugin, $lookupModel, $lookupColumn,$translatedCol,ArrayObject $data,$columnOrder) {
+    public function onImportPopulateIdentityTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn,$translatedCol,ArrayObject $data,$columnOrder) {
         try {
-            $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+            $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
             $modelData = $this->populateIdentityTypesData();
 
             // Get Excel labels (for headers)
