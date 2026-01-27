@@ -1682,22 +1682,48 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
             return $value;
         }
     }
+//     public function onGetShiftId(Event $event, Entity $entity)
+//     {
+// //        dd($entity);
+//         $shift_id = $entity->shift_id;
+//         if(!$shift_id){
+//             return "";
+//         }
+//         $ShiftOptions = self::getDynamicTableInstance('Institution.ShiftOptions');
+//         $res = $ShiftOptions->get($shift_id);
+//         if(empty($res->name)){ //POCOR-7185
+//             $shift = 'NA';
+//         }else{
+//             $shift = $res->name;
+//         }
+//         return $shift;
+//     }
+
+    //POCOR-9546[START]
     public function onGetShiftId(Event $event, Entity $entity)
     {
-//        dd($entity);
         $shift_id = $entity->shift_id;
-        if(!$shift_id){
-            return "";
+
+        if (empty($shift_id)) {
+            return '';
         }
+
         $ShiftOptions = self::getDynamicTableInstance('Institution.ShiftOptions');
-        $res = $ShiftOptions->get($shift_id);
-        if(empty($res->name)){ //POCOR-7185
-            $shift = 'NA';
-        }else{
-            $shift = $res->name;
+
+        $res = $ShiftOptions
+            ->find()
+            ->select(['name'])
+            ->where(['id' => $shift_id])
+            ->first();
+
+        if (empty($res) || empty($res->name)) { // POCOR-7185
+            return 'NA';
         }
-        return $shift;
+
+        return $res->name;
     }
+    //POCOR-9546[END]
+
     /**
      * Get a dynamic table instance with all associations.
      *
