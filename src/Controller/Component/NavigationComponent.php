@@ -135,8 +135,8 @@ class NavigationComponent extends Component
         $authUserId = $session->read('Auth.User.id');
         //POCOR-9429 start
         $userRoleIdArray = $this->getUserRoleIdArray($authUserId);
-        
-        if(!$this->AccessControl->isAdmin() && (empty($userRoleIdArray)||$userRoleIdArray[0]==0)) { //POCOR-9429 
+
+        if(!$this->AccessControl->isAdmin() && (empty($userRoleIdArray)||$userRoleIdArray[0]==0)) { //POCOR-9429
            $navigations = [];
            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
            $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
@@ -1556,7 +1556,7 @@ class NavigationComponent extends Component
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     function getInstitutionID($debug = "")
@@ -2337,7 +2337,7 @@ class NavigationComponent extends Component
     public function getProfileNavigationForUsersWithoutSecurityRoles()
     {
 
-        
+
         $session = $this->getController()->getRequest()->getSession();
         $userID = $session->read('Auth.User.id');
         $params = [
@@ -2379,7 +2379,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Profiles.Personal.view',
                     'Profiles.Personal.pull',
-                ] 
+                ]
             ],
         ];
         foreach ($navigation as &$n) {

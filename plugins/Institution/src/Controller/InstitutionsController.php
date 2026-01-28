@@ -915,7 +915,7 @@ class InstitutionsController extends AppController
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public
     function getInstitutionID($debugString = "")
@@ -1834,7 +1834,7 @@ class InstitutionsController extends AppController
                 'SecurityRoleFunctions.security_role_id IN ' => $permission_id,
             ])
             ->toArray();
-        
+
         $roleIds = array_map(function($entity) {
                   return $entity->security_role_id;
                   }, $securityRoleFunctionsData);
@@ -1870,7 +1870,7 @@ class InstitutionsController extends AppController
         }
         }
         //POCOR-9491
-        
+
         //POCOR-9487
         // $permission_id = $_SESSION['Permissions']['Institutions']['Institutions']['edit'];
         // if(!empty($permission_id)){
@@ -2826,7 +2826,7 @@ class InstitutionsController extends AppController
 
     /**
      * common function to get _edit access control and set it for js
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     function setInstitutionStaffAttendancesEdit()
@@ -5604,7 +5604,7 @@ class InstitutionsController extends AppController
      * Retrieves the education grades for a given academic period and institution.
      *
      * @throws \Exception If an error occurs during the query.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getEducationGrade()
     {
@@ -5722,7 +5722,7 @@ class InstitutionsController extends AppController
      *
      * @return array The request data
      * @throws \Exception If there is an error in decoding the request data
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getRequestData(): array
     {
@@ -5738,7 +5738,7 @@ class InstitutionsController extends AppController
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -5793,7 +5793,7 @@ class InstitutionsController extends AppController
      * @param array $data The response data
      * @param int $statusCode The HTTP status code (default is 200)
      * @return \Cake\Http\Response The JSON response
-     * @author Khindol Madraimov
+
      */
     private function sendJsonResponse(array $data, int $statusCode = 200): Response
     {
@@ -6010,7 +6010,7 @@ class InstitutionsController extends AppController
      *
 
      * @throws \Exception If there is an error in decoding the request data
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getPositions()
     {
@@ -6375,7 +6375,7 @@ class InstitutionsController extends AppController
      * @param string $key The key to look for
      * @param mixed $default The default value if the key is not found
      * @return mixed The value from the request data or the default value
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getValue(array $requestData, string $key, $default = null)
     {
@@ -6823,7 +6823,7 @@ class InstitutionsController extends AppController
      * Saves student data. POCOR-8231
      *
      * @return \Cake\Http\Response|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function saveDirectoryData()
     {
@@ -6857,7 +6857,7 @@ class InstitutionsController extends AppController
      * Saves student data. POCOR-8231
      *
      * @return \Cake\Http\Response|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function saveStudentData()
     {
@@ -6907,7 +6907,7 @@ class InstitutionsController extends AppController
      *
      * @return \Cake\Http\Response|null
      * @throws Exception
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function saveStaffData()
     {
@@ -6959,7 +6959,7 @@ class InstitutionsController extends AppController
      * @param $is_staff
      * @param $is_guardian
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function extractSecurityUserData($requestData, $userId, $is_student = false, $is_staff = false, $is_guardian = false)
     {
@@ -7003,7 +7003,7 @@ class InstitutionsController extends AppController
      * Saves a security user. POCOR-8231
      *
      * @param array $userData
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     /**
      * Save or update a Security User by openemis_no.
@@ -7100,7 +7100,7 @@ class InstitutionsController extends AppController
      * @param array $requestData
      * @param int $userRecordId
      * @param int $userId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleNationalities($requestData, $userRecordId, $userId)
     {
@@ -7125,7 +7125,7 @@ class InstitutionsController extends AppController
      * @param string $nationalityName
      * @param int $userId
      * @return \Cake\Datasource\EntityInterface|false
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function createNewNationality($nationalityName, $userId)
     {
@@ -7158,7 +7158,7 @@ class InstitutionsController extends AppController
      * @param int $nationalityId
      * @param int $userRecordId
      * @param int $userId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function saveUserNationality($nationalityId, $userRecordId, $userId)
     {
@@ -7205,7 +7205,7 @@ class InstitutionsController extends AppController
      * @param array $requestData
      * @param int $userRecordId
      * @param int $userId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleIdentities($requestData, $userRecordId, $userId)
     {
@@ -7259,7 +7259,7 @@ class InstitutionsController extends AppController
      * @param array $requestData
      * @param int $userRecordId
      * @param int $userId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleContacts($requestData, $userRecordId, $userId)
     {
@@ -7276,7 +7276,7 @@ class InstitutionsController extends AppController
      * @param string $contactValue
      * @param int $userRecordId
      * @param int $userId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function saveNewUserContact($contactTypeId, $contactValue, $userRecordId, $userId)
     {
@@ -7336,7 +7336,7 @@ class InstitutionsController extends AppController
      * @param array $requestData
      * @param int $userId
      * @param int $createdUserId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleCustomFields($userType, $requestData, $userId, $createdUserId)
     {
@@ -7413,7 +7413,7 @@ class InstitutionsController extends AppController
      *
      * @param string $userType
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getCustomFieldValuesTable($userType)
     {
@@ -7435,7 +7435,7 @@ class InstitutionsController extends AppController
      * @param array $requestData
      * @param int $userRecordId
      * @param int $userId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleStudentInstitutionData(array $requestData, $userRecordId, $userId)
     {
@@ -7652,7 +7652,7 @@ class InstitutionsController extends AppController
     /**
      * POCOR-7146
      * POCOR-7224 refactored
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      * assign Role and group to student while creating student
      **/
     private
@@ -7683,7 +7683,7 @@ class InstitutionsController extends AppController
 
     /**
      * @return int
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     static function getStudentSecurityRoleId(): int
@@ -7713,7 +7713,7 @@ class InstitutionsController extends AppController
     /**
      * @param $institutionId
      * @return integer
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     static function getInstitutionSecurityGroupId($institutionId)
@@ -7754,7 +7754,7 @@ class InstitutionsController extends AppController
      * @param $student_id
      * @param $student_role_id
      * @return array
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     static function getStudentSecurityGroups($student_id, $student_role_id)
@@ -7775,7 +7775,7 @@ class InstitutionsController extends AppController
      * @param $student_id
      * @param $security_group_id
      * @param $student_role_id
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
@@ -7800,7 +7800,7 @@ class InstitutionsController extends AppController
      * @param $student_id
      * @param $institutionTbl
      * @return mixed
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     static function getPreviousSecurityGroupId($institution_id, $student_id)
@@ -7846,7 +7846,7 @@ class InstitutionsController extends AppController
      * @param $security_group_id
      * @param $previous_security_group_id
      * @param $student_role_id
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
@@ -7871,7 +7871,7 @@ class InstitutionsController extends AppController
      * @param array $requestData
      * @param int $userRecordId
      * @param int $userId
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleStudentTransfer(array $requestData, $userRecordId, $userId)
     {
@@ -8040,7 +8040,7 @@ class InstitutionsController extends AppController
      * @param string $workflowName
      * @param string $stepName
      * @return int|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getWorkflowStepId($workflowName, $stepName)
     {
@@ -8296,7 +8296,7 @@ class InstitutionsController extends AppController
      * @param int $userId
      * @return void
      * @throws \Cake\ORM\Exception\PersistenceFailedException
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleStaffInstitutionData($requestData, $userRecordId, $userId)
     {
@@ -8365,7 +8365,7 @@ class InstitutionsController extends AppController
      * @return string|null
      * @throws \Cake\ORM\Exception\PersistenceFailedException
      * @throws \Cake\Datasource\Exception\RecordNotFoundException
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getSecurityGroupUserId($securityGroupUsers, $security_group_id, $userRecordId, $userId, $securityRoleId)
     {
@@ -8401,7 +8401,7 @@ class InstitutionsController extends AppController
      * @param int $staffPositionTitleId
      * @return int | null
      * @throws \Cake\Datasource\Exception\RecordNotFoundException
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getSecurityRoleID($staffPositionTitleId)
     {
@@ -8418,7 +8418,7 @@ class InstitutionsController extends AppController
      * @param int $userRecordId
      * @return void
      * @throws \Cake\ORM\Exception\PersistenceFailedException
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function handleShifts($requestData, $userRecordId)
     {
@@ -8446,7 +8446,7 @@ class InstitutionsController extends AppController
      * Saves guardian data. POCOR-8337
      *
      * @return \Cake\Http\Response|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function saveGuardianData()
     {
@@ -8500,7 +8500,7 @@ class InstitutionsController extends AppController
      * Saves other user data. POCOR-8337
      *
      * @return \Cake\Http\Response|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function saveOtherData()
     {
@@ -8553,7 +8553,7 @@ class InstitutionsController extends AppController
      * @param $userRecordId
      * @param $userId
      * @return array|\Cake\Datasource\EntityInterface|Exception|false
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      *
      */
     private function handleGuardians($guardianRelationId, $studentOpenemisNo, $userRecordId, $userId)
@@ -8715,7 +8715,7 @@ class InstitutionsController extends AppController
 
     /**
      * Change for hiding/showing external search. POCOR-8231
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      *     POCOR-9118 refactored for OpenEMIS Core search
      */
     public function checkConfigurationForExternalSearch(): Response
@@ -9160,7 +9160,7 @@ class InstitutionsController extends AppController
      * @return array
      * @ticket POCOR-6930, POCOR-7916
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public
     function getCspdData()

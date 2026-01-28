@@ -33,30 +33,30 @@ class ArchivedAttendancesTable extends ControllerActionTable
         $config['Created'] = false;
         $table_name = 'institution_staff_attendances';
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
-        
+
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
         $this->connectionName = $targetTableConnection;
-        
+
         $this->getConnection($remoteConnection);
         $this->setTable($targetTableName);
-        
+
         // if($targetTableName == 'institution_staff_attendances'){
         //     $tableLocator = new TableLocator();
         //     $tableArchived = $tableLocator->get('InstitutionStaffAttendances', [
-        //     'connection' => $remoteConnection]); 
+        //     'connection' => $remoteConnection]);
         // }else{
         //     $tableLocator = new TableLocator();
         //     $tableArchived = $tableLocator->get($targetTableName, [
-        //     'connection' => $remoteConnection]); 
+        //     'connection' => $remoteConnection]);
         // }
         // echo "<pre>"; print_r($this->getTable($targetTableName));
         // die;
         parent::initialize($config);
-        
+
 //         echo "<pre>"; print_r($targetTableConnection);
-        
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -114,7 +114,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
 
     /**
      * common proc to get/set main variables to use further
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function setInstitutionStaffIDs()
     {
@@ -204,7 +204,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getRelatedName($tableName, $relatedField)
     {
@@ -227,7 +227,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getRelatedNameWithId($tableName, $relatedField)
     {
