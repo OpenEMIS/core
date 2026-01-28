@@ -300,7 +300,7 @@ class InstitutionPositionsTable extends ControllerActionTable
      * @param ServerRequest $request The server request containing the data.
      * @return array The updated attributes.
      * @throws \Exception If the request data is not available or invalid.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldPositionNo(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -1703,7 +1703,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

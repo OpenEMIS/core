@@ -491,7 +491,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param ServerRequest $request The request object containing data.
      * @return array The updated attributes.
      * @throws \RuntimeException If there is an issue retrieving the current academic period ID.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -911,7 +911,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -932,7 +932,7 @@ class StaffLeaveTable extends ControllerActionTable
      * POCOR-8015
      * @param Request $request
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getAssigneesOptions(ServerRequest $request)
     {
@@ -953,7 +953,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to add extra buttons, to call in indexBeforeAction
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      * @param ArrayObject $extra
      */
     private function addExtraButtons(ArrayObject $extra)
@@ -966,7 +966,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to add a manual button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      * @param $toolbarButtons
      */
     private function addManualButton($toolbarButtons)
@@ -993,7 +993,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to add an archive button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      * @param $toolbarButtons
      */
     // private function addArchiveButton($toolbarButtons)
@@ -1018,7 +1018,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to check if there is an archive
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      * @return bool
      */
     private function isArchiveExists()
@@ -1042,7 +1042,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param $url
      * @param null $btnAttr
      * common proc to generate button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {
@@ -1072,7 +1072,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to get/set main variables to use further
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function setInstitutionStaffIDs()
     {
@@ -1128,7 +1128,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param $filter_id
      * @param $institutionId
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function findAssigneeOptions($filter_id, $institutionId)
     {
@@ -1226,7 +1226,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \RuntimeException If there is an issue retrieving the table instance.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getDynamicTableInstance(string $tableName): \Cake\ORM\Table
     {

@@ -11,8 +11,8 @@ use Cake\Datasource\ConnectionManager;
 
 /**
  * Class ArchiveStudentAttendanceShell
- * POCOR-7521-KHINDOL
- * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+ * POCOR-7521-KH
+
  * @package App\Shell
  * Archive following tables
  * institution_class_attendance_records
@@ -33,7 +33,7 @@ class ArchiveStudentAttendancesShell extends Shell
     public $recordsInArchive;
 
     /**
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function initialize(): void
     {
@@ -44,8 +44,8 @@ class ArchiveStudentAttendancesShell extends Shell
     }
 
     /**
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * POCOR-7521-KH
+
      */
     public function main()
     {

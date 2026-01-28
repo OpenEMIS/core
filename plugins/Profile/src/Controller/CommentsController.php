@@ -394,7 +394,7 @@ class CommentsController extends PageController
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getInstitutionID()
     {

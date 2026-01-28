@@ -183,7 +183,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getRelatedName($tableName, $relatedField)
     {
@@ -206,7 +206,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getRelatedNameWithId($tableName, $relatedField)
     {

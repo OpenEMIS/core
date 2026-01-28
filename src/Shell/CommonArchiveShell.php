@@ -305,8 +305,8 @@ class CommonArchiveShell extends Shell
      * @param $table_name
      * @param $academic_period_id
      * @return int
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * POCOR-7521-KH
+
      * cleaner code
      */
     private static function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)
