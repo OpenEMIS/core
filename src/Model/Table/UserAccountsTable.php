@@ -7,7 +7,7 @@ use Cake\Validation\Validator;
 
 class UserAccountsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
         $this->addBehavior('User.Account', ['userRole' => 'Preferences', 'targetField' => 'new_password', 'permission' => ['Preferences', 'UserAccounts', 'edit']]);
         parent::initialize($config);
