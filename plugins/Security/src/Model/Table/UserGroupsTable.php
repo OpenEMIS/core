@@ -336,7 +336,7 @@ class UserGroupsTable extends ControllerActionTable
      * @param array $attr
      * @param $action
      * @param Request $request
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @return array
      */
      public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -594,7 +594,7 @@ class UserGroupsTable extends ControllerActionTable
     /**
      * @param Entity|null $entity
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private
     function getAreaIdList(Entity $entity = null)
@@ -624,7 +624,7 @@ class UserGroupsTable extends ControllerActionTable
     /**
      * @param Entity $entity
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private
     function getInstitutionIdList(Entity $entity)
@@ -649,7 +649,7 @@ class UserGroupsTable extends ControllerActionTable
      * @param $ids
      * @param $idArray
      * @return array
-     * @author for a patch Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getChildren($ids, $idArray) {
 
@@ -669,7 +669,7 @@ class UserGroupsTable extends ControllerActionTable
     /**
      * @param null $areaList
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function getInstitutionOptions($areaList = null)
     {

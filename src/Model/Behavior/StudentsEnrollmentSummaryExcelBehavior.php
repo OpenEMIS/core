@@ -69,7 +69,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $this->generateXLXS($ids);
     }
 
-    public function excelV4(Event $mainEvent, ArrayObject $extra)
+    public function excelV4(EventInterface $mainEvent, ArrayObject $extra)
     {
         $id = 0;
         $break = false;
@@ -277,7 +277,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                      $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
                                      $StudentsEnrollmentSummary->aliasfield('student_status_id') => 1,
                                      $conditionEdn,
-                                     
+
                                     //POCOR-6620[START]
                                     //$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus  //POCOR-6712
                                     //POCOR-6620[END]
@@ -353,7 +353,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             $gender,
                             $status_data['count'],
                             $status_data['status_name'],   //POCOR-6712
-                            
+
                         ];
                      }
                 }

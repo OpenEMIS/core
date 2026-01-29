@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 
 class CallWebhookBehavior extends Behavior
@@ -61,7 +62,7 @@ class CallWebhookBehavior extends Behavior
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         if($this->_table->getAlias() == 'InstitutionClasses'){
             return;

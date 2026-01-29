@@ -47,7 +47,7 @@ class AlertLogsTable extends ControllerActionTable
         return $events;
     }
 
-    public function alertAssigneeAfterSave(Event $mainEvent, Entity $recordEntity)
+    public function alertAssigneeAfterSave(EventInterface $mainEvent, Entity $recordEntity)
     {
         $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
         $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');

@@ -573,7 +573,7 @@ class StaffUserTable extends ControllerActionTable
         $this->fields['is_homeroom']['options'] = [0 => 'No', 1 => 'Yes'];
     }
 
-    public function staffAfterSave(Event $event, $staff)
+    public function staffAfterSave(EventInterface $event, $staff)
     {
         if ($staff->isNew()) {
             $this->updateAll(['is_staff' => 1], ['id' => $staff->staff_id]);

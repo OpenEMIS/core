@@ -320,7 +320,7 @@ class AcademicPeriodsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
 
 
@@ -1421,7 +1421,7 @@ class AcademicPeriodsTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return array|Query
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function findWeeksForPeriodMeal(Query $query, array $options)
     {
@@ -1960,7 +1960,7 @@ class AcademicPeriodsTable extends ControllerActionTable
      * POCOR-7908
      * @param Query $query
      * @param array $options
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function findDaysForPeriodWeekMeal(Query $query, array $options)
     {

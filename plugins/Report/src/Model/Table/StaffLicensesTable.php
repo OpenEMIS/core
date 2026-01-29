@@ -88,7 +88,7 @@ class StaffLicensesTable extends AppTable  {
             ->distinct(['StaffLicenses.id'])
             ->order([$this->aliasField('security_user_id')]);
 
-       
+
             if (!empty($selectedStatus) && $selectedStatus != '-1') {
                 $query->where([$this->aliasField('status_id') => $selectedStatus]);
             }
@@ -109,11 +109,11 @@ class StaffLicensesTable extends AppTable  {
                     }else{
                         return $row;
                     }
-                    
+
                 });
             });
     }
-    
+
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
@@ -123,7 +123,7 @@ class StaffLicensesTable extends AppTable  {
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
-            'label' => '', 
+            'label' => '',
         ];
 
         $newArray[] = [
@@ -213,7 +213,7 @@ class StaffLicensesTable extends AppTable  {
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
