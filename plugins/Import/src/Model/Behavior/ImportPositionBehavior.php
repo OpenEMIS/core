@@ -330,9 +330,9 @@ class ImportPositionBehavior extends Behavior
                     continue;
                 }
 
-                if ($row == $highestRow && !$this->checkRowCells($sheet, $totalColumns, $row)) {
-                    break;
-                }
+                // if ($row == $highestRow && !$this->checkRowCells($sheet, $totalColumns, $row)) {
+                //     break;
+                // }
 
                 $tempRow = new ArrayObject();
                 $rowInvalidCodeCols = new ArrayObject();
@@ -364,7 +364,7 @@ class ImportPositionBehavior extends Behavior
                 }
 
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
-
+                
                 if ($rowPass !== NULL && !$rowPass) {
                     $activeModel->setImportValidationFailed();
                 } else {
@@ -1204,7 +1204,6 @@ class ImportPositionBehavior extends Behavior
             } else {
                 $originalValue = $cell->getValue();
             }
-
             $cellValue = $originalValue;
             if (gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
                 $cellValue = (string)$cellValue;
@@ -1260,7 +1259,6 @@ class ImportPositionBehavior extends Behavior
             if (!$isOptional) {
                 $isOptional = substr_count($columnDescription, 'not required');
             }
-
             if ($foreignKey == self::FIELD_OPTION) {
                 if (!empty($cellValue)) {
                     if (array_key_exists($cellValue, $lookup[$col])) {
