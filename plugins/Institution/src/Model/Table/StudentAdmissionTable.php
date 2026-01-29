@@ -456,7 +456,7 @@ class StudentAdmissionTable extends ControllerActionTable
      * If creation fails, reverts the admission's status to its previous state.
      *
      * @param \Cake\ORM\Entity $entity The StudentAdmission entity
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @since POCOR-9163
      **/
     private function ensureInstitutionStudentExists($entity): void
@@ -531,15 +531,15 @@ class StudentAdmissionTable extends ControllerActionTable
                     'number' => $entity->identity_number ?? null,
                     'nationality_id IS' => null,
                     'created_user_id' => $entity->created_user_id,
-                    'created' => FrozenTime::now(),  
+                    'created' => FrozenTime::now(),
                 ];
                 $newStduentIdentities = $Identities->newEntity($incomingStudentIdentities);
                 try{
                     $Identities->save($newStduentIdentities);
                 } catch (\Exception $exception) {
                     Log::error($exception->getMessage());
-                }  //POCOR-9404 end    
-            }   
+                }  //POCOR-9404 end
+            }
             return $newEntity;
         }else{
             return null;
@@ -724,7 +724,7 @@ class StudentAdmissionTable extends ControllerActionTable
     /**
      * POCOR-7146
      * POCOR-7224 refactored
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * assign Role and group to student while creating student
      **/
     private static function assignStudentRoleGroup($institution_id, $student_id)
@@ -758,7 +758,7 @@ class StudentAdmissionTable extends ControllerActionTable
 
     /**
      * @return int
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getStudentSecurityRoleId()
     {
@@ -775,7 +775,7 @@ class StudentAdmissionTable extends ControllerActionTable
      * POCOR-9423
      * @param $institution_id
      * @return integer
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getInstitutionSecurityGroupId($institution_id)
     {
@@ -857,7 +857,7 @@ class StudentAdmissionTable extends ControllerActionTable
      * @param $student_id
      * @param $student_role_id
      * @return array
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getStudentSecurityGroups($student_id, $student_role_id)
     {
@@ -877,7 +877,7 @@ class StudentAdmissionTable extends ControllerActionTable
      * @param $student_id
      * @param $security_group_id
      * @param $student_role_id
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function createNewStudentSecurityGroup($student_id, $security_group_id, $student_role_id)
     {
@@ -912,7 +912,7 @@ class StudentAdmissionTable extends ControllerActionTable
      * @param $student_id
      * @param $institutionTbl
      * @return mixed
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getPreviousSecurityGroupId($institution_id, $student_id)
     {
@@ -957,7 +957,7 @@ class StudentAdmissionTable extends ControllerActionTable
      * @param $security_group_id
      * @param $previous_security_group_id
      * @param $student_role_id
-     * @author for refactioring Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function makeStudentSecurityGroupTransfer($student_id, $security_group_id, $previous_security_group_id, $student_role_id)
     {
@@ -1425,7 +1425,7 @@ class StudentAdmissionTable extends ControllerActionTable
      *
      * This logic enforces date consistency for admissions relative to their academic period.
      *
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @since POCOR-9163
      */
     public function beforeSave($event, Entity $entity, ArrayObject $options)

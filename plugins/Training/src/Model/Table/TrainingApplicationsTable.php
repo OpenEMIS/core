@@ -312,7 +312,7 @@ class TrainingApplicationsTable extends ControllerActionTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
@@ -370,7 +370,7 @@ class TrainingApplicationsTable extends ControllerActionTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
@@ -412,7 +412,7 @@ class TrainingApplicationsTable extends ControllerActionTable
     /**
      * @param null $areaList
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function getInstitutionOptions($areaList = null)
     {
@@ -472,7 +472,7 @@ class TrainingApplicationsTable extends ControllerActionTable
      * @param $filter_id
      * @param $institutionId
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function findAssigneeOptions($filter_id, $institutionId = 0)
     {

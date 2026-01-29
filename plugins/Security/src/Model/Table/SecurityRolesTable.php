@@ -84,7 +84,7 @@ class SecurityRolesTable extends ControllerActionTable
         ); // for webhook
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         $this->saveRelatedSecurityFunctions($entity);
 
@@ -532,7 +532,7 @@ class SecurityRolesTable extends ControllerActionTable
      * function returns the list + user roles for the group
      * @param $userGroupId
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getUserRolesList($userGroupId)
     {

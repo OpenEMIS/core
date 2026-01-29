@@ -103,7 +103,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      * @param EventInterface $event
      * @param Query $query
      * @param ArrayObject $extra
-     * @author for the POCOR-7536 change Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
@@ -165,7 +165,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 //        $where[$this->aliasField('institution_id')] = $institutionId;  // POCOR-7201
-        // removed for the quickfix POCOR-7536-KHINDOL
+        // removed for the quickfix POCOR-7536-KH
         //End
         //Assessment Period filter
         $selectedAcademicPeriod = $this->setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod);
@@ -214,7 +214,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      * @param EventInterface $event
      * @param Entity $entity
      * @return float
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onGetMarks(EventInterface $event, Entity $entity)
     {
@@ -243,7 +243,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      * @param EventInterface $event
      * @param Entity $entity
      * @return float
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onGetTotalMark(EventInterface $event, Entity $entity)
     {
@@ -443,7 +443,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      * @param $studentId
      * @param $selectedAcademicPeriod
      * @return int|string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod)
     {
@@ -505,7 +505,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      * @param int $selectedAssessment
      * @param int $selectedAssessmentPeriod
      * @return int|string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function setAssessmentPeriodOptions($selectedAssessment = -1, $selectedAssessmentPeriod = -1)
     {
@@ -658,7 +658,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
             'label' => 'Total Marks',
         ];
     }
-    
+
     public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;

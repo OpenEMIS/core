@@ -535,7 +535,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * common proc to add extra buttons, to call in indexBeforeAction
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @param ArrayObject $extra
      */
     private function addExtraButtons(ArrayObject $extra)
@@ -547,7 +547,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * common proc to add an archive button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @param $toolbarButtons
      */
     private function addArchiveButton($toolbarButtons)
@@ -571,7 +571,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * common proc to check if there is an archive
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @return bool
      */
     private function isArchiveExists()
@@ -593,7 +593,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      * @param $url
      * @param null $btnAttr
      * common proc to generate button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {

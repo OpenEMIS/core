@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
+use Cake\Event\Event;
 
 class InstitutionStudentRisksTable extends ControllerActionTable
 {
@@ -296,7 +297,7 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         return $institutionClassesName;
     }
 
-    public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
+    public function afterSaveOrDelete(EventInterface $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
         try { //POCOR-9249 try catch added to avoid 404 error while marking attendance, its fails if risk is not configured in Administration
             $role = null;

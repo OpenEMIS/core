@@ -316,7 +316,7 @@ class InstitutionClassesTable extends ControllerActionTable
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public
     function getInstitutionID($debugString = "")
@@ -540,7 +540,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // POCOR-9403 cleancoded
         $this->handleClassCustomFields($entity);

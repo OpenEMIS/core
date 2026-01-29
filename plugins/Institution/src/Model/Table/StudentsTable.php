@@ -304,7 +304,7 @@ class StudentsTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
@@ -596,7 +596,7 @@ class StudentsTable extends ControllerActionTable
          * Get all those custom fields of a student
          * Page: Administartion > System Setup > Custom Fields > Student > Page
          * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
-         * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+         *
          * Ticket: POCOR-6531
          * Ticket: POCOR-7732
          */

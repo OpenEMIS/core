@@ -105,7 +105,7 @@ class AssessmentItemResultsTable extends AppTable
                 return false;
             } else {
                 if ($entity->isNew()) {
-                    //POCOR-7536-KHINDOL
+                    //POCOR-7536-KH
                     //AS the ID is not the KEY do shadow save and delete new entity
                     $assessmentItemResults = self::getDynamicTableInstance('Assessment.AssessmentItemResults'); //POCOR-8224
                     $previousAssessment = $assessmentItemResults->find()
@@ -118,7 +118,7 @@ class AssessmentItemResultsTable extends AppTable
                             $assessmentItemResults->aliasField('education_subject_id') => $entity->education_subject_id,
                             $assessmentItemResults->aliasField('institution_classes_id') => $entity->institution_classes_id,//POCOR-9184
                         ])
-                        ->order([ //POCOR-7580-KHINDOL
+                        ->order([ //POCOR-7580-KH
                             $assessmentItemResults->aliasField('created') => 'DESC',
                             $assessmentItemResults->aliasField('modified') => 'DESC',
                         ])
@@ -145,7 +145,7 @@ class AssessmentItemResultsTable extends AppTable
                                 $assessmentItemResults->aliasField('id') => $id,
                             ])
                             ->first();
-                        //POCOR-7536-KHINDOL
+                        //POCOR-7536-KH
                         $this->getAssessmentGrading($previousAssessment);
                         $event->stopPropagation();
                     } else {
@@ -451,7 +451,7 @@ class AssessmentItemResultsTable extends AppTable
      * @param \Cake\ORM\Entity $entity Entity containing `marks`, `assessment_id`, `assessment_period_id`, and `education_subject_id`
      * @return \Cake\ORM\Entity The updated entity with `assessment_grading_option`, `assessment_grading_option_id`, and `assessment_grading_type` set
      *
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public static function evaluateGradingForMarks(Entity $entity): Entity
     {
@@ -1327,7 +1327,7 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     //POCOR-9477
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['student_id'])) {
 
@@ -1428,7 +1428,7 @@ class AssessmentItemResultsTable extends AppTable
             }
 
             $marks = self::getMarksForClass([
-                'academic_period_id' => $academicPeriodIdRow, 
+                'academic_period_id' => $academicPeriodIdRow,
                 'class_id' => $classId
             ]);
 

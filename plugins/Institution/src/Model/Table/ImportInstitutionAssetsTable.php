@@ -33,7 +33,7 @@ class ImportInstitutionAssetsTable extends AppTable
 
     /**
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function implementedEvents()
     {
@@ -75,7 +75,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetAssetTypesId(EventInterface $event, $cellValue)
     {
@@ -89,7 +89,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetAssetMakesId(EventInterface $event, $cellValue)
     {
@@ -102,7 +102,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetAssetModelsId(EventInterface $event, $cellValue)
     {
@@ -115,7 +115,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetAssetStatusesId(EventInterface $event, $cellValue)
     {
@@ -128,7 +128,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetAssetConditionsId(EventInterface $event, $cellValue)
     {
@@ -141,7 +141,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetInstitutionRoomsId(EventInterface $event, $cellValue)
     {
@@ -154,7 +154,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return int|string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetAccessibilityId(EventInterface $event, $cellValue)
     {
@@ -166,7 +166,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param EventInterface $event
      * @param $cellValue
      * @return int|string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportGetPurposeId(EventInterface $event, $cellValue)
     {
@@ -176,7 +176,7 @@ class ImportInstitutionAssetsTable extends AppTable
 
     /**
      * @param $event
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function beforeAction($event)
     {
@@ -194,7 +194,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportPopulateAccessibilityData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
@@ -211,7 +211,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportPopulatePurposeData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
@@ -229,7 +229,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $data
      * @param $columnOrder
      * @return bool
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportPopulateInstitutionRoomsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
@@ -265,7 +265,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportPopulateSelectData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
@@ -317,7 +317,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $language
      * @param bool $autoHumanize
      * @return mixed|string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -344,7 +344,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportPopulateRemoveData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
@@ -437,7 +437,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $originalRow
      * @param ArrayObject $rowInvalidCodeCols
      * @return bool|mixed
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
@@ -459,7 +459,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $cellValue
      * @param $table_name
      * @return |null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function checkLookupIdFromTable($cellValue, $table_name)
     {
@@ -494,7 +494,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $Label
      * @param $code
      * @return ArrayObject
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function populateLookupOptions(ArrayObject $data, $columnOrder, $Label, $code)
     {
@@ -515,7 +515,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $cellValue
      * @param $code
      * @return int|string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function checkLookupIdFromOptions($cellValue, $code)
     {
@@ -536,7 +536,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function checkFinalUser(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -559,7 +559,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function checkFinalInstitution(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -579,7 +579,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function checkFinalMakeModel(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -605,7 +605,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {

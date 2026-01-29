@@ -341,7 +341,7 @@ class StaffController extends AppController
     /**
      * common proc to check if there is an archive
      * @return bool
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function isStaffAttendancesArchiveExists()
     {
@@ -384,7 +384,7 @@ class StaffController extends AppController
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     function getInstitutionID($debugString = "")
     {
@@ -1030,7 +1030,7 @@ class StaffController extends AppController
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
 
     public function ArchivedAttendances()

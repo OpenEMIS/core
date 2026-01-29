@@ -120,7 +120,7 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // Ensure auto-quoting for DB safety (kept from your original)
         $this->getConnection()->getDriver()->enableAutoQuoting();
@@ -1036,7 +1036,7 @@ class EducationGradesTable extends ControllerActionTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \Exception If the table instance cannot be retrieved.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

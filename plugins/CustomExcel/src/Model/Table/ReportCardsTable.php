@@ -1656,7 +1656,7 @@ class ReportCardsTable extends AppTable
     }
 
     public function onExcelTemplateInitialiseStudentCompetencyItemComments(
-        Event $event,
+        EventInterface $event,
         array $params,
         ArrayObject $extra
     ) {
@@ -1694,7 +1694,7 @@ class ReportCardsTable extends AppTable
 
 
 
-    public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseCompetencyCriteriasWithResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id']) && isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['academic_period_id'])) {
             $CompetencyCriterias = self::getDynamicTableInstance('Competency.CompetencyCriterias'); // POCOR-9162
@@ -1801,7 +1801,7 @@ class ReportCardsTable extends AppTable
     }
 
 
-    public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentCompetencyResults(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($extra['competency_templates_ids']) && !empty($extra['competency_templates_ids']) && isset($extra['competency_periods_ids']) && !empty($extra['competency_periods_ids']) && isset($params['student_id']) && isset($params['institution_id']) && isset($params['academic_period_id'])) {
             $StudentCompetencyResults = self::getDynamicTableInstance('Institution.InstitutionCompetencyResults'); // POCOR-9162
@@ -2175,7 +2175,7 @@ class ReportCardsTable extends AppTable
      * @param \ArrayAccess $extra Extra context data (assessment_id, assessment_period_ids, etc.)
      * @return array The search results.
      *
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function onExcelTemplateInitialiseAssessmentItemResults(EventInterface $event, array $params, ArrayObject $extra): array
     {

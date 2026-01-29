@@ -36,6 +36,7 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing; // POCOR-8683
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Writer\Xls;
 use function PHPUnit\Framework\isEmpty;
 use PhpOffice\PhpSpreadsheet\Style\Alignment; // POCOR-9364
 use PhpOffice\PhpSpreadsheet\Cell\DataType; // POCOR-9364
@@ -705,10 +706,10 @@ class ImportBehavior extends Behavior
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
             $modelNameforTemplate = 'Training_Results';
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelNameforTemplate);
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xls', $modelNameforTemplate);
         } else {
             // Do not lcalize file name as certain non-latin characters might cause issue
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xls', $modelName);
         }//5695 ends
         $excelPath = $folder . DS . $excelFile;
 
@@ -737,11 +738,11 @@ class ImportBehavior extends Behavior
 
         $objPHPExcel->setActiveSheetIndex(0);
         //$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-        $objWriter = new Xlsx($objPHPExcel);
+        $objWriter = new Xls($objPHPExcel);
         try {
             $objWriter->save($excelPath);
         } catch (\Throwable $th) {
-
+            Log::debug(print_r([__FUNCTION__ => $th->getMessage()], true));
         }
 
         $this->performDownload($excelFile);
@@ -1151,7 +1152,7 @@ class ImportBehavior extends Behavior
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
             // Do not lcalize file name as certain non-latin characters might cause issue
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->getConfig('model'), ucwords($type), time());
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xls', $this->getConfig('model'), ucwords($type), time());
             $excelPath = $downloadFolder . DS . $excelFile;
 
             $newHeader = $header;
@@ -1211,10 +1212,11 @@ class ImportBehavior extends Behavior
 
             $objPHPExcel->setActiveSheetIndex(0);
             //$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-            $objWriter = new Xlsx($objPHPExcel);
+            $objWriter = new Xls($objPHPExcel);
             try {
                 $objWriter->save($excelPath);
             } catch (\Throwable $th) {
+                Log::debug(print_r([__FUNCTION__ => $th->getMessage()], true));
 
             }
 

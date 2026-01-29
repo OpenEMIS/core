@@ -425,7 +425,7 @@ class AssessmentItemStudentExemptionsTable extends AppTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \Exception If the table instance cannot be retrieved.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
