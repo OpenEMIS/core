@@ -671,7 +671,6 @@ class UsersTable extends AppTable
         $latest = $this->find()
             ->order($this->aliasField('id') . ' DESC')
             ->first();
-
         if (is_array($latest)) {
             $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
         } else {
@@ -691,11 +690,9 @@ class UsersTable extends AppTable
         } else {
             $newStamp = $currentStamp;
         }
-
         $newOpenemisNo = $prefix . $newStamp;
         $openemisTemps = TableRegistry::getTableLocator()->get('User.OpenemisTemps');
         $SecurityUser = TableRegistry::getTableLocator()->get('Security.Users');
-
         $resultOpenemisTemp = $openemisTemps->find('all')
             ->order(['id' => 'DESC'])
             ->first();
