@@ -717,29 +717,55 @@ class ExcelReportBehavior extends Behavior
     /**
      * POCOR-6908
      */
+    // public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id, $paramVal)
+    // {
+    //     Log::write('debug', 'ExcelReportBehavior >>> saveFile: ' . $format);
+    //     $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+
+    //     if ($format == 'pdf') {
+    //         $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id, $paramVal);
+    //         return; // POCOR-9336
+    //     } else {
+    //         // pdf
+    //         if (!empty($student_id)) {
+    //             $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
+    //         }
+    //         // xlsx
+    //         $objWriter->save($filepath);
+    //     }
+
+    //     $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+    //     $objWriter->save($filepath);
+    //     $objSpreadsheet->disconnectWorksheets();
+    //     unset($objWriter, $objSpreadsheet);
+    //     gc_collect_cycles();
+
+    // }/
+
     public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id, $paramVal)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> saveFile: ' . $format);
-        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+        Log::write('debug', 'ExcelReportBehavior >>> saveFileAssessment format: ' . $format);
 
-        if ($format == 'pdf') {
+        if ($format === 'pdf') {
             $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id, $paramVal);
-            return; // POCOR-9336
-        } else {
-            // pdf
-            if (!empty($student_id)) {
-                $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
-            }
-            // xlsx
-            $objWriter->save($filepath);
+            return;
         }
 
+        // Save PDF copy if needed
+        if (!empty($student_id)) {
+            $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
+        }
+
+        // ✅ FORCE XLSX — DO NOT use libraryTypes mapping
         $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+
+        Log::write('debug', 'Excel writer class: ' . get_class($objWriter));
+
         $objWriter->save($filepath);
+
         $objSpreadsheet->disconnectWorksheets();
         unset($objWriter, $objSpreadsheet);
         gc_collect_cycles();
-
     }
 
     public function saveFile($objSpreadsheet, $filepath, $format, $student_id, $report_card_id)
