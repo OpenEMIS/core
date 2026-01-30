@@ -1126,9 +1126,9 @@ trait PdfReportTrait
                     }
                     $limitedSpreadsheet->addSheet($cloned);
                 }
-                $objWriter = IOFactory::createWriter($limitedSpreadsheet, 'Xls');
+                $objWriter = IOFactory::createWriter($limitedSpreadsheet, 'Xlsx');
             } else {
-                $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xls');
+                $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
             }
 
             $objWriter->save($sheetPath);
@@ -1274,7 +1274,7 @@ trait PdfReportTrait
             $ss->garbageCollect();
 
 // Write XLSX
-            $writer = IOFactory::createWriter($ss, 'Xls');
+            $writer = IOFactory::createWriter($ss, 'Xlsx');
 // $writer->setPreCalculateFormulas(false); // enable if formula calc causes issues
             $writer->save($xlsxPath);
 

@@ -734,7 +734,7 @@ class ExcelReportBehavior extends Behavior
             $objWriter->save($filepath);
         }
 
-        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xls');
+        $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $objWriter->save($filepath);
         $objSpreadsheet->disconnectWorksheets();
         unset($objWriter, $objSpreadsheet);
@@ -747,7 +747,7 @@ class ExcelReportBehavior extends Behavior
         Log::debug('ExcelReportBehavior >>> saveFile: ' . $format);
 
         // Write XLSX FIRST (before any LibreOffice modifies it)
-        $writer = IOFactory::createWriter($objSpreadsheet, 'Xls');
+        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $writer->save($filepath);
 
         // Now that XLSX is safely saved — create copy for PDF
@@ -756,7 +756,7 @@ class ExcelReportBehavior extends Behavior
         if ($format === 'pdf' || !empty($student_id)) {
             $this->savePDF($pdfSpreadsheet, $filepath, $student_id, $report_card_id);
         }
-        $writer = IOFactory::createWriter($objSpreadsheet, 'Xls');
+        $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
         $writer->save($filepath);
         // Cleanup
         $objSpreadsheet->disconnectWorksheets();
