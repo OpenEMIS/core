@@ -706,10 +706,10 @@ class ImportBehavior extends Behavior
         //5695 starts
         if ($modelName == 'Training_Session_Trainee_Results') {
             $modelNameforTemplate = 'Training_Results';
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xls', $modelNameforTemplate);
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelNameforTemplate);
         } else {
             // Do not lcalize file name as certain non-latin characters might cause issue
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xls', $modelName);
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
         }//5695 ends
         $excelPath = $folder . DS . $excelFile;
 
@@ -738,7 +738,7 @@ class ImportBehavior extends Behavior
 
         $objPHPExcel->setActiveSheetIndex(0);
         //$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-        $objWriter = new Xls($objPHPExcel);
+        $objWriter = new Xlsx($objPHPExcel);
         try {
             $objWriter->save($excelPath);
         } catch (\Throwable $th) {
@@ -1152,7 +1152,7 @@ class ImportBehavior extends Behavior
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
             // Do not lcalize file name as certain non-latin characters might cause issue
-            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xls', $this->getConfig('model'), ucwords($type), time());
+            $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->getConfig('model'), ucwords($type), time());
             $excelPath = $downloadFolder . DS . $excelFile;
 
             $newHeader = $header;
@@ -1212,7 +1212,7 @@ class ImportBehavior extends Behavior
 
             $objPHPExcel->setActiveSheetIndex(0);
             //$objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-            $objWriter = new Xls($objPHPExcel);
+            $objWriter = new Xlsx($objPHPExcel);
             try {
                 $objWriter->save($excelPath);
             } catch (\Throwable $th) {
