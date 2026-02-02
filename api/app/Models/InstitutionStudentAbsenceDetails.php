@@ -73,6 +73,14 @@ use InstitutionScope;
         return $this->belongsTo(StudentAbsenceReason::class, 'student_absence_reason_id', 'id');
     }
 
+    public function attendancePeriod()
+    {
+        return $this->belongsTo(
+            StudentAttendancePerDayPeriod::class,
+            'period', // FK column
+            'id'
+        );
+    }
 
     public function period()
     {

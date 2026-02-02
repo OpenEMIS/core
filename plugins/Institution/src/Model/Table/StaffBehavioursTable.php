@@ -67,7 +67,7 @@ class StaffBehavioursTable extends ControllerActionTable
                     'SecurityRoleFunctions._execute' => 1
                 ])
                 ->toArray();
-        // if(!empty($QueryResult)){ //commented in POCOR-6155 
+        // if(!empty($QueryResult)){ //commented in POCOR-6155
             $this->addBehavior('Excel', ['pages' => ['index']]);
         // }
         $this->addBehavior('Institution.InstitutionTab', [
@@ -131,9 +131,9 @@ class StaffBehavioursTable extends ControllerActionTable
 
         $this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id','behaviour_classification_id']);
 
-        
+
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Staff');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Behaviour','Staff');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -261,7 +261,7 @@ class StaffBehavioursTable extends ControllerActionTable
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
-    {   
+    {
         /*POCOR-starts*/
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
@@ -556,8 +556,8 @@ class StaffBehavioursTable extends ControllerActionTable
         ->select([
             'date_of_behaviour' => 'StaffBehaviours.date_of_behaviour',
             'category' => 'StaffBehaviourCategories.name',
-            'behaviour_classification' => 'BehaviourClassifications.name', 
-            'openemis_no' => 'Staff.openemis_no', 
+            'behaviour_classification' => 'BehaviourClassifications.name',
+            'openemis_no' => 'Staff.openemis_no',
             'student_name' => $User->find()->func()->concat([
                 'first_name' => 'literal',
                 " ",
@@ -596,7 +596,7 @@ class StaffBehavioursTable extends ControllerActionTable
                             'record_id' => $recordId
                         ]);
                     });
-                
+
                 $linked_cases = $query->count();
                 $row['linked_cases'] = $linked_cases;
                 // POCOR-6155 linked cases
@@ -613,7 +613,7 @@ class StaffBehavioursTable extends ControllerActionTable
     {
         if ($this->action == 'view') {
             return $entity->assignee->name;
-        } 
+        }
     }
 
     /**
@@ -649,7 +649,7 @@ class StaffBehavioursTable extends ControllerActionTable
             $stepId = $workflowStepsOptions->stepId;
             $session = $request->getSession();
             $institutionId = $this->getInstitutionID();
-            
+
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
@@ -660,7 +660,7 @@ class StaffBehavioursTable extends ControllerActionTable
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -676,12 +676,12 @@ class StaffBehavioursTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -740,7 +740,7 @@ class StaffBehavioursTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return Query
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function findWorkbench(Query $query, array $options)
     {
@@ -812,7 +812,7 @@ class StaffBehavioursTable extends ControllerActionTable
 
 
     /*public function deleteBeforeAction(Event $event, ArrayObject $extra)
-    {   
+    {
         $id = $this->request->data['primaryKey'];
         $jsonData = base64_decode($id);
         preg_match_all('/{(.*?)}/', $jsonData, $matches);
@@ -870,15 +870,15 @@ class StaffBehavioursTable extends ControllerActionTable
                 return __('Status');
             case 'staff_id':
                 return __('Staff');
-            case 'linked_cases':   
+            case 'linked_cases':
                 return __('Linked Cases');
             case 'created':
                 return __('Created');
             case 'created_user_id':
                     return __('Created By');
-            case 'modified':   
+            case 'modified':
                 return __('Modified');
-            case 'modified_user_id':  
+            case 'modified_user_id':
                 return __('Modified By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);

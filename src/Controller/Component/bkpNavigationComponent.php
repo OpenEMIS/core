@@ -4165,7 +4165,7 @@ class NavigationComponent extends Component
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private
     function getInstitutionID($debug = "")

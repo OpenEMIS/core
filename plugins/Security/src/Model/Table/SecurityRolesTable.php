@@ -82,7 +82,7 @@ class SecurityRolesTable extends ControllerActionTable
         $securityRoleId = $entity['id'];
         $securityRoleFunctionsTable = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
         $values = [];
-        
+
         foreach ($securityFunctionData as $function) {
             $data = [
                 'security_role_id' => $securityRoleId,
@@ -93,7 +93,7 @@ class SecurityRolesTable extends ControllerActionTable
                 '_delete' =>$function['_joinData']['_delete'],
                 '_execute' => $function['_joinData']['_execute'],
             ];
-        
+
             // Create a new entity and add it to the list
             $newEntity = $securityRoleFunctionsTable->newEntity($data);
             $entitiesToSave[] = $newEntity;
@@ -191,7 +191,7 @@ class SecurityRolesTable extends ControllerActionTable
             }
         }
     }
-    
+
 
     public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
@@ -594,7 +594,7 @@ class SecurityRolesTable extends ControllerActionTable
      * function returns the list + user roles for the group
      * @param $userGroupId
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getUserRolesList($userGroupId)
     {

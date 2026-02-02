@@ -12,11 +12,10 @@ use Cake\Http\ServerRequest;
 class PreferencesTable extends ControllerActionTable
 {
     private $loginLanguages = [];
-    public function initialize(array $config)
+    public function initialize(array $config): void               
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
-
         $Locales = TableRegistry::get('Locales');
         $this->loginLanguages = $Locales->find('list', [
                 'keyField' => 'iso',
@@ -28,7 +27,7 @@ class PreferencesTable extends ControllerActionTable
         $this->toggle('add', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra = null)
     {
         $shownField = ['preferred_language'];
 
@@ -50,9 +49,9 @@ class PreferencesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldPreferredLanguage(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreferredLanguage(Event $event, array $attr, $action, ServerRequest $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->read('System.language_menu')) {
             $attr['options'] = $this->loginLanguages;
         } else {
@@ -69,12 +68,11 @@ class PreferencesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra=NULL)
     {
         // Remove the back toolbarButton
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-
-        $session = $this->request->session();
+        $toolbarButtonsArray = isset($extra['toolbarButtons']) ? $extra['toolbarButtons']->getArrayCopy() : [];
+        $session = $this->request->getSession();
         if (!$session->read('System.language_menu')) {
             if (isset($toolbarButtonsArray['edit'])) {
                 unset($toolbarButtonsArray['edit']);
@@ -85,7 +83,7 @@ class PreferencesTable extends ControllerActionTable
             unset($toolbarButtonsArray['back']);
         }
 
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        isset($extra['toolbarButtons']) ? $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray) : [];
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)

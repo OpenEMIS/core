@@ -112,7 +112,7 @@ class ImportBehavior extends Behavior
         'ods' => ['application/vnd.oasis.opendocument.spreadsheet'],
         'zip' => ['application/zip']
     ];
-    private $institutionId = false;
+    protected $institutionId = false;
     private $recordHeader = '';
     private $customText = '';
 
@@ -152,7 +152,7 @@ class ImportBehavior extends Behavior
         $this->AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
     }
 
-    private function isCustomText()
+    protected function isCustomText()
     {
         // POCOR-8683 start
         $headings = $this->getConfig('headings') ?? [];

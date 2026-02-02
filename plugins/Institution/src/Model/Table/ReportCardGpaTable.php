@@ -19,6 +19,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate; //POCOR-9545
 use Cake\Http\Session; // POCOR-9162
 
 /**
@@ -575,7 +576,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-    
+
     public static function addGpaReportCards(
         $studentId,
         $academicPeriodId,
@@ -628,17 +629,26 @@ class ReportCardGpaTable extends ControllerActionTable
          *    - Prevents future-term GPA generation
          *    - Still allows regeneration for past terms
          */
+        $today = FrozenDate::today();
         $gpaIds = [];
         $firstTermStart = $gpaResults[0]->start_date;
 
+        // foreach ($gpaResults as $gpa) {
+        //     if ($gpa->start_date == $firstTermStart) {
+        //         $gpaIds[] = $gpa->id;
+        //     }
+        // }
+
         foreach ($gpaResults as $gpa) {
-            if ($gpa->start_date == $firstTermStart) {
+            // Allow all GPA terms that have already started
+            if ($gpa->start_date <= $today) {
                 $gpaIds[] = $gpa->id;
             }
         }
 
         // Optional but recommended guard
-        $gpaIds = array_values($gpaIds);
+        // $gpaIds = array_values($gpaIds);
+        $gpaIds = array_values(array_unique($gpaIds));
 
         /**
          * 4. Generate GPA per valid GPA term
@@ -1117,7 +1127,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 subq.institution_id,
                 subq.student_id,
                 ROUND(
-                    SUM(IFNULL(gpa_grading_options.point, 0)) 
+                    SUM(IFNULL(gpa_grading_options.point, 0))
                     /
                     COUNT(DISTINCT subq.education_subject_id),
                 2
@@ -1275,7 +1285,12 @@ class ReportCardGpaTable extends ControllerActionTable
             institution_subject_students.student_id,
             term_info.academic_term
             ) subq
-        INNER JOIN education_grades_gpa ON subq.assessment_period_end_date >= education_grades_gpa.start_date AND subq.assessment_period_end_date <= education_grades_gpa.end_date AND subq.assessment_period_start_date >= education_grades_gpa.start_date AND subq.assessment_period_start_date <= education_grades_gpa.end_date AND education_grades_gpa.academic_period_id = subq.academic_period_id AND education_grades_gpa.education_grade_id = subq.education_grade_id AND education_grades_gpa.id = $educationGradeGpaId
+        INNER JOIN education_grades_gpa ON 
+        subq.assessment_period_start_date <= education_grades_gpa.end_date
+        AND subq.assessment_period_end_date   >= education_grades_gpa.start_date
+        AND education_grades_gpa.academic_period_id = subq.academic_period_id 
+        AND education_grades_gpa.education_grade_id = subq.education_grade_id 
+        AND education_grades_gpa.id = $educationGradeGpaId
         INNER JOIN gpa_grading_options ON subq.total_mark >= gpa_grading_options.min AND subq.total_mark <= gpa_grading_options.max AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
         GROUP BY
             subq.academic_period_id,
@@ -1298,7 +1313,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $result['gpa'] ?? 0.00;
     }
 
-    //Commenting Dr.Khindol's logic as the exemption scenario is not working as expected.
+    //Commenting Dr.Kh's logic as the exemption scenario is not working as expected.
     //DO NOT DELETE -- Needed for reference.
     public static function getGpaForStudentGpaOriginal(
         int $institutionId,

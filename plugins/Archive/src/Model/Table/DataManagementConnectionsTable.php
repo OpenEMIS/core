@@ -75,7 +75,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $validator->requirePresence('db_name', 'create')->notEmpty('db_name');
         $validator->requirePresence('username', 'create')->notEmpty('username');
         $validator->allowEmpty('password', 'create');
-        
+
         $validator->integer('conn_status_id')->allowEmpty('conn_status_id', 'create');
         $validator->dateTime('status_checked')->allowEmpty('status_checked', 'create');
         //$validator->allowEmpty('modified_user_id');
@@ -152,33 +152,33 @@ class DataManagementConnectionsTable extends ControllerActionTable
                 'timezone' => 'UTC',
                 'cacheMetadata' => true,
             ]);
-    
+
             try {
                 $connection = ConnectionManager::get($post_data['DataManagementConnections']['name']);
                 $connected = $connection->connect();
                 $this->Alert->success('Connection.testConnectionSuccess', ['reset' => true]);
                 // $this->Session->write('is_connection_stablished', "1");
-    
+
             }catch (Exception $connectionError) {
                 // $this->Session->write('is_connection_stablished', "0");
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
             }
         }
 
-    }   
-    
+    }
+
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('name');    
+        $this->field('name');
         $this->field('db_type_id');
         $this->field('host');
-        $this->field('host_port');    
+        $this->field('host_port');
         $this->field('db_name');
         $this->field('username');
-        $this->field('password', ['visible' => false]);    
+        $this->field('password', ['visible' => false]);
         $this->field('conn_status_id');
         $this->field('status_checked');
-        $this->field('modified_user_id');    
+        $this->field('modified_user_id');
         $this->field('modified');
         $this->field('created_user_id');
         $this->field('created');
@@ -188,16 +188,16 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('name');    
+        $this->field('name');
         $this->field('db_type_id');
         $this->field('host');
-        $this->field('host_port');    
+        $this->field('host_port');
         $this->field('db_name');
         $this->field('username');
-        $this->field('password', ['visible' => true, 'type' => 'password']);    
+        $this->field('password', ['visible' => true, 'type' => 'password']);
         $this->field('conn_status_id', ['visible' => false]);
         $this->field('status_checked', ['visible' => false]);
-        $this->field('modified_user_id', ['visible' => false]);    
+        $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -226,7 +226,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
         return compact('databaseTypeOptions', 'selectedDatabaseType');
     }
-    
+
     public function onGetDbTypeId(Event $event, Entity $entity)
     {
         list($databaseTypeOptions) = array_values($this->getSelectOptions());
@@ -283,7 +283,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
                 'timezone' => 'UTC',
                 'cacheMetadata' => true,
             ]);
-    
+
             try {
                 $connection = ConnectionManager::get($post_data['DataManagementConnections']['name']);
                 $connected = $connection->connect();
@@ -293,13 +293,13 @@ class DataManagementConnectionsTable extends ControllerActionTable
                 $this->updateAll(
                     ['conn_status_id' => 1],    //field
                     [
-                     'host' => $post_data['DataManagementConnections']['host'], 
+                     'host' => $post_data['DataManagementConnections']['host'],
                      'db_name'=> $post_data['DataManagementConnections']['db_name'],
                      'username' => $post_data['DataManagementConnections']['username']
                      ] //condition
                 );
                 //END: POCOR-6770
-    
+
             }catch (Exception $connectionError) {
                 $this->Session->write('is_connection_stablished', "0");
                 $this->Alert->error('Connection.testConnectionFail', ['reset' => true]);
@@ -307,13 +307,13 @@ class DataManagementConnectionsTable extends ControllerActionTable
                 $this->updateAll(
                     ['conn_status_id' => 0],    //field
                     [
-                     'host' => $post_data['DataManagementConnections']['host'], 
+                     'host' => $post_data['DataManagementConnections']['host'],
                      'db_name'=> $post_data['DataManagementConnections']['db_name'],
                      'username' => $post_data['DataManagementConnections']['username']
                      ] //condition
                 );
                 //END: POCOR-6770
-                
+
             }
         }
         $is_connection_stablished = $this->Session->read('is_connection_stablished');
@@ -327,11 +327,11 @@ class DataManagementConnectionsTable extends ControllerActionTable
         // $password  = ((new DefaultPasswordHasher)->hash($entity->password));
         // $password = $this->PasswordHash->encrypt($entity->password, Security::salt());
         $password = $this->encrypt($entity->password, Security::salt());
-        
+
         $entity->password = $password;
         $entity->modified_user_id = $this->Session->read('Auth.User.id');
         $entity->created_user_id = $this->Session->read('Auth.User.id');
-        
+
     }
 
     public  function encrypt($pure_string, $secretHash) {
@@ -349,7 +349,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
      * @param int $length
      * @return bool|string
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function generateRandomString($length = 4)
     {
@@ -357,7 +357,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
         return substr(str_replace(['/', '+', '='], '', base64_encode($bytes)), 0, $length);
     }
 
-    
+
 
     /**
      * a common function to check whether there is an archive table or not.
@@ -368,7 +368,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
      * @param string $db_name
      * @return string
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function hasArchiveTable($sourceTableName, $db_name = 'default')
     {
@@ -441,7 +441,7 @@ class DataManagementConnectionsTable extends ControllerActionTable
      * @param array $where
      * @return bool
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function hasArchiveRecords(string $table_name, array $where = [])
     {
@@ -452,21 +452,21 @@ class DataManagementConnectionsTable extends ControllerActionTable
         $archiveConnection = ConnectionManager::get($targetTableConnection);
         // if($targetTableName == 'assessment_item_results_archived'){
         //     $targetTableName = 'AssessmentItemResultsArchived';
-        // }  
-        
-        
+        // }
+
+
         if($targetTableName == 'assessment_item_results_archived'){
             $tableLocator = new TableLocator();
             $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
-            'connection' => $archiveConnection]); 
+            'connection' => $archiveConnection]);
         }else if($targetTableName == 'institution_staff_attendances_archived'){
             $tableLocator = new TableLocator();
             $tableArchived = $tableLocator->get('institution_staff_attendances_archived', [
-            'connection' => $archiveConnection]); 
+            'connection' => $archiveConnection]);
         }else{
             $tableLocator = new TableLocator();
             $tableArchived =$tableLocator->get($targetTableName, [
-            'connection' => $archiveConnection]); 
+            'connection' => $archiveConnection]);
         }
 
 
@@ -493,25 +493,25 @@ die;*/
     function snakeToCamel($string) {
         // Split the string by underscores
         $words = explode('_', $string);
-    
+
         // Convert the first word to lowercase
         $camelCaseString = strtolower(array_shift($words));
-    
+
         // Capitalize the first letter of each remaining word and concatenate
         foreach ($words as $word) {
             $camelCaseString .= ucfirst(strtolower($word));
         }
-    
+
         return $camelCaseString;
     }
-    
+
 
     /**
      * common function to get archive table name and connection
      * @param $sourceTableName
      * @return array
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getArchiveTableAndConnection($sourceTableName)
     {
@@ -548,7 +548,7 @@ die;*/
      * @param array $where - parameters, like institution_id, institution_class_id etc
      * @return array
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getArchiveYears(string $table_name, array $where)
     {
@@ -560,13 +560,13 @@ die;*/
         if($targetTableName == 'assessment_item_results_archived'){
             $tableLocator = new TableLocator();
             $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
-            'connection' => $remoteConnection]); 
+            'connection' => $remoteConnection]);
         }else{
             $tableLocator = new TableLocator();
             $tableArchived = $tableLocator->get($targetTableName, [
-            'connection' => $remoteConnection]); 
+            'connection' => $remoteConnection]);
         }
-        
+
 //        Log::write('debug', 'getArchiveYears');
 //        Log::write('debug', $where);
         $distinctYears = $tableArchived->find('all')
@@ -587,7 +587,7 @@ die;*/
      * @param array $where
      * @return array
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getArchiveAssessments(string $table_name, array $where)
     {
@@ -619,7 +619,7 @@ die;*/
      * @param array $where
      * @return array
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getArchiveAssessmentPeriods(string $table_name, array $where)
     {
@@ -648,7 +648,7 @@ die;*/
      * @param array $where
      * @return array
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getArchiveStudents(string $table_name, array $where)
     {
@@ -677,7 +677,7 @@ die;*/
      * @param array $where
      * @return array
      * @throws \Exception
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getArchiveClasses(string $table_name, array $where)
     {
@@ -685,11 +685,11 @@ die;*/
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        
+
         if($targetTableName == 'assessment_item_results_archived'){
             $tableLocator = new TableLocator();
             $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
-            'connection' => $remoteConnection]); 
+            'connection' => $remoteConnection]);
         }else{
            $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
             'connection' => $remoteConnection,

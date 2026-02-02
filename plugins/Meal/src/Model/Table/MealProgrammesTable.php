@@ -661,7 +661,7 @@ use AllowDynamicProperties; // POCOR-8988
     /**
      * POCOR-8988: Optimization of Meal Programme Institution and Food Type Management
      *
-     * @author khindol.madraimov@gmail.com (Khindol Madraimov)
+
      *
      * ### Changes Implemented:
      * 1. **Fixed Error When Adding New Records**

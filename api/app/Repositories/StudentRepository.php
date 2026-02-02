@@ -30,13 +30,13 @@ class StudentRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
                     if($permissions['allowAllInstitutions'] != 1){
                         $institution_Ids = $permissions['institutionIds'];
-                    } 
+                    }
                     //For POCOR-8077 End...
                 }
             }
@@ -75,7 +75,7 @@ class StudentRepository extends Controller
                 $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
-            
+
             return $resp;
 
         } catch (\Exception $e) {
@@ -96,13 +96,13 @@ class StudentRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
                     if($permissions['allowAllInstitutions'] != 1){
                         $institution_Ids = $permissions['institutionIds'];
-                    } 
+                    }
                     //For POCOR-8077 End...
                 }
             }
@@ -115,7 +115,7 @@ class StudentRepository extends Controller
                 'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
                 'studentCustomFieldValue.studentCustomField:id,name')->where('institution_id', $institutionId);
             //For POCOR-8491 End...
-            
+
             if(isset($params['academic_period_id'])){
                 $academic_period_id = $params['academic_period_id'];
 
@@ -161,13 +161,13 @@ class StudentRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
                     if($permissions['allowAllInstitutions'] != 1){
                         $institution_Ids = $permissions['institutionIds'];
-                    } 
+                    }
                     //For POCOR-8077 End...
                 }
             }
@@ -176,11 +176,11 @@ class StudentRepository extends Controller
 
             //For POCOR-8491 Start...
             $data = InstitutionStudent::with(
-                    'institution:id,code,name', 
-                    'educationGrade:id,name', 
-                    'securityUser', 
-                    'securityUser.gender:id,name', 
-                    'studentStatus', 
+                    'institution:id,code,name',
+                    'educationGrade:id,name',
+                    'securityUser',
+                    'securityUser.gender:id,name',
+                    'studentStatus',
                     'academicPeriod:id,name',
                     'studentCustomFieldValue:id,text_value,number_value,decimal_value,textarea_value,date_value,time_value,file,student_custom_field_id,student_id',
                     'studentCustomFieldValue.studentCustomField:id,name'
@@ -203,7 +203,7 @@ class StudentRepository extends Controller
                 $data = [];
             }
             return $data;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch data from DB',
@@ -215,292 +215,451 @@ class StudentRepository extends Controller
     }
 
 
-    public function getStudentAbsences($request)
-    {
-        try {
-
-            //For POCOR-7772 Start
-            $permissions = checkAccess();
-            
-            if(isset($permissions)){
-                if($permissions['super_admin'] != 1){
-                    //For POCOR-8077 Start...
-                    if($permissions['allowAllInstitutions'] != 1){
-                        $institution_Ids = $permissions['institutionIds'];
-                    } 
-                    //For POCOR-8077 End...
-                }
-            }
-            //For POCOR-7772 End
-
-            $params = $request->all();
-
-            $getStudents = InstitutionStudentAbsenceDetails::with(
-                        'securityUser',
-                        'securityUser.gender:id,name',
-                        'educationGrade:id,name',
-                        'institutionClass:id,name',
-                        'academicPeriod:id,name',
-                        'institution:id,code,name'
-                    );
-
-            if(isset($params['academic_period_id'])){
-                $academic_period_id = $params['academic_period_id'];
-
-                $getStudents = $getStudents->where('academic_period_id', $academic_period_id);
-            }
-
-            //For POCOR-7772 Start
-            if(isset($institution_Ids)){
-                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
-            }
-            //For POCOR-7772 End
-
-            $getStudents = $getStudents->select('student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'modified_user_id', 'modified', 'created_user_id', 'created')->groupby('institution_id', 'student_id');
-
-            if(isset($params['order'])){
-                $orderBy = $params['order_by']??"ASC";
-                $col = $params['order'];
-                $getStudents = $getStudents->orderBy($col, $orderBy);
-            }
-
-            //$getStudents = $getStudents->paginate($limit)->toArray();
-            //dd("getStudents", $getStudents);
-
-
-            //For POCOR-8215/8216 start...          
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-                $list = $getStudents->paginate($limit)->toArray();
-                
-            } else {
-                $list['data'] = $getStudents->get()->toArray();
-            }
-            //For POCOR-8215/8216 end...
-
-            $data = [];
-
-            if(count($list['data']) > 0){
-                foreach($list['data'] as $k => $d){
-                    
-                    $data[$k] = $d;
-                    $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
-                    $arr = [];
-                    foreach($dateData as $key => $dd){
-                        $arr[$key]['period_id'] = $dd['period']['id']??Null;
-                        $arr[$key]['period_name'] = $dd['period']['name']??Null;
-                        $arr[$key]['subject_id'] = $dd['subject']['id']??Null;
-                        $arr[$key]['subject_name'] = $dd['subject']['name']??Null;
-                        $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
-                        $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
-                        $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
-                        $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
-                        $arr[$key]['comment'] = $dd['comment']??Null;
-                        $arr[$key]['date'] = $dd['date']??Null;
-                        
-                    }
-
-                    $data[$k]['date_data'] = $arr;
-                }
-            }
-            
-            $list['data'] = $data;
-
-            return $list;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch list from DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Institution Student Absences List Not Found');
-        }
-    }
-
-
-
+//    public function getStudentAbsences($request)
+//    {
+//        try {
+//
+//            //For POCOR-7772 Start
+//            $permissions = checkAccess();
+//
+//            if(isset($permissions)){
+//                if($permissions['super_admin'] != 1){
+//                    //For POCOR-8077 Start...
+//                    if($permissions['allowAllInstitutions'] != 1){
+//                        $institution_Ids = $permissions['institutionIds'];
+//                    }
+//                    //For POCOR-8077 End...
+//                }
+//            }
+//            //For POCOR-7772 End
+//
+//            $params = $request->all();
+//
+//            $getStudents = InstitutionStudentAbsenceDetails::with(
+//                        'securityUser',
+//                        'securityUser.gender:id,name',
+//                        'educationGrade:id,name',
+//                        'institutionClass:id,name',
+//                        'academicPeriod:id,name',
+//                        'institution:id,code,name'
+//                    );
+//
+//            if(isset($params['academic_period_id'])){
+//                $academic_period_id = $params['academic_period_id'];
+//
+//                $getStudents = $getStudents->where('academic_period_id', $academic_period_id);
+//            }
+//
+//            //For POCOR-7772 Start
+//            if(isset($institution_Ids)){
+//                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+//            }
+//            //For POCOR-7772 End
+//
+//            $getStudents = $getStudents->select('student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'modified_user_id', 'modified', 'created_user_id', 'created')->groupby('institution_id', 'student_id');
+//
+//            if(isset($params['order'])){
+//                $orderBy = $params['order_by']??"ASC";
+//                $col = $params['order'];
+//                $getStudents = $getStudents->orderBy($col, $orderBy);
+//            }
+//
+//            //$getStudents = $getStudents->paginate($limit)->toArray();
+//            //dd("getStudents", $getStudents);
+//
+//
+//            //For POCOR-8215/8216 start...
+//            if(isset($params['limit'])){
+//                $limit = $params['limit'];
+//                $list = $getStudents->paginate($limit)->toArray();
+//
+//            } else {
+//                $list['data'] = $getStudents->get()->toArray();
+//            }
+//            //For POCOR-8215/8216 end...
+//
+//            $data = [];
+//
+//            if(count($list['data']) > 0){
+//                foreach($list['data'] as $k => $d){
+//
+//                    $data[$k] = $d;
+//                    $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
+//                    $arr = [];
+//                    foreach($dateData as $key => $dd){
+//                        $arr[$key]['period_id'] = $dd['period']['id']??Null;
+//                        $arr[$key]['period_name'] = $dd['period']['name']??Null;
+//                        $arr[$key]['subject_id'] = $dd['subject']['id']??Null;
+//                        $arr[$key]['subject_name'] = $dd['subject']['name']??Null;
+//                        $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
+//                        $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
+//                        $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
+//                        $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
+//                        $arr[$key]['comment'] = $dd['comment']??Null;
+//                        $arr[$key]['date'] = $dd['date']??Null;
+//
+//                    }
+//
+//                    $data[$k]['date_data'] = $arr;
+//                }
+//            }
+//
+//            $list['data'] = $data;
+//
+//            return $list;
+//
+//        } catch (\Exception $e) {
+//            Log::error(
+//                'Failed to fetch list from DB',
+//                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+//            );
+//
+//            return $this->sendErrorResponse('Institution Student Absences List Not Found');
+//        }
+//    }
+//
+//
+//
+//    public function getInstitutionStudentAbsences($request, $institutionId)
+//    {
+//        try {
+//            $params = $request->all();
+//
+//
+//            //For POCOR-7772 Start
+//            $permissions = checkAccess();
+//
+//            if(isset($permissions)){
+//                if($permissions['super_admin'] != 1){
+//                    //For POCOR-8077 Start...
+//                    if($permissions['allowAllInstitutions'] != 1){
+//                        $institution_Ids = $permissions['institutionIds'];
+//                    }
+//                    //For POCOR-8077 End...
+//                }
+//            }
+//            //For POCOR-7772 End
+//
+//            $getStudents = InstitutionStudentAbsenceDetails::with(
+//                        'securityUser',
+//                        'securityUser.gender:id,name',
+//                        'educationGrade:id,name',
+//                        'institutionClass:id,name',
+//                        'academicPeriod:id,name',
+//                        'institution:id,code,name'
+//                    )->where('institution_id', $institutionId);
+//
+//            if(isset($params['academic_period_id'])){
+//                $academic_period_id = $params['academic_period_id'];
+//
+//                $getStudents = $getStudents->where('academic_period_id', $academic_period_id);
+//            }
+//
+//            $getStudents = $getStudents->select('student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'modified_user_id', 'modified', 'created_user_id', 'created')->groupby('institution_id', 'student_id');
+//
+//            if(isset($params['order'])){
+//                $orderBy = $params['order_by']??"ASC";
+//                $col = $params['order'];
+//                $getStudents = $getStudents->orderBy($col, $orderBy);
+//            }
+//
+//
+//            //For POCOR-7772 Start
+//            if(isset($institution_Ids)){
+//                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+//            }
+//            //For POCOR-7772 End
+//
+//
+//
+//            //$getStudents = $getStudents->paginate($limit)->toArray();
+//            //dd("getStudents", $getStudents);
+//
+//
+//            //For POCOR-8215/8216 start...
+//            if(isset($params['limit'])){
+//                $limit = $params['limit'];
+//                $list = $getStudents->paginate($limit)->toArray();
+//
+//            } else {
+//                $list['data'] = $getStudents->get()->toArray();
+//            }
+//            //For POCOR-8215/8216 end...
+//
+//
+//            $data = [];
+//
+//            if(count($list['data']) > 0){
+//                foreach($list['data'] as $k => $d){
+//
+//                    $data[$k] = $d;
+//                    $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
+//                    $arr = [];
+//                    foreach($dateData as $key => $dd){
+//                        $arr[$key]['period_id'] = $dd['period']['id']??Null;
+//                        $arr[$key]['period_name'] = $dd['period']['name']??Null;
+//                        $arr[$key]['subject_id'] = $dd['subject']['id']??Null;
+//                        $arr[$key]['subject_name'] = $dd['subject']['name']??Null;
+//                        $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
+//                        $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
+//                        $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
+//                        $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
+//                        $arr[$key]['comment'] = $dd['comment']??Null;
+//                        $arr[$key]['date'] = $dd['date']??Null;
+//
+//                    }
+//
+//                    $data[$k]['date_data'] = $arr;
+//                }
+//            }
+//
+//            $list['data'] = $data;
+//
+//            return $list;
+//
+//        } catch (\Exception $e) {
+//            Log::error(
+//                'Failed to fetch list from DB',
+//                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+//            );
+//
+//            return $this->sendErrorResponse('Institution Student Absences List Not Found');
+//        }
+//    }
+//
+//
+//    public function getInstitutionStudentAbsencesData($request, $institutionId, $studentId)
+//    {
+//        try {
+//
+//            //For POCOR-7772 Start
+//            $permissions = checkAccess();
+//
+//            if(isset($permissions)){
+//                if($permissions['super_admin'] != 1){
+//                    //For POCOR-8077 Start...
+//                    if($permissions['allowAllInstitutions'] != 1){
+//                        $institution_Ids = $permissions['institutionIds'];
+//                    }
+//                    //For POCOR-8077 End...
+//                }
+//            }
+//            //For POCOR-7772 End
+//
+//            $getStudent = InstitutionStudentAbsenceDetails::with(
+//                        'securityUser',
+//                        'securityUser.gender:id,name',
+//                        'educationGrade:id,name',
+//                        'institutionClass:id,name',
+//                        'academicPeriod:id,name',
+//                        'institution:id,code,name'
+//                    )
+//                    ->where('institution_id', $institutionId)
+//                    ->where('student_id', $studentId);
+//
+//            //For POCOR-7772 Start
+//            if(isset($institution_Ids)){
+//                $getStudent = $getStudent->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+//            }
+//            //For POCOR-7772 End
+//
+//            $getStudent = $getStudent->first();
+//
+//            if($getStudent){
+//                $getStudent = $getStudent->toArray();
+//
+//                $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $getStudent['student_id'])->where('institution_id', $getStudent['institution_id'])->get()->toArray();
+//
+//                $arr = [];
+//                foreach($dateData as $key => $dd){
+//                    $arr[$key]['period_id'] = $dd['period']['id']??Null;
+//                    $arr[$key]['period_name'] = $dd['period']['name']??Null;
+//                    $arr[$key]['subject_id'] = $dd['subject']['id']??Null;
+//                    $arr[$key]['subject_name'] = $dd['subject']['name']??Null;
+//                    $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
+//                    $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
+//                    $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
+//                    $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
+//                    $arr[$key]['comment'] = $dd['comment']??Null;
+//                    $arr[$key]['date'] = $dd['date']??Null;
+//
+//                }
+//                $getStudent['date_data'] = $arr;
+//
+//            } else {
+//                $getStudent = [];
+//            }
+//            return $getStudent;
+//        } catch (\Exception $e) {
+//            Log::error(
+//                'Failed to fetch data from DB',
+//                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+//            );
+//
+//            return $this->sendErrorResponse('Institution Student Absences Data Not Found');
+//        }
+//    }
+//
+ // POCOR-9530 start
     public function getInstitutionStudentAbsences($request, $institutionId)
     {
-        try {
-            $params = $request->all();
-
-
-            //For POCOR-7772 Start
-            $permissions = checkAccess();
-            
-            if(isset($permissions)){
-                if($permissions['super_admin'] != 1){
-                    //For POCOR-8077 Start...
-                    if($permissions['allowAllInstitutions'] != 1){
-                        $institution_Ids = $permissions['institutionIds'];
-                    } 
-                    //For POCOR-8077 End...
-                }
-            }
-            //For POCOR-7772 End
-
-            $getStudents = InstitutionStudentAbsenceDetails::with(
-                        'securityUser',
-                        'securityUser.gender:id,name',
-                        'educationGrade:id,name',
-                        'institutionClass:id,name',
-                        'academicPeriod:id,name',
-                        'institution:id,code,name'
-                    )->where('institution_id', $institutionId);
-
-            if(isset($params['academic_period_id'])){
-                $academic_period_id = $params['academic_period_id'];
-
-                $getStudents = $getStudents->where('academic_period_id', $academic_period_id);
-            }
-
-            $getStudents = $getStudents->select('student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'modified_user_id', 'modified', 'created_user_id', 'created')->groupby('institution_id', 'student_id');
-
-            if(isset($params['order'])){
-                $orderBy = $params['order_by']??"ASC";
-                $col = $params['order'];
-                $getStudents = $getStudents->orderBy($col, $orderBy);
-            }
-
-
-            //For POCOR-7772 Start
-            if(isset($institution_Ids)){
-                $getStudents = $getStudents->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
-            }
-            //For POCOR-7772 End
-
-
-
-            //$getStudents = $getStudents->paginate($limit)->toArray();
-            //dd("getStudents", $getStudents);
-
-
-            //For POCOR-8215/8216 start...          
-            if(isset($params['limit'])){
-                $limit = $params['limit'];
-                $list = $getStudents->paginate($limit)->toArray();
-                
-            } else {
-                $list['data'] = $getStudents->get()->toArray();
-            }
-            //For POCOR-8215/8216 end...
-
-
-            $data = [];
-
-            if(count($list['data']) > 0){
-                foreach($list['data'] as $k => $d){
-                    
-                    $data[$k] = $d;
-                    $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $d['student_id'])->where('institution_id', $d['institution_id'])->get()->toArray();
-                    $arr = [];
-                    foreach($dateData as $key => $dd){
-                        $arr[$key]['period_id'] = $dd['period']['id']??Null;
-                        $arr[$key]['period_name'] = $dd['period']['name']??Null;
-                        $arr[$key]['subject_id'] = $dd['subject']['id']??Null;
-                        $arr[$key]['subject_name'] = $dd['subject']['name']??Null;
-                        $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
-                        $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
-                        $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
-                        $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
-                        $arr[$key]['comment'] = $dd['comment']??Null;
-                        $arr[$key]['date'] = $dd['date']??Null;
-                        
-                    }
-
-                    $data[$k]['date_data'] = $arr;
-                }
-            }
-            
-            $list['data'] = $data;
-            
-            return $list;
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch list from DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Institution Student Absences List Not Found');
-        }
+        $request->merge(['institution_id' => $institutionId]);
+        return $this->getStudentAbsences($request);
     }
-
 
     public function getInstitutionStudentAbsencesData($request, $institutionId, $studentId)
     {
+        $request->merge([
+            'institution_id' => $institutionId,
+            'student_id' => $studentId,
+            'limit' => 1
+        ]);
+
+        $data = $this->getStudentAbsences($request);
+        return $data['data'][0] ?? [];
+    }
+
+    public function getStudentAbsences($request)
+    {
         try {
+            $params = $request->all();
+            $institutionIds = $this->getAccessibleInstitutionIds();
 
-            //For POCOR-7772 Start
-            $permissions = checkAccess();
-            
-            if(isset($permissions)){
-                if($permissions['super_admin'] != 1){
-                    //For POCOR-8077 Start...
-                    if($permissions['allowAllInstitutions'] != 1){
-                        $institution_Ids = $permissions['institutionIds'];
-                    } 
-                    //For POCOR-8077 End...
-                }
+//            Log::debug('Student Absences - Incoming Filters', $params);
+            $query = $this->getBaseQuery();
+            $params = $this->cleanFilterParams($params); // 🧼 clean up 0 values
+            $query = $this->applyFilters($query, $params, $institutionIds);
+
+            $query->select(
+                'student_id', 'institution_id', 'academic_period_id',
+                'institution_class_id', 'education_grade_id',
+                'modified_user_id', 'modified', 'created_user_id', 'created'
+            )->groupBy('institution_id', 'student_id');
+
+            if (!empty($params['order'])) {
+                $query->orderBy($params['order'], $params['order_by'] ?? 'ASC');
             }
-            //For POCOR-7772 End
+//            $sqlPreview = $query->toSql();
+//            $bindings = $query->getBindings();
+//
+//            Log::debug('Student Absences - SQL Query', ['sql' => $sqlPreview, 'bindings' => $bindings]);
 
-            $getStudent = InstitutionStudentAbsenceDetails::with(
-                        'securityUser',
-                        'securityUser.gender:id,name',
-                        'educationGrade:id,name',
-                        'institutionClass:id,name',
-                        'academicPeriod:id,name',
-                        'institution:id,code,name'
-                    )
-                    ->where('institution_id', $institutionId)
-                    ->where('student_id', $studentId);
 
-            //For POCOR-7772 Start
-            if(isset($institution_Ids)){
-                $getStudent = $getStudent->whereIn('institution_student_absence_details.institution_id', $institution_Ids);
+            $limit = isset($params['limit']) ? (int) $params['limit'] : 50; // Default to 50
+
+            $list = $query->paginate($limit)->toArray();
+
+            foreach ($list['data'] as $k => $student) {
+                $list['data'][$k] = $student;
+                $list['data'][$k]['date_data'] = $this->loadAbsenceDateData($student['institution_id'], $student['student_id'], $params);
             }
-            //For POCOR-7772 End
 
-            $getStudent = $getStudent->first();
-
-            if($getStudent){
-                $getStudent = $getStudent->toArray();
-
-                $dateData = InstitutionStudentAbsenceDetails::with('absenceType:id,name', 'studentAbsenceReason:id,name', 'period:id,name', 'subject:id,name')->where('student_id', $getStudent['student_id'])->where('institution_id', $getStudent['institution_id'])->get()->toArray();
-
-                $arr = [];
-                foreach($dateData as $key => $dd){
-                    $arr[$key]['period_id'] = $dd['period']['id']??Null;
-                    $arr[$key]['period_name'] = $dd['period']['name']??Null;
-                    $arr[$key]['subject_id'] = $dd['subject']['id']??Null;
-                    $arr[$key]['subject_name'] = $dd['subject']['name']??Null;
-                    $arr[$key]['absence_type_id'] = $dd['absence_type']['id']??Null;
-                    $arr[$key]['absence_type_name'] = $dd['absence_type']['name']??Null;
-                    $arr[$key]['student_absence_reason_id'] = $dd['student_absence_reason']['id']??Null;
-                    $arr[$key]['student_absence_reason_name'] = $dd['student_absence_reason']['name']??Null;
-                    $arr[$key]['comment'] = $dd['comment']??Null;
-                    $arr[$key]['date'] = $dd['date']??Null;
-                    
-                }
-                $getStudent['date_data'] = $arr;
-
-            } else {
-                $getStudent = [];
-            }
-            return $getStudent;
+            return $list;
         } catch (\Exception $e) {
-            Log::error(
-                'Failed to fetch data from DB',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
-
-            return $this->sendErrorResponse('Institution Student Absences Data Not Found');
+            Log::error('Failed to fetch absences', ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return $this->sendErrorResponse('Student absences could not be retrieved');
         }
     }
 
+    private function cleanFilterParams(array $params): array
+    {
+        foreach (['period', 'subject_id'] as $field) {
+            if (isset($params[$field]) && (int)$params[$field] === 0) {
+                unset($params[$field]);
+            }
+        }
+        return $params;
+    }
+    private function getAccessibleInstitutionIds()
+    {
+        $permissions = checkAccess();
 
+        if ($permissions['super_admin'] ?? false) {
+            return null;
+        }
+
+        if (!empty($permissions['allowAllInstitutions'])) {
+            return null;
+        }
+
+        return $permissions['institutionIds'] ?? null;
+    }
+    private function getBaseQuery()
+    {
+        return InstitutionStudentAbsenceDetails::with([
+            'securityUser',
+            'securityUser.gender:id,name',
+            'educationGrade:id,name',
+            'institutionClass:id,name',
+            'academicPeriod:id,name',
+            'institution:id,code,name'
+        ]);
+    }
+    private function applyFilters($query, $params, $institutionIds = null)
+    {
+        $filterableFields = [
+            'institution_id',
+            'institution_class_id',
+            'education_grade_id',
+            'academic_period_id',
+            'subject_id',
+            'student_id',
+            'date',
+            'period'
+        ];
+
+        foreach ($filterableFields as $field) {
+            if (!empty($params[$field])) {
+                $query->where("institution_student_absence_details.$field", $params[$field]);
+            }
+        }
+
+        if ($institutionIds !== null) {
+            $query->whereIn('institution_student_absence_details.institution_id', $institutionIds);
+        }
+
+        return $query;
+    }
+    private function loadAbsenceDateData($institutionId, $studentId, $params = [])
+    {
+        $query = InstitutionStudentAbsenceDetails::with([
+            'absenceType:id,name',
+            'studentAbsenceReason:id,name',
+            'attendancePeriod:id,name',
+            'subject:id,name'
+        ])->where('student_id', $studentId)
+            ->where('institution_id', $institutionId);
+
+        if (!empty($params['date'])) {
+            $query->whereDate('date', $params['date']);
+        }
+
+        if (!empty($params['period'])) {
+            $query->where('period', $params['period']);
+        }
+
+        if (!empty($params['subject_id'])) {
+            $query->where('subject_id', $params['subject_id']);
+        }
+
+        $records = $query->get();
+
+        return $records->map(function ($record) {
+            return [
+                'period_id' => $record->attendancePeriod->id ?? null,
+                'period_name' => $record->attendancePeriod->name ?? null,
+                'subject_id' => $record->subject->id ?? null,
+                'subject_name' => $record->subject->name ?? null,
+                'absence_type_id' => $record->absenceType->id ?? null,
+                'absence_type_name' => $record->absenceType->name ?? null,
+                'student_absence_reason_id' => $record->studentAbsenceReason->id ?? null,
+                'student_absence_reason_name' => $record->studentAbsenceReason->name ?? null,
+                'comment' => $record->comment,
+                'date' => $record->date,
+            ];
+        })->toArray();
+    }
+    // POCOR-9530 end
 
     //POCOR-7547 Starts...
     public function getEducationGrades($request)
@@ -532,7 +691,7 @@ class StudentRepository extends Controller
                 ORDER BY education_grades.id ASC,student_attendance_per_day_periods.id ASC';
 
             $list = DB::select(DB::raw($sql));*/
-            
+
 
 
             $lists = DB::table('student_mark_type_status_grades')
@@ -572,9 +731,9 @@ class StudentRepository extends Controller
             }
 
             return $resp;
-            
+
         } catch (\Exception $e) {
-            
+
             Log::error(
                 'Failed to fetch list from DB',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
@@ -591,13 +750,13 @@ class StudentRepository extends Controller
 
             //For POCOR-7772 Start
             $permissions = checkAccess();
-            
+
             if(isset($permissions)){
                 if($permissions['super_admin'] != 1){
                     //For POCOR-8077 Start...
                     if($permissions['allowAllInstitutions'] != 1){
                         $institution_Ids = $permissions['institutionIds'];
-                    } 
+                    }
                     //For POCOR-8077 End...
                 }
             }
@@ -636,7 +795,7 @@ class StudentRepository extends Controller
                 $data = $data->whereIn('institution_classes.institution_id', $institution_Ids);
             }
             //For POCOR-7772 End
-                 
+
 
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";
@@ -682,7 +841,7 @@ class StudentRepository extends Controller
                 'subject_id' => $params['subject_id']??0,
             ])->first();
 
-            if($check){ 
+            if($check){
                 $updateArr['academic_period_id'] = $params['academic_period_id'];
                 $updateArr['education_grade_id'] = $params['education_grade_id'];
                 $updateArr['institution_id'] = $params['institution_id'];
@@ -719,7 +878,7 @@ class StudentRepository extends Controller
 
             DB::commit();
             return $resp;
-            
+
         } catch (\Exception $e) {
             DB::rollback();
             Log::error(
@@ -739,7 +898,7 @@ class StudentRepository extends Controller
         try {
             $param = $request->all();
             $isLinked = $this->checkIfStudentLinked($param);
-            
+
             if(!$isLinked){
                 return 3;
             }
@@ -833,7 +992,7 @@ class StudentRepository extends Controller
 
                 $insert = StudentAttendanceMarkedRecords::insert($storeArr);
             }
-                
+
             DB::commit();
             return $resp;
         } catch (\Exception $e) {
@@ -859,15 +1018,15 @@ class StudentRepository extends Controller
                 'academic_period_id' => $param['academic_period_id'],
                 'date' => $param['date']
             ])->first();
-            
+
             if($check){
                 $param['modified_user_id'] = JWTAuth::user()->id;
                 $param['modified'] = Carbon::now()->toDateTimeString();
                 $param['xyz'] = 1234;
-                
+
                 //This function removes the unnecessary columns...
                 $values = removeNonColumnFields($param, 'institution_staff_attendances');
-                
+
                 $update = InstitutionStaffAttendances::where([
                     'staff_id' => $param['staff_id'],
                     'institution_id' => $param['institution_id'],
@@ -881,15 +1040,15 @@ class StudentRepository extends Controller
                 $param['id'] = Str::Uuid();
                 $param['created_user_id'] = JWTAuth::user()->id;
                 $param['created'] = Carbon::now()->toDateTimeString();
-                
+
                 //This function removes the unnecessary columns...
                 $values = removeNonColumnFields($param, 'institution_staff_attendances');
-                
+
                 $store = InstitutionStaffAttendances::insert($values);
                 $resp = 1;
             }
 
-            
+
             DB::commit();
             return $resp;
         } catch (\Exception $e) {
@@ -950,7 +1109,7 @@ class StudentRepository extends Controller
             if($check){
                 return true;
             } else {
-                return false; 
+                return false;
             }
         }catch(\Exception $e) {
             return false;
@@ -978,7 +1137,7 @@ class StudentRepository extends Controller
     }
     //For POCOR-8505 End...
 
-    
+
     //For POCOR-8491 Start...
     public function getStudentClasses($institutionId, $studentId)
     {
@@ -1000,7 +1159,7 @@ class StudentRepository extends Controller
                     $subjects[$s]['name'] = $subject['institution_subject']['name'];
                 }
                 $list[$key]['subjects'] = $subjects;
-                
+
             }
 
             return $list;
@@ -1038,7 +1197,7 @@ class StudentRepository extends Controller
                 $list = $list->get()->toArray();
                 $resp['data'] = $list;
             }
-            
+
             return $resp;
         } catch (\Exception $e) {
             Log::error(
@@ -1082,7 +1241,7 @@ class StudentRepository extends Controller
                                 ->where('workflows.code', 'STUDENT-TRANSFER-2001')
                                 ->where('workflow_steps.name', 'Open')
                                 ->first();
-                
+
             } else {
                 return 0;
             }
@@ -1136,12 +1295,12 @@ class StudentRepository extends Controller
                 $insertArr['assignee_id'] = JWTAuth::user()->id;
                 $insertArr['created_user_id'] = JWTAuth::user()->id;
                 $insertArr['created'] = Carbon::now()->toDateTimeString();
-                
-                $insert = InstitutionStudentTransfers::insert($insertArr); 
+
+                $insert = InstitutionStudentTransfers::insert($insertArr);
             }
-            
+
             return 1;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to add student tranfer data.',
@@ -1162,7 +1321,7 @@ class StudentRepository extends Controller
                 ->get()
                 ->toArray();
             return $absencesDetailsData;
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Student Absences Data Not Found.',
