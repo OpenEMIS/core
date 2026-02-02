@@ -18,13 +18,13 @@ use Cake\ORM\Locator\TableLocator;
 /**
  * Class MergeBehavior
  * @package Directory\Model\Behavior
- * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
  */
 class MergeBehavior extends Behavior
 {
     /**
      * @param array $config
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function initialize(array $config): void
     {
@@ -35,7 +35,7 @@ class MergeBehavior extends Behavior
 
     /**
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function implementedEvents(): array
     {
@@ -55,7 +55,7 @@ class MergeBehavior extends Behavior
      * @param Event $mainEvent
      * @param ArrayObject $extra
      * @return Entity|mixed|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function merge(Event $mainEvent, ArrayObject $extra)
     {
@@ -155,7 +155,7 @@ class MergeBehavior extends Behavior
      * @param $action
      * @param Request $request
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldFirstId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -175,7 +175,7 @@ class MergeBehavior extends Behavior
      * @param $action
      * @param Request $request
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldMergeId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -204,7 +204,7 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function ajaxUserAutocomplete()
     {
@@ -264,7 +264,7 @@ class MergeBehavior extends Behavior
      * @param $language
      * @param bool $autoHumanize
      * @return string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
@@ -283,7 +283,7 @@ class MergeBehavior extends Behavior
      * @param ArrayObject $extra
      * @param \Cake\ORM\Table $model
      * @return ArrayObject
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function addBackButton(ArrayObject $extra, \Cake\ORM\Table $model)
     {
@@ -307,7 +307,7 @@ class MergeBehavior extends Behavior
     /**
      * @param Event $event
      * @param ArrayObject $extra
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function beforeAction(Event $event, ArrayObject $extra)
     {
@@ -327,7 +327,7 @@ class MergeBehavior extends Behavior
 //     * @param Entity $entity
 //     * @param ArrayObject $options
 //     * @param ArrayObject $extra
-//     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+//
 //     */
 //    public function _mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
 //    {
@@ -350,7 +350,7 @@ class MergeBehavior extends Behavior
 //     * @param Entity $entity
 //     * @param ArrayObject $options
 //     * @param ArrayObject $extra
-//     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+//
 //     */
 //    public function _mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
 //    {
@@ -424,7 +424,7 @@ class MergeBehavior extends Behavior
      * @param $model
      * @param $user_field
      * @return Entity|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getUserEntity($model, $user_field)
     {
@@ -450,7 +450,7 @@ class MergeBehavior extends Behavior
     /**
      * @param $merge_id
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getRelatedRecords($base_id, $merge_id)
     {
@@ -508,7 +508,7 @@ class MergeBehavior extends Behavior
      * @param Entity $first_entity
      * @param \Cake\ORM\Table $model
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getAssociations(ArrayObject $extra, Entity $merge_entity, Entity $first_entity, \Cake\ORM\Table $model)
     {
@@ -544,7 +544,7 @@ class MergeBehavior extends Behavior
      * @param Entity $merge_entity The new entity.
      * @param array $exclude_fields An array of field names to exclude from comparison.
      * @return array An array of field comparisons with 'field', 'old_value', 'new_value', and 'changed' keys.
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function compareEntities(Entity $base_entity, Entity $merge_entity, $exclude_fields = [])
     {
@@ -597,7 +597,7 @@ class MergeBehavior extends Behavior
             $base_value = is_string($base_raw) ? trim($base_raw) : $base_raw;
             $merge_value = is_string($merge_raw) ? trim($merge_raw) : $merge_raw;
             //POCOR-9410 -- END
-            
+
             $result_value = $base_value;
             $to_change = false;
             if (empty($result_value)) {
@@ -640,7 +640,7 @@ class MergeBehavior extends Behavior
      * @param $tableName
      * @param $relatedField
      * @return string|null
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public static function getRelatedName($tableName, $relatedField)
     {
@@ -661,7 +661,7 @@ class MergeBehavior extends Behavior
     /**
      * @param Event $event
      * @param ArrayObject $buttons
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
@@ -681,7 +681,7 @@ class MergeBehavior extends Behavior
      * @param Entity $merge_entity
      * @param \Cake\ORM\Table $model
      * @return array
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private function getMergeFields(ArrayObject $extra, Entity $first_entity, Entity $merge_entity, \Cake\ORM\Table $model)
     {

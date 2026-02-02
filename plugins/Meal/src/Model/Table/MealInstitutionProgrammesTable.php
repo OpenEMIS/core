@@ -121,7 +121,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
      * POCOR-7908
      * @param Query $query
      * @param array $options
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function findMealInstitutionPrograms(Query $query, array $options)
     {
@@ -144,7 +144,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
                 $MealPrograms->aliasField('academic_period_id') => $academicPeriodId,
             ])
                 ->orderAsc($MealPrograms->aliasField('code'));
-        
+
     }
 
     public function findMealReceivedOptions(Query $query, array $options)

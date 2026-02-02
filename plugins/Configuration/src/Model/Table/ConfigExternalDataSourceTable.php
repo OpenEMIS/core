@@ -284,7 +284,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      *     POCOR-9118
      */
     public function getRelatedName($tableName, $relatedField)
@@ -665,7 +665,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

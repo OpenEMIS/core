@@ -89,7 +89,7 @@ class StudentBehavioursTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return Query
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function findWorkbench(Query $query, array $options)
     {
@@ -1225,11 +1225,11 @@ class StudentBehavioursTable extends ControllerActionTable
             //POCOR-8866 start
             $behaviourClassificationOptions = $this->StudentBehaviourClassifications
             ->find('list', [
-                'keyField' => 'id', 
-                'valueField' => 'name' 
+                'keyField' => 'id',
+                'valueField' => 'name'
             ])
             ->toArray();
-           
+
             // $behaviourCategoryId = 0;
             // if ($request->is(['post', 'put'])) {
             //     $behaviourCategoryId = $request->getData($this->aliasField('student_behaviour_category_id'));
@@ -1250,7 +1250,7 @@ class StudentBehavioursTable extends ControllerActionTable
                 //     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 //     ->where([$this->StudentBehaviourClassifications->aliasField('id') => $behaviourCategories])
                 //     ->toArray();
-                // } 
+                // }
             // }
             $attr['options'] = $behaviourClassificationOptions;
             //POCOR-8866 end

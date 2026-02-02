@@ -333,7 +333,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function getRelatedName($tableName, $relatedField)
     {

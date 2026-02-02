@@ -247,7 +247,7 @@ class StudentTransferTable extends ControllerActionTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -377,7 +377,7 @@ class StudentTransferTable extends ControllerActionTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -646,7 +646,7 @@ class StudentTransferTable extends ControllerActionTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -709,7 +709,7 @@ class StudentTransferTable extends ControllerActionTable
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
     {
@@ -919,7 +919,7 @@ class StudentTransferTable extends ControllerActionTable
      * POCOR-8946
      * @param string $tableName
      * @return Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

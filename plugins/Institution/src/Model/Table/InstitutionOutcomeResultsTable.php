@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 class InstitutionOutcomeResultsTable extends AppTable
 {
@@ -73,7 +74,6 @@ class InstitutionOutcomeResultsTable extends AppTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //POCOT-7480-HINDOL
-
         $gradingOption = empty($entity->outcome_grading_option_id) ? -1 : $entity->outcome_grading_option_id;
 
         if ($entity->isNew() && $gradingOption <= 0) {
@@ -129,5 +129,36 @@ class InstitutionOutcomeResultsTable extends AppTable
                 return $q->where(['ClassSubjects.institution_class_id' => $classId]);
             })
             ->toArray();
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+        $session = $this->request->getSession();
+        $paramInstitutionId = $this->request->getAttribute('param')['institutionId'];
+        $getInstitutionId = $this->getQueryString('institution_id');
+        $institutionId = !empty($paramInstitutionId) ? $this->ControllerAction->paramsDecode($paramInstitutionId)['id'] : $getInstitutionId;
+
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        if ($this->action == 'index') {
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = [
+                'title' => __('Back'),
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false
+            ];
+            $toolbarButtons['back']['url'] = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentOutcomes',
+                0 => 'index',
+                1 => $encodedQueryString
+                //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+            ];
+
+        }
     }
 }
