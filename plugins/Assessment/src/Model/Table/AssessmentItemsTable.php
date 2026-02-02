@@ -513,26 +513,30 @@ class AssessmentItemsTable extends AppTable
 //                    $this->log($securityGroupUserEditAccessCount, 'debug');
                     if ($securityGroupUserEditAccessCount > 0) {
                         //POCOR-9487[START]
-                         if($isHomeRoomTeacherOrSecondaryTeacher == 1){
+                        if($isHomeRoomTeacherOrSecondaryTeacher == 1){
                             $row['is_editable'] = 1;
-                            return (array) $row;
-                         }
-
-                         else if($isPrinciple == 1){
-                            $row['is_editable'] = 1;
-                            return (array) $row;
-                        }else{
-                            $row['is_editable'] = '';
                             return (array) $row;
                         }
-                        //POCOR-9487[END]
-                    } else{
-                        if ($securityGroupUserEditAccessCount > 0) { //POCOR-9535
+
+                        else if($isPrinciple == 1){
                             $row['is_editable'] = 1;
-                            return (array)$row;
-                        } else {
+                            return (array) $row;
+                        }
+                        else{
+                            if ($securityGroupUserEditAccessCount > 0) { //POCOR-9535
+                                $row['is_editable'] = 1;
+                                return (array)$row;
+                            } else {
+                                $row['is_editable'] = 0;
+                                return (array)$row;
+                            }
+                        }
+                        //POCOR-9487[END]
+                    } else {
+                        if($isPrinciple == 1){
+                             $row['is_editable'] = 1;
+                        }else{
                             $row['is_editable'] = 0;
-                            return (array)$row;
                         }
                     }
                     //POCOR-7541 end
