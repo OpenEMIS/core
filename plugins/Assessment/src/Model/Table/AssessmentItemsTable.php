@@ -526,11 +526,13 @@ class AssessmentItemsTable extends AppTable
                             return (array) $row;
                         }
                         //POCOR-9487[END]
-                    } else {
-                        if($isPrinciple == 1){
-                             $row['is_editable'] = 1;
-                        }else{
+                    } else{
+                        if ($securityGroupUserEditAccessCount > 0) { //POCOR-9535
+                            $row['is_editable'] = 1;
+                            return (array)$row;
+                        } else {
                             $row['is_editable'] = 0;
+                            return (array)$row;
                         }
                     }
                     //POCOR-7541 end
