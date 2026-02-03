@@ -1281,7 +1281,8 @@ class DirectoriesTable extends ControllerActionTable
                 'entity_update' => 'security_user_update',
                 'table_alias' => 'User.Users'
             ]
-        ); // for webhook        $this->addBehavior('User.AdvancedIdentitySearch');
+        ); // for webhook
+        $this->addBehavior('User.AdvancedIdentitySearch');
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
         $this->addBehavior('User.AdvancedSpecificNameTypeSearch');
