@@ -33,7 +33,6 @@ class ArchiveStudentAttendancesShell extends Shell
     public $recordsInArchive;
 
     /**
-     *
      */
     public function initialize(): void
     {
@@ -45,7 +44,6 @@ class ArchiveStudentAttendancesShell extends Shell
 
     /**
      * POCOR-7521-KH
-     *
      */
     public function main()
     {

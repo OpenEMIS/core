@@ -7,7 +7,6 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
 use Cake\Controller\Exception\SecurityException;
 use Cake\Core\Configure;
-use Cake\Event\EventInterface;
 
 class NavigationComponent extends Component
 {

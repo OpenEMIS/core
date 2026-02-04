@@ -300,10 +300,10 @@ class StudentSubjectsTable extends ControllerActionTable
      * @param EventInterface $event
      * @param Entity $entity
      * @return float
-     *
+
      * This function is commented as not to show total mark (POCOR-8435)
      */
-    // public function onGetTotalMark(EventInterface $event, Entity $entity)
+    // public function onGetTotalMark(Event $event, Entity $entity)
     // {
     //     // POCOR-7896 start
     //     $sum_results = $entity->total_mark;

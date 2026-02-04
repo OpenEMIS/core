@@ -451,7 +451,11 @@ class AssessmentItemResultsTable extends AppTable
      * @param \Cake\ORM\Entity $entity Entity containing `marks`, `assessment_id`, `assessment_period_id`, and `education_subject_id`
      * @return \Cake\ORM\Entity The updated entity with `assessment_grading_option`, `assessment_grading_option_id`, and `assessment_grading_type` set
      *
+<<<<<<< HEAD
      *
+=======
+
+>>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
      */
     public static function evaluateGradingForMarks(Entity $entity): Entity
     {

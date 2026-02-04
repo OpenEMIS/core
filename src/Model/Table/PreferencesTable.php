@@ -12,9 +12,9 @@ use Cake\Http\ServerRequest;
 class PreferencesTable extends ControllerActionTable
 {
     private $loginLanguages = [];
-    public function initialize(array $config)
+    public function initialize(array $config): void               
     {
-        $this->table('security_users');
+        $this->setTable('security_users');
         parent::initialize($config);
 
         $Locales = TableRegistry::getTableLocator()->get('Locales');
@@ -28,7 +28,7 @@ class PreferencesTable extends ControllerActionTable
         $this->toggle('add', false);
     }
 
-    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event)
     {
         $shownField = ['preferred_language'];
 
@@ -50,9 +50,9 @@ class PreferencesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldPreferredLanguage(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldPreferredLanguage(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $session = $this->request->session();
+        $session = $this->request->getSession();
         if ($session->read('System.language_menu')) {
             $attr['options'] = $this->loginLanguages;
         } else {
@@ -72,9 +72,8 @@ class PreferencesTable extends ControllerActionTable
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // Remove the back toolbarButton
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-
-        $session = $this->request->session();
+        $toolbarButtonsArray = isset($extra['toolbarButtons']) ? $extra['toolbarButtons']->getArrayCopy() : [];
+        $session = $this->request->getSession();
         if (!$session->read('System.language_menu')) {
             if (isset($toolbarButtonsArray['edit'])) {
                 unset($toolbarButtonsArray['edit']);
@@ -85,7 +84,7 @@ class PreferencesTable extends ControllerActionTable
             unset($toolbarButtonsArray['back']);
         }
 
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        isset($extra['toolbarButtons']) ? $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray) : [];
     }
 
     public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)

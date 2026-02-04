@@ -19,6 +19,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Http\Session; // POCOR-9162
 use Cake\I18n\FrozenTime; // POCOR-9162
 use Cake\ORM\Table; // POCOR-9162
+use Cake\I18n\FrozenDate; //POCOR-9545
 use Cake\Utility\Inflector; // POCOR-9162
 
 // POCOR-9162
@@ -1073,13 +1074,22 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
      *    (prevents future GPA & cumulative GPA generation)
      */
     $firstTermStart = $gpaResults[0]->start_date;
+    $today = FrozenDate::today();
     $gpaIds = [];
 
+    // foreach ($gpaResults as $gpa) {
+    //     if ($gpa->start_date === $firstTermStart) {
+    //         $gpaIds[] = $gpa->id;
+    //     }
+    // }
+
     foreach ($gpaResults as $gpa) {
-        if ($gpa->start_date === $firstTermStart) {
+        // Allow all GPA terms that have already started
+        if ($gpa->start_date <= $today) {
             $gpaIds[] = $gpa->id;
         }
     }
+    $gpaIds = array_values(array_unique($gpaIds));
 
     if (empty($gpaIds)) {
         return [];
