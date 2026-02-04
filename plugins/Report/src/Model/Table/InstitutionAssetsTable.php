@@ -6,8 +6,9 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\Event\Event;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Time;
@@ -29,10 +30,10 @@ class InstitutionAssetsTable extends AppTable
     const NO_STAFF = 2;
     public $currency = '';
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
 
-        $this->table('institutions');
+        $this->setTable('institutions');
 
         parent::initialize($config);
         //$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
@@ -295,12 +296,7 @@ class InstitutionAssetsTable extends AppTable
     {
         $ConfigItems = TableRegistry::getTableLocator()->get('config_items');
         $this->currency = $ConfigItems->find('all')->where(['code' => 'currency'])->select(['value'])->first()->value;
-//        $this->log('$this->currency', 'debug');
-//        $this->log($this->currency, 'debug');
-
         $requestData = json_decode($settings['process']['params']);
-//        $this->log(__FUNCTION__, 'debug');
-//        $this->log($requestData, 'debug');
         $institutionId = $requestData->institution_id;
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
@@ -319,7 +315,6 @@ class InstitutionAssetsTable extends AppTable
         $query = $this->getAssetLocationQuery($query);
         $query = $this->getAssetUserQuery($query);
         $query = $this->getCalculatedFieldsQuery($query, $yearStartDay, $yearEndDay);
-//        $this->log($query->sql(), 'debug');
         return $query;
     }
 
@@ -379,7 +374,7 @@ class InstitutionAssetsTable extends AppTable
 //            'salvage_value' => $institutionAssets->aliasField('depreciation'),
             $this->aliasField('area_id'),
         ])
-            ->leftJoin([$institutionAssets->alias() => $institutionAssets->table()],
+            ->leftJoin([$institutionAssets->getAlias() => $institutionAssets->getTable()],
                 [$institutionAssets->aliasField('institution_id = ') . $this->aliasField('id')])
             ->where($conditions);
 
@@ -562,13 +557,11 @@ class InstitutionAssetsTable extends AppTable
         $currency = $this->currency;
         $query = $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($currency, $yearStartDay, $yearEndDay) {
             return $results->map(function ($row) use ($currency, $yearStartDay, $yearEndDay) {
-//                $this->log($currency, 'debug');
                 $actual_cost = isset($row['cost']) ? floatval($row['cost']) : 0;
                 $total_cost = $actual_cost;
 //                $salvageValue = isset($row['salvage_value']) ? floatval($row['salvage_value']) : 0;
                 $row['purchase_cost'] = $currency . '' . number_format($actual_cost, 2);
                 $row['total_cost'] = $currency . '' . number_format($actual_cost, 2);
-
 //                $row['depreciation'] = number_format($row['depreciation'], 2) . '%';
 //                return $row;
                 if ($actual_cost == 0) {
@@ -742,7 +735,7 @@ class InstitutionAssetsTable extends AppTable
     {
         $Table = TableRegistry::getTableLocator()->get($table);
         if (!$table_alias) {
-            $table_alias = $Table->alias();
+            $table_alias = $Table->getAlias();
         }
         $field = "{$table_alias}.{$name}";
         if (mb_strlen($name) > 0 && ctype_upper(mb_substr($name, 0, 1))) {
@@ -751,7 +744,7 @@ class InstitutionAssetsTable extends AppTable
         $query->select([
             $Table->aliasField('id'),
             $alias_name => $field])
-            ->LeftJoin([$table_alias => $Table->table()], [
+            ->LeftJoin([$table_alias => $Table->getTable()], [
                 "{$table_alias}.id = {$fk}"]);
         if ($alias_code) {
             $query->select([
