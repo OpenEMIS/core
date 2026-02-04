@@ -21,7 +21,7 @@ class PreferencesController extends AppController {
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
-        return $events;
+		return $events;
     }
 
     public function isActionIgnored(EventInterface $event, $action)
@@ -41,8 +41,7 @@ class PreferencesController extends AppController {
 
         $Preferences = TableRegistry::getTableLocator()->get('Preferences');
         $loginUserId = $this->Auth->user('id');
-
-        if ($Preferences->exists([$Preferences->primaryKey() => $loginUserId])) {
+        if ($Preferences->exists([$Preferences->getPrimaryKey() => $loginUserId])) {
             $this->activeObj = $Preferences->get($loginUserId);
         }
 
@@ -50,6 +49,27 @@ class PreferencesController extends AppController {
 
 		$this->set('contentHeader', $header);
 	}
+	//POCOR-9447 Start
+	public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+		$buttons = $this->viewBuilder()->getVars()['toolbarButtons'] ?? null;
+		
+		if ($buttons) {
+			unset($buttons['back'], $buttons['remove']); //dd($buttons);
+			if (isset($buttons['edit']['url'])) {
+				$buttons['edit']['url'] = [
+					'plugin' => false,
+					'controller' => 'Preferences',
+					'action' => 'edit',
+					$this->request->getParam('pass.0')
+				];
+			}
+			$this->set('toolbarButtons', $buttons); 
+		}
+    }
+	//POCOR-9447 End
 
 	public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 		if (!is_null($this->activeObj)) {
@@ -62,14 +82,14 @@ class PreferencesController extends AppController {
 
 	public function index() {
 		$userId = $this->Auth->user('id');
-		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Preferences', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])]);
+		return $this->redirect(['plugin' => false, 'controller' => $this->getName(), 'action' => 'view','', $this->ControllerAction->paramsEncode(['id' => $userId])]);
 	}
 
 	public function beforePaginate(EventInterface $event, $model, Query $query, ArrayObject $options) {
 		$user = $this->Auth->user();
 		if (isset($user['id'])) {
 			$userId = $user['id'];
-			$query->where([$model->aliasField('security_user_id') => $userId]);
+			$query->where([$model->aliasField('id') => $userId]);
 		} else {
 			$this->Alert->warning('general.noData');
 			$event->stopPropagation();

@@ -289,7 +289,11 @@ class StaffQualificationsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
+<<<<<<< HEAD
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
+=======
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+>>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
     {
         $newFields = [];
         $newFields[] = [

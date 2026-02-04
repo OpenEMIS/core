@@ -113,6 +113,10 @@ class StaffLicensesTable extends AppTable  {
                 });
             });
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
 
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
@@ -213,7 +217,11 @@ class StaffLicensesTable extends AppTable  {
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
+<<<<<<< HEAD
      *
+=======
+
+>>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {

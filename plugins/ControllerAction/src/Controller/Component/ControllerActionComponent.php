@@ -678,6 +678,13 @@ class ControllerActionComponent extends Component
     private function initComponentsForModel()
     {
         $this->debug(__METHOD__);
+        //POCOR-9447 Start
+        if(empty($this->model)) { 
+            $model = $this->getController()->getName();
+            $this->model = $this->getController()->loadModel($model);
+            $this->model->alias = $this->model->getAlias();
+        }
+        //POCOR-9447 End
         $this->model->controller = $this->getController();
         $this->model->request = $this->getController()->getRequest();
         $this->model->Session = $this->getController()->getRequest()->getSession();

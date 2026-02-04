@@ -196,7 +196,7 @@ class StaffSubjectsTable extends AppTable
             'staff_status'  => 'IF(`staff_status`.`staff_id` IS NULL, "Not Assigned", "Assigned")',
             'qualification_title'  => 'IFNULL(`staff_qualification_titles`.`staff_qualification_combined`, "")',
             'qualification_specializations'  => 'IFNULL(`staff_qualification_titles`.`staff_specialisation_combined`, "")',
-            'subject'  => 'institution_subjects.name',
+            'subject'  => 'education_subjects.name', //POCOR-9534
             'grade'  => 'education_grades.name',
             'class'  => 'institution_classes.name',
         ])
