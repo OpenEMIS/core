@@ -7,7 +7,7 @@ use Cake\i18n\Date;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 
 use App\Model\Table\ControllerActionTable;
@@ -39,7 +39,7 @@ class RisksTable extends ControllerActionTable
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('number_of_risk_index',['sort' => false]);
@@ -91,13 +91,13 @@ class RisksTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -155,14 +155,14 @@ class RisksTable extends ControllerActionTable
         return $this->controller->redirect($url);
     }
 
-    public function setupFields(Event $event, Entity $entity)
+    public function setupFields(EventInterface $event, Entity $entity)
     {
         $this->field('generated_by', ['visible' => false]);
         $this->field('status', ['visible' => false]);
         $this->field('pid', ['visible' => false]);
     }
 
-    public function onGetNumberOfRiskIndex(Event $event, Entity $entity)
+    public function onGetNumberOfRiskIndex(EventInterface $event, Entity $entity)
     {
         $riskId = $entity->id;
         $riskTotal = $this->RiskCriterias->getTotalRisk($riskId);
@@ -175,7 +175,7 @@ class RisksTable extends ControllerActionTable
         return $this->InstitutionRisks->find('Record', ['risk_id' => $riskId, 'institution_id' => $institutionId]);
     }
 
-    public function onGetGeneratedBy(Event $event, Entity $entity)
+    public function onGetGeneratedBy(EventInterface $event, Entity $entity)
     {
         $riskId = $entity->id;
         $institutionId = $this->getInstitutionID();
@@ -193,7 +193,7 @@ class RisksTable extends ControllerActionTable
         return $userName;
     }
 
-    public function onGetGeneratedOn(Event $event, Entity $entity)
+    public function onGetGeneratedOn(EventInterface $event, Entity $entity)
     {
         $riskId = $entity->id;
         $institutionId = $this->getInstitutionID();
@@ -208,7 +208,7 @@ class RisksTable extends ControllerActionTable
         return $generatedOn;
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $riskId = $entity->id;
@@ -220,7 +220,7 @@ class RisksTable extends ControllerActionTable
         return $Risks->getIndexesStatus($statusId);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -271,7 +271,7 @@ class RisksTable extends ControllerActionTable
 
         return $buttons;
     }
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 
         $institutionId = $this->getInstitutionID();
@@ -311,7 +311,7 @@ class RisksTable extends ControllerActionTable
         ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [
@@ -350,7 +350,7 @@ class RisksTable extends ControllerActionTable
         ];
         $fields->exchangeArray($extraField);
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'name':

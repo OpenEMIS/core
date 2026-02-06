@@ -33,7 +33,7 @@ class POCOR6288 extends AbstractMigration
         AND education_systems.academic_period_id = institution_class_students.academic_period_id
         WHERE correct_grade.id != institution_class_students.education_grade_id");
 
-        $institution_class_students = TableRegistry::get('institution_class_students');
+        $institution_class_students = TableRegistry::getTableLocator()->get('institution_class_students');
         if(!empty($institution_class_students_result_data)){
             foreach ($institution_class_students_result_data as $text_key => $text_val) {
                 $text_val_id = $text_val['id'];

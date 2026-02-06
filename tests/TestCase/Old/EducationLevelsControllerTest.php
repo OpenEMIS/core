@@ -26,7 +26,7 @@ class EducationLevelsControllerTest extends AppTestCase
     {
         parent::setUp();
         $this->urlPrefix('/Educations/Levels/');
-        $this->table = TableRegistry::get('Education.EducationLevels');
+        $this->table = TableRegistry::getTableLocator()->get('Education.EducationLevels');
     }
 
     public function testIndex()
@@ -128,7 +128,7 @@ class EducationLevelsControllerTest extends AppTestCase
     // public function testDelete() {
     //     $testUrl = $this->url('remove');
 
-    //     $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    //     $table = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
     //     $exists = $table->exists([$table->primaryKey() => $this->id]);
     //     $this->assertTrue($exists);

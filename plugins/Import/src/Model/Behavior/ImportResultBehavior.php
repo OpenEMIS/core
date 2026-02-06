@@ -5,7 +5,7 @@ namespace Import\Model\Behavior;
 use ArrayObject;
 use Cake\Routing\Router;
 use Cake\Http\Session;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 use Import\Model\Behavior\ImportBehavior;
@@ -19,7 +19,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class ImportResultBehavior extends ImportBehavior
 {
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         switch ($action) {
             case 'add':

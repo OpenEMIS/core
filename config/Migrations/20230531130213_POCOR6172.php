@@ -5,6 +5,7 @@ use Phinx\Migration\AbstractMigration;
 class POCOR6172 extends AbstractMigration
 {
     /**
+     *
      * Create configuration item to allow users to enroll students to multiple institutions
      * name 'Multiple Institutions Student Enrollment',
      * code 'multiple_institutions_student_enrollment',

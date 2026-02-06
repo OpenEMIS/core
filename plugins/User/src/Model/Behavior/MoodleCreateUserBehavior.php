@@ -7,7 +7,7 @@ use Exception;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\MoodleApi\MoodleApi;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
@@ -19,7 +19,7 @@ class MoodleCreateUserBehavior extends Behavior
     public function initialize(array $config): void {}
 
     // change in POCOR-8381
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $isNew = $entity->isNew();
         //POCOR-9277 -- Start
@@ -76,13 +76,13 @@ class MoodleCreateUserBehavior extends Behavior
 
     private function convertStudentToUser($entity)
     {
-        $Users = TableRegistry::get('Security.Users');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
         return $Users->find()->where(['id' => $entity->student_id])->first();
     }
 
     private function convertStaffToUser($entity)
     {
-        $Users = TableRegistry::get('Security.Users');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
         return $Users->find()->where(['id' => $entity->staff_id])->first();
     }
 
@@ -108,7 +108,7 @@ class MoodleCreateUserBehavior extends Behavior
         $response = null;
         try {
 
-            $subjectsTable = TableRegistry::get('Institution.InstitutionSubjects');
+            $subjectsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
             $entity = $subjectsTable->attachFieldNames($entity);
 
             $moodleApi = new MoodleApi();

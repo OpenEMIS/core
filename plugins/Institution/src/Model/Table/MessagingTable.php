@@ -7,7 +7,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -85,7 +85,7 @@ class MessagingTable extends ControllerActionTable
             ->notEmptyArray('message');
          // POCOR-8286 end
      }
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('message');
         $this->field('institution_id', ['visible' =>  ['index' => false, 'view' => false, 'edit' => false, 'add' => false]]);
@@ -103,11 +103,11 @@ class MessagingTable extends ControllerActionTable
         $this->field('status', ['visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]]);
 
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $entity->institution_id  = $this->getInstitutionID();
     }
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id');
         $this->field('security_role_id', ['entity' => $entity, 'visible' => true]);
@@ -127,7 +127,7 @@ class MessagingTable extends ControllerActionTable
             'subject', 'message']);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
         $this->getConnection()->begin();
 
@@ -158,7 +158,7 @@ class MessagingTable extends ControllerActionTable
 
     private function getSecurityRolesFromEntity(Entity $entity): array
     {
-        return TableRegistry::get('Security.SecurityRoles')
+        return TableRegistry::getTableLocator()->get('Security.SecurityRoles')
             ->find()
             ->where(['id IN' => $entity->security_role_id['_ids'] ?? []])
             ->extract('id') // POCOR-9274
@@ -277,7 +277,7 @@ class MessagingTable extends ControllerActionTable
         }
     }
 
-    public function addEditOnsendMessage(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addEditOnsendMessage(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
         // POCOR-8286 start
         if (!$entity->institution_id) {
@@ -454,7 +454,7 @@ class MessagingTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         if ($entity->status === 1) {
@@ -470,7 +470,7 @@ class MessagingTable extends ControllerActionTable
         $this->Session->write('messageId', $entity->id);
         $this->setFieldOrder(['academic_period_id', 'recipient_level_id', 'recipient_group_id', 'security_role_id', 'subject', 'message', 'status', 'modified', 'modified_user_id', 'created', 'created_user_id']);
     }
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain('MessagingSecurityRoles');
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
@@ -487,7 +487,7 @@ class MessagingTable extends ControllerActionTable
     }
 
     // POCOR-8286
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
 //        if (isset($data['submit']) && $data['submit'] == 'save' || $data['submit'] == 'Send') {
         // POCOR-8286 start
@@ -500,7 +500,7 @@ class MessagingTable extends ControllerActionTable
         }
 //        }
     }
-    public function indexAfterAction(Event $event, Query $query)
+    public function indexAfterAction(EventInterface $event, Query $query)
     {
         $this->field('message', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
@@ -514,7 +514,7 @@ class MessagingTable extends ControllerActionTable
             'subject', 'message']);
 
     }
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
@@ -531,7 +531,7 @@ class MessagingTable extends ControllerActionTable
         ];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
@@ -541,7 +541,7 @@ class MessagingTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -552,7 +552,7 @@ class MessagingTable extends ControllerActionTable
         }
         return $buttons;
     }
-    public function onGetRecipientLevelId(Event $event, Entity $entity)
+    public function onGetRecipientLevelId(EventInterface $event, Entity $entity)
     {
        $value="";
        switch($entity->recipient_level_id){
@@ -576,18 +576,18 @@ class MessagingTable extends ControllerActionTable
        }
        return $value;
     }
-    public function onGetRecipientGroupId(Event $event, Entity $entity)
+    public function onGetRecipientGroupId(EventInterface $event, Entity $entity)
     {
         $option=$this->getRecipientGroupOptions($entity->recipient_level_id, $entity->institution_id); // POCOR-9274
         $result= $option[$entity->recipient_group_id];
         return $result;
     }
-    public function onGetCreated(Event $event, Entity $entity)
+    public function onGetCreated(EventInterface $event, Entity $entity)
     {
 
         return date_format($entity->created, 'd M Y');
     }
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'add' || $this->action == 'edit') {
             $originalButtons = $buttons->getArrayCopy();
@@ -609,7 +609,7 @@ class MessagingTable extends ControllerActionTable
             $buttons->exchangeArray($originalButtons);
         }
     }
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
 
         if ($entity->status == self::DRAFT) {
@@ -618,9 +618,9 @@ class MessagingTable extends ControllerActionTable
             return __("Sent"); // POCOR-8286
         }
     }
-    public function onGetSecurityRoleId(Event $event, Entity $entity)
+    public function onGetSecurityRoleId(EventInterface $event, Entity $entity)
     {
-        $table = TableRegistry::get('Security.SecurityRoles');
+        $table = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $obj = [];
         if ($entity->has('security_role_id')) {
 
@@ -633,7 +633,7 @@ class MessagingTable extends ControllerActionTable
         $values = !empty($obj) ? implode(', ', $obj) : __('No Security Roles Selected ');
         return $values;
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'academic_period_id':
@@ -665,7 +665,7 @@ class MessagingTable extends ControllerActionTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    public function onUpdateFieldRecipientLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldRecipientLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit'
         ) {
@@ -677,7 +677,7 @@ class MessagingTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldRecipientGroupId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldRecipientGroupId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if (
@@ -713,7 +713,7 @@ class MessagingTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateFieldSecurityRoleId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSecurityRoleId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         // POCOR-9274 start
@@ -746,7 +746,7 @@ class MessagingTable extends ControllerActionTable
             return [];
         }
 
-        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $options = $SecurityRoles->find('list', [
             'keyField' => 'id',
             'valueField' => 'name',
@@ -851,12 +851,12 @@ class MessagingTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldMessage(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldMessage(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'text';
         return $attr;
     }
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == "add") {
 
@@ -876,7 +876,7 @@ class MessagingTable extends ControllerActionTable
      */
     public function getRecipientGroupOptions($recipient_level_id, $institution_id){
 
-        $academicPeriodId =TableRegistry::get('AcademicPeriod.AcademicPeriods')->getCurrent();
+        $academicPeriodId =TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getCurrent();
         $institutions = $this->Institutions;
         if ($institution_id) {
             try {
@@ -932,7 +932,7 @@ class MessagingTable extends ControllerActionTable
     }
     public function getSelectOptions($institution_id, $academicPeriodId)
     {
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $programmeOptions = [];
 
         $query = $InstitutionGrades
@@ -953,7 +953,7 @@ class MessagingTable extends ControllerActionTable
 
     public function getClassOptions($institution_id, $academicPeriodId)
     {
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $query=$InstitutionClasses->find()->contain('InstitutionSubjects')
                         ->where([
                             $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
@@ -994,7 +994,7 @@ class MessagingTable extends ControllerActionTable
     }
 
     // POCOR-8286
-    public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldMethod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if ($action == 'add' || $action == 'edit') {

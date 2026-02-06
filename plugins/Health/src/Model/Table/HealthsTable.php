@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 
@@ -45,19 +45,19 @@ class HealthsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetBloodType(Event $event, Entity $entity)
+    public function onGetBloodType(EventInterface $event, Entity $entity)
     {
         $bloodTypeOptions = $this->getSelectOptions('Health.blood_types');
         return $bloodTypeOptions[$entity->blood_type];
     }
 
-    public function onGetHealthInsurance(Event $event, Entity $entity)
+    public function onGetHealthInsurance(EventInterface $event, Entity $entity)
     {
         $healthInsuranceOptions = $this->getSelectOptions('general.yesno');
         return $healthInsuranceOptions[$entity->health_insurance];
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -176,7 +176,7 @@ class HealthsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
@@ -189,20 +189,20 @@ class HealthsTable extends ControllerActionTable
         // end POCOR-3358
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldBloodType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldBloodType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('Health.blood_types');
         return $attr;
     }
 
-    public function onUpdateFieldHealthInsurance(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldHealthInsurance(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
@@ -224,7 +224,7 @@ class HealthsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'blood_type',
@@ -272,7 +272,7 @@ class HealthsTable extends ControllerActionTable
     }
 
     //POCOR-6131
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
         $userID = $this->getUserID();
 
         $query
@@ -286,7 +286,7 @@ class HealthsTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'blood_type') {
             return __('Blood Type');
@@ -312,7 +312,7 @@ class HealthsTable extends ControllerActionTable
     }
 
     //POCOR-8293
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;

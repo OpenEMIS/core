@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
 use Page\Model\Entity\PageElement;
@@ -14,12 +14,12 @@ class InstitutionTripsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('Transport.TripTypes');
-        $this->loadModel('Institution.InstitutionTransportProviders');
-        $this->loadModel('Institution.InstitutionBuses');
-        $this->loadModel('Institution.Students');
-        $this->loadModel('Student.StudentStatuses');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
+        $this->TripTypes = $this->fetchTable('Transport.TripTypes');
+        $this->InstitutionTransportProviders = $this->fetchTable('Institution.InstitutionTransportProviders');
+        $this->InstitutionBuses = $this->fetchTable('Institution.InstitutionBuses');
+        $this->Students = $this->fetchTable('Institution.Students');
+        $this->StudentStatuses = $this->fetchTable('Student.StudentStatuses');
 
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
@@ -118,7 +118,7 @@ class InstitutionTripsController extends PageController
 
         // reorder fields
         $page->move('academic_period_id')->first();
-        $Users = TableRegistry::get('labels');
+        $Users = TableRegistry::getTableLocator()->get('labels');
         $result = $Users
             ->find()
             ->where(['module' => 'InstitutionTrips', 'field_name' => 'Repeat'])
@@ -202,7 +202,7 @@ class InstitutionTripsController extends PageController
         $this->addEdit($id);
     }
 
-    public function onRenderDays(Event $event, Entity $entity, PageElement $element)
+    public function onRenderDays(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 

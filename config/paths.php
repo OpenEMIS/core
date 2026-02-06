@@ -83,3 +83,30 @@ define('CAKE_CORE_INCLUDE_PATH', ROOT . DS . 'vendor' . DS . 'cakephp' . DS . 'c
  */
 define('CORE_PATH', CAKE_CORE_INCLUDE_PATH . DS);
 define('CAKE', CORE_PATH . 'src' . DS);
+
+/**
+ * Compatibility function for CakePHP 5
+ * The env() helper function was removed in CakePHP 5, so we provide a compatibility wrapper
+ */
+if (!function_exists('env')) {
+    /**
+     * Gets an environment variable from available sources.
+     *
+     * @param string $key Environment variable name.
+     * @param mixed $default Default value to return if the environment variable is not set.
+     * @return mixed Environment variable value or default value.
+     */
+    function env($key, $default = null)
+    {
+        if ($key === false) {
+            return $default;
+        }
+
+        $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+        if ($value === false) {
+            return $default;
+        }
+
+        return $value;
+    }
+}

@@ -7,7 +7,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\Collection\Collection;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -33,7 +33,7 @@ class ImportInstitutionAssetsTable extends AppTable
 
     /**
      * @return array
-
+     *
      */
     public function implementedEvents()
     {
@@ -72,12 +72,12 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return |null
-
+     *
      */
-    public function onImportGetAssetTypesId(Event $event, $cellValue)
+    public function onImportGetAssetTypesId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_types';
         $table_name = 'AssetTypes';
@@ -86,12 +86,12 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return |null
-
+     *
      */
-    public function onImportGetAssetMakesId(Event $event, $cellValue)
+    public function onImportGetAssetMakesId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_makes';
         $table_name = 'AssetMakes';
@@ -99,12 +99,12 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return |null
-
+     *
      */
-    public function onImportGetAssetModelsId(Event $event, $cellValue)
+    public function onImportGetAssetModelsId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_models';
         $table_name = 'AssetModels';
@@ -112,12 +112,12 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return |null
-
+     *
      */
-    public function onImportGetAssetStatusesId(Event $event, $cellValue)
+    public function onImportGetAssetStatusesId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_statuses';
         $table_name = 'AssetStatuses';
@@ -125,12 +125,12 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return |null
-
+     *
      */
-    public function onImportGetAssetConditionsId(Event $event, $cellValue)
+    public function onImportGetAssetConditionsId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_conditions';
         $table_name = 'AssetConditions';
@@ -138,12 +138,12 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return |null
-
+     *
      */
-    public function onImportGetInstitutionRoomsId(Event $event, $cellValue)
+    public function onImportGetInstitutionRoomsId(EventInterface $event, $cellValue)
     {
         //$table_name = 'institution_rooms';
         $table_name = 'InstitutionRooms';
@@ -151,24 +151,24 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return int|string|null
-
+     *
      */
-    public function onImportGetAccessibilityId(Event $event, $cellValue)
+    public function onImportGetAccessibilityId(EventInterface $event, $cellValue)
     {
         $code = "InstitutionAssets.accessibility";
         return $this->checkLookupIdFromOptions($cellValue, $code);
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $cellValue
      * @return int|string|null
-
+     *
      */
-    public function onImportGetPurposeId(Event $event, $cellValue)
+    public function onImportGetPurposeId(EventInterface $event, $cellValue)
     {
         $code = "InstitutionAssets.purpose";
         return $this->checkLookupIdFromOptions($cellValue, $code);
@@ -176,7 +176,7 @@ class ImportInstitutionAssetsTable extends AppTable
 
     /**
      * @param $event
-
+     *
      */
     public function beforeAction($event)
     {
@@ -187,16 +187,16 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $lookupPlugin
      * @param $lookupModel
      * @param $lookupColumn
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-
+     *
      */
-    public function onImportPopulateAccessibilityData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAccessibilityData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $Label = 'Accessibility';
         $code = 'accessibility';
@@ -204,16 +204,16 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $lookupPlugin
      * @param $lookupModel
      * @param $lookupColumn
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-
+     *
      */
-    public function onImportPopulatePurposeData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulatePurposeData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $Label = 'Purpose';
         $code = 'purpose';
@@ -221,7 +221,7 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $lookupPlugin
      * @param $lookupModel
      * @param $lookupColumn
@@ -229,9 +229,9 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $data
      * @param $columnOrder
      * @return bool
-
+     *
      */
-    public function onImportPopulateInstitutionRoomsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateInstitutionRoomsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('InstitutionRooms', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -258,16 +258,16 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $lookupPlugin
      * @param $lookupModel
      * @param $lookupColumn
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-
+     *
      */
-    public function onImportPopulateSelectData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateSelectData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $tableName = $lookupPlugin . '.' . $lookupModel;
         //        $this->log($tableName, 'debug');
@@ -311,15 +311,15 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $module
      * @param $field
      * @param $language
      * @param bool $autoHumanize
      * @return mixed|string|null
-
+     *
      */
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'AssetStatuses') {
             return __('Status');
@@ -337,16 +337,16 @@ class ImportInstitutionAssetsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $lookupPlugin
      * @param $lookupModel
      * @param $lookupColumn
      * @param $translatedCol
      * @param ArrayObject $data
      * @param $columnOrder
-
+     *
      */
-    public function onImportPopulateRemoveData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateRemoveData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         unset($data[$columnOrder]);
     }
@@ -431,15 +431,15 @@ class ImportInstitutionAssetsTable extends AppTable
     // POCOR-7362 ends
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $references
      * @param ArrayObject $tempRow
      * @param ArrayObject $originalRow
      * @param ArrayObject $rowInvalidCodeCols
      * @return bool|mixed
-
+     *
      */
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         $result = true;
         list($tempRow, $rowInvalidCodeCols, $result) = $this->checkFinalUser($tempRow, $rowInvalidCodeCols, $result);
@@ -459,7 +459,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $cellValue
      * @param $table_name
      * @return |null
-
+     *
      */
     private function checkLookupIdFromTable($cellValue, $table_name)
     {
@@ -494,7 +494,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $Label
      * @param $code
      * @return ArrayObject
-
+     *
      */
     private function populateLookupOptions(ArrayObject $data, $columnOrder, $Label, $code)
     {
@@ -515,7 +515,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $cellValue
      * @param $code
      * @return int|string|null
-
+     *
      */
     private function checkLookupIdFromOptions($cellValue, $code)
     {
@@ -536,7 +536,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
-
+     *
      */
     private function checkFinalUser(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -559,7 +559,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
-
+     *
      */
     private function checkFinalInstitution(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -579,7 +579,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param ArrayObject $rowInvalidCodeCols
      * @param $result
      * @return array
-
+     *
      */
     private function checkFinalMakeModel(ArrayObject $tempRow, ArrayObject $rowInvalidCodeCols, $result)
     {
@@ -605,7 +605,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-
+     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {

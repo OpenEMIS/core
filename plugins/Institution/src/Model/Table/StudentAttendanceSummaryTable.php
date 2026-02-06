@@ -5,7 +5,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
@@ -38,7 +38,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -57,7 +57,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
@@ -72,7 +72,7 @@ class StudentAttendanceSummaryTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
@@ -86,7 +86,7 @@ class StudentAttendanceSummaryTable extends AppTable
         return $attr;
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -96,7 +96,7 @@ class StudentAttendanceSummaryTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -104,7 +104,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $gradeId = $requestData->education_grade_id;
         $classId = $requestData->institution_class_id;
         $month = $requestData->month;
-        $absentDays = TableRegistry::get('Institution. InstitutionStudentAbsences');
+        $absentDays = TableRegistry::getTableLocator()->get('Institution. InstitutionStudentAbsences');
         $monthoption = ['01'=>"January",'02'=>"February",'03'=>"March",'04'=>"April",'05'=>"May",'06'=>"June",'07'=>"July",'08'=>"August",'09'=>"September",10=>"October",11=>"November",12=>"December"];
        
         //POCOR-7265::Start
@@ -514,7 +514,7 @@ when there is no matching data in period_counter.
     /**
      * Generate the all Header for sheet
      */
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
        

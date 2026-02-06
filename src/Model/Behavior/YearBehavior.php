@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\I18n\Date;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -19,7 +19,7 @@ class YearBehavior extends Behavior
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $config = $this->getConfig();
         foreach ($config as $date => $year) {
@@ -35,7 +35,7 @@ class YearBehavior extends Behavior
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $config = $this->getConfig();
         foreach ($config as $date => $year) {

@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use DatePeriod;
 use DateInterval;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;

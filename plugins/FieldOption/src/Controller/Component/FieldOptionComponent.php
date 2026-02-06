@@ -18,7 +18,7 @@ namespace FieldOption\Controller\Component;
 
 use ArrayObject;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -29,11 +29,21 @@ class FieldOptionComponent extends Component
     private $fieldOptions = [];
 
 
-    public $components = ['AccessControl'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['AccessControl'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         foreach ($this->fieldOptions as $key => $className) {
             $this->AccessControl->addAccessMap($key);
         }
@@ -41,7 +51,7 @@ class FieldOptionComponent extends Component
 
     public function getFieldOptions()
     {
-        $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
+        $FieldOptionTable = TableRegistry::getTableLocator()->get('FieldOption.FieldOptions');
         $FieldOptions = $FieldOptionTable->find('all')->toArray();
         $session = $this->getController()->getRequest()->getSession(); //POCOR-7396
         $FieldOptionPermissions = $session->read('Permissions.FieldOptions'); //POCOR-7396
@@ -80,7 +90,7 @@ class FieldOptionComponent extends Component
 
     public function getClassName($key)
     {
-        $FieldOptionTable = TableRegistry::get('FieldOption.FieldOptions');
+        $FieldOptionTable = TableRegistry::getTableLocator()->get('FieldOption.FieldOptions');
         $Words = trim(preg_replace('/(?<!\ )[A-Z]/', ' $0', $key));
 // echo $key;die;
         $FieldOptions = $FieldOptionTable->find('all', ['conditions' => ['name' => $Words]])->first();

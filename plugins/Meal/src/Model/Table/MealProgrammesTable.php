@@ -7,7 +7,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -55,12 +55,12 @@ use AllowDynamicProperties; // POCOR-8988
         // $this->belongsTo('Areas', ['className' => 'Area.Areas']);
         // $this->addBehavior('Area.Areapicker');
         // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
-        // $this->AreaLevels = TableRegistry::get('Area.AreaLevels'); //POCOR-6920
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        // $this->AreaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels'); //POCOR-6920
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $extra['selectedAcademicPeriodOptions'] = $this->getSelectedAcademicPeriod($this->request);
@@ -114,7 +114,7 @@ use AllowDynamicProperties; // POCOR-8988
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
@@ -125,10 +125,10 @@ use AllowDynamicProperties; // POCOR-8988
     }
 
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $typeOptions = $this->MealNutritions->find('list')->toArray();
-        $foodTable = TableRegistry::get('Meal.FoodTypes'); //POCOR_7363
+        $foodTable = TableRegistry::getTableLocator()->get('Meal.FoodTypes'); //POCOR_7363
         $foodTypeOptions = $foodTable->find('list')->toArray(); //POCOR-7363
         // $AreaLevelsOptions = $this->AreaLevels->find('list')->toArray(); //POCOR-6920
         $this->field('academic_period_id', ['select' => false]);
@@ -158,7 +158,7 @@ use AllowDynamicProperties; // POCOR-8988
         $this->field('implementer');
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
@@ -184,8 +184,8 @@ use AllowDynamicProperties; // POCOR-8988
         return $attr;
     }
 
-    // public function onUpdateFieldType(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldType(Event $event, array $attr, $action)
+    // public function onUpdateFieldType(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldType(EventInterface $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
         $attr['options'] = $levelOptions;
@@ -199,7 +199,7 @@ use AllowDynamicProperties; // POCOR-8988
     public function getSelectOptions()
     {
         $serverRequest = $this->request;
-        $MealTypes = TableRegistry::get('Meal.MealProgrammeTypes');
+        $MealTypes = TableRegistry::getTableLocator()->get('Meal.MealProgrammeTypes');
         $levelOptions = $MealTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
@@ -209,8 +209,8 @@ use AllowDynamicProperties; // POCOR-8988
         return compact('levelOptions', 'selectedLevel');
     }
 
-    // public function onUpdateFieldTargeting(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldTargeting(Event $event, array $attr, $action)
+    // public function onUpdateFieldTargeting(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldTargeting(EventInterface $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getTargetingOptions());
         $attr['options'] = $levelOptions;
@@ -240,7 +240,7 @@ use AllowDynamicProperties; // POCOR-8988
     public function getTargetingOptions()
     {
         $serverRequest = new ServerRequest();
-        $MealTrageting = TableRegistry::get('Meal.MealTargetTypes');
+        $MealTrageting = TableRegistry::getTableLocator()->get('Meal.MealTargetTypes');
         $levelOptions = $MealTrageting
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
@@ -250,8 +250,8 @@ use AllowDynamicProperties; // POCOR-8988
         return compact('levelOptions', 'selectedLevel');
     }
 
-    // public function onUpdateFieldMealNutritions(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldMealNutritions(Event $event, array $attr, $action)
+    // public function onUpdateFieldMealNutritions(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldMealNutritions(EventInterface $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getNutritionalOptions());
         $attr['options'] = $levelOptions;
@@ -261,7 +261,7 @@ use AllowDynamicProperties; // POCOR-8988
         return $attr;
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-7363 start
         $query->contain(['MealFoodRecords']);
@@ -278,7 +278,7 @@ use AllowDynamicProperties; // POCOR-8988
         });
 
         //POCOR-7363 end
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
         $MealsProgrammeId = $this->paramsDecode($this->request->getParam('pass')[1]);
         $MealInstitutionProgrammesData = $MealInstitutionProgrammes
             ->find()
@@ -292,19 +292,19 @@ use AllowDynamicProperties; // POCOR-8988
             //START : POCOR-6608
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
-                    $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+                    $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
                     $MealInstitutionProgrammesData = $MealInstitutionProgrammes
                         ->find()
                         ->contain(['Institutions'])
                         ->where([$MealInstitutionProgrammes->aliasField('meal_programme_id') => $row->id])
                         ->all();
 
-                    $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+                    $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
                     foreach ($MealInstitutionProgrammesData as $institutionData) {
                         $institutionArr[] = $institutionData->institution_id;
                     }
                     if (!empty($institutionArr)) {
-                        $Institutions = TableRegistry::get('Institution.Institutions');
+                        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                         $InstitutionsResult = $Institutions
                             ->find()
                             ->where(['id IN' => $institutionArr])
@@ -323,7 +323,7 @@ use AllowDynamicProperties; // POCOR-8988
                             foreach ($AreaResult as $AreaData) {
                                 $areaArr[] = $AreaData->area_id;
                             }
-                            $Areas = TableRegistry::get('Area.Areas');
+                            $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                             if ($areaArr[0] == -1) {
                                 $AreasResult = $Areas
                                     ->find()
@@ -354,13 +354,13 @@ use AllowDynamicProperties; // POCOR-8988
         //END : POCOR-6608
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
 
         $this->setupFields($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields['id']['type'] = 'hidden';
         $this->setupFields($entity);
@@ -429,7 +429,7 @@ use AllowDynamicProperties; // POCOR-8988
     public function getNutritionalOptions()
     {
         $serverRequest = new ServerRequest();
-        $MealNutritions = TableRegistry::get('Meal.MealNutritions');
+        $MealNutritions = TableRegistry::getTableLocator()->get('Meal.MealNutritions');
         $levelOptions = $MealNutritions
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
@@ -439,8 +439,8 @@ use AllowDynamicProperties; // POCOR-8988
         return compact('levelOptions', 'selectedLevel');
     }
 
-    // public function onUpdateFieldImplementer(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldImplementer(Event $event, array $attr, $action)
+    // public function onUpdateFieldImplementer(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldImplementer(EventInterface $event, array $attr, $action)
     {
         list($levelOptions, $selectedLevel) = array_values($this->getImplementerOptions());
         $attr['options'] = $levelOptions;
@@ -454,7 +454,7 @@ use AllowDynamicProperties; // POCOR-8988
     public function getImplementerOptions()
     {
         $serverRequest = new ServerRequest();
-        $MealImplementers = TableRegistry::get('Meal.MealImplementers');
+        $MealImplementers = TableRegistry::getTableLocator()->get('Meal.MealImplementers');
         $levelOptions = $MealImplementers
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->toArray();
@@ -495,8 +495,8 @@ use AllowDynamicProperties; // POCOR-8988
 
     public function getMealProgrammesOptions($options)
     {
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
-        $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
+        $MealProgramme = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
         $list = $MealProgramme
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
@@ -525,13 +525,13 @@ use AllowDynamicProperties; // POCOR-8988
             ]);
     }
 
-    public function onGetAreaId(Event $event, Entity $entity)
+    public function onGetAreaId(EventInterface $event, Entity $entity)
     {
         $areaName = ''; // POCOR-8988
         if ($this->action == 'index') {
             $areaName = $entity->Areas['name'];
             // Getting the system value for the area
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $areaLevel = $ConfigItems->value('institution_area_level_id');
 
             // Getting the current area id
@@ -558,7 +558,7 @@ use AllowDynamicProperties; // POCOR-8988
         // return $entity->area_id;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'amount':
@@ -601,9 +601,9 @@ use AllowDynamicProperties; // POCOR-8988
     * ticket POCOR-6608
     */
 
-    public function onGetAreaAdministrativeId(Event $event, Entity $entity)
+    public function onGetAreaAdministrativeId(EventInterface $event, Entity $entity)
     {
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
         $result = $MealInstitutionProgrammes
             ->find()
             ->select([$MealInstitutionProgrammes->aliasField('area_id')])
@@ -613,7 +613,7 @@ use AllowDynamicProperties; // POCOR-8988
         foreach ($result as $AreaData) {
             $areaArr[] = $AreaData->area_id;
         }
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         if (!empty($areaArr)) {
             $AreasResult = $Areas
                 ->find('list')
@@ -626,7 +626,7 @@ use AllowDynamicProperties; // POCOR-8988
         return (!empty($AreaDataVal)) ? implode(', ', $AreaDataVal) : 'All area';
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         // if ($entity->institution) {
         //     return $entity->institution->code_name;
@@ -635,7 +635,7 @@ use AllowDynamicProperties; // POCOR-8988
         // }
 
         // START: POCOR-6608
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
         $result = $MealInstitutionProgrammes
             ->find()
             ->select([$MealInstitutionProgrammes->aliasField('institution_id')])
@@ -645,7 +645,7 @@ use AllowDynamicProperties; // POCOR-8988
             $institutionArr[] = $institutionData->institution_id;
         }
         if (!empty($institutionArr)) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $InstitutionsResult = $Institutions
                 ->find('list')
                 ->where(['id IN' => $institutionArr])
@@ -661,7 +661,7 @@ use AllowDynamicProperties; // POCOR-8988
     /**
      * POCOR-8988: Optimization of Meal Programme Institution and Food Type Management
      *
-
+     *
      *
      * ### Changes Implemented:
      * 1. **Fixed Error When Adding New Records**
@@ -695,7 +695,7 @@ use AllowDynamicProperties; // POCOR-8988
      *    */
 
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //        dd($entity);
         $this->updateMealInstitutionRecords($entity);
@@ -842,7 +842,7 @@ use AllowDynamicProperties; // POCOR-8988
     /**
      * Handles updating the area list and ensures no child areas are listed if a parent area is already selected.
      */
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $MealsProgrammeId = $action == 'edit' ? $attr['entity']->id : null;
         $areaId = $this->getSelectedAreasIds($request, $MealsProgrammeId);
@@ -872,7 +872,7 @@ use AllowDynamicProperties; // POCOR-8988
     /**
      * Handles updating the institution list based on selected areas.
      */
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         $MealsProgrammeId = $action == 'edit' ? $attr['entity']->id : null;
@@ -1077,8 +1077,8 @@ use AllowDynamicProperties; // POCOR-8988
 
     public function getMealInstitutionProgrammes($options)
     {
-        $MealInstitutionProgrammes = TableRegistry::get('Meal.MealInstitutionProgrammes');
-        $MealProgramme = TableRegistry::get('Meal.MealProgrammes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
+        $MealProgramme = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
         $list = $MealProgramme
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->innerJoin(
@@ -1100,9 +1100,9 @@ use AllowDynamicProperties; // POCOR-8988
     * @auther Anubhav Jain <anubhav.jain@mail.valuecoders.com>
     * ticket POCOR-6681
     */
-    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function deleteAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $MealInstitutionProgrammes = TableRegistry::get('Institution.InstitutionDistributions');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Institution.InstitutionDistributions');
         $InstitutionProgrammes = $MealInstitutionProgrammes
             ->find('all')->select(['id'])
             ->where([
@@ -1114,7 +1114,7 @@ use AllowDynamicProperties; // POCOR-8988
             }
         }
         //POCOR-7363 start
-        $MealFoodTable = TableRegistry::get('Meal.MealFoodRecords');
+        $MealFoodTable = TableRegistry::getTableLocator()->get('Meal.MealFoodRecords');
         $MealFoodRecords =  $MealFoodTable
             ->find('all')->select(['id'])
             ->where([
@@ -1126,9 +1126,9 @@ use AllowDynamicProperties; // POCOR-8988
             }
         }
     }
-    public function onGetFoodTypeId(Event $event, Entity $entity)
+    public function onGetFoodTypeId(EventInterface $event, Entity $entity)
     {
-        $table = TableRegistry::get('Meal.FoodTypes');
+        $table = TableRegistry::getTableLocator()->get('Meal.FoodTypes');
         $obj = [];
         if ($entity->has('food_type_id')) {
 

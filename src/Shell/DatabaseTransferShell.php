@@ -4,7 +4,7 @@ namespace App\Shell;
 use Exception;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Date;
@@ -17,7 +17,7 @@ class DatabaseTransferShell extends Shell
     {
         parent::initialize();
         
-        $this->loadModel('SystemProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()
@@ -61,7 +61,7 @@ class DatabaseTransferShell extends Shell
     public function getRecords($academicPeriodId){
         $connection = ConnectionManager::get('default');
 
-        $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsData = $DataManagementConnections->find('all')
             ->select([
                 'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
@@ -110,7 +110,7 @@ class DatabaseTransferShell extends Shell
               ");
         }
 
-        $InstitutionStaffAttendancesResult = TableRegistry::get('Staff.InstitutionStaffAttendances');
+        $InstitutionStaffAttendancesResult = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
         $InstitutionStaffAttendancesData = $InstitutionStaffAttendancesResult->find('all')
                     ->select([
                         'InstitutionStaffAttendances.id','InstitutionStaffAttendances.staff_id',
@@ -255,7 +255,7 @@ class DatabaseTransferShell extends Shell
               ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of leave for a specific staff';
               ");
         }
-        $InstitutionStaffLeaveReasult = TableRegistry::get('Institution.StaffLeave');
+        $InstitutionStaffLeaveReasult = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
         $InstitutionStaffLeaveData = $InstitutionStaffLeaveReasult->find('all')
                     ->select([
                         'StaffLeave.id','StaffLeave.date_from',
@@ -409,14 +409,14 @@ class DatabaseTransferShell extends Shell
               PARTITIONS 101");
         }
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
-        $StudentAbsences = TableRegistry::get('Report.StudentAbsences');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $AssessmentItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('Institution.ClassAttendanceRecords');
+        $StudentAbsences = TableRegistry::getTableLocator()->get('Report.StudentAbsences');
 
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
+        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
 
         $assessmentItemResultsData = $AssessmentItemResults->find('all')
                     ->select([
@@ -987,14 +987,14 @@ class DatabaseTransferShell extends Shell
         //get archive database connection
         $connection = ConnectionManager::get('default');
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $ClassAttendanceRecords = TableRegistry::get('Institution.ClassAttendanceRecords');
-        $StudentAbsences = TableRegistry::get('Report.StudentAbsences');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $AssessmentItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('Institution.ClassAttendanceRecords');
+        $StudentAbsences = TableRegistry::getTableLocator()->get('Report.StudentAbsences');
 
-        $InstitutionStudentAbsenceDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
-        $StudentAttendanceMarkType = TableRegistry::get('Attendance.StudentAttendanceMarkTypesTable');
+        $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
+        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+        $StudentAttendanceMarkType = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypesTable');
         //institution_student_absence_days -- couldn't find model regarding this table in master branch
 
         $allData = $AcademicPeriods->find('all')

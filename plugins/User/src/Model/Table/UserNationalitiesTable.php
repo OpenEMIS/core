@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\I18n\Time;
 
@@ -61,7 +61,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $events;
     }
 
-    public function afterSaveUsers(Event $event, Entity $entity)
+    public function afterSaveUsers(EventInterface $event, Entity $entity)
     {
         $userID = $entity->security_user_id ?? $this->securityUserId; // POCOR-8989
         $nationalityID = $entity->nationality_id ?? -1;
@@ -99,7 +99,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $userID = $this->securityUserId;
@@ -173,7 +173,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return "";
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // Handle preferred flag change
         if ($entity->getDirty('preferred') && $entity->preferred == 1) {
@@ -257,7 +257,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->securityUserId =  $this->getQueryString('security_user_id');
         if($this->securityUserId == ''){
             $this->securityUserId = $this->getQueryString('user_id');
@@ -272,7 +272,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         ]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -330,14 +330,14 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $validator->allowEmptyString('security_user_id');
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'NationalitiesLookUp'
         ]);
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
 
         $UserNationalities = self::getDynamicTableInstance('User.Identities');
@@ -356,7 +356,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->preferred == 1) { //if the preferred nationality deleted
 
@@ -375,7 +375,7 @@ class UserNationalitiesTable extends ControllerActionTable {
 
                 //update information on security user table
                 $listeners = [
-                    TableRegistry::get('User.Users')
+                    TableRegistry::getTableLocator()->get('User.Users')
                 ];
                 $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
             }
@@ -393,7 +393,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     // task POCOR-5668 starts
-    public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldIdentityTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if (!in_array($action, ['add', 'edit'])){
@@ -459,12 +459,12 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
 
-    public function onUpdateFieldNumber(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNumber(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         return $attr;
     }
 
-    public function onUpdateFieldValidateNumber(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValidateNumber(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $userId = $this->getUserID();
         $validate_number = !empty($request->getQuery('validate_number')) ? $request->getQuery('validate_number') : 0;
@@ -497,7 +497,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldNationalityId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNationalityId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $user_id = $this->getUserID();
         if ($action == 'add' || $action == 'edit') {
@@ -535,7 +535,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeIdentityTypeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeIdentityTypeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         $query = $request->getQuery(); // Get the query parameters as an array
@@ -553,12 +553,12 @@ class UserNationalitiesTable extends ControllerActionTable {
         }
     }
     // task POCOR-5668 ends
-    public function onGetPreferred(Event $event, Entity $entity) {
+    public function onGetPreferred(EventInterface $event, Entity $entity) {
         $preferredOptions = $this->getSelectOptions('general.yesno');
         return $preferredOptions[$entity->preferred];
     }
 
-    public function onUpdateFieldPreferred(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPreferred(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
@@ -597,8 +597,8 @@ class UserNationalitiesTable extends ControllerActionTable {
     }
 
     public function findDataExistInUserIdentityTable($identity_type_id, $nationality_id, $userId){
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $UserIdentities = TableRegistry::get('User.Identities');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $where = [
             $UserIdentities->aliasField('identity_type_id') => $identity_type_id,
             $UserIdentities->aliasField('nationality_id') => $nationality_id,
@@ -624,7 +624,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $identityTypeData;
     }
     public function findNumberExistInUserIdentityTable($identity_type_id, $nationality_id, $number, $userId = null){
-        $UserIdentities = TableRegistry::get('User.Identities');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $where = [
             $UserIdentities->aliasField('identity_type_id') => $identity_type_id,
             $UserIdentities->aliasField('nationality_id') => $nationality_id,
@@ -739,7 +739,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     // task POCOR-5668 ends
 
     /*POCOR-6267 Starts*/
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $securityUserId = $this->getUserID();
         if (!empty($securityUserId)) {
@@ -829,7 +829,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         // End POCOR-5188
     }
     /*POCOR-6267 Ends*/
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if(isset($data['security_user_id']) && empty($data['security_user_id'])) {
             $userId = $this->getUserID();
@@ -842,7 +842,7 @@ class UserNationalitiesTable extends ControllerActionTable {
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

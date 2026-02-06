@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
@@ -28,19 +28,19 @@ class ImportAssessmentItemResultsTable extends AppTable {
             'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Assessments']
         ]);
         // register table once
-        $this->AssessmentItemResults = TableRegistry::get('Institution.AssessmentItemResults');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $this->Assessments = TableRegistry::get('Assessment.Assessments');
-        $this->AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-        $this->AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-        $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $this->Student = TableRegistry::get('Security.Users');
-        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $this->InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $this->Users = TableRegistry::get('User.Users');
+        $this->AssessmentItemResults = TableRegistry::getTableLocator()->get('Institution.AssessmentItemResults');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+        $this->EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $this->InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+        $this->Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $this->AssessmentItems = TableRegistry::getTableLocator()->get('Assessment.AssessmentItems');
+        $this->AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
+        $this->InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $this->Student = TableRegistry::getTableLocator()->get('Security.Users');
+        $this->InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $this->InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+        $this->Users = TableRegistry::getTableLocator()->get('User.Users');
     }
 
     public function beforeAction($event) {
@@ -48,7 +48,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+        $this->systemDateFormat = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
     }
 
     public function implementedEvents(): array {
@@ -67,20 +67,20 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona) {
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona) {
         $crumbTitle = $this->getHeader($this->getAlias());
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'AssessmentItemResults'];
         $Navigation->substituteCrumb($crumbTitle, 'AssessmentItemResults', $url);
         $Navigation->addCrumb($crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+    public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
             $tempRow['entity'] = $this->AssessmentItemResults->newEntity();   
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
+    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {  
         if (isset($buttons[1])) {
             $buttons[1]['url'] = $this->ControllerAction->url('index');
@@ -94,7 +94,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $request = $this->request;
         $query = $request->getQuery(); // Get the query parameters
@@ -103,7 +103,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
     }
 
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->dependency = [];
         $this->dependency["class_name"] = ["select_file"];
@@ -137,7 +137,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
        if (isset($toolbarButtons['back'])) {
             $toolbarButtons['back']['url'] = $this->ControllerAction->url('index');
@@ -145,13 +145,13 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldClassName(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldClassName(EventInterface $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
             $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
             
             $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
             $classNameOption = $InstitutionClasses->find('list', [
                                     'keyField' => 'id',
                                     'valueField' => 'name'
@@ -181,15 +181,15 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldEducationSubject(EventInterface $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
             $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
             $classId = isset($request->getData()['ImportAssessmentItemResults']['class_name']) 
                         ? $request->getData()['ImportAssessmentItemResults']['class_name'] 
                         : null;
             $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
-            $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-            $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+            $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
             $superAdmin = $this->Auth->user('super_admin');
             $where = [];
             if ($superAdmin != 1) {
@@ -223,7 +223,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $attr;
     }
 
-    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateEducationSubjectsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $subjectId = $this->request->query['education_subject'];
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -259,7 +259,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateAssessmentPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAssessmentPeriodsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $classId = $this->request->getQuery('class_name');
         $educationData = $this->InstitutionClassGrades->find()
@@ -269,8 +269,8 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $educationGradeId = $educationData->education_grade_id;
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
 
-        $Assessments = TableRegistry::get('Assessment.Assessments');
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
 
         $assessmentPeriodsResult = $AssessmentPeriods->find()
                         ->select([
@@ -307,7 +307,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateInstitutionClassesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateInstitutionClassesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $classId = $this->request->query['class_name'];
         $classData = $this->InstitutionClasses->find()
@@ -338,11 +338,11 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onImportGetAssessmentPeriodsId(Event $event, $cellValue)
+    public function onImportGetAssessmentPeriodsId(EventInterface $event, $cellValue)
     {
         /*POCOR-6377 starts*/
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
-        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $dataRecord = $this->AssessmentPeriods->find()
                     ->select([$this->AssessmentPeriods->aliasField('id')])
                     ->leftJoin([$Assessments->getAlias() => $Assessments->getTable()], [
@@ -358,7 +358,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $assessmentPeriodsId;
     }
 
-    public function onImportGetInstitutionClassesId(Event $event, $cellValue)
+    public function onImportGetInstitutionClassesId(EventInterface $event, $cellValue)
     {
         $record = $this->InstitutionClasses->find()
                 ->select([$this->InstitutionClasses->aliasField('id')])
@@ -369,7 +369,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $classId;
     }
 
-    public function onImportGetEducationSubjectsId(Event $event, $cellValue)
+    public function onImportGetEducationSubjectsId(EventInterface $event, $cellValue)
     {
         $data = $this->EducationSubjects->find()->select([$this->EducationSubjects->aliasField('id')])->where([$this->EducationSubjects->aliasField('code') => $cellValue])->first();
         
@@ -378,7 +378,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $educationSubjectsId;
     }
 
-    public function onImportGetUsersId(Event $event, $cellValue)
+    public function onImportGetUsersId(EventInterface $event, $cellValue)
     {  
         $record = $this->Users->find()->select([$this->Users->aliasField('id')])->where([$this->Users->aliasField('openemis_no') => $cellValue])->first();
         
@@ -387,14 +387,14 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return $userId;
     }
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
         //POCOR-6613 starts
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;// for enrolled status //POCOR-6613 ends
         $classId = $this->request->getQuery['class_name'];
         $academicPeriodId = !is_null($this->request->getQuery('period')) ? $this->request->getQuery('period') : $this->AcademicPeriods->getCurrent();
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Users = TableRegistry::get('User.Users');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $studentData = $InstitutionClassStudents->find()
                         ->where([
                             $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
@@ -444,15 +444,15 @@ class ImportAssessmentItemResultsTable extends AppTable {
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
        
         $educationGradeId = $this->request->getQuery('education_grade');
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
         $institutionId = $this->request->getSession()->read('Institution.Institutions.id');
         $tempRow['institution_id'] = $institutionId;
 		/*POCOR-6528 starts*/
-		$this->AssessmentItemsGradingTypes = TableRegistry::get('Institution.AssessmentItemsGradingTypes');
-		$this->AssessmentGradingTypes = TableRegistry::get('Institution.AssessmentGradingTypes');
+		$this->AssessmentItemsGradingTypes = TableRegistry::getTableLocator()->get('Institution.AssessmentItemsGradingTypes');
+		$this->AssessmentGradingTypes = TableRegistry::getTableLocator()->get('Institution.AssessmentGradingTypes');
 		/*POCOR-6528 ends*/
         $tempRow['academic_period_id'] = $academicPeriodId;
         $classId = $this->request->query['class_name'];
@@ -533,7 +533,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         return true;
     }
 
-    public function addEditOnChangeClassName(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeClassName(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->getAlias();
         $classId = $data[$alias]['class_name'];

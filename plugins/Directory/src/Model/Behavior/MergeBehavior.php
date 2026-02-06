@@ -7,7 +7,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
@@ -18,13 +18,13 @@ use Cake\ORM\Locator\TableLocator;
 /**
  * Class MergeBehavior
  * @package Directory\Model\Behavior
-
+ *
  */
 class MergeBehavior extends Behavior
 {
     /**
      * @param array $config
-
+     *
      */
     public function initialize(array $config): void
     {
@@ -35,7 +35,7 @@ class MergeBehavior extends Behavior
 
     /**
      * @return array
-
+     *
      */
     public function implementedEvents(): array
     {
@@ -55,7 +55,7 @@ class MergeBehavior extends Behavior
      * @param Event $mainEvent
      * @param ArrayObject $extra
      * @return Entity|mixed|null
-
+     *
      */
     public function merge(Event $mainEvent, ArrayObject $extra)
     {
@@ -150,14 +150,14 @@ class MergeBehavior extends Behavior
 
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
-
+     *
      */
-    public function onUpdateFieldFirstId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFirstId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'merge') {
             $entity = $attr['entity'];
@@ -170,14 +170,14 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
-
+     *
      */
-    public function onUpdateFieldMergeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldMergeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $model = $this->_table;
         if ($action == 'merge') {
@@ -187,7 +187,7 @@ class MergeBehavior extends Behavior
             $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
             $urlAction = $model->getAlias();
             $attr['url'] = ['controller' => $model->controller->getName(), 'action' => $urlAction, 'ajaxUserAutocomplete'];
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             $requestData = $model->request->getData();
             if (isset($requestData) && !empty($requestData[$model->getAlias()]['merge_id'])) {
                 $mergeId = $requestData[$model->getAlias()]['merge_id'];
@@ -204,7 +204,7 @@ class MergeBehavior extends Behavior
     }
 
     /**
-
+     *
      */
     public function ajaxUserAutocomplete()
     {
@@ -214,8 +214,8 @@ class MergeBehavior extends Behavior
         if ($this->_table->request->is(['ajax'])) {
             $term = $this->_table->request->getQuery('term');
 
-            $Users = TableRegistry::get('User.Users');
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $Users
                 ->find()
@@ -258,15 +258,15 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $module
      * @param $field
      * @param $language
      * @param bool $autoHumanize
      * @return string|null
-
+     *
      */
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
 
         switch ($field) {
@@ -283,7 +283,7 @@ class MergeBehavior extends Behavior
      * @param ArrayObject $extra
      * @param \Cake\ORM\Table $model
      * @return ArrayObject
-
+     *
      */
     private function addBackButton(ArrayObject $extra, \Cake\ORM\Table $model)
     {
@@ -305,11 +305,11 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param ArrayObject $extra
-
+     *
      */
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (isset($toolbarButtonsArray['edit'])) {
@@ -323,13 +323,13 @@ class MergeBehavior extends Behavior
     }
 
 //    /**
-//     * @param Event $event
+//     * @param EventInterface $event
 //     * @param Entity $entity
 //     * @param ArrayObject $options
 //     * @param ArrayObject $extra
-//
+//     *
 //     */
-//    public function _mergeBeforeSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
+//    public function _mergeBeforeSave(EventInterface $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
 //    {
 //        $model = $this->_table;
 //        try {
@@ -346,13 +346,13 @@ class MergeBehavior extends Behavior
 //    }
 
 //    /**
-//     * @param Event $event
+//     * @param EventInterface $event
 //     * @param Entity $entity
 //     * @param ArrayObject $options
 //     * @param ArrayObject $extra
-//
+//     *
 //     */
-//    public function _mergeAfterSave(Event $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
+//    public function _mergeAfterSave(EventInterface $event, Entity $entity, ArrayObject $options, ArrayObject $extra) // POCOR-8633
 //    {
 //        // POCOR-9015 start
 //        $model = $this->_table;
@@ -424,7 +424,7 @@ class MergeBehavior extends Behavior
      * @param $model
      * @param $user_field
      * @return Entity|null
-
+     *
      */
     private function getUserEntity($model, $user_field)
     {
@@ -450,7 +450,7 @@ class MergeBehavior extends Behavior
     /**
      * @param $merge_id
      * @return array
-
+     *
      */
     private function getRelatedRecords($base_id, $merge_id)
     {
@@ -508,7 +508,7 @@ class MergeBehavior extends Behavior
      * @param Entity $first_entity
      * @param \Cake\ORM\Table $model
      * @return array
-
+     *
      */
     private function getAssociations(ArrayObject $extra, Entity $merge_entity, Entity $first_entity, \Cake\ORM\Table $model)
     {
@@ -544,7 +544,7 @@ class MergeBehavior extends Behavior
      * @param Entity $merge_entity The new entity.
      * @param array $exclude_fields An array of field names to exclude from comparison.
      * @return array An array of field comparisons with 'field', 'old_value', 'new_value', and 'changed' keys.
-
+     *
      */
     private function compareEntities(Entity $base_entity, Entity $merge_entity, $exclude_fields = [])
     {
@@ -640,7 +640,7 @@ class MergeBehavior extends Behavior
      * @param $tableName
      * @param $relatedField
      * @return string|null
-
+     *
      */
     public static function getRelatedName($tableName, $relatedField)
     {
@@ -659,11 +659,11 @@ class MergeBehavior extends Behavior
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param ArrayObject $buttons
-
+     *
      */
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $model = $this->_table;
         switch ($model->action) {
@@ -681,7 +681,7 @@ class MergeBehavior extends Behavior
      * @param Entity $merge_entity
      * @param \Cake\ORM\Table $model
      * @return array
-
+     *
      */
     private function getMergeFields(ArrayObject $extra, Entity $first_entity, Entity $merge_entity, \Cake\ORM\Table $model)
     {

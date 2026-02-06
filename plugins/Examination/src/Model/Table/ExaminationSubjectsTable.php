@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\AppTable;
 

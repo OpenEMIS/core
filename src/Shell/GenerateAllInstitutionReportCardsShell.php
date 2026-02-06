@@ -15,9 +15,9 @@ class GenerateAllInstitutionReportCardsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('CustomExcel.InstitutionReportCards');
-        $this->loadModel('ReportCard.InstitutionReportCardProcesses');
-        $this->loadModel('SystemProcesses');
+        $this->InstitutionReportCards = $this->fetchTable('CustomExcel.InstitutionReportCards');
+        $this->InstitutionReportCardProcesses = $this->fetchTable('ReportCard.InstitutionReportCardProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
         ini_set("pcre.backtrack_limit", "5000000"); //POCOR-6744
     }
 

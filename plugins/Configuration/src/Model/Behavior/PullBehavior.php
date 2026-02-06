@@ -7,7 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Http\Client;
 use Cake\Http\Exception\NotFoundException;
@@ -94,7 +94,7 @@ class PullBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         if ($model->action == 'pull') {
@@ -215,12 +215,12 @@ class PullBehavior extends Behavior
         return $entity;
     }
 
-    public function pullAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function pullAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->_table->Alert->info('general.reconfirm');
     }
 
-    public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
+    public function pullBeforePatch(EventInterface $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
     	$model = $this->_table;
     	$schema = $model->getSchema();
@@ -279,7 +279,7 @@ class PullBehavior extends Behavior
         }
     }
 
-    public function pullAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+    public function pullAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
         $model = $this->_table;
         $errors = $entity->getErrors();
         if (empty($errors)) {
@@ -317,7 +317,7 @@ class PullBehavior extends Behavior
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, $extra)
     {
         $externalReference = $entity->getOriginal('external_reference');
 
@@ -497,77 +497,77 @@ class PullBehavior extends Behavior
         }
     }
 
-    public function onGetFirstName(Event $event, Entity $entity)
+    public function onGetFirstName(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['first_name'])) {
             return $this->newValues['first_name'];
         }
     }
 
-    public function onGetMiddleName(Event $event, Entity $entity)
+    public function onGetMiddleName(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['middle_name'])) {
             return $this->newValues['middle_name'];
         }
     }
 
-    public function onGetThirdName(Event $event, Entity $entity)
+    public function onGetThirdName(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['third_name'])) {
             return $this->newValues['third_name'];
         }
     }
 
-    public function onGetLastName(Event $event, Entity $entity)
+    public function onGetLastName(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['last_name'])) {
             return $this->newValues['last_name'];
         }
     }
 
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['identity_number'])) {
             return $this->newValues['identity_number'];
         }
     }
 
-    public function onGetDateOfBirth(Event $event, Entity $entity)
+    public function onGetDateOfBirth(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['date_of_birth'])) {
             return $this->newValues['date_of_birth'];
         }
     }
 
-    public function onGetNationalityId(Event $event, Entity $entity)
+    public function onGetNationalityId(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['nationality_id'])) {
             return $this->newValues['nationality_id'];
         }
     }
 
-    public function onGetIdentityTypeId(Event $event, Entity $entity)
+    public function onGetIdentityTypeId(EventInterface $event, Entity $entity)
     {
         if (isset($this->newValues['identity_type_id'])) {
             return $this->newValues['identity_type_id'];
         }
     }
 
-    public function onGetGenderId(Event $events, Entity $entity)
+    public function onGetGenderId(EventInterface $events, Entity $entity)
     {
         if (isset($this->newValues['gender_id'])) {
             return $this->newValues['gender_id'];
         }
     }
 
-    public function onGetAddress(Event $events, Entity $entity)
+    public function onGetAddress(EventInterface $events, Entity $entity)
     {
         if (isset($this->newValues['address'])) {
             return $this->newValues['address'];
         }
     }
 
-    public function onGetPostalCode(Event $events, Entity $entity)
+    public function onGetPostalCode(EventInterface $events, Entity $entity)
     {
         if (isset($this->newValues['postal_code'])) {
             return $this->newValues['postal_code'];

@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -30,24 +30,24 @@ class PotentialStudentDuplicatesTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        $Students = TableRegistry::get('Institution.Students');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 
         $duplicateStudentSubquery = $this->find()
             ->select([
@@ -115,16 +115,16 @@ class PotentialStudentDuplicatesTable extends AppTable
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
                 return $results->map(function ($row) { 
                     //For Education Programme
-                    $EducationProgramTable = TableRegistry::get('Education.EducationProgrammes');
+                    $EducationProgramTable = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
                     if(!empty($row->education_programme_id)){
                         $EducationProgram = $EducationProgramTable->find()->where(['id'=> $row->education_programme_id])->first();
                         $row['education_programme'] = $EducationProgram->name;
                     }
                     //For Student Status
-                    $InstitutionStudentsTable = TableRegistry::get('Institution.InstitutionStudents');
+                    $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
                     $InstitutionStudent = $InstitutionStudentsTable->find()->where(['student_id'=> $row->id])->order(['id'=>'ASC'])->first();
                     $student_status_id = $InstitutionStudent->student_status_id;
-                    $StudentStatusTable = TableRegistry::get('student_statuses');
+                    $StudentStatusTable = TableRegistry::getTableLocator()->get('student_statuses');
                     if(!empty($student_status_id)){
                         $StudentStatus = $StudentStatusTable->find()->where(['id'=> $student_status_id])->first();
                         $row['student_status'] = $StudentStatus->name;
@@ -136,7 +136,7 @@ class PotentialStudentDuplicatesTable extends AppTable
             //End:POCOR-6069
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         // set formatting to string for certain columns
         $cloneFields = $fields->getArrayCopy();

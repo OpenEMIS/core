@@ -35,7 +35,7 @@ class EducationsControllerTest extends AppTestCase
         ];
         $this->postData('/Educations/Systems/add', $data);
 
-        $table = TableRegistry::get('Education.EducationSystems');
+        $table = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $this->assertNotEmpty($table->get(1));
     }
 
@@ -56,7 +56,7 @@ class EducationsControllerTest extends AppTestCase
             'name' => 'PHPUnit Education System'
         ];
         $this->postData('/Educations/Systems/edit/1', $data);
-        $table = TableRegistry::get('Education.EducationSystems');
+        $table = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $entity = $table->get(1);
         $this->assertEquals($data['name'], $entity->name);
     }
@@ -73,7 +73,7 @@ class EducationsControllerTest extends AppTestCase
             '_method' => 'DELETE'
         ];
         $this->postData('/Educations/Systems/remove/1', $data);
-        $table = TableRegistry::get('Education.EducationSystems');
+        $table = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $exists = $table->exists([$table->primaryKey() => 1]);
         $this->assertFalse($exists);
     }

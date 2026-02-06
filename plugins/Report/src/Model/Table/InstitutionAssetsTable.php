@@ -6,8 +6,8 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
-use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
+use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Time;
@@ -47,14 +47,14 @@ class InstitutionAssetsTable extends AppTable
 
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $infrastructureLevel = $requestData->infrastructure_level;
@@ -291,9 +291,9 @@ class InstitutionAssetsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        $ConfigItems = TableRegistry::get('config_items');
+        $ConfigItems = TableRegistry::getTableLocator()->get('config_items');
         $this->currency = $ConfigItems->find('all')->where(['code' => 'currency'])->select(['value'])->first()->value;
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;
@@ -348,7 +348,7 @@ class InstitutionAssetsTable extends AppTable
             $conditions[$this->aliasField('area_id In')] = $areaList;
         }
         //POCOR-7877 end
-        $institutionAssets = TableRegistry::get('institution_assets');
+        $institutionAssets = TableRegistry::getTableLocator()->get('institution_assets');
         $query = $query->select([
             $this->aliasField('id'),
             'institution_code' => $this->aliasField('code'),
@@ -386,7 +386,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getInstitutionAreaQuery(Query $query)
     {
-        $areas = TableRegistry::get('areas');
+        $areas = TableRegistry::getTableLocator()->get('areas');
 
         $query = $this->getRelatedQuery($query,
             'areas',
@@ -406,7 +406,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getInstitutionParentAreaQuery(Query $query)
     {
-        $areas = TableRegistry::get('areas');
+        $areas = TableRegistry::getTableLocator()->get('areas');
         $query = $this->getRelatedQuery($query,
             'areas',
             $areas->aliasField('parent_id'),
@@ -437,7 +437,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getAssetStatusQuery(Query $query)
     {
-        $Table = TableRegistry::get('institution_assets');
+        $Table = TableRegistry::getTableLocator()->get('institution_assets');
 
         $query = $this->getRelatedQuery($query,
             'asset_statuses',
@@ -452,7 +452,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getAssetTypeQuery(Query $query)
     {
-        $institutionAssets = TableRegistry::get('institution_assets');
+        $institutionAssets = TableRegistry::getTableLocator()->get('institution_assets');
 
         $query = $this->getRelatedQuery($query,
             'asset_types',
@@ -467,7 +467,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getAssetMakeQuery(Query $query)
     {
-        $Table = TableRegistry::get('institution_assets');
+        $Table = TableRegistry::getTableLocator()->get('institution_assets');
 
         $query = $this->getRelatedQuery($query,
             'asset_makes',
@@ -482,7 +482,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getAssetModelQuery(Query $query)
     {
-        $Table = TableRegistry::get('institution_assets');
+        $Table = TableRegistry::getTableLocator()->get('institution_assets');
 
         $query = $this->getRelatedQuery($query,
             'asset_models',
@@ -497,7 +497,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getAssetConditionQuery(Query $query)
     {
-        $Table = TableRegistry::get('institution_assets');
+        $Table = TableRegistry::getTableLocator()->get('institution_assets');
 
         $query = $this->getRelatedQuery($query,
             'asset_conditions',
@@ -512,8 +512,8 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getAssetLocationQuery(Query $query)
     {
-        $Table = TableRegistry::get('institution_assets');
-        $Users = TableRegistry::get('institution_rooms');
+        $Table = TableRegistry::getTableLocator()->get('institution_assets');
+        $Users = TableRegistry::getTableLocator()->get('institution_rooms');
         $name = $Users->aliasField('name');
         $code = $Users->aliasField('code');
         $field = "CONCAT({$code}, ': ', {$name})";
@@ -532,8 +532,8 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getAssetUserQuery(Query $query)
     {
-        $Table = TableRegistry::get('institution_assets');
-        $Users = TableRegistry::get('security_users');
+        $Table = TableRegistry::getTableLocator()->get('institution_assets');
+        $Users = TableRegistry::getTableLocator()->get('security_users');
         $first_name = $Users->aliasField('first_name');
         $last_name = $Users->aliasField('last_name');
         $field = "CONCAT({$first_name}, ' ', {$last_name})";
@@ -669,7 +669,7 @@ class InstitutionAssetsTable extends AppTable
     }
 
 
-    public function onExcelGetDepreciation(Event $event, Entity $entity)
+    public function onExcelGetDepreciation(EventInterface $event, Entity $entity)
     {
         if (!$entity->depreciation) {
             return "";
@@ -678,7 +678,7 @@ class InstitutionAssetsTable extends AppTable
         return $formattedAmount; // Output: $1,234.56
     }
 
-    public function onExcelGetPurpose(Event $event, Entity $entity)
+    public function onExcelGetPurpose(EventInterface $event, Entity $entity)
     {
         if ($entity->purpose) {
             $purpose = 'Teaching';
@@ -688,7 +688,7 @@ class InstitutionAssetsTable extends AppTable
         return $purpose;
     }
 
-    public function onExcelGetAccessibility(Event $event, Entity $entity)
+    public function onExcelGetAccessibility(EventInterface $event, Entity $entity)
     {
         if ($entity->accessibility) {
             $accessibility = 'Accessible';
@@ -702,14 +702,14 @@ class InstitutionAssetsTable extends AppTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-
+     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -732,7 +732,7 @@ class InstitutionAssetsTable extends AppTable
      */
     private function getRelatedQuery(Query $query, $table, $fk, $alias_name, $name = 'name', $alias_code = null, $code = 'code', $table_alias = null)
     {
-        $Table = TableRegistry::get($table);
+        $Table = TableRegistry::getTableLocator()->get($table);
         if (!$table_alias) {
             $table_alias = $Table->getAlias();
         }

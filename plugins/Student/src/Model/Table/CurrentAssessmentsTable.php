@@ -4,7 +4,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -51,7 +51,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //$contentHeader = $this->controller->viewVars['contentHeader'];
         $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
@@ -70,7 +70,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $this->studentId = $studentId;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         //set fields
         $this->fields['student_status_id']['visible'] = false;
@@ -100,11 +100,12 @@ class CurrentAssessmentsTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Query $query
      * @param ArrayObject $extra
+     *
      */
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-7201[START]
         $session = $this->Session;
@@ -114,7 +115,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $query->contain('Assessments');
         $query->contain('AssessmentPeriods');
         $query->contain('EducationSubjects');
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
 
 
         $query->find('all', [
@@ -198,26 +199,26 @@ class CurrentAssessmentsTable extends ControllerActionTable
 
     }
 
-    public function onGetAssessmentsName(Event $event, Entity $entity)
+    public function onGetAssessmentsName(EventInterface $event, Entity $entity)
     {
         return $entity->assessment_name . ' - ' . $entity->assessment_code . ' - ' . $entity->assessment_name;
     }
 
-    public function onGetAssessmentPeriodName(Event $event, Entity $entity)
+    public function onGetAssessmentPeriodName(EventInterface $event, Entity $entity)
     {
         return $entity->assessment_period_term . ' - ' . $entity->assessment_period_name;
     }
 
     /**
      * get last marks from a common query
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return float
-
+     *
      */
-    public function onGetMarks(Event $event, Entity $entity)
+    public function onGetMarks(EventInterface $event, Entity $entity)
     {
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
 
         $options = ["student_id" => $entity->student_id,
             "academic_period_id" => $entity->academic_period_id,
@@ -239,14 +240,14 @@ class CurrentAssessmentsTable extends ControllerActionTable
 
     /**
      * get total marks from a common query
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return float
-
+     *
      */
-    public function onGetTotalMark(Event $event, Entity $entity)
+    public function onGetTotalMark(EventInterface $event, Entity $entity)
     {
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         $options = ["student_id" => $entity->student_id,
 //            "institution_id" => $entity->institution_id,
 //            "institution_class_id" => $entity->institution_class_id,
@@ -288,7 +289,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         return round($sum_results, 2);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
@@ -319,7 +320,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         //POCOR-7474-HINDOL
         $this->setupTabElements();
@@ -442,12 +443,12 @@ class CurrentAssessmentsTable extends ControllerActionTable
      * @param $studentId
      * @param $selectedAcademicPeriod
      * @return int|string|null
-
+     *
      */
     private function setAcademicPeriodOptions($institutionId, $studentId, $selectedAcademicPeriod)
     {
     // Academic Periods filter
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         $years_arr = $ItemResults->find()
             ->select('academic_period_id')
             ->distinct('academic_period_id')
@@ -476,7 +477,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
      */
     private function setAssessmentOptions($selectedAcademicPeriod, $selectedAssessment = -1)
     {
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         $assessments_arr = $ItemResults->find()
             ->select('assessment_id')
             ->distinct('assessment_id')
@@ -486,7 +487,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         if(sizeof($assessments_ids) == 0){
             $assessments_ids = [0];
         }
-        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
         $assessmentOptions = $Assessments
             ->find('list')
             ->where([$Assessments->aliasField('id IN') => $assessments_ids,
@@ -504,11 +505,11 @@ class CurrentAssessmentsTable extends ControllerActionTable
      * @param int $selectedAssessment
      * @param int $selectedAssessmentPeriod
      * @return int|string|null
-
+     *
      */
     private function setAssessmentPeriodOptions($selectedAssessment = -1, $selectedAssessmentPeriod = -1)
     {
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         $assessment_periods_arr = $ItemResults->find()
             ->select('assessment_period_id')
             ->distinct('assessment_period_id')
@@ -518,7 +519,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         if(sizeof($assessment_periods_ids) == 0){
             $assessment_periods_ids = [0];
         }
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
         $where = [$AssessmentPeriods->aliasField('id IN') => $assessment_periods_ids];
         if ($selectedAssessment > 0) {
             $where[$AssessmentPeriods->aliasField('assessment_id')] = $selectedAssessment;
@@ -534,18 +535,18 @@ class CurrentAssessmentsTable extends ControllerActionTable
     }
 
     //POCOR-8137 Start
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $institutionId = $this->getInstitutionID();
         $studentId = $this->studentId;
         $query->contain('Assessments');
         $query->contain('AssessmentPeriods');
         $query->contain('EducationSubjects');
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
         $query->contain('Assessments');
         $query->contain('AssessmentPeriods');
         $query->contain('EducationSubjects');
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
         $query->find('all', [
             'fields' => [
                 'id' => $this->aliasField('id'),
@@ -606,7 +607,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         $query->find('all')->where([$where]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $fields[] = [
             'key' => 'CurrentAssessments.User.openemis_no',
@@ -658,24 +659,28 @@ class CurrentAssessmentsTable extends ControllerActionTable
         ];
     }
 
+<<<<<<< HEAD
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
+=======
     public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+>>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
     {
         return $entity->user->openemis_no;
     }
 
-    public function onExcelGetAssessmentId(Event $event, Entity $entity)
+    public function onExcelGetAssessmentId(EventInterface $event, Entity $entity)
     {
         return $entity->assessment_name . ' - ' . $entity->assessment_code . ' - ' . $entity->assessment_name;
     }
 
-    public function onExcelGetAssessmentPeriodId(Event $event, Entity $entity)
+    public function onExcelGetAssessmentPeriodId(EventInterface $event, Entity $entity)
     {
         return $entity->assessment_period_term . ' - ' . $entity->assessment_period_name;
     }
 
-    public function onExcelGetTotalMark(Event $event, Entity $entity)
+    public function onExcelGetTotalMark(EventInterface $event, Entity $entity)
     {
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         $options = ["student_id" => $entity->student_id,
             "academic_period_id" => $entity->academic_period_id,
             "education_grade_id" => $entity->education_grade_id,

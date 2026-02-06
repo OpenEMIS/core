@@ -7,7 +7,7 @@ use stdClass;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;
@@ -55,7 +55,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists('classStudents') && empty($data['classStudents'])) { //only utilize save by association when class student empty.
             $data['class_students'] = [];
@@ -71,12 +71,12 @@ class ReportCardStatusProgressTable extends ControllerActionTable
     ** index action methods
     **
     ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
     }
 
-    public function indexBeforeQuerybkp(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuerybkp(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Academic Periods filter
         $institutionId  = $this->getInstitutionID();
@@ -87,7 +87,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
 
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $reportCardTable = TableRegistry::get('ReportCard.ReportCards');
+        $reportCardTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $reportCardOptions = $reportCardTable
                         ->find('list',[
                             'keyField' => 'id',
@@ -102,7 +102,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod', 'institutionId', 'reportCardOptions', 'selectedReportCard'));
         $isSuperAdmin = $this->Auth->user('super_admin');
         $loggedInUserId = $this->Auth->user('id');
-        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userRole = $GroupRoles
                         ->find()
                         ->contain('SecurityRoles')
@@ -111,9 +111,9 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                         ])
                         ->first();
         $roleId =  $userRole['security_role']['id'];
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : 'all';
-        $classPermission = TableRegistry::get('Security.SecurityRoleFunctions')->find()
+        $classPermission = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -186,8 +186,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $this->controller->set(compact('classOptions', 'selectedClass'));
 
 
-        $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
-        $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $reportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
+        $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
         $classIds = 0;
         if(!empty($classLists)){
             $classIds = array_keys($classLists);
@@ -215,7 +215,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                     ])
                 ->formatResults(function (ResultSetInterface $results) use ($reportCardId, $institutionId, $academicPeriodId) {
                     return $results->map(function ($row) use ($reportCardId, $institutionId, $academicPeriodId) {
-                        $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+                        $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
                         $inCompleted = $institutionStudentsReportCards->find()->where([
                             $institutionStudentsReportCards->aliasField('report_card_id') => $reportCardId,
                             $institutionStudentsReportCards->aliasField('academic_period_id') => $academicPeriodId,
@@ -232,7 +232,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Academic Periods filter
         $institutionId  = $this->getInstitutionID();
@@ -243,7 +243,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
 
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $reportCardTable = TableRegistry::get('ReportCard.ReportCards');
+        $reportCardTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $reportCardOptions = $reportCardTable
                         ->find('list',[
                             'keyField' => 'id',
@@ -259,7 +259,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $isSuperAdmin = $this->Auth->user('super_admin');
         $loggedInUserId = $this->Auth->user('id');
         $staffId = $this->Auth->user('id');
-        $GroupRoles = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupRoles = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userRole = $GroupRoles
                         ->find()
                         ->contain('SecurityRoles')
@@ -268,7 +268,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                         ])
                         ->first();
         $roleId =  $userRole['security_role']['id'];
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : 'all';
         $classOptions = [];
         $classLists = [];
@@ -315,8 +315,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classLists + ['all' => __('All Classes')];
        // $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
-        $reportCardProcesses = TableRegistry::get('ReportCard.ReportCardProcesses');
-        $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $reportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
+        $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
         $classIds = 0;
         if(!empty($classLists)){
             $classIds = array_keys($classLists);
@@ -344,7 +344,7 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                     ])
                 ->formatResults(function (ResultSetInterface $results) use ($reportCardId, $institutionId, $academicPeriodId) {
                     return $results->map(function ($row) use ($reportCardId, $institutionId, $academicPeriodId) {
-                        $institutionStudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+                        $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
                         $inCompleted = $institutionStudentsReportCards->find()->where([
                             $institutionStudentsReportCards->aliasField('report_card_id') => $reportCardId,
                             $institutionStudentsReportCards->aliasField('academic_period_id') => $academicPeriodId,
@@ -360,13 +360,13 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
 
-    public function onGetReportCard(Event $event, Entity $entity)
+    public function onGetReportCard(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('report_card_id')) {
@@ -387,8 +387,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
     public function getRolePermissionAccessForAllClasses($userId, $institutionId)
     {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::get('Security.SecurityRoleFunctions')->find()
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -414,8 +414,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
     public function getRolePermissionAccessForMySubjects($userId, $institutionId)
     {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::get('Security.SecurityRoleFunctions')->find()
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
@@ -441,8 +441,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
     public function getRolePermissionAccessForMyClasses($userId, $institutionId)
     {
-        $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-        $QueryResult = TableRegistry::get('Security.SecurityRoleFunctions')->find()
+        $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
                 ->leftJoin(['SecurityFunctions' => 'security_functions'], [
                     [
                         'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',

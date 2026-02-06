@@ -3,7 +3,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -20,7 +20,7 @@ class StaffOutOfSchoolTable extends AppTable  {
             'pages' => false
         ]);
     }
-    public function onExcelBeforeQuery (Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery (EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         //POCOR-7661::Start
@@ -117,7 +117,7 @@ class StaffOutOfSchoolTable extends AppTable  {
         //POCOR-7661::End
            
     }
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
         
         $extraField[] = [
             'key' => 'StaffOutOfSchoolTable.openemis_no',

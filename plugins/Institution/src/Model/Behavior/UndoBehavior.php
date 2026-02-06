@@ -24,7 +24,7 @@ class UndoBehavior extends Behavior {
 		$this->undoAction = $class;
 
 		$this->statuses = $this->getConfig('statuses');
-		$this->model = TableRegistry::get($this->getConfig('model'));
+		$this->model = TableRegistry::getTableLocator()->get($this->getConfig('model'));
 	}
 
 	protected function getStudents($data) {
@@ -110,7 +110,7 @@ class UndoBehavior extends Behavior {
         if (!empty($entity)) {
             if ($undoStatus == 'TRANSFERRED') { //for undo transfer, need to re-update end_date according to transfer request on admission table
 
-                $studentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+                $studentAdmissionTable = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
 
                 $studentAdmission = $studentAdmissionTable
                                     ->find()
@@ -130,7 +130,7 @@ class UndoBehavior extends Behavior {
             //undo which dont store previous end_date will then take the end date of the academic period.
             } else if ($undoStatus == 'WITHDRAWN' || $undoStatus == 'REPEATED' || $undoStatus == 'PROMOTED') {
 
-                $academicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriod = $academicPeriodTable->get($entity->academic_period_id);
 
                 if (!empty($academicPeriod)) {

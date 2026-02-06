@@ -4,7 +4,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -70,7 +70,7 @@ class AttachmentsTable extends ControllerActionTable
 
     //END:POCOR-5067
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('file_name', ['visible' => false]);
@@ -93,7 +93,7 @@ class AttachmentsTable extends ControllerActionTable
      ** index action logics
      **
      ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('description', ['visible' => false]);//POCOR-5067
         $this->field('file_type', ['visible' => false]);
@@ -205,11 +205,11 @@ class AttachmentsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //if not super admin then get the security role for filtering purpose
         if (!$this->AccessControl->isAdmin()) {
-            $AttachmentsRoles = TableRegistry::get('User.AttachmentsRoles');
+            $AttachmentsRoles = TableRegistry::getTableLocator()->get('User.AttachmentsRoles');
             $userId = $this->Auth->user('id');
 
             $securityRoles = $this->AccessControl->getRolesByUser($userId)->toArray();
@@ -244,7 +244,7 @@ class AttachmentsTable extends ControllerActionTable
     }
 
     //START:POCOR-5067
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'student_attachment_type_id':
@@ -272,7 +272,7 @@ class AttachmentsTable extends ControllerActionTable
      ** edit action logics
      **
      ******************************************************************************************************************/
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //START:POCOR-5067
         $this->field('student_attachment_type_id', ['visible' => false]);
@@ -307,15 +307,15 @@ class AttachmentsTable extends ControllerActionTable
      ** field specific methods
      **
      ******************************************************************************************************************/
-    public function onGetFileType(Event $event, Entity $entity)
+    public function onGetFileType(EventInterface $event, Entity $entity)
     {
         return $this->getFileTypeForView($entity->file_name);
     }
 
-    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSecurityRoles(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $attr['options'] = TableRegistry::get('Security.SecurityRoles')->getSystemRolesList();
+            $attr['options'] = TableRegistry::getTableLocator()->get('Security.SecurityRoles')->getSystemRolesList();
         }
 
         return $attr;
@@ -326,7 +326,7 @@ class AttachmentsTable extends ControllerActionTable
      ** add/Edit action page //START:POCOR-5067
      **
      ******************************************************************************************************************/
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $userId = $this->getUserID();
@@ -375,7 +375,7 @@ class AttachmentsTable extends ControllerActionTable
     }
 
     //END:POCOR-5067
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
         $userId = $this->getUserID();
@@ -423,13 +423,13 @@ class AttachmentsTable extends ControllerActionTable
 
     //END:POCOR-5067
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $userId = $this->getUserID();
         $entity['security_user_id'] = $userId;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $sentData = $this->request->getData();
         $alias = $this->getAlias();
@@ -475,7 +475,7 @@ class AttachmentsTable extends ControllerActionTable
      ** adding download button to index page
      **
      ******************************************************************************************************************/
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $downloadAccess = $this->AccessControl->check([$this->controller->getName(), 'Attachments', 'download']);

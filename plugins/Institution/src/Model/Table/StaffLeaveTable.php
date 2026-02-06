@@ -7,7 +7,7 @@ use Cake\Database\Schema\Table;
 use Cake\Datasource\ConnectionManager;
 use DatePeriod;
 use DateInterval;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -124,7 +124,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $staffId = $entity['staff_id'];
         $institutionId = $entity['institution_id'];
@@ -179,7 +179,7 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (in_array($this->action, ['view', 'edit', 'delete'])) {
             $modelAlias = 'Staff Leave';
@@ -210,7 +210,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('start_time', ['visible' => false]);
@@ -221,7 +221,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     }
 
-    public function indexHistoricalBeforeQuery(Event $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
+    public function indexHistoricalBeforeQuery(EventInterface $event, Query $mainQuery, Query $historicalQuery, ArrayObject $selectList, ArrayObject $defaultOrder, ArrayObject $extra)
     {
         $decodedQueryString = $this->getQueryString();
 //        echo "<pre>"; print_r($decodedQueryString);
@@ -350,12 +350,12 @@ class StaffLeaveTable extends ControllerActionTable
             ]);
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('staff_leave_type_id');
         $this->field('assignee_id', ['entity' => $entity]); //send entity information
@@ -372,7 +372,7 @@ class StaffLeaveTable extends ControllerActionTable
             'date_from', 'date_to', 'full_day', 'start_time', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content', 'assignee_id']);
     }
 
-    public function onGetTime(Event $event, Entity $entity)
+    public function onGetTime(EventInterface $event, Entity $entity)
     {
         $time = '-';
         $isFullDay = $this->getFieldEntity($entity->is_historical, $entity->id, 'full_day');
@@ -384,12 +384,12 @@ class StaffLeaveTable extends ControllerActionTable
         return $time;
     }
 
-    public function onGetFullDay(Event $event, Entity $entity)
+    public function onGetFullDay(EventInterface $event, Entity $entity)
     {
         return $this->fullDayOptions[$entity->full_day];
     }
 
-    public function onGetStatusId(Event $event, Entity $entity)
+    public function onGetStatusId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $statusName = $entity->status->name;
@@ -404,7 +404,7 @@ class StaffLeaveTable extends ControllerActionTable
         return '<span class="status highlight">' . $statusName . '</span>';
     }
 
-    public function onGetAssigneeId(Event $event, Entity $entity)
+    public function onGetAssigneeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->assignee->name;
@@ -414,7 +414,7 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->institution->code_name;
@@ -428,7 +428,7 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    public function onGetStaffLeaveTypeId(Event $event, Entity $entity)
+    public function onGetStaffLeaveTypeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->staff_leave_type->name;
@@ -438,7 +438,7 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->academic_period->name;
@@ -448,7 +448,7 @@ class StaffLeaveTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldFileName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFileName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'hidden';
@@ -459,7 +459,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $userId = $this->getStaffId();
@@ -470,7 +470,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffLeaveTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -485,15 +485,15 @@ class StaffLeaveTable extends ControllerActionTable
      *
      * POCOR-8091
      *
-     * @param Event $event The event triggering this function.
+     * @param EventInterface $event The event triggering this function.
      * @param array $attr The attributes of the field being updated.
      * @param string $action The action being performed ('add' or 'edit').
      * @param ServerRequest $request The request object containing data.
      * @return array The updated attributes.
      * @throws \RuntimeException If there is an issue retrieving the current academic period ID.
-
+     *
      */
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $alias = $this->getAlias();
         $data = $request->getData($alias);
@@ -516,7 +516,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFullDay(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFullDay(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             // $attr['type'] = 'select';
@@ -527,7 +527,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartTime(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($request->getData()[$this->getAlias()]['full_day'])) {
@@ -546,7 +546,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndTime(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($request->getData()[$this->getAlias()]['full_day'])) {
@@ -594,7 +594,7 @@ class StaffLeaveTable extends ControllerActionTable
         return $userId;
     }
 
-    public function institutionStaffAfterDelete(Event $event, Entity $institutionStaffEntity)
+    public function institutionStaffAfterDelete(EventInterface $event, Entity $institutionStaffEntity)
     {
         $staffLeaveData = $this->find()
             ->where([
@@ -735,7 +735,7 @@ class StaffLeaveTable extends ControllerActionTable
         return (($comparison_date >= $start_date) && ($comparison_date <= $end_date));
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
@@ -906,14 +906,14 @@ class StaffLeaveTable extends ControllerActionTable
     //POCOR-6925
     //POCOR-8015 refactored
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
-
+     *
      */
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action != 'add' && $action != 'edit'){
             return $attr;
@@ -932,7 +932,7 @@ class StaffLeaveTable extends ControllerActionTable
      * POCOR-8015
      * @param Request $request
      * @return array
-
+     *
      */
     private function getAssigneesOptions(ServerRequest $request)
     {
@@ -953,7 +953,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to add extra buttons, to call in indexBeforeAction
-
+     *
      * @param ArrayObject $extra
      */
     private function addExtraButtons(ArrayObject $extra)
@@ -966,7 +966,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to add a manual button
-
+     *
      * @param $toolbarButtons
      */
     private function addManualButton($toolbarButtons)
@@ -993,7 +993,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to add an archive button
-
+     *
      * @param $toolbarButtons
      */
     // private function addArchiveButton($toolbarButtons)
@@ -1018,7 +1018,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to check if there is an archive
-
+     *
      * @return bool
      */
     private function isArchiveExists()
@@ -1042,7 +1042,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param $url
      * @param null $btnAttr
      * common proc to generate button
-
+     *
      */
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {
@@ -1072,7 +1072,7 @@ class StaffLeaveTable extends ControllerActionTable
 
     /**
      * common proc to get/set main variables to use further
-
+     *
      */
     private function setInstitutionStaffIDs()
     {
@@ -1082,7 +1082,7 @@ class StaffLeaveTable extends ControllerActionTable
         $this->staffId = $staffId;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'staff_leave_type_id') {
             return __('Staff Leave Type');
@@ -1128,7 +1128,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param $filter_id
      * @param $institutionId
      * @return array
-
+     *
      */
     private function findAssigneeOptions($filter_id, $institutionId)
     {
@@ -1226,7 +1226,7 @@ class StaffLeaveTable extends ControllerActionTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \RuntimeException If there is an issue retrieving the table instance.
-
+     *
      */
     private static function getDynamicTableInstance(string $tableName): \Cake\ORM\Table
     {

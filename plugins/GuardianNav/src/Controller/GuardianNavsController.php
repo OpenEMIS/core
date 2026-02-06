@@ -4,7 +4,7 @@ namespace GuardianNav\Controller;
 use ArrayObject;
 use Exception;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -118,7 +118,7 @@ class GuardianNavsController extends AppController
         return $events;
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 		$header = 'Students';
         $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'GuardianNavs']);
         $viewPermission = $this->AccessControl->check(['StudentUser']);
@@ -367,7 +367,7 @@ class GuardianNavsController extends AppController
         $userId = $this->Auth->user('id');
 
         $InstitutionStudents =
-        TableRegistry::get('Institution.InstitutionStudents')
+        TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')
         ->find()
         ->where([
             'InstitutionStudents.student_id' => $userId
@@ -376,11 +376,11 @@ class GuardianNavsController extends AppController
         ->first();
 
         $institutionId = $InstitutionStudents['institution_id'];
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
         ->getCurrent();
 
         $InstitutionClassStudentsResult =
-        TableRegistry::get('Institution.InstitutionClassStudents')
+        TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents')
         ->find()
         ->where([
             'academic_period_id'=>$academicPeriodId,
@@ -391,7 +391,7 @@ class GuardianNavsController extends AppController
         ->first();
 
         $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
-        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
+        $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables')
         ->find()
         ->where([
             'academic_period_id'=>$academicPeriodId,

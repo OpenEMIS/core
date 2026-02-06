@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -52,7 +52,7 @@ class StudentOutcomesTable extends ControllerActionTable
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $studentId = $queryString['student_id'];
@@ -114,7 +114,7 @@ class StudentOutcomesTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $studentId = $this->paramsEncode('student_id');
@@ -127,7 +127,7 @@ class StudentOutcomesTable extends ControllerActionTable
         // end
 
         // outcome template filter
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $studentGrades = $InstitutionStudents->find()
             ->where([
                 $InstitutionStudents->aliasField('student_id') => $this->studentId,
@@ -184,9 +184,9 @@ class StudentOutcomesTable extends ControllerActionTable
             }else{
                 $studentId = $studentId;
             }//POCOR-6215 ends
-            $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+            $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
             $subjectOptions = $EducationSubjects
                                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                                 ->innerJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
@@ -279,12 +279,12 @@ class StudentOutcomesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function onGetOutcomePeriodId(Event $event, Entity $entity)
+    public function onGetOutcomePeriodId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('outcome_period')) {
@@ -293,7 +293,7 @@ class StudentOutcomesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    public function onGetEducationSubjectId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('education_subject')) {
@@ -302,7 +302,7 @@ class StudentOutcomesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetOutcomeCriteriaId(Event $event, Entity $entity)
+    public function onGetOutcomeCriteriaId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('outcome_criteria')) {
@@ -311,7 +311,7 @@ class StudentOutcomesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetOutcomeGradingOptionId(Event $event, Entity $entity)
+    public function onGetOutcomeGradingOptionId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('outcome_grading_option')) {
@@ -332,7 +332,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Outcomes');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'outcome_period_id') {
             return __('Outcome Period');

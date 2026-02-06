@@ -6,7 +6,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\I18n\FrozenDate;
@@ -38,14 +38,14 @@ class StaffLicensesTable extends AppTable  {
     }
 
     //POCOR-9418 query changes
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedStatus = $requestData->status;
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
 
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $conditions = [];
 
@@ -113,9 +113,13 @@ class StaffLicensesTable extends AppTable  {
                 });
             });
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
 
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newArray = [];
 
@@ -201,7 +205,7 @@ class StaffLicensesTable extends AppTable  {
         $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $security_user_id = $entity['security_user_id'];
         $user = self::getRelatedRecord('security_users', $security_user_id);
@@ -213,14 +217,18 @@ class StaffLicensesTable extends AppTable  {
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
+<<<<<<< HEAD
+     *
+=======
 
+>>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -231,7 +239,7 @@ class StaffLicensesTable extends AppTable  {
     }
 
 
-    public function onExcelGetClassification(Event $event, Entity $entity)
+    public function onExcelGetClassification(EventInterface $event, Entity $entity)
     {
         if ($entity->has('classifications')) {
             $classifications = [];
@@ -245,7 +253,7 @@ class StaffLicensesTable extends AppTable  {
     }
 
     //POCOR-9418
-    public function onExcelGetIssueDate(Event $event, Entity $entity)
+    public function onExcelGetIssueDate(EventInterface $event, Entity $entity)
     {
         if(!empty($entity->issue_date)){
             return isset($entity->issue_date) ? $entity->issue_date->format('Y-m-d') : '';
@@ -255,7 +263,7 @@ class StaffLicensesTable extends AppTable  {
     }
 
     //POCOR-9418
-    public function onExcelGetExpiryDate(Event $event, Entity $entity)
+    public function onExcelGetExpiryDate(EventInterface $event, Entity $entity)
     {
         if(!empty($entity->expiry_date)){
             return isset($entity->expiry_date) ? $entity->expiry_date->format('Y-m-d') : '';
@@ -269,8 +277,8 @@ class StaffLicensesTable extends AppTable  {
      */
    /* private function addInstitutionJoinToQuery($query)
     {
-        $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $query
             ->leftJoin([$InstitutionStaffTable->getAlias() => $InstitutionStaffTable->getTable()], [
                 $InstitutionStaffTable->aliasField('staff_id') => $this->aliasField('security_user_id')
@@ -279,7 +287,7 @@ class StaffLicensesTable extends AppTable  {
             ]);
     }*/
 
-    public function onExcelBeforeQuerybkp(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuerybkp(EventInterface $event, ArrayObject $settings, $query)
     {
 //        $query = $this->addInstitutionJoinToQuery($query);
         $requestData = json_decode($settings['process']['params']);
@@ -287,13 +295,13 @@ class StaffLicensesTable extends AppTable  {
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
-        $InstitutionStaffTable = TableRegistry::get('Institution.InstitutionStaff');
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if (!empty($academicPeriodId)) {
                 $conditions['OR'] = [
                     'OR' => [
@@ -345,15 +353,15 @@ class StaffLicensesTable extends AppTable  {
 
     }
 
-    //    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    //    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
 //    {
 //        $requestData = json_decode($settings['process']['params']);
 //        $selectedStatus = $requestData->status;
 //        $areaId = $requestData->area_education_id;
 //        $institutionId = $requestData->institution_id;
 //        $academicPeriodId = $requestData->academic_period_id;
-//        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-//        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+//        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+//        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 //        $periodEntity = $AcademicPeriods->get($academicPeriodId);
 //        $startDate = $periodEntity->start_date->format('Y-m-d');
 //        $endDate = $periodEntity->end_date->format('Y-m-d');

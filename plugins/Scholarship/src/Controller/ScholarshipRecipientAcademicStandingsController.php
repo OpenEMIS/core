@@ -3,7 +3,7 @@ namespace Scholarship\Controller;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Page\Model\Entity\PageElement;
 use App\Controller\PageController;
@@ -13,9 +13,9 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Security.Users');
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('Scholarship.RecipientAcademicStandings');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
+        $this->RecipientAcademicStandings = $this->fetchTable('Scholarship.RecipientAcademicStandings');
 
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->Page->loadElementsFromTable($this->RecipientAcademicStandings);

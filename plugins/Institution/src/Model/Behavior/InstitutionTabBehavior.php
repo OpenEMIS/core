@@ -3,7 +3,7 @@
 namespace Institution\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Core\Configure;
@@ -28,7 +28,7 @@ class InstitutionTabBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra = null)
+    public function beforeAction(EventInterface $event, ArrayObject $extra = null)
     {
         $model = $this->_table;
         if (!$extra) {
@@ -170,7 +170,7 @@ class InstitutionTabBehavior extends Behavior
         return $userID;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
         if ($this->_table->getAlias() != "Positions") { // POCOR_9426
@@ -187,7 +187,7 @@ class InstitutionTabBehavior extends Behavior
                 $institutionId = $this->getInstitutionID() ;
                 $userId = $this->_table->Auth->user('id');
                 $roles = $this->_table->Institutions->getInstitutionRoles($userId, $institutionId);
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($workflowStep->id);
                 $securityRoleAllowedEdit=!empty(array_intersect($roles, $stepRoles));
             }
@@ -323,7 +323,7 @@ class InstitutionTabBehavior extends Behavior
         return $buttons;
     }
 
-    public function addDeleteBeforeAction(Event $event = null, ArrayObject $extra = null)
+    public function addDeleteBeforeAction(EventInterface $event = null, ArrayObject $extra = null)
     {
         //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
         if ($extra == null) {
@@ -474,7 +474,7 @@ class InstitutionTabBehavior extends Behavior
         }//PCOOR-8388 ends
 
         // POCOR-8074-QueryStringProfile start
-        $labels_tbl = TableRegistry::get('System.Labels');   //POCOR-8056
+        $labels_tbl = TableRegistry::getTableLocator()->get('System.Labels');   //POCOR-8056
         $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();//POCOR-8056
         if(empty($curricular_label_Data->name)){
             $curricular_label_Data->name = "Curriculars"; //POCOR-9432

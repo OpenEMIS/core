@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
@@ -74,7 +74,7 @@ class StudentOutcomesTable extends ControllerActionTable
         ]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $academicPeriodId = $this->getQueryString('academic_period_id');
         $outcomeTemplateId = $this->getQueryString('outcome_template_id');
@@ -118,7 +118,7 @@ class StudentOutcomesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $classId = $settings['class_id'];
         $institutionId = $settings['institution_id'];
@@ -298,7 +298,7 @@ class StudentOutcomesTable extends ControllerActionTable
             });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $criteriaList =  $settings['criteria_list_entities'];
         $prefix = $settings['criteria_prefix'];
@@ -365,7 +365,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $entity->institution_id = $this->getInstitutionID();
@@ -398,7 +398,7 @@ class StudentOutcomesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('class_number', ['type' => 'hidden']);
         $this->field('staff_id', ['type' => 'hidden']);
@@ -412,7 +412,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('outcome_template');
         $this->field('education_grade');
@@ -440,7 +440,7 @@ class StudentOutcomesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $Outcomes = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
         $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
@@ -589,7 +589,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Institution.StudentOutcomes/controls', 'data' => ['encodedQueryString' => $encodedQueryString,], 'options' => [], 'order' => 1];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Class Name');
@@ -607,7 +607,7 @@ class StudentOutcomesTable extends ControllerActionTable
     }
 
         //POCOR-6280 starts
-    public function onGetTotalMaleStudents(Event $event, Entity $entity) {
+    public function onGetTotalMaleStudents(EventInterface $event, Entity $entity) {
         
         if($this->action == 'view'){
             $grade = $this->getQueryString('education_grade_id');
@@ -642,7 +642,7 @@ class StudentOutcomesTable extends ControllerActionTable
         return $count;
     }
 
-    public function onGetTotalFemaleStudents(Event $event, Entity $entity) {
+    public function onGetTotalFemaleStudents(EventInterface $event, Entity $entity) {
         
         if($this->action == 'view'){
             $grade = $this->getQueryString('education_grade_id');
@@ -677,13 +677,13 @@ class StudentOutcomesTable extends ControllerActionTable
     }
     //POCOR-6280 ends
 
-    public function onGetEducationGrade(Event $event, Entity $entity)
+    public function onGetEducationGrade(EventInterface $event, Entity $entity)
     {
         $grade = $this->EducationGrades->get($entity->education_grade_id);
         return $grade->programme_grade_name;
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // from action button
         $this->classId = $this->getQueryString('class_id');
@@ -711,7 +711,7 @@ class StudentOutcomesTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function onGetOutcomeTemplate(Event $event, Entity $entity)
+    public function onGetOutcomeTemplate(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             $OutcomeTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
@@ -906,7 +906,7 @@ class StudentOutcomesTable extends ControllerActionTable
         return $studentOptions;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomCriteriasElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         // set Outcome Period filter
         $attr['period_options'] = $this->getOutcomePeriodOptions();

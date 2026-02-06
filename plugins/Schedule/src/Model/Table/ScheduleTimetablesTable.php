@@ -4,7 +4,7 @@ namespace Schedule\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -112,7 +112,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'add') {
             $originalButtons = $buttons->getArrayCopy();
@@ -134,7 +134,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'institution_schedule_term_id':
@@ -168,7 +168,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain(['ScheduleIntervals.Shifts.ShiftOptions']);
@@ -204,7 +204,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('status');
         $this->field('institution_schedule_term_id', ['visible' => false]);
@@ -312,7 +312,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // POCOR-8985 start
         $this->field('academic_period_id', ['type' => 'select', 'attr' => ['required' => true]]);
@@ -333,7 +333,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-
+     *
      */
     public function getRelatedName($tableName, $relatedField)
     {
@@ -349,7 +349,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             return $relatedField;
         }
     }
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('academic_period_id',
             ['type' => 'readonly',
@@ -380,7 +380,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             'institution_class_id', 'institution_schedule_interval_id', 'status']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -390,7 +390,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
             ]);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('institution_schedule_term_id', ['type' => 'select']);
@@ -436,7 +436,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
 
     //POCOR-8662 -- START
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extraArray = $extra->getArrayCopy();
         if (isset($extraArray['toolbarButtons']) && is_array($extraArray['toolbarButtons'])) {
@@ -460,7 +460,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
     //POCOR-8662 -- END
 
-    public function viewAfterActionOld(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterActionOld(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if (array_key_exists('edit', $extra['toolbarButtons'])) {
             $params = $this->getQueryString();
@@ -482,7 +482,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
 
     // OnGet Events
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->status == self::DRAFT) {
             $color = '#DDDDDD';
@@ -499,12 +499,12 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $status;
     }
 
-    public function onGetShift(Event $event, Entity $entity)
+    public function onGetShift(EventInterface $event, Entity $entity)
     {
         return $entity->schedule_interval->shift->shift_option->name;
     }
 
-    public function onGetGrade(Event $event, Entity $entity)
+    public function onGetGrade(EventInterface $event, Entity $entity)
     {
         $classGrades = $entity->institution_class->class_grades;
         $educationGradeList = [];
@@ -521,7 +521,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'select';
@@ -533,7 +533,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionScheduleTermId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionScheduleTermId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -544,7 +544,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -557,7 +557,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -573,7 +573,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldShift(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldShift(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = $this->extractRequestData($request, 'academic_period_id');
@@ -585,7 +585,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionScheduleIntervalId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionScheduleIntervalId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $shiftId = $this->extractRequestData($request, 'shift');
@@ -600,7 +600,7 @@ class ScheduleTimetablesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'readonly';
@@ -611,14 +611,14 @@ class ScheduleTimetablesTable extends ControllerActionTable
     }
 
     // Change Events
-    public function addOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($data[$this->getAlias()]['institution_schedule_interval_id']);
         unset($data[$this->getAlias()]['shift']);
         unset($data[$this->getAlias()]['education_grade_id']);
     }
 
-    public function addOnSaveSchedule(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addOnSaveSchedule(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
 
         $patchOptions['validate'] = true;

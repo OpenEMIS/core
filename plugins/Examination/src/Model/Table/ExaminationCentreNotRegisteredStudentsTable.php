@@ -2,7 +2,7 @@
 namespace Examination\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
@@ -24,7 +24,7 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.NotRegisteredStudents');
 
-        $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+        $this->ExaminationCentreStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
     }
 
     public function implementedEvents(): array
@@ -34,7 +34,7 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'RegisteredStudents'];
         $this->controller->getStudentsTab();
 

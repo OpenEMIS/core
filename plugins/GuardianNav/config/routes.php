@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/GuardianNavs', ['plugin' => 'GuardianNav'], function ($routes) {
-    Router::connect('/GuardianNavs', ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs']);
-    Router::connect('/GuardianNavs/:action/*', ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/GuardianNavs', ['plugin' => 'GuardianNav'], function (RouteBuilder $routes) {
+        $routes->connect('/GuardianNavs', ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs']);
+        $routes->connect('/GuardianNavs/:action/*', ['plugin' => 'GuardianNav', 'controller' => 'GuardianNavs']);
+    });
+};

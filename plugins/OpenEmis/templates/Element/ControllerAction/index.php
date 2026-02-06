@@ -2,6 +2,7 @@
 echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
 
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 //ControllerActionComponent - Version 1.0.5
 $dataKeys = [];

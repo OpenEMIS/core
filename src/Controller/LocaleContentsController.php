@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 class LocaleContentsController extends AppController
@@ -10,9 +10,9 @@ class LocaleContentsController extends AppController
     {
         parent::initialize();
         $this->loadComponent('Paginator');
-        $this->loadModel('Locales');
-        $this->loadModel('LocaleContents');
-        $this->loadModel('LocaleContentTranslations');
+        $this->Locales = $this->fetchTable('Locales');
+        $this->LocaleContents = $this->fetchTable('LocaleContents');
+        $this->LocaleContentTranslations = $this->fetchTable('LocaleContentTranslations');
     }
 
     public function beforeFilter(Event|\Cake\Event\EventInterface $event)

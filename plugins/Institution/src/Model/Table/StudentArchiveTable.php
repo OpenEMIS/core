@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -30,7 +30,7 @@ class StudentArchiveTable extends ControllerActionTable
     {
         $connectionone = ConnectionManager::get('default');
         $db1 = $connectionone->config()['database'];
-        $DataManagementConnections = TableRegistry::get('Archive.DataManagementConnections');
+        $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsData = $DataManagementConnections->find('all')
             ->select([
                 'DataManagementConnections.host','DataManagementConnections.db_name','DataManagementConnections.host','DataManagementConnections.username','DataManagementConnections.password','DataManagementConnections.db_name'
@@ -200,10 +200,10 @@ class StudentArchiveTable extends ControllerActionTable
         return $queryData;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        $Users = TableRegistry::get('Security.Users');
-        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
         $institution_id = !empty($this->request->query['institution_id']) ? $this->request->query['institution_id'] : 0 ;
 
         $query
@@ -216,7 +216,7 @@ class StudentArchiveTable extends ControllerActionTable
         ->where([$this->aliasField('institution_id') => $institution_id]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         ini_set("memory_limit", "-1");
 
@@ -250,7 +250,7 @@ class StudentArchiveTable extends ControllerActionTable
     }
 
     // To select another one more field from the containable data
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $day_id = $this->request->query('day_id');
         $newArray[] = [
@@ -262,11 +262,11 @@ class StudentArchiveTable extends ControllerActionTable
 
         if ($day_id == -1) {
 
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
             $daysPerWeek = $ConfigItems->value('days_per_week');
 
-            $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+            $optionTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
             $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                 ->where([
                     'ConfigItemOptions.option_type' =>'first_day_of_week',
@@ -321,7 +321,7 @@ class StudentArchiveTable extends ControllerActionTable
         $newFields = array_merge($newArray, $field_show);
         $fields->exchangeArray($newFields);
         $sheet = $settings['sheet'];
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         // Set data into a temporary variable
         $options['institution_id'] = $sheet['institutionId'];
@@ -336,7 +336,7 @@ class StudentArchiveTable extends ControllerActionTable
         $this->_absenceData = $this->findClassStudentsWithAbsence($sheet['query'], $options);
     }
 
-    public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderAttendance(EventInterface $event, Entity $entity, array $attr)
     {
         // Get the data from the temporary variable
         $absenceData = $this->_absenceData;
@@ -373,7 +373,7 @@ class StudentArchiveTable extends ControllerActionTable
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         echo "<pre>";print_r($data);die;
     }

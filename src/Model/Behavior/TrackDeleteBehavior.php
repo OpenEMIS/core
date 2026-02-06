@@ -4,7 +4,7 @@ namespace App\Model\Behavior;
 use Exception;
 
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -29,7 +29,7 @@ class TrackDeleteBehavior extends Behavior
         return $events;
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $this->trackDelete($entity);
     }

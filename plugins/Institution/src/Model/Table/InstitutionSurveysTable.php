@@ -7,7 +7,7 @@ use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
@@ -88,7 +88,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     { //POCOR-8926 start
         $pass = $this->request->getAttribute('params')['pass'][1] ?? null;
 
@@ -117,7 +117,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         //POCOR-8926  end
     }
 
-    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function deleteAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $broadcaster = $this;
         $listeners[] = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
@@ -127,7 +127,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         // To update to this code when upgrade server to PHP 5.5 and above
@@ -176,7 +176,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         ];
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
 
         $tabSection = null;
@@ -245,7 +245,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]); // POCOR-9105
     }
     //POCOR-7171:Start
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('assignee_id');
         $this->setFieldOrder(['assignee_id']);
@@ -288,7 +288,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         //POCOR-9033 end
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         //      POCOR-8496 start
         if (isset($extra['entity'])) {
@@ -299,7 +299,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->setfieldOrder($this->fieldsOrder);
     }
     //POCOR-7171:End
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $broadcaster = $this;
         $listeners = [];
@@ -312,7 +312,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $errors = $entity->getErrors();
 
@@ -331,7 +331,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function getWorkflowFilterOptions(Event $event, array $extra = null)
+    public function getWorkflowFilterOptions(EventInterface $event, array $extra = null)
     {
         $CustomModules = $this->SurveyForms->CustomModules;
         $module = $this->module;
@@ -418,7 +418,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
-    public function onGetDescription(Event $event, Entity $entity)
+    public function onGetDescription(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('survey_form') && $entity->survey_form->has('description')) {
@@ -428,7 +428,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetLastModified(Event $event, Entity $entity)
+    public function onGetLastModified(EventInterface $event, Entity $entity)
     {
         if (is_null($entity->modified)) {
             return $this->formatDateTime($entity->created);
@@ -437,7 +437,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function onGetToBeCompletedBy(Event $event, Entity $entity)
+    public function onGetToBeCompletedBy(EventInterface $event, Entity $entity)
     {
         $academicPeriodId = $entity->academic_period_id;
         $surveyFormId = $entity->survey_form->id;
@@ -471,12 +471,12 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCompletedOn(Event $event, Entity $entity)
+    public function onGetCompletedOn(EventInterface $event, Entity $entity)
     {
         return $this->formatDateTime($entity->modified);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Retrieve from here because will be reset in beforeAction of WorkflowBehavior
         $this->attachWorkflow = $this->controller->Workflow->attachWorkflow;
@@ -527,7 +527,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->setFieldOrder($fieldOrder);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-9089 start
         //POCOR-6976 start
@@ -823,21 +823,21 @@ class InstitutionSurveysTable extends ControllerActionTable
 
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'SurveyForms'
         ]);
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'survey_form_id';
         $searchableFields[] = 'assignee_id';
         $searchableFields[] = 'description';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
         $SurveyStatusPeriodTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatusPeriods');
@@ -876,7 +876,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         //POCOR-7290::End
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
 
         // to get all the workflow steps for this model
@@ -895,7 +895,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
     //POCOR-7290:: Start
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $SurveyStatusTable = TableRegistry::getTableLocator()->get('Survey.SurveyStatuses');
@@ -941,7 +941,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $buttons;
     }
     //POCOR-7290:: End
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('s_form', [
             'type' => 'element',
@@ -965,7 +965,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         $this->field('repeater_question_id');
     }
 
-    public function onUpdateFieldStatusId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStatusId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
             $statusOptions = $this->getWorkflowStepList();
@@ -980,7 +980,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
@@ -995,7 +995,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSurveyFormId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldSurveyFormId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
@@ -1010,7 +1010,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDescription(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldDescription(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'text';
@@ -1028,12 +1028,12 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
     {
         $includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
     }
 
-    public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldRepeaterQuestionId(EventInterface $event, array $attr, $action, $request)
     {
         $attr['type'] = 'hidden';
         $attr['value'] = 0;
@@ -1418,7 +1418,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         return $query;
     }
 
-    public function workflowBeforeTransition(Event $event, $requestData)
+    public function workflowBeforeTransition(EventInterface $event, $requestData)
     {
         $errors = false;
         $modelId = $this->request->getParam('pass')[1]; // id of the sub model
@@ -1514,7 +1514,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if ($action == 'add' || $action == 'edit') {
@@ -1585,7 +1585,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'assignee_id') {
             return __('Assignee');

@@ -3,7 +3,7 @@ namespace FieldOption\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -31,26 +31,26 @@ class QualificationTitlesTable extends ControllerActionTable
 		;
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(EventInterface $event) {
 		$this->field('qualification_level_id', [
 			'type' => 'select',
 			'after' => 'national_code'
 		]);
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

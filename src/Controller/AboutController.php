@@ -1,7 +1,7 @@
 <?php
 namespace App\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Locator\TableLocator;
@@ -49,7 +49,7 @@ class AboutController extends AppController
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         return true;
     }
@@ -83,7 +83,7 @@ class AboutController extends AppController
     {
         $tableLocator = new TableLocator();
         $ConfigAttachments = $tableLocator->get('ConfigAttachments');
-        // $ConfigAttachments = TableRegistry::get('ConfigAttachments');
+        // $ConfigAttachments = TableRegistry::getTableLocator()->get('ConfigAttachments');
 
         $configAttachmentsQuery = $ConfigAttachments->find()
             ->where([$ConfigAttachments->aliasField('active') => 1, $ConfigAttachments->aliasField('type') => 'partner', ])

@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -20,13 +20,13 @@ use Cake\Log\Log;
 
 //POCOR-8323
 // Events
-// public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
-// public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
-// public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {}
-// public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {}
-// public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {}
-// public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
-// public function onExcelGetLabel(Event $event, $column) {}
+// public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelGenerate(EventInterface $event, $writer, ArrayObject $settings) {}
+// public function onExcelGenerateComplete(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {}
+// public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {}
+// public function onExcelEndSheet(EventInterface $event, ArrayObject $settings, $totalProcessed) {}
+// public function onExcelGetLabel(EventInterface $event, $column) {}
 
 class ClassExcelBehavior extends Behavior
 {
@@ -92,7 +92,7 @@ class ClassExcelBehavior extends Behavior
         $this->generateXLXS($ids);
     }
 
-    public function excelV4(Event $mainEvent, ArrayObject $extra)
+    public function excelV4(EventInterface $mainEvent, ArrayObject $extra)
     {
         $id = 0;
         $break = false;
@@ -193,8 +193,8 @@ class ClassExcelBehavior extends Behavior
             $education_grade_id = $this->_table->request->getQuery()['education_grade_id'];
             $academic_period_id = $this->_table->request->getQuery()['academic_period_id'];
 
-            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 
             if($this->_table->request->getQuery()['education_grade_id'] > 0){
                 $conditions = [
@@ -220,20 +220,20 @@ class ClassExcelBehavior extends Behavior
 
             $footer = $this->getFooter();
             $Query = $sheet['query'];
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-			$StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-			$Institutions = TableRegistry::get('Institution.Institutions');
-			$InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+			$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+			$InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+			$StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+			$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+			$InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
 			//POCOR-8323 starts
-            //$InstitutionStudents = TableRegistry::get('Institution.InstitutionClassesStudents');
+            //$InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesStudents');
             $locator = new TableLocator();
             $locator->setConfig('Institution.InstitutionClassesStudents', [
                 'className' => Institution\Model\Table\InstitutionClassesStudents::class,
             ]);
             $InstitutionStudents = $locator->get('Institution.InstitutionClassesStudents');
             //POCOR-8323 ends
-            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+            $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
             /**
             * added condition to make query on the bases on selected class and exporting student's list
             * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
@@ -437,8 +437,8 @@ class ClassExcelBehavior extends Behavior
                                         ->where([$Users->aliasField('openemis_no') => $openemisId])
                                         ->first();
 
-                        $UserIdentities = TableRegistry::get('User.Identities');//POCOR-5852 starts
-                        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');//POCOR-5852 ends
+                        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');//POCOR-5852 starts
+                        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');//POCOR-5852 ends
                         $conditions = [
                             $UserIdentities->aliasField('security_user_id') => $user_data->id,
                         ];
@@ -936,7 +936,7 @@ class ClassExcelBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $action = $this->_table->action;
@@ -981,7 +981,7 @@ class ClassExcelBehavior extends Behavior
         //POCOR-5852 ends
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
 
         if ($buttons->offsetExists('view')) {

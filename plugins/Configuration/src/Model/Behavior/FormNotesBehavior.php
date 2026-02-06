@@ -4,7 +4,7 @@ namespace Configuration\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 class FormNotesBehavior extends Behavior {
@@ -20,11 +20,11 @@ class FormNotesBehavior extends Behavior {
 		return $events;
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(EventInterface $event, Entity $entity) {
 		$this->setupFormNotes($entity);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(EventInterface $event, Entity $entity) {
 		$this->setupFormNotes($entity);
 	}
 

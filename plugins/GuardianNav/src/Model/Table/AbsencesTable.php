@@ -3,7 +3,7 @@ namespace GuardianNav\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -46,7 +46,7 @@ class AbsencesTable extends ControllerActionTable
             $entity = $this->get($condition['id']);
             $institutionStudentAbsenceDaysEntity = $this->InstitutionStudentAbsenceDays->get($entity->institution_student_absence_day_id);
             $this->InstitutionStudentAbsenceDays->delete($institutionStudentAbsenceDaysEntity);
-            TableRegistry::get('InstitutionStudentAbsenceDetails')
+            TableRegistry::getTableLocator()->get('InstitutionStudentAbsenceDetails')
                     ->deleteAll(['student_id'=>$entity->student_id,
                             'date'=>$entity->date,
                             ]);
@@ -57,7 +57,7 @@ class AbsencesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $settings)
     {
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['institution_id']['visible'] = false;
@@ -69,9 +69,9 @@ class AbsencesTable extends ControllerActionTable
         $this->setFieldOrder('date');
     }
 
-    public function onGetPeriods(Event $event, Entity $entity)
+    public function onGetPeriods(EventInterface $event, Entity $entity)
     {
-        $StudentAttendancePerDayPeriods = TableRegistry::get('Attendance.StudentAttendancePerDayPeriods');
+        $StudentAttendancePerDayPeriods = TableRegistry::getTableLocator()->get('Attendance.StudentAttendancePerDayPeriods');
         $result = $StudentAttendancePerDayPeriods
             ->find()
             ->select(['name'])
@@ -80,9 +80,9 @@ class AbsencesTable extends ControllerActionTable
         return $this->periods = $result->name;
     }
 
-    public function onGetSubjects(Event $event, Entity $entity)
+    public function onGetSubjects(EventInterface $event, Entity $entity)
     {
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $result = $InstitutionSubjects
             ->find()
             ->select(['name'])
@@ -91,9 +91,9 @@ class AbsencesTable extends ControllerActionTable
         return $this->subjects = $result->name;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -223,7 +223,7 @@ class AbsencesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         parent::onUpdateActionButtons($event, $entity, $buttons);
         unset($buttons['edit']);
@@ -275,12 +275,12 @@ class AbsencesTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         $this->setupTabElements();
     }
 
-    public function beforeFind( Event $event, Query $query )
+    public function beforeFind( EventInterface $event, Query $query )
     {
 		$userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267

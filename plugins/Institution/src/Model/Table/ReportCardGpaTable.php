@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
@@ -63,7 +63,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -106,7 +106,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_name', ['type' => 'integer','sort' => ['field' => 'Users.first_name']]);
@@ -123,7 +123,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $institutionId = $this->getInstitutionID();
         $params = $this->request->getQuery();
@@ -332,7 +332,7 @@ class ReportCardGpaTable extends ControllerActionTable
     }
 
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $gradeId = $this->request->getQuery('education_grade_id');
         //POCOR-9170[START]
@@ -486,13 +486,13 @@ class ReportCardGpaTable extends ControllerActionTable
 
 
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
         //$this->field('institution_class_id', ['visible' => true]);
@@ -506,7 +506,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'gpa']);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
 
         $value = '';
@@ -516,7 +516,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $value;
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString() ?? [];
         $url = $this->url('index');
@@ -539,7 +539,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $this->controller->redirect($url);
     }
 
-    public function generateAll(Event $event, ArrayObject $extra)
+    public function generateAll(EventInterface $event, ArrayObject $extra)
     {
         $this->AcademicPeriods =self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-9162
 
@@ -870,12 +870,12 @@ class ReportCardGpaTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getInstitutionGpaTab();
     }
 
-   public function onGetGpa(Event $event, Entity $entity)
+   public function onGetGpa(EventInterface $event, Entity $entity)
     {
         $studentsGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
         $gpa_id = $entity->education_grades_gpa_id;
@@ -899,7 +899,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return '';
     }
 
-    public function onGetCreated(Event $event, Entity $entity)
+    public function onGetCreated(EventInterface $event, Entity $entity)
     {
         if($this->action == 'index' && !empty($entity->gpa)){
             $studentsGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
@@ -927,7 +927,7 @@ class ReportCardGpaTable extends ControllerActionTable
     }
 
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if (($field == 'created' || $field == 'modified') && $this->action == 'index') {
             return 'Updated';
@@ -940,12 +940,12 @@ class ReportCardGpaTable extends ControllerActionTable
         }
     }
 
-    public function onGetStudentName(Event $event, Entity $entity)
+    public function onGetStudentName(EventInterface $event, Entity $entity)
     {
         return $entity->user->name;
     }
 
-    public function onGetInstitutionClass(Event $event, Entity $entity)
+    public function onGetInstitutionClass(EventInterface $event, Entity $entity)
     {
         $InstitutionClasses =self::getDynamicTableInstance('Institution.InstitutionClasses');
         $getName = $InstitutionClasses->find()
@@ -995,7 +995,7 @@ class ReportCardGpaTable extends ControllerActionTable
         }
     }
 
-    public function onGetGpaName(Event $event, Entity $entity)
+    public function onGetGpaName(EventInterface $event, Entity $entity)
     {
 
         $gpaTable =self::getDynamicTableInstance('Gpa.GpaSystem');
@@ -1018,7 +1018,7 @@ class ReportCardGpaTable extends ControllerActionTable
     }
 
 
-    /*public function viewBeforeQuery(Event $event, Query $query, Entity $entity)
+    /*public function viewBeforeQuery(EventInterface $event, Query $query, Entity $entity)
     {
 
         $query->where([$this->aliasField('institution_class_id IS') => $entity-]);

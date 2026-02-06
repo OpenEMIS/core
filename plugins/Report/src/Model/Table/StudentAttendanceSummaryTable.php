@@ -7,7 +7,7 @@ use DatePeriod;
 use DateTime;
 use App\Model\Table\AppTable;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -52,11 +52,11 @@ class StudentAttendanceSummaryTable extends AppTable
         $this->addBehavior('Institution.Calendar');
         $this->addBehavior('Report.AreaList');//POCOR-7794 //POCOR-7879
 
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $requestData = json_decode($settings['process']['params']);
         $sheetsData = $this->generateSheetsData($requestData);
@@ -64,7 +64,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $this->schoolClosedDays = $this->getSchoolClosedDate($requestData);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -73,7 +73,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
         $areaLevelId = $requestData->area_level_id;//POCOR-7794 //POCOR-7879
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $reportStartDate = new DateTime($requestData->report_start_date);
         $reportEndDate = new DateTime($requestData->report_end_date);
         $startDate = $reportStartDate->format('Y-m-d');
@@ -81,7 +81,7 @@ class StudentAttendanceSummaryTable extends AppTable
 
         $conditions = [];
 
-        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
@@ -213,7 +213,7 @@ class StudentAttendanceSummaryTable extends AppTable
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $extraField[] = [
             'key' => '',
@@ -346,7 +346,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $institutionTypeId = $requestData->institution_type_id;
 
         $ids ='';
-        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
@@ -354,7 +354,7 @@ class StudentAttendanceSummaryTable extends AppTable
                         ->where(['institution_type_id' => $institutionTypeId])
                         ->toArray();
 
-        $InstitutionGradesTable = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $institutionGradeResults = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId, true);
         $gradeOptions = [];
 
@@ -362,7 +362,7 @@ class StudentAttendanceSummaryTable extends AppTable
             if(in_array($educationGradeId, $institutionGradeResults)){
                 $gradeOptions[$educationGradeId] = $institutionGradeResults[$educationGradeId];
             }else{
-                $EducationGrades = TableRegistry::get('Education.EducationGrades');
+                $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
                 $educationGradesOptions = $EducationGrades
                     ->find('list', [
                         'keyField' => 'id',

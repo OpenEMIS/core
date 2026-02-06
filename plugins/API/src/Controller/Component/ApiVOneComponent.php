@@ -2,7 +2,7 @@
 namespace API\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -17,7 +17,7 @@ class ApiVOneComponent extends Component {
 
 		// for extracting error codes
 		// couldn't add the global codes in app table or controller since it is being used in both controller, components & table
-		$ApiAuthorizations = TableRegistry::get('API.ApiAuthorizations');
+		$ApiAuthorizations = TableRegistry::getTableLocator()->get('API.ApiAuthorizations');
 		// for extracting error codes
 
 		if (!isset($params['user_id']) || empty($params['user_id'])) {
@@ -27,7 +27,7 @@ class ApiVOneComponent extends Component {
 			// $result = ['error' => $error];
 		}
 
-		$IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+		$IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
 		$combineClosure = function ($record) {
 			return [
 				'name'=>$record->name,
@@ -47,14 +47,14 @@ class ApiVOneComponent extends Component {
 
 			if (isset($params['persona']) && $params['persona']!='') {
 				$persona = ucwords(strtolower($params['persona']));
-				$PersonaIdentities = TableRegistry::get('API.'.$persona.'Identities');
+				$PersonaIdentities = TableRegistry::getTableLocator()->get('API.'.$persona.'Identities');
 				if (!method_exists($PersonaIdentities, 'search')) {
 					$result = [
 						'error' => $ApiAuthorizations->getErrorMessage('openemis_persona_type_error'),
 					];
 				}
 			} else {
-				$PersonaIdentities = TableRegistry::get('API.StudentIdentities');
+				$PersonaIdentities = TableRegistry::getTableLocator()->get('API.StudentIdentities');
 			}
 
 			$conditions = [];

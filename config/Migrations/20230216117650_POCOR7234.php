@@ -22,8 +22,8 @@ class POCOR7234 extends AbstractMigration
         $this->execute("ALTER TABLE `institution_grades` MODIFY COLUMN `start_date` DATE NULL");
         $this->execute("ALTER TABLE `institution_grades` MODIFY COLUMN `start_year` INT(4) NULL");
 
-        $grades = TableRegistry::get('institution_grades');
-        $academicPeriod = TableRegistry::get('academic_periods');
+        $grades = TableRegistry::getTableLocator()->get('institution_grades');
+        $academicPeriod = TableRegistry::getTableLocator()->get('academic_periods');
         $institutionGrades = $grades->find()->toArray();
 
         foreach($institutionGrades as $value){

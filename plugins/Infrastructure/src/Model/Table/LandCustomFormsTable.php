@@ -4,7 +4,7 @@ namespace Infrastructure\Model\Table;
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Locator\TableLocator;
 use Cake\ORM\Query;
 
@@ -36,7 +36,7 @@ class LandCustomFormsTable extends CustomFormsTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCustomModuleId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $selectedModule = !is_null($this->request->getQuery('module')) ? $this->request->getQuery('module') : '';
         $tableLocator = new TableLocator();
@@ -65,7 +65,7 @@ class LandCustomFormsTable extends CustomFormsTable
         return $query;
     } 
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //echo "<pre>"; print_r($query->toArray());die;
     }

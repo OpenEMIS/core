@@ -4,7 +4,7 @@ namespace StaffAppraisal\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
@@ -69,7 +69,7 @@ class AppraisalsTable extends AppTable
         
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -88,12 +88,12 @@ class AppraisalsTable extends AppTable
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
@@ -108,7 +108,7 @@ class AppraisalsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
@@ -122,12 +122,12 @@ class AppraisalsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $requestData = $request->getData($this->getAlias());
         if (isset($requestData['feature'])) {
             $feature                = $this->request->getData($this->getAlias())['feature'];
-            $AcademicPeriodTable    = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriodTable    = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions  = $AcademicPeriodTable->getYearList();
             $currentPeriod          = $AcademicPeriodTable->getCurrent();
             $attr['options']        = $academicPeriodOptions;
@@ -141,7 +141,7 @@ class AppraisalsTable extends AppTable
         }
     }
 
-    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDate(EventInterface $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
         
@@ -158,7 +158,7 @@ class AppraisalsTable extends AppTable
         
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -174,7 +174,7 @@ class AppraisalsTable extends AppTable
        
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $fields[] = [
             'key' => 'AppraisalPeriods.AcademicPeriods.AcademicPeriods',
@@ -184,7 +184,7 @@ class AppraisalsTable extends AppTable
         ];
     }
 
-    public function onExcelGetCode(Event $event, Entity $entity)
+    public function onExcelGetCode(EventInterface $event, Entity $entity)
     {
        return $entity->appraisal_period->academic_period->name;
     }

@@ -15,18 +15,18 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Cases.InstitutionCases');
-        $this->loadModel('Cases.InstitutionCaseRecords');
-        $this->loadModel('Institution.ClassAttendanceRecords');
-		$this->loadModel('Institution.InstitutionClasses');
-		$this->loadModel('Institution.Institutions');
-		$this->loadModel('AcademicPeriod.AcademicPeriods');
-		$this->loadModel('Workflow.WorkflowRules');
+        $this->InstitutionCases = $this->fetchTable('Cases.InstitutionCases');
+        $this->InstitutionCaseRecords = $this->fetchTable('Cases.InstitutionCaseRecords');
+        $this->ClassAttendanceRecords = $this->fetchTable('Institution.ClassAttendanceRecords');
+		$this->InstitutionClasses = $this->fetchTable('Institution.InstitutionClasses');
+		$this->Institutions = $this->fetchTable('Institution.Institutions');
+		$this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
+		$this->WorkflowRules = $this->fetchTable('Workflow.WorkflowRules');
 
-        $this->loadModel('Security.Users');
-        $this->loadModel('Security.SecurityGroupUsers');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->SecurityGroupUsers = $this->fetchTable('Security.SecurityGroupUsers');
 
-		$this->loadModel('Alert.AlertLogs');
+		$this->AlertLogs = $this->fetchTable('Alert.AlertLogs');
     }
 
     public function main()
@@ -44,7 +44,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 		foreach($workflowRules as $workflowRule){
 			$rule = json_decode($workflowRule['rule'], true);
 			//6023 starts get workflow name
-			$Workflows = TableRegistry::get('Workflows');
+			$Workflows = TableRegistry::getTableLocator()->get('Workflows');
 			$workflows = $Workflows->find()->where(['id' => $workflowRule['workflow_id']])->first();
 			//6023 ends
 			$daysUnmarked = $rule['where']['days_unmarked'];
@@ -67,7 +67,7 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 				$mailed_data = []; //6023 task
 				foreach($classAttendanceRecords as $classAttendanceRecord){
 					//6023 starts
-					$studentAttendanceMarkedRecords = TableRegistry::get('student_attendance_marked_records');
+					$studentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('student_attendance_marked_records');
 					$studentRecords = $studentAttendanceMarkedRecords
 									->find()
 									->where([
@@ -109,9 +109,9 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 					$title = $classAttendanceRecord['institution_class']['name'] . ' ' . $classAttendanceRecord['institution_class']['institution']['code'] . ' - ' . $classAttendanceRecord['institution_class']['institution']['name'] . ' with ' . $daysUnmarked . ' day Student Unmarked Attendances';
 					//POCOR-6363:: START
 					$institutionId = $classAttendanceRecord['institution_class']['institution']['id'];
-					$INSTITUTIONS = TableRegistry::get('institutions');
+					$INSTITUTIONS = TableRegistry::getTableLocator()->get('institutions');
 					$INSTITITUTEDATA = $INSTITUTIONS->find('all',['conditions'=>['id'=>$institutionId]])->first();
-					$securityGroupUsers = TableRegistry::get('security_group_users');
+					$securityGroupUsers = TableRegistry::getTableLocator()->get('security_group_users');
 					$dataForAssigneeID = $securityGroupUsers->find('all',['conditions'=>['security_group_id'=>$INSTITITUTEDATA->security_group_id,'security_role_id'=>$securityRoleId]])->first();
 					if(!empty($dataForAssigneeID)){
 						$assigneeId = $dataForAssigneeID->security_user_id;

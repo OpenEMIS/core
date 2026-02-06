@@ -8,7 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class VisitBehavior extends Behavior
 {
@@ -24,7 +24,7 @@ class VisitBehavior extends Behavior
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
 

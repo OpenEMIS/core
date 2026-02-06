@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -34,11 +34,11 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelGetEstimatedAmount(Event $event, Entity $entity)
+    public function onExcelGetEstimatedAmount(EventInterface $event, Entity $entity)
     {
         $estimatedAmount = '';
 
-        $estimatesStructure = TableRegistry::get('Scholarship.RecipientPaymentStructureEstimates');
+        $estimatesStructure = TableRegistry::getTableLocator()->get('Scholarship.RecipientPaymentStructureEstimates');
         $result = $estimatesStructure
             ->find()
             ->where([
@@ -57,7 +57,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
         return $estimatedAmount;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -145,7 +145,7 @@ class ScholarshipDisbursementsAmountsTable extends AppTable
             ->where($conditions);
     }
 
-   public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+   public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
    {
        $newFields = [];
 

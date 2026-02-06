@@ -3,6 +3,7 @@ namespace ControllerAction\View\Helper;
 
 use ArrayObject;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -476,7 +477,7 @@ class ControllerActionHelper extends Helper
                 $options = isset($_fieldAttr['attr']) ? $_fieldAttr['attr'] : array();
 
                 if (is_null($table) && isset($attr['className'])) { // POCOR-9227
-                    $table = TableRegistry::get($attr['className']);
+                    $table = TableRegistry::getTableLocator()->get($attr['className']);
                 }
 
                 // attach event to get labels for fields

@@ -1,17 +1,19 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/MoodleApi', ['plugin' => 'MoodleApi'], function ($routes) {
-    $routes->scope('/log', ['controller' => 'MoodleApiLog'], function ($route) {
-        $route->connect(
-            '/',
-            ['action' => 'index']
-        );
-
-        $route->connect(
-            '/:action/*',
-            [],
-            ['action' => '[a-zA-Z]+']
-        );
+return function (RouteBuilder $routes) {
+    $routes->scope('/MoodleApi', ['plugin' => 'MoodleApi'], function (RouteBuilder $routes) {
+        $routes->scope('/log', ['controller' => 'MoodleApiLog'], function (RouteBuilder $route) {
+            $route->connect(
+                '/',
+                ['action' => 'index']
+            );
+    
+            $route->connect(
+                '/:action/*',
+                [],
+                ['action' => '[a-zA-Z]+']
+            );
+        });
     });
-});
+};

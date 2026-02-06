@@ -9,7 +9,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -56,7 +56,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
         $institutionId = $options['institution_id'];
         //SATRT: POCOR-6609
         // $academic_year =  explode("-", $options['academic_period_id']);
-        // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        // $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         // $academicPeriodId = $AcademicPeriods
         //             ->find()
         //             ->where([
@@ -77,7 +77,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
         } else {
             $academic_period_id = $options['academic_period_id'];
             // $academic_year =  explode("-", $options['academic_period_id']);
-            // $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            // $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             // $academicPeriodId = $AcademicPeriods
             //         ->find()
             //         ->where([
@@ -89,7 +89,7 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
             // $academic_period_id = $academicPeriodId;
         }
         //END: POCOR-6609
-        $MealProgrammes = TableRegistry::get('Meal.MealProgrammes');
+        $MealProgrammes = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
         $query
             ->select([
                 $this->aliasField('meal_programme_id'),
@@ -121,13 +121,13 @@ class MealInstitutionProgrammesTable extends ControllerActionTable
      * POCOR-7908
      * @param Query $query
      * @param array $options
-
+     *
      */
     public function findMealInstitutionPrograms(Query $query, array $options)
     {
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
-        $MealPrograms = TableRegistry::get('Meal.MealProgrammes');
+        $MealPrograms = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
         return $query
             ->select([
                 $this->aliasField('meal_programme_id'),

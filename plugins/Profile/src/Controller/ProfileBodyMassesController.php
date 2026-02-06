@@ -1,7 +1,7 @@
 <?php
 namespace Profile\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Profile\Controller\EventInterface;
 use Profile\Controller\BodyMassesController as BaseController;
 

@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 
@@ -39,49 +39,49 @@ class StaffHealthReportsTable extends AppTable
         $this->addBehavior('AcademicPeriod.Period');
     }
 
-    public function beforeAction(Event $event) 
+    public function beforeAction(EventInterface $event) 
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) 
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
 
-    public function onExcelGetHealthInsurance(Event $event, Entity $entity)
+    public function onExcelGetHealthInsurance(EventInterface $event, Entity $entity)
     {
         $healthInsurance = ($entity->health_insurance == 1)?'Yes':'No';
         return $healthInsurance;
     }
     
-    public function onExcelGetSevere(Event $event, Entity $entity)
+    public function onExcelGetSevere(EventInterface $event, Entity $entity)
     {
         $severe = ($entity->severe == 1)?'Yes':'No';
         return $severe;
     }
     
-    public function onExcelGetCurrent(Event $event, Entity $entity)
+    public function onExcelGetCurrent(EventInterface $event, Entity $entity)
     {
         $current = ($entity->current == 1)?'Yes':'No';
         return $current;
     }
     
     
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $identityTypeName = '';
         if (!empty($entity->identity_type)) {
-            $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
+            $identityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->find()->where(['id'=>$entity->identity_type])->first();
             $identityTypeName = $identityType->name;
         }
         return $identityTypeName;
     }
     
-    public function onExcelGetGender(Event $event, Entity $entity)
+    public function onExcelGetGender(EventInterface $event, Entity $entity)
     {
         $gender = '';
         if (!empty($entity->user->gender->name) ) {
@@ -91,17 +91,17 @@ class StaffHealthReportsTable extends AppTable
         return $gender;
     }    
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $healthReportType = $requestData->health_report_type;
         $areaId = $requestData->area_education_id;
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
-        $Class = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+        $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -859,7 +859,7 @@ class StaffHealthReportsTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $healthReportType = $requestData->health_report_type;

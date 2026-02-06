@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -46,7 +46,7 @@ class StudentClassesTable extends ControllerActionTable
         // ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //$contentHeader = $this->controller->viewVars['contentHeader'];
         $contentHeader = $this->controller->viewBuilder()->getVars()['contentHeader'];
@@ -57,7 +57,7 @@ class StudentClassesTable extends ControllerActionTable
         $this->controller->Navigation->substituteCrumb(__('Student Classes'), __('Classes'));
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['education_grade_id']['visible'] = false;
         $this->fields['institution_id']['visible'] = false;
@@ -149,7 +149,7 @@ class StudentClassesTable extends ControllerActionTable
     }
 
     //POCOR-8490
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userData = $this->Session->read();
         $session = $this->request->getSession(); //POCOR-6267
@@ -183,7 +183,7 @@ class StudentClassesTable extends ControllerActionTable
         ->toArray();
     }
 
-    public function indexBeforeQueryOld(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQueryOld(EventInterface $event, Query $query, ArrayObject $extra)
     {
 		$userData = $this->Session->read();
         $session = $this->request->getSession();//POCOR-6267
@@ -224,7 +224,7 @@ class StudentClassesTable extends ControllerActionTable
         ->toArray();
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $queryString = $this->getQueryString();
@@ -261,7 +261,7 @@ class StudentClassesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'student'];
         //$tabElements = $this->controller->getAcademicTabElements($options);
@@ -275,7 +275,7 @@ class StudentClassesTable extends ControllerActionTable
 
     public function getClassStudents($classId, $periodId, $institutionId)
     {
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');
         return $this->find()
                 ->contain('Users')
                 ->where([
@@ -287,7 +287,7 @@ class StudentClassesTable extends ControllerActionTable
                 ->toArray();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period') {
             return __('Academic Period');

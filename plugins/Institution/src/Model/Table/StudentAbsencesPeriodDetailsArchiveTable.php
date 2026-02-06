@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -107,7 +107,7 @@ class StudentAbsencesPeriodDetailsArchiveTable extends ControllerActionTable
 //        return $query;
 //    }
 //
-//    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+//    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
 //    {
 //        $academic_period_id = $this->request->query['academic_period_id'];
 //        $institution_class_id = $this->request->query['institution_class_id'];

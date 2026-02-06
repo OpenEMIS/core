@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
@@ -64,7 +64,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param array $options
      * @return array|Query|mixed
      * refactured for POCOR-7908
-
+     *
      */
     public function findClassStudentsWithMeal(Query $query, array $options)
     {
@@ -84,8 +84,8 @@ class StudentMealsTable extends ControllerActionTable
             $institutionClassId,
             $studentID,
             $ID);
-        $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
-        $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
+        $InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
+        $StudentMealMarkedRecords = TableRegistry::getTableLocator()->get('Meal.StudentMealMarkedRecords');
         $MealProgrammes = $InstitutionMealStudents->MealProgrammes;
         $MealBenefit = $InstitutionMealStudents->MealBenefit;
         $MealReceived = $InstitutionMealStudents->MealReceived;
@@ -142,7 +142,7 @@ class StudentMealsTable extends ControllerActionTable
         if ($day == -1) {
             $findDay[] = $weekStartDay;
             $findDay[] = $weekEndDay;
-            $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
             $dayList = $AcademicPeriodsTable
                 ->find('DaysForPeriodWeek', [
@@ -170,8 +170,8 @@ class StudentMealsTable extends ControllerActionTable
                 ->all();
             if (!$studentListResult->isEmpty()) {
                 $studentList = $studentListResult->toArray();
-                $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
-                $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
+                $InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
+                $StudentMealMarkedRecords = TableRegistry::getTableLocator()->get('Meal.StudentMealMarkedRecords');
 
                 $result = $InstitutionMealStudents
                     ->find()
@@ -276,7 +276,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return array|Query|mixed
-
+     *
      */
         public function findClassStudentsWithMealSave(Query $query, array $options)
     {
@@ -293,8 +293,8 @@ class StudentMealsTable extends ControllerActionTable
         $day = $options['day_id'];
         $firstStudent = $arrayStudents[0];
         $isMarked = $firstStudent->marked_meal_id;
-        $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
-        $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
+        $StudentMealMarkedRecords = TableRegistry::getTableLocator()->get('Meal.StudentMealMarkedRecords');
+        $InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
         if (empty($isMarked)) {
             $result = $this->markDay($institutionId,
                 $institutionClassId,
@@ -346,12 +346,12 @@ class StudentMealsTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return array|Query|mixed
-
+     *
      */
     public function findClassStudentWithMealSave(Query $query, array $options)
     {
 
-        $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
+        $InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
         $id = $options['institution_meal_student_id'];
         $mealReceivedId = $options['meal_received_id'];
         $mealBenefitId = $options['meal_benefit_id'];
@@ -378,11 +378,11 @@ class StudentMealsTable extends ControllerActionTable
         return $this->findClassStudentsWithMeal($query, $options);
     }
 
-    public function onExcelGetBenefit(Event $event, Entity $entity)
+    public function onExcelGetBenefit(EventInterface $event, Entity $entity)
     {
 
-        $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
-        $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
+        $InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
+        $StudentMealMarkedRecords = TableRegistry::getTableLocator()->get('Meal.StudentMealMarkedRecords');
 
 
         $conditions = [
@@ -440,10 +440,10 @@ class StudentMealsTable extends ControllerActionTable
         return $benefit;
     }
 
-    public function onExcelGetMealReceived(Event $event, Entity $entity)
+    public function onExcelGetMealReceived(EventInterface $event, Entity $entity)
     {
-        $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
-        $StudentMealMarkedRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
+        $InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
+        $StudentMealMarkedRecords = TableRegistry::getTableLocator()->get('Meal.StudentMealMarkedRecords');
 
         $conditions = [
             $InstitutionMealStudents->aliasField('academic_period_id = ') => $entity->academic_period_id,
@@ -496,7 +496,7 @@ class StudentMealsTable extends ControllerActionTable
     }
 
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         ini_set("memory_limit", "-1");
 
@@ -507,7 +507,7 @@ class StudentMealsTable extends ControllerActionTable
         $weekEndDay = $this->request->getQuery('week_end_day');
         $dayId = $this->request->getQuery('day_id');
 
-        $InstitutionMealStudents = TableRegistry::get('Institution.InstitutionMealStudents');
+        $InstitutionMealStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionMealStudents');
 
 
         $sheetName = 'StudentMeals';
@@ -535,7 +535,7 @@ class StudentMealsTable extends ControllerActionTable
         ];
     }
 
-    public function onExcelGetName(Event $event, Entity $entity)
+    public function onExcelGetName(EventInterface $event, Entity $entity)
     {
 
         $fname = ($entity->user->first_name != null) ? $entity->user->first_name : '';
@@ -546,7 +546,7 @@ class StudentMealsTable extends ControllerActionTable
         return $fullname;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $day_id = $this->request->getQuery('day_id');
         $newArray[] = [
@@ -595,7 +595,7 @@ class StudentMealsTable extends ControllerActionTable
         //$newFields = array_merge($newArray, $field_show);
         $fields->exchangeArray($newArray);
         $sheet = $settings['sheet'];
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         // Set data into a temporary variable
         $options['institution_id'] = $sheet['institutionId'];
@@ -618,7 +618,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param null $studentID
      * @param null $ID
      * @return array|Query
-
+     *
      */
     private function getMealsMainQuery(Query $query,
                                        $academicPeriodId,
@@ -675,7 +675,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param Query $query
      * @param $default_meal_receive_id
      * @return mixed
-
+     *
      */
     private function getDailyMealData(Query $query, $default_meal_receive_id)
     {
@@ -695,14 +695,14 @@ class StudentMealsTable extends ControllerActionTable
     /**
      * POCOR-7908
      * @return mixed
-
+     *
      */
     private function getDefaultMealReceiveID()
     {
-        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configItemData = $ConfigItemsTable->find('all', ['conditions' => ['code' => 'DefaultDeliveryStatus']])->first();
         $DefaultDeliveryStatus = $configItemData->value;
-        $MealReceivedTable = TableRegistry::get('Meal.MealReceived');
+        $MealReceivedTable = TableRegistry::getTableLocator()->get('Meal.MealReceived');
         $mealReceivedData = $MealReceivedTable->find('all')->where(['name' => $DefaultDeliveryStatus])->first();
         $default_meal_receive_id = $mealReceivedData->id;
         return $default_meal_receive_id;
@@ -717,7 +717,7 @@ class StudentMealsTable extends ControllerActionTable
      * @param $day
      * @param \Cake\ORM\Table $StudentMealMarkedRecords
      * @return bool|\Cake\Datasource\EntityInterface|mixed
-
+     *
      */
     private function markDay($institutionId, $institutionClassId, $mealProgramId, $academicPeriodId, $day, \Cake\ORM\Table $StudentMealMarkedRecords)
     {

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -24,24 +24,24 @@ class StaffIdentitiesTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
 	}
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
 		$requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');

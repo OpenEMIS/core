@@ -6,7 +6,7 @@ use Cake\I18n\Date;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 
@@ -46,7 +46,7 @@ class UserBodyMassesTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -154,7 +154,7 @@ class UserBodyMassesTable extends ControllerActionTable
         return $query;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['height']) && !empty($data['weight'])) {
             $height = round($data['height']/100, 2);
@@ -173,7 +173,7 @@ class UserBodyMassesTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'UserBodyMasses';
         $userType = '';
@@ -202,7 +202,7 @@ class UserBodyMassesTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
         $this->field('comment',['visible' => false]);
@@ -211,13 +211,13 @@ class UserBodyMassesTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
@@ -225,14 +225,14 @@ class UserBodyMassesTable extends ControllerActionTable
         ->orderDesc($this->aliasField('id'));
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $extra, Query $query){
         $session = $this->request->getSession();
         $studentUserId = $session->read('Institution.StudentUser.primaryKey.id');
         $query->where([$this->aliasField('security_user_id') => $studentUserId])
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
@@ -259,7 +259,7 @@ class UserBodyMassesTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
         $weight =  $entity['weight'];
         //convert height centimeter to meter
         $height =  ($entity['height'] / 100);
@@ -270,7 +270,7 @@ class UserBodyMassesTable extends ControllerActionTable
         $entity['body_mass_index'] = $body_mass_index;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'academic_period_id',

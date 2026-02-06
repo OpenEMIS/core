@@ -10,9 +10,9 @@ use Cake\I18n\Time;
 class LinkAllExamCentresShell extends Shell {
     public function initialize(): void {
         parent::initialize();
-        $this->loadModel('Examination.ExaminationCentres');
-        $this->loadModel('Examination.ExaminationCentresExaminations');
-        $this->loadModel('Institution.Institutions');
+        $this->ExaminationCentres = $this->fetchTable('Examination.ExaminationCentres');
+        $this->ExaminationCentresExaminations = $this->fetchTable('Examination.ExaminationCentresExaminations');
+        $this->Institutions = $this->fetchTable('Institution.Institutions');
     }
 
     public function main() {
@@ -21,7 +21,7 @@ class LinkAllExamCentresShell extends Shell {
 
             $PAGE_LIMIT = 500;
             $pid = getmypid();
-            $SystemProcesses = TableRegistry::get('SystemProcesses');
+            $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
             $systemProcessId = !empty($args[0]) ? $args[0] : 0;
             $examinationId = !empty($args[1]) ? $args[1] : 0;
             $examCentreTypeId = !empty($args[2]) ? $args[2] : 0; // POCOR-8919

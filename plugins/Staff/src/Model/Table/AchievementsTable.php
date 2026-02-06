@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -43,7 +43,7 @@ class AchievementsTable extends AppTable {
 			->allowEmpty('file_content');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$visible = ['index' => false, 'view' => true, 'edit' => true];
 		$this->ControllerAction->field('training_achievement_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('description', ['visible' => $visible]);
@@ -58,21 +58,21 @@ class AchievementsTable extends AppTable {
 		$this->ControllerAction->field('staff_id', ['type' => 'hidden']);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(EventInterface $event) {
 		$this->ControllerAction->setFieldOrder([
 			'training_achievement_type_id', 'code', 'name', 'start_date', 'credit_hours'
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(EventInterface $event, Entity $entity) {
 		$this->setupFields($entity);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(EventInterface $event, Entity $entity) {
 		$this->setupFields($entity);
 	}
 
-	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
 			$session = $request->session();
 			$sessionKey = 'Staff.Staff.id';

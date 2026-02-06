@@ -5,11 +5,10 @@ namespace Workflow\Controller;
 use App\Controller\AppController;
 use ArrayObject;
 use Cake\Core\Configure;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\EventInterface;
 
 class WorkflowsController extends AppController
 {
@@ -145,7 +144,7 @@ class WorkflowsController extends AppController
         return $requestQuery;
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Workflow');
 
@@ -176,7 +175,7 @@ class WorkflowsController extends AppController
         $case_id = $this->request->getQuery('case_id');
 
 
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $params = [
             'is_school_based' => $isSchoolBased,
             'workflow_step_id' => $nextStepId,
@@ -189,7 +188,7 @@ class WorkflowsController extends AppController
                 $params['institution_id'] = $institutionId;
             }
         }
-        $institutionCasesT = TableRegistry::get('Cases.InstitutionCases');
+        $institutionCasesT = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
         $caseOptions = $institutionCasesT->find('list', ['keyField' => 'id', 'valueField' => 'case_number'])->where(['id !=' => $case_id])->toArray();
 
 
@@ -244,7 +243,7 @@ class WorkflowsController extends AppController
         $autoAssignAssignee = $this->request->getQuery('auto_assign_assignee');
 
         if (!$autoAssignAssignee) {
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $params = [
                 'is_school_based' => $isSchoolBased,
                 'workflow_step_id' => $nextStepId,
@@ -273,7 +272,7 @@ class WorkflowsController extends AppController
 
         } else {
             //POCOR-8642 --START
-            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
             $path = $queryString['path'];
             $segments = explode('/', $path);
             //echo "<pre>";print_r($_SESSION);exit;
@@ -298,7 +297,7 @@ class WorkflowsController extends AppController
 
             $id = isset($primaryKey['id']) ? $primaryKey['id'] : null;
             $institutionId = isset($primaryKey['institution_id']) ? $primaryKey['institution_id'] : null;
-            $receivingInsttutionId = TableRegistry::get($tableName)->getReceivingInstList($id);
+            $receivingInsttutionId = TableRegistry::getTableLocator()->get($tableName)->getReceivingInstList($id);
 
             $params = [
                 'is_school_based' => $isSchoolBased,
@@ -377,7 +376,7 @@ class WorkflowsController extends AppController
         $comment = $this->request->getQuery('name');
         $case_id = $this->request->getQuery('caseId');
 
-        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
+        $workflow_transitions_table = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
 
         $dataRecord = $workflow_transitions_table->get($case_id);
         $dataRecord->comment = $comment;
@@ -405,7 +404,7 @@ class WorkflowsController extends AppController
         $queryString = parse_url($url);
 
         $case_id = $this->request->getQuery('caseId');
-        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
+        $workflow_transitions_table = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
         $data = $workflow_transitions_table->find()->where(['id' => $case_id])->first();
         $comment = $data->comment;
 
@@ -431,7 +430,7 @@ class WorkflowsController extends AppController
         $queryString = parse_url($url);
 
         $case_id = $this->request->getQuery('caseId');
-        $workflow_transitions_table = TableRegistry::get('Workflow.WorkflowTransitions');
+        $workflow_transitions_table = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
         $params = [
             'caseId' => $case_id
         ];

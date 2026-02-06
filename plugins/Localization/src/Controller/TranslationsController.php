@@ -1,7 +1,7 @@
 <?php
 namespace Localization\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Core\App;
 use Cake\Cache\Cache;
 

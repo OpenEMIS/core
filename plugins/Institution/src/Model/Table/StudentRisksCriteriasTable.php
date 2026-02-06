@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 use App\Model\Table\AppTable;
@@ -64,10 +64,10 @@ class StudentRisksCriteriasTable extends AppTable
 
                 case 3: // '='
                 case 11: // for Repeated status
-                    $Risks = TableRegistry::get('Risk.Risks');
+                    $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
                     $criteriaName = $RiskCriteriasData->criteria;
                     $criteriaDetails = $Risks->getCriteriasDetails($criteriaName);
-                    $criteriaModel = TableRegistry::get($criteriaDetails['model']);
+                    $criteriaModel = TableRegistry::getTableLocator()->get($criteriaDetails['model']);
 
                     $valueRisk = $criteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 

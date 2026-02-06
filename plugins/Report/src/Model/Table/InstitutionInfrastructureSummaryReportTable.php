@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -32,14 +32,14 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $areaLevelId = $requestData->area_level_id;
@@ -47,9 +47,9 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         $institution_id = $requestData->institution_id;
         $institution_status_id = $requestData->institution_status_id;
         $academic_period_id = $requestData->academic_period_id;
-        $AreaLvlT = TableRegistry::get('Area.AreaLevels'); 
+        $AreaLvlT = TableRegistry::getTableLocator()->get('Area.AreaLevels'); 
 	    $AreaLvlData = $AreaLvlT->find('all')->where(['id' => $areaLevelId])->first();
-        $AreaT = TableRegistry::get('Area.Areas');                
+        $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');                
         //Level-1
         if($areaId != -1){
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
@@ -57,7 +57,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
             $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['area_level_id' => $areaLevelId])->toArray();
         }
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $acedmicPeriodData = $AcademicPeriods->find()->where([$AcademicPeriods->aliasField('id') => $academic_period_id])->first();
         $AcademicPeriodsStartYear = $acedmicPeriodData->start_year;
         
@@ -237,7 +237,7 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
     }
     
 
-     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
      { 
         $newFields[] = [
             'key' => 'academic_period',

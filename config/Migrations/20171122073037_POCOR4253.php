@@ -19,7 +19,7 @@ class POCOR4253 extends AbstractMigration
         // end backup
 
         // insert data to utility_internet_types from z_4253_institution_network_connectivities
-        $count = TableRegistry::get('ZUtilityInternetType', ['table' => 'z_4253_utility_internet_types'])->find()->count();
+        $count = TableRegistry::getTableLocator()->get('ZUtilityInternetType', ['table' => 'z_4253_utility_internet_types'])->find()->count();
 
         if ($count) {
             $this->execute('

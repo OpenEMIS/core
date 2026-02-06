@@ -1,8 +1,9 @@
 <?php
-use Cake\Routing\Router;
 use Cake\Routing\RouteBuilder;
 
-Router::scope('/Configurations', ['plugin' => 'Configuration'], function (RouteBuilder$routes) {
-	Router::connect('/Configurations', ['plugin' => 'Configuration', 'controller' => 'Configurations']);
-	Router::connect('/Configurations/:action/*', ['plugin' => 'Configuration', 'controller' => 'Configurations']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Configurations', ['plugin' => 'Configuration'], function (RouteBuilder $routes) {
+    	$routes->connect('/Configurations', ['plugin' => 'Configuration', 'controller' => 'Configurations']);
+    	$routes->connect('/Configurations/:action/*', ['plugin' => 'Configuration', 'controller' => 'Configurations']);
+    });
+};

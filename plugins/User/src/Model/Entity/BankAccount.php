@@ -12,7 +12,7 @@ class BankAccount extends Entity
     protected function _getBankName() {
     	$name = '';
     	if ($this->has('bank_branch') && $this->bank_branch->has('bank_id')) {
-    		$Banks = TableRegistry::get('FieldOption.Banks'); 
+    		$Banks = TableRegistry::getTableLocator()->get('FieldOption.Banks'); 
     		$data = $Banks
     			->find()
     			->where([$Banks->aliasField($Banks->getPrimaryKey()) => $this->bank_branch->bank_id])

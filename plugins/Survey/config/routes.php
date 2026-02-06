@@ -1,12 +1,14 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Surveys', ['plugin' => 'Survey'], function ($routes) {
-	Router::connect('/Surveys', ['plugin' => 'Survey', 'controller' => 'Surveys']);
-	Router::connect('/Surveys/:action/*', ['plugin' => 'Survey', 'controller' => 'Surveys']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Surveys', ['plugin' => 'Survey'], function (RouteBuilder $routes) {
+    	$routes->connect('/Surveys', ['plugin' => 'Survey', 'controller' => 'Surveys']);
+    	$routes->connect('/Surveys/:action/*', ['plugin' => 'Survey', 'controller' => 'Surveys']);
+    });;
 
-Router::scope('/SurveyStatuses', ['plugin' => 'Survey'], function ($routes) {
-	Router::connect('/SurveyStatuses', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
-	Router::connect('/SurveyStatuses/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
-});
+    $routes->scope('/SurveyStatuses', ['plugin' => 'Survey'], function (RouteBuilder $routes) {
+    	$routes->connect('/SurveyStatuses', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
+    	$routes->connect('/SurveyStatuses/:action/*', ['plugin' => 'Survey', 'controller' => 'SurveyStatuses']);
+    });
+};

@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
@@ -27,18 +27,18 @@ class StaffTrainingReportsTable extends AppTable {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
     
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $identityTypeName = '';
         if (!empty($entity->identity_type)) {
@@ -48,7 +48,7 @@ class StaffTrainingReportsTable extends AppTable {
         return $identityTypeName;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
@@ -113,7 +113,7 @@ class StaffTrainingReportsTable extends AppTable {
         $query->where(['Users.is_staff' => 1, $conditions]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields) {
         $extraFields = [];
         
         $extraFields[] = [

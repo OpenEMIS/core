@@ -18,7 +18,7 @@ class POCOR6223 extends AbstractMigration
         $this->execute('INSERT INTO `z_6223_security_roles` SELECT * FROM `security_roles`');
 
 
-        $securityRolesTable = TableRegistry::get('security_roles');
+        $securityRolesTable = TableRegistry::getTableLocator()->get('security_roles');
         $reorderItems = $securityRolesTable
                 ->find('list')
                 ->order([$securityRolesTable->aliasField('order')])

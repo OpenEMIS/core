@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -22,7 +22,7 @@ class StaffDutiesTable extends AppTable  {
 		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -39,7 +39,7 @@ class StaffDutiesTable extends AppTable  {
             $conditions['Institutions.area_id'] = $areaId; 
         }
         
-		$staffDuties = TableRegistry::get('Institution.StaffDuties');
+		$staffDuties = TableRegistry::getTableLocator()->get('Institution.StaffDuties');
 	
          $query
             ->select([
@@ -83,12 +83,12 @@ class StaffDutiesTable extends AppTable  {
 			]);
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
 		return $attr;
 	}
 
-	 public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+	 public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields) 
     {   
          $cloneFields = $fields->getArrayCopy();
 

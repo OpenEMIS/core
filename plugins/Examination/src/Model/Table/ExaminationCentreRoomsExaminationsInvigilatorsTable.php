@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\Utility\Security;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\AppTable;
 

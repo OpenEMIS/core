@@ -3,7 +3,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -24,7 +24,7 @@ class StaffLeaveReportTable extends AppTable
         ]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -34,7 +34,7 @@ class StaffLeaveReportTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
@@ -106,7 +106,7 @@ class StaffLeaveReportTable extends AppTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
 
-                $StaffCustomFieldValues = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
+                $StaffCustomFieldValues = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
 
                 // POCOR-9314 start
                 $customFieldData = $StaffCustomFieldValues->find()
@@ -164,12 +164,12 @@ class StaffLeaveReportTable extends AppTable
         return '';
     }
 
-    public function onExcelRenderDateFrom(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDateFrom(EventInterface $event, Entity $entity, $attr)
     {
         return $this->formatDateCell($entity->get('date_from'));
     }
 
-    public function onExcelRenderDateTo(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDateTo(EventInterface $event, Entity $entity, $attr)
     {
         return $this->formatDateCell($entity->get('date_to'));
     }
@@ -191,17 +191,17 @@ class StaffLeaveReportTable extends AppTable
     }
     // POCOR-9314 end
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         $identityTypeName = '';
         if (!empty($entity->identity_type)) {
-            $identityType = TableRegistry::get('FieldOption.IdentityTypes')->find()->where(['id' => $entity->identity_type])->first();
+            $identityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->find()->where(['id' => $entity->identity_type])->first();
             $identityTypeName = $identityType->name;
         }
         return $identityTypeName;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $extraFields[] = [
             'key' => '',
@@ -330,7 +330,7 @@ class StaffLeaveReportTable extends AppTable
             'label' => __('Comments')
         ];
 
-        $StaffCustomFields = TableRegistry::get('staff_custom_fields');
+        $StaffCustomFields = TableRegistry::getTableLocator()->get('staff_custom_fields');
 
         $customFieldData = $StaffCustomFields->find()
             ->select([

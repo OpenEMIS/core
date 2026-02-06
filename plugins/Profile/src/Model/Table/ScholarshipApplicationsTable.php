@@ -2,7 +2,7 @@
 namespace Profile\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -52,7 +52,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             ]
         ]);
         $this->interestRateOptions = $this->getSelectOptions('Scholarships.interest_rate');
-        $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
+        $this->currency = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('currency');
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -76,7 +76,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
            ]);
     }
 
-   public function beforeAction(Event $event, ArrayObject $extra)
+   public function beforeAction(EventInterface $event, ArrayObject $extra)
    {
        if (in_array($this->action, ['view', 'edit'])) {
            // set header
@@ -112,7 +112,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
         $this->field('scholarship_id', ['type' => 'string']);
@@ -159,7 +159,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         // POCOR-7905: end
    }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->select([
@@ -215,7 +215,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             ]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->isNew()) {
             $scholarshipId = $this->getQueryString('scholarship_id');
@@ -239,7 +239,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->select([
@@ -308,12 +308,12 @@ class ScholarshipApplicationsTable extends ControllerActionTable
             ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-//    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+//    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
 //    {
 //        switch ($field) {
 //            case 'scholarship_id':
@@ -331,34 +331,34 @@ class ScholarshipApplicationsTable extends ControllerActionTable
 //        }
 //    }
 //
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
     }
 
-    public function onGetFinancialAssistanceTypeId(Event $event, Entity $entity)
+    public function onGetFinancialAssistanceTypeId(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->financial_assistance_type->name;
     }
 
-    public function onGetMaximumAwardAmount(Event $event, Entity $entity)
+    public function onGetMaximumAwardAmount(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->maximum_award_amount;
     }
 
-    public function onGetBond(Event $event, Entity $entity)
+    public function onGetBond(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->bond . ' ' . __('Years');
     }
 
-    public function onGetInterestRate(Event $event, Entity $entity)
+    public function onGetInterestRate(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             return $entity->scholarship->loan->interest_rate;
         }
     }
 
-    public function onGetInterestRateType(Event $event, Entity $entity)
+    public function onGetInterestRateType(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             $interestRateType = $entity->scholarship->loan->interest_rate_type;
@@ -366,21 +366,21 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         }
     }
 
-    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
+    public function onGetScholarshipPaymentFrequencyId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             return $entity->scholarship->loan->payment_frequency->name;
         }
     }
 
-    public function onGetLoanTerm(Event $event, Entity $entity)
+    public function onGetLoanTerm(EventInterface $event, Entity $entity)
     {
         if ($entity->has('scholarship') && $entity->scholarship->has('loan')) {
             return $entity->scholarship->loan->loan_term . ' ' . __('Years');
         }
     }
 
-    public function onUpdateFieldFinancialAssistanceTypeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldFinancialAssistanceTypeId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -390,7 +390,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldScholarshipId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldScholarshipId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -400,7 +400,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBond(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldBond(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -414,7 +414,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInterestRateType(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldInterestRateType(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -429,7 +429,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldLoanTerm(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldLoanTerm(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -443,7 +443,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action,  $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action,  $request)
     {
 //        die('<pre>'.print_r($attr['entity']));
         if ($action == 'add' || $action == 'edit') {
@@ -465,7 +465,7 @@ class ScholarshipApplicationsTable extends ControllerActionTable
     {
         $isLoan = false;
         if ($entity->has('scholarship') && $entity->scholarship->has('scholarship_financial_assistance_type_id')) {
-            $FinancialAssistanceTypesTable = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+            $FinancialAssistanceTypesTable = TableRegistry::getTableLocator()->get('Scholarship.FinancialAssistanceTypes');
             $isLoan = $FinancialAssistanceTypesTable->is($entity->scholarship->scholarship_financial_assistance_type_id, 'LOAN');
         }
 

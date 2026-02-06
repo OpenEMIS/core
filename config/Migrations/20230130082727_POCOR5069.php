@@ -22,8 +22,8 @@ class POCOR5069 extends AbstractMigration
 
         $this->execute('ALTER TABLE `institution_staff` ADD `staff_position_grade_id` INT NOT NULL AFTER `security_group_user_id`;');
 
-        $staff = TableRegistry::get('institution_staff');
-        $position = TableRegistry::get('institution_positions');
+        $staff = TableRegistry::getTableLocator()->get('institution_staff');
+        $position = TableRegistry::getTableLocator()->get('institution_positions');
         $institutionStaff = $staff->find('all')->toArray();
         foreach($institutionStaff as $key=> $insStaff){
             $staffPosition = $position->find('all',['conditions'=>['id'=> $insStaff->institution_position_id]])->first();

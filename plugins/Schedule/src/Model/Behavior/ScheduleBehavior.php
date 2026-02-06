@@ -1,7 +1,7 @@
 <?php
 namespace Schedule\Model\Behavior;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
@@ -15,7 +15,7 @@ class ScheduleBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $model = $this->_table;
         $controller = $this->_table->controller;
@@ -43,7 +43,7 @@ class ScheduleBehavior extends Behavior
         $institutionId = $this->getInstitutionID();
 //        echo "<pre>"; print_r($institutionId); die('gjhghg');
 
-        $institutionTable =  TableRegistry::get('Institution.Institutions');
+        $institutionTable =  TableRegistry::getTableLocator()->get('Institution.Institutions');
         $activeInstitution = $institutionTable->find()->where(['id' => $institutionId])->first();
         $institutionName = $activeInstitution->name;
         $postfix = $newTitle;

@@ -4,13 +4,12 @@ namespace Staff\Controller;
 
 use App\Controller\AppController;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
-use Cake\Event\EventInterface;//POCOR-8456
 
 class StaffController extends AppController
 {
@@ -102,8 +101,8 @@ class StaffController extends AppController
 
         $this->attachAngularModules();
 
-        $this->loadModel('Institution.StaffBodyMasses');
-        $this->loadModel('User.UserInsurances');
+        $this->StaffBodyMasses = $this->fetchTable('Institution.StaffBodyMasses');
+        $this->UserInsurances = $this->fetchTable('User.UserInsurances');
     }
 
     // CAv4
@@ -342,7 +341,7 @@ class StaffController extends AppController
     /**
      * common proc to check if there is an archive
      * @return bool
-
+     *
      */
     private function isStaffAttendancesArchiveExists()
     {
@@ -385,7 +384,7 @@ class StaffController extends AppController
     /**
      * common function to get institution id
      * @return string|null
-
+     *
      */
     function getInstitutionID($debugString = "")
     {
@@ -485,7 +484,7 @@ class StaffController extends AppController
     public function getCareerTabElements($options = [])
     {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $this->loadModel('Staff.Staff');
+        $this->Staff = $this->fetchTable('Staff.Staff');
         $tabElements = $this->Staff->getCareerTabElements($options, $this);
         return $this->TabPermission->checkTabPermission($tabElements);
         // $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
@@ -498,7 +497,7 @@ class StaffController extends AppController
         //     $options['institution_id'] = $institutionId;
         // }
 
-        // $tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+        // $tabElements = TableRegistry::getTableLocator()->get('Staff.Staff')->getCareerTabElements($options);
 
         // return $this->TabPermission->checkTabPermission($tabElements);
     }
@@ -538,7 +537,7 @@ class StaffController extends AppController
     private function setManualStaffAttendances()
     {
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals');
         $ManualContent = $manualTable->find()->select(['url'])->where([
             $manualTable->aliasField('function') => 'Attendances',
             $manualTable->aliasField('module') => 'Institutions',
@@ -602,7 +601,7 @@ class StaffController extends AppController
         $institutionId = $this->getInstitutionID();
         $staffId = $this->getStaffID();
 
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $activeInstitution = $this->Institutions->get($institutionId);
         $institutionName = $activeInstitution->name;
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId ,'institution_id' => $institutionId]);
@@ -644,7 +643,7 @@ class StaffController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
         if ($isInstitutionIndex) {
@@ -746,7 +745,7 @@ class StaffController extends AppController
     {
         $institutionId = $this->getInstitutionID();
 
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
@@ -770,14 +769,14 @@ class StaffController extends AppController
         }
     }
 
-    public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    public function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
     {
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
     //POCOR-7062
 
-    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    public function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->getSession();
 
@@ -876,7 +875,7 @@ class StaffController extends AppController
         $institutionId = $this->getInstitutionID();
         if (!empty($institutionId)) {
             if ($this->request->getParam('action') == 'StaffCurriculars') {
-                $labels_tbl = TableRegistry::get('Labels');
+                $labels_tbl = TableRegistry::getTableLocator()->get('Labels');
                 $curricular_label_Data = $labels_tbl->find('all',['conditions'=>['field'=>'institution_curriculars']])->first();
                 if(empty($curricular_label_Data->name)){
                     $curricular_label_Data->name = "Institution Curriculars";
@@ -934,8 +933,8 @@ class StaffController extends AppController
             $userId = $this->Auth->user('id');
         }
 
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
 
         $InstitutionStaff = $InstitutionStaff
@@ -967,13 +966,13 @@ class StaffController extends AppController
             ->enableHydration(false)
             ->toArray();
 
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
-        $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodOptions = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getYearList();
 
 
-        $shiftOptions = TableRegistry::get('Schedule.ScheduleIntervals')
+        $shiftOptions = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals')
             ->getShiftOptions($academicPeriodId, false, $institutionId);
 
         $this->set('userId', $userId);
@@ -987,7 +986,7 @@ class StaffController extends AppController
         $this->set('ngController', 'TimetableCtrl as $ctrl');
 
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals');
         $ManualContent = $manualTable->find()->select(['url'])->where([
             $manualTable->aliasField('function') => 'Staff',
             $manualTable->aliasField('module') => 'Institutions',
@@ -1031,7 +1030,7 @@ class StaffController extends AppController
     /**
      * common function to get institution id
      * @return string|null
-
+     *
      */
 
     public function ArchivedAttendances()

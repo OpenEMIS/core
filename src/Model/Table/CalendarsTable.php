@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use DatePeriod;
 use DateInterval;
@@ -119,7 +119,7 @@ class CalendarsTable extends ControllerActionTable
     }
 
     // POCOR-6122
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //for showing start date and end date on edit page
         if(!$entity->getErrors()){
@@ -150,7 +150,7 @@ class CalendarsTable extends ControllerActionTable
 
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $maincontroller = $this->controller;
         $controllerName = $maincontroller->getName();
@@ -166,7 +166,7 @@ class CalendarsTable extends ControllerActionTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if(empty($entity->institution_id)){
             $entity->institution_id = -1;
@@ -201,7 +201,7 @@ class CalendarsTable extends ControllerActionTable
     }
 
     // POCOR-6122
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $startDate = new Date($entity->start_date);
@@ -271,7 +271,7 @@ class CalendarsTable extends ControllerActionTable
         return $query;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 
         $institutionId  = $this->getQueryString('institution_id');
@@ -309,7 +309,7 @@ class CalendarsTable extends ControllerActionTable
 
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
@@ -345,14 +345,14 @@ class CalendarsTable extends ControllerActionTable
         //POCOR-5280 : End
     }
     //POCOR-5280 : Start
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request){
         $attr['options'] = $this->AcademicPeriods->getYearList();
         $attr['onChangeReload'] = true;
 
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionShiftId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionShiftId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($this->action == 'add' || $this->action == 'edit') {
 
@@ -367,7 +367,7 @@ class CalendarsTable extends ControllerActionTable
 
     //POCOR-5280 : End
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // POCOR-6122 start
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -420,7 +420,7 @@ class CalendarsTable extends ControllerActionTable
         return $selectedAcademicPeriod;
     }
     // POCOR-6122 end
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
 //        dd($buttons);
         parent::onUpdateActionButtons($event, $entity, $buttons);
 //        $entity = $entity->toArray();
@@ -431,7 +431,7 @@ class CalendarsTable extends ControllerActionTable
 
         return $buttons;
     }
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // POCOR-6122 start
         if (isset($extra['selectedAcademicPeriodOptions']) && !empty($extra['selectedAcademicPeriodOptions'])) {
@@ -496,7 +496,7 @@ class CalendarsTable extends ControllerActionTable
     }
 
     //POCOR-7696
-    public function onGetInstitutionShiftId(Event $event, Entity $entity)
+    public function onGetInstitutionShiftId(EventInterface $event, Entity $entity)
     {
         $ShiftOptionTable = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
         $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
@@ -508,7 +508,7 @@ class CalendarsTable extends ControllerActionTable
         return $shiftOptionsName;
     }
 
-    public function onGetInstitution(Event $event, Entity $entity)
+    public function onGetInstitution(EventInterface $event, Entity $entity)
     {
 //        dd($entity);
         if ($entity->institution_id == -1) {

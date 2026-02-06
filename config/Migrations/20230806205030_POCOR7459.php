@@ -661,7 +661,7 @@ class POCOR7459 extends AbstractMigration
     private function updateAddSomeMakesAndModels()
     {
         $has_assets = false;
-        $AssetTypes = TableRegistry::get('asset_types');
+        $AssetTypes = TableRegistry::getTableLocator()->get('asset_types');
         $computer = $AssetTypes
             ->find()
             ->select(['id'])

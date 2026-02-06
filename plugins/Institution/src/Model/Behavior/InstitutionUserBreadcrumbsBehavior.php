@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Model\Behavior;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Http\ServerRequest;
@@ -31,7 +31,7 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
 ** Events
 **
 ******************************************************************************************************************/
-	public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, Entity $persona) {
+	public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, Entity $persona) {
 		$crumbTitle = Inflector::humanize(Inflector::underscore($this->_table->getAlias()));
 		$splitTitle = explode(' ', $crumbTitle);
 		$newCrumbTitle = Inflector::pluralize($splitTitle[0]);

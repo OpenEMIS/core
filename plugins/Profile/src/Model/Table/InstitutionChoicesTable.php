@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
@@ -45,7 +45,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         return $events;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         $queryString  = $this->getQueryString('scholarship_id');
@@ -57,7 +57,7 @@ class InstitutionChoicesTable extends ControllerActionTable
             ->order(['AcademicPeriods.name' => 'DESC']);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $encodedQueryString = $this->request->getParam('pass')[1];
         $tabElements = $this->ScholarshipTabs->getScholarshipProfileTabs();
@@ -81,7 +81,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('applicant_id', ['visible' => false]);
@@ -101,17 +101,17 @@ class InstitutionChoicesTable extends ControllerActionTable
 
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {   
         $this->Navigation->substituteCrumb($this->getHeader($this->getAlias()), __('Institution Choice'));
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         return $entity->scholarship->academic_period->name;
     }
 
-    /*public function viewBeforeAction(Event $event, ArrayObject $extra)
+    /*public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -126,7 +126,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         }
     }*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'scholarship_institution_choice_type_id') {
             return __('Institution');
@@ -145,7 +145,7 @@ class InstitutionChoicesTable extends ControllerActionTable
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $applicantId = $this->getQueryString('applicant_id');
         $scholarshipId = $this->getQueryString('scholarship_id');
@@ -198,7 +198,7 @@ class InstitutionChoicesTable extends ControllerActionTable
             ]);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         
         if ($entity->getDirty('is_selected')) {
@@ -226,7 +226,7 @@ class InstitutionChoicesTable extends ControllerActionTable
 
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $queryString = $this->getQueryString();
 
@@ -236,13 +236,13 @@ class InstitutionChoicesTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) 
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $applicantId = $this->getQueryString('applicant_id');
@@ -307,7 +307,7 @@ class InstitutionChoicesTable extends ControllerActionTable
 
     }
 
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         
         if($this->action == 'remove'){

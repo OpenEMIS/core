@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/AcademicPeriods', ['plugin' => 'AcademicPeriod'], function ($routes) {
-	Router::connect('/AcademicPeriods', ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods']);
-	Router::connect('/AcademicPeriods/:action/*', ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/AcademicPeriods', ['plugin' => 'AcademicPeriod'], function (RouteBuilder $routes) {
+        $routes->connect('/AcademicPeriods', ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods']);
+        $routes->connect('/AcademicPeriods/:action/*', ['plugin' => 'AcademicPeriod', 'controller' => 'AcademicPeriods']);
+    });
+};

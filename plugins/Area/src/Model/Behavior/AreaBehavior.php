@@ -13,9 +13,9 @@ class AreaBehavior extends Behavior {
 		if (isset($options['id']) && isset($options['columnName']) && isset($options['table'])) {
 			$Table = '';
 			if ($options['table'] == 'areas') {
-				$Table = TableRegistry::get('Area.Areas');
+				$Table = TableRegistry::getTableLocator()->get('Area.Areas');
 			}else if ($options['table'] == 'area_administratives') {
-				$Table = TableRegistry::get('Area.AreaAdministratives');;
+				$Table = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');;
 			}
 
 			if (!empty($options['table'])) {
@@ -43,13 +43,13 @@ class AreaBehavior extends Behavior {
 		if (isset($options['shift_option_id']) && isset($options['columnName']) && isset($options['table'])) {
 			$Table = '';
 			if ($options['table'] == 'institution_shifts') {
-				$Table = TableRegistry::get('Institution.InstitutionShifts');
+				$Table = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 			}
 			if (!empty($options['table'])) {
 				//start POCOR-6797
 				if (!empty($options['conditionCheck']['alternative_name'] == 2) && !empty($options['shift_option_id'])) {
 					$tableAlias = $options['columnName'].'institution_shifts';
-					$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+					$InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 					$academicPeriod = $this->getCurrent();
 					$conditions = [];
 					if (!empty($academicPeriod)) {
@@ -121,7 +121,7 @@ class AreaBehavior extends Behavior {
 		if (isset($options['shift_ownership']) && isset($options['columnName']) && isset($options['table'])) {
 			$Table = '';
 			if ($options['table'] == 'institution_shifts') {
-				$Table = TableRegistry::get('Institution.InstitutionShifts');
+				$Table = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 			}
 			if (!empty($options['table'])) {
 				$tableAlias = $options['columnName'].'institution_shifts';
@@ -135,7 +135,7 @@ class AreaBehavior extends Behavior {
 					}
 				}
 				else{
-					$InstitutionShifts = TableRegistry::get('Institution.InstitutionShifts');
+					$InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
 					$academicPeriod = $this->getCurrent();
 					$conditions = [];
 					if (!empty($academicPeriod)) {
@@ -190,7 +190,7 @@ class AreaBehavior extends Behavior {
 
 	public function getCurrent()
     {
-    	$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+    	$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $query = $AcademicPeriod->find('all')
                     ->select([$AcademicPeriod->aliasField('id')])
                     ->where([

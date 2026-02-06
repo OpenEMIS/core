@@ -18,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
+use Cake\Event\EventInterface;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -73,7 +74,7 @@ class ExcelReportBehavior extends Behavior
         return $events;
     }
 
-    public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
+    public function onGetExcelTemplateVars(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
 
@@ -125,12 +126,12 @@ class ExcelReportBehavior extends Behavior
         $this->renderExcelTemplate($extra, $event);
     }
 
-    //POCOR-8568[Here added  Event $event]
+    //POCOR-8568[Here added  EventInterface $event]
 
     /**
      * @throws \Exception
      */
-    public function renderExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
+    public function renderExcelTemplate(ArrayObject $extra, EventInterface $event = null) //POCOR-8588
     {
         $model = $this->_table;
         $format = $this->getConfig('format');
@@ -191,7 +192,7 @@ class ExcelReportBehavior extends Behavior
             $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'] . '.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 
-            $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+            $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
             // save Pdf file
             $StudentsReportCards->updateAll([
                 'file_content_pdf' => $pdfFileContent,
@@ -218,8 +219,9 @@ class ExcelReportBehavior extends Behavior
         gc_collect_cycles();
     }
 
-    public function loadExcelTemplate(ArrayObject $extra, Event $event = null) //POCOR-8588
-    {
+
+    public function loadExcelTemplate(ArrayObject $extra, ?EventInterface $event = null) //POCOR-8588
+   {
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
             $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
@@ -232,7 +234,7 @@ class ExcelReportBehavior extends Behavior
             $recordId = $params[$this->getConfig('templateTableKey')];
         }
 
-        $Table = TableRegistry::get($this->getConfig('templateTable'));
+        $Table = TableRegistry::getTableLocator()->get($this->getConfig('templateTable'));
 
         if (empty($recordId)) {
             $objSpreadsheet = new Spreadsheet();
@@ -247,7 +249,7 @@ class ExcelReportBehavior extends Behavior
                 }
 
                 // Create a temporary file with the correct extension
-                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_') . '.xlsx';
+                $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_') . '.xls';
                 $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
@@ -715,29 +717,55 @@ class ExcelReportBehavior extends Behavior
     /**
      * POCOR-6908
      */
+    // public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id, $paramVal)
+    // {
+    //     Log::write('debug', 'ExcelReportBehavior >>> saveFile: ' . $format);
+    //     $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+
+    //     if ($format == 'pdf') {
+    //         $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id, $paramVal);
+    //         return; // POCOR-9336
+    //     } else {
+    //         // pdf
+    //         if (!empty($student_id)) {
+    //             $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
+    //         }
+    //         // xlsx
+    //         $objWriter->save($filepath);
+    //     }
+
+    //     $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+    //     $objWriter->save($filepath);
+    //     $objSpreadsheet->disconnectWorksheets();
+    //     unset($objWriter, $objSpreadsheet);
+    //     gc_collect_cycles();
+
+    // }/
+
     public function saveFileAssessment($objSpreadsheet, $filepath, $format, $student_id, $paramVal)
     {
-        Log::write('debug', 'ExcelReportBehavior >>> saveFile: ' . $format);
-        $objWriter = IOFactory::createWriter($objSpreadsheet, $this->libraryTypes[$format]);
+        Log::write('debug', 'ExcelReportBehavior >>> saveFileAssessment format: ' . $format);
 
-        if ($format == 'pdf') {
+        if ($format === 'pdf') {
             $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id, $paramVal);
-            return; // POCOR-9336
-        } else {
-            // pdf
-            if (!empty($student_id)) {
-                $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
-            }
-            // xlsx
-            $objWriter->save($filepath);
+            return;
         }
 
+        // Save PDF copy if needed
+        if (!empty($student_id)) {
+            $this->savePDFAssessment($objSpreadsheet, $filepath, $student_id);
+        }
+
+        // ✅ FORCE XLSX — DO NOT use libraryTypes mapping
         $objWriter = IOFactory::createWriter($objSpreadsheet, 'Xlsx');
+
+        Log::write('debug', 'Excel writer class: ' . get_class($objWriter));
+
         $objWriter->save($filepath);
+
         $objSpreadsheet->disconnectWorksheets();
         unset($objWriter, $objSpreadsheet);
         gc_collect_cycles();
-
     }
 
     public function saveFile($objSpreadsheet, $filepath, $format, $student_id, $report_card_id)

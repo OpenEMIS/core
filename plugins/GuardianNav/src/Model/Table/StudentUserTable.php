@@ -2,7 +2,7 @@
 namespace GuardianNav\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -62,12 +62,19 @@ class StudentUserTable extends ControllerActionTable
         if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
             $this->addBehavior('Risk.Risks');
         }
-
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
         $this->toggle('index', false);
         $this->toggle('remove', false);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $options['associated']['Nationalities'] = [
             'validate' => 'AddByAssociation'
@@ -205,7 +212,7 @@ class StudentUserTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
@@ -265,7 +272,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityNumber(Event $event, Entity $entity){
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity){
         $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
@@ -333,7 +340,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     {
         $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_identities = $users_ids->find()
@@ -421,7 +428,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $entity = $extra['entity'];
         if (!is_null($entity)) {
@@ -444,14 +451,14 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'MainNationalities', 'MainIdentityTypes', 'Genders'
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if (!$this->AccessControl->isAdmin()) {
             $institutionIds = $this->AccessControl->getInstitutionsByUser();
@@ -463,7 +470,7 @@ class StudentUserTable extends ControllerActionTable
         $this->setupToolbarButtons($entity, $extra);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->Session->write('Student.Students.id', $entity->id);
         $this->Session->write('Student.Students.name', $entity->name);
@@ -638,10 +645,10 @@ class StudentUserTable extends ControllerActionTable
 
             // Check if the student is enrolled
             if ($studentEntity->student_status_id == $enrolledStatus) {
-                $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
-                $WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
+                $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
+                $WithdrawRequests = TableRegistry::getTableLocator()->get('Institution.WithdrawRequests');
                 $session->write($WithdrawRequests->getRegistryAlias().'.id', $institutionStudentId);
-                $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+                $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
                 $approvedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'APPROVED');
 
                 $rejectedStatus = $WorkflowModels->getWorkflowStatusSteps('Institution.StudentWithdraw', 'REJECTED');
@@ -699,7 +706,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //to handle identity_number field that is automatically created by mandatory behaviour.
-    public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIdentityNumber(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $attr['fieldName'] = $this->getAlias().'.identities.0.number';
@@ -708,14 +715,14 @@ class StudentUserTable extends ControllerActionTable
         return $attr;
     }
 
-    public function studentsAfterSave(Event $event, $student)
+    public function studentsAfterSave(EventInterface $event, $student)
     {
         if ($student->isNew()) {
             $this->updateAll(['is_student' => 1], ['id' => $student->student_id]);
         }
     }
 
-    public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
+    public function pullBeforePatch(EventInterface $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
         if (!isset($queryString['institution_id'])) {
             $session = $this->request->session();
@@ -756,7 +763,7 @@ class StudentUserTable extends ControllerActionTable
         return $permission;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $IdentityType = self::getDynamicTableInstance('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
@@ -916,7 +923,7 @@ class StudentUserTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':
@@ -990,7 +997,7 @@ class StudentUserTable extends ControllerActionTable
     /**
      * @param string $tableName
      * @return Table
-
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

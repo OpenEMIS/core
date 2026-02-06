@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
@@ -20,7 +20,7 @@ class SetupDecimalBehavior extends SetupBehavior
         parent::initialize($config);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
@@ -32,7 +32,7 @@ class SetupDecimalBehavior extends SetupBehavior
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->field_type == $this->fieldTypeCode) {
             $this->buildDecimalValidator();
@@ -64,7 +64,7 @@ class SetupDecimalBehavior extends SetupBehavior
         ;
     }
 
-    public function onSetDecimalElements(Event $event, Entity $entity)
+    public function onSetDecimalElements(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
 
@@ -89,7 +89,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $model->field('decimal_precision');
     }
 
-    public function onUpdateFieldDecimalLength(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDecimalLength(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
@@ -114,7 +114,7 @@ class SetupDecimalBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldDecimalPrecision(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDecimalPrecision(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
@@ -139,7 +139,7 @@ class SetupDecimalBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
             $length = $data->offsetExists('decimal_length') ?  $data['decimal_length'] : null;

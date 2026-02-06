@@ -8,7 +8,7 @@ use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
@@ -47,12 +47,12 @@ class AlertLogsTable extends ControllerActionTable
         return $events;
     }
 
-    public function alertAssigneeAfterSave(Event $mainEvent, Entity $recordEntity)
+    public function alertAssigneeAfterSave(EventInterface $mainEvent, Entity $recordEntity)
     {
-        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
-        $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-        $Users = TableRegistry::get('User.Users');
+        $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
+        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
 
         if ($recordEntity->has('status_id') && $recordEntity->status_id > 0) {
             // used to get correct workflow model for StaffTransferIn and StaffTransferOut
@@ -67,7 +67,7 @@ class AlertLogsTable extends ControllerActionTable
         }
 
         $workflowModel = isset($modelName) ? $modelName : $recordEntity->getSource();
-        $model = TableRegistry::get($workflowModel);
+        $model = TableRegistry::getTableLocator()->get($workflowModel);
         $modelAlias = $model->getAlias();
         $modelRegistryAlias = $model->getRegistryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
@@ -280,31 +280,31 @@ class AlertLogsTable extends ControllerActionTable
         return $message;
     }
 
-    public function onGetFeature(Event $event, Entity $entity)
+    public function onGetFeature(EventInterface $event, Entity $entity)
     {
         return Inflector::humanize(Inflector::underscore($entity->feature));
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         return $this->statusTypes[$entity->status];
     }
 
     //6023 starts
-    public function onGetProcessedDate(Event $event, Entity $entity)
+    public function onGetProcessedDate(EventInterface $event, Entity $entity)
     {
         if(!empty($entity->processed_date)){
             return date('Y-m-d', strtotime($entity->processed_date));
         }
     }//6023 ends
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('status', ['after' => 'message']);
         $this->field('checksum', ['visible' => false]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
         $this->field('method', ['after' => 'feature', 'sort' => true]);
@@ -347,7 +347,7 @@ class AlertLogsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //$selectedFeature = $extra['selectedFeature'];
         $featureOptions = $this->getFeatureOptions();
@@ -357,7 +357,7 @@ class AlertLogsTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // trigger the send email shell
         //$this->triggerSendingAlertShell('SendingAlert', $entity->feature, $entity->id);
@@ -372,7 +372,7 @@ class AlertLogsTable extends ControllerActionTable
         ksort($alertFeatures); // sort alphabetical
 
         // feature from workflow to be classified under workflow
-        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+        $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
         $workflowFeatures = $WorkflowModels->getFeatureOptions();
         ksort($workflowFeatures); // sort alphabetical
 
@@ -395,9 +395,9 @@ class AlertLogsTable extends ControllerActionTable
         $message = null;
 
         if ($recordEntity->has('status_id') && !empty($recordEntity->status_id)) {
-            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
-            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+            $WorkflowModels = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+            $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 
             $workflowStepEntity = $WorkflowSteps
                 ->find()
@@ -445,7 +445,7 @@ class AlertLogsTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

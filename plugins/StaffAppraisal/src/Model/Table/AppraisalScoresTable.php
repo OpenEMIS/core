@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -57,7 +57,7 @@ class AppraisalScoresTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->matching('AppraisalFormsCriterias.AppraisalCriterias.FieldTypes', function($q) {
@@ -68,7 +68,7 @@ class AppraisalScoresTable extends ControllerActionTable
             ]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $scoreType = self::SCORE_TYPE_CODE;
         $query
@@ -85,12 +85,12 @@ class AppraisalScoresTable extends ControllerActionTable
             ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupFields();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
 
@@ -102,7 +102,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
 
@@ -115,12 +115,12 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function editOnAddField(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editOnAddField(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         if (!empty($requestData) && isset($requestData[$this->getAlias()]) && isset($requestData[$this->getAlias()]['selected_score'])) {
             $selectedCriteria = $requestData[$this->getAlias()]['selected_score'];
             // Get the critiera type fields based on their ID
-            $appraisalCriterias = TableRegistry::get('StaffAppraisal.AppraisalCriterias');
+            $appraisalCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalCriterias');
 
             if (!empty($requestData[$this->getAlias()]['appraisal_forms_criterias_score'])) {
                 $scoreDependencyArrayField = $requestData[$this->getAlias()]['appraisal_forms_criterias_score'];
@@ -153,7 +153,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $appraisalFormId = $entity->id;
         $criteriaScores = $entity->appraisal_forms_criterias;
@@ -223,7 +223,7 @@ class AppraisalScoresTable extends ControllerActionTable
         $patchOptions->exchangeArray($arrayOptions);
     }
 
-    public function onGetFinalScore(Event $event, Entity $entity)
+    public function onGetFinalScore(EventInterface $event, Entity $entity)
     {
         $formId = $entity->id;
         $result = $this->find()
@@ -257,7 +257,7 @@ class AppraisalScoresTable extends ControllerActionTable
         return "<i class='fa fa-minus'></i>";
     }
 
-    public function onGetCode(Event $event, Entity $entity)
+    public function onGetCode(EventInterface $event, Entity $entity)
     {
         if (!is_null($entity)) {
             if ($entity->has('code') && $entity->has('name')) {
@@ -266,7 +266,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':
@@ -299,7 +299,7 @@ class AppraisalScoresTable extends ControllerActionTable
     }
 
 
-    public function onGetScoreFieldsElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetScoreFieldsElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'view') {
             $scoreEntity = $attr['entity'];
@@ -355,7 +355,7 @@ class AppraisalScoresTable extends ControllerActionTable
             $attr2['add_steps_field'] = __('Steps');
 
             // Let the steps to auto select
-            $appraisalFormsCriteriasScores = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScores');
+            $appraisalFormsCriteriasScores = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScores');
 
             $appraisalFormsCriteriasScoresEntity = $appraisalFormsCriteriasScores
                 ->find()
@@ -482,7 +482,7 @@ class AppraisalScoresTable extends ControllerActionTable
             }
 
             // Let the steps to auto select
-            $appraisalFormsCriteriasScores = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScores');
+            $appraisalFormsCriteriasScores = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScores');
 
             $appraisalFormsCriteriasScoresEntity = $appraisalFormsCriteriasScores
                 ->find()
@@ -507,7 +507,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldFinalScore(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldFinalScore(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             $entity = $attr['attr']['entity'];
             $scoreCriteriasOptions = [];
@@ -538,7 +538,7 @@ class AppraisalScoresTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldCode(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'edit') {
             if (isset($attr['attr']) && array_key_exists('entity', $attr['attr'])) {
                 $entity = $attr['attr']['entity'];
@@ -552,7 +552,7 @@ class AppraisalScoresTable extends ControllerActionTable
     }
 
     // Appraisals - Scores Page (Index)
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $formId = $entity->id;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -567,7 +567,7 @@ class AppraisalScoresTable extends ControllerActionTable
 
     private function isAppraisalScoreAnswersEditable($formId)
     {
-        $appraisalScoreAnswers = TableRegistry::get('StaffAppraisal.AppraisalScoreAnswers');
+        $appraisalScoreAnswers = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalScoreAnswers');
 
         $appraisalScoreAnswersEntities = $appraisalScoreAnswers->find()
             ->where([
@@ -628,7 +628,7 @@ class AppraisalScoresTable extends ControllerActionTable
                 !is_null($requestData[$this->getAlias()]['selected_score'][$appraisalCriteriaId])
                 ) {
                     $selectedCriteriaId = $requestData[$this->getAlias()]['selected_score'][$appraisalCriteriaId];
-                    $appraisalCriterias = TableRegistry::get('StaffAppraisal.AppraisalCriterias');
+                    $appraisalCriterias = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalCriterias');
 
                     $record = $appraisalCriterias
                         ->find()
@@ -654,7 +654,7 @@ class AppraisalScoresTable extends ControllerActionTable
 
     private function getScoreCriteriaLinkedFields($formId, $criteriaId)
     {
-        $appraisalFormsCriteriasScoresLinks = TableRegistry::get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
+        $appraisalFormsCriteriasScoresLinks = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalFormsCriteriasScoresLinks');
 
         return $appraisalFormsCriteriasScoresLinks
             ->find()

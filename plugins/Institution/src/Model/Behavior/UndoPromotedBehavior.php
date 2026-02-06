@@ -3,7 +3,7 @@ namespace Institution\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Institution\Model\Behavior\UndoBehavior;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -21,11 +21,11 @@ class UndoPromotedBehavior extends UndoBehavior {
 		return $events;
 	}
 
-	public function onGetPromotedStudents(Event $event, $data) {
+	public function onGetPromotedStudents(EventInterface $event, $data) {
 		return $this->getStudents($data);
 	}
 
-	public function processSavePromotedStudents(Event $event, Entity $entity, ArrayObject $data) 
+	public function processSavePromotedStudents(EventInterface $event, Entity $entity, ArrayObject $data) 
 	{
 		//echo "<pre>"; print_r($entity);die;
 		$studentIds = [];
@@ -36,9 +36,9 @@ class UndoPromotedBehavior extends UndoBehavior {
 		$selectedGrade = $entity->education_grade_id;
 		$selectedStatus = $entity->student_status_id;
 
-		$institutionStudent = TableRegistry::get('Institution.InstitutionStudents');
-		$institution = TableRegistry::get('Institution.Institutions');
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$institutionStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+		$institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+		$StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
 
 		if (isset($entity->students)) {
 			foreach ($entity->students as $key => $obj) {

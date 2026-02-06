@@ -52,7 +52,7 @@ class CounsellingsTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -88,7 +88,7 @@ class CounsellingsTable extends ControllerActionTable
     public function getCounselorOptions($institutionId)
     {
         // get the staff that assigned from the institution from security user
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
 
         $counselorOptions = $this->Counselors
             ->find('list', [
@@ -126,13 +126,13 @@ class CounsellingsTable extends ControllerActionTable
         $this->field('comment',['visible' => false]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         /*$academicPeriodOptions = $this->AcademicPeriods->getYearList();
         

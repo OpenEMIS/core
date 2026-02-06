@@ -3,7 +3,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class NationalitiesTable extends AppTable {
 	public function initialize(array $config): void {
@@ -47,7 +47,7 @@ class NationalitiesTable extends AppTable {
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(EventInterface $event) {
 		$this->setupTabElements();
 	}	
 

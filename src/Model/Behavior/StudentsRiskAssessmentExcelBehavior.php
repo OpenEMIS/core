@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -16,13 +16,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 
 // Events
-// public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
-// public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
-// public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {}
-// public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {}
-// public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {}
-// public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
-// public function onExcelGetLabel(Event $event, $column) {}
+// public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelGenerate(EventInterface $event, $writer, ArrayObject $settings) {}
+// public function onExcelGenerateComplete(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {}
+// public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {}
+// public function onExcelEndSheet(EventInterface $event, ArrayObject $settings, $totalProcessed) {}
+// public function onExcelGetLabel(EventInterface $event, $column) {}
 
 class StudentsRiskAssessmentExcelBehavior extends Behavior
 {
@@ -85,7 +85,7 @@ class StudentsRiskAssessmentExcelBehavior extends Behavior
     	$this->generateXLXS($ids);
     }
 
-    public function excelV4(Event $mainEvent, ArrayObject $extra)
+    public function excelV4(EventInterface $mainEvent, ArrayObject $extra)
     {
     	$id = 0;
     	$break = false;
@@ -186,11 +186,11 @@ private function getData($settings)
    $institutionId = $requestData->institution_id;
    $riskType = $requestData->risk_type;
    $areaId = $requestData->area_education_id;
-   $institutionStudents = TableRegistry::get('institution_students');
-   $institutionStudentRisks = TableRegistry::get('institution_student_risks');
-   $studentRisksCriterias = TableRegistry::get('student_risks_criterias');
-   $riskCriterias = TableRegistry::get('risk_criterias');
-   $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
+   $institutionStudents = TableRegistry::getTableLocator()->get('institution_students');
+   $institutionStudentRisks = TableRegistry::getTableLocator()->get('institution_student_risks');
+   $studentRisksCriterias = TableRegistry::getTableLocator()->get('student_risks_criterias');
+   $riskCriterias = TableRegistry::getTableLocator()->get('risk_criterias');
+   $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
    $conditions = [];
 
         if (!empty($academicPeriodId)) {
@@ -484,7 +484,7 @@ private function isForeignKey($table, $field)
     	return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
     	$action = $this->_table->action;
     	if (in_array($action, $this->getConfig('pages'))) {
@@ -511,7 +511,7 @@ private function isForeignKey($table, $field)
     	}
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
     	if ($buttons->offsetExists('view')) {
     		$export = $buttons['view'];
