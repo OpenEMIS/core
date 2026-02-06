@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Systems', ['plugin' => 'System'], function ($routes) {
-	Router::connect('/Systems', ['plugin' => 'System', 'controller' => 'Systems']);
-	Router::connect('/Systems/:action/*', ['plugin' => 'System', 'controller' => 'Systems']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Systems', ['plugin' => 'System'], function (RouteBuilder $routes) {
+        $routes->connect('/Systems', ['plugin' => 'System', 'controller' => 'Systems']);
+        $routes->connect('/Systems/:action/*', ['plugin' => 'System', 'controller' => 'Systems']);
+    });
+};

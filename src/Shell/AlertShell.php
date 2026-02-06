@@ -13,16 +13,16 @@ class AlertShell extends Shell
     {
         parent::initialize();
 
-        $this->loadModel('Alert.Alerts');
-        $this->loadModel('Alert.AlertRules');
-        $this->loadModel('Alert.AlertLogs');
-        $this->loadModel('Institution.Institutions');
-        $this->loadModel('Security.Users');
-        $this->loadModel('Security.SecurityGroupUsers');
+        $this->Alerts = $this->fetchTable('Alert.Alerts');
+        $this->AlertRules = $this->fetchTable('Alert.AlertRules');
+        $this->AlertLogs = $this->fetchTable('Alert.AlertLogs');
+        $this->Institutions = $this->fetchTable('Institution.Institutions');
+        $this->Users = $this->fetchTable('Security.Users');
+        $this->SecurityGroupUsers = $this->fetchTable('Security.SecurityGroupUsers');
 
         // to get institution
-        $this->loadModel('Staff.StaffStatuses');
-        $this->loadModel('Institution.Staff');
+        $this->StaffStatuses = $this->fetchTable('Staff.StaffStatuses');
+        $this->Staff = $this->fetchTable('Institution.Staff');
 
         $class = basename(str_replace('\\', '/', get_class($this)));
 

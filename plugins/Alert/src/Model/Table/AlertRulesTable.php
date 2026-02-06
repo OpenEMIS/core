@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
@@ -72,7 +72,7 @@ class AlertRulesTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
 
@@ -128,13 +128,13 @@ class AlertRulesTable extends ControllerActionTable
         return $this->alertTypeFeatures;
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity)
+    public function afterSaveCommit(EventInterface $event, Entity $entity)
     {
         if ($entity->isNew()) {
 //            $feature = $entity->feature;
 
 //            if (in_array($feature, ['ScholarshipApplication'])) {
-//                $AlertRoles = TableRegistry::get('Alert.AlertsRoles');
+//                $AlertRoles = TableRegistry::getTableLocator()->get('Alert.AlertsRoles');
 //
 //                $alertRoleData = [
 //                    'alert_rule_id' => $entity->id,
@@ -151,7 +151,7 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
         $this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
@@ -160,7 +160,7 @@ class AlertRulesTable extends ControllerActionTable
 
         // element control
         //POCOR-7558 start
-        $logsTable = TableRegistry::get('Alert.AlertLogs');
+        $logsTable = TableRegistry::getTableLocator()->get('Alert.AlertLogs');
         $featureOptions = $logsTable->getFeatureOptions();
         array_shift($featureOptions);
         //POCOR-7558 end
@@ -216,7 +216,7 @@ class AlertRulesTable extends ControllerActionTable
         return $featureOptions;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $params = $this->request->getQuery();
         if(empty($params)){
@@ -231,7 +231,7 @@ class AlertRulesTable extends ControllerActionTable
 
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->extractThresholdValuesFromEntity($entity);
     }
@@ -252,7 +252,7 @@ class AlertRulesTable extends ControllerActionTable
                     if ($fieldType == 'chosenSelect') {
                         $lookupModel = $thresholdConfig[$field]['lookupModel'];
                         if (isset($lookupModel)) {//POCOR-7462
-                            $Model = TableRegistry::get($lookupModel);
+                            $Model = TableRegistry::getTableLocator()->get($lookupModel);
                             if (is_array($value)) {
                                 $entity->{$field} = [];
                                 foreach ($value as $modelId) {
@@ -267,7 +267,7 @@ class AlertRulesTable extends ControllerActionTable
 
                         if (in_array($thresholdConfig[$field]['options'], $workflowOptions, true)) {
                             if (is_array($value)) {
-                                $Model = TableRegistry::get('Workflow.WorkflowSteps');
+                                $Model = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
                                 $entity->{$field} = [];
 
                                 foreach ($value as $modelId) {
@@ -295,12 +295,12 @@ class AlertRulesTable extends ControllerActionTable
         return $alertTypeDetails;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
     }
 
-    public function setupFields(Event $event, Entity $entity)
+    public function setupFields(EventInterface $event, Entity $entity)
     {
 
 
@@ -337,7 +337,7 @@ class AlertRulesTable extends ControllerActionTable
 //        dd($entity);
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $errors = $entity->getErrors();
         if (!empty($errors)) {
@@ -351,13 +351,13 @@ class AlertRulesTable extends ControllerActionTable
             $this->Alert->error("$errorsMessage", ['type' => 'string', 'reset' => true]);
         }
     }
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
         $this->field('alert_features', ['visible' => false]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain(['SecurityRoles']);
     }
@@ -380,20 +380,20 @@ class AlertRulesTable extends ControllerActionTable
         return $type;
     }
 
-    public function onGetFeature(Event $event, Entity $entity)
+    public function onGetFeature(EventInterface $event, Entity $entity)
     {
         $this->featureList[$entity->id] = $entity->feature;
         return Inflector::humanize(Inflector::underscore($entity->feature));
     }
 
-    public function onGetEnabled(Event $event, Entity $entity)
+    public function onGetEnabled(EventInterface $event, Entity $entity)
     {
         return $entity->enabled == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
     //POCOR-8690[START]
 
-    public function onGetThreshold(Event $event, Entity $entity)
+    public function onGetThreshold(EventInterface $event, Entity $entity)
     {
         // temporary solution
         $origEntity = $this->get($entity->id);
@@ -410,7 +410,7 @@ class AlertRulesTable extends ControllerActionTable
 
     //POCOR-8690[END]
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $featureOptions = $this->getFeatureOptions();
         if ($action == 'add') {
@@ -427,7 +427,7 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldMethod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -466,7 +466,7 @@ class AlertRulesTable extends ControllerActionTable
         return $method;
     }
 
-    public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeFeature(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data)) {
             $feature = $data[$this->getAlias()]['feature'];
@@ -474,7 +474,7 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEnabled(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEnabled(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['visible'] = false;
@@ -486,7 +486,7 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSecurityRoles(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-8286 start
         $attr = $this->processAlertRoleAttributes($attr, $action);
@@ -582,7 +582,7 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldThreshold(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldThreshold(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         if ($action == 'add') {
@@ -633,16 +633,16 @@ class AlertRulesTable extends ControllerActionTable
             : __('No Role To Send Alert Selected');
     }
 
-    public function onGetSecurityRoleIds(Event $event, Entity $entity): string
+    public function onGetSecurityRoleIds(EventInterface $event, Entity $entity): string
     {
         return $this->getSecurityRolesList($entity);
     }
 
-    public function onGetSecurityRoles(Event $event, Entity $entity): string
+    public function onGetSecurityRoles(EventInterface $event, Entity $entity): string
     {
         return $this->getSecurityRolesList($entity);
     } // POCOR-9391 end
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomCriteriasElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'add' || $action == 'edit') {
             $tableHeaders = [__('Keywords'), __('Remarks')];
@@ -685,7 +685,7 @@ class AlertRulesTable extends ControllerActionTable
         $connection = ConnectionManager::get('default');
         $connection->execute("DELETE FROM system_processes WHERE `status` = 3;");
         //POCOR-8575[END]
-        $systemProcess = TableRegistry::get('SystemProcesses');
+        $systemProcess = TableRegistry::getTableLocator()->get('SystemProcesses');
         $data = $systemProcess->find()->select([
             'name' => $systemProcess->aliasField('name'),
             'end_date' => $systemProcess->aliasField('end_date'),
@@ -703,7 +703,7 @@ class AlertRulesTable extends ControllerActionTable
         return $result;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':
@@ -756,7 +756,7 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
     ////POCOR-8341 start
-    // public function onUpdateFieldMethod(Event $event, array $attr, $action, ServerRequest $request)
+    // public function onUpdateFieldMethod(EventInterface $event, array $attr, $action, ServerRequest $request)
     // {
     //     if ($action == 'add'||$action == 'edit') {
     //         $entity = $attr['entity'];

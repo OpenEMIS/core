@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
@@ -59,7 +59,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         ]);
     }
 
-    public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function transferAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $transferredTo = $entity->convert_to;
         $securityRole = $this->find()
@@ -98,7 +98,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             /*POCOR-5069 Starts
             ->add('staff_position_grade_id', 'custom', [
                 'rule' => function ($value, $context) {
-                    $StaffPositionTitlesGrades = TableRegistry::get('Institution.StaffPositionTitlesGrades');
+                    $StaffPositionTitlesGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitlesGrades');
                     $staffPositionTitleId = $context['data']['staff_position_title_id'];
 
                     $result = $StaffPositionTitlesGrades
@@ -121,7 +121,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             //Remove is_homeroom from position table-POCOR-5070
             // ->requirePresence('is_homeroom', function ($context) {
             //     if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
-            //         $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            //         $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
             //         $titleId = $context['data']['staff_position_title_id'];
 
             //         $titleEntity = $StaffPositionTitles
@@ -153,7 +153,7 @@ class InstitutionPositionsTable extends ControllerActionTable
             //     },
             //     'on' => function ($context) {
             //         if (array_key_exists('staff_position_title_id', $context['data']) && strlen($context['data']['staff_position_title_id']) > 0) {
-            //             $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            //             $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
             //             $titleId = $context['data']['staff_position_title_id'];
 
             //             $titleEntity = $StaffPositionTitles
@@ -196,7 +196,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     }
 
     //POCOR-9321
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // Check for related records in InstitutionStaff
         if ($this->InstitutionStaff->exists(['institution_position_id' => $entity->id]) ||
@@ -211,7 +211,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         /*POCOR-5069 Starts
         if ($entity->has('is_homeroom') && $entity->dirty('is_homeroom')) {
@@ -233,8 +233,8 @@ class InstitutionPositionsTable extends ControllerActionTable
                 ])
                 ;
             if (!empty($staffInvolved)) {
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+                $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
                 $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
                 try {
                     $securityGroupId = $this->Institutions->get($entity->institution_id)->security_group_id;
@@ -265,7 +265,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }POCOR-5069 Ends*/
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('position_no', ['visible' => true]);
@@ -294,15 +294,15 @@ class InstitutionPositionsTable extends ControllerActionTable
     /**
      * Updates the field position number based on the provided action.
      * POCOR-7799
-     * @param Event $event The event that triggered this function.
+     * @param EventInterface $event The event that triggered this function.
      * @param array $attr The attributes to be updated.
      * @param string $action The action to be performed ('add' or other).
      * @param ServerRequest $request The server request containing the data.
      * @return array The updated attributes.
      * @throws \Exception If the request data is not available or invalid.
-
+     *
      */
-    public function onUpdateFieldPositionNo(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPositionNo(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $alias = $this->getAlias();
         $data = $request->getData($alias);
@@ -317,7 +317,7 @@ class InstitutionPositionsTable extends ControllerActionTable
     }
 
     /*POCOR-5069 starts
-    public function onUpdateFieldStaffPositionGradeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldStaffPositionGradeId(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -333,7 +333,7 @@ class InstitutionPositionsTable extends ControllerActionTable
 
 
 
-    public function onUpdateFieldIsHomeroom(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsHomeroom(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $visibility = false;
@@ -372,7 +372,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetIsHomeroom(Event $event, Entity $entity)
+    public function onGetIsHomeroom(EventInterface $event, Entity $entity)
     {
         $isHomeroom = $entity->is_homeroom;
         return $this->getSelectOptions('general.yesno')[$isHomeroom];
@@ -428,7 +428,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $prefix . '-' . $newStamp;
     }
 
-    public function onGetStaffPositionTitleId(Event $event, Entity $entity)
+    public function onGetStaffPositionTitleId(EventInterface $event, Entity $entity)
     {
         $types = $this->getSelectOptions('Staff.position_types');
         if ($entity->has('staff_position_title')) {
@@ -436,7 +436,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $name = $entity->position_no;
         $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
@@ -471,7 +471,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStaffPositionTitleId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStaffPositionTitleId(EventInterface $event, array $attr, $action, $request)
     {
         if (in_array($action, ['edit'])) {
             // POCOR-3003 - [...] decision is to make Position Title not editable on the position edit page
@@ -544,7 +544,7 @@ class InstitutionPositionsTable extends ControllerActionTable
      ** index action methods
      **
      ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
@@ -584,7 +584,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         }
     }
 
-    public function onGetCurrentStaff(Event $event, Entity $entity)
+    public function onGetCurrentStaff(EventInterface $event, Entity $entity)
     {
         $value = '';
         $id = $entity->id;
@@ -643,7 +643,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $currentStaff;
     }
 
-        public function onGetGrade(Event $event, Entity $entity)
+        public function onGetGrade(EventInterface $event, Entity $entity)
     {
         $value = '';
         $id = $entity->id;
@@ -697,7 +697,7 @@ class InstitutionPositionsTable extends ControllerActionTable
         return $value;
     }//PCOOR-5069 Ends
 
-public function onGetHomeroomTeacher(Event $event, Entity $entity)
+public function onGetHomeroomTeacher(EventInterface $event, Entity $entity)
     {
         $value = '';
         $id = $entity->id;
@@ -745,7 +745,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         return $value;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
@@ -828,7 +828,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
      **
      ******************************************************************************************************************/
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(EventInterface $event)
     {
         $this->fields['current_staff_list']['visible'] = false;
         $this->fields['past_staff_list']['visible'] = false;
@@ -845,7 +845,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         ]);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         /*POCOR-5069 Starts$this->field('staff_position_grade_id', [
             'type' => 'select',
@@ -877,7 +877,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
      **
      ******************************************************************************************************************/
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $this->field('staff_position_title_type', ['visible' => true]);//POCOR-7758
         $this->field('staff_position_title_category', ['visible' => true]);//POCOR-7758
@@ -953,7 +953,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         return true;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $name = $entity->position_no;
         $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->getAlias())));
@@ -964,7 +964,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         }
          //POCOR-8561 Start
          $statusId = $entity['status']->id;
-         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
+         $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
          $editCheck = $WorkflowSteps->find()
                          ->where([$WorkflowSteps->aliasField('id') => $statusId])
                          ->first();
@@ -1044,7 +1044,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
      **
      ******************************************************************************************************************/
 
-    public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options)
+    public function transferOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $options)
     {
         $institutionId = $this->getInstitutionID();
         $query->where([$this->aliasField('institution_id') => $institutionId]);
@@ -1211,7 +1211,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
     /**
      * POCOR-6820 change in query get position number and associated staff
      */
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->getInstitutionID();
         $query
@@ -1303,12 +1303,12 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
     }
 
     /*POCOR-5069 Starts
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
+    public function onExcelGetIsHomeroom(EventInterface $event, Entity $entity)
     {
         return ($entity->is_homeroom) ? __('Yes') : __('No');
     }POCOR-5069 Ends*/
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
         $newArray[] = [
@@ -1388,7 +1388,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetStaffPositionTitleId(Event $event, Entity $entity)
+    public function onExcelGetStaffPositionTitleId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('staff_position_title') && !empty($entity->staff_position_title)) {
             $isTeaching = ($entity->staff_position_title->type) ? __('Teaching') : __('Non-Teaching');
@@ -1396,7 +1396,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         }
     }
 
-    public function onExcelGetStaffId(Event $event, Entity $entity)
+    public function onExcelGetStaffId(EventInterface $event, Entity $entity)
     {
         $UsersTable = self::getDynamicTableInstance('Security.Users');
 
@@ -1409,7 +1409,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
      * POCOR-6820
      * on the basis of the position number get staff data.
      */
-    public function onExcelGetOpenemisId(Event $event, Entity $entity)
+    public function onExcelGetOpenemisId(EventInterface $event, Entity $entity)
     {
         $session = $this->Session;
         $position_id = $entity->id;
@@ -1470,18 +1470,18 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         return $entity->openemis_no;
     }
 
-    public function onExcelGetFte(Event $event, Entity $entity)
+    public function onExcelGetFte(EventInterface $event, Entity $entity)
     {
         return $entity->fte;
     }
 
-    public function onExcelGetStaffName(Event $event, Entity $entity)
+    public function onExcelGetStaffName(EventInterface $event, Entity $entity)
     {
         return $entity->staff_name;
     }
 
     //PCOOR-5069 Starts
-    public function onExcelGetStaffPositionGradeName(Event $event, Entity $entity)
+    public function onExcelGetStaffPositionGradeName(EventInterface $event, Entity $entity)
     {
         $session = $this->Session;
         $position_id = $entity->id;
@@ -1512,18 +1512,18 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         return $entity->staff_position_grade_name;
     }//PCOOR-5069 Ends
 
-    public function onExcelGetIdentityType(Event $event, Entity $entity)
+    public function onExcelGetIdentityType(EventInterface $event, Entity $entity)
     {
         return $entity->identity_type;
     }
 
-    public function onExcelGetidentityNumber(Event $event, Entity $entity)
+    public function onExcelGetidentityNumber(EventInterface $event, Entity $entity)
     {
         return $entity->identity_number;
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Positions';
@@ -1611,7 +1611,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
      * add shift dropdown
      */
 
-    public function onUpdateFieldShiftId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldShiftId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $this->AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
         $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
@@ -1644,7 +1644,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
     }
 
     //POCOR-7758 start
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         $this->field('staff_position_title_type', ['visible' => true]);
         $this->field('staff_position_title_category', ['visible' => true]);
@@ -1675,32 +1675,14 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         }
     }
 
-    public function onGetStaffPositionTitleType(Event $event, Entity $entity)
+    public function onGetStaffPositionTitleType(EventInterface $event, Entity $entity)
     {
         if ($entity->has('staff_position_title')) {
             $value = $entity->staff_position_title->type == 1 ? "Teaching" : "Non-Teaching";
             return $value;
         }
     }
-//     public function onGetShiftId(Event $event, Entity $entity)
-//     {
-// //        dd($entity);
-//         $shift_id = $entity->shift_id;
-//         if(!$shift_id){
-//             return "";
-//         }
-//         $ShiftOptions = self::getDynamicTableInstance('Institution.ShiftOptions');
-//         $res = $ShiftOptions->get($shift_id);
-//         if(empty($res->name)){ //POCOR-7185
-//             $shift = 'NA';
-//         }else{
-//             $shift = $res->name;
-//         }
-//         return $shift;
-//     }
-
-    //POCOR-9546[START]
-    public function onGetShiftId(Event $event, Entity $entity)
+    public function onGetShiftId(EventInterface $event, Entity $entity)
     {
         $shift_id = $entity->shift_id;
 
@@ -1729,7 +1711,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -1777,7 +1759,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         // Return the table instance
         return $locator->get($tableFullAlias);
     }
-    public function onGetStaffPositionTitleCategory(Event $event, Entity $entity)
+    public function onGetStaffPositionTitleCategory(EventInterface $event, Entity $entity)
     {
         if ($entity->has('staff_position_title')) {
             $value = self::getDynamicTableInstance('Staff.StaffPositionCategories')->get($entity->staff_position_title->staff_position_categories_id)->name;
@@ -1785,7 +1767,7 @@ public function onGetHomeroomTeacher(Event $event, Entity $entity)
         }
     }
 
-    public function onGetStaffPositionTitleDescription(Event $event, Entity $entity)
+    public function onGetStaffPositionTitleDescription(EventInterface $event, Entity $entity)
     {
         if ($entity->has('staff_position_title')) {
             $value = $entity->staff_position_title->file_name;

@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -21,21 +21,21 @@ class StaffContactsTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 		return $attr;
 	}
 
-    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    public function onExcelGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         $IdentityNumber = '';
-        $userIdentities = TableRegistry::get('User.Identities');
+        $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $result = $userIdentities
                     ->find()
                     ->where([
@@ -61,10 +61,10 @@ class StaffContactsTable extends AppTable  {
         return $IdentityNumber;
     }    
 
-    public function onExcelGetNationality(Event $event, Entity $entity)
+    public function onExcelGetNationality(EventInterface $event, Entity $entity)
     {
         $Nationalities = '';
-        $userNationalities = TableRegistry::get('User.UserNationalities');
+        $userNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
         $result = $userNationalities
                     ->find()
                     ->where([
@@ -89,12 +89,12 @@ class StaffContactsTable extends AppTable  {
         return $Nationalities;
     }
 
-    public function onExcelGetTeachingStatus(Event $event, Entity $entity)
+    public function onExcelGetTeachingStatus(EventInterface $event, Entity $entity)
     {
         $teachingStatus = '';
-        $securityRoles = TableRegistry::get('Security.SecurityRoles');
-        $staffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
-        $Status = TableRegistry::get('Security.SecurityGroupUsers');
+        $securityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $staffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $Status = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
 
         $query = $staffPositionTitles->find();
         $type = $query->func()->sum('type');
@@ -131,13 +131,13 @@ class StaffContactsTable extends AppTable  {
         return $teachingStatus;
     }
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -198,12 +198,12 @@ class StaffContactsTable extends AppTable  {
 
 	}
 
-	public function onExcelGetPreferred(Event $event, Entity $entity) {
+	public function onExcelGetPreferred(EventInterface $event, Entity $entity) {
 		$options = [0 => __('No'), 1 => __('Yes')];
 		return $options[$entity->preferred];
 	}
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         foreach ($fields as $key => $field) {
             // change formatting to string to avoid content unreadable errors on excel

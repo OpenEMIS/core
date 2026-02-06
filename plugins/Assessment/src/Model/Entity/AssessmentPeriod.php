@@ -26,7 +26,7 @@ class AssessmentPeriod extends Entity
             return true;
         }
 //        $user_id= $this->created_user_id;
-        $SecurityGroupUsersTable=TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsersTable=TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $securityGroupUserData=$SecurityGroupUsersTable->
                                find('all')->where([$SecurityGroupUsersTable->aliasField('security_user_id IS') => $user_id])
                                ->toArray();
@@ -36,7 +36,7 @@ class AssessmentPeriod extends Entity
             $ids[]=$value['security_role_id'];
         }
         if(!empty($ids)){ // POCOR-8859
-            $ExcludedSecurityRoleTable=TableRegistry::get('Assessment.AssessmentPeriodExcludedSecurityRoles');
+            $ExcludedSecurityRoleTable=TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriodExcludedSecurityRoles');
             $ExcludedSecurityRoleCount=$ExcludedSecurityRoleTable->find('all') // POCOR-8859
                                                                ->where([
                                                                 'security_role_id In'=>$ids,

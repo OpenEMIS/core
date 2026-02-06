@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -22,7 +22,7 @@ class StaffTable extends AppTable
         parent::initialize($config);
 
         // Associations
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $Users::handleAssociations($this);
         self::handleAssociations($this);
 
@@ -63,7 +63,7 @@ class StaffTable extends AppTable
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
 
-        $this->InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $this->InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $this->addBehavior('Institution.InstitutionTab');
         $this->addBehavior('Staff.StaffTab', ['controller' => $controller]);
     }
@@ -101,17 +101,17 @@ class StaffTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->Session->write('Staff.Staff.name', $entity->name);
         $this->setupTabElements(['id' => $entity->id]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $settings)
     {
         // fields are set in UserBehavior
         $this->fields = []; // unset all fields first
@@ -119,7 +119,7 @@ class StaffTable extends AppTable
         $this->ControllerAction->field('institution', ['order' => 50]);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options)
     {
         $query->where([$this->aliasField('is_staff') => 1]);
 
@@ -158,7 +158,7 @@ class StaffTable extends AppTable
         );
     }
 
-    public function onGetInstitution(Event $event, Entity $entity)
+    public function onGetInstitution(EventInterface $event, Entity $entity)
     {
         $userId = $entity->id;
         $institutions = $this->InstitutionStaff->find('list', ['valueField' => 'Institutions.name'])
@@ -176,7 +176,7 @@ class StaffTable extends AppTable
         return $value;
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $openemisNo = $this->getUniqueOpenemisId(['model' => 'Staff']);
         $this->ControllerAction->field('openemis_no', [
@@ -189,7 +189,7 @@ class StaffTable extends AppTable
         $this->ControllerAction->field('is_staff', ['value' => 1]);
     }
 
-    public function addAfterAction(Event $event)
+    public function addAfterAction(EventInterface $event)
     {
         // need to find out order values because recordbehavior changes it
         $allOrderValues = [];
@@ -203,11 +203,11 @@ class StaffTable extends AppTable
         $this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
+    public function onBeforeDelete(EventInterface $event, ArrayObject $options, $ids)
     {
         $process = function ($model, $ids, $options) {
             // classes are not to be deleted (cascade delete is not set and need to change id)
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $InstitutionClasses->updateAll(
                     ['staff_id' => 0],
                     $ids
@@ -229,7 +229,7 @@ class StaffTable extends AppTable
     }
 
     // Logic for the mini dashboard
-    public function afterAction(Event $event)
+    public function afterAction(EventInterface $event)
     {
         if ($this->action == 'index') {
             $searchConditions = $this->getSearchConditions($this, $this->request->data['Search']['searchField']);

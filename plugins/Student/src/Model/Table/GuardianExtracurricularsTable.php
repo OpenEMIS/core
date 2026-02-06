@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
@@ -18,7 +18,7 @@ class GuardianExtracurricularsTable extends AppTable {
 		$this->belongsTo('ExtracurricularTypes', ['className' => 'FieldOption.ExtracurricularTypes']);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(EventInterface $event) {
 		
 		$this->fields['end_date']['visible'] = false;
 		$this->fields['hours']['visible'] = false;
@@ -34,7 +34,7 @@ class GuardianExtracurricularsTable extends AppTable {
 	
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function addEditBeforeAction(EventInterface $event) {
 		$order = 0;
 		$this->ControllerAction->setFieldOrder('academic_period_id', $order++);
 		$this->ControllerAction->setFieldOrder('extracurricular_type_id', $order++);
@@ -64,11 +64,11 @@ class GuardianExtracurricularsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event, $data) {
+	public function afterAction(EventInterface $event, $data) {
 		$this->setupTabElements();
 	}
 
-	public function beforeFind( Event $event, Query $query )
+	public function beforeFind( EventInterface $event, Query $query )
 	{   
 		$session = $this->request->getSession();
 		$userData = $this->Session->read();
@@ -111,7 +111,7 @@ class GuardianExtracurricularsTable extends AppTable {
 		}
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();

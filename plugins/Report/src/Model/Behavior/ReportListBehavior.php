@@ -3,7 +3,7 @@ namespace Report\Model\Behavior;
 
 use ArrayObject;
 use ZipArchive;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -42,7 +42,7 @@ class ReportListBehavior extends Behavior {
 		return $events;
 	}
 
-	public function afterAction(Event $event, $config) {
+	public function afterAction(EventInterface $event, $config) {
 
 		if ($this->_table->action == 'index') {
 			/*POCOR-6208 starts*/
@@ -108,7 +108,7 @@ class ReportListBehavior extends Behavior {
 		}
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $settings) {
 		//print_r($this->ReportProgress); die;
 		//print_r($this->_table->getAlias());die;
 		$query = $settings['query'];
@@ -185,7 +185,7 @@ class ReportListBehavior extends Behavior {
 		return $query;
 	}
 
-	public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
 	{
 		if($request->getData()['Staff']['feature'] == 'Report.StaffPhoto' || $request->getData()['Students']['feature'] == 'Report.StudentsPhoto'){
 			$attr['options'] = ['zip' => 'Zip'];
@@ -198,7 +198,7 @@ class ReportListBehavior extends Behavior {
 		return $attr;
 	}
 
-	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
 
 		$data[$this->_table->getAlias()]['locale'] = I18n::getLocale();
 		$session = new Session();
@@ -217,13 +217,13 @@ class ReportListBehavior extends Behavior {
 		return $process;
 	}
 
-	public function onExcelGenerate(Event $event, $settings) {
+	public function onExcelGenerate(EventInterface $event, $settings) {
 		$requestData = json_decode($settings['process']['params']);
 		$locale = $requestData->locale;
 		I18n::getLocale($locale);
 	}
 
-	public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {
+	public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {
 		$process = $settings['process'];
 		$this->ReportProgress->updateAll(
 			['total_records' => $totalCount],
@@ -231,7 +231,7 @@ class ReportListBehavior extends Behavior {
 		);
 	}
 
-	public function onExcelBeforeWrite(Event $event, ArrayObject $settings, $rowProcessed, $percentCount) {
+	public function onExcelBeforeWrite(EventInterface $event, ArrayObject $settings, $rowProcessed, $percentCount) {
 		$process = $settings['process'];
 		if (($percentCount > 0 && $rowProcessed % $percentCount == 0) || $percentCount == 0)  {
 			$this->ReportProgress->updateAll(
@@ -241,7 +241,7 @@ class ReportListBehavior extends Behavior {
 		}
 	}
 
-	public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {
+	public function onExcelEndSheet(EventInterface $event, ArrayObject $settings, $totalProcessed) {
 		$process = $settings['process'];
 		$this->ReportProgress->updateAll(
 			['current_records' => $totalProcessed],
@@ -249,7 +249,7 @@ class ReportListBehavior extends Behavior {
 		);
 	}
 
-	public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {
+	public function onExcelGenerateComplete(EventInterface $event, ArrayObject $settings) {
 		$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 		$setTime= $ConfigItems->value("time_zone");
 		$timeZone= !empty($setTime) ? $setTime : 'UTC'; //POCOR-6732
@@ -265,14 +265,14 @@ class ReportListBehavior extends Behavior {
 		$settings['purge'] = false; //for report, dont purge after download.
 	}
 
-	public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateBeforeGenerate(EventInterface $event, array $params, ArrayObject $extra)
 	{
 		$requestData = json_decode($extra['process']['params']);
 		$locale = $requestData->locale;
 		I18n::getLocale($locale);
 	}
 
-	public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
+	public function onExcelTemplateAfterGenerate(EventInterface $event, array $params, ArrayObject $extra)
 	{
 		$process = $extra['process'];
 		$expiryDate = new FrozenTime();
@@ -283,7 +283,7 @@ class ReportListBehavior extends Behavior {
 		);
 	}
 
-	public function onCsvGenerateComplete(Event $event, ArrayObject $settings)
+	public function onCsvGenerateComplete(EventInterface $event, ArrayObject $settings)
 	{
 		$process = $settings['process'];
 		$expiryDate = new FrozenTime();
@@ -625,7 +625,7 @@ class ReportListBehavior extends Behavior {
     }
     /*POCOR-6208 ends*/
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
     	if($this->_table->controller->getPlugin() == 'Report'){
     		$controller = $this->_table->controller->getName();

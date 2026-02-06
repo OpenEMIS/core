@@ -13,6 +13,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use App\Model\Traits\MessagesTrait;
 use Cake\Http\ServerRequest;
+use Cake\Event\EventInterface;
 
 class DataManagementCopyTable extends ControllerActionTable
 {
@@ -110,7 +111,7 @@ class DataManagementCopyTable extends ControllerActionTable
     /*───────────────────────────────────────────────────────────────────────────
      | POCOR-9354: afterSave → delegate to feature-specific triggers (Shell → Command where ready)
      ───────────────────────────────────────────────────────────────────────────*/
-    public function afterSave(Event $event, Entity $entity, ArrayObject $data)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         ini_set('memory_limit', '2G');
         return $this->triggerForFeature($entity);
@@ -1886,7 +1887,7 @@ class DataManagementCopyTable extends ControllerActionTable
 //     * @param $fieldName
 //     * @param $newId
 //     * @param $oldId
-//
+//     *
 //     */
 //    private function copyCustomFields(\Cake\Datasource\ConnectionInterface $connection, $tableName, $fieldName, $newId, $oldId)
 //    {

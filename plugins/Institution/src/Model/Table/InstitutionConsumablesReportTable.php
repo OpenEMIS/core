@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
@@ -45,7 +45,7 @@ class InstitutionConsumablesReportTable extends ControllerActionTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [
@@ -127,7 +127,7 @@ class InstitutionConsumablesReportTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }   
 
-    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDate(EventInterface $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
         
@@ -144,7 +144,7 @@ class InstitutionConsumablesReportTable extends ControllerActionTable
         
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $institutionId = $requestData->institution_id;

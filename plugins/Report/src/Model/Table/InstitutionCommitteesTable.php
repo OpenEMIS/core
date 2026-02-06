@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Log\Log;
@@ -39,10 +39,10 @@ class InstitutionCommitteesTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $areaId = $requestData->area_education_id;
         $where = [];
         if($requestData->institution_id == 0){
@@ -98,19 +98,19 @@ class InstitutionCommitteesTable extends AppTable
             ]);
     }
 
-    public function onExcelRenderStartTime(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderStartTime(EventInterface $event, Entity $entity, array $attr)
     {
         $entity->start_time = $entity->start_time->i18nFormat('h:mm:ss a');
         return $entity->start_time;        
     }
 
-    public function onExcelRenderEndTime(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderEndTime(EventInterface $event, Entity $entity, array $attr)
     {
         $entity->end_time = $entity->end_time->i18nFormat('h:mm:ss a');
         return $entity->end_time;        
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
         //add columns POCOR-5394 starts

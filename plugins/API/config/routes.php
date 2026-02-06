@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/api', ['plugin' => 'API'], function ($routes) {
-	Router::connect('/api', ['plugin' => 'API', 'controller' => 'Api']);
-	Router::connect('/api/:action/*', ['plugin' => 'API', 'controller' => 'Api']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/api', ['plugin' => 'API'], function (RouteBuilder $routes) {
+    	$routes->connect('/api', ['plugin' => 'API', 'controller' => 'Api']);
+    	$routes->connect('/api/:action/*', ['plugin' => 'API', 'controller' => 'Api']);
+    });
+};

@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupDropdownBehavior extends SetupBehavior
@@ -14,7 +14,7 @@ class SetupDropdownBehavior extends SetupBehavior
         parent::initialize($config);
     }
 
-    public function onSetDropdownElements(Event $event, Entity $entity)
+    public function onSetDropdownElements(EventInterface $event, Entity $entity)
     {
         $fieldType = strtolower($this->fieldTypeCode);
         $this->_table->field('options', [
@@ -27,7 +27,7 @@ class SetupDropdownBehavior extends SetupBehavior
         $this->sortFieldOrder('options');
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryCopy = clone($query);
         $entity = $queryCopy->first();
@@ -36,7 +36,7 @@ class SetupDropdownBehavior extends SetupBehavior
         }
     }
 
-    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -49,7 +49,7 @@ class SetupDropdownBehavior extends SetupBehavior
         }
     }
 
-    public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddOption(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
@@ -66,7 +66,7 @@ class SetupDropdownBehavior extends SetupBehavior
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
             if (isset($data['is_default']) && !empty($data['custom_field_options'])) {

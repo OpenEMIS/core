@@ -3,7 +3,7 @@ namespace Gpa\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -25,7 +25,7 @@ class CumulativeTable extends ControllerActionTable {
         parent::initialize($config);
         $this->belongsTo('GpaEducationGrades', ['className' => 'Education.EducationGrades','foreignKey' => 'main_education_grade_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades','foreignKey' => 'main_education_grade_id']);
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
     }
 
@@ -40,7 +40,7 @@ class CumulativeTable extends ControllerActionTable {
             ->notEmpty('education_grade_id');
     }
 
-   public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+   public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Get the table name as a string for GpaSystem
        
@@ -56,7 +56,7 @@ class CumulativeTable extends ControllerActionTable {
             'options' => [],
             'order' => 1
         ];
-        $gradeGpaTable = TableRegistry::get('Gpa.EducationGradesGpa');
+        $gradeGpaTable = TableRegistry::getTableLocator()->get('Gpa.EducationGradesGpa');
         $query->leftJoin(
                         [$gradeGpaTable->getAlias() => $gradeGpaTable->getTable()],
                         [
@@ -68,13 +68,13 @@ class CumulativeTable extends ControllerActionTable {
     }
 
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getGpaTab();
         
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('main_education_grade_id', ['type' => 'select']);
@@ -83,7 +83,7 @@ class CumulativeTable extends ControllerActionTable {
         $this->setFieldOrder(['academic_period_id', 'gpa_education_programme_id','main_education_grade_id', 'gpa_grading_type_id']);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {  
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('gpa_education_programme_id', ['type' => 'select']);
@@ -101,7 +101,7 @@ class CumulativeTable extends ControllerActionTable {
 
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -112,7 +112,7 @@ class CumulativeTable extends ControllerActionTable {
                 $attr['default'] = $selectedPeriod;
 
             } else {
-                $gpa = TableRegistry::get('Gpa.EducationGradesGpa');
+                $gpa = TableRegistry::getTableLocator()->get('Gpa.EducationGradesGpa');
                 $getId = $this->paramsDecode($this->request->getParam('pass')[1]);
                 $recordId = $getId['id'];
                 $mainEducationGradeId = $this->find()->where(['id' => $recordId])->first()->main_education_grade_id;
@@ -126,13 +126,13 @@ class CumulativeTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldGpaEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGpaEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-        $gpa = TableRegistry::get('Gpa.EducationGradesGpa');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+        $gpa = TableRegistry::getTableLocator()->get('Gpa.EducationGradesGpa');
         if ($action == 'view') {
             //POCOR-8962
             $getId = $this->paramsDecode($this->request->getParam('pass')[1]);
@@ -175,7 +175,7 @@ class CumulativeTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addOnChangeEducationProgrammeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
 
@@ -192,7 +192,7 @@ class CumulativeTable extends ControllerActionTable {
     }
 
 
-    public function onUpdateFieldMainEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldMainEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
         if ($action == 'add' || $action == 'edit' ) {
@@ -223,7 +223,7 @@ class CumulativeTable extends ControllerActionTable {
         return $attr;
     }
 
-     public function addOnChangeEducationGradeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+     public function addOnChangeEducationGradeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
 
@@ -250,7 +250,7 @@ class CumulativeTable extends ControllerActionTable {
     }
 
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'education_grade_id') {
             return __('Education Grade');
@@ -265,13 +265,13 @@ class CumulativeTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEducationGradesCumulativeGpa(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradesCumulativeGpa(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'element';
         $attr['element'] = 'cumulative';
         $mainEducationGradeId = $request->getData()['Cumulative']['main_education_grade_id'];
 
-         $gpa = TableRegistry::get('Gpa.EducationGradesGpa');
+         $gpa = TableRegistry::getTableLocator()->get('Gpa.EducationGradesGpa');
         if ($action == 'add' || $action == 'edit' || $action == 'view') {
             if ($request->is(['post', 'put'])) {
                 $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
@@ -279,7 +279,7 @@ class CumulativeTable extends ControllerActionTable {
             }
 
             if ($action == 'edit' || $action == 'view') {
-                $gpa = TableRegistry::get('Gpa.EducationGradesGpa');
+                $gpa = TableRegistry::getTableLocator()->get('Gpa.EducationGradesGpa');
                 $selectedProgramme = $request->getData($this->aliasField('gpa_education_programme_id'));
                 $getId = $this->paramsDecode($this->request->getParam('pass')[1]);
                 $recordId = $getId['id'];
@@ -293,7 +293,7 @@ class CumulativeTable extends ControllerActionTable {
                 }
                
                 if (!empty($recordId)) {
-                    $CumulativeGpaGradesData = TableRegistry::get('Gpa.EducationCumulativeGrades')
+                    $CumulativeGpaGradesData = TableRegistry::getTableLocator()->get('Gpa.EducationCumulativeGrades')
                         ->find('list', [
                             'keyField' => 'education_grade_id',
                             'valueField' => 'education_grade_id'
@@ -363,11 +363,11 @@ class CumulativeTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
        // $cumulativeGpaGrades = $entity['education_grades_cumulative_gpa'];
-        $gradeGpa = TableRegistry::get('Gpa.EducationGradesGpa');
+        $gradeGpa = TableRegistry::getTableLocator()->get('Gpa.EducationGradesGpa');
         $educationGradeId = $entity->main_education_grade_id;
         $academicPeriodId = $entity->academic_period_id;
         $checkRecord = $gradeGpa->find()
@@ -396,13 +396,13 @@ class CumulativeTable extends ControllerActionTable {
     }
 
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['EducationGrades' => [
             'sort' => ['EducationGrades.id' => 'ASC']]]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) 
     {
         $this->field('education_grades_cumulative_gpa', [
             'type' => 'element',
@@ -416,10 +416,10 @@ class CumulativeTable extends ControllerActionTable {
         ]);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) 
     { 
         $data = [];
-        $CumulativeGpaGradesTable = TableRegistry::get('Gpa.EducationCumulativeGrades');
+        $CumulativeGpaGradesTable = TableRegistry::getTableLocator()->get('Gpa.EducationCumulativeGrades');
         $CumulativeGpaGrades = $entity->education_grades_cumulative_gpa ?? [];
         foreach ($CumulativeGpaGrades as $value) {
             // Extra validation to ensure non-zero entries
@@ -468,17 +468,17 @@ class CumulativeTable extends ControllerActionTable {
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         // populate 'to be deleted' field
         $grade = $this->GpaEducationGrades->get($entity->education_grade_id);
         $entity->showDeletedValueAs = $grade->name;
     }
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         
-        $this->InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
+        $this->InstitutionStudentsGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa');
         // Check if any associated records exist in any related tables.
         $associatedRecordsExist = 
             $this->InstitutionStudentsGpa->exists([
@@ -500,7 +500,7 @@ class CumulativeTable extends ControllerActionTable {
     }
 
     //POCOR-8962
-    public function onGetGpaEducationProgrammeId(Event $event, Entity $entity)
+    public function onGetGpaEducationProgrammeId(EventInterface $event, Entity $entity)
     {
         if($this->action == 'index') {
             $programmeGradeName = $entity->education_grade->programme_name;
@@ -508,10 +508,10 @@ class CumulativeTable extends ControllerActionTable {
         }
     }
 
-    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    public function onGetAcademicPeriodId(EventInterface $event, Entity $entity)
     {
         // Get the GPA table
-        $gpaTable = TableRegistry::get('Gpa.EducationGradesGpa');
+        $gpaTable = TableRegistry::getTableLocator()->get('Gpa.EducationGradesGpa');
 
         // Get the main education grade ID from the entity
         $mainEducationGradeId = $entity->main_education_grade_id;

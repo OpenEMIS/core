@@ -5,7 +5,7 @@ namespace App\Shell;
 use Exception;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Date;
@@ -18,7 +18,7 @@ class PerformanceOutcomesShell extends Shell
     {
         parent::initialize();
 
-        $this->loadModel('SystemProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()
@@ -64,9 +64,9 @@ class PerformanceOutcomesShell extends Shell
     {
         //Updated Education Id Start
         $connection = ConnectionManager::get('default');
-        $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
-        $OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
+        $OutcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+        $OutcomeTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('Academic.AcademicPeriods');
         $statement1 = $connection->prepare("Select subq1.grade_id as wrong_grade_id,subq1.grade_name,subq1.period_name,subq1.programme_name ,  subq2.grade_id as correct_grade_id,subq2.grade_name ,subq2.period_name,subq2.programme_name from
                             (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades
                             INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id

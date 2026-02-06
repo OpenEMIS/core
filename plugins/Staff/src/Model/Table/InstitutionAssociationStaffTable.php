@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -35,7 +35,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
        if ($field == 'total_male_students') {
             return  __('Male Students');
@@ -62,7 +62,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         }
     }
     
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('total_students', []);
         $this->fields['code']['visible'] = false;
@@ -89,7 +89,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $staffId = $this->Session->read('Staff.Staff.id');
         if (!empty($staffId)) {
@@ -97,7 +97,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         } else {
             $staffId =$this->Session->read('Auth.User.id');
         }
-        $AssocoationStaff = TableRegistry::get('Institution.InstitutionAssociationStaff');
+        $AssocoationStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociationStaff');
         $staffData = $AssocoationStaff->find()
                     ->select([$AssocoationStaff->aliasField('institution_association_id')])
                     ->where([$AssocoationStaff->aliasField('security_user_id') => $staffId])->toArray();
@@ -120,7 +120,7 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         // ->orWhere($where); // POCOR-7485
     }
   
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         // $options = ['type' => 'staff'];
         // $tabElements = $this->controller->getCareerTabElements($options);
@@ -157,12 +157,12 @@ class InstitutionAssociationStaffTable extends ControllerActionTable
         return $userId;
     }
 
-    public function onGetTotalStudents(Event $event, Entity $entity)
+    public function onGetTotalStudents(EventInterface $event, Entity $entity)
     {
 
         return $entity->total_male_students + $entity->total_female_students;
         // if (!isset($this->InstitutionAssociationStudent)) {
-        //     $this->InstitutionAssociationStudent = TableRegistry::get('Student.InstitutionAssociationStudent');
+        //     $this->InstitutionAssociationStudent = TableRegistry::getTableLocator()->get('Student.InstitutionAssociationStudent');
         // }
         // $count = $this->InstitutionAssociationStudent->getMaleCountByAssociations($entity->id) + $this->InstitutionAssociationStudent->getFemaleCountByAssociations($entity->id);
         // return $count.' ';

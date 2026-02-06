@@ -2,7 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
@@ -31,7 +31,7 @@ class ApplicationAttachmentsTable extends AppTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download') {
             // check for the user permission to download here

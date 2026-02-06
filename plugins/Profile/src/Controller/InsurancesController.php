@@ -1,7 +1,7 @@
 <?php
 namespace Profile\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use App\Controller\PageController;
 use Page\Model\Entity\PageElement;//POCOR-6255
@@ -10,9 +10,9 @@ class InsurancesController extends PageController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Health.InsuranceProviders');
-        $this->loadModel('Health.InsuranceTypes');
-        $this->loadModel('User.UserInsurances');
+        $this->InsuranceProviders = $this->fetchTable('Health.InsuranceProviders');
+        $this->InsuranceTypes = $this->fetchTable('Health.InsuranceTypes');
+        $this->UserInsurances = $this->fetchTable('User.UserInsurances');
         $this->Page->loadElementsFromTable($this->UserInsurances);
         $this->Page->enable(['download']);
 

@@ -14,7 +14,7 @@ class POCOR5033p extends AbstractMigration
         $this->execute('CREATE TABLE `z_5033_security_role_functions` LIKE `security_role_functions`');
         $this->execute('INSERT INTO `z_5033_security_role_functions` SELECT * FROM `security_role_functions`');
 
-        $SecurityFunctions = TableRegistry::get('Security.SecurityFunctions');
+        $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
         $lastInsertId = $SecurityFunctions
                           ->find()
                           ->order($SecurityFunctions->aliasField('id') . ' DESC')

@@ -4,7 +4,7 @@ namespace User\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
@@ -53,11 +53,11 @@ class UserLanguagesTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param ArrayObject $extra
-
+     *
      */
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('evaluation_date');
         $this->field('language_id');
@@ -97,7 +97,7 @@ class UserLanguagesTable extends ControllerActionTable
     /**
      * @param Validator $validator
      * @return Validator
-
+     *
      */
     public function validationDefault(Validator $validator): Validator
     {
@@ -112,7 +112,7 @@ class UserLanguagesTable extends ControllerActionTable
     }
 
     /*POCOR-6267 Starts*/
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getUserID();
 
@@ -200,7 +200,7 @@ class UserLanguagesTable extends ControllerActionTable
     /*POCOR-6267 Ends*/
 
     public
-    function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }

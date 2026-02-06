@@ -3,7 +3,7 @@
 namespace User\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class UserActivitiesTable extends ControllerActionTable
 {

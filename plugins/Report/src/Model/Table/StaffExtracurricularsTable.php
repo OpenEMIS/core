@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -23,15 +23,15 @@ class StaffExtracurricularsTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
 		$areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-		$Staff = TableRegistry::get('Security.Users');
-        $InstitutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $Institutions = TableRegistry::get('Institution.Institutions');
+		$Staff = TableRegistry::getTableLocator()->get('Security.Users');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$conditions = [];
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;     
@@ -81,21 +81,21 @@ class StaffExtracurricularsTable extends AppTable  {
             ->where([$conditions]);
 	}
 	
-	public function onExcelRenderStartDate(Event $event, Entity $entity, $attr)
+	public function onExcelRenderStartDate(EventInterface $event, Entity $entity, $attr)
     {
         $start_date = $entity->date_from->format('Y-m-d');
         $entity->start_date = $start_date;
         return $entity->start_date;
     }
 
-    public function onExcelRenderEndDate(Event $event, Entity $entity, $attr)
+    public function onExcelRenderEndDate(EventInterface $event, Entity $entity, $attr)
     {
         $end_date = $entity->end_date->format('Y-m-d');
         $entity->end_date = $end_date;
         return $entity->end_date;
     }
 	
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields) 
     {   
         $cloneFields = $fields->getArrayCopy();
 

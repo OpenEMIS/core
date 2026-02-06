@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -63,7 +63,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         return $events;
     }
 
-    public function studentsAfterSave(Event $event, $student)
+    public function studentsAfterSave(EventInterface $event, $student)
     {
         // saving of new subject students is handled by institutionClassStudentsAfterSave
         if (!$student->isNew()) {
@@ -94,7 +94,7 @@ class InstitutionSubjectStudentsTable extends AppTable
                     $this->aliasField('education_grade_id') => $student->education_grade_id,
                     $this->aliasField('student_id') => $student->student_id,
                 ])->first();
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
 
             if (!empty($subjectStudent) && $subjectStudent->student_status_id != $student->student_status_id) {
@@ -109,11 +109,11 @@ class InstitutionSubjectStudentsTable extends AppTable
         /*POCOR-6542 ends*/
     }
 
-    public function institutionClassStudentsAfterSave(Event $event, Entity $student)
+    public function institutionClassStudentsAfterSave(EventInterface $event, Entity $student)
     {
         if ($student->isNew()) {
             // to automatically add the student into class subjects when the student is added to a class
-            $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $ClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
             $studentEducationGradeId = $student->education_grade_id;
             $classId = $student->institution_class_id;
 
@@ -146,7 +146,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         }
     }
 
-    public function institutionClassStudentsAfterDelete(Event $event, Entity $student)
+    public function institutionClassStudentsAfterDelete(EventInterface $event, Entity $student)
     {   //comment delete code for POCOR-6468 starts
         /*$deleteSubjectStudent = $this->find()
             ->where([
@@ -161,7 +161,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         }*///comment delete code for POCOR-6468 ends
     }
 
-    public function assessmentResultsAfterSave(Event $event, $results)
+    public function assessmentResultsAfterSave(EventInterface $event, $results)
     {
         // used to update total mark whenever an assessment mark is added or updated
         $studentId = $results->student_id;
@@ -172,7 +172,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $institutionClassesId = $results->institution_classes_id; //POCOR-6479
         $assessmentPeriodId = $results->assessment_period_id; //POCOR-6479
 
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId, $institutionClassesId, $assessmentPeriodId, $institutionId);//POCOR-6479
 
         if (!empty($totalMark)) {
@@ -221,9 +221,9 @@ class InstitutionSubjectStudentsTable extends AppTable
         $Users = $this->Users;
         $InstitutionSubjects = $this->InstitutionSubjects;
         $StudentStatuses = $this->StudentStatuses;
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $InstitutionClassStudents = TableRegistry::get('institution_class_students');//POCOR-6468 starts
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('institution_class_students');//POCOR-6468 starts
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');//POCOR-6468 starts
 
         $query
             ->select([
@@ -310,8 +310,8 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->formatResults(function ($results) {
                 $arrResults = is_array($results) ? $results : $results->toArray();
                 foreach ($arrResults as &$result) {
-                    $InstitutionStudents = TableRegistry::get('institution_students');
-                    $StudentStatuses = TableRegistry::get('student_statuses');
+                    $InstitutionStudents = TableRegistry::getTableLocator()->get('institution_students');
+                    $StudentStatuses = TableRegistry::getTableLocator()->get('student_statuses');
                     $StudentStatusesData = $InstitutionStudents->find()
                         ->select([
                             $InstitutionStudents->aliasField('student_status_id'),
@@ -344,7 +344,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         $query->formatResults(function ($results1) {
             $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
             foreach ($arrResults1 as &$result) {
-                $assessmentItemResults = TableRegistry::get('assessment_item_results');
+                $assessmentItemResults = TableRegistry::getTableLocator()->get('assessment_item_results');
                 $assessmentItemResultsData = $assessmentItemResults->find()
                     ->select([
                         $assessmentItemResults->aliasField('marks')
@@ -369,7 +369,7 @@ class InstitutionSubjectStudentsTable extends AppTable
     }
 
     /*
-     * $isst = Cake\ORM\TableRegistry::get('Institution.InstitutionSubjectStudents');
+     * $isst = Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
      * $query = $isst->find('studentResults', ['institution_class_id' => 583, 'education_subject_id' => 60]);
      * $array = $query->toArray();
      */
@@ -437,14 +437,14 @@ class InstitutionSubjectStudentsTable extends AppTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-
+     *
      */
     public static function getRelatedRecord($tableName, $relatedField)
     {
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -458,14 +458,14 @@ class InstitutionSubjectStudentsTable extends AppTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-
+     *
      */
     public static function getRelatedName($tableName, $relatedField)
     {
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->name;
@@ -492,9 +492,9 @@ class InstitutionSubjectStudentsTable extends AppTable
         $Users = $this->Users;
         $InstitutionSubjects = $this->InstitutionSubjects;
         $StudentStatuses = $this->StudentStatuses;
-        // $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $ItemResults = TableRegistry::get('Institution.AssessmentItemResultsArchived');
-        $InstitutionClassStudents = TableRegistry::get('institution_class_students');//POCOR-6572
+        // $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+        $ItemResults = TableRegistry::getTableLocator()->get('Institution.AssessmentItemResultsArchived');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('institution_class_students');//POCOR-6572
         $educationId = $InstitutionSubjects->find()->select('education_subject_id')->where(['id' => $subjectId])->first();
 
 
@@ -581,7 +581,7 @@ class InstitutionSubjectStudentsTable extends AppTable
             ->formatResults(function ($results1) {
                 $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
                 foreach ($arrResults1 as &$result) {
-                    $assessmentItemResults = TableRegistry::get('assessment_item_results_archived');
+                    $assessmentItemResults = TableRegistry::getTableLocator()->get('assessment_item_results_archived');
                     $assessmentItemResultsData = $assessmentItemResults->find()
                         ->select([
                             $assessmentItemResults->aliasField('marks')
@@ -617,8 +617,8 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         $Users = $this->Users;
         $InstitutionSubjects = $this->InstitutionSubjects;
-        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
-        $GradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
+        $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
+        $GradingOptions = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingOptions');
 
         $query
             ->select([
@@ -700,7 +700,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         return $count;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
         if ($entity->isNew() || $entity->getDirty('student_status_id')) {
@@ -712,7 +712,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $res = $this->InstitutionSubjects->find()->select(['InstitutionSubjects.id'])->join([
             'institution_subject_students' => [
@@ -743,7 +743,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
         //PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
         // find related classes and grades
-        // $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        // $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         // $institutionClassData = $InstitutionSubjects->find()
         //     ->contain('Classes.ClassGrades')
         //     ->where([$InstitutionSubjects->aliasField($InstitutionSubjects->primaryKey()) => $entity->institution_subject_id])
@@ -761,7 +761,7 @@ class InstitutionSubjectStudentsTable extends AppTable
         // }
         // $gradeArray = array_unique($gradeArray);
 
-        // $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        // $AssessmentItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         // conditions: 'assessment_item_results' removing from student_id, institution_id, academic_period_id, assessment_item_id->education_subject_id;
         // $deleteAssessmentItemResults = $AssessmentItemResults->find()
         //     ->where([
@@ -780,7 +780,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     public function getEnrolledStudentBySubject($period, $class, $subject)
     {
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
         $Users = $this->Users;
@@ -820,7 +820,7 @@ class InstitutionSubjectStudentsTable extends AppTable
     // POCOR-7362 starts
     public function getEnrolledStudent($period, $subject, $educationGradeId)
     {
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
         $Users = $this->Users;
@@ -882,7 +882,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     private function isAutoAddSubject($subject)
     {
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+        $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
         $educationGradeId = $subject['education_grade_id'];
         $educationSubjectId = $subject['education_subject_id'];
 
@@ -923,7 +923,7 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     private function getBasicAssessmentQuery(Query $query, array $where, $assessment_id)
     {
-        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
 
         return $query
             ->select([
@@ -975,7 +975,7 @@ class InstitutionSubjectStudentsTable extends AppTable
      */
     private function getBasicAssessmentUsersQuery(Query $query)
     {
-        $Users = TableRegistry::get('User.Users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $query =$query->contain('Users')
             ->select([
                 $this->aliasField('student_id'),
@@ -1002,7 +1002,7 @@ class InstitutionSubjectStudentsTable extends AppTable
      */
     private function getBasicAssessmentMarksQuery(Query $query, $options, $archive)
     {
-        $Results = TableRegistry::get('Assessment.AssessmentItemResults');
+        $Results = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         try {
             $marksPerStudent = $Results::getClassAssessmentItemResults($options, $archive);
         } catch (\Exception $exception) {

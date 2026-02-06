@@ -3,7 +3,7 @@ namespace Manuals\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -27,7 +27,7 @@ class InstitutionTable extends ControllerActionTable
         $this->removeBehavior('Reorder');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $query = $extra['query'];
         // $extra['pagination'] = false;
@@ -49,12 +49,12 @@ class InstitutionTable extends ControllerActionTable
         // return $query;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupField();
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {        
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -67,7 +67,7 @@ class InstitutionTable extends ControllerActionTable
         $this->field('parent_id', ['visible' => false]);   
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     { 
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
@@ -98,7 +98,7 @@ class InstitutionTable extends ControllerActionTable
         $this->setFieldOrder(['category','function','url']);
     }
 
-    public function onGetUrl(Event $event, Entity $entity)
+    public function onGetUrl(EventInterface $event, Entity $entity)
     {
         $link  = $entity['url'];
         if(!empty($link)){
@@ -108,7 +108,7 @@ class InstitutionTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);

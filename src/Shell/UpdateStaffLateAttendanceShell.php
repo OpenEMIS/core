@@ -20,9 +20,9 @@ class UpdateStaffLateAttendanceShell extends Shell
     {
 
         parent::initialize();
-        $this->loadModel('Institution.InstitutionStaffShifts');
-        $this->loadModel('Institution.InstitutionShifts');
-        $this->loadModel('Institution.InstitutionPositions');//POCOR-7225
+        $this->InstitutionStaffShifts = $this->fetchTable('Institution.InstitutionStaffShifts');
+        $this->InstitutionShifts = $this->fetchTable('Institution.InstitutionShifts');
+        $this->InstitutionPositions = $this->fetchTable('Institution.InstitutionPositions');//POCOR-7225
 
     }
 

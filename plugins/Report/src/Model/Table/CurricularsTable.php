@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
@@ -36,21 +36,21 @@ class CurricularsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         //POCOR-8028 removed academic period
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
-        $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
-        $InstitutionCurricularStudent = TableRegistry::get('Institution.InstitutionCurricularStudents');
-        $InstitutionCurricularPosition = TableRegistry::get('FieldOption.CurricularPositions');
-        $InstitutionCurriculartypes = TableRegistry::get('FieldOption.CurricularTypes');
-        $staff = TableRegistry::get('Security.Users');
-        $student = TableRegistry::get('Security.Users');
-        $Genders = TableRegistry::get('User.Genders');
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-        $UserIdentities = TableRegistry::get('User.Identities');
+        $InstitutionCurricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
+        $InstitutionCurricularStudent = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStudents');
+        $InstitutionCurricularPosition = TableRegistry::getTableLocator()->get('FieldOption.CurricularPositions');
+        $InstitutionCurriculartypes = TableRegistry::getTableLocator()->get('FieldOption.CurricularTypes');
+        $staff = TableRegistry::getTableLocator()->get('Security.Users');
+        $student = TableRegistry::getTableLocator()->get('Security.Users');
+        $Genders = TableRegistry::getTableLocator()->get('User.Genders');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $conditions = [];
         
         if (!empty($institutionId) && $institutionId > 0) {
@@ -140,7 +140,7 @@ class CurricularsTable extends AppTable
             ->group([$this->aliasField('id')]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         //POCOR-8028 removed academic period
         $newFields = [];
@@ -260,11 +260,11 @@ class CurricularsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStaffName(Event $event, Entity $entity)
+    public function onExcelGetStaffName(EventInterface $event, Entity $entity)
     {
         $staffdata = [];
-        $InstitutionCurricularStaff = TableRegistry::get('Institution.InstitutionCurricularStaff');
-        $staff = TableRegistry::get('Security.Users');
+        $InstitutionCurricularStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionCurricularStaff');
+        $staff = TableRegistry::getTableLocator()->get('Security.Users');
         $staff = $InstitutionCurricularStaff->find()
                     ->select(['openemis_no' => $staff->aliasField('openemis_no'),
                         'first_name' => $staff->aliasField('first_name'),
@@ -285,7 +285,7 @@ class CurricularsTable extends AppTable
         return implode(', ', $staffdata); //display as comma seperated
     }
 
-    public function onExcelGetCategory(Event $event, Entity $entity)
+    public function onExcelGetCategory(EventInterface $event, Entity $entity)
     {
          return $entity->category ? __('Co-Curricular') : __('Extracurricular');
     }

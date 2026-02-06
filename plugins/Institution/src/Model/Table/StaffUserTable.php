@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -74,6 +74,14 @@ class StaffUserTable extends ControllerActionTable
             ]
             ]
         );
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
     }
 
     public static function handleAssociations($model)
@@ -137,7 +145,7 @@ class StaffUserTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $options['associated']['Nationalities'] = [
             'validate' => 'AddByAssociation'
@@ -147,7 +155,7 @@ class StaffUserTable extends ControllerActionTable
         ];
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $id = $this->getQueryString('id');
 
@@ -167,7 +175,7 @@ class StaffUserTable extends ControllerActionTable
     }
 
     //POCOR-7982
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!empty($entity->date_of_death)) { //POCOR-8059
             if (isset($entity->dod_range)) {
@@ -181,14 +189,14 @@ class StaffUserTable extends ControllerActionTable
     //POCOR-7982
 
     // POCOR-5684
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
 
         // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
-        $users_ids = TableRegistry::get('User.UserIdentities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -196,7 +204,7 @@ class StaffUserTable extends ControllerActionTable
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('User.UserIdentities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $user_id_data = $users_ids->find()
             ->select(['number'])
             ->where([
@@ -211,7 +219,7 @@ class StaffUserTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('FieldOption.Nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -232,7 +240,7 @@ class StaffUserTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('User.UserIdentities');
+                $users_ids = TableRegistry::getTableLocator()->get('User.UserIdentities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number'])
                     ->where([
@@ -256,9 +264,9 @@ class StaffUserTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('User.UserIdentities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -266,7 +274,7 @@ class StaffUserTable extends ControllerActionTable
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('User.UserIdentities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.UserIdentities');
         $user_id_data = $users_ids->find()
             ->select(['number', 'identity_type_id'])
             ->where([
@@ -276,7 +284,7 @@ class StaffUserTable extends ControllerActionTable
 
         if (count($user_identities) == 1) {
             // Case 1
-            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+            $users_id_type = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -288,7 +296,7 @@ class StaffUserTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -309,7 +317,7 @@ class StaffUserTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('User.UserIdentities');
+                $users_ids = TableRegistry::getTableLocator()->get('User.UserIdentities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number', 'identity_type_id'])
                     ->where([
@@ -323,7 +331,7 @@ class StaffUserTable extends ControllerActionTable
             }
             if (count($nationality_based_ids) > 0) {
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+                $users_id_type = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                     ->select(['name'])
                     ->where([
@@ -333,7 +341,7 @@ class StaffUserTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             } else {
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+                $users_id_type = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                     ->select(['name'])
                     ->where([
@@ -349,7 +357,7 @@ class StaffUserTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         $validator = $BaseUsers->setUserValidation($validator, $this);
         $validator
             ->allowEmpty('username')
@@ -394,14 +402,14 @@ class StaffUserTable extends ControllerActionTable
         return $validator;
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'MainNationalities', 'MainIdentityTypes'
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if (!$this->AccessControl->isAdmin()) {
             $institutionIds = $this->AccessControl->getInstitutionsByUser();
@@ -431,9 +439,9 @@ class StaffUserTable extends ControllerActionTable
         if ($this->AccessControl->check([$this->controller->getName(), 'StaffTransferOut', 'add'])) {
             $session = $this->request->getSession();
             $toolbarButtons = $extra['toolbarButtons'];
-            $StaffTable = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $ConfigStaffTransfersTable = TableRegistry::get('Configuration.ConfigStaffTransfers');
+            $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+            $ConfigStaffTransfersTable = TableRegistry::getTableLocator()->get('Configuration.ConfigStaffTransfers');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
             $institutionId = !is_null($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->getInstitutionID();
@@ -479,9 +487,9 @@ class StaffUserTable extends ControllerActionTable
         if ($this->AccessControl->check([$this->controller->getName(), 'StaffRelease', 'add'])) {
 
             $toolbarButtons = $extra['toolbarButtons'];
-            $StaffTable = TableRegistry::get('Institution.Staff');
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-            $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+            $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+            $ConfigStaffReleaseTable = TableRegistry::getTableLocator()->get('Configuration.ConfigStaffReleases');
 
             $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
             $institutionId = $this->getInstitutionID();
@@ -521,11 +529,11 @@ class StaffUserTable extends ControllerActionTable
 
     //POCOR-5070:Start
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         //POCOR-5070:Start
         if ($entity->id) {
-            $staff = TableRegistry::get('Institution.Staff');
+            $staff = TableRegistry::getTableLocator()->get('Institution.Staff');
             $staffIsHomeroom = $staff->find('all', ['conditions' => ['staff_id' => $entity->id]])->first();
             $entity->is_homeroom = $staffIsHomeroom->is_homeroom;
         }
@@ -550,14 +558,14 @@ class StaffUserTable extends ControllerActionTable
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
     }
 
-    public function onGetIsHomeroom(Event $event, Entity $entity)
+    public function onGetIsHomeroom(EventInterface $event, Entity $entity)
     {
         return ($entity->is_homeroom) ? __('Yes') : __('No');
     }
 
     //POCOR-5070:end
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('is_homeroom', [
             'type' => 'select'
@@ -565,245 +573,16 @@ class StaffUserTable extends ControllerActionTable
         $this->fields['is_homeroom']['options'] = [0 => 'No', 1 => 'Yes'];
     }
 
-    public function editAfterSave(Event $event, Entity $entity)
-    {
-        //POCOR-5070:start
-        $staffT = TableRegistry::get('Institution.Staff');//POCOR-8364
-        $entityData = $staffT->find('all', ['conditions' => ['staff_id' => $entity->id]])->first();
-        $entityData->is_homeroom = $entity->is_homeroom;
-        $saveData = $staffT->save($entityData);
-        //POCOR-5070:end
-        if ($this->action == 'edit') {
-            $staff = TableRegistry::get('Institution.Staff');
-            $bodyData = $staff->find('all',
-                ['contain' => [
-                    'Institutions',
-                    'StaffTypes',
-                    'StaffPositionProfiles',
-                    'Positions',
-                    'Positions.StaffPositionTitles',
-                    'Users',
-                    'Users.Genders',
-                    'Users.MainNationalities',
-                    'Users.Identities.IdentityTypes',
-                    'Users.AddressAreas',
-                    'Users.BirthplaceAreas',
-                    'Users.Contacts.ContactTypes'
-                ],
-                ])->where([
-                $staff->aliasField('staff_id') => $entity->id
-            ]);
-
-
-            if (!empty($bodyData)) {
-                foreach ($bodyData as $key => $value) {
-                    $user_id = $value->user->id;
-                    $openemis_no = $value->user->openemis_no;
-                    $first_name = $value->user->first_name;
-                    $middle_name = $value->user->middle_name;
-                    $third_name = $value->user->third_name;
-                    $last_name = $value->user->last_name;
-                    $preferred_name = $value->user->preferred_name;
-                    $gender = $value->user->gender->name;
-                    $nationality = $value->user->main_nationality->name;
-                    $dateOfBirth = $value->user->date_of_birth;
-
-                    $address = $value->user->address;
-                    $postalCode = $value->user->postal_code;
-                    $addressArea = $value->user->address_area->name;
-                    $birthplaceArea = $value->user->birthplace_area->name;
-                    $role = $value->user->is_staff;
-                    $contactValue = [];
-                    $contactType = [];
-                    if (!empty($value->user['contacts'])) {
-                        foreach ($value->user['contacts'] as $key => $contact) {
-                            $contactValue[] = $contact->value;
-                            $contactType[] = $contact->contact_type->name;
-                        }
-                    }
-
-                    $identityNumber = [];
-                    $identityType = [];
-                    if (!empty($value->user['identities'])) {
-                        foreach ($value->user['identities'] as $key => $identity) {
-                            $identityNumber[] = $identity->number;
-                            $identityType[] = $identity->identity_type->name;
-                        }
-                    }
-
-                    $username = $value->user->username;
-                    $institution_id = $value->institution->id;
-                    $institutionName = $value->institution->name;
-                    $institutionCode = $value->institution->code;
-
-                    $position_no = $value->position->position_no;
-                    $staff_position_titles_type = $value->position->staff_position_title->type;
-                    $staff_types_name = $value->staff_type->name;
-
-                    if ($staff_position_titles_type == 1) {
-                        $class = 'Teaching';
-                    } else {
-                        $class = 'Non-Teaching';
-                    }
-                    $staff_position_titles_name = $value->position->staff_position_title->name;
-                    $institutionStaffId = $value->id;
-                    $startDate = $value->start_date;
-                    $endDate = $value->end_date;
-
-                }
-            }
-            //POCOR-8364
-            $institutionShifts = TableRegistry::get('Institution.InstitutionShifts');
-            $shiftOptions = TableRegistry::get('Institution.ShiftOptions');
-            $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts');
-            //POCOR-8364
-            $res = $institutionShifts->find()->select(['name' => 'name'])
-                ->leftJoin(
-                    [$shiftOptions->getAlias() => $shiftOptions->getTable()],
-                    [
-                        $shiftOptions->aliasField('id = ') . $institutionShifts->aliasField('shift_option_id')
-                    ]
-                )
-                ->leftJoin(
-                    [$institutionStaffShifts->getAlias() => $institutionStaffShifts->getTable()],
-                    [
-                        $institutionStaffShifts->aliasField('shift_id = ') . $institutionShifts->aliasField('id')
-                    ]
-                )
-                ->where([$institutionStaffShifts->aliasField('staff_id') => $entity->id])->order($institutionShifts->aliasField('id'))->group('name')->order('name')->toArray();
-            $shift = '';
-            foreach ($res as $key => $value) {
-                $shift .= $value['name'] . ',';
-            }
-            $shiftName = rtrim($shift, ',');
-            if (!empty($shiftData)) {
-                foreach ($shiftData as $k => $val) {
-                    $shiftName = $val->shift_option->name;
-                }
-            }
-            $bodys = array();
-
-            $bodys = [
-                'security_users_id' => !empty($user_id) ? $user_id : NULL,
-                'security_users_openemis_no' => !empty($openemis_no) ? $openemis_no : NULL,
-                'security_users_first_name' => !empty($first_name) ? $first_name : NULL,
-                'security_users_middle_name' => !empty($middle_name) ? $middle_name : NULL,
-                'security_users_third_name' => !empty($third_name) ? $third_name : NULL,
-                'security_users_last_name' => !empty($last_name) ? $last_name : NULL,
-                'security_users_preferred_name' => !empty($preferred_name) ? $preferred_name : NULL,
-                'security_users_gender' => !empty($gender) ? $gender : NULL,
-                'security_users_date_of_birth' => !empty($dateOfBirth) ? date("d-m-Y", strtotime($dateOfBirth)) : NULL,
-                'security_users_address' => !empty($address) ? $address : NULL,
-                'security_users_postal_code' => !empty($postalCode) ? $postalCode : NULL,
-                'area_administrative_name_birthplace' => !empty($addressArea) ? $addressArea : NULL,
-                'area_administrative_name_address' => !empty($birthplaceArea) ? $birthplaceArea : NULL,
-                'contact_type_name' => !empty($contactType) ? $contactType : NULL,
-                'user_contact_type_value' => !empty($contactValue) ? $contactValue : NULL,
-                'nationality_name' => !empty($nationality) ? $nationality : NULL,
-                'identity_type_name' => !empty($identityType) ? $identityType : NULL,
-                'user_identities_number' => !empty($identityNumber) ? $identityNumber : NULL,
-                'security_user_username' => !empty($username) ? $username : NULL,
-                'institutions_id' => !empty($institution_id) ? $institution_id : NULL,
-                'institutions_code' => !empty($institutionCode) ? $institutionCode : NULL,
-                'institutions_name' => !empty($institutionName) ? $institutionName : NULL,
-                //'institution_staff_id' => !empty($institutionStaffId) ? $institutionStaffId : NULL,
-                'institution_staff_start_date' => !empty($startDate) ? date("d-m-Y", strtotime($startDate)) : NULL,
-                'institution_staff_end_date' => !empty($endDate) ? date("d-m-Y", strtotime($endDate)) : NULL,
-                'institution_positions_position_no' => !empty($position_no) ? $position_no : NULL,
-                'staff_position_titles_type' => !empty($class) ? $class : NULL,
-                'staff_position_titles_name' => !empty($staff_position_titles_name) ? $staff_position_titles_name : NULL,
-                'staff_types_name' => !empty($staff_types_name) ? $staff_types_name : NULL,
-                'shift_options_name' => !empty($shiftName) ? $shiftName : NULL,
-                'role_name' => ($role == 1) ? 'staff' : NULL
-            ];
-            //POCOR-6805 start
-            //POCOR-8364
-            $Guardians = TableRegistry::get('StaffCustomField.StaffCustomFieldValues');
-            $staffCustomFieldOptions = TableRegistry::get('StaffCustomField.StaffCustomFieldOptions');
-            $staffCustomFields = TableRegistry::get('StaffCustomField.StaffCustomFields');
-            $staffCustomFormsFields = TableRegistry::get('StaffCustomField.StaffCustomFormsFields');
-            //POCOR-8364
-            //POCOR-6805 start
-
-            $guardianData = $Guardians->find()
-                ->select([
-                    'id' => $Guardians->aliasField('id'),
-                    'staff_id' => $Guardians->aliasField('staff_id'),
-                    'staff_custom_field_id' => $Guardians->aliasField('staff_custom_field_id'),
-                    'text_value' => $Guardians->aliasField('text_value'),
-                    'number_value' => $Guardians->aliasField('number_value'),
-                    'decimal_value' => $Guardians->aliasField('decimal_value'),
-                    'textarea_value' => $Guardians->aliasField('textarea_value'),
-                    'date_value' => $Guardians->aliasField('date_value'),
-                    'time_value' => $Guardians->aliasField('time_value'),
-                    'checkbox_value_text' => 'staffCustomFieldOptions.name',
-                    'name' => 'staffCustomField.name',
-                    'staff_custom_id' => 'staffCustomField.id',
-                    'field_type' => 'staffCustomField.field_type',
-                ])
-                ->leftJoin(
-                    ['staffCustomField' => 'staff_custom_fields'],
-                    [
-                        'staffCustomField.id = ' . $Guardians->aliasField('staff_custom_field_id')
-                    ]
-                )
-                ->leftJoin(
-                    ['staffCustomFieldOptions' => 'staff_custom_field_options'],
-                    [
-                        'staffCustomFieldOptions.id = ' . $Guardians->aliasField('number_value')
-                    ]
-                )
-                ->where([
-                    $Guardians->aliasField('staff_id') => $user_id,
-                ])
-                ->toArray();
-
-            $custom_field = array();
-            $count = 0;
-            if (!empty($guardianData)) {
-                foreach ($guardianData as $val) {
-                    $custom_field['custom_field'][$count]["id"] = (!empty($val['staff_custom_id']) ? $val['staff_custom_id'] : '');
-                    $custom_field['custom_field'][$count]["name"] = (!empty($val['name']) ? $val['name'] : '');
-                    $fieldTypes[$count] = (!empty($val['field_type']) ? $val['field_type'] : '');
-                    $fieldType = $fieldTypes[$count];
-                    if ($fieldType == 'TEXT') {
-                        $custom_field['custom_field'][$count]["text_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                    } else if ($fieldType == 'CHECKBOX') {
-                        $custom_field['custom_field'][$count]["checkbox_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                    } else if ($fieldType == 'NUMBER') {
-                        $custom_field['custom_field'][$count]["number_value"] = (!empty($val['number_value']) ? $val['number_value'] : '');
-                    } else if ($fieldType == 'DECIMAL') {
-                        $custom_field['custom_field'][$count]["decimal_value"] = (!empty($val['decimal_value']) ? $val['decimal_value'] : '');
-                    } else if ($fieldType == 'TEXTAREA') {
-                        $custom_field['custom_field'][$count]["textarea_value"] = (!empty($val['textarea_value']) ? $val['textarea_value'] : '');
-                    } else if ($fieldType == 'DROPDOWN') {
-                        $custom_field['custom_field'][$count]["dropdown_value"] = (!empty($val['checkbox_value_text']) ? $val['checkbox_value_text'] : '');
-                    } else if ($fieldType == 'DATE') {
-                        $custom_field['custom_field'][$count]["date_value"] = date('Y-m-d', strtotime($val->date_value));
-                    } else if ($fieldType == 'TIME') {
-                        $custom_field['custom_field'][$count]["time_value"] = date('h:i A', strtotime($val->time_value));
-                    } else if ($fieldType == 'COORDINATES') {
-                        $custom_field['custom_field'][$count]["cordinate_value"] = (!empty($val['text_value']) ? $val['text_value'] : '');
-                    }
-                    $count++;
-                }
-            }
-            $body = array_merge($bodys, $custom_field); //POCOR-6805 end
-            $Webhooks = TableRegistry::get('Webhook.Webhooks');
-            $Webhooks->triggerShell('staff_update', ['username' => ''], $body);
-        }
-    }
-
-    public function staffAfterSave(Event $event, $staff)
+    public function staffAfterSave(EventInterface $event, $staff)
     {
         if ($staff->isNew()) {
             $this->updateAll(['is_staff' => 1], ['id' => $staff->staff_id]);
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $extraField[] = [
@@ -954,15 +733,15 @@ class StaffUserTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $userNationalities = TableRegistry::get('User.userNationalities');
-        $userContacts = TableRegistry::get('UserContacts');
-        $contactTypes = TableRegistry::get('User.ContactTypes');
-        $contactOptions = TableRegistry::get('User.ContactOptions');
-        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
+        $userNationalities = TableRegistry::getTableLocator()->get('User.userNationalities');
+        $userContacts = TableRegistry::getTableLocator()->get('UserContacts');
+        $contactTypes = TableRegistry::getTableLocator()->get('User.ContactTypes');
+        $contactOptions = TableRegistry::getTableLocator()->get('User.ContactOptions');
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
 
 
         $query
@@ -979,11 +758,11 @@ class StaffUserTable extends ControllerActionTable
 
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
             return $results->map(function ($row) {
-                $userContacts = TableRegistry::get('UserContacts');
-                $contactTypes = TableRegistry::get('User.ContactTypes');
-                $contactOptions = TableRegistry::get('User.ContactOptions');
+                $userContacts = TableRegistry::getTableLocator()->get('UserContacts');
+                $contactTypes = TableRegistry::getTableLocator()->get('User.ContactTypes');
+                $contactOptions = TableRegistry::getTableLocator()->get('User.ContactOptions');
 
-                $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+                $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
 
                 $userContactsData = $userContacts
                     ->find()
@@ -1015,9 +794,9 @@ class StaffUserTable extends ControllerActionTable
                     $row['contact_number'] = $d;
                 }
 
-                $userIdentities = TableRegistry::get('User.Identities');
-                $identityType = TableRegistry::get('FieldOption.IdentityTypes');
-                $nationalities = TableRegistry::get('FieldOption.Nationalities');
+                $userIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+                $identityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+                $nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
 
                 $userIdentitiesData = $userIdentities
                     ->find()
@@ -1150,9 +929,9 @@ class StaffUserTable extends ControllerActionTable
         return $query;
     }
 
-    public function afterAction(Event $event, ArrayObject $options)
+    public function afterAction(EventInterface $event, ArrayObject $options)
     {
-        $users = TableRegistry::get('Security.Users');
+        $users = TableRegistry::getTableLocator()->get('Security.Users');
         $plugin = __($this->controller->getPlugin());
         $id = $this->request->getAttribute('params')['pass'][1];
         $DecodedQueryString = $this->paramsDecode($id);

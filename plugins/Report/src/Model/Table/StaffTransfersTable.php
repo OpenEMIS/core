@@ -2,7 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -35,7 +35,7 @@ class StaffTransfersTable extends AppTable {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
@@ -66,7 +66,7 @@ class StaffTransfersTable extends AppTable {
             }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
 
@@ -199,9 +199,9 @@ class StaffTransfersTable extends AppTable {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetPreviousPositionNo(Event $event, Entity $entity)
+    public function onExcelGetPreviousPositionNo(EventInterface $event, Entity $entity)
     {
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
         $prevInstitutionStaff = [];
         $prevPositionNo = '';
 
@@ -236,12 +236,12 @@ class StaffTransfersTable extends AppTable {
         return $prevPositionNo;
     }
 
-    public function onExcelGetPreviousPositionTitle(Event $event, Entity $entity)
+    public function onExcelGetPreviousPositionTitle(EventInterface $event, Entity $entity)
     { 
         return $this->prevPositionTitle;
     }
 
-    public function onExcelGetAuthorizedBy(Event $event, Entity $entity)
+    public function onExcelGetAuthorizedBy(EventInterface $event, Entity $entity)
     { 
         return $entity->created_user->name;
     }

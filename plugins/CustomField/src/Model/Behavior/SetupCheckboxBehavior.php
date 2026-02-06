@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\SetupBehavior;
 
 class SetupCheckboxBehavior extends SetupBehavior
@@ -14,7 +14,7 @@ class SetupCheckboxBehavior extends SetupBehavior
         parent::initialize($config);
     }
 
-    public function onSetCheckboxElements(Event $event, Entity $entity)
+    public function onSetCheckboxElements(EventInterface $event, Entity $entity)
     {
         $fieldType = strtolower($this->fieldTypeCode);
         $this->_table->field('options', [
@@ -30,7 +30,7 @@ class SetupCheckboxBehavior extends SetupBehavior
         $this->sortFieldOrder('id','options');
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryCopy = clone($query);
         $entity = $queryCopy->first();
@@ -39,7 +39,7 @@ class SetupCheckboxBehavior extends SetupBehavior
         }
     }
 
-    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -52,7 +52,7 @@ class SetupCheckboxBehavior extends SetupBehavior
         }
     }
 
-    public function addEditOnAddOption(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddOption(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
 

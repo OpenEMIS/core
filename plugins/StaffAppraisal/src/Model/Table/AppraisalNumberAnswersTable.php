@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -25,14 +25,14 @@ class AppraisalNumberAnswersTable extends AppraisalAnswersTable
         return $events;
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name)
+    public function buildValidator(EventInterface $event, Validator $validator, $name)
     {
         $validator->setProvider('custom', $this);
         return $validator
             ->add('answer', 'greaterThan', [
                 'rule' => function ($value, $context) {
                     if ($context['data']['validation_rule'] == AppraisalNumbers::GREATER_THAN) {
-                        $AppraisalNumbersTable = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
+                        $AppraisalNumbersTable = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalNumbers');
                         $appraisalNumber = $AppraisalNumbersTable
                             ->find()
                             ->select([
@@ -61,7 +61,7 @@ class AppraisalNumberAnswersTable extends AppraisalAnswersTable
             ->add('answer', 'greaterThanOrEqual', [
                 'rule' => function ($value, $context) {
                     if ($context['data']['validation_rule'] == AppraisalNumbers::GREATER_THAN_OR_EQUAL) {
-                        $AppraisalNumbersTable = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
+                        $AppraisalNumbersTable = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalNumbers');
                         $appraisalNumber = $AppraisalNumbersTable
                             ->find()
                             ->select([
@@ -90,7 +90,7 @@ class AppraisalNumberAnswersTable extends AppraisalAnswersTable
             ->add('answer', 'lessThan', [
                 'rule' => function ($value, $context) {
                     if ($context['data']['validation_rule'] == AppraisalNumbers::LESS_THAN) {
-                        $AppraisalNumbersTable = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
+                        $AppraisalNumbersTable = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalNumbers');
                         $appraisalNumber = $AppraisalNumbersTable
                             ->find()
                             ->select([
@@ -119,7 +119,7 @@ class AppraisalNumberAnswersTable extends AppraisalAnswersTable
             ->add('answer', 'lessThanOrEqual', [
                 'rule' => function ($value, $context) {
                     if ($context['data']['validation_rule'] == AppraisalNumbers::LESS_THAN_OR_EQUAL) {
-                        $AppraisalNumbersTable = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
+                        $AppraisalNumbersTable = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalNumbers');
                         $appraisalNumber = $AppraisalNumbersTable
                             ->find()
                             ->select([
@@ -148,7 +148,7 @@ class AppraisalNumberAnswersTable extends AppraisalAnswersTable
             ->add('answer', 'inBetween', [
                 'rule' => function ($value, $context) {
                     if ($context['data']['validation_rule'] == AppraisalNumbers::BETWEEN) {
-                        $AppraisalNumbersTable = TableRegistry::get('StaffAppraisal.AppraisalNumbers');
+                        $AppraisalNumbersTable = TableRegistry::getTableLocator()->get('StaffAppraisal.AppraisalNumbers');
                         $appraisalNumber = $AppraisalNumbersTable
                             ->find()
                             ->select([

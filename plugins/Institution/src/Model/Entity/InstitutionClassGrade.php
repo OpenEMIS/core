@@ -14,7 +14,7 @@ class InstitutionClassGrade extends Entity
         if ($this->has('education_grade')) {
             $value = $this->education_grade->name;
         } else {
-            $table = TableRegistry::get('Education.EducationGrades');
+            $table = TableRegistry::getTableLocator()->get('Education.EducationGrades');
             $id = $this->education_grade_id;
             $value = $table->get($id)->name;            
         }
@@ -26,7 +26,7 @@ class InstitutionClassGrade extends Entity
         if ($this->has('education_grade')) {
             $value = $this->education_grade->name;
         } else {
-            $table = TableRegistry::get('Education.EducationGrades');
+            $table = TableRegistry::getTableLocator()->get('Education.EducationGrades');
             $id = $this->education_grade_id;
             $value = $table->get($id)->name;            
         }

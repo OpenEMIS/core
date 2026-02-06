@@ -1,7 +1,7 @@
 <?php
 namespace App\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\Log\Log;
 use Cake\Validation\Validator;

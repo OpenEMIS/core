@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 //use Cake\Utility\Inflector;
 use Cake\Utility\Text;
@@ -90,34 +90,34 @@ class AssessmentResultsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $params
      * @param ArrayObject $extra
      * @return array
      */
-    public function onExcelTemplateInitialiseAssessments(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessments(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         return $this->initialiseAssessments('initialiseAssessments', $params);
     }
 
-    public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentItems(EventInterface $event, array $params, ArrayObject $extra)
     {
         return $this->initialiseAssessmentItems($params);
     }
 
-    public function onExcelTemplateInitialiseAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentItemsGradingTypes(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         return $this->initialiseAssessmentItemsGradingTypes($params);
     }
 
-    public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentPeriods(EventInterface $event, array $params, ArrayObject $extra)
     {
         return $this->initialiseAssessmentPeriods($params);
     }
 
-    public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessmentItemResults(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         if (isset($params['class_id'])
@@ -179,12 +179,12 @@ class AssessmentResultsTable extends AppTable
 
     /**
      * POCOR-8224 refactured
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $params
      * @param ArrayObject $extra
      * @return array|null
      */
-    public function onExcelTemplateInitialiseGroupAssessmentItems(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseGroupAssessmentItems(EventInterface $event, array $params, ArrayObject $extra)
     {
         $groupAssessmentItems = $this->groupAssessmentItems;
         if(empty($groupAssessmentItems)){
@@ -195,13 +195,13 @@ class AssessmentResultsTable extends AppTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $params
      * @param ArrayObject $extra
      * @return array|null
      *  POCOR-8224 refactured
      */
-    public function onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes(EventInterface $event, array $params, ArrayObject $extra)
     {
 
         $groupAssessmentItemsGradingTypes = $this->groupAssessmentItemsGradingTypes;
@@ -211,7 +211,7 @@ class AssessmentResultsTable extends AppTable
         return $groupAssessmentItemsGradingTypes;
     }
 
-    public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseGroupAssessmentPeriods(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
@@ -264,7 +264,7 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseGroupAssessmentPeriodsWithTerms(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseGroupAssessmentPeriodsWithTerms(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['assessment_id'])) {
 //            $start_time = microtime(true);
@@ -327,7 +327,7 @@ class AssessmentResultsTable extends AppTable
             return $periodsWithTermOrders;
         }
     }
-    public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event,
+    public function onExcelTemplateInitialiseGroupAssessmentItemResults(EventInterface $event,
                                                                         array $params,
                                                                         ArrayObject $extra)
     {
@@ -353,7 +353,7 @@ class AssessmentResultsTable extends AppTable
         return $groupAssessmentItemResults;
     }
 
-    public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseClassStudents(EventInterface $event, array $params, ArrayObject $extra)
     {
 //        $this->log('onExcelTemplateInitialiseClassStudents', 'debug');
 //        $this->log($params, 'debug');
@@ -462,7 +462,7 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutions(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
 //            $start_time = microtime(true);
@@ -479,7 +479,7 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionClasses(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['class_id'])) {
 //            $start_time = microtime(true);
@@ -495,7 +495,7 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionStudentAbsences(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['class_id']) &&
             isset($params['assessment_id']) &&
@@ -545,7 +545,7 @@ class AssessmentResultsTable extends AppTable
     }
 
     /*POCOR-6355 starts*/
-    public function onExcelTemplateInitialiseEducationGrades(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseEducationGrades(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['grade_id'])) {
 //            $start_time = microtime(true);
@@ -565,7 +565,7 @@ class AssessmentResultsTable extends AppTable
      * @param $array
      * @param $key
      * @return |null
-
+     *
      */
     private static function getFromArray($array, $key)
     {
@@ -575,7 +575,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-
+     *
      */
     private static function getMarksForClass(array $params)
     {
@@ -626,7 +626,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-
+     *
      */
     private static function getExemptsForClass(array $params)
     {
@@ -681,7 +681,7 @@ class AssessmentResultsTable extends AppTable
      * @param array $marks
      * @param array $exempt
      * @return array
-
+     *
      */
     private static function getMarksWithSubjectClassificationWeight(array $marks, array $exempts = [])
     {
@@ -812,7 +812,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $marksWithSubjectClassificationWeight
      * @return array
-
+     *
      */
     private static function getMarksPerStudentPerTermArray(array $marksWithSubjectClassificationWeight)
     {
@@ -849,7 +849,7 @@ class AssessmentResultsTable extends AppTable
      * @param array $marksPerStudent
      * @param array $assessmentItemsTotalMarks
      * @return array
-
+     *
      */
     private static function getTotalMarksPerStudent(array $marksPerStudent, array $assessmentItemsTotalMarks): array
     {
@@ -967,7 +967,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $marks
      * @return int
-
+     *
      */
     private static function getGroupAssessmentPeriodCount(array $marks)
     {
@@ -1016,7 +1016,7 @@ class AssessmentResultsTable extends AppTable
      * @param array $averageStudentSubjectResults
      * @param $groupAssessmentPeriodCount
      * @return array
-
+     *
      */
     private static function getAverageRecords(array $averageStudentSubjectResults, $groupAssessmentPeriodCount)
     {
@@ -1049,7 +1049,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $marksWithSubjectClassificationWeight
      * @return array
-
+     *
      */
     private static function getAverageStudentSubjectResults(array $marksWithSubjectClassificationWeight)
     {
@@ -1086,7 +1086,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-
+     *
      */
     public function getGroupAssessmentItemResults(array $params)
     {
@@ -1115,7 +1115,7 @@ class AssessmentResultsTable extends AppTable
      * @param $tableName
      * @param $relatedField
      * @return array|null
-
+     *
      */
     public static function getRelatedRecord($tableName, $relatedField)
     {
@@ -1136,7 +1136,7 @@ class AssessmentResultsTable extends AppTable
      * @param $tableName
      * @param $where
      * @return array|null
-
+     *
      */
     public static function getRecordByOptions($tableName, $where)
     {
@@ -1159,7 +1159,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param $function
      * @param $args
-
+     *
      */
     private static function measureExecutionTime($function, $args) {
         $startTime = microtime(true);
@@ -1173,7 +1173,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-
+     *
      */
     private function initialiseAssessments(array $params)
     {
@@ -1191,7 +1191,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-
+     *
      */
     private function initialiseAssessmentItems(array $params)
     {
@@ -1260,7 +1260,7 @@ class AssessmentResultsTable extends AppTable
     /**
      * @param array $params
      * @return array
-
+     *
      */
     private function initialiseAssessmentPeriods(array $params)
     {

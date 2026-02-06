@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
@@ -26,18 +26,18 @@ class StudentIdentitiesTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 		return $attr;
 	}
 
-	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+	public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
@@ -86,7 +86,7 @@ class StudentIdentitiesTable extends AppTable  {
 			->where(['Users.is_student' => 1, $conditions]);
 	}
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) 
     {
         foreach ($fields as $key => $field) { 
             //get the value from the table, but change the label to become default identity type.
@@ -119,7 +119,7 @@ class StudentIdentitiesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetStudentName(Event $event, Entity $entity) 
+    public function onExcelGetStudentName(EventInterface $event, Entity $entity) 
     {
         //cant use $this->Users->get() since it will load big data and cause memory allocation problem
         $studentName = [];

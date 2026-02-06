@@ -651,7 +651,7 @@ trait PdfReportTrait
 //        Log::write('debug', 'ExcelReportBehavior >>> filepath: '.$filepath);
         // Convert spreadsheet object into html
         // POCOR-9336 start
-        $reportCard = TableRegistry::get('ReportCard.ReportCards');
+        $reportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $configVal = $reportCard->find()->select(['pdf_no' => $reportCard->aliasField('pdf_page_number')])->where([$reportCard->aliasField('id') => $report_card_id])->first();
         if (!empty($configVal)) { //POCOR-7096
             $configValue = $configVal['pdf_no'];
@@ -1110,7 +1110,7 @@ trait PdfReportTrait
         $authPass = $attributes['password'] ?? null;
         $apiParams = $attributes['api_params'] ?? null;
         $deleteOriginal = $attributes['delete_original'] ?? 1;
-        $sheetPath = $baseFileName . '.xlsx';
+        $sheetPath = $baseFileName . '.xls';
         $pdfFile = basename($baseFileName) . '.pdf';
         $pdfUrl = $baseUrl . '/check-pdf/' . $pdfFile . '?delete=true';
 //        $authUser = 'user';
@@ -1206,13 +1206,13 @@ trait PdfReportTrait
     {
 
         $tempDir = TMP; // or "/tmp"
-        $baseFileName = basename($baseFileName, '.xlsx'); // safe name, no path
+        $baseFileName = basename($baseFileName, '.xls'); // safe name, no path
 //        putenv("HOME=$tempDir"); // Ensures LibreOffice has a writable HOME directory
 //        Log::debug($tempDir);
         try {
             $unique = uniqid('libo_', true);
             // 1. Save XLSX
-            $xlsxPath       = $tempDir . $unique . '.xlsx';
+            $xlsxPath       = $tempDir . $unique . '.xls';
             $pdfExpectedPath = $tempDir . $unique . '.pdf';
 
             $ss = $objSpreadsheet;

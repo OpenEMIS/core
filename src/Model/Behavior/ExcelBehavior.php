@@ -3,7 +3,7 @@ namespace App\Model\Behavior;
 
 use Cake\ORM\TableRegistry; //POCOR-6538
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -15,13 +15,13 @@ use Cake\Utility\Hash;
 use XLSXWriter;
 
 // Events
-// public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
-// public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
-// public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {}
-// public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {}
-// public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {}
-// public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
-// public function onExcelGetLabel(Event $event, $column) {}
+// public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelGenerate(EventInterface $event, $writer, ArrayObject $settings) {}
+// public function onExcelGenerateComplete(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {}
+// public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {}
+// public function onExcelEndSheet(EventInterface $event, ArrayObject $settings, $totalProcessed) {}
+// public function onExcelGetLabel(EventInterface $event, $column) {}
 
 class ExcelBehavior extends Behavior
 {
@@ -38,7 +38,7 @@ class ExcelBehavior extends Behavior
         'autoFields' => true,
         'orientation' => 'landscape', // or portrait
         'sheet_limit' =>  1000000, // 1 mil rows and header row
-        'auto_contain' => true  
+        'auto_contain' => true
     ];
 
     public function initialize(array $config): void
@@ -84,7 +84,7 @@ class ExcelBehavior extends Behavior
         $this->generateXLXS($ids);
     }
 
-    public function excelV4(Event $mainEvent, ArrayObject $extra)
+    public function excelV4(EventInterface $mainEvent, ArrayObject $extra)
     {
         $id = 0;
         $break = false;
@@ -229,7 +229,7 @@ class ExcelBehavior extends Behavior
                     $query->where([$table->aliasField($primaryKey) => $id]);
                 }
                 //POCOR-8627 End
-            //POCOR-8515 starts    
+            //POCOR-8515 starts
             }else{
                 if (isset($settings['id'])) {
                     $id = $settings['id'];
@@ -239,7 +239,7 @@ class ExcelBehavior extends Behavior
                     }
                 }
             }//POCOR-8515 ends
-            
+
             if ($this->getConfig('auto_contain')) {
                 $this->contain($query, $fields, $table);
             }
@@ -522,7 +522,7 @@ class ExcelBehavior extends Behavior
                 if ($event && method_exists($event, 'getResult')) {
                     $result = $event->getResult();
                     // Explicitly check for null to allow 0 //POCOR-9272
-                    if ($result !== null) { 
+                    if ($result !== null) {
                         $returnedResult = $event->getResult();
                         if (is_array($returnedResult)) {
                             $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
@@ -557,7 +557,7 @@ class ExcelBehavior extends Behavior
         }
 
         $specialCharacters = ['=', '@'];
-        //POCOR-8515 commented this code because of getting error to generate report starts 
+        //POCOR-8515 commented this code because of getting error to generate report starts
         //$firstCharacter = substr($value, 0, 1);
         // if (in_array($firstCharacter, $specialCharacters)) {
         //     // append single quote to escape special characters
@@ -565,7 +565,7 @@ class ExcelBehavior extends Behavior
         // }//POCOR-8515 ends
 
         //return ['rowData' => __($value), 'style' => $style];
-        return ['rowData' => $value, 'style' => $style];//POCOR-8515 
+        return ['rowData' => $value, 'style' => $style];//POCOR-8515
     }
 
     private function isForeignKey($table, $field)
@@ -658,7 +658,7 @@ class ExcelBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
 
@@ -686,7 +686,7 @@ class ExcelBehavior extends Behavior
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];

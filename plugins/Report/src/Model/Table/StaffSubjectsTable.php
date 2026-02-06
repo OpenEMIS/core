@@ -5,7 +5,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -29,7 +29,7 @@ class StaffSubjectsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
@@ -40,31 +40,31 @@ class StaffSubjectsTable extends AppTable
         $regionId = null;
         $countryId = null;
         $selectedArea = $requestData->area_education_id;
-        $academicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $staff = TableRegistry::get('Security.Users');
-        $staffStatuses = TableRegistry::get('staff_statuses');
-        $staffQualifications = TableRegistry::get('staff_qualifications');
-        $qualificationTitles = TableRegistry::get('qualification_titles');
-        $qualificationLevels = TableRegistry::get('qualification_levels');
-        $staffQualificationsSpecialisations = TableRegistry::get('staff_qualifications_specialisations');
-        $qualificationSpecialisations = TableRegistry::get('qualification_specialisations');
-        $institutionPositions = TableRegistry::get('Institution.institution_positions');
-        $staffPositionTitles = TableRegistry::get('staff_position_titles');
-        $genders = TableRegistry::get('User.Genders');
-        $mainNationalities = TableRegistry::get('FieldOption.Nationalities');
-        $institutionSub = TableRegistry::get('institution_subjects');
-        $educationSubjects = TableRegistry::get('education_subjects'); //POCOR-7095
-        $userIdentities = TableRegistry::get('user_identities');
-        $identityTypes = TableRegistry::get('identity_types');
-        $userNationalities = TableRegistry::get('user_nationalities');
-        $nationalities = TableRegistry::get('nationalities');
-        $securityUsers = TableRegistry::get('security_users');
-        $institutionClassSubjects = TableRegistry::get('institution_class_subjects');
-        $institutionClasses = TableRegistry::get('institution_classes');
-        $educationGrades = TableRegistry::get('education_grades');
-        $institutions = TableRegistry::get('institutions');
-        $areas = TableRegistry::get('areas');
+        $academicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $staff = TableRegistry::getTableLocator()->get('Security.Users');
+        $staffStatuses = TableRegistry::getTableLocator()->get('staff_statuses');
+        $staffQualifications = TableRegistry::getTableLocator()->get('staff_qualifications');
+        $qualificationTitles = TableRegistry::getTableLocator()->get('qualification_titles');
+        $qualificationLevels = TableRegistry::getTableLocator()->get('qualification_levels');
+        $staffQualificationsSpecialisations = TableRegistry::getTableLocator()->get('staff_qualifications_specialisations');
+        $qualificationSpecialisations = TableRegistry::getTableLocator()->get('qualification_specialisations');
+        $institutionPositions = TableRegistry::getTableLocator()->get('Institution.institution_positions');
+        $staffPositionTitles = TableRegistry::getTableLocator()->get('staff_position_titles');
+        $genders = TableRegistry::getTableLocator()->get('User.Genders');
+        $mainNationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
+        $institutionSub = TableRegistry::getTableLocator()->get('institution_subjects');
+        $educationSubjects = TableRegistry::getTableLocator()->get('education_subjects'); //POCOR-7095
+        $userIdentities = TableRegistry::getTableLocator()->get('user_identities');
+        $identityTypes = TableRegistry::getTableLocator()->get('identity_types');
+        $userNationalities = TableRegistry::getTableLocator()->get('user_nationalities');
+        $nationalities = TableRegistry::getTableLocator()->get('nationalities');
+        $securityUsers = TableRegistry::getTableLocator()->get('security_users');
+        $institutionClassSubjects = TableRegistry::getTableLocator()->get('institution_class_subjects');
+        $institutionClasses = TableRegistry::getTableLocator()->get('institution_classes');
+        $educationGrades = TableRegistry::getTableLocator()->get('education_grades');
+        $institutions = TableRegistry::getTableLocator()->get('institutions');
+        $areas = TableRegistry::getTableLocator()->get('areas');
 
         //POCOR-9124 start
         $conditions = [];
@@ -268,7 +268,7 @@ class StaffSubjectsTable extends AppTable
     //POCOR-7095
     public function getChildren($id, $idArray)
     {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
             ->where([
                 $Areas->aliasField('parent_id') => $id
@@ -281,9 +281,9 @@ class StaffSubjectsTable extends AppTable
         return $idArray;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
-        $IdentityType = TableRegistry::get('identity_types');
+        $IdentityType = TableRegistry::getTableLocator()->get('identity_types');
         $userIdTypes = $IdentityType->find()->all();
         $defaultIdType = $IdentityType->find()
             ->where([$IdentityType->aliasField('default') => 1])

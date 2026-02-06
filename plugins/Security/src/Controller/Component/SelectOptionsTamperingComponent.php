@@ -2,14 +2,14 @@
 namespace Security\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Controller\Exception\AuthSecurityException;
 use Cake\Http\ServerRequest;
 
 class SelectOptionsTamperingComponent extends Component {
     const DEFAULT_MESSAGE = 'Dropdown Options has been tampered';
 
-    public function startup(Event $event) {
+    public function startup(EventInterface $event) {
         $serverRequest = new ServerRequest;
         // Select options form tampering
         $session = $this->getController()->getRequest()->getSession();

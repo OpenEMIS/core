@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Core\Configure;
 
 class StudentCascadeDeleteBehavior extends Behavior
@@ -18,7 +18,7 @@ class StudentCascadeDeleteBehavior extends Behavior
         parent::initialize($config);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $this->classIds = $this->getClassIds($entity);
         $this->subjectIds = $this->getSubjectIds($entity);
@@ -41,9 +41,9 @@ class StudentCascadeDeleteBehavior extends Behavior
         }
 
         $listeners = [
-            TableRegistry::get('Institution.StudentAdmission'),
-            TableRegistry::get('Institution.StudentWithdraw'),
-            TableRegistry::get('Institution.StudentStatusUpdates')
+            TableRegistry::getTableLocator()->get('Institution.StudentAdmission'),
+            TableRegistry::getTableLocator()->get('Institution.StudentWithdraw'),
+            TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates')
         ];
         $this->_table->dispatchEventToModels('Model.Students.afterDelete', [$entity], $this->_table, $listeners);
     }
@@ -51,7 +51,7 @@ class StudentCascadeDeleteBehavior extends Behavior
     private function deleteClassStudents(Entity $entity)
     {
         if (!empty($this->classIds)) {
-            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $classStudentData = $ClassStudents->find()
                 ->where([
                     $ClassStudents->aliasField('student_id') => $entity->student_id,
@@ -69,7 +69,7 @@ class StudentCascadeDeleteBehavior extends Behavior
     private function deleteSubjectStudents(Entity $entity)
     {
         if (!empty($this->subjectIds) && !empty($this->classIds)) {
-            $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
+            $SubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
             $subjectStudentData = $SubjectStudents->find()
                 ->where([
                     $SubjectStudents->aliasField('student_id') => $entity->student_id,
@@ -87,8 +87,8 @@ class StudentCascadeDeleteBehavior extends Behavior
 
     private function deleteStudentResults(Entity $entity)
     {
-        $Assessments = TableRegistry::get('Assessment.Assessments');
-        $Results = TableRegistry::get('Assessment.AssessmentItemResults');
+        $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+        $Results = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
 
         $institutionId = $entity->institution_id;
         $periodId = $entity->academic_period_id;
@@ -120,8 +120,8 @@ class StudentCascadeDeleteBehavior extends Behavior
 
     private function deleteStudentFees(Entity $entity)
     {
-        $InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
-        $StudentFees = TableRegistry::get('Institution.StudentFeesAbstract');
+        $InstitutionFees = TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
+        $StudentFees = TableRegistry::getTableLocator()->get('Institution.StudentFeesAbstract');
 
         $institutionFeeResults = $InstitutionFees
             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -161,7 +161,7 @@ class StudentCascadeDeleteBehavior extends Behavior
         }
 
         /* delete all attendance records (institution_site_student_absences) with dates that fall between the start and end date found in institution_students */
-        $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $InstitutionStudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
         $overlapDateCondition = [];
         $overlapDateCondition = [
             $InstitutionStudentAbsences->aliasField('date') . ' >= ' => $startDate,
@@ -178,7 +178,7 @@ class StudentCascadeDeleteBehavior extends Behavior
             $InstitutionStudentAbsences->delete($value);
         }
 
-        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
         $overlapDateCondition = [
             $StudentAbsencesPeriodDetails->aliasField('date') . ' >= ' => $startDate,
             $StudentAbsencesPeriodDetails->aliasField('date') . ' <= ' => $endDate
@@ -211,7 +211,7 @@ class StudentCascadeDeleteBehavior extends Behavior
             $endDate = date('Y-m-d', strtotime($endDate));
         }
         /* delete all behaviour records (student_behaviours) with dates that fall between the start and end date found in institution_students */
-        $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
+        $StudentBehaviours = TableRegistry::getTableLocator()->get('Institution.StudentBehaviours');
 
         $studentBehaviourData = $StudentBehaviours->find()
             ->where([
@@ -230,9 +230,9 @@ class StudentCascadeDeleteBehavior extends Behavior
 
     private function deleteStudentSurveys(Entity $entity)
     {
-        $StudentSurveys = TableRegistry::get('Student.StudentSurveys');
-        $StudentSurveyAnswers = TableRegistry::get('Student.StudentSurveyAnswers');
-        $StudentSurveyTableCells = TableRegistry::get('Student.StudentSurveyTableCells');
+        $StudentSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys');
+        $StudentSurveyAnswers = TableRegistry::getTableLocator()->get('Student.StudentSurveyAnswers');
+        $StudentSurveyTableCells = TableRegistry::getTableLocator()->get('Student.StudentSurveyTableCells');
 
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
@@ -281,7 +281,7 @@ class StudentCascadeDeleteBehavior extends Behavior
 
     private function deleteStudentWithdrawRecords(Entity $entity)
     {
-        $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
+        $StudentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
         $studentWithdrawData = $StudentWithdraw->find()
             ->where([
                 $StudentWithdraw->aliasField('institution_id') => $entity->institution_id,
@@ -298,7 +298,7 @@ class StudentCascadeDeleteBehavior extends Behavior
 
     private function deleteStudentAdmissionRecords(Entity $entity)
     {
-        $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+        $StudentAdmission = TableRegistry::getTableLocator()->get('Institution.StudentAdmission');
         $doneStatus = $StudentAdmission::DONE;
 
         // only pending admission records will be deleted
@@ -321,7 +321,7 @@ class StudentCascadeDeleteBehavior extends Behavior
 
     private function deleteStudentTransferRecords(Entity $entity)
     {
-        $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $StudentTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
         $studentTransferData = $StudentTransfers->find()
             ->where([
                 $StudentTransfers->aliasField('previous_institution_id') => $entity->institution_id,
@@ -359,8 +359,8 @@ class StudentCascadeDeleteBehavior extends Behavior
 
     private function getClassIds(Entity $entity)
     {
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
 
         return $Classes
             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -383,8 +383,8 @@ class StudentCascadeDeleteBehavior extends Behavior
         $subjectIds = [];
 
         if (!empty($this->classIds)) {
-            $Subjects = TableRegistry::get('Institution.InstitutionSubjects');
-            $ClassesSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $Subjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+            $ClassesSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
 
             $subjectIds = $Subjects
                 ->find('list', ['keyField' => 'id', 'valueField' => 'id'])

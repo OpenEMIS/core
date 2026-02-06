@@ -3,7 +3,7 @@ namespace Assessment\Controller;
 
 use App\Controller\AppController;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -54,7 +54,7 @@ class AssessmentsController extends AppController
 
 	}
 
-	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+	public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 		$header = __('Assessment');
 		$header .= ' - ' . $model->getHeader($model->alias);
 		$this->Navigation->addCrumb('Assessments', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);

@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderNumberBehavior extends RenderBehavior {
@@ -11,7 +11,7 @@ class RenderNumberBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-    public function onGetCustomNumberElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomNumberElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $value = '';
 
@@ -80,7 +80,7 @@ class RenderNumberBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function processNumberValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processNumberValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $settings['valueKey'] = 'number_value';
         $this->processValues($entity, $data, $settings);
     }

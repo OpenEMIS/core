@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Competencies', ['plugin' => 'Competency'], function ($routes) {
-	Router::connect('/Competencies', ['plugin' => 'Competency', 'controller' => 'Competencies']);
-	Router::connect('/Competencies/:action/*', ['plugin' => 'Competency', 'controller' => 'Competencies']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Competencies', ['plugin' => 'Competency'], function (RouteBuilder $routes) {
+    	$routes->connect('/Competencies', ['plugin' => 'Competency', 'controller' => 'Competencies']);
+    	$routes->connect('/Competencies/:action/*', ['plugin' => 'Competency', 'controller' => 'Competencies']);
+    });
+};

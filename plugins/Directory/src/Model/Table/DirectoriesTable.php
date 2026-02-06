@@ -4,7 +4,7 @@ namespace Directory\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
@@ -36,7 +36,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param array $requestDataParams The parameters for the internal search.
      * @return array The search results.
-
+     *
      */
     public static function getUserInternalSearch(array $requestDataParams): array
     {
@@ -199,7 +199,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $limit The limit for the search results.
      * @param int $page The page number for the search results.
      * @return array The search results.
-
+     *
      */
     public static function getUsersSearchArr(Table $securityUsers,
                                              Table $genders,
@@ -299,7 +299,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int|null $nationalityId The nationality ID.
      * @param \Cake\ORM\Table $userIdentities The user identities table instance.
      * @return array The identity search conditions.
-
+     *
      */
     public static function getUserSearchIdentityCondition(?int $identityTypeId, ?string $identityNumber, ?int $nationalityId, Table $userIdentities): array
     {
@@ -333,7 +333,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $limit The limit for the search results.
      * @param int $page The page number for the search results.
      * @return array The search results.
-
+     *
      */
     public static function getUsersSearchWithIdentityArr(Table $securityUsers, Table $genders, Table $mainIdentityTypes, Table $mainNationalities, Table $areaAdministratives, Table $userIdentities, array $identityCondition, Table $birthAreaAdministratives, int $limit, int $page): array
     {
@@ -515,7 +515,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $userId
      * @return array
-
+     *
      */
     private static function getContactData(int $userId): array
     {
@@ -559,7 +559,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $securityUserId The security user ID.
      * @param int|null $institutionId The institution ID.
      * @return array The student details.
-
+     *
      */
     private static function getStudentDetails(int $securityUserId, ?int $institutionId): array
     {
@@ -612,7 +612,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param int $securityUserId
      * @return array
      * @throws \Exception If there is an error retrieving the student data
-
+     *
      */
     private static function getStudent(int $securityUserId): array
     {
@@ -664,7 +664,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \Exception If the table instance cannot be retrieved.
-
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -720,7 +720,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $securityUserId
      * @return array
-
+     *
      */
     private static function getPendingTransfer(int $securityUserId): array
     {
@@ -776,7 +776,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $securityUserId
      * @return array
-
+     *
      */
     private static function getPendingWithdraw(int $securityUserId): array
     {
@@ -824,7 +824,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $studentId
      * @return array
-
+     *
      */
     private static function getStudentCustomData(int $studentId): array
     {
@@ -917,7 +917,7 @@ class DirectoriesTable extends ControllerActionTable
      * @param \Cake\ORM\Table $institutionStaffTable The institution staff table instance.
      * @param \Cake\ORM\Table $institutionsTable The institutions table instance.
      * @return array The staff details.
-
+     *
      */
     private static function getStaffDetails(int $securityUserId, ?int $institutionId, $institutionStaffTable, $institutionsTable): array
     {
@@ -1011,7 +1011,7 @@ class DirectoriesTable extends ControllerActionTable
      *
      * @param int $staffId
      * @return array
-
+     *
      */
     private static function getStaffCustomData(int $staffId): array
     {
@@ -1274,6 +1274,14 @@ class DirectoriesTable extends ControllerActionTable
 
         $this->addBehavior('User.User');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
         $this->addBehavior('User.AdvancedIdentitySearch');
         $this->addBehavior('User.AdvancedContactNumberSearch');
         $this->addBehavior('User.AdvancedPositionSearch');
@@ -1310,7 +1318,7 @@ class DirectoriesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict'); //POCOR-7083
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         // echo "<pre>";
         // print_r( $primary);die;
@@ -1329,10 +1337,10 @@ class DirectoriesTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    // public function onGetIdentityNumber(Event $event, Entity $entity)
+    // public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     // {
     //     // Get user identity number
-    //     $users_ids = TableRegistry::get('user_identities');
+    //     $users_ids = TableRegistry::getTableLocator()->get('user_identities');
     //     $user_id_data = $users_ids->find()
     //     ->select(['number'])
     //     ->where([
@@ -1343,10 +1351,10 @@ class DirectoriesTable extends ControllerActionTable
     // }
 
     // // POCOR-5684
-    // public function onGetIdentityTypeID(Event $event, Entity $entity)
+    // public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     // {
     //     // Get User Identity Type id
-    //     $users_ids = TableRegistry::get('user_identities');
+    //     $users_ids = TableRegistry::getTableLocator()->get('user_identities');
     //     $user_id_data = $users_ids->find()
     //     ->select(['identity_type_id'])
     //     ->where([
@@ -1355,7 +1363,7 @@ class DirectoriesTable extends ControllerActionTable
     //     ->first();
 
     //     // Get Identity Type Name
-    //     $users_id_type = TableRegistry::get('identity_types');
+    //     $users_id_type = TableRegistry::getTableLocator()->get('identity_types');
     //     $user_id_name = $users_id_type->find()
     //     ->select(['name'])
     //     ->where([
@@ -1394,11 +1402,11 @@ class DirectoriesTable extends ControllerActionTable
                 'last' => true
             ])
             ->notEmpty('nationality');
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         // POCOR-4035 Check when the submit is not save then will not add the validation.
         $submit = isset($data['submit']) ? $data['submit'] : 'save';
@@ -1420,7 +1428,7 @@ class DirectoriesTable extends ControllerActionTable
         // end POCOR-4035
     }
 
-    public function onModifyConditions(Event $events, $key, $value)
+    public function onModifyConditions(EventInterface $events, $key, $value)
     {
         if ($key == 'user_type') {
             $conditions = [];
@@ -1450,7 +1458,7 @@ class DirectoriesTable extends ControllerActionTable
     }
 
 
-    public function areaAdminstrativeAfterDelete(Event $event, $areaAdministrative)
+    public function areaAdminstrativeAfterDelete(EventInterface $event, $areaAdministrative)
     {
         $subqueryOne = $this->AddressAreas
             ->find()
@@ -1497,7 +1505,7 @@ class DirectoriesTable extends ControllerActionTable
 
     }
 
-    public function getCustomFilter(Event $event)
+    public function getCustomFilter(EventInterface $event)
     {
         $filters['user_type'] = [
             'label' => __('User Type'),
@@ -1511,7 +1519,7 @@ class DirectoriesTable extends ControllerActionTable
         return $filters;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $options)
     {
         // POCOR-8558 start
         $referer = $this->request->getEnv('HTTP_REFERER');
@@ -1556,9 +1564,9 @@ class DirectoriesTable extends ControllerActionTable
         //POCOR-6248 starts
         $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
         if ($userType == self::STAFF || $userType == self::STUDENT) {
-            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
-            $UserIdentities = TableRegistry::get('User.Identities');
-            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+            $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $ConfigItem = $ConfigItemTable
                 ->find()
                 ->where([
@@ -1599,7 +1607,7 @@ class DirectoriesTable extends ControllerActionTable
 
 public function getIdentityTypeData($value_selection)
     {
-        $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $typesIdentity = $IdentityTypes
             ->find()
             ->select([
@@ -1640,7 +1648,7 @@ public function getIdentityTypeData($value_selection)
 
     public function findStudentsNotInSchool(Query $query, array $options)
     {
-        $InstitutionStudentTable = TableRegistry::get('Institution.Students');
+        $InstitutionStudentTable = TableRegistry::getTableLocator()->get('Institution.Students');
         $allInstitutionStudents = $InstitutionStudentTable->find()
             ->select([
                 $InstitutionStudentTable->aliasField('student_id')
@@ -1678,7 +1686,7 @@ public function getIdentityTypeData($value_selection)
 
     public function findStaffNotInSchool(Query $query, array $options)
     {
-        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $allInstitutionStaff = $InstitutionStaffTable->find()
             ->select([
                 $InstitutionStaffTable->aliasField('staff_id')
@@ -1691,7 +1699,7 @@ public function getIdentityTypeData($value_selection)
         return $query;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action == 'add') {
             if ($this->controller->getName() != 'Students') {
@@ -1764,7 +1772,7 @@ public function getIdentityTypeData($value_selection)
             $encodedParam = $this->request->getAttribute('params')['pass'][1];
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
 
-            $userInfo = TableRegistry::get('User.Users')->get($securityUserId);
+            $userInfo = TableRegistry::getTableLocator()->get('User.Users')->get($securityUserId);
             if ($userInfo->is_student) {
                 $userType = self::STUDENT;
                 $this->addCustomUserBehavior($userType);
@@ -1868,13 +1876,13 @@ public function getIdentityTypeData($value_selection)
         return;
     }
 
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
         // Case 3: if user has more than one identity (no one is linked to nationality), show the first
 
-        $users_ids = TableRegistry::get('User.Identities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -1882,7 +1890,7 @@ public function getIdentityTypeData($value_selection)
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('User.Identities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
         $user_id_data = $users_ids->find()
             ->select(['number'])
             ->where([
@@ -1897,7 +1905,7 @@ public function getIdentityTypeData($value_selection)
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('FieldOption.Nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -1918,7 +1926,7 @@ public function getIdentityTypeData($value_selection)
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('User.Identities');
+                $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number'])
                     ->where([
@@ -1942,9 +1950,9 @@ public function getIdentityTypeData($value_selection)
     }
 
     // POCOR-5684
-    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('User.Identities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
         $user_identities = $users_ids->find()
             ->select(['number', 'nationality_id'])
             ->where([
@@ -1952,7 +1960,7 @@ public function getIdentityTypeData($value_selection)
             ])
             ->all();
 
-        $users_ids = TableRegistry::get('User.Identities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
         $user_id_data = $users_ids->find()
             ->select(['number', 'identity_type_id'])
             ->where([
@@ -1962,7 +1970,7 @@ public function getIdentityTypeData($value_selection)
 
         if (count($user_identities) == 1) {
             // Case 1
-            $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+            $users_id_type = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
             $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -1974,7 +1982,7 @@ public function getIdentityTypeData($value_selection)
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('FieldOption.Nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -1995,7 +2003,7 @@ public function getIdentityTypeData($value_selection)
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('User.Identities');
+                $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
                 $user_id_data_nat = $users_ids->find()
                     ->select(['number', 'identity_type_id'])
                     ->where([
@@ -2009,7 +2017,7 @@ public function getIdentityTypeData($value_selection)
             }
             if (count($nationality_based_ids) > 0) {
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+                $users_id_type = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $user_id_name = $users_id_type->find()
                     ->select(['name'])
                     ->where([
@@ -2020,7 +2028,7 @@ public function getIdentityTypeData($value_selection)
             } else {
                 // Case 3 - returning value, return again from Case 1
                 if(!empty( $user_id_data)){
-                    $users_id_type = TableRegistry::get('FieldOption.IdentityTypes');
+                    $users_id_type = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                     $user_id_name = $users_id_type->find()
                         ->select(['name'])
                         ->where([
@@ -2033,7 +2041,7 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $requestData = $this->request->getData();
         if (!isset($requestData[$this->getAlias()]['user_type'])) {
@@ -2043,7 +2051,7 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // need to find out order values because recordbehavior changes it
         $allOrderValues = [];
@@ -2093,7 +2101,7 @@ public function getIdentityTypeData($value_selection)
         ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
         $toolbarButtons['advance_search'] = [
@@ -2114,7 +2122,7 @@ public function getIdentityTypeData($value_selection)
            unset($toolbarButtons['search']);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -2144,7 +2152,7 @@ public function getIdentityTypeData($value_selection)
         return $buttons;
     }
 
-    public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldUserType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = [
             self::STUDENT => __('Student'),
@@ -2161,7 +2169,7 @@ public function getIdentityTypeData($value_selection)
         return $attr;
     }
 
-    public function addOnChangeUserType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeUserType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->getQuery['user_type']);
 
@@ -2188,7 +2196,7 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    public function onUpdateFieldPassword(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldPassword(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // setting the tooltip message
         $tooltipMessagePassword = $this->getMessage('Users.tooltip_message_password');
@@ -2208,7 +2216,7 @@ public function getIdentityTypeData($value_selection)
         return $tooltipMessage;
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
         $userType = $requestData[$this->getAlias()]['user_type'];
         $type = [
@@ -2237,7 +2245,7 @@ public function getIdentityTypeData($value_selection)
         $requestData[$this->getAlias()] = $directoryEntity;
     }
 
-    public function indexAfterAction(Event $event)
+    public function indexAfterAction(EventInterface $event)
     {
         // echo "<pre>";print_r($_REQUEST);die;
         // $data  = $event->getData();
@@ -2278,13 +2286,13 @@ public function getIdentityTypeData($value_selection)
         $this->fields['date_of_birth']['type'] = 'date';
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         // echo '<pre>';print_r($extra);die;
         if ($this->action == 'index') {
             $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
             //POCOR-6248 starts
-                $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+                $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
                 $ConfigItem = $ConfigItemTable
                     ->find()
                     ->where([
@@ -2376,7 +2384,7 @@ public function getIdentityTypeData($value_selection)
             }
     }
 
-    public function onGetStudentStatus(Event $event, Entity $entity)
+    public function onGetStudentStatus(EventInterface $event, Entity $entity)
     {
         return __($entity->student_status_name);
     }
@@ -2411,7 +2419,7 @@ public function getIdentityTypeData($value_selection)
         return $params;
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'MainNationalities' => [
@@ -2435,7 +2443,7 @@ public function getIdentityTypeData($value_selection)
         ]);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $isSet = $this->setSessionAfterAction($event, $entity);
 
@@ -2525,7 +2533,7 @@ public function getIdentityTypeData($value_selection)
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //POCOR-6332 commented due to this function some error was occuring
         $isSet = $this->setSessionAfterAction($event, $entity);
@@ -2541,7 +2549,7 @@ public function getIdentityTypeData($value_selection)
         $this->setupTabElements($entity);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-8059::start
         if ($entity->isNew()) {
@@ -2578,7 +2586,7 @@ public function getIdentityTypeData($value_selection)
         //POCOR-8906 end
     }
 
-    public function onGetInstitution(Event $event, Entity $entity)
+    public function onGetInstitution(EventInterface $event, Entity $entity)
     {
         $userId = $entity->id;
         $isStudent = $entity->is_student;
@@ -2587,7 +2595,7 @@ public function getIdentityTypeData($value_selection)
 
         $studentInstitutions = [];
         if ($isStudent) {
-            $InstitutionStudentTable = TableRegistry::get('Institution.Students');
+            $InstitutionStudentTable = TableRegistry::getTableLocator()->get('Institution.Students');
             /**POCOR-6902 starts - modified query to fetch correct institution name*/
             $studentInstitutions = $InstitutionStudentTable->find()
                 ->matching('StudentStatuses', function ($q) {
@@ -2614,7 +2622,7 @@ public function getIdentityTypeData($value_selection)
 
         $staffInstitutions = [];
         if ($isStaff) {
-            $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+            $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
             $today = date('Y-m-d');
             $staffInstitutions = $InstitutionStaffTable->find('list', [
                 'keyField' => 'id',
@@ -2631,7 +2639,7 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($this->hasAssociatedRecords($this, $entity, $extra)) {
             //Inflector::humanize(Inflector::underscore());
@@ -2640,11 +2648,11 @@ public function getIdentityTypeData($value_selection)
             return $this->controller->redirect($this->url('remove'));
         } else {
             try {
-                TableRegistry::get('StudentCustomField.StudentCustomFieldValues')->deleteAll(['student_id' => $entity->id]);
+                TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues')->deleteAll(['student_id' => $entity->id]);
             } catch (\Exception $exception) {
                 $this->log($exception->getMessage(), 'error');
             }
-            $users = TableRegistry::get('Security.Users');
+            $users = TableRegistry::getTableLocator()->get('Security.Users');
             $user = $users->get($entity->id);
             if ($users->delete($user)) {
                 $this->Alert->success('general.delete.success', ['reset' => true]);
@@ -2653,7 +2661,7 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'photo_content') {
             return __('Photo Content');
@@ -2742,39 +2750,39 @@ public function getIdentityTypeData($value_selection)
 
         if ($securityUserId) {
             // count all institution_class_students
-            $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents')
+            $institutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all user activities
-            $userActivities = TableRegistry::get('User.UserActivities')
+            $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all student_custom_field_values
-            $studentCustomFieldValues = TableRegistry::get('StudentCustomField.StudentCustomFieldValues')
+            $studentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_competency_results
-            $institutionCompetencyResults = TableRegistry::get('Institution.InstitutionCompetencyResults')
+            $institutionCompetencyResults = TableRegistry::getTableLocator()->get('Institution.InstitutionCompetencyResults')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absences
-            $institutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences')
+            $institutionStudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absence_days
-            $institutionStudentAbsenceDays = TableRegistry::get('Institution.InstitutionStudentAbsenceDays')
+            $institutionStudentAbsenceDays = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDays')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_absence_details
-            $institutionStudentAbsenceDetails = TableRegistry::get('Institution.InstitutionStandardStudentAbsenceType')//need to ask
+            $institutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.InstitutionStandardStudentAbsenceType')//need to ask
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_students
-            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents')
+            $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // student_risks_criterias
-            $students = TableRegistry::get('Institution.InstitutionStudentRisks');
+            $students = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentRisks');
             $query = $students->find()->select(['id'])->where(['student_id =' => $securityUserId]);
 
             $studentRiskIds = [];
@@ -2784,54 +2792,54 @@ public function getIdentityTypeData($value_selection)
 
             $studentRisksCriterias = 0;
             if (count($studentRiskIds)) {
-                $studentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias')
+                $studentRisksCriterias = TableRegistry::getTableLocator()->get('Institution.StudentRisksCriterias')
                     ->find()->where(['institution_student_risk_id IN' => $securityUserId])->count();
             }
 
             // count all institution_student_risks
-            $institutionStudentRisks = TableRegistry::get('Institution.InstitutionStudentRisks')
+            $institutionStudentRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentRisks')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_subject_students
-            $institutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents')
+            $institutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all user_special_needs_devices
-            $userSpecialNeedsDevices = TableRegistry::get('SpecialNeeds.SpecialNeedsDevices')
+            $userSpecialNeedsDevices = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsDevices')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all user_special_needs_referrals
-            $userSpecialNeedsReferrals = TableRegistry::get('SpecialNeeds.SpecialNeedsReferrals')
+            $userSpecialNeedsReferrals = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsReferrals')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             // count all user_special_needs_services
-            $userSpecialNeedsServices = TableRegistry::get('SpecialNeeds.SpecialNeedsServices')
+            $userSpecialNeedsServices = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsServices')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
             // count all user_special_needs_services
-            $userSpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments')
+            $userSpecialNeedsAssessments = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsAssessments')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
 
             // count all institution_cases
-            $institutionCases = TableRegistry::get('Cases.InstitutionCases')
+            $institutionCases = TableRegistry::getTableLocator()->get('Cases.InstitutionCases')
                 ->find()->where(['assignee_id' => $securityUserId])->count();
 
             // count all institution_staff_shifts
-            $institutionStaffShifts = TableRegistry::get('Institution.InstitutionStaffShifts')
+            $institutionStaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts')
                 ->find()->where(['staff_id' => $securityUserId])->count();
 
             //// POCOR-7179[START]
-            $userNationalities = TableRegistry::get('User.Nationalities')
+            $userNationalities = TableRegistry::getTableLocator()->get('User.Nationalities')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
             // POCOR-7179[END]
 
             //POCOR-7540 start
             // count all institution_student_admission
-            $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission')
+            $institutionStudentAdmission = TableRegistry::getTableLocator()->get('Institution.StudentAdmission')
                 ->find()->where(['student_id' => $securityUserId])->count();
 
             // count all institution_student_surveys and institution_student_survey_answers
-            $institutionStudentSurveys = TableRegistry::get('Student.StudentSurveys')
+            $institutionStudentSurveys = TableRegistry::getTableLocator()->get('Student.StudentSurveys')
                 ->find()->where(['student_id' => $securityUserId])->toArray();
 
 
@@ -2842,16 +2850,16 @@ public function getIdentityTypeData($value_selection)
 
             $institutionStudentSurveyAnswers = 0;
             if (count($institutionStudentSurveysIds)) {
-                $institutionStudentSurveyAnswers = TableRegistry::get('Institution.InstitutionStudentSurveyAnswers')
+                $institutionStudentSurveyAnswers = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentSurveyAnswers')
                     ->find()->where(['institution_student_survey_id IN' => $institutionStudentSurveysIds])->count();
             }
 
             //count all security_group_users
-            $securityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers')
+            $securityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             //count all student_status_updates
-            $studentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates')
+            $studentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates')
                 ->find()->where(['security_user_id' => $securityUserId])->count();
 
             //POCOR-7540 end
@@ -2888,10 +2896,10 @@ public function getIdentityTypeData($value_selection)
     }
 
     //POCOR-8743 Start
-    public function onGetModifiedUserId(Event $event, Entity $entity)
+    public function onGetModifiedUserId(EventInterface $event, Entity $entity)
     {
         if(!empty($entity->modified_user_id)) {
-            $users = TableRegistry::get('Security.Users');
+            $users = TableRegistry::getTableLocator()->get('Security.Users');
             // POCOR-9083 start
             try {
                 $user = $users->get($entity->modified_user_id);
@@ -2903,9 +2911,9 @@ public function getIdentityTypeData($value_selection)
         }
     }
 
-    public function onGetCreatedUserId(Event $event, Entity $entity)
+    public function onGetCreatedUserId(EventInterface $event, Entity $entity)
     {
-        $users = TableRegistry::get('Security.Users');
+        $users = TableRegistry::getTableLocator()->get('Security.Users');
         // POCOR-9083 start
         if(!empty($entity->created_user_id)) {
             try {

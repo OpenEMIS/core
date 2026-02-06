@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 class ReorderBehavior extends Behavior {
@@ -21,7 +21,7 @@ class ReorderBehavior extends Behavior {
 		return $events;
 	}
 
-	public function reorder(Event $mainEvent, ArrayObject $extra) {
+	public function reorder(EventInterface $mainEvent, ArrayObject $extra) {
 		$model = $this->_table;
 		$controller = $model->controller;
 		$request = $model->request;
@@ -74,7 +74,7 @@ class ReorderBehavior extends Behavior {
 		return true;
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
 		if ($entity->isNew() && $model->getAlias() != 'SecurityRoles') {
@@ -146,7 +146,7 @@ class ReorderBehavior extends Behavior {
 		}
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
 		/** POCOR-6677 starts- added AND condition to not do anything when model is SecurityRoles*/
 		$model = $this->_table;
 		if ($model->getAlias() != 'SecurityRoles') {
@@ -157,7 +157,7 @@ class ReorderBehavior extends Behavior {
 		}
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+	public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
 		$orderField = $this->getConfig('orderField');
 		$filter = $this->getConfig('filter');
 		$filterValues = $this->getConfig('filterValues');

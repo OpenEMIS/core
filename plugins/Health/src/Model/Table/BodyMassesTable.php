@@ -6,7 +6,7 @@ use Cake\I18n\Date;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 
@@ -64,7 +64,7 @@ class BodyMassesTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -168,7 +168,7 @@ class BodyMassesTable extends ControllerActionTable
         return $query;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (!empty($data['height']) && !empty($data['weight'])) {
             $height = round($data['height']/100, 2);
@@ -221,7 +221,7 @@ class BodyMassesTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
 		// Start POCOR-5188
@@ -247,7 +247,7 @@ class BodyMassesTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
         $this->field('comment',['visible' => false]);
@@ -256,25 +256,25 @@ class BodyMassesTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userID = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userID]);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $extra, Query $query){
         $userID = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userID])
             ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
@@ -303,7 +303,7 @@ class BodyMassesTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
         if(empty($entity->getErrors())) {
             $weight =  $entity['weight'];
             //convert height centimeter to meter
@@ -317,7 +317,7 @@ class BodyMassesTable extends ControllerActionTable
         
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'academic_period_id',
@@ -359,7 +359,7 @@ class BodyMassesTable extends ControllerActionTable
     }
 
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
 //        if ($field == 'comment_date') {
 //            return __('Date');

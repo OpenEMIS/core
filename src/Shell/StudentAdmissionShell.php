@@ -15,7 +15,7 @@ class StudentAdmissionShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('System.StudentAdmission');
+        $this->StudentAdmission = $this->fetchTable('System.StudentAdmission');
     }
 
     public function main()

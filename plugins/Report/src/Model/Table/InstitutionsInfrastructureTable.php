@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -40,14 +40,14 @@ class InstitutionInfrastructuresTable extends AppTable
 
     }
 
-   public function beforeAction(Event $event)
+   public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onExcelGetAccessibility(Event $event, Entity $entity)
+    public function onExcelGetAccessibility(EventInterface $event, Entity $entity)
     {
         $accessibility = '';
         if($entity->land_infrastructure_accessibility == 1) {
@@ -59,7 +59,7 @@ class InstitutionInfrastructuresTable extends AppTable
     }
 
 
-   public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+   public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $infrastructureLevel = $requestData->infrastructure_level;
@@ -198,7 +198,7 @@ class InstitutionInfrastructuresTable extends AppTable
             'label' => __('Accessibility')
         ];
 
-        $InfrastructureCustomFields = TableRegistry::get('Institution.InfrastructureCustomFields');
+        $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('Institution.InfrastructureCustomFields');
 
         $customFieldData = $InfrastructureCustomFields->find()
             ->select([
@@ -227,7 +227,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 
         $requestData = json_decode($settings['process']['params']);
@@ -238,19 +238,19 @@ class InstitutionInfrastructuresTable extends AppTable
         $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
 
-        $institutionLands = TableRegistry::get('Institution.InstitutionLands');
-        $institutionFloors = TableRegistry::get('Institution.InstitutionFloors');
-        $institutionBuildings = TableRegistry::get('Institution.InstitutionBuildings');
-        $institutionRooms = TableRegistry::get('Institution.InstitutionRooms');
-        $buildingTypes = TableRegistry::get('building_types');
-        $infrastructureCondition = TableRegistry::get('infrastructure_conditions');
-        $infrastructureStatus = TableRegistry::get('infrastructure_statuses');
-        $institutionStatus = TableRegistry::get('institution_statuses');
-        $infrastructureOwnerships = TableRegistry::get('infrastructure_ownerships');
-        $infrastructureLevels = TableRegistry::get('infrastructure_levels');
-        $areas = TableRegistry::get('areas');
+        $institutionLands = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
+        $institutionFloors = TableRegistry::getTableLocator()->get('Institution.InstitutionFloors');
+        $institutionBuildings = TableRegistry::getTableLocator()->get('Institution.InstitutionBuildings');
+        $institutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
+        $buildingTypes = TableRegistry::getTableLocator()->get('building_types');
+        $infrastructureCondition = TableRegistry::getTableLocator()->get('infrastructure_conditions');
+        $infrastructureStatus = TableRegistry::getTableLocator()->get('infrastructure_statuses');
+        $institutionStatus = TableRegistry::getTableLocator()->get('institution_statuses');
+        $infrastructureOwnerships = TableRegistry::getTableLocator()->get('infrastructure_ownerships');
+        $infrastructureLevels = TableRegistry::getTableLocator()->get('infrastructure_levels');
+        $areas = TableRegistry::getTableLocator()->get('areas');
 
-        $institutions = TableRegistry::get('institutions');
+        $institutions = TableRegistry::getTableLocator()->get('institutions');
 
         if($infrastructureLevel == 1) { $level = "Lands"; $type ='land';}
         if($infrastructureLevel == 2) { $level = "Buildings"; $type ='building';}
@@ -267,7 +267,7 @@ class InstitutionInfrastructuresTable extends AppTable
         if (!empty($areaId) && $areaId != -1) {
             $conditions[$this->aliasField('area_id')] = $areaId;
         }
-        $institutions = TableRegistry::get('Institution.Institutions');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
@@ -450,7 +450,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use($type) {
             return $results->map(function ($row) use($type) {
 
-                $areas1 = TableRegistry::get('areas');
+                $areas1 = TableRegistry::getTableLocator()->get('areas');
                 $areasData = $areas1
                             ->find()
                             ->where([$areas1->alias('code')=>$row->area_code])
@@ -458,9 +458,9 @@ class InstitutionInfrastructuresTable extends AppTable
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if($areasData->parent_id){ // POCOR-9070
-                    $areas = TableRegistry::get('areas');
-                    $areaLevels = TableRegistry::get('area_levels');
-                    $institutions = TableRegistry::get('institutions');
+                    $areas = TableRegistry::getTableLocator()->get('areas');
+                    $areaLevels = TableRegistry::getTableLocator()->get('area_levels');
+                    $institutions = TableRegistry::getTableLocator()->get('institutions');
                     $val = $areas
                                 ->find()
                                 ->select([
@@ -490,7 +490,7 @@ class InstitutionInfrastructuresTable extends AppTable
                     }
                 }
 
-                $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+                $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
                 if(!empty($row['level_id'])) {
                     $customFieldData = $InfrastructureCustomFields->find()
                         ->select([

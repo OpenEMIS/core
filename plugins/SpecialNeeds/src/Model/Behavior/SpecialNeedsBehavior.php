@@ -1,7 +1,7 @@
 <?php
 namespace SpecialNeeds\Model\Behavior;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\Utility\Inflector;
 
@@ -30,7 +30,7 @@ class SpecialNeedsBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $model = $this->_table;
         $controller = $this->_table->controller;

@@ -4,7 +4,7 @@ namespace StaffCustomField\Model\Table;
 use ArrayObject;
 use CustomField\Model\Table\CustomFormsTable;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
@@ -28,7 +28,7 @@ class StaffCustomFormsTable extends CustomFormsTable
         parent::initialize($config);
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         if ($data->count() > 0) {
             if ($extra->offsetExists('toolbarButtons') && $extra['toolbarButtons']['add']) {
@@ -37,7 +37,7 @@ class StaffCustomFormsTable extends CustomFormsTable
         }
     }
 
-    public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCustomModuleId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $module = $this->CustomModules
             ->find()
@@ -59,7 +59,7 @@ class StaffCustomFormsTable extends CustomFormsTable
         return $query->where([$this->CustomModules->aliasField('code') => 'Staff']);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'field_type') {
             return __('Field Type');
@@ -90,7 +90,7 @@ class StaffCustomFormsTable extends CustomFormsTable
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

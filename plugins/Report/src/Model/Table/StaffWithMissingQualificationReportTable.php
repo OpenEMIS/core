@@ -8,7 +8,7 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -31,7 +31,7 @@ class StaffWithMissingQualificationReportTable extends AppTable  {
         $this->addBehavior('Report.AreaList');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $controllerName = $this->controller->name;
         $reportName = __('Staff with Missing Qualification Report');
         $this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
@@ -41,13 +41,13 @@ class StaffWithMissingQualificationReportTable extends AppTable  {
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
         $attr['options'] = $this->controller->getFeatureOptions($this->alias());
         return $attr;
     }
 
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $userId = $requestData->user_id;
@@ -57,8 +57,8 @@ class StaffWithMissingQualificationReportTable extends AppTable  {
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
 
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -174,7 +174,7 @@ class StaffWithMissingQualificationReportTable extends AppTable  {
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) { 
                 return $results->map(function ($row) { 
                     //For Default ID NO
-                    $identity_typesTable = TableRegistry::get('FieldOption.IdentityTypes');
+                    $identity_typesTable = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                     $identity_types = $identity_typesTable->find()
                                         ->where(['`default`' => 1])
                                         ->first();
@@ -200,7 +200,7 @@ class StaffWithMissingQualificationReportTable extends AppTable  {
         
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) 
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields) 
     {
         $newFields = [];
         $newFields[] = [

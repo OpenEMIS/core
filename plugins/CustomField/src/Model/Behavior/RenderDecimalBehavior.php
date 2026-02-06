@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use CustomField\Model\Behavior\RenderBehavior;
 
@@ -15,7 +15,7 @@ class RenderDecimalBehavior extends RenderBehavior
         parent::initialize($config);
     }
 
-	public function onGetCustomDecimalElement(Event $event, $action, $entity, $attr, $options=[])
+	public function onGetCustomDecimalElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         $value = '';
 
@@ -80,7 +80,7 @@ class RenderDecimalBehavior extends RenderBehavior
         return $value;
     }
 
-    public function processDecimalValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    public function processDecimalValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
     {
         $settings['valueKey'] = 'decimal_value';
         $this->processValues($entity, $data, $settings);

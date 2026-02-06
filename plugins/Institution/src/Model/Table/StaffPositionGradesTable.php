@@ -6,7 +6,7 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 
 class StaffPositionGradesTable extends ControllerActionTable
@@ -35,7 +35,7 @@ class StaffPositionGradesTable extends ControllerActionTable
         $list = [];
 
         if (!is_null($positionTitleId)) {
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
             $positionTitleEntity = $StaffPositionTitles->get($positionTitleId);
             $isSelectAll = $StaffPositionTitles->checkIsSelectAll($positionTitleEntity);
 
@@ -52,19 +52,19 @@ class StaffPositionGradesTable extends ControllerActionTable
 
         return $list;
     }
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

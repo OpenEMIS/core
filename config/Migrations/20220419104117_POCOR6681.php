@@ -51,8 +51,8 @@ class POCOR6681 extends AbstractMigration
         // For point 2 validation POCOR-6681 delete existing records 
         $this->execute('TRUNCATE institution_meal_programmes');
 
-        $MealProgrammes = TableRegistry::get('meal_programmes');
-        $MealInstitutionProgrammes = TableRegistry::get('institution_meal_programmes');
+        $MealProgrammes = TableRegistry::getTableLocator()->get('meal_programmes');
+        $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('institution_meal_programmes');
 
         // Delete existing records For Export 
         $MealProgrammes = $MealProgrammes

@@ -10,7 +10,7 @@ class UsersDirectoryController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Scholarship.UsersDirectory');
+        $this->UsersDirectory = $this->fetchTable('Scholarship.UsersDirectory');
         $this->loadComponent('User.User');
         $this->loadComponent('Page.Page');
         // $this->Page->loadElementsFromTable($this->UsersDirectory);

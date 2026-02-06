@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\ResultSet;
 use Cake\Http\ServerRequest;
 
@@ -32,7 +32,7 @@ class StudentRisksTable extends ControllerActionTable
         $this->addBehavior('Institution.InstitutionTab');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('average_risk', ['visible' => false]);
         $this->field('student_id', ['visible' => false]);
@@ -40,7 +40,7 @@ class StudentRisksTable extends ControllerActionTable
         $this->field('total_risk', ['after' => 'risk_id']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('generated_by', ['visible' => false]);
         $this->field('generated_on', ['visible' => false]);
@@ -91,7 +91,7 @@ class StudentRisksTable extends ControllerActionTable
 
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $queryString = $this->getQueryString();
@@ -111,7 +111,7 @@ class StudentRisksTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('grade');
@@ -121,16 +121,16 @@ class StudentRisksTable extends ControllerActionTable
         $this->field('created', ['visible' => false]);
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         return $entity->user->name;
     }
 
-    public function onGetGrade(Event $event, Entity $entity)
+    public function onGetGrade(EventInterface $event, Entity $entity)
     {
         // some class not configure in the institutionClassStudents, therefore using the institutionStudents
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $studentId = $entity->student_id;
         $academicPeriodId = $entity->academic_period_id;
 
@@ -150,10 +150,10 @@ class StudentRisksTable extends ControllerActionTable
         return $educationGradesName;
     }
 
-    public function onGetClass(Event $event, Entity $entity)
+    public function onGetClass(EventInterface $event, Entity $entity)
     {
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $studentId = $entity->student_id;
         $academicPeriodId = $entity->academic_period_id;
 
@@ -173,7 +173,7 @@ class StudentRisksTable extends ControllerActionTable
         return $institutionClassesName;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $conditions = [];
         $extra['selectedAcademicPeriodId'] =  !empty($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
@@ -239,15 +239,15 @@ class StudentRisksTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Risks');
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function onGetGeneratedBy(Event $event, Entity $entity)
+    public function onGetGeneratedBy(EventInterface $event, Entity $entity)
     {
         // from indexes table
-        $Risks = TableRegistry::get('Risk.Risks');
+        $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $riskId = $entity->risk->id;
         $generatedById = $Risks->get($riskId)->generated_by;
 
@@ -259,10 +259,10 @@ class StudentRisksTable extends ControllerActionTable
         return $userName;
     }
 
-    public function onGetGeneratedOn(Event $event, Entity $entity)
+    public function onGetGeneratedOn(EventInterface $event, Entity $entity)
     {
         // from indexes table
-        $Risks = TableRegistry::get('Risk.Risks');
+        $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $riskId = $entity->risk->id;
         $risksGeneratedOn = $Risks->get($riskId)->generated_on;
 
@@ -274,9 +274,9 @@ class StudentRisksTable extends ControllerActionTable
         return $generatedOn;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomCriteriasElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
-        // $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
+        // $IndexesCriterias = TableRegistry::getTableLocator()->get('Indexes.IndexesCriterias');
         $tableHeaders = $this->getMessage('Risk.TableHeader');
         array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
         $tableHeaders[] = __('References');
@@ -312,11 +312,11 @@ class StudentRisksTable extends ControllerActionTable
                     $value = $this->StudentRisksCriterias->getValue($institutionStudentRiskId, $riskCriteriasId);
 
                     $criteriaDetails = $this->Risks->getCriteriasDetails($criteriaName);
-                    $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
+                    $CriteriaModel = TableRegistry::getTableLocator()->get($criteriaDetails['model']);
 
                     if ($value == 'True') {
                         // Comparison like behaviour
-                        $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
+                        $LookupModel = TableRegistry::getTableLocator()->get($criteriaDetails['threshold']['lookupModel']);
 
                         // to get total number of behaviour
                         $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
@@ -376,7 +376,7 @@ class StudentRisksTable extends ControllerActionTable
         return $event->getSubject()->renderElement('Risk.Risks/' . $fieldKey, ['attr' => $attr]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
@@ -400,7 +400,7 @@ class StudentRisksTable extends ControllerActionTable
     }
 
     //POCOR-8414 start
-    public function afterAction(Event $event, ArrayObject $options)
+    public function afterAction(EventInterface $event, ArrayObject $options)
     {
         $plugin = __($this->controller->getPlugin());
         if($plugin != 'Profile' && $plugin != 'GuardianNav'){
@@ -414,7 +414,7 @@ class StudentRisksTable extends ControllerActionTable
 				$userId = $queryString['student_id'];
 			}
             //POCOR-8489 --End
-            $Users = TableRegistry::get('User.Users');
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
             $result = $Users
                 ->find()
                 ->select(['first_name','last_name'])

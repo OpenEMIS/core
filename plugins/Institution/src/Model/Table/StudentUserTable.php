@@ -7,7 +7,7 @@ use ArrayObject;
 use Cake\Collection\CollectionInterface;
 use Cake\Core\Configure;
 use Cake\Database\Exception as DatabaseException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -83,6 +83,14 @@ class StudentUserTable extends ControllerActionTable
         $studentID = $this->getStudentID();
         //$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
     }
 
     public static function handleAssociations($model)
@@ -148,7 +156,7 @@ class StudentUserTable extends ControllerActionTable
         $model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars', 'foreignKey' => 'security_user_id', 'dependent' => true]);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $options['associated']['Nationalities'] = [
             'validate' => 'AddByAssociation'
@@ -169,7 +177,7 @@ class StudentUserTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $BaseUsers = TableRegistry::get('User.Users');
+        $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         $validator = $BaseUsers->setUserValidation($validator, $this);
         $validator->setProvider('custom', $this);
         $validator
@@ -228,7 +236,7 @@ class StudentUserTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
@@ -250,7 +258,7 @@ class StudentUserTable extends ControllerActionTable
             //$studentId = isset($params['id']) ? $params['id'] : $this->Session->read('Institution.StudentUser.primaryKey.id');
 
             // get the id of the latest student record in the current institution
-            $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+            $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
             $institutionStudentId = $InstitutionStudentsTable->find()
                 ->where([
                     $InstitutionStudentsTable->aliasField('student_id') => $studentId,
@@ -299,7 +307,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         $users_ids = self::getDynamicTableInstance('User.UserIdentities');
         $user_identities = $users_ids->find()
@@ -368,7 +376,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     {
         $users_ids = self::getDynamicTableInstance('User.Identities');
         $user_identities = $users_ids->find()
@@ -456,7 +464,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $entity = $extra['entity'];
         $userId = $this->Auth->user('id');
@@ -513,7 +521,7 @@ class StudentUserTable extends ControllerActionTable
 
     //POCOR-7982
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'MainNationalities', 'MainIdentityTypes', 'Genders'
@@ -522,7 +530,7 @@ class StudentUserTable extends ControllerActionTable
 
     //POCOR-7982
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!empty($entity->date_of_death)) { //POCOR-8059
             if (isset($entity->dod_range)) {
@@ -534,7 +542,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $this->setupTabElements($entity);
@@ -599,7 +607,7 @@ class StudentUserTable extends ControllerActionTable
 
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->Session->write('Student.Students.id', $entity->id);
         $this->Session->write('Student.Students.name', $entity->name);
@@ -627,7 +635,7 @@ class StudentUserTable extends ControllerActionTable
         $this->fields['institution_id']['value'] = $extra['institutionId'];
     }
 
-    public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIdentityNumber(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $attr['fieldName'] = $this->getAlias() . '.identities.0.number';
@@ -637,9 +645,9 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //POCOR-9393
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $this->triggerWebhooks($entity->id, $entity);
+
         $this->getEventManager()->dispatch(new Event('Model.Students.afterSaveCustom', $this, [
             'entity' => $entity,
             'options' => $options
@@ -648,7 +656,7 @@ class StudentUserTable extends ControllerActionTable
     }
 
     //POCOR-9393
-    public function studentsAfterSave(Event $event)
+    public function studentsAfterSave(EventInterface $event)
     {
         $entity = $event->getData('entity');
         if ($entity->isNew()) {
@@ -658,7 +666,7 @@ class StudentUserTable extends ControllerActionTable
 
     //to handle identity_number field that is automatically created by mandatory behaviour.
 
-    public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
+    public function pullBeforePatch(EventInterface $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
         if (!isset($queryString['institution_id'])) {
             $session = $this->request->getSession();
@@ -666,7 +674,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         unset($sheets[0]);
         $studentsTabsData = $this->studentsTabsData;
@@ -694,7 +702,7 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $sheetData = $settings['sheet']['sheetData'];
         $StudentType = $sheetData['student_tabs_type'];
@@ -981,7 +989,7 @@ class StudentUserTable extends ControllerActionTable
 
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $InstitutionStudents = self::getDynamicTableInstance('User.InstitutionStudents');
         $ClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents');
@@ -1557,7 +1565,7 @@ class StudentUserTable extends ControllerActionTable
     /**
      * @param string $tableName
      * @return Table
-
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -1601,230 +1609,230 @@ class StudentUserTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-     /**
-     * Triggers webhooks for a user. POCOR-9393
-     *
-     * @param int $userRecordId
-     * @param array $requestData
-     */
-    private function triggerWebhooks($userRecordId, $requestData)
-    {
-        $institutionStudents = self::getDynamicTableInstance('Institution.Students');
-        $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
-        $userNationalities = self::getDynamicTableInstance('User.UserNationalities');
-        $nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
-        $identities = self::getDynamicTableInstance('User.Identities');
-        $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
-        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
-
-        $bodyData = $institutionStudents->find()
-                    ->select([
-                        'id'         => $institutionStudents->aliasField('id'),
-                        'student_id' => $institutionStudents->aliasField('student_id'),
-                        // user info
-                        'username'    => 'Users.username',
-                        'openemis_no' => 'Users.openemis_no',
-                        'first_name'  => 'Users.first_name',
-                        'middle_name' => 'Users.middle_name',
-                        'third_name'  => 'Users.third_name',
-                        'last_name'   => 'Users.last_name',
-                        'date_of_birth' => 'Users.date_of_birth',
-                        'email'       => 'Users.email',
-                        'address'     => 'Users.address',
-                        'postal_code' => 'Users.postal_code',
-
-                        // institution & status
-                        'institution'     => 'Institutions.name',
-                        'student_status'  => 'StudentStatuses.name',
-                        'academic_period' => 'AcademicPeriods.name',
-                        'education_grade' => 'EducationGrades.name',
-                        'institution_class' => $InstitutionClasses->aliasField('name'),
-                        'institution_class_id' => $InstitutionClasses->aliasField('id'),
-
-                        // demographics
-                        'gender'         => 'Genders.name',
-                        'address_area'   => 'AddressAreas.name',
-                        'birthplace_area'=> 'BirthplaceAreas.name',
-                        'mobile_number'        => 'Users.mobile_number',
-                        'nationality'    => $nationalities->aliasField('name'),
-                        'user_identities_number'    => $identities->aliasField('number'),
-                        'identity_types'    => $IdentityTypes->aliasField('name'),
-                    ])
-                    ->contain([
-                        'Institutions',
-                        'EducationGrades',
-                        'AcademicPeriods',
-                        'StudentStatuses',
-                        'Users' => [
-                            'Genders',
-                            'MainNationalities',
-                            'AddressAreas',
-                            'BirthplaceAreas',
-                        ]
-                    ])
-                    ->leftJoin(
-                    [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
-                    [
-                        $InstitutionClassStudents->aliasField('student_id') . ' = ' . $institutionStudents->aliasField('student_id'),
-                    ])
-                    ->leftJoin(
-                    [$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
-                    [
-                        $InstitutionClasses->aliasField('id') . ' = ' . $InstitutionClassStudents->aliasField('institution_class_id'),
-                    ])
-                    ->leftJoin(
-                        [$userNationalities->getAlias() => $userNationalities->getTable()],
-                        [
-                            $userNationalities->aliasField('security_user_id') . ' = ' . $institutionStudents->aliasField('student_id'),
-                        ])
-                    ->leftJoin(
-                        [$nationalities->getAlias() => $nationalities->getTable()],
-                        [
-                            $nationalities->aliasField('id') . ' = ' . $userNationalities->aliasField('nationality_id'),
-                        ])
-                    ->leftJoin(
-                        [$identities->getAlias() => $identities->getTable()],
-                        [
-                            $identities->aliasField('security_user_id') . ' = ' . $institutionStudents->aliasField('student_id'),
-                        ])
-                    ->leftJoin(
-                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
-                        [
-                            $IdentityTypes->aliasField('id') . ' = ' . $identities->aliasField('identity_type_id'),
-                        ])
-                    ->where([
-                        $institutionStudents->aliasField('student_id') => $requestData['id']
-                    ])
-                    ->enableHydration(false)->first();
-
-            //Log::error($bodyData->sql());
-
-
-        //Fetch student custom fields
-        $studentCustomFieldValues = self::getDynamicTableInstance('student_custom_field_values');
-        $studentCustomFieldOptions = self::getDynamicTableInstance('student_custom_field_options');
-
-        $studentCustomData = $studentCustomFieldValues->find()
-            ->select([
-                'id' => $studentCustomFieldValues->aliasField('id'),
-                'custom_id' => 'studentCustomField.id',
-                'student_id' => $studentCustomFieldValues->aliasField('student_id'),
-                'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                'text_value' => $studentCustomFieldValues->aliasField('text_value'),
-                'number_value' => $studentCustomFieldValues->aliasField('number_value'),
-                'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
-                'textarea_value' => $studentCustomFieldValues->aliasField('textarea_value'),
-                'date_value' => $studentCustomFieldValues->aliasField('date_value'),
-                'time_value' => $studentCustomFieldValues->aliasField('time_value'),
-                'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
-                'name' => 'studentCustomField.name',
-                'field_type' => 'studentCustomField.field_type',
-            ])
-            ->leftJoin(
-                ['studentCustomField' => 'student_custom_fields'],
-                ['studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')]
-            )
-            ->leftJoin(
-                [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
-                [
-                    $studentCustomFieldOptions->aliasField('student_custom_field_id') . ' = ' . $studentCustomFieldValues->aliasField('student_custom_field_id'),
-                    $studentCustomFieldOptions->aliasField('id') . ' = ' . $studentCustomFieldValues->aliasField('number_value')
-                ]
-            )
-            ->where([
-                $studentCustomFieldValues->aliasField('student_id') => $userRecordId,
-            ])
-            ->enableHydration(false)
-            ->toArray();
-
-        if (!empty($bodyData)) {
-            $body = $this->prepareWebhookBody($bodyData, $studentCustomData);
-
-            $webhooks = self::getDynamicTableInstance('Webhook.Webhooks');
-            if (!empty($requestData['id'])) {
-                $webhooks->triggerShell('student_update', ['username' => ''], $body);
-            }
-        }
-    }
-
-    /**
-     * Prepares the webhook body.
-     * POCOR-9393
-     * @param array $student
-     * @return array
-     */
-    private function prepareWebhookBody($student, array $studentCustomData = [])
-    {
-
-        $body = [
-            'student_id'    => $student['student_id'] ?? null,
-            'username'      => $student['username'] ?? null,
-            'openemis_no'   => $student['openemis_no'] ?? null,
-            'first_name'    => $student['first_name'] ?? null,
-            'middle_name'   => $student['middle_name'] ?? null,
-            'third_name'    => $student['third_name'] ?? null,
-            'last_name'     => $student['last_name'] ?? null,
-           'date_of_birth' => !empty($student['date_of_birth'])
-                               ? $student['date_of_birth']->format('Y-m-d') : null,
-            'email'         => $student['email'] ?? null,
-            'address'       => $student['address'] ?? null,
-            'postal_code'   => $student['postal_code'] ?? null,
-            'mobile_number'   => $student['mobile_number'] ?? null,
-            'institution'     => $student['institution'] ?? null,
-            'student_status'          => $student['student_status'] ?? null,
-            'academic_period' => $student['academic_period'] ?? null,
-            'education_grade' => $student['education_grade'] ?? null,
-            'institution_class' => $student['institution_class'] ?? null,
-            'institution_class_id' => $student['institution_class_id'] ?? null,
-            'gender'          => $student['gender'] ?? null,
-            'address_area'    => $student['address_area'] ?? null,
-            'birthplace_area' => $student['birthplace_area'] ?? null,
-            'nationality'     => $student['nationality'] ?? null,
-            'user_identities_number'  => $student['user_identities_number'] ?? null,
-            'identity_types'     => $student['identity_types'] ?? null,
-        ];
-
-        // Attach custom fields if available
-        $customFields = [];
-        if (!empty($studentCustomData)) {
-            $count = 0;
-            foreach ($studentCustomData as $val) {
-                $fieldType = $val['field_type'] ?? '';
-                $entry = [
-                    'id'   => $val['custom_id'] ?? '',
-                    'name' => $val['name'] ?? '',
-                ];
-
-                if ($fieldType === 'TEXT') {
-                    $entry['text_value'] = $val['text_value'] ?? '';
-                } elseif ($fieldType === 'CHECKBOX') {
-                    $entry['checkbox_value'] = $val['option_value_text'] ?? '';
-                } elseif ($fieldType === 'NUMBER') {
-                    $entry['number_value'] = $val['number_value'] ?? '';
-                } elseif ($fieldType === 'DECIMAL') {
-                    $entry['decimal_value'] = $val['decimal_value'] ?? '';
-                } elseif ($fieldType === 'TEXTAREA') {
-                    $entry['textarea_value'] = $val['textarea_value'] ?? '';
-                } elseif ($fieldType === 'DROPDOWN') {
-                    $entry['dropdown_value'] = $val['option_value_text'] ?? '';
-                } elseif ($fieldType === 'DATE') {
-                    $entry['date_value'] = !empty($val['date_value'])
-                        ? date('Y-m-d', strtotime($val['date_value']))
-                        : '';
-                } elseif ($fieldType === 'TIME') {
-                    $entry['time_value'] = !empty($val['time_value'])
-                        ? date('h:i A', strtotime($val['time_value']))
-                        : '';
-                } elseif ($fieldType === 'COORDINATES') {
-                    $entry['coordinate_value'] = $val['text_value'] ?? '';
-                }
-
-                $customFields['custom_field'][$count] = $entry;
-                $count++;
-            }
-        }
-
-        return array_merge($body, $customFields);
-    }
+//     /**
+//     * Triggers webhooks for a user. POCOR-9393
+//     *
+//     * @param int $userRecordId
+//     * @param array $requestData
+//     */
+//    private function triggerWebhooks($userRecordId, $requestData)
+//    {
+//        $institutionStudents = self::getDynamicTableInstance('Institution.Students');
+//        $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
+//        $userNationalities = self::getDynamicTableInstance('User.UserNationalities');
+//        $nationalities = self::getDynamicTableInstance('FieldOption.Nationalities');
+//        $identities = self::getDynamicTableInstance('User.Identities');
+//        $IdentityTypes = self::getDynamicTableInstance('FieldOption.IdentityTypes');
+//        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+//
+//        $bodyData = $institutionStudents->find()
+//                    ->select([
+//                        'id'         => $institutionStudents->aliasField('id'),
+//                        'student_id' => $institutionStudents->aliasField('student_id'),
+//                        // user info
+//                        'username'    => 'Users.username',
+//                        'openemis_no' => 'Users.openemis_no',
+//                        'first_name'  => 'Users.first_name',
+//                        'middle_name' => 'Users.middle_name',
+//                        'third_name'  => 'Users.third_name',
+//                        'last_name'   => 'Users.last_name',
+//                        'date_of_birth' => 'Users.date_of_birth',
+//                        'email'       => 'Users.email',
+//                        'address'     => 'Users.address',
+//                        'postal_code' => 'Users.postal_code',
+//
+//                        // institution & status
+//                        'institution'     => 'Institutions.name',
+//                        'student_status'  => 'StudentStatuses.name',
+//                        'academic_period' => 'AcademicPeriods.name',
+//                        'education_grade' => 'EducationGrades.name',
+//                        'institution_class' => $InstitutionClasses->aliasField('name'),
+//                        'institution_class_id' => $InstitutionClasses->aliasField('id'),
+//
+//                        // demographics
+//                        'gender'         => 'Genders.name',
+//                        'address_area'   => 'AddressAreas.name',
+//                        'birthplace_area'=> 'BirthplaceAreas.name',
+//                        'mobile_number'        => 'Users.mobile_number',
+//                        'nationality'    => $nationalities->aliasField('name'),
+//                        'user_identities_number'    => $identities->aliasField('number'),
+//                        'identity_types'    => $IdentityTypes->aliasField('name'),
+//                    ])
+//                    ->contain([
+//                        'Institutions',
+//                        'EducationGrades',
+//                        'AcademicPeriods',
+//                        'StudentStatuses',
+//                        'Users' => [
+//                            'Genders',
+//                            'MainNationalities',
+//                            'AddressAreas',
+//                            'BirthplaceAreas',
+//                        ]
+//                    ])
+//                    ->leftJoin(
+//                    [$InstitutionClassStudents->getAlias() => $InstitutionClassStudents->getTable()],
+//                    [
+//                        $InstitutionClassStudents->aliasField('student_id') . ' = ' . $institutionStudents->aliasField('student_id'),
+//                    ])
+//                    ->leftJoin(
+//                    [$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()],
+//                    [
+//                        $InstitutionClasses->aliasField('id') . ' = ' . $InstitutionClassStudents->aliasField('institution_class_id'),
+//                    ])
+//                    ->leftJoin(
+//                        [$userNationalities->getAlias() => $userNationalities->getTable()],
+//                        [
+//                            $userNationalities->aliasField('security_user_id') . ' = ' . $institutionStudents->aliasField('student_id'),
+//                        ])
+//                    ->leftJoin(
+//                        [$nationalities->getAlias() => $nationalities->getTable()],
+//                        [
+//                            $nationalities->aliasField('id') . ' = ' . $userNationalities->aliasField('nationality_id'),
+//                        ])
+//                    ->leftJoin(
+//                        [$identities->getAlias() => $identities->getTable()],
+//                        [
+//                            $identities->aliasField('security_user_id') . ' = ' . $institutionStudents->aliasField('student_id'),
+//                        ])
+//                    ->leftJoin(
+//                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+//                        [
+//                            $IdentityTypes->aliasField('id') . ' = ' . $identities->aliasField('identity_type_id'),
+//                        ])
+//                    ->where([
+//                        $institutionStudents->aliasField('student_id') => $requestData['id']
+//                    ])
+//                    ->enableHydration(false)->first();
+//
+//            //Log::error($bodyData->sql());
+//
+//
+//        //Fetch student custom fields
+//        $studentCustomFieldValues = self::getDynamicTableInstance('student_custom_field_values');
+//        $studentCustomFieldOptions = self::getDynamicTableInstance('student_custom_field_options');
+//
+//        $studentCustomData = $studentCustomFieldValues->find()
+//            ->select([
+//                'id' => $studentCustomFieldValues->aliasField('id'),
+//                'custom_id' => 'studentCustomField.id',
+//                'student_id' => $studentCustomFieldValues->aliasField('student_id'),
+//                'student_custom_field_id' => $studentCustomFieldValues->aliasField('student_custom_field_id'),
+//                'text_value' => $studentCustomFieldValues->aliasField('text_value'),
+//                'number_value' => $studentCustomFieldValues->aliasField('number_value'),
+//                'decimal_value' => $studentCustomFieldValues->aliasField('decimal_value'),
+//                'textarea_value' => $studentCustomFieldValues->aliasField('textarea_value'),
+//                'date_value' => $studentCustomFieldValues->aliasField('date_value'),
+//                'time_value' => $studentCustomFieldValues->aliasField('time_value'),
+//                'option_value_text' => $studentCustomFieldOptions->aliasField('name'),
+//                'name' => 'studentCustomField.name',
+//                'field_type' => 'studentCustomField.field_type',
+//            ])
+//            ->leftJoin(
+//                ['studentCustomField' => 'student_custom_fields'],
+//                ['studentCustomField.id = ' . $studentCustomFieldValues->aliasField('student_custom_field_id')]
+//            )
+//            ->leftJoin(
+//                [$studentCustomFieldOptions->getAlias() => $studentCustomFieldOptions->getTable()],
+//                [
+//                    $studentCustomFieldOptions->aliasField('student_custom_field_id') . ' = ' . $studentCustomFieldValues->aliasField('student_custom_field_id'),
+//                    $studentCustomFieldOptions->aliasField('id') . ' = ' . $studentCustomFieldValues->aliasField('number_value')
+//                ]
+//            )
+//            ->where([
+//                $studentCustomFieldValues->aliasField('student_id') => $userRecordId,
+//            ])
+//            ->enableHydration(false)
+//            ->toArray();
+//
+//        if (!empty($bodyData)) {
+//            $body = $this->prepareWebhookBody($bodyData, $studentCustomData);
+//
+//            $webhooks = self::getDynamicTableInstance('Webhook.Webhooks');
+//            if (!empty($requestData['id'])) {
+//                $webhooks->triggerShell('student_update', ['username' => ''], $body);
+//            }
+//        }
+//    }
+//
+//    /**
+//     * Prepares the webhook body.
+//     * POCOR-9393
+//     * @param array $student
+//     * @return array
+//     */
+//    private function prepareWebhookBody($student, array $studentCustomData = [])
+//    {
+//
+//        $body = [
+//            'student_id'    => $student['student_id'] ?? null,
+//            'username'      => $student['username'] ?? null,
+//            'openemis_no'   => $student['openemis_no'] ?? null,
+//            'first_name'    => $student['first_name'] ?? null,
+//            'middle_name'   => $student['middle_name'] ?? null,
+//            'third_name'    => $student['third_name'] ?? null,
+//            'last_name'     => $student['last_name'] ?? null,
+//           'date_of_birth' => !empty($student['date_of_birth'])
+//                               ? $student['date_of_birth']->format('Y-m-d') : null,
+//            'email'         => $student['email'] ?? null,
+//            'address'       => $student['address'] ?? null,
+//            'postal_code'   => $student['postal_code'] ?? null,
+//            'mobile_number'   => $student['mobile_number'] ?? null,
+//            'institution'     => $student['institution'] ?? null,
+//            'student_status'          => $student['student_status'] ?? null,
+//            'academic_period' => $student['academic_period'] ?? null,
+//            'education_grade' => $student['education_grade'] ?? null,
+//            'institution_class' => $student['institution_class'] ?? null,
+//            'institution_class_id' => $student['institution_class_id'] ?? null,
+//            'gender'          => $student['gender'] ?? null,
+//            'address_area'    => $student['address_area'] ?? null,
+//            'birthplace_area' => $student['birthplace_area'] ?? null,
+//            'nationality'     => $student['nationality'] ?? null,
+//            'user_identities_number'  => $student['user_identities_number'] ?? null,
+//            'identity_types'     => $student['identity_types'] ?? null,
+//        ];
+//
+//        // Attach custom fields if available
+//        $customFields = [];
+//        if (!empty($studentCustomData)) {
+//            $count = 0;
+//            foreach ($studentCustomData as $val) {
+//                $fieldType = $val['field_type'] ?? '';
+//                $entry = [
+//                    'id'   => $val['custom_id'] ?? '',
+//                    'name' => $val['name'] ?? '',
+//                ];
+//
+//                if ($fieldType === 'TEXT') {
+//                    $entry['text_value'] = $val['text_value'] ?? '';
+//                } elseif ($fieldType === 'CHECKBOX') {
+//                    $entry['checkbox_value'] = $val['option_value_text'] ?? '';
+//                } elseif ($fieldType === 'NUMBER') {
+//                    $entry['number_value'] = $val['number_value'] ?? '';
+//                } elseif ($fieldType === 'DECIMAL') {
+//                    $entry['decimal_value'] = $val['decimal_value'] ?? '';
+//                } elseif ($fieldType === 'TEXTAREA') {
+//                    $entry['textarea_value'] = $val['textarea_value'] ?? '';
+//                } elseif ($fieldType === 'DROPDOWN') {
+//                    $entry['dropdown_value'] = $val['option_value_text'] ?? '';
+//                } elseif ($fieldType === 'DATE') {
+//                    $entry['date_value'] = !empty($val['date_value'])
+//                        ? date('Y-m-d', strtotime($val['date_value']))
+//                        : '';
+//                } elseif ($fieldType === 'TIME') {
+//                    $entry['time_value'] = !empty($val['time_value'])
+//                        ? date('h:i A', strtotime($val['time_value']))
+//                        : '';
+//                } elseif ($fieldType === 'COORDINATES') {
+//                    $entry['coordinate_value'] = $val['text_value'] ?? '';
+//                }
+//
+//                $customFields['custom_field'][$count] = $entry;
+//                $count++;
+//            }
+//        }
+//
+//        return array_merge($body, $customFields);
+//    }
 
 }

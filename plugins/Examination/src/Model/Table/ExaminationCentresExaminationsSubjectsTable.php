@@ -3,7 +3,7 @@ namespace Examination\Model\Table;
 
 use ArrayObject;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
@@ -55,7 +55,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $this->queryString = $this->request->getQuery['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
@@ -66,7 +66,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $Navigation->addCrumb('Subjects');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
@@ -106,7 +106,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
@@ -115,7 +115,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // set queryString for page refresh
         $this->controller->set('queryString', $this->queryString);
@@ -158,7 +158,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('weight');
         $this->field('start_time', ['type' => 'time']);
@@ -167,12 +167,12 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'name', 'education_subject_id',  'examination_date', 'start_time', 'end_time', 'weight', 'examination_grading_type_id', 'examination_id']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain('ExaminationSubjects.ExaminationGradingTypes');
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('examination_item')) {
@@ -182,7 +182,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCode(Event $event, Entity $entity)
+    public function onGetCode(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('examination_item')) {
@@ -192,7 +192,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetExaminationDate(Event $event, Entity $entity)
+    public function onGetExaminationDate(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('examination_item')) {
@@ -202,7 +202,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetWeight(Event $event, Entity $entity)
+    public function onGetWeight(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('examination_item')) {
@@ -212,7 +212,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStartTime(Event $event, Entity $entity)
+    public function onGetStartTime(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('examination_item')) {
@@ -222,7 +222,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEndTime(Event $event, Entity $entity)
+    public function onGetEndTime(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('examination_item')) {
@@ -232,7 +232,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetExaminationGradingTypeId(Event $event, Entity $entity)
+    public function onGetExaminationGradingTypeId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('examination_item') && $entity->examination_item->has('examination_grading_type')) {
@@ -242,7 +242,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    public function onGetEducationSubjectId(EventInterface $event, Entity $entity)
     {
         $value = ' ';
         if ($entity->has('education_subject')) {
@@ -268,7 +268,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $subjectList;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'examination_id') {
             return __('Examination');

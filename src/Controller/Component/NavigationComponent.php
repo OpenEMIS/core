@@ -1556,7 +1556,7 @@ class NavigationComponent extends Component
     /**
      * common function to get institution id
      * @return string|null
-
+     *
      */
     private
     function getInstitutionID($debug = "")
@@ -2932,6 +2932,11 @@ class NavigationComponent extends Component
                         'Configurations.StaffReleases',//POCOR-9455
                         'Configurations.StaffTransfers',//POCOR-9455
                         'Configurations.AdministrativeBoundaries',
+                        'Configurations.ExternalAlertServiceSMS',
+                        'Configurations.ExternalDataServiceWebhook',
+                        'Configurations.ExternalDataSourceExams',
+                        'Configurations.ExternalDataSourceIdentity',
+                        'Configurations.ExternalDataSourceLMS',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',

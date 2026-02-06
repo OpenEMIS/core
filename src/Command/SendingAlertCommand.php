@@ -17,7 +17,7 @@ class SendingAlertCommand extends \Cake\Command\Command
 
     public function execute(Arguments $args, ConsoleIo $io): int
     {
-        $this->loadModel('Alert.AlertLogs');
+        $this->AlertLogs = $this->fetchTable('Alert.AlertLogs');
 
         $today = FrozenTime::now();
         $feature = $args->getArgumentAt(0);

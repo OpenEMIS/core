@@ -7,7 +7,7 @@ class POCOR4764 extends AbstractMigration
 {
     public function up()
     {
-        $ApplicationInstitutionChoices = TableRegistry::get('Scholarship.ApplicationInstitutionChoices');
+        $ApplicationInstitutionChoices = TableRegistry::getTableLocator()->get('Scholarship.ApplicationInstitutionChoices');
         $ScholarshipApplicationInstitutionChoices = $ApplicationInstitutionChoices
             ->find()
             ->toArray();

@@ -3,7 +3,7 @@ namespace User\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
@@ -23,7 +23,7 @@ class DemographicsTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
         if(!empty($requestQuery)){
@@ -120,7 +120,7 @@ class DemographicsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $demographicTypes = TableRegistry::getTableLocator()->get('FieldOption.DemographicTypes');
         $demographicTypesArray = $demographicTypes
@@ -155,7 +155,7 @@ class DemographicsTable extends ControllerActionTable
         return $IndigenousOptions;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'demographic_types_id') {
             return __('Wealth Quintile');
@@ -167,14 +167,14 @@ class DemographicsTable extends ControllerActionTable
     }
     
     /*POCOR-6395 starts*/
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) 
     {   
         $requestQuery = $this->request->getQuery();
         $userId = $this->paramsDecode($requestQuery['queryString'])['security_user_id'];
         $entity['security_user_id'] = $userId;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
         $userId  = $this->request->getSession()->read('Auth.User.id');

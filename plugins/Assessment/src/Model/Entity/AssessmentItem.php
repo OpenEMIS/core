@@ -11,7 +11,7 @@ class AssessmentItem extends Entity
     protected function _getEducationSubjectName() {
 		$educationSubjectId = $this->education_subject_id;
 		if (!empty($educationSubjectId) && !is_null($educationSubjectId)) {
-			$EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+			$EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
 			if ($EducationSubjects->exists([$EducationSubjects->getPrimaryKey() => $educationSubjectId])) {
 				$subject = $EducationSubjects->get($educationSubjectId);
 				return $subject->code . ' - ' . $subject->name;

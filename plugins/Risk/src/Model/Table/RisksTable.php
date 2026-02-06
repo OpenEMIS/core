@@ -8,7 +8,7 @@ use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -144,7 +144,7 @@ class RisksTable extends ControllerActionTable
             ;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'risk_criterias') {
             return __('Risk Criterias');
@@ -228,14 +228,14 @@ class RisksTable extends ControllerActionTable
 
     public function getOptions($model)
     {
-        $model = TableRegistry::get($model);
+        $model = TableRegistry::getTableLocator()->get($model);
         $options = [];
         $options = $model->getThresholdOptions();
 
         return $options;
     }
 
-    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomCriteriasElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $criteriaData = $this->getCriteriasData();
         $tableHeaders = $this->getMessage('Risk.TableHeader');
@@ -253,7 +253,7 @@ class RisksTable extends ControllerActionTable
                 foreach ($associated[$fieldKey] as $obj) {
                     if ($obj['operator'] == 3) {
                         // '=' the threshold is a string
-                        $lookupModel = TableRegistry::get($criteriaData[$obj['criteria']]['threshold']['lookupModel']);
+                        $lookupModel = TableRegistry::getTableLocator()->get($criteriaData[$obj['criteria']]['threshold']['lookupModel']);
                         $thresholdData = __($lookupModel->get($obj['threshold'])->name);
                     } else if ($obj['operator'] == 11) { // for Repeated
                         // for student status, the threshold value will be 'Yes'
@@ -298,7 +298,7 @@ class RisksTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList();
 
@@ -318,7 +318,7 @@ class RisksTable extends ControllerActionTable
         return $attr;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('modified_user_id', ['visible' => true]);
@@ -366,12 +366,12 @@ class RisksTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'RiskCriterias' => [
@@ -384,18 +384,18 @@ class RisksTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
         $this->field('academic_period_id', ['before' => 'name']);
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // to clear the risk criteria when delete all the criteria
         if (!isset($data[$this->getAlias()]['criterias'])) {
@@ -403,7 +403,7 @@ class RisksTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $entityRiskCriteriasData = $entity->risk_criterias;
         // list of criteria in the risk type
@@ -429,7 +429,7 @@ class RisksTable extends ControllerActionTable
 
             if (!empty($entityRiskCriterias)) {
                 foreach ($entityRiskCriterias as $entityRiskCriteriasKey => $entityRiskCriteriasObj) {
-                    $StudentRisksCriterias = TableRegistry::get('Institution.StudentRisksCriterias');
+                    $StudentRisksCriterias = TableRegistry::getTableLocator()->get('Institution.StudentRisksCriterias');
                     $value = $StudentRisksCriterias->getValue($institutionStudentRisksId, $entityRiskCriteriasKey);
                     $riskValue = $StudentRisksCriterias->getRiskValue($value, $entityRiskCriteriasKey, $institutionId, $studentId, $academicPeriodId);
 
@@ -454,10 +454,10 @@ class RisksTable extends ControllerActionTable
         }
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         // stop the processing before delete the risks
-        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        $InstitutionRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionRisks');
         $riskId = $entity->id;
 
         $records = $InstitutionRisks->find()
@@ -477,10 +477,10 @@ class RisksTable extends ControllerActionTable
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // delete the institution Risks records
-        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        $InstitutionRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionRisks');
         // pr($InstitutionRisks);
         $riskId = $entity->id;
         // pr($riskId);die;
@@ -490,7 +490,7 @@ class RisksTable extends ControllerActionTable
         $this->InstitutionStudentRisks->deleteAll(['risk_id' => $riskId]);
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $fieldKey = 'risk_criterias';
         $userId = $this->request->getSession()->read('Auth.User.id');
@@ -533,7 +533,7 @@ class RisksTable extends ControllerActionTable
         );
     }
 
-    public function addEditOnAddCriteria(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddCriteria(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->getAlias();
         $fieldKey = 'risk_criterias';
@@ -581,7 +581,7 @@ class RisksTable extends ControllerActionTable
         ];
     }
 
-    public function setupFields(Event $event, Entity $entity)
+    public function setupFields(EventInterface $event, Entity $entity)
     {
         $this->field('risk_criterias', ['type' => 'custom_criterias']);
 
@@ -596,7 +596,7 @@ class RisksTable extends ControllerActionTable
 
     public function getCriteriaByModel($model, $institutionId)
     {
-        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        $InstitutionRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionRisks');
         $criteriaData = $this->getCriteriasData();
 
         $criteria = [];
@@ -663,10 +663,10 @@ class RisksTable extends ControllerActionTable
         Log::write('debug', $shellCmd);
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         //  set_time_limit(300);
-        $Risks = TableRegistry::get('Risk.Risks');
+        $Risks = TableRegistry::getTableLocator()->get('Risk.Risks');
         $requestQuery = $this->request->getQuery();
         $params = $this->paramsDecode($requestQuery['queryString']);
 
@@ -697,7 +697,7 @@ class RisksTable extends ControllerActionTable
             
         $statement->execute();
         $result = $statement->fetchAll('obj');
-        $InstitutionRisks = TableRegistry::get('Institution.InstitutionRisks');
+        $InstitutionRisks = TableRegistry::getTableLocator()->get('Institution.InstitutionRisks');
         foreach($result AS $record){
             $institutionId = $record->institution_id;
             
@@ -750,7 +750,7 @@ class RisksTable extends ControllerActionTable
         exit;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $serverRequest = $this->request;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);

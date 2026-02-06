@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -29,14 +29,14 @@ class GuardianUserTable extends UserTable {
         return $events;
     }
 
-    public function guardianAfterSave(Event $event, $guardian)
+    public function guardianAfterSave(EventInterface $event, $guardian)
     {
         if ($guardian->isNew()) {
             $this->updateAll(['is_guardian' => 1], ['id' => $guardian->guardian_id]);
         }
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $sessionKey = 'Student.Guardians.new';
         if ($this->Session->check($sessionKey)) {
@@ -48,7 +48,7 @@ class GuardianUserTable extends UserTable {
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (!$entity->errors()) {
             $sessionKey = 'Student.Guardians.new';
@@ -56,7 +56,7 @@ class GuardianUserTable extends UserTable {
                 $guardianData = $this->Session->read($sessionKey);
                 $guardianData['guardian_id'] = $entity->id;
 
-                $Guardians = TableRegistry::get('Student.Guardians');
+                $Guardians = TableRegistry::getTableLocator()->get('Student.Guardians');
                 $Guardians->save($Guardians->newEntity($guardianData));
                 $this->Session->delete($sessionKey);
             }
@@ -75,7 +75,7 @@ class GuardianUserTable extends UserTable {
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
 
@@ -87,7 +87,7 @@ class GuardianUserTable extends UserTable {
     }
 
     //POCOR-7982
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if(!empty($entity->date_of_death)){ //POCOR-8059
             if(isset($entity->dod_range)){
@@ -100,7 +100,7 @@ class GuardianUserTable extends UserTable {
     }
     //POCOR-7982
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // MUST set user_type to request query before call parent's beforeAction
        // $this->request->query['user_type'] = UserTable::GUARDIAN;
@@ -112,9 +112,9 @@ class GuardianUserTable extends UserTable {
     }
 
     // POCOR-5684
-    public function onGetIdentityNumber(Event $event, Entity $entity){
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity){
 
-        $users_ids = TableRegistry::get('User.Identities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
@@ -122,7 +122,7 @@ class GuardianUserTable extends UserTable {
         ])
         ->all();
 
-        $users_ids = TableRegistry::get('User.Identities');
+        $users_ids = TableRegistry::getTableLocator()->get('User.Identities');
         $user_id_data = $users_ids->find()
         ->select(['number'])
         ->where([
@@ -137,7 +137,7 @@ class GuardianUserTable extends UserTable {
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -158,7 +158,7 @@ class GuardianUserTable extends UserTable {
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::getTableLocator()->get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
                 ->where([
@@ -182,9 +182,9 @@ class GuardianUserTable extends UserTable {
     }
 
     // POCOR-5684
-    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     {
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_identities = $users_ids->find()
         ->select(['number','nationality_id'])
         ->where([
@@ -192,7 +192,7 @@ class GuardianUserTable extends UserTable {
         ])
         ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
         ->where([
@@ -202,7 +202,7 @@ class GuardianUserTable extends UserTable {
 
         if(count($user_identities) == 1){
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = TableRegistry::getTableLocator()->get('identity_types');
             $user_id_name = $users_id_type->find()
             ->select(['name'])
             ->where([
@@ -214,7 +214,7 @@ class GuardianUserTable extends UserTable {
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -235,7 +235,7 @@ class GuardianUserTable extends UserTable {
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::getTableLocator()->get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
                 ->where([
@@ -249,7 +249,7 @@ class GuardianUserTable extends UserTable {
             }
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::getTableLocator()->get('identity_types');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -259,7 +259,7 @@ class GuardianUserTable extends UserTable {
                 return $entity->identity_type_id = $user_id_name->name;
             }else{
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::getTableLocator()->get('identity_types');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -271,7 +271,7 @@ class GuardianUserTable extends UserTable {
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
 
@@ -288,7 +288,7 @@ class GuardianUserTable extends UserTable {
         $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         parent::addAfterAction($event, $entity, $extra);
 
@@ -307,13 +307,13 @@ class GuardianUserTable extends UserTable {
         $this->controller->set('selectedAction', 'Guardians');
     }
 
-    public function onUpdateFieldGenderId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldGenderId(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $entity = $attr['entity'];
 
             if ($entity->has('guardian_relation_id')) {
-                $GuardianRelationsTable = TableRegistry::get('Student.GuardianRelations');
+                $GuardianRelationsTable = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
                 $guardianRelationEntity = $GuardianRelationsTable
                     ->find()
                     ->matching('Genders')

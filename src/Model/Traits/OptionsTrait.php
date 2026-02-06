@@ -7,9 +7,9 @@ trait OptionsTrait
 {
     public function getSelectOptions($code)
     {
-        // $WorkFlows = TableRegistry::get("WorkFlow.WorkFlows" );
+        // $WorkFlows = TableRegistry::getTableLocator()->get("WorkFlow.WorkFlows" );
         // $WorkFlowData = $WorkFlows->find('all')->where(['code' => "STUDENT-ADMISSION-1001"])->extract('id')->first();
-        // $WorkFlowSteps = TableRegistry::get('WorkFlow.WorkFlowSteps');
+        // $WorkFlowSteps = TableRegistry::getTableLocator()->get('WorkFlow.WorkFlowSteps');
         // $WorkFlowStepData = $WorkFlowSteps->find('all')->where(['workflow_id' => $WorkFlowData])->toArray();
         // $workflowStepsDataArr = (new Collection($WorkFlowStepData))
         //                     ->combine('id', 'name')
@@ -262,8 +262,15 @@ trait OptionsTrait
                     ]
                 ],
                 //POCOR-8869 end
-            ],
 
+            ],
+            'ExternalDataServiceWebhook' => [
+                'source' => [
+                    1 => __('Custom'),
+                    2 => __('OpenEMIS Exams'),
+                ]
+            ],
+            //POCOR-8869 end
         ];
 
         $index = explode('.', $code);

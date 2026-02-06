@@ -22,7 +22,7 @@ class StudentsPhotoDownloadShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Security.Users');
+        $this->Users = $this->fetchTable('Security.Users');
 
     }
 
@@ -33,7 +33,7 @@ class StudentsPhotoDownloadShell extends Shell
             $connection = ConnectionManager::get('default');
             $model = "Students";
             $model_table = 'institution_students';
-            $userTable = TableRegistry::get($model_table);
+            $userTable = TableRegistry::getTableLocator()->get($model_table);
             $model_field = 'student_id';
             $target_dir = ROOT . DS . "webroot/downloads/{$model}-photo/";   // POCOR-6309
             if (!file_exists($target_dir)) {
@@ -42,7 +42,7 @@ class StudentsPhotoDownloadShell extends Shell
 
             $report_progress_id = $this->args[0];
 
-            $ReportProgress = TableRegistry::get('Report.ReportProgress');
+            $ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
             $date = date('d-m-Y H:i:s');
             if (!empty($report_progress_id)) {
                 $report_progress = $ReportProgress
@@ -63,7 +63,7 @@ class StudentsPhotoDownloadShell extends Shell
                     $where['academic_period_id'] = $academicPeriodId;
                 }
                 if ($model == 'Staff') {
-                    $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                    $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                     $periodEntity = $AcademicPeriods->get($academicPeriodId);
                     $startDate = $periodEntity->start_date->format('Y-m-d');
                     $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -93,7 +93,7 @@ class StudentsPhotoDownloadShell extends Shell
                 }
             }
 
-            $Institutions = TableRegistry::get('institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('institutions');
             if ($institutionId > 0) {
                 $where['institution_id'] = $institutionId;
             } else {
@@ -105,7 +105,7 @@ class StudentsPhotoDownloadShell extends Shell
                     $where[$Institutions->aliasField('area_id IN')] = $areaList;
                 }
             }
-            $Users = TableRegistry::get('security_users');
+            $Users = TableRegistry::getTableLocator()->get('security_users');
             $where[$Users->aliasField('photo_content !=')] = '';
 
 
@@ -149,7 +149,7 @@ class StudentsPhotoDownloadShell extends Shell
 
     public function getAreaList($areaId)
     {
-        $Areas = TableRegistry::get('areas');
+        $Areas = TableRegistry::getTableLocator()->get('areas');
         $areaList = [];
         if ($areaId > 1) {
             array_push($areaList, $areaId);

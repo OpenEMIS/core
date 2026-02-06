@@ -1,7 +1,7 @@
 <?php
 namespace Profile\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Scholarship\Controller\AttachmentsController as BaseController;
 
 class ProfileApplicationAttachmentsController extends BaseController
@@ -9,7 +9,7 @@ class ProfileApplicationAttachmentsController extends BaseController
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Scholarship.Scholarships');
+        $this->Scholarships = $this->fetchTable('Scholarship.Scholarships');
     }
 
     public function beforeFilter(Event|\Cake\Event\EventInterface $event)

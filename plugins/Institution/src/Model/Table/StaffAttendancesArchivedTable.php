@@ -10,7 +10,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\Date;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -42,15 +42,15 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $data = $this->request->query;
         $query = $query->select([
@@ -183,14 +183,14 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-
+     *
      */
     public function getRelatedName($tableName, $relatedField)
     {
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             $name = strval($related->name);
@@ -206,14 +206,14 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-
+     *
      */
     public function getRelatedNameWithId($tableName, $relatedField)
     {
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             $name = strval($related->nameWithId);
@@ -225,7 +225,7 @@ class StaffAttendancesArchivedTable extends ControllerActionTable
     }
 
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 

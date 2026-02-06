@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 
 class InstitutionClassBehavior extends Behavior
@@ -22,7 +22,7 @@ class InstitutionClassBehavior extends Behavior
         return $events;
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         // This logic is dependent on SecurityAccessBehavior because it relies on SecurityAccess join table
         // This logic will only be triggered when the table is accessed by RestfulController
@@ -33,7 +33,7 @@ class InstitutionClassBehavior extends Behavior
             if ($user['super_admin'] == 0) { // if he is not super admin
                 $userId = $user['id'];
                 $today = Date::now();
-                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                 //Start POCOR-POCOR-6772
                 $data = $SecurityGroupUsers->find()
                 ->select([
@@ -186,7 +186,7 @@ class InstitutionClassBehavior extends Behavior
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
             $userId = $this->_table->Auth->user('id');
@@ -196,7 +196,7 @@ class InstitutionClassBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $action = 'edit';
         if (!$this->checkAllClassesPermission($action)) {
@@ -214,8 +214,8 @@ class InstitutionClassBehavior extends Behavior
 
     public function findByAccess(Query $query, array $options)
     {
-        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+        $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
         if (isset($options['accessControl'])) {
             $AccessControl = $options['accessControl'];
             $userId = $options['userId'];
@@ -305,7 +305,7 @@ class InstitutionClassBehavior extends Behavior
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         switch ($this->_table->action) {
             case 'view':

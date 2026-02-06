@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
@@ -46,7 +46,7 @@ class WorkflowsTable extends AppTable {
         $this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('WorkflowRules', ['className' => 'Workflow.WorkflowRules', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+        $this->WorkflowsFilters = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
 
     }
 
@@ -63,7 +63,7 @@ class WorkflowsTable extends AppTable {
         return $validator;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
         // Auto insert default workflow_steps when add
         if ($entity->isNew()) {
             $data = [
@@ -78,7 +78,7 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
         if ($entity->isNew()) {
             // When add: preinsert default workflow actions
             $this->setWorkflowActions($entity);
@@ -91,7 +91,7 @@ class WorkflowsTable extends AppTable {
         $this->resetWorkflowStepId($entity);
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(EventInterface $event) {
         //Add controls filter to index page
         $toolbarElements = [
             ['name' => 'Workflow.Workflows/controls', 'data' => [], 'options' => []]
@@ -105,7 +105,7 @@ class WorkflowsTable extends AppTable {
         $this->ControllerAction->setFieldOrder(['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name']);
     }
 
-    public function indexBeforePaginate(Event $event,  $request, Query $query, ArrayObject $options) {
+    public function indexBeforePaginate(EventInterface $event,  $request, Query $query, ArrayObject $options) {
         $modelOptions = $this->getWorkflowModel();
         $modelOptions = ['-1' => __('All Workflows')] + $modelOptions;
         $selectedModel = $this->queryString('model', $modelOptions);
@@ -123,7 +123,7 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function indexAfterAction(Event $event, $data) {
+    public function indexAfterAction(EventInterface $event, $data) {
         $session = $this->request->getSession();
 
         $sessionKey = $this->getRegistryAlias() . '.warning';
@@ -134,7 +134,7 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function onGetApplyToAll(Event $event, Entity $entity) {
+    public function onGetApplyToAll(EventInterface $event, Entity $entity) {
         if ($this->action == 'index') {
             $entity->filters = [];
 
@@ -154,7 +154,7 @@ class WorkflowsTable extends AppTable {
                     $value = __('No');
 
                     $filters = [];
-                    $filterModel = TableRegistry::get($filter);
+                    $filterModel = TableRegistry::getTableLocator()->get($filter);
                     if (!empty($filterIds)) {
                         $filters = $filterModel
                             ->getList()
@@ -172,7 +172,7 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function onGetFilters(Event $event, Entity $entity) {
+    public function onGetFilters(EventInterface $event, Entity $entity) {
         if ($this->action == 'index') {
             if (!is_null($entity->_matchingData['WorkflowModels']->filter)) {
                 if (sizeof($entity->filters) > 0) {
@@ -188,7 +188,7 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query) {
+    public function viewEditBeforeQuery(EventInterface $event, Query $query) {
         $paramsPass = $this->ControllerAction->paramsPass();
         if (!empty($paramsPass)) {
             $workflowId = $this->paramsDecode($paramsPass[0]);
@@ -208,11 +208,11 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(EventInterface $event, Entity $entity) {
         $this->setupFields($entity);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity) {
+    public function addOnInitialize(EventInterface $event, Entity $entity) {
         // always reset
         $request = $this->request;
         $queryParams = $request->getQuery();
@@ -221,7 +221,7 @@ class WorkflowsTable extends AppTable {
 
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         if (isset($data[$this->getAlias()])) {
             if (array_key_exists('workflow_model_id', $data[$this->getAlias()])) {
                 $selectedModel = $data[$this->getAlias()]['workflow_model_id'];
@@ -230,11 +230,11 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity) {
+    public function addEditAfterAction(EventInterface $event, Entity $entity) {
         $this->setupFields($entity);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
@@ -319,7 +319,7 @@ class WorkflowsTable extends AppTable {
 
         foreach ($featureList as $key => $feature) {
             $rowData = [];
-            $targetModel = TableRegistry::get($feature);
+            $targetModel = TableRegistry::getTableLocator()->get($feature);
             $rowData[] = $targetModel->getAlias();
             $rowData[] = $targetModel
                 ->find()
@@ -334,7 +334,7 @@ class WorkflowsTable extends AppTable {
         $this->controller->set(compact('steps', 'convertStepOptions', 'tableHeaders', 'tableCells'));
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+    public function onBeforeDelete(EventInterface $event, ArrayObject $options, $ids) {
         $requestData = $this->request->getData();
         $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
@@ -354,7 +354,7 @@ class WorkflowsTable extends AppTable {
         }
     }
 
-    public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {
+    public function onDeleteTransfer(EventInterface $event, ArrayObject $options, $id) {
         $transferProcess = function($associations, $transferFrom, $transferTo, $model) {
             $conn = ConnectionManager::get('default');
             $conn->begin();
@@ -389,9 +389,9 @@ class WorkflowsTable extends AppTable {
             // End
 
             // Update workflow_step_id in workflow_records and model table
-            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+            $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
             $registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
-            $targetModel = TableRegistry::get($registryAlias);
+            $targetModel = TableRegistry::getTableLocator()->get($registryAlias);
             foreach ($requestData[$this->getAlias()]['steps'] as $key => $stepObj) {
                 $stepFrom = $stepObj['workflow_step_id'];
                 $stepTo = $stepObj['convert_workflow_step_id'];
@@ -416,7 +416,7 @@ class WorkflowsTable extends AppTable {
         return $transferProcess;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['remove'])) {
             // Check by model if filter applied, disabled delete button if the workflow is apply to all.
@@ -439,7 +439,7 @@ class WorkflowsTable extends AppTable {
         return $buttons;
     }
 
-    public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldWorkflowModelId(EventInterface $event, array $attr, $action, $request) {
         if ($action == 'add') {
             $modelOptions = $this->getWorkflowModel();
 
@@ -482,7 +482,7 @@ class WorkflowsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldApplyToAll(EventInterface $event, array $attr, $action, $request) {
         if ($action == 'view') {
             $applyToAllOptions = $attr['options'];
             $attr['value'] = $applyToAllOptions[$attr['value']];
@@ -491,7 +491,7 @@ class WorkflowsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldFilters(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldFilters(EventInterface $event, array $attr, $action, $request) {
         if ($action == 'view') {
             $workflowModel = $attr['attr']['workflowModel'];
             $filter = $workflowModel->filter;
@@ -508,13 +508,13 @@ class WorkflowsTable extends AppTable {
             list($plugin, $modelAlias) = explode('.', $filter, 2);
             $labelText = Inflector::underscore(Inflector::singularize($modelAlias));
             /*POCOR-5833 starts*/
-            $LicenseTypes = TableRegistry::get('FieldOption.LicenseTypes');
+            $LicenseTypes = TableRegistry::getTableLocator()->get('FieldOption.LicenseTypes');
             $paramsPass = $this->ControllerAction->paramsPass();
             if (!empty($paramsPass)) {
                 $workflowId = $this->paramsDecode(current($paramsPass))['id'];
                 //POCOR-7686:: Create if condition for Institution.StaffLeave
                 if($attr['attr']['workflowModel']['model'] == "Institution.StaffLeave"){
-                    $filterOptions = TableRegistry::get($filter)->getList()->toArray();
+                    $filterOptions = TableRegistry::getTableLocator()->get($filter)->getList()->toArray();
                 }else{
                     $filterOptions = $LicenseTypes->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                                 ->leftJoin([$this->WorkflowsFilters->getAlias() => $this->WorkflowsFilters->getTable()], [
@@ -525,12 +525,12 @@ class WorkflowsTable extends AppTable {
                 }
                 //END
             } else {
-                $filterOptions = TableRegistry::get($filter)->getList()->toArray();
+                $filterOptions = TableRegistry::getTableLocator()->get($filter)->getList()->toArray();
             }
 
             /*POCOR-5833 ends*/
             // Trigger event to get the correct wofkflow filter options
-            $subject = TableRegistry::get($model);
+            $subject = TableRegistry::getTableLocator()->get($model);
             $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
             if ($newEvent->isStopped()) { return $newEvent->getResult(); }
             if (!empty($newEvent->getResult())) {
@@ -539,7 +539,7 @@ class WorkflowsTable extends AppTable {
             // End
 
             // Logic to remove filter from the list if already in used
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
 
             $filterQuery = $this->WorkflowsFilters
                 ->find('list', ['keyField' => 'filter_id', 'valueField' => 'filter_id'])
@@ -873,7 +873,7 @@ class WorkflowsTable extends AppTable {
                 }
             }
 
-            $subject = TableRegistry::get($model);
+            $subject = TableRegistry::getTableLocator()->get($model);
 
             if ($entity->has($statusKey) && $entity->has('filters')) {
                 // When edit: If filterIds is clear, fall back to the first step of Default Workflows (Apply To All)
@@ -893,7 +893,7 @@ class WorkflowsTable extends AppTable {
                         ->toArray();
                     }
 
-                    $Workflows = TableRegistry::get('Workflow.Workflows');
+                    $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
                     $defaultWorkflowId = $this->WorkflowsFilters
                         ->find('list', ['keyField' => 'workflow_id', 'valueField' => 'workflow_id'])
                         ->matching('Workflows', function ($q) use ($Workflows, $selectedModel) {

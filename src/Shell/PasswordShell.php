@@ -12,7 +12,7 @@ class PasswordShell extends Shell {
 	}
 
 	public function main() {
-		$Users = TableRegistry::get($this->args[0]);
+		$Users = TableRegistry::getTableLocator()->get($this->args[0]);
 		$passwordHasher = new DefaultPasswordHasher();
 		$primaryKey = $Users->primaryKey();
 		$today = Time::now();

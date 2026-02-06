@@ -2,14 +2,14 @@
 namespace Institution\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 
 class InstitutionAccessControlComponent extends Component {
 
 	public function initialize(array $config): void {
-		$this->Institutions = TableRegistry::get('Institution.Institutions');
+		$this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$this->controller = $this->_registry->getController();
 	}
 
@@ -35,7 +35,7 @@ class InstitutionAccessControlComponent extends Component {
 		}
 	}
 
-	public function onNavigationUpdateRoles(Event $event) {
+	public function onNavigationUpdateRoles(EventInterface $event) {
 
 		$roles = $this->onUpdateRole();
 
@@ -49,11 +49,11 @@ class InstitutionAccessControlComponent extends Component {
 		return ['roles' => $roles, 'restrictedTo' => $restrictedTo];
 	}
 
-	public function onSecurityUpdateRoles(Event $event) {
+	public function onSecurityUpdateRoles(EventInterface $event) {
 		return $this->onUpdateRole();
 	}
 
-	public function onInitializeButtonUpdateRoles(Event $event) {
+	public function onInitializeButtonUpdateRoles(EventInterface $event) {
 		return $this->onUpdateRole();
 	}
 }

@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest; //POCOR-8886
@@ -24,15 +24,15 @@ class ImportStudentAttendancesTable extends AppTable {
             'backUrl' => ['plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StudentAttendances']]); //POCOR-8886
-        $this->StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-        $this->Institutions = TableRegistry::get('Institution.Institutions');
-        $this->Students = TableRegistry::get('Institution.Students');
-        $this->Users = TableRegistry::get('User.Users');
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $this->StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-        $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $this->StudentAbsences = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsences');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $this->Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $this->Users = TableRegistry::getTableLocator()->get('User.Users');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $this->InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $this->StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
+        $this->InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
     }
 
     public function beforeAction($event) {
@@ -41,7 +41,7 @@ class ImportStudentAttendancesTable extends AppTable {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }*/
          $this->institutionId = $this->ControllerAction->getQueryString('institution_id'); //POCOR-8886
-        $this->systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
+        $this->systemDateFormat = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
     }
 
     public function implementedEvents(): array {
@@ -63,7 +63,7 @@ class ImportStudentAttendancesTable extends AppTable {
         return $events;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $request = $this->request;
         if (empty($request->getQuery('class'))) {
@@ -72,7 +72,7 @@ class ImportStudentAttendancesTable extends AppTable {
         }
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $request = $this->request->withQueryParams(
             array_diff_key($this->request->getQuery(), ['class' => ''])
@@ -80,7 +80,7 @@ class ImportStudentAttendancesTable extends AppTable {
 
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->dependency = [];
         $this->dependency["class"] = ["select_file"];
@@ -113,22 +113,22 @@ class ImportStudentAttendancesTable extends AppTable {
         }
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona): void {
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona): void {
         $crumbTitle = $this->getHeader($this->getAlias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+    public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
 
             $tempRow['entity'] = $this->StudentAbsencesPeriodDetails->newEntity([]);
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
+    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
     /**
      * Currently only populates students based on current academic period
      */
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $currentPeriodId = $this->AcademicPeriods->getCurrent();
         if (!$currentPeriodId) {
@@ -198,8 +198,8 @@ class ImportStudentAttendancesTable extends AppTable {
         }
     }
 
-    // public function onImportPopulateUsersDataBasedOnAllAcademicPeriods(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
-    //  $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    // public function onImportPopulateUsersDataBasedOnAllAcademicPeriods(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $sheetName, $translatedCol, ArrayObject $data) {
+    //  $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
     //  $editablePeriods = $this->AcademicPeriods->getAvailableAcademicPeriods();
     //  $allStudents = $this->Students
     //                      ->find('all')
@@ -239,12 +239,12 @@ class ImportStudentAttendancesTable extends AppTable {
     //  }
     // }
 
-    public function onImportGetInstitutionSubjectsId(Event $event, $cellValue)
+    public function onImportGetInstitutionSubjectsId(EventInterface $event, $cellValue)
     {
         return $cellValue;
     }
 
-    public function onImportPopulateInstitutionSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateInstitutionSubjectsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         $request = $this->request;
         $selectedClass = $request->getQuery('class');
         $classId = !empty($this->request->getQuery('class')) ? $this->request->getQuery('class') : '';
@@ -275,8 +275,8 @@ class ImportStudentAttendancesTable extends AppTable {
 
     }
 
-    public function onImportPopulateStudentAttendanceTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    public function onImportPopulateStudentAttendanceTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
 
         $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
@@ -297,8 +297,8 @@ class ImportStudentAttendancesTable extends AppTable {
         }
     }
 
-    public function onImportPopulateAbsenceTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+    public function onImportPopulateAbsenceTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->find('all')->select(['id', 'name', $lookupColumn]);
 
         $nameHeader = $this->getExcelLabel($lookedUpTable, 'name');
@@ -319,7 +319,7 @@ class ImportStudentAttendancesTable extends AppTable {
         }
     }
 
-    public function onImportPopulatePeriodData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulatePeriodData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
 
         $classId = !empty($this->request->getQuery('class')) ? $this->request->getQuery('class') : '';
 
@@ -329,7 +329,7 @@ class ImportStudentAttendancesTable extends AppTable {
         $academicPeriodId = $this->AcademicPeriods->getCurrent();
 
         //Get the attendance per day that class needs to mark
-        $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
         $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($classId,$academicPeriodId);
 
         $nameHeader = $this->getExcelLabel($StudentAttendanceMarkTypes, 'Number of Periods');
@@ -358,7 +358,7 @@ class ImportStudentAttendancesTable extends AppTable {
     }
 
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
         $institutionId = $this->ControllerAction->getQueryString('institution_id');
         $this->institutionId = $institutionId;
         if (empty($tempRow['student_id'])) {
@@ -427,7 +427,7 @@ class ImportStudentAttendancesTable extends AppTable {
             return false;
         } else {
             //check if period within options
-            $StudentAttendanceMarkTypes = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+            $StudentAttendanceMarkTypes = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
             $attendancePerDay = $StudentAttendanceMarkTypes->getAttendancePerDayByClass($classId,$currentPeriodId);
 //dd($attendancePerDay);
             if ($tempRow['period'] > $attendancePerDay || $tempRow['period'] < 1) {
@@ -445,7 +445,7 @@ class ImportStudentAttendancesTable extends AppTable {
             $tempRow['subject_id'] = 0;
         }
 
-         $GradeId = TableRegistry::get('Institution.InstitutionClassGrades');
+         $GradeId = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
          $educationGradeId = $GradeId->find()->where([
             'institution_class_id IS' => $tempRow['institution_class_id']
         ])->first();
@@ -455,7 +455,7 @@ class ImportStudentAttendancesTable extends AppTable {
         $tempRow['record_source'] = 'import_student_attendances';
          $tempRow['education_grade_id'] = $educationGradeId['education_grade_id'];
 
-         $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+         $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
         $markRecord = $StudentAttendanceMarkedRecords->newEntity([
             'institution_id'       => $tempRow['institution_id'],
             'academic_period_id'   => $tempRow['academic_period_id'],
@@ -473,19 +473,19 @@ class ImportStudentAttendancesTable extends AppTable {
         return true;
     }
 
-    public function onImportGetPeriodId(Event $event, $cellValue)
+    public function onImportGetPeriodId(EventInterface $event, $cellValue)
     {
         return $cellValue;
     }
 
-    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
+    public function onImportSetModelPassedRecord(EventInterface $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {
         $flipped = array_flip($columns);
         $original = $originalRow->getArrayCopy();
         $key = $flipped['student_id'];
         $tempPassedRecord['data'][$key] = $original[$key];
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldClass(EventInterface $event, array $attr, $action, ServerRequest $request) {
         if ($action == 'add') {
             $classId  = $this->request->getData()[$this->getAlias()]['class'];
             $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
@@ -536,7 +536,7 @@ class ImportStudentAttendancesTable extends AppTable {
 
         return $attr;
     }
-    public function addEditOnChangeClassName(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeClassName(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->getAlias();
         $classId = $data[$alias]['class_name'];

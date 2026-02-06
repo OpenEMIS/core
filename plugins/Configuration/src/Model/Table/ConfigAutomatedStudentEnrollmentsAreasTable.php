@@ -2,7 +2,7 @@
 namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;

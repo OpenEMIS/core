@@ -53,7 +53,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
-        $this->loadModel('Institution.StaffLeave');
+        $this->StaffLeave = $this->fetchTable('Institution.StaffLeave');
         $approvedStatusIds = $this->getApprovedStepIds();
 //        $this->logMsg("Approved Statis: " . print_r($approvedStatusIds, true));
 //        $this->logMsg(print_r($approvedStatusIds,true));

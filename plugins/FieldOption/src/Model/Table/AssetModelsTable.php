@@ -2,7 +2,7 @@
 namespace FieldOption\Model\Table;
 
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
@@ -28,7 +28,7 @@ class AssetModelsTable extends ControllerActionTable
         ]);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) 
+    public function afterAction(EventInterface $event, ArrayObject $extra) 
     {
         $this->field('asset_make_id', [
             'type' => 'select', 
@@ -38,7 +38,7 @@ class AssetModelsTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldAssetMakeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssetMakeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $assetMakes = $this->AssetMakes
             ->find('list')
@@ -49,28 +49,28 @@ class AssetModelsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //update information on security user table
 //        $listeners = [
-//            TableRegistry::get('User.Users')
+//            TableRegistry::getTableLocator()->get('User.Users')
 //        ];
 //        $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

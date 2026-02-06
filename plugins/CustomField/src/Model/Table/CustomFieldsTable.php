@@ -5,7 +5,7 @@ namespace CustomField\Model\Table;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
 use App\Model\Traits\OptionsTrait;
@@ -57,29 +57,29 @@ class CustomFieldsTable extends ControllerActionTable
         $this->fieldTypeOptions = $this->CustomFieldTypes->getFieldTypeList($this->fieldTypeFormat, $this->fieldTypes);
     }
 
-    public function onGetIsMandatory(Event $event, Entity $entity)
+    public function onGetIsMandatory(EventInterface $event, Entity $entity)
     {
         $isMandatory = $this->CustomFieldTypes->findByCode($entity->field_type)->first()->is_mandatory;
         return $isMandatory == 1 ? ($entity->is_mandatory == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>') : '<i class="fa fa-minus"></i>';
     }
 
-    public function onGetIsUnique(Event $event, Entity $entity)
+    public function onGetIsUnique(EventInterface $event, Entity $entity)
     {
         $isUnique = $this->CustomFieldTypes->findByCode($entity->field_type)->first()->is_unique;
         return $isUnique == 1 ? ($entity->is_unique == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>') : '<i class="fa fa-minus"></i>';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('params', ['visible' => false]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         // always reset
         $queryParams = $this->request->getQueryParams();
@@ -88,7 +88,7 @@ class CustomFieldsTable extends ControllerActionTable
 
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         $this->request = $this->request->withQueryParams(['field_type' => $entity->field_type]);
         return null;
@@ -97,14 +97,14 @@ class CustomFieldsTable extends ControllerActionTable
 
     /**
      * Function to delete related options from option lists
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @param ArrayObject $requestData
      * @param ArrayObject $options
-
+     *
      */
-    //public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options, ArrayObject $extra)
+    //public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options, ArrayObject $extra)
     {
 
         $paramsPass = $this->request->getAttribute('params')['pass'][1];
@@ -224,12 +224,12 @@ class CustomFieldsTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldFieldType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFieldType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
         } elseif ($action == 'add') {
@@ -250,8 +250,8 @@ class CustomFieldsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldIsMandatory(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldIsMandatory(Event $event, array $attr, $action)
+    // public function onUpdateFieldIsMandatory(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsMandatory(EventInterface $event, array $attr, $action)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
@@ -273,8 +273,8 @@ class CustomFieldsTable extends ControllerActionTable
         return $attr;
     }
 
-    // public function onUpdateFieldIsUnique(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldIsUnique(Event $event, array $attr, $action)
+    // public function onUpdateFieldIsUnique(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldIsUnique(EventInterface $event, array $attr, $action)
     {
         if ($action == 'view') {
         } elseif ($action == 'add' || $action == 'edit') {
@@ -296,7 +296,7 @@ class CustomFieldsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         $queryParams = $request->getQueryParams();
@@ -393,13 +393,13 @@ class CustomFieldsTable extends ControllerActionTable
         return array($options_table_name, $options_custom_field_id);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

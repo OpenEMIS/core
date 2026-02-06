@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Date;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
@@ -177,7 +177,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Start:POCOR-6693
         $this->field('area', ['attr' => ['label' => __('Size')]]);
@@ -207,7 +207,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $data['name'] = $data['code'];
         //POCOR-7769
@@ -221,7 +221,7 @@ class InstitutionLandsTable extends ControllerActionTable
         //POCOR-7769
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->has('change_type')) {
             $editType = $entity->change_type;
@@ -235,7 +235,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // logic to copy custom fields (general only) where new land is created when change in land type
         if ($entity->isNew()) {
@@ -256,7 +256,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function onGetCode(Event $event, Entity $entity)
+    public function onGetCode(EventInterface $event, Entity $entity)
     {
         //$institutionId = $this->request->getParam('institutionId');
         $institutionId = $this->getInstitutionID();
@@ -282,17 +282,17 @@ class InstitutionLandsTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($entity->code, $url);
     }
 
-    public function onGetInfrastructureLevel(Event $event, Entity $entity)
+    public function onGetInfrastructureLevel(EventInterface $event, Entity $entity)
     {
         return $this->levelOptions[$this->landLevel];
     }
 
-    public function onGetAccessibility(Event $event, Entity $entity)
+    public function onGetAccessibility(EventInterface $event, Entity $entity)
     {
         return $this->accessibilityOptions[$entity->accessibility];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Owner');
@@ -327,7 +327,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -346,7 +346,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->landLevel = $this->Levels->getFieldByCode('LAND', 'id');
         $this->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'land_type_id', 'land_status_id']);
@@ -388,7 +388,7 @@ class InstitutionLandsTable extends ControllerActionTable
         /*POCOR-6264 ends*/
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // get the list of owner institution id
         $ownerInstitutionIds = $this->getOwnerInstitutionId();
@@ -435,7 +435,7 @@ class InstitutionLandsTable extends ControllerActionTable
         ];
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 
@@ -447,14 +447,14 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             // POCOR-8037 removed academic period code
             'LandTypes', 'InfrastructureConditions']);
     }
 
-    public function editBeforeAction(Event $event, ArrayObject $extra)
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 
@@ -466,7 +466,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
@@ -507,7 +507,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
@@ -551,26 +551,26 @@ class InstitutionLandsTable extends ControllerActionTable
         // POCOR-8037 removed academic period code
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //$selectedEditType = $this->request->getQuery()['edit_type'];
         $selectedEditType = $this->request->getAttribute('params')['?']['edit_type'];
@@ -583,7 +583,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldChangeType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldChangeType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
@@ -607,7 +607,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldLandStatusId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldLandStatusId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
@@ -620,7 +620,7 @@ class InstitutionLandsTable extends ControllerActionTable
     }
 
     // POCOR-8037 removed academic period code
-    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCode(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $parentId = $request->getQuery()['parent'];
@@ -635,7 +635,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->getQuery()['edit_type'];
@@ -647,7 +647,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldLandTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldLandTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $landTypeOptions = $this->LandTypes
@@ -680,7 +680,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $today = new DateTime();
         // POCOR-8037 removed academic period code
@@ -690,7 +690,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         // POCOR-8037 removed academic period code start
         if ($action == 'view') {
@@ -721,7 +721,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAccessibility(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAccessibility(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit' || $action == 'add') {
             $attr['options'] = $this->accessibilityOptions;
@@ -730,7 +730,7 @@ class InstitutionLandsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInfrastructureConditionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             //$selectedEditType = $request->getQuery()['edit_type'];
@@ -743,7 +743,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInfrastructureOwnershipId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             //$selectedEditType = $request->getQuery()['edit_type'];
@@ -756,7 +756,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldYearAcquired(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldYearAcquired(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->getYearOptionsByConfig();
@@ -774,7 +774,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldYearDisposed(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldYearDisposed(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->getYearOptionsByConfig();
@@ -792,7 +792,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldArea(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldArea(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             //$selectedEditType = $request->getQuery()['edit_type'];
@@ -805,7 +805,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewLandType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewLandType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -830,7 +830,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNewStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNewStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -865,7 +865,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'index' || $action == 'view') {
             if (!empty($this->getOwnerInstitutionId())) {
@@ -876,7 +876,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeLandType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeLandType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->getQuery['type']);
@@ -1168,7 +1168,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     // POCOR-8037 removed academic period code
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $infrastructureLevels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $infrastructureLevelsData = $infrastructureLevels
@@ -1197,7 +1197,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     }
 
-    public function onExcelGetAccessibility(Event $event, Entity $entity)
+    public function onExcelGetAccessibility(EventInterface $event, Entity $entity)
     {
 
         $accessibility = '';
@@ -1209,7 +1209,7 @@ class InstitutionLandsTable extends ControllerActionTable
         return $accessibility;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $infrastructureLevel  = $requestData->infrastructure_level;
@@ -1399,7 +1399,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
          if (is_null($this->request->getQuery('period_id'))) {
             //$this->request->getQuery['period_id'] = $this->AcademicPeriods->getCurrent();

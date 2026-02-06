@@ -16,13 +16,13 @@ class UpdateIndexesShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Institution.InstitutionStudentRisks');
-        $this->loadModel('Institution.InstitutionRisks');
-        $this->loadModel('Institution.StudentRisksCriterias');
-        $this->loadModel('Risk.RiskCriterias');
-        $this->loadModel('Risk.Risks');
-        $this->loadModel('Institution.Students');
-        $this->loadModel('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionStudentRisks = $this->fetchTable('Institution.InstitutionStudentRisks');
+        $this->InstitutionRisks = $this->fetchTable('Institution.InstitutionRisks');
+        $this->StudentRisksCriterias = $this->fetchTable('Institution.StudentRisksCriterias');
+        $this->RiskCriterias = $this->fetchTable('Risk.RiskCriterias');
+        $this->Risks = $this->fetchTable('Risk.Risks');
+        $this->Students = $this->fetchTable('Institution.Students');
+        $this->AcademicPeriods = $this->fetchTable('AcademicPeriod.AcademicPeriods');
     }
 
     public function main()
@@ -60,7 +60,7 @@ class UpdateIndexesShell extends Shell
     public function autoUpdateRisks($key, $model, $institutionId, $userId, $academicPeriodId)
     {
         $today = FrozenTime::now();
-        $CriteriaModel = TableRegistry::get($model);
+        $CriteriaModel = TableRegistry::getTableLocator()->get($model);
 
         // get the list of enrolled student in the institution in academic period
         $institutionStudentsResults = $this->Students->find()

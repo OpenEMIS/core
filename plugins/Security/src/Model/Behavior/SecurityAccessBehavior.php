@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 class SecurityAccessBehavior extends Behavior
@@ -17,7 +17,7 @@ class SecurityAccessBehavior extends Behavior
         return $events;
     }
 
-    public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
     {
         // $options['user'] = ['id' => 4, 'super_admin' => 0]; // for testing purposes
         // This logic will only be triggered when the table is accessed by RestfulController
@@ -37,7 +37,7 @@ class SecurityAccessBehavior extends Behavior
     {
         if (isset($options['userId'])) {
             $userId = $options['userId'];
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
             $institutionQuery = $Institutions->find()
                 ->select([

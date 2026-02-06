@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -29,24 +29,24 @@ class InstitutionAssociationsTable extends AppTable
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
         $attr['select'] = true;
         return $attr;
     }
     
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
 
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionAssociationStaff = TableRegistry::get('Institution.InstitutionAssociationStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionAssociationStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionAssociationStaff');
         $requestData = json_decode($settings['process']['params']);
         $institution_id = $requestData->institution_id;
         $periodId = $requestData->academic_period_id;
@@ -100,7 +100,7 @@ class InstitutionAssociationsTable extends AppTable
                 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         //redeclare all for sorting purpose.
         $newFields[] = [

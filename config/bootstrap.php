@@ -21,6 +21,33 @@ declare(strict_types=1);
 require __DIR__ . DIRECTORY_SEPARATOR . 'paths.php';
 
 /*
+ * Compatibility function for CakePHP 5
+ * The env() helper function was removed in CakePHP 5, so we provide a compatibility wrapper
+ */
+if (!function_exists('env')) {
+    /**
+     * Gets an environment variable from available sources.
+     *
+     * @param string $key Environment variable name.
+     * @param mixed $default Default value to return if the environment variable is not set.
+     * @return mixed Environment variable value or default value.
+     */
+    function env($key, $default = null)
+    {
+        if ($key === false) {
+            return $default;
+        }
+
+        $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+        if ($value === false) {
+            return $default;
+        }
+
+        return $value;
+    }
+}
+
+/*
  * Bootstrap CakePHP.
  *
  * Does the various bits of setup that CakePHP needs to do.
@@ -30,6 +57,23 @@ require __DIR__ . DIRECTORY_SEPARATOR . 'paths.php';
  * - Setting the default application paths.
  */
 require CORE_PATH . 'config' . DS . 'bootstrap.php';
+
+/*
+ * Load global functions including i18n functions (__(), __d(), etc.)
+ * These are needed in template files which don't have namespaces.
+ * In CakePHP 5, functions.php defines them in the Cake\I18n namespace,
+ * but we need global versions. The functions.php file checks if they exist
+ * before defining them, so we can require it directly.
+ */
+if (defined('CAKE') && file_exists(CAKE . 'I18n' . DS . 'functions.php')) {
+    require CAKE . 'I18n' . DS . 'functions.php';
+}
+
+/*
+ * Compatibility extension for CakePHP 5
+ * TableRegistry exists in CakePHP 5 but is missing the get() method
+ */
+require __DIR__ . DS . 'table_registry_compat.php';
 
 use Cake\Cache\Cache;
 use Cake\Core\Configure;

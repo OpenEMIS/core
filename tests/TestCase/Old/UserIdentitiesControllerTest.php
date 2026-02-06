@@ -52,7 +52,7 @@ class UserIdentitiesControllerTest extends AppTestCase
         $this->urlPrefix('/Students/Identities/');
 
         $this->setStudentSession($this->studentId);
-        $this->table = TableRegistry::get('User.Identities');
+        $this->table = TableRegistry::getTableLocator()->get('User.Identities');
     }
 
     public function testIndexIdentities()
@@ -156,7 +156,7 @@ class UserIdentitiesControllerTest extends AppTestCase
     public function testDeleteIdentities() {
         $testUrl = $this->url('remove'); // Delete records with confirmation modal (delete modal)
 
-        $table = TableRegistry::get('User.Identities');
+        $table = TableRegistry::getTableLocator()->get('User.Identities');
 
         $exists = $table->exists([$table->primaryKey() => $this->id]);
         $this->assertTrue($exists);

@@ -9,7 +9,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
@@ -46,7 +46,7 @@ class ConfigItemsTable extends AppTable
         }
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('visible', ['visible' => false]);
         $this->ControllerAction->field('editable', ['visible' => false]);
@@ -107,7 +107,7 @@ class ConfigItemsTable extends AppTable
         return $events;
     }
 
-    public function onAfterFormatResult(Event $event, $data, ArrayObject $schema, ArrayObject $extra)
+    public function onAfterFormatResult(EventInterface $event, $data, ArrayObject $schema, ArrayObject $extra)
     {
         $action = $extra['action'];
 
@@ -132,7 +132,7 @@ class ConfigItemsTable extends AppTable
      **
      ******************************************************************************************************************/
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $type = $this->request->getQuery('type_value');
         // $type = $request->getQuery('type_value');
@@ -148,7 +148,7 @@ class ConfigItemsTable extends AppTable
      ** edit action methods
      **
      ******************************************************************************************************************/
-    public function editBeforeAction(Event $event)
+    public function editBeforeAction(EventInterface $event)
     {
         $this->fields['type']['type'] = 'readonly';
         $this->fields['label']['type'] = 'readonly';
@@ -164,7 +164,7 @@ class ConfigItemsTable extends AppTable
                 $this->fields['value']['attr']['label'] = 'Identity Number';
                 $this->fields['value']['attr']['required'] = false;
 
-                $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
+                $identity_types = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
                 $option_types = $identity_types->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'name'
@@ -196,7 +196,7 @@ class ConfigItemsTable extends AppTable
         return $validator;
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (is_array($data[$this->getAlias()]['value'])) {
             if ($entity->code == 'openemis_id_prefix') {
@@ -261,7 +261,7 @@ class ConfigItemsTable extends AppTable
      **
      ******************************************************************************************************************/
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
         if ($entity->code == 'language') {
             if ($entity->value != 'en') {
@@ -312,7 +312,7 @@ class ConfigItemsTable extends AppTable
         $session->delete('System.language_menu');
     }
 
-    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValue(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (in_array($action, ['edit', 'add'])) {
             //$pass = $this->request->getParam('pass');
@@ -337,7 +337,7 @@ class ConfigItemsTable extends AppTable
                     if (count($exp) > 0 && $exp[0] == 'database') {
                         $model = Inflector::pluralize($exp[1]);
                         $model = $this->getActualModeLocation($model);
-                        $optionTable = TableRegistry::get($model);
+                        $optionTable = TableRegistry::getTableLocator()->get($model);
 
                         $listeners = [
                             $optionTable
@@ -356,7 +356,7 @@ class ConfigItemsTable extends AppTable
                          * if options list is from ConfigItemOptions table
                          */
                     } else {
-                        $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+                        $optionTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
                         $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                             ->where([
                                 'ConfigItemOptions.option_type' => $entity->option_type,
@@ -432,7 +432,7 @@ class ConfigItemsTable extends AppTable
         return $attr;
     }
 
-    public function onGetValue(Event $event, Entity $entity)
+    public function onGetValue(EventInterface $event, Entity $entity)
     {
         if ($entity->type == 'Custom Validation') {
             $attr['type'] = 'string';
@@ -451,11 +451,11 @@ class ConfigItemsTable extends AppTable
     }
 
     //POCOR-6248 starts
-    public function onGetValueSelection(Event $event, Entity $entity)
+    public function onGetValueSelection(EventInterface $event, Entity $entity)
     {
         $this->ControllerAction->field('value_selection', ['visible' => ['view' => true], 'after' => 'value']);
 
-        $identity_types = TableRegistry::get('FieldOption.IdentityTypes');
+        $identity_types = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $option_types = $identity_types
             ->find()
             ->where(['id' => $entity->value_selection])
@@ -467,18 +467,18 @@ class ConfigItemsTable extends AppTable
         return $value_selection;
     }//POCOR-6248 ends
 
-    public function onGetDefaultValue(Event $event, Entity $entity)
+    public function onGetDefaultValue(EventInterface $event, Entity $entity)
     {
         return $this->recordValueForView('default_value', $entity);
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
     {
         $includes['configItems'] = ['include' => true, 'js' => ['config']];
     }
 
     //POCOR-7059
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         if ($entity->name == 'Latitude Length') {
             $tooltipMessage = "Length validation is applied after decimal place.";
@@ -521,7 +521,7 @@ class ConfigItemsTable extends AppTable
             if (count($exp) > 0 && $exp[0] == 'database') {
                 $model = Inflector::pluralize($exp[1]);
                 $model = $this->getActualModeLocation($model);
-                $optionsModel = TableRegistry::get($model);
+                $optionsModel = TableRegistry::getTableLocator()->get($model);
 
                 if ($entity->code == 'institution_area_level_id'
                     || $entity->code == 'institution_validate_area_level_id') {
@@ -594,7 +594,7 @@ class ConfigItemsTable extends AppTable
                     return __('Enabled');
                 }
             } else {
-                $optionsModel = TableRegistry::get('Configuration.ConfigItemOptions');
+                $optionsModel = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
                 $value = $optionsModel->find()
                     ->where([
                         'ConfigItemOptions.option_type' => $entity->option_type,
@@ -676,7 +676,7 @@ class ConfigItemsTable extends AppTable
         return $model;
     }
 
-    public function areaLevelAfterDelete(Event $event, $areaLevel)
+    public function areaLevelAfterDelete(EventInterface $event, $areaLevel)
     {
         $entity = $this->findByCode('institution_area_level_id')->first();
         $configValue = strlen($entity->value) ? $entity->value : $entity->default_value;
@@ -708,7 +708,7 @@ class ConfigItemsTable extends AppTable
 
     public function getAutoGeneratedPassword()
     {
-        $UsersTable = TableRegistry::get('User.Users');
+        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
         $ConfigItems = $this;
         $passwordLength = intval($ConfigItems->value('password_min_length')) > 3 ? intval($ConfigItems->value('password_min_length')) : 4;
 
@@ -1031,7 +1031,7 @@ class ConfigItemsTable extends AppTable
     //POCOR-7716 start
     public function getAdmissionOptions()
     {
-        $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $query = $workflowStepsTable->find()->contain('Workflows')
             ->where([
                 $workflowStepsTable->aliasField('category IN') => [1, 2],
@@ -1053,12 +1053,12 @@ class ConfigItemsTable extends AppTable
         /**
      * Handles updating the action buttons for a specific entity.
      *
-     * @param Event $event The event triggered during the action.
+     * @param EventInterface $event The event triggered during the action.
      * @param Entity $entity The entity associated with the action.
      * @param array $buttons The existing action buttons that will be modified.
      * @return array Modified action buttons.
      */
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
       

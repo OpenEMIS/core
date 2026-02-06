@@ -75,8 +75,8 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Assessment.AssessmentGradingTypes');
-        $hasManyTable = TableRegistry::get('Assessment.AssessmentGradingOptions');
+        $table = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingTypes');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingOptions');
         $data = [
             'AssessmentGradingTypes' => [
                 'code' => 'GradingType04',
@@ -140,8 +140,8 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
         $testUrl = $this->url('edit/'.$this->id);
 
         // TODO: DO A GET FIRST
-        $table = TableRegistry::get('Assessment.AssessmentGradingTypes');
-        $hasManyTable = TableRegistry::get('Assessment.AssessmentGradingOptions');
+        $table = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingTypes');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingOptions');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
@@ -204,8 +204,8 @@ class AssessmentGradingTypesControllerTest extends AppTestCase
     {
         $testUrl = $this->url('remove');
 
-        $table = TableRegistry::get('Assessment.AssessmentGradingTypes');
-        $hasManyTable = TableRegistry::get('Assessment.AssessmentGradingOptions');
+        $table = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingTypes');
+        $hasManyTable = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingOptions');
 
         $exists = $table->exists([$table->primaryKey() => $this->id]);
         $this->assertTrue($exists);

@@ -26,7 +26,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         parent::setUp();
         $this->urlPrefix('/FieldOptions/Sectors/');
 
-        $this->table = TableRegistry::get('Institution.Sectors');
+        $this->table = TableRegistry::getTableLocator()->get('Institution.Sectors');
     }
 
     public function testIndex()
@@ -178,7 +178,7 @@ class InstitutionSectorsControllerTest extends AppTestCase
         $deleteId = 4;
         $testUrl = $this->url('remove/'.$deleteId);
 
-        $table = TableRegistry::get('Institution.Sectors');
+        $table = TableRegistry::getTableLocator()->get('Institution.Sectors');
 
         $exists = $table->exists([$table->primaryKey() => $deleteId]);
         $this->assertTrue($exists);

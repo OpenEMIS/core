@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use Cake\ORM\Query;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -65,7 +65,7 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
         return parent::findOptionList($query, $options);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('comment',['visible' => false]);
 
@@ -109,14 +109,14 @@ class InstitutionTransportProvidersTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         //$institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionId = $this->getInstitutionID();
         $query->where(['InstitutionTransportProviders.institution_id' =>  $institutionId]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'name':

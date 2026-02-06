@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
@@ -20,7 +20,7 @@ class RenderDateBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+	public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options) {
 		$dataArray = $data->getArrayCopy();
 		if (isset($dataArray['custom_field_values'])) {
 			foreach ($dataArray['custom_field_values'] as $key => $value) {
@@ -36,7 +36,7 @@ class RenderDateBehavior extends RenderBehavior {
 		}
 	}
 
-	public function onGetCustomDateElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomDateElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
 		$_options = [
 			'format' => 'dd-mm-yyyy',
@@ -116,11 +116,11 @@ class RenderDateBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action) {
     	$includes['datepicker']['include'] = true;
     }
 
-    public function processDateValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processDateValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $settings['valueKey'] = 'date_value';
         $this->processValues($entity, $data, $settings);
     }

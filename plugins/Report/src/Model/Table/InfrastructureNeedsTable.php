@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -31,13 +31,13 @@ class InfrastructureNeedsTable extends AppTable  {
         $this->addBehavior('Report.InstitutionSecurity');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $requestData = json_decode($settings['process']['params']);
         
@@ -52,12 +52,12 @@ class InfrastructureNeedsTable extends AppTable  {
             $conditions['Institutions.area_id'] = $areaId;
         }
         
-        $infrastructureNeeds = TableRegistry::get('Institutions.InfrastructureNeeds');
-        $infrastructureNeedTypes = TableRegistry::get('Institution.InfrastructureNeedTypes');
-        $institutionStatus = TableRegistry::get('Institution.InstitutionStatuses');
-        $institutions = TableRegistry::get('Institution.Institutions');
-        $areas = TableRegistry::get('Area.Areas');
-        $areaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+        $infrastructureNeeds = TableRegistry::getTableLocator()->get('Institutions.InfrastructureNeeds');
+        $infrastructureNeedTypes = TableRegistry::getTableLocator()->get('Institution.InfrastructureNeedTypes');
+        $institutionStatus = TableRegistry::getTableLocator()->get('Institution.InstitutionStatuses');
+        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $areaAdministratives = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
         $query
                 ->select([
                 'area_name' => 'Areas.name',
@@ -98,12 +98,12 @@ class InfrastructureNeedsTable extends AppTable  {
                 ->where($conditions);   
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request) {
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
             $attr['options'] = $this->controller->getFeatureOptions('Institutions');
             return $attr;
     }
      
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $newFields = [];
@@ -216,10 +216,10 @@ class InfrastructureNeedsTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetAssociatedProject(Event $event, Entity $entity)
+    public function onExcelGetAssociatedProject(EventInterface $event, Entity $entity)
     { 
-        $InfrastructureProjectsNeeds = TableRegistry::get('Institution.InfrastructureProjectsNeeds');
-        $InfrastructureProjects = TableRegistry::get('Institution.InfrastructureProjects');
+        $InfrastructureProjectsNeeds = TableRegistry::getTableLocator()->get('Institution.InfrastructureProjectsNeeds');
+        $InfrastructureProjects = TableRegistry::getTableLocator()->get('Institution.InfrastructureProjects');
         $needId = $entity->need_id;
         $data = $InfrastructureProjectsNeeds->find()
                 ->select([$InfrastructureProjects->aliasField('name')])

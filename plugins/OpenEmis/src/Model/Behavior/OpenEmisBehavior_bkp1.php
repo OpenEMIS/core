@@ -6,7 +6,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class OpenEmisBehavior extends Behavior
 {
@@ -30,7 +30,7 @@ class OpenEmisBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
         switch ($action) {
@@ -60,7 +60,7 @@ class OpenEmisBehavior extends Behavior
         $this->initializeButtons($extra);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
         if ($model->action == 'index' || $model->action == 'view') {
@@ -197,7 +197,7 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, $resultSet, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, $resultSet, ArrayObject $extra)
     {
         if (count($resultSet) == 0) {
             // $this->_table->Alert->info(); //'general.noData'
@@ -205,14 +205,14 @@ class OpenEmisBehavior extends Behavior
         $extra['config']['form'] = ['class' => ''];
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $model = $this->_table;
         $errors = $entity->errors();
@@ -223,7 +223,7 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $model = $this->_table;
         $errors = $entity->errors();
@@ -234,14 +234,14 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
         }
     }
 
-    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function deleteAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         if ($model->request->is('delete') || $extra['forceDeleteRecord']) {
@@ -261,7 +261,7 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function transferAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $model = $this->_table;
         if ($model->request->is('delete')) {

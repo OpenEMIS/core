@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Behavior;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 class NotRegisteredStudentsBehavior extends Behavior {
@@ -35,7 +35,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $model = $this->_table;
         // sort attr is required by sortWhitelist
         $model->field('openemis_no', [
@@ -63,7 +63,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->setFieldOrder(['openemis_no', 'student_id', 'date_of_birth', 'nationality', 'identity_type', 'identity_number', 'gender_id', 'repeated', 'institution_id']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $model = $this->_table;
         $select = [
             $model->aliasField('id'),
@@ -101,8 +101,8 @@ class NotRegisteredStudentsBehavior extends Behavior {
         if ($selectedExamination == -1) {
             $where[$model->aliasField('student_id')] = '-1';
         } else {
-            $Examinations = TableRegistry::get('Examination.Examinations');
-            $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+            $Examinations = TableRegistry::getTableLocator()->get('Examination.Examinations');
+            $ExaminationCentreStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
             $examination = $Examinations->find()->where([$Examinations->aliasField('id') => $selectedExamination])->first();
 
             $where[$model->aliasField('education_grade_id')] = $examination->education_grade_id;
@@ -148,13 +148,13 @@ class NotRegisteredStudentsBehavior extends Behavior {
             ->order([$model->Institutions->aliasField('name') => 'asc']);
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'openemis_no';
         $searchableFields[] = 'student_id';
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $query
             ->contain([
                 'Users.SpecialNeeds.SpecialNeedsTypes', 
@@ -167,7 +167,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
             ->matching('Institutions');
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
         $this->setupFields($entity, $extra);
 
         if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
@@ -175,25 +175,25 @@ class NotRegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true) 
     {
         if ($this->_table->action == 'view') {
             if ($field == 'identity_number') {
                 if ($this->identityType) {
                     return __($this->identityType);
                 } else {
-                    return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+                    return __(TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
                 }
             } 
         }
     }
 
-    public function onGetRepeated(Event $event, Entity $entity)
+    public function onGetRepeated(EventInterface $event, Entity $entity)
     {
         return $this->_table->ExaminationCentreStudents->onGetRepeated($event, $entity);
     }
 
-    public function onGetNationality(Event $event, Entity $entity)
+    public function onGetNationality(EventInterface $event, Entity $entity)
     {   
         if ($this->_table->action == 'index') {
             if (!empty($entity)) {
@@ -204,7 +204,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetIdentityType(Event $event, Entity $entity)
+    public function onGetIdentityType(EventInterface $event, Entity $entity)
     {   
         if ($this->_table->action == 'index') {
             if (!empty($entity)) {
@@ -215,7 +215,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         if (!empty($entity)) {
             if ($entity->user->has('identity_number') && !empty($entity->user->identity_number)) {
@@ -224,7 +224,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity) {
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity) {
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->openemis_no;
@@ -235,7 +235,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetStudentId(Event $event, Entity $entity)
+    public function onGetStudentId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -246,7 +246,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetDateOfBirth(Event $event, Entity $entity) {
+    public function onGetDateOfBirth(EventInterface $event, Entity $entity) {
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->date_of_birth;
@@ -255,7 +255,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetGenderId(Event $event, Entity $entity) {
+    public function onGetGenderId(EventInterface $event, Entity $entity) {
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->gender->name;
@@ -264,13 +264,13 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetExaminationId(Event $event, Entity $entity) {
+    public function onGetExaminationId(EventInterface $event, Entity $entity) {
         $value = '';
         $model = $this->_table;
         $examinationId = $model->request->getQuery('examination_id');
 
         if (!is_null($examinationId)) {
-            $Examinations = TableRegistry::get('Examination.Examinations');
+            $Examinations = TableRegistry::getTableLocator()->get('Examination.Examinations');
             $examination = $Examinations->find()->where([$Examinations->aliasField('id') => $examinationId])->first();
             $value = $examination->name;
         }
@@ -278,34 +278,34 @@ class NotRegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity) {
+    public function onGetInstitutionId(EventInterface $event, Entity $entity) {
         return $entity->institution->code_name;
     }
 
-    public function onGetContactPerson(Event $event, Entity $entity) {
+    public function onGetContactPerson(EventInterface $event, Entity $entity) {
         return $entity->institution->contact_person;
     }
 
-    public function onGetTelephone(Event $event, Entity $entity) {
+    public function onGetTelephone(EventInterface $event, Entity $entity) {
         return $entity->institution->telephone;
     }
 
-   /* public function onGetFax(Event $event, Entity $entity) {
+   /* public function onGetFax(EventInterface $event, Entity $entity) {
         return $entity->institution->fax;
     }*/
 
-    public function onGetEmail(Event $event, Entity $entity) {
+    public function onGetEmail(EventInterface $event, Entity $entity) {
         return $entity->institution->email;
     }
 
-    public function onGetSpecialNeeds(Event $event, Entity $entity) {
+    public function onGetSpecialNeeds(EventInterface $event, Entity $entity) {
         $specialNeeds = $this->extractSpecialNeeds($entity);
 
         return implode(", ", $specialNeeds);
     }
 
     public function getExaminationOptions($selectedAcademicPeriod) {
-        $Examinations = TableRegistry::get('Examination.Examinations');
+        $Examinations = TableRegistry::getTableLocator()->get('Examination.Examinations');
         $examinationOptions = $Examinations
             ->find('list')
             ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])

@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -76,7 +76,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $events;
     }
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    public function getWorkflowEvents(EventInterface $event, ArrayObject $eventsObject)
     {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
@@ -85,10 +85,10 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    public function onReleaseStaff(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onReleaseStaff(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
-        $StaffTable = TableRegistry::get('Institution.Staff');
-        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+        $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
         $entity = $this->get($id);
 
         // add new institution staff record in new institution
@@ -118,7 +118,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    public function checkIfCanAddButtons(Event $event, Entity $entity)
+    public function checkIfCanAddButtons(EventInterface $event, Entity $entity)
     {
         $canAddButtons = false;
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
@@ -127,7 +127,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         $currentInstitutionId = isset($requestInstitutionId) ? $this->paramsDecode($requestInstitutionId)['id'] : $getInstitutionId;
         //$currentInstitutionId = isset($this->request->params['institutionId']) ? $this->paramsDecode($this->request->params['institutionId'])['id'] : $this->request->session()->read('Institution.Institutions.id');
 
-        $ConfigStaffReleaseTable = TableRegistry::get('Configuration.ConfigStaffReleases');
+        $ConfigStaffReleaseTable = TableRegistry::getTableLocator()->get('Configuration.ConfigStaffReleases');
         $isRestricted = $ConfigStaffReleaseTable->checkStaffReleaseRestrictedBetweenSameType($entity->previous_institution_id, $entity->new_institution_id);
 
         if (!$isRestricted) {
@@ -155,7 +155,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $canAddButtons;
     }
 
-    public function onSetCustomAssigneeParams(Event $event, Entity $entity, $params)
+    public function onSetCustomAssigneeParams(EventInterface $event, Entity $entity, $params)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
 
@@ -167,24 +167,24 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $params;
     }
 
-    public function setAutoAssignAssigneeFlag(Event $event, Entity $action)
+    public function setAutoAssignAssigneeFlag(EventInterface $event, Entity $action)
     {
         $currentInstitutionOwner = $this->getWorkflowStepsParamValue($action->workflow_step_id, 'institution_owner');
         $nextInstitutionOwner = $this->getWorkflowStepsParamValue($action->next_workflow_step_id, 'institution_owner');
         return $currentInstitutionOwner != $nextInstitutionOwner ? 1 : 0;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('all_visible', ['type' => 'hidden']);
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'staff_id';
     }
 
-    public function onGetStatusId(Event $event, Entity $entity)
+    public function onGetStatusId(EventInterface $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $getInstitutionId = $this->getQueryString('institution_id');
@@ -201,7 +201,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    public function onGetWorkflowStatus(Event $event, Entity $entity)
+    public function onGetWorkflowStatus(EventInterface $event, Entity $entity)
     {
         $institutionOwner = $this->getWorkflowStepsParamValue($entity->status_id, 'institution_owner');
         $getInstitutionId = $this->getQueryString('institution_id');
@@ -217,7 +217,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         }
     }
 
-    public function onGetPreviousFTE(Event $event, Entity $entity)
+    public function onGetPreviousFTE(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('previous_FTE')) {
@@ -227,7 +227,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetPreviousInstitutionId(Event $event, Entity $entity)
+    public function onGetPreviousInstitutionId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('previous_institution')) {
@@ -236,7 +236,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetNewFTE(Event $event, Entity $entity)
+    public function onGetNewFTE(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('new_FTE')) {
@@ -246,7 +246,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetNewInstitutionId(Event $event, Entity $entity)
+    public function onGetNewInstitutionId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('new_institution')) {
@@ -255,7 +255,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStaffId(Event $event, Entity $entity)
+    public function onGetStaffId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -264,7 +264,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetStaffTypeId(Event $event, Entity $entity)
+    public function onGetStaffTypeId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if (!empty($entity->previous_institution_staff_id)) {
@@ -274,7 +274,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetPositionsHeld(Event $event, Entity $entity)
+    public function onGetPositionsHeld(EventInterface $event, Entity $entity)
     {
         $value = $this->getPositionsHeld($entity);
         return $value;
@@ -284,7 +284,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     {
         $value = '';
         if (!empty($entity->previous_institution_staff_id)) {
-            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+            $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
 
             if ($entity->has('previous_institution')) {
                 $institutionId = $entity->previous_institution->id;
@@ -322,7 +322,7 @@ class InstitutionStaffReleasesTable extends ControllerActionTable
     }
 
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->getDirty('status_id')) {
             if (!$entity->all_visible) {

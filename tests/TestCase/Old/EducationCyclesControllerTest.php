@@ -27,7 +27,7 @@ class EducationCyclesControllerTest extends AppTestCase
     {
         parent::setUp();
         $this->urlPrefix('/Educations/Cycles/');
-        $this->table = TableRegistry::get('Education.EducationCycles');
+        $this->table = TableRegistry::getTableLocator()->get('Education.EducationCycles');
     }
 
     public function testIndex()
@@ -93,7 +93,7 @@ class EducationCyclesControllerTest extends AppTestCase
     {
         $testUrl = $this->url('view/'.$this->id);
 
-        $table = TableRegistry::get('EducationCycle.EducationCycles');
+        $table = TableRegistry::getTableLocator()->get('EducationCycle.EducationCycles');
         $this->get($testUrl);
 
         $this->assertResponseCode(200);

@@ -4,7 +4,7 @@ namespace Meal\Controller;
 use ArrayObject;
 use Exception;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -29,7 +29,7 @@ class MealsController extends AppController
         parent::initialize();
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 
 		$header = 'Meal Programmes';
         $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $this->request->getParam('action')]);

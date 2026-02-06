@@ -2,7 +2,7 @@
 namespace Examination\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use ArrayObject;
@@ -59,7 +59,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->controller->getExamsTab();
 
         $this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
@@ -94,12 +94,12 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
         if ($this->action=='edit') {
             $this->fields['visible']['visible'] = false;
         }
@@ -110,10 +110,10 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         ]);
     }
 
-    public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction (EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
-        $ExaminationGradingOptions = TableRegistry::get('Examination.ExaminationGradingOptions');
+        $ExaminationGradingOptions = TableRegistry::getTableLocator()->get('Examination.ExaminationGradingOptions');
         $gradingOptions = [];
         if (!is_null($entity->grading_options)) {
             foreach ($entity->grading_options as $key => $gradingOption) {
@@ -129,7 +129,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         $this->controller->set('gradingOptions', $gradingOptions);
     }
 
-    public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+    public function addEditOnReload(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
         $groupOptionData = $this->GradingOptions->getFormFields();
         if (!empty($entity->id)) {
             $groupOptionData['examination_grading_type_id'] = $entity->id;
@@ -144,10 +144,10 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         // get the array of the original gradeOptions
-        $ExaminationGradingOptions = TableRegistry::get('Examination.ExaminationGradingOptions');
+        $ExaminationGradingOptions = TableRegistry::getTableLocator()->get('Examination.ExaminationGradingOptions');
         $query = $ExaminationGradingOptions
             ->find()
             ->where(['examination_grading_type_id' => $entity->id])
@@ -192,7 +192,7 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         }
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra) {
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
         $this->setFieldOrder([
@@ -200,20 +200,20 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         ]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $query->contain([
             $this->GradingOptions->getAlias()
         ]);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->GradingOptions->getAlias()
         ];
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'visible') {
             return __('Visible');

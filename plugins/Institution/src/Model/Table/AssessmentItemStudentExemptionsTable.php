@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Text;
 use Cake\Core\Configure;
 use App\Model\Traits\MessagesTrait;
@@ -425,7 +425,7 @@ class AssessmentItemStudentExemptionsTable extends AppTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \Exception If the table instance cannot be retrieved.
-
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

@@ -11,7 +11,7 @@ class SurveyShell extends Shell {
 
  	public function main() {
 		$institutionIds = $this->args[0];
-		$InstitutionSurveys = TableRegistry::get('Institution.InstitutionSurveys');
+		$InstitutionSurveys = TableRegistry::getTableLocator()->get('Institution.InstitutionSurveys');
 		$InstitutionSurveys->addBehavior('Workflow.Workflow', ['model' => $InstitutionSurveys->registryAlias()]);
 
 		foreach ($institutionIds as $institutionId) {

@@ -4,7 +4,7 @@ namespace ControllerAction\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 
@@ -21,7 +21,7 @@ class SearchBehavior extends Behavior {
 		return $events;
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
 		//$model = $this->_table;
 		$model = $this->table();
 		$alias = $model->getRegistryAlias();
@@ -46,7 +46,7 @@ class SearchBehavior extends Behavior {
 		$extra['config']['search'] = $search;
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
 		$model = $this->_table;
 		$search = $extra['config']['search'];
 		//POCOR-8176 start
@@ -117,7 +117,7 @@ class SearchBehavior extends Behavior {
 	}
 
 	//called by ControllerActionHelper
-	public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+	public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields) {
 		$model = $this->_table;
 		$schema = $model->getSchema();
 		$columns = $schema->columns();

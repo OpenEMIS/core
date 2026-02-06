@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Table\AppTable;
@@ -52,7 +52,7 @@ class InstitutionOutcomeResultsTable extends AppTable
                 'rule' => function ($value, $context) {
 
             $allowSubjectList = $this->getAllowedSubjectList();
-            $outcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
+            $outcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $outcomeCriteriasList = $outcomeCriterias
                 ->find()
                 ->where([$outcomeCriterias->aliasField('id') => $value])
@@ -71,7 +71,7 @@ class InstitutionOutcomeResultsTable extends AppTable
         return $validator;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOT-7480-HINDOL
         $gradingOption = empty($entity->outcome_grading_option_id) ? -1 : $entity->outcome_grading_option_id;
@@ -114,11 +114,11 @@ class InstitutionOutcomeResultsTable extends AppTable
 
     private function getAllowedSubjectList()
     {
-        $ImportOutcomeResults = TableRegistry::get('Institution.ImportOutcomeResults');
+        $ImportOutcomeResults = TableRegistry::getTableLocator()->get('Institution.ImportOutcomeResults');
         $userId = $ImportOutcomeResults->Auth->user('id');
         $AccessControl = $ImportOutcomeResults->AccessControl;
         $classId = $ImportOutcomeResults->request->query('class');
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         return $InstitutionSubjects
             ->find('list', [
                 'keyField' => 'education_subject_id',

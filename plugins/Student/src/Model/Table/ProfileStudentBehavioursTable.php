@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
@@ -31,7 +31,7 @@ class ProfileStudentBehavioursTable extends ControllerActionTable
         ]);
 	}
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $settings) {
 		$this->field('student_id', ['visible' => false]);
 		$this->field('student_behaviour_category_id', ['type' => 'select']);
 		$this->field('description', ['visible' => false]);
@@ -41,7 +41,7 @@ class ProfileStudentBehavioursTable extends ControllerActionTable
 	}
 
 
-	public function beforeFind(Event $event, Query $query, $options)
+	public function beforeFind(EventInterface $event, Query $query, $options)
 	{
 		//$userData = $this->Session->read();
 		if ($this->controller->getName() != null && $this->controller->getName() == 'Profiles' && $this->request->getQuery('type') == 'student') {
@@ -85,7 +85,7 @@ class ProfileStudentBehavioursTable extends ControllerActionTable
 		
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if (isset($buttons['view'])) {
@@ -121,11 +121,11 @@ class ProfileStudentBehavioursTable extends ControllerActionTable
 		$this->controller->set('selectedAction', $alias);
 	}
 
-	public function indexAfterAction(Event $event, $data) {
+	public function indexAfterAction(EventInterface $event, $data) {
 		$this->setupTabElements();
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'institution_id') {
             return __('Institution');

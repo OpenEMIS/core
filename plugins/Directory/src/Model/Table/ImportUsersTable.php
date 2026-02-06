@@ -3,7 +3,7 @@
 namespace Directory\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
@@ -130,7 +130,7 @@ class ImportUsersTable extends AppTable
         return $events;
     }
 
-    public function onImportCheckUnique(Event $event,
+    public function onImportCheckUnique(EventInterface $event,
                                         $sheet,
                                         $row,
                                         $columns,
@@ -282,12 +282,12 @@ class ImportUsersTable extends AppTable
 
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
+    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity)
     {
         $importedUniqueCodes[] = $entity->openemis_no;
     }
 
-    public function onImportGetAccountTypesId(Event $event, $cellValue)
+    public function onImportGetAccountTypesId(EventInterface $event, $cellValue)
     {
         return $this->getAccountTypeId($cellValue);
     }
@@ -305,7 +305,7 @@ class ImportUsersTable extends AppTable
         }
     }
 
-    public function onImportGetAccountTypesName(Event $event, $value)
+    public function onImportGetAccountTypesName(EventInterface $event, $value)
     {
         $name = '';
         foreach ($this->accountTypes as $key => $type) {
@@ -317,7 +317,7 @@ class ImportUsersTable extends AppTable
         return $name;
     }
 
-    public function onImportPopulateAccountTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAccountTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('Imports', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -331,7 +331,7 @@ class ImportUsersTable extends AppTable
         }
     }
 
-    public function onImportPopulateContactTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateContactTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         //Join contact type and contact options for displaying the name of contact type and its contact option name at excel for user to see
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
@@ -354,7 +354,7 @@ class ImportUsersTable extends AppTable
         }
     }
 
-    public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAreaAdministrativesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
         $modelData = $lookedUpTable->find('all')
@@ -375,7 +375,7 @@ class ImportUsersTable extends AppTable
         }
     }
 
-    public function onImportPopulateGendersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateGendersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
         $modelData = $lookedUpTable->find('all')
@@ -400,7 +400,7 @@ class ImportUsersTable extends AppTable
      * POCOR-8683 refactured
      * @throws \Exception
      */
-    public function onImportModelSpecificValidation(Event $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
 
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
@@ -458,7 +458,7 @@ class ImportUsersTable extends AppTable
         return true;
     }
 
-    public function onImportPopulateNationalitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateNationalitiesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683
 
@@ -500,7 +500,7 @@ class ImportUsersTable extends AppTable
         return $accountType;
     }
 
-    public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
+    public function onImportSetModelPassedRecord(EventInterface $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow)
     {
         $flipped = array_flip($columns);
         $key = $flipped['openemis_no'];
@@ -531,7 +531,7 @@ class ImportUsersTable extends AppTable
         $tempPassedRecord['data'][$key] = $clonedEntity->guardian_openemis_no; // POCOR-8683
     }
 
-    public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData)
+    public function onImportCustomHeader(EventInterface $event, $customDataSource, ArrayObject $customHeaderData)
     {
 
         $customTable = self::getDynamicTableInstance($customDataSource); // POCOR-8683
@@ -561,7 +561,7 @@ class ImportUsersTable extends AppTable
         $customHeaderData[] = $column;
     }
 
-    public function onImportCheckIdentityConfig(Event $event, $tempRow, $cellValue)
+    public function onImportCheckIdentityConfig(EventInterface $event, $tempRow, $cellValue)
     {
         $result = true;
 
@@ -660,7 +660,7 @@ class ImportUsersTable extends AppTable
     /*
      * POCOR-8683
      */
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAcademicPeriodsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
@@ -687,7 +687,7 @@ class ImportUsersTable extends AppTable
     /*
      * POCOR-8683
      */
-    public function onImportPopulateEducationGradesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateEducationGradesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
 
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
@@ -723,7 +723,7 @@ class ImportUsersTable extends AppTable
     /*
      * POCOR-8683
      */
-    public function onImportPopulateGuardianRelationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateGuardianRelationsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel);
 
@@ -1472,7 +1472,7 @@ class ImportUsersTable extends AppTable
      */
     private function getTimeZone()
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $setTimeZone = $ConfigItems->value("time_zone");
         $timeZone = !empty($setTimeZone) ? $setTimeZone : 'UTC'; //POCOR-6732
         date_default_timezone_set($timeZone);

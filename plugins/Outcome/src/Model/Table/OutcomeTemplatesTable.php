@@ -2,7 +2,7 @@
 namespace Outcome\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -66,14 +66,14 @@ class OutcomeTemplatesTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action == 'index' || $this->action == 'add') {
             $this->controller->getOutcomeTabs();
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // academic period filter
         $serverRequest = $this->request;
@@ -107,7 +107,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // set tabs
         $queryString = ['queryString' => $this->paramsEncode(['outcome_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
@@ -118,7 +118,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         $this->controller->set('contentHeader', $header);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // set tabs
         $queryString = ['queryString' => $this->paramsEncode(['outcome_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
@@ -129,7 +129,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         $this->controller->set('contentHeader', $header);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('education_programme_id', ['entity' => $entity]);
@@ -140,7 +140,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -160,10 +160,10 @@ class OutcomeTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+		$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
 
         if ($action == 'add') {
@@ -187,7 +187,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationProgrammeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->getQuery['programme']);
@@ -201,7 +201,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             // $selectedProgramme = $request->getQuery('programme'); //POCOR-7485
@@ -230,7 +230,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');
@@ -262,7 +262,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         if (empty($entity->getErrors())) {
             // set redirect url to view page
@@ -275,7 +275,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
     }
 
     //POCOR-8253 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // Check if any associated records exist in any related tables.
         $associatedRecordsExist = 
@@ -301,14 +301,14 @@ class OutcomeTemplatesTable extends ControllerActionTable
      * It fetches the available grading types from the `OutcomeGradingTypes` table and 
      * populates the dropdown options with the `id` as the key and the `name` as the value.
      * 
-     * @param Event $event The event object that triggered this method.
+     * @param EventInterface $event The event object that triggered this method.
      * @param array $attr An array containing the attributes of the field being modified.
      * @param string $action The action being performed (e.g., add, edit).
      * @param ServerRequest $request The HTTP request object containing context for the action.
      * 
      * @return array The modified attributes array with dropdown type and options for the "outcome grading type" field.
      */
-    public function onUpdateFieldOutcomeGradingTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldOutcomeGradingTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $OutcomeGradingTypes = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingTypes');
         $OutcomeGradingTypesOptions = $OutcomeGradingTypes
