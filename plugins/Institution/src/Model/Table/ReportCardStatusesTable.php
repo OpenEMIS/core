@@ -1095,6 +1095,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 file_put_contents($filepath, $pdfBinary);
                 $filePaths[] = $path . $filename;
+                $counter++;  // POCOR-9537: Increment counter to ensure unique filenames
 
             }
             if (!empty($filePaths)) {
