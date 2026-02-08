@@ -359,7 +359,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
 
-        // DEFENSIVE CHECK: If no academic periods available (no programmes/grades exist),
+        // POCOR-9538: If no academic periods available (no programmes/grades exist),
         // redirect to Programmes add page with flash message
         if (empty($academicPeriodOptions)) {
             $this->Alert->error(__('Please create a Programme before accessing Classes.'), ['type' => 'string', 'reset' => true]);
