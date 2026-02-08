@@ -362,7 +362,7 @@ class InstitutionClassesTable extends ControllerActionTable
         // POCOR-9538: If no academic periods available (no programmes/grades exist),
         // redirect to Programmes add page with flash message
         if (empty($academicPeriodOptions)) {
-            $this->Alert->error(__('Please create a Programme before accessing Classes.'), ['type' => 'string', 'reset' => true]);
+            $this->Alert->error(__('Please add a Programme/Grade in the Institution before accessing Classes.'), ['type' => 'string', 'reset' => true]);
             $event->stopPropagation();
             $url = $this->url('index');
             $url['action'] = 'Programmes';
