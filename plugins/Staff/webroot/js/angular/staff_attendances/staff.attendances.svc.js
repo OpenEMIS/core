@@ -29,7 +29,7 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         getAcademicPeriodOptions: getAcademicPeriodOptions,
         getWeekListOptions: getWeekListOptions,
         getStaffAttendances: getStaffAttendances,
-        getColumnDefs: getColumnDefs
+        getColumnDefs: getColumnDefs,
     };
     return service;
 
@@ -454,6 +454,4 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
             console.log(e.message);
         }
     }
-
-
 };
