@@ -60,6 +60,32 @@ class InstitutionStudentsTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $educationProgrammeId = $requestData->education_programme_id;
         $statusId = $requestData->status;
+
+        //POCOR-9561 start
+        $currentAcademicPeriodId = (int)$academicPeriodId;
+        $previousAcademicPeriodId = null;
+
+        if ($currentAcademicPeriodId > 0) {
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriods');
+
+            $prevAcademicPeriod = $AcademicPeriods->find()
+                ->select(['id', 'start_year'])
+                ->where([
+                    'academic_period_level_id' => 1,
+                    'visible' => 1,
+                    'start_year <' => $AcademicPeriods->find()
+                        ->select(['start_year'])
+                        ->where(['id' => $currentAcademicPeriodId])
+                        ->limit(1)
+                ])
+                ->order(['start_year' => 'DESC'])
+                ->limit(1)
+                ->first();
+
+            $previousAcademicPeriodId = $prevAcademicPeriod ? $prevAcademicPeriod->id : null;
+        }
+        //POCOR-9561 end
+
         //POCOR-8416[START]
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
@@ -357,12 +383,12 @@ class InstitutionStudentsTable extends AppTable
                     return $row;
                 });
             })
-            ->formatResults(function (\Cake\Collection\CollectionInterface $results) {
-                return $results->map(function ($row) {
+            ->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($previousAcademicPeriodId) {
+                return $results->map(function ($row) use ($previousAcademicPeriodId) {
 
                     $InstitutionStudents = TableRegistry::getTableLocator()->get('InstitutionStudents');
 
-                    $InstitutionStudentsCurrentData = $InstitutionStudents
+                    $InstitutionStudentsQuery = $InstitutionStudents
                         ->find()
                         ->select([
                             'InstitutionStudents.id',
@@ -370,10 +396,21 @@ class InstitutionStudentsTable extends AppTable
                             'InstitutionStudents.previous_institution_student_id'
                         ])
                         ->where([
-                            $InstitutionStudents->aliasField('student_id') => $row->student_id
+                            $InstitutionStudents->aliasField('student_id') => $row->student_id,
+                        ]);
+
+                    if ($previousAcademicPeriodId !== null) {
+                        $InstitutionStudentsQuery->where([
+                            $InstitutionStudents->aliasField('academic_period_id') => $previousAcademicPeriodId
+                        ]);
+                    }
+
+                    $InstitutionStudentsCurrentData = $InstitutionStudentsQuery
+                        ->order([
+                            $InstitutionStudents->aliasField('student_status_id') => 'DESC'
                         ])
-                        ->order([$InstitutionStudents->aliasField('InstitutionStudents.student_status_id') => 'DESC'])
                         ->first();
+                        
                     if ($row->student_status->name == "Enrolled") {
                         if (($InstitutionStudentsCurrentData->student_status_id == 8)) {
                             $student_status = "Enrolled (Repeater)";
