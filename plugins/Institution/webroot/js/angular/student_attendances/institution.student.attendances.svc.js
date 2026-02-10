@@ -63,6 +63,24 @@ function InstitutionStudentAttendancesSvc(
 
     const ALL_DAY_VALUE = -1;
 
+    // POCOR-9572-GH: Умное кэширование (теперь это не монолит, а справочники)
+    var cache = {
+        absenceTypes: {},
+        absenceReasons: {},
+        academicPeriods: {},
+        weeks: {},
+        days: {},
+        classes: {},
+        grades: {},
+        subjects: {},
+        periods: {}
+    };
+
+    // Вспомогательная функция для генерации ключа кэша из аргументов
+    function getCacheKey() {
+        return Array.prototype.slice.call(arguments).join('_');
+    }
+
     var translateText = {
         original: {
             OpenEmisId: "OpenEMIS ID",
@@ -124,9 +142,9 @@ function InstitutionStudentAttendancesSvc(
 
         saveAbsences: saveAbsences,
         savePeriodMarked: savePeriodMarked,
-        editSavePeriodMarked: editSavePeriodMarked, //POCOR-6658 // POCOR-9406
+        editSavePeriodMarked: editSavePeriodMarked, //POCOR-6658 //POCOR-9406
         isMarkableSubjectAttendance: isMarkableSubjectAttendance,
-        isMarkableAttendance: isMarkableAttendance, // POCOR-8874
+        isMarkableAttendance: isMarkableAttendance, //POCOR-8874
     };
 
     return service;
@@ -169,109 +187,106 @@ function InstitutionStudentAttendancesSvc(
     }
 
     function getAbsenceTypeOptions() {
+        const key = 'all'; // Обычно список типов един для системы
+        if (cache.absenceTypes[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.absenceTypes[key]);
+        }
+
         var success = function (response, deferred) {
             var absenceType = response.data.data;
-            // console.log("absenceType");
-            // console.log(absenceType);
             if (angular.isObject(absenceType) && absenceType.length > 0) {
+                cache.absenceTypes[key] = absenceType;
                 deferred.resolve(absenceType);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the absence types"
-                );
+                deferred.reject("Error retrieving absence types");
             }
         };
 
-        return AbsenceTypes.find("absenceTypeList").ajax({
-            success: success,
-            defer: true,
-        });
+        return AbsenceTypes.find("absenceTypeList").ajax({ success: success, defer: true });
     }
 
     function getStudentAbsenceReasonOptions() {
+        const key = 'all';
+        if (cache.absenceReasons[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.absenceReasons[key]);
+        }
+
         var success = function (response, deferred) {
             var studentAbsenceReasons = response.data.data;
-            // console.log("studentAbsenceReasons");
-            // console.log(studentAbsenceReasons);
-            if (
-                angular.isObject(studentAbsenceReasons) &&
-                studentAbsenceReasons.length > 0
-            ) {
+            if (angular.isObject(studentAbsenceReasons) && studentAbsenceReasons.length > 0) {
+                cache.absenceReasons[key] = studentAbsenceReasons;
                 deferred.resolve(studentAbsenceReasons);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the student absence reasons"
-                );
+                deferred.reject("Error retrieving absence reasons");
             }
         };
 
-        return (
-            StudentAbsenceReasons.select(["id", "name"])
-                //.order(['order']) //POCOR-5815
-                .ajax({success: success, defer: true})
-        );
+        return StudentAbsenceReasons.select(["id", "name"]).ajax({ success: success, defer: true });
     }
 
     function getAcademicPeriodOptions(institutionId) {
+        const key = getCacheKey(institutionId);
+        if (cache.academicPeriods[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.academicPeriods[key]);
+        }
+
         var success = function (response, deferred) {
             var periods = response.data.data;
-            // console.log("periods");
-            // console.log(periods);
             if (angular.isObject(periods) && periods.length > 0) {
+                cache.academicPeriods[key] = periods;
                 deferred.resolve(periods);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the academic periods"
-                );
+                deferred.reject("Error retrieving academic periods");
             }
         };
 
-        return AcademicPeriods.find("periodHasClass", {
-            institution_id: institutionId,
-        }).ajax({success: success, defer: true});
+        return AcademicPeriods.find("periodHasClass", { institution_id: institutionId })
+            .ajax({ success: success, defer: true });
     }
 
     function getWeekListOptions(academicPeriodId) {
+        const key = getCacheKey(academicPeriodId);
+        if (cache.weeks[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.weeks[key]);
+        }
+
         var success = function (response, deferred) {
             var academicPeriodObj = response.data.data;
-            // console.log("academicPeriodObj");
-            // console.log(academicPeriodObj);
-            if (
-                angular.isDefined(academicPeriodObj) &&
-                academicPeriodObj.length > 0
-            ) {
-                var weeks = academicPeriodObj[0].weeks; // find only 1 academic period entity
-
+            if (angular.isDefined(academicPeriodObj) && academicPeriodObj.length > 0) {
+                var weeks = academicPeriodObj[0].weeks;
                 if (angular.isDefined(weeks) && weeks.length > 0) {
+                    cache.weeks[key] = weeks;
                     deferred.resolve(weeks);
                 } else {
-                    deferred.reject(
-                        "There was an error when retrieving the week list"
-                    );
+                    deferred.reject("Error retrieving week list");
                 }
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the week list"
-                );
+                deferred.reject("Error retrieving week list");
             }
         };
 
-        return AcademicPeriods.find("weeksForPeriod", {
-            academic_period_id: academicPeriodId,
-        }).ajax({success: success, defer: true});
+        return AcademicPeriods.find("weeksForPeriod", { academic_period_id: academicPeriodId })
+            .ajax({ success: success, defer: true });
     }
 
     function getDayListOptions(academicPeriodId, weekId, institutionId) {
+        const key = getCacheKey(academicPeriodId, weekId, institutionId);
+        if (cache.days[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.days[key]);
+        }
+
         var success = function (response, deferred) {
             var dayList = response.data.data;
-            // console.log("dayList");
-            // console.log(dayList);
             if (angular.isObject(dayList) && dayList.length > 0) {
+                cache.days[key] = dayList;
                 deferred.resolve(dayList);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the day list"
-                );
+                deferred.reject("Error retrieving day list");
             }
         };
 
@@ -280,135 +295,95 @@ function InstitutionStudentAttendancesSvc(
             week_id: weekId,
             institution_id: institutionId,
             school_closed_required: true,
-        }).ajax({success: success, defer: true});
+        }).ajax({ success: success, defer: true });
     }
 
     function getClassOptions(institutionId, academicPeriodId) {
+        const key = getCacheKey(institutionId, academicPeriodId);
+        if (cache.classes[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.classes[key]);
+        }
+
         var success = function (response, deferred) {
             var classList = response.data.data;
-            // console.log("classList");
-            // console.log(classList);
             if (angular.isObject(classList)) {
-                if (classList.length > 0) {
-                    deferred.resolve(classList);
-                } else {
-                    AlertSvc.warning(
-                        controllerScope,
-                        "You do not have any classes"
-                    );
-                    deferred.reject("You do not have any classes");
-                }
+                cache.classes[key] = classList;
+                deferred.resolve(classList);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the class list"
-                );
+                deferred.reject("Error retrieving class list");
             }
         };
 
-        return InstitutionClasses.find(
-            "classesByInstitutionAndAcademicPeriod",
-            {
-                institution_id: institutionId,
-                academic_period_id: academicPeriodId,
-            }
-        ).ajax({success: success, defer: true});
-
-        return [];
+        return InstitutionClasses.find("classesByInstitutionAndAcademicPeriod", {
+            institution_id: institutionId,
+            academic_period_id: academicPeriodId,
+        }).ajax({ success: success, defer: true });
     }
 
-    function getEducationGradeOptions(
-        institutionId,
-        academicPeriodId,
-        classId
-    ) {
+    function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
+        const key = getCacheKey(institutionId, academicPeriodId, classId);
+        if (cache.grades[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.grades[key]);
+        }
+
         var success = function (response, deferred) {
             var educationGradeList = response.data.data;
-            // console.log("educationGradeList");
-            // console.log(educationGradeList);
-            if (angular.isObject(educationGradeList)) {
-                if (educationGradeList.length > 0) {
-                    deferred.resolve(educationGradeList);
-                } else {
-                    AlertSvc.warning(
-                        controllerScope,
-                        "You do not have any education grades"
-                    );
-                    deferred.reject("You do not have any education grades");
-                }
+            if (angular.isObject(educationGradeList) && educationGradeList.length > 0) {
+                cache.grades[key] = educationGradeList;
+                deferred.resolve(educationGradeList);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the education grade list"
-                );
+                deferred.reject("Error retrieving education grade list");
             }
         };
-        return InstitutionClasses.find(
-            "gradesByInstitutionAndAcademicPeriodAndInstitutionClass",
-            {
-                institution_id: institutionId,
-                academic_period_id: academicPeriodId,
-                institution_class_id: classId,
-            }
-        ).ajax({success: success, defer: true});
 
-        return [];
+        return InstitutionClasses.find("gradesByInstitutionAndAcademicPeriodAndInstitutionClass", {
+            institution_id: institutionId,
+            academic_period_id: academicPeriodId,
+            institution_class_id: classId,
+        }).ajax({ success: success, defer: true });
     }
 
-    function getSubjectOptions(
-        institutionId,
-        institutionClassId,
-        academicPeriodId,
-        day_id,
-        educationGradeId
-    ) {
+    function getSubjectOptions(institutionId, institutionClassId, academicPeriodId, day_id, educationGradeId) {
+        const key = getCacheKey(institutionId, institutionClassId, academicPeriodId, day_id, educationGradeId);
+        if (cache.subjects[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.subjects[key]);
+        }
+
         var success = function (response, deferred) {
             var subjectList = response.data.data;
-            // console.log("subjectList");
-            // console.log(subjectList);
             if (angular.isObject(subjectList)) {
+                cache.subjects[key] = subjectList;
                 deferred.resolve(subjectList);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the subject list"
-                );
+                deferred.reject("Error retrieving subject list");
             }
         };
 
-        return InstitutionClassSubjects.find(
-            "allSubjectsByClassPerAcademicPeriod",
-            {
-                institution_id: institutionId,
-                institution_class_id: institutionClassId,
-                academic_period_id: academicPeriodId,
-                day_id: day_id,
-                education_grade_id: educationGradeId,
-            }
-        ).ajax({success: success, defer: true});
-
-        return [];
+        return InstitutionClassSubjects.find("allSubjectsByClassPerAcademicPeriod", {
+            institution_id: institutionId,
+            institution_class_id: institutionClassId,
+            academic_period_id: academicPeriodId,
+            day_id: day_id,
+            education_grade_id: educationGradeId,
+        }).ajax({ success: success, defer: true });
     }
 
-    function getPeriodOptions(
-        institutionClassId,
-        academicPeriodId,
-        day_id,
-        educationGradeId,
-        weekStartDay,
-        weekEndDay
-    ) {
-        //POCOR-7183 add params weekStartDay, weekEndDay
+    function getPeriodOptions(institutionClassId, academicPeriodId, day_id, educationGradeId, weekStartDay, weekEndDay) {
+        const key = getCacheKey(institutionClassId, academicPeriodId, day_id, educationGradeId, weekStartDay, weekEndDay);
+        if (cache.periods[key]) {
+            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            return $q.resolve(cache.periods[key]);
+        }
         var success = function (response, deferred) {
             var attendancePeriodList = response.data.data;
-            // console.log("attendancePeriodList");
-            // console.log(attendancePeriodList);
-            if (
-                angular.isObject(attendancePeriodList) &&
-                attendancePeriodList.length > 0
-            ) {
+            if (angular.isObject(attendancePeriodList) && attendancePeriodList.length > 0) {
+                cache.periods[key] = attendancePeriodList;
                 deferred.resolve(attendancePeriodList);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the attendance period list"
-                );
+                deferred.reject("Error retrieving attendance period list");
             }
         };
 
@@ -417,9 +392,9 @@ function InstitutionStudentAttendancesSvc(
             academic_period_id: academicPeriodId,
             day_id: day_id,
             education_grade_id: educationGradeId,
-            week_start_day: weekStartDay, //POCOR-7183
-            week_end_day: weekEndDay, //POCOR-7183
-        }).ajax({success: success, defer: true});
+            week_start_day: weekStartDay,
+            week_end_day: weekEndDay,
+        }).ajax({ success: success, defer: true });
     }
 
     function getClassStudent(params) {
@@ -447,7 +422,7 @@ function InstitutionStudentAttendancesSvc(
             extra.attendance_period_id = 1;
         }
         //POCOR-8874 end
-        // console.log(extra);
+        console.log(extra);
         if (
             extra.attendance_period_id == "" ||
             extra.institution_class_id == "" ||
@@ -459,18 +434,46 @@ function InstitutionStudentAttendancesSvc(
         }
 
         var success = function (response, deferred) {
+            console.log("🔍 [Debug] Ответ от сервера:", response);
+
+            if (!response || !response.data) {
+                console.error("❌ [Error] Пустой ответ (Network OK, но данных нет)");
+                deferred.reject("Empty response");
+                return;
+            }
+
+            // Если бэкенд упал с ошибкой маппинга, тут часто будет null
+            if (response.data.data === null) {
+                console.group("❌ [Fatal] classStudents is NULL");
+                console.error("Бэкенд вернул null. Проверьте логи PHP (debug.log).");
+                console.log("Содержимое response.data:", response.data);
+                console.groupEnd();
+                deferred.reject("Backend returned null");
+                return;
+            }
+
             var classStudents = response.data.data;
-            if (angular.isObject(classStudents)) {
+
+            if (angular.isArray(classStudents) || angular.isObject(classStudents)) {
+                console.log("✅ [Success] Загружено студентов:", classStudents.length || "Object received");
                 deferred.resolve(classStudents);
             } else {
-                deferred.reject(
-                    "There was an error when retrieving the class student list"
-                );
+                console.error("❌ [Type Error] Ожидался массив, пришло:", typeof classStudents);
+                deferred.reject("Invalid data type");
             }
+        };
+
+        var error = function (err, deferred) {
+            console.group("🚨 [Ajax Error]");
+            console.error("Статус:", err.status);
+            console.error("Ошибка:", err);
+            console.groupEnd();
+            deferred.reject(err);
         };
 
         return StudentAttendances.find("classStudentsWithAbsence", extra).ajax({
             success: success,
+            error: error,
             defer: true,
         });
     }
