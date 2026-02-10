@@ -189,8 +189,8 @@ class TrainingsTable extends AppTable
 
     public function addOnChangeTrainingCourseId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
-            if (array_key_exists('training_session_id', $data[$this->getAlias()])) {
+        if (array_key_exists($this->getAlias(), (array) $data)) {
+            if (array_key_exists('training_session_id', (array) $data[$this->getAlias()])) {
                 unset($data[$this->getAlias()]['training_session_id']);
             }
         }

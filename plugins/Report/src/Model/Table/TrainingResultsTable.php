@@ -112,11 +112,11 @@ class TrainingResultsTable extends AppTable
                 ['ResultTypes.id = ' . $this->aliasField('training_result_type_id')]
             )*///5695
             ->innerJoin(
-                [$TrainingSessionResults->alias() => $TrainingSessionResults->table()],
+                [$TrainingSessionResults->getAlias() => $TrainingSessionResults->getTable()],
                 [$TrainingSessionResults->aliasField('training_session_id = ') . $this->aliasField('training_session_id')]
             )
             ->innerJoin(
-                [$WorkflowSteps->alias() => $WorkflowSteps->table()],
+                [$WorkflowSteps->getAlias() => $WorkflowSteps->getTable()],
                 [$WorkflowSteps->aliasField('id = ') . $TrainingSessionResults->aliasField('status_id')]
             )
             ->join([
@@ -165,7 +165,7 @@ class TrainingResultsTable extends AppTable
         if ($selectedStatus != '-1') {
             $query
                 ->innerJoin(
-                    [$WorkflowStatusesSteps->alias() => $WorkflowStatusesSteps->table()],
+                    [$WorkflowStatusesSteps->getAlias() => $WorkflowStatusesSteps->getTable()],
                     [$WorkflowStatusesSteps->aliasField('workflow_step_id = ') . $WorkflowSteps->aliasField('id')]
                 )
                 ->where([$WorkflowStatusesSteps->aliasField('workflow_status_id') => $selectedStatus]);

@@ -393,16 +393,18 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $userId = $entity->id;
 
         $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
-        $comment = $studentWithdraw
-        ->find()
-        ->where([
-            $studentWithdraw->aliasField('student_id') => $userId,
-            $studentWithdraw->aliasField('academic_period_id') => $academicPeriods,
-        ])
-        ->first();
+        if(!empty($userId) && !empty($academicPeriods)){
+            $comment = $studentWithdraw
+            ->find()
+            ->where([
+                $studentWithdraw->aliasField('student_id') => $userId,
+                $studentWithdraw->aliasField('academic_period_id') => $academicPeriods,
+            ])
+            ->first();
 
 
-        return !empty($comment->comment) ? $comment->comment : '';
+            return !empty($comment->comment) ? $comment->comment : '';
+            }
     }
 
     public function onExcelGetReasonId(EventInterface $event, Entity $entity)
@@ -414,25 +416,27 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $Statuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentWithdraw');
-        $reason = $studentWithdraw
-        ->find()
-        ->select([
-                'student_withdraw_reason' => $StudentWithdrawReasons->aliasField('name')
+        if(!empty($userId) && !empty($academicPeriods)){
+            $reason = $studentWithdraw
+            ->find()
+            ->select([
+                    'student_withdraw_reason' => $StudentWithdrawReasons->aliasField('name')
+                ])
+            ->leftJoin(
+                [$StudentWithdrawReasons->getAlias() => $StudentWithdrawReasons->getTable()],
+                [
+                    $StudentWithdrawReasons->aliasField('id = ') . $studentWithdraw->aliasField('student_withdraw_reason_id')
+                ]
+            )
+            ->where([
+                $studentWithdraw->aliasField('student_id') => $userId,
+                $studentWithdraw->aliasField('academic_period_id') => $academicPeriods,
             ])
-        ->leftJoin(
-            [$StudentWithdrawReasons->getAlias() => $StudentWithdrawReasons->getTable()],
-            [
-                $StudentWithdrawReasons->aliasField('id = ') . $studentWithdraw->aliasField('student_withdraw_reason_id')
-            ]
-        )
-        ->where([
-            $studentWithdraw->aliasField('student_id') => $userId,
-            $studentWithdraw->aliasField('academic_period_id') => $academicPeriods,
-        ])
-        ->first();
+            ->first();
 
 
-        return !empty($reason->student_withdraw_reason) ? $reason->student_withdraw_reason : '';
+            return !empty($reason->student_withdraw_reason) ? $reason->student_withdraw_reason : '';
+        }
     }
 
     public function getIdByAcademicPeriods($code)
@@ -456,21 +460,23 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         //START: POCOR-6511
         $conditionForStudent[] = $UserContacts->aliasField("contact_type_id  IN (1,2,15) ");
         //END: POCOR-6511
-        $userContactResults = $UserContacts
-        ->find()
-        ->contain(['ContactTypes.ContactOptions'])
-        ->select(['value'])                     
-        ->where([
-            $UserContacts->aliasField('security_user_id') => $userId,
-            'OR' => $conditionForStudent
-        ])
-        ->all();
-        if (!$userContactResults->isEmpty()) {
-             foreach ($userContactResults as $key => $code) {
-                $contact[] = $code->value;
+        if(!empty($userId)){
+            $userContactResults = $UserContacts
+            ->find()
+            ->contain(['ContactTypes.ContactOptions'])
+            ->select(['value'])                     
+            ->where([
+                $UserContacts->aliasField('security_user_id') => $userId,
+                'OR' => $conditionForStudent
+            ])
+            ->all();
+            if (!$userContactResults->isEmpty()) {
+                foreach ($userContactResults as $key => $code) {
+                    $contact[] = $code->value;
+                }
             }
+            return implode(',', $contact);
         }
-        return implode(',', $contact);
     }
 
     /*
@@ -493,24 +499,25 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ])
         ->first();
 
-        
-        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
-        $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id IN (1,2,15) ");
-        $userContactResults = $UserContacts
-        ->find()
-        ->contain(['ContactTypes.ContactOptions'])
-        ->select(['value'])                     
-        ->where([
-            $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
-            'OR' => $conditionForGuardian
-        ])
-        ->all();
-        if (!$userContactResults->isEmpty()) {
-             foreach ($userContactResults as $key => $code) {
-                $guardianContact[] = $code->value;
+        if(!empty($StudentGuardiansContactResult->guardian_id)){
+            $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
+            $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id IN (1,2,15) ");
+            $userContactResults = $UserContacts
+            ->find()
+            ->contain(['ContactTypes.ContactOptions'])
+            ->select(['value'])                     
+            ->where([
+                $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
+                'OR' => $conditionForGuardian
+            ])
+            ->all();
+            if (!$userContactResults->isEmpty()) {
+                foreach ($userContactResults as $key => $code) {
+                    $guardianContact[] = $code->value;
+                }
             }
+            return implode(',', $guardianContact);
         }
-        return implode(',', $guardianContact);
     }
 
     /*
@@ -565,24 +572,25 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         ])
         ->first();
 
-        
-        $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
-        $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id = 8 ");
-        $userContactResults = $UserContacts
-        ->find()
-        ->contain(['ContactTypes.ContactOptions'])
-        ->select(['value' => $UserContacts->aliasField('value')])                     
-        ->where([
-            $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
-            'OR' => $conditionForGuardian
-        ])
-        ->all();
-        if (!$userContactResults->isEmpty()) {
-             foreach ($userContactResults as $key => $code) {
-                $guardianContact[] = $code->value;
+        if(!empty($StudentGuardiansContactResult->guardian_id)){
+            $UserContacts = TableRegistry::getTableLocator()->get('User.Contacts');
+            $conditionForGuardian[] = $UserContacts->aliasField("contact_type_id = 8 ");
+            $userContactResults = $UserContacts
+            ->find()
+            ->contain(['ContactTypes.ContactOptions'])
+            ->select(['value' => $UserContacts->aliasField('value')])                     
+            ->where([
+                $UserContacts->aliasField('security_user_id') => $StudentGuardiansContactResult->guardian_id,
+                'OR' => $conditionForGuardian
+            ])
+            ->all();
+            if (!$userContactResults->isEmpty()) {
+                foreach ($userContactResults as $key => $code) {
+                    $guardianContact[] = $code->value;
+                }
             }
+            return implode(',', $guardianContact);
         }
-        return implode(',', $guardianContact);
     }
 
     public function onExcelGetStudentName(EventInterface $event, Entity $entity)

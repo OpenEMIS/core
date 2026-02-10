@@ -114,7 +114,7 @@ class Uis6Table extends AppTable
                 //'repeater_Student' => 'summary_grade_gender_ages.total_students', //should change
             ])
             
-            ->InnerJoin([$SummaryGradeStatusGenders->alias() => $SummaryGradeStatusGenders->table() ], [
+            ->InnerJoin([$SummaryGradeStatusGenders->getAlias() => $SummaryGradeStatusGenders->getTable() ], [
                 $this->aliasField('academic_period_id'). ' = ' . $SummaryGradeStatusGenders->aliasField('academic_period_id'),
                 $this->aliasField('education_system_id'). ' = ' . $SummaryGradeStatusGenders->aliasField('education_system_id'),
                 $this->aliasField('education_level_isced_id'). ' = ' . $SummaryGradeStatusGenders->aliasField('education_level_isced_id'),
