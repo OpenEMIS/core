@@ -320,6 +320,7 @@ function InstitutionStudentAttendancesController(
                     ) {
                         classStudents = [];
                     }
+
                     vm.updateClassStudentList(classStudents);
                 }, vm.error)
                 .finally(function () {
@@ -564,6 +565,7 @@ function InstitutionStudentAttendancesController(
     };
 
     vm.updateClassStudentList = function (classStudents) {
+        UtilsSvc.isAppendLoader(false);
         vm.classStudents = [];
         vm.classStudentList = classStudents;
     };

@@ -422,7 +422,7 @@ function InstitutionStudentAttendancesSvc(
             extra.attendance_period_id = 1;
         }
         //POCOR-8874 end
-        console.log(extra);
+        // console.log(extra);
         if (
             extra.attendance_period_id == "" ||
             extra.institution_class_id == "" ||
@@ -876,7 +876,7 @@ function InstitutionStudentAttendancesSvc(
 
         columnDefs.push({
             headerName: "OpenEMIS ID",
-            field: "user.openemis_no",
+            field: "openemis_no",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,
@@ -884,7 +884,7 @@ function InstitutionStudentAttendancesSvc(
         });
         columnDefs.push({
             headerName: "Name",
-            field: "user.name",
+            field: "name",
             filterParams: filterParams,
             pinned: direction,
             menuTabs: menuTabs,

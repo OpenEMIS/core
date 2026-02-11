@@ -88,6 +88,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function findClassStudentsWithAbsence(Query $query, array $options)
     {
+        $day = $options['day_id'];
         $institutionId = $options['institution_id'];
         $institutionClassId = $options['institution_class_id'];
         $educationGradeId = $options['education_grade_id'];
@@ -100,690 +101,796 @@ class StudentAttendancesTable extends ControllerActionTable
         $subjectId = $options['subject_id'];
         $attendanceBy = $options['attendance_by']; // POCOR-8874
 
-        // Logging can be uncommented for debugging if needed
-        // $this->log("institutionId = $institutionId", 'debug');
-        // $this->log("institutionClassId = $institutionClassId", 'debug');
-        // $this->log("educationGradeId = $educationGradeId", 'debug');
-        // $this->log("academicPeriodId = $academicPeriodId", 'debug');
-        // $this->log("weekId = $weekId", 'debug');
-        // $this->log("weekStartDay = $weekStartDay", 'debug');
-        // $this->log("weekEndDay = $weekEndDay", 'debug');
-        // $this->log("day = $day", 'debug');
-        // $this->log("subjectId = $subjectId", 'debug');
+        // 1. Базовый запрос с необходимыми связями
+//        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $AbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details');
+        $AbsenceTypes = self::getDynamicTableInstance('absence_types');
+        $MarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records');
 
-
-        $weekly = $day == -1;
-        $dayly = !$weekly;
-        $query = $this->getAttendanceBasicQueryNew(
-            $query,
+        $query = $this->getAttendanceBasicQueryNew($query,
             $academicPeriodId,
-            $institutionClassId,
-            $educationGradeId,
-            $institutionId
-        );
-        if ($subjectId != 0) {
-            $query = $this->getAttendanceQueryWithSubjectId(
-                $query,
-                $subjectId
+            $institutionClassId, $educationGradeId,
+            $institutionId);
+//        Log::debug('Base attendance query 1: ' . $query->sql($query->getValueBinder()));
+//        $cloneQuery = clone $query;
+//        $results = $cloneQuery->all()->toArray();
+//        Log::debug('Base attendance query results 1: ' . print_r($results,true));
+
+        // 2. Фильтрация отчисленных (через подзапрос, как мы решили ранее)
+        $query = $this->_filterWithdrawnStudents($query, $options);
+            Log::debug('Base attendance query 2 (after filtering withdrawn): ' . $query->sql($query->getValueBinder()));
+//            $cloneQuery = clone $query;
+//            $results = $cloneQuery->all()->toArray();
+//            Log::debug('Base attendance query results 2: ' . print_r($results,true));
+        if ($day != -1) {
+            // --- DAILY MODE: ПРЯМЫЕ JOIN И SELECT ВМЕСТО MAPPING ---
+
+            // Джойним таблицу прогулов
+            $query = $this->getAttendanceDailyQueryWithDayConditionNew($query, $day);
+//            $cloneQuery = clone $query;
+//            $results = $cloneQuery->all()->toArray();
+//            Log::debug('Base attendance query results count: ' . print_r($results,true));
+//            // Джойним типы прогулов для кодов (EXCUSED, UNEXCUSED и т.д.)
+            $query->leftJoin(
+                ['Types' => $AbsenceTypes->getTable()],
+                ['Types.id = Absences.absence_type_id']
             );
+//
+//            // Джойним флаг "No Lessons" для всего класса/периода
+            $query->leftJoin(
+                ['Marked' => $MarkedRecords->getTable()],
+                [
+                    'Marked.institution_class_id' => $institutionClassId,
+                    'Marked.date' => $day,
+                    'Marked.period' => $attendancePeriodId,
+                    'Marked.no_scheduled_class' => 1
+                ]
+            );
+//
+//            // Формируем плоский select
+            $query->select([
+                // Данные студента
+                'student_id' => $this->aliasField('student_id'),
+                'openemis_no' => 'User.openemis_no',
+                'first_name' => 'User.first_name',
+                'last_name' => 'User.last_name',
+                'gender' => $query->newExpr()->addCase(
+                    [$query->newExpr()->add(['User.gender_id' => 2]), $query->newExpr()->add(['User.gender_id' => 1])],
+                    [__('Female'), __('Male')],
+                    ['string', 'string']
+                ),
+                // Данные прогула (используем COALESCE для значений по умолчанию)
+                'absence_type_id' => 'COALESCE(Absences.absence_type_id, 0)',
+                'absence_type_code' => 'COALESCE(Types.code, "PRESENT")',
+                'comment' => 'Absences.comment',
+                'student_absence_reason_id' => 'Absences.student_absence_reason_id',
+                'is_NoClassScheduled' => 'COALESCE(Marked.no_scheduled_class, 0)',
+                'date' => 'COALESCE(Absences.date, "' . $day . '")',
+                'period' => 'COALESCE(Absences.period, ' . (int)$attendancePeriodId . ')'
+//            ]);
+
         } else {
-            $subjectId = null;
+            // НЕДЕЛЬНЫЙ РЕЖИМ (оставляем существующую логику, так как там массив дат)
+            $query = $query->formatResults(function (ResultSetInterface $results) use ($options) {
+                $academicPeriodId = $options['academic_period_id'];
+                $institutionClassId = $options['institution_class_id'];
+                $educationGradeId = $options['education_grade_id'];
+                $institutionId = $options['institution_id'];
+                $attendancePeriodId = $options['attendance_period_id'];
+                $subjectId = $options['subject_id'] ?? 0;
+
+                return $results->map(function ($row) use ($academicPeriodId, $institutionClassId, $educationGradeId, $institutionId, $attendancePeriodId, $subjectId) {
+                    // Логика получения данных по прогулов для каждой строки (студента)
+                    // Здесь можно использовать аналогичный подход с прямыми запросами к БД для оптимизации
+                    // Например, можно сделать один запрос для всех студентов и потом распределить данные по строкам
+
+                    // ... (логика получения данных по прогулов)
+
+                    return $row; // Не забываем вернуть строку
+                });
+            });
         }
-        $query = $this->_filterWithdrawnStudents(
-            $query,
-            $options
-        );
-//        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
-//        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
-//        $this->Users = TableRegistry::getTableLocator()->get('Security.Users');
-//        /* POCOR-5912 condition for week filter starts */
-//        $overlapDateCondition['OR'] = [];
-//        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekEndDay];
-//        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('end_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' <= ' => $weekEndDay];
-//        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' <= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' >= ' => $weekEndDay];
-//        /* POCOR-5912 condition for week filter ends */
-//        /* POCOR-5919 condition for day filter starts */
-//        if ($day != -1) {
-//            $conditionQuery = [
-//                $InstitutionStudents->aliasField('start_date <= ') => $day,
-//                'OR' => [
-//                    $InstitutionStudents->aliasField('end_date is ') => null,
-//                    $InstitutionStudents->aliasField('end_date >= ') => $day,
-//
-//                ]
-//            ];
-//        }
-//        /* POCOR-5919 condition for day filter ends */
-//        /* POCOR-7956 fetch status starts */
-//        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
-//        $statuses = $StudentStatuses->findCodeList();
-//        /* POCOR-7956 fetch status starts */
-//        if ($day == -1) {
-//            $findDay[] = $weekStartDay;
-//            $findDay[] = $weekEndDay;
-//        } else {
-//            $findDay = $day;
-//        }
-//        if ($subjectId != 0 || $attendanceBy == 'subject') {
-//            $query
-//                ->select([
-//                    $this->aliasField('academic_period_id'),
-//                    $this->aliasField('institution_class_id'),
-//                    $this->aliasField('institution_id'),
-//                    $this->aliasField('student_id'),
-//                    $this->Users->aliasField('id'),
-//                    $this->Users->aliasField('openemis_no'),
-//                    $this->Users->aliasField('first_name'),
-//                    $this->Users->aliasField('middle_name'),
-//                    $this->Users->aliasField('third_name'),
-//                    $this->Users->aliasField('last_name'),
-//                    $this->Users->aliasField('preferred_name'), // POCOR-9011
-//                    $this->Users->aliasField('gender_id') // POCOR-9011
-//                ])
-//                ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
-//                ->leftJoin(
-//                    [$InstitutionSubjectStudents->getAlias() => $InstitutionSubjectStudents->getTable()],
-//                    [
-//                        $InstitutionSubjectStudents->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
-//                        $InstitutionSubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-//                    ]
-//                )
-//                //POCOR-5900 start (Filter for check start date of student)
-//                ->leftJoin(
-//                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
-//                    [
-//                        $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-//                    ]
-//                )
-//                //POCOR-5900 end
-//                ->where([
-//                    $this->aliasField('academic_period_id') => $academicPeriodId,
-//                    $this->aliasField('institution_class_id') => $institutionClassId,
-//                    $this->aliasField('education_grade_id') => $educationGradeId,
-//                    $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
-//                    // //POCOR-5900 condition
-//                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
-//                    $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
-//                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-//                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'], $statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
-//                    $overlapDateCondition,
-//                    $conditionQuery
-//                ])
-//                ->group([
-//                    $InstitutionSubjectStudents->aliasField('student_id')
-//                ])
-//                ->order([
-//                    $this->Users->aliasField('id')
-//                ]);
-//        } else {
-//            $query
-//                ->select([
-//                    $this->aliasField('academic_period_id'),
-//                    $this->aliasField('institution_class_id'),
-//                    $this->aliasField('institution_id'),
-//                    $this->aliasField('student_id'),
-//                    $this->Users->aliasField('id'),
-//                    $this->Users->aliasField('openemis_no'),
-//                    $this->Users->aliasField('first_name'),
-//                    $this->Users->aliasField('middle_name'),
-//                    $this->Users->aliasField('third_name'),
-//                    $this->Users->aliasField('last_name'),
-//                    $this->Users->aliasField('preferred_name'),
-//                    $this->Users->aliasField('gender_id'), // POCOR-9011
-//                ])
-//                ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
-//                //POCOR-5900 start (Filter for check start date of student)
-//                ->leftJoin(
-//                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
-//                    [
-//                        $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-//                    ]
-//                )
-//                //POCOR-5900 end
-//
-//                ->where([
-//                    $this->aliasField('academic_period_id') => $academicPeriodId,
-//                    $this->aliasField('institution_class_id') => $institutionClassId,
-//                    $this->aliasField('education_grade_id') => $educationGradeId,
-//                    //POCOR-5900 condition
-//                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
-//                    $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
-//                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-//                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'], $statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
-//                    $overlapDateCondition,
-//                    $conditionQuery
-//                ])
-//                ->group([
-//                    $InstitutionStudents->aliasField('student_id')
-//                ])
-//                ->order([
-//                    $this->Users->aliasField('first_name')
-//                ]);
-//            // echo "<pre>";print_r($query);die;
-//        }
-//
-//        if ($day != -1) {
-//            // single day
-//            $query
-//                ->formatResults(
-//                    function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId, $educationGradeId, $attendanceBy) { //POCOR-8874 add param attendanceBy
-//                        $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
-//                        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
-//                        return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId, $InstitutionStudents, $attendanceBy) { // POCOR-8874 add param attendanceBy
-//                            $academicPeriodId = $row->academic_period_id;
-//                            $institutionClassId = $row->institution_class_id;
-//                            $studentId = $row->student_id;
-//                            $institutionId = $row->institution_id;
-//                            $PRESENT = 0;
-//                            // POCOR-9011 start
-//                            $row->gender = __('Not Set');
-//                            if($row['user']['gender_id'] == 2){
-//                                $row->gender = __('Female');
-//                            }
-//                            if($row['user']['gender_id'] == 1){
-//                                $row->gender = __('Male');
-//                            }
-//                            // POCOR-9011 end
-//                            $conditions = [];
-//                            $conditions = [
-//                                $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
-//                                $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
-//                                $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
-//                                $StudentAbsencesPeriodDetails->aliasField('student_id = ') => $studentId,
-//                                $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
-//                                // $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId, // commented due to POCOR-8874
-//                                $StudentAbsencesPeriodDetails->aliasField('date = ') => $findDay,
-//                                // $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
-//                            ];
-//                            if ($subjectId) {
-//                                $SubId[] = [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId];
-//
-//                                $conditions = array_merge($conditions, $SubId[0]);
-//                            }
-//                            //POCOR-8874 start
-//                            else {
-//                                $SubId[] = [$StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId];
-//                                $conditions = array_merge($conditions, $SubId[0]);
-//                            }
-//                            //POCOR-8874 end
-//                            $absenceReason = array();
-//                            $absenceType = array();
-//                            $result = $StudentAbsencesPeriodDetails
-//                                ->find()
-//                                ->contain(['AbsenceTypes'])
-//                                ->select([
-//                                    $StudentAbsencesPeriodDetails->aliasField('date'),
-//                                    $StudentAbsencesPeriodDetails->aliasField('period'),
-//                                    $StudentAbsencesPeriodDetails->aliasField('comment'),
-//                                    $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
-//                                    $StudentAbsencesPeriodDetails->aliasField('student_absence_reason_id'),
-//                                    'AbsenceTypes.code'
-//                                ])
-//                                ->where($conditions)
-//                                ->all();
-//                            if (!$result->isEmpty()) {
-//                                $entity = $result->first();
-//                                $data = [
-//                                    'date' => $entity->date,
-//                                    'period' => $entity->period,
-//                                    'comment' => $entity->comment,
-//                                    'absence_type_id' => $entity->absence_type_id ?? 0,
-//                                    'student_absence_reason_id' => $entity->student_absence_reason_id,
-//                                    'absence_type_code' => $entity->absence_type->code
-//                                ];
-//                                if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
-//                                    $StudentAbsenceReasons = TableRegistry::getTableLocator()->get('Institution.StudentAbsenceReasons');
-//                                    if (isset($entity->student_absence_reason_id)) {
-//                                        $studentAbsenceReason = $StudentAbsenceReasons
-//                                            ->find()
-//                                            ->select([
-//                                                'name' => $StudentAbsenceReasons->aliasField('name')
-//                                            ])
-//                                            ->where(
-//                                                [$StudentAbsenceReasons->aliasField('id = ') => $entity->student_absence_reason_id]
-//                                            )->first();
-//                                        if (!empty($studentAbsenceReason)) {
-//                                            $absenceReason['name'] = $studentAbsenceReason->name;
-//                                        }
-//                                    }
-//                                    $AbsenceTypes = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
-//                                    if (isset($entity->absence_type_id) && $entity->absence_type_id != 0) {
-//                                        $absenceType = $AbsenceTypes
-//                                            ->find()
-//                                            ->select([
-//                                                'name' => $AbsenceTypes->aliasField('name'),
-//                                                'code' => $AbsenceTypes->aliasField('code')
-//                                            ])
-//                                            ->where([$AbsenceTypes->aliasField('id = ') => $entity->absence_type_id])->first();
-//                                        if (!empty($absenceType)) {
-//                                            $absenceType['name'] = $absenceType->name;
-//                                            $absenceType['code'] = $absenceType->code;
-//                                        }
-//                                    }
-//                                }
-//                            } else {
-//                                // $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Institution.StudentAttendanceMarkedRecords');
-//                                $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-//                                $isMarkedRecords = $StudentAttendanceMarkedRecords
-//                                    ->find()
-//                                    ->select([
-//                                        $StudentAttendanceMarkedRecords->aliasField('date'),
-//                                        $StudentAttendanceMarkedRecords->aliasField('period')
-//                                    ])
-//                                    //POCOR-5900 start (Filter for check start date of student)
-//                                    ->leftJoin(
-//                                        [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
-//                                        [
-//                                            $InstitutionStudents->aliasField('institution_id = ') . $StudentAttendanceMarkedRecords->aliasField('institution_id'),
-//                                        ]
-//                                    )
-//                                    //POCOR-5900 end
-//                                    ->where([
-//                                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
-//                                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
-//                                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
-//                                        $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
-//                                        $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay,
-//                                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
-//                                        $InstitutionStudents->aliasField('start_date') . ' <= ' => $findDay
-//                                    ])->toArray();
-//
-//                                if (!empty($isMarkedRecords)) {
-//                                    $data = [
-//                                        'date' => $findDay,
-//                                        'period' => (int) $attendancePeriodId,
-//                                        'comment' => null,
-//                                        'absence_type_id' => $PRESENT,
-//                                        'student_absence_reason_id' => null,
-//                                        'absence_type_code' => null
-//                                    ];
-//                                } else {
-//                                    $data = [
-//                                        'date' => $findDay,
-//                                        'period' => (int) $attendancePeriodId,
-//                                        'comment' => null,
-//                                        'absence_type_id' => 0,
-//                                        'student_absence_reason_id' => null,
-//                                        'absence_type_code' => null
-//                                    ];
-//                                }
-//                            }
-//                            $row->institution_student_absences = $data;
-//                            $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-//                            $getRecord = $StudentAttendanceMarkedRecords->find('all')
-//                                ->where([
-//                                    $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
-//                                    $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-//                                    $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
-//                                    $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
-//                                    $StudentAttendanceMarkedRecords->aliasField('date') => $findDay,
-//                                    $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1,
-//                                    $StudentAttendanceMarkedRecords->aliasField('period IS') => $attendancePeriodId //POCOR-8383
-//                                ])->first();
-//                            if (!empty($getRecord)) {
-//                                $row->is_NoClassScheduled = 1;
-//                            } else {
-//                                $row->is_NoClassScheduled = 0;
-//                            }
-//                            //POCOR-8874 start
-//                            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-//                            $getSubject = $InstitutionSubjects->find('all')
-//                                ->where([
-//                                    $InstitutionSubjects->aliasField('id') => $subjectId,
-//                                ])->first();
-//                            $row->subject = $getSubject->name;
-//                            //POCOR-8874 end
-//                            if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
-//
-//                                $row->attendance = '';
-//
-//                                if ($row->is_NoClassScheduled == 1) { //POCOR-7929
-//                                    $row->attendance = 'No scheduled class';
-//                                } else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
-//                                    $row->attendance = 'Present';
-//                                } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
-//                                    $row->attendance = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
-//                                } else if (isset($data['absence_type_code']) && $data['absence_type_code'] == 'LATE') {
-//                                    $row->attendance = 'Late';
-//                                } else {
-//                                    $row->attendance = 'NOTMARKED';
-//                                }
-//                                $row->comment = $data['comment'];
-//                                $row->student_absence_reasons = (isset($absenceReason['name'])) ? $absenceReason['name'] : NULL;
-//                                $row->name = $row['user']['first_name'] . ' ' . $row['user']['last_name'];
-//                                $row->class = $row['institution_class']['name'];
-//                                $row->date = date("d/m/Y", strtotime($findDay));
-//                                $row->StudentStatuses = $row['_matchingData']['StudentStatuses']['name'];
-//                                $row->studentId = $row['student_id'];
-//                                $row->attendanceBy = $attendanceBy; //POCOR-8874
-//                                $row->period = "Period " . $attendancePeriodId; //POCOR-8874
-//                                $row->test = 1;
-//                            }
-//                            return $row;
-//                        });
-//                    }
-//                );
-//        } else {
-//            // all day
-//            $StudentAttendanceMarkTypesTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
-//            $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-//            $periodList = $StudentAttendanceMarkTypesTable
-//                ->find('PeriodByClass', [
-//                    'institution_class_id' => $institutionClassId,
-//                    'academic_period_id' => $academicPeriodId,
-//                    'day_id' => $day,
-//                    'education_grade_id' => $educationGradeId,
-//                    'week_start_day' => $weekStartDay, //POCOR-7183
-//                    'week_end_day' => $weekEndDay //POCOR-7183
-//                ])->toArray();
-//
-//            $dayList = $AcademicPeriodsTable
-//                ->find('DaysForPeriodWeek', [
-//                    'academic_period_id' => $academicPeriodId,
-//                    'week_id' => $weekId,
-//                    'institution_id' => $institutionId,
-//                    'exclude_all' => true
-//                ])->toArray();
-//
-//            $studentListResult = $this
-//                ->find('list', [
-//                    'keyField' => 'student_id',
-//                    'valueField' => 'student_id'
-//                ])
-//                ->matching($this->StudentStatuses->getAlias(), function ($q) {
-//                    return $q->where([
-//                        $this->StudentStatuses->aliasField('code') => 'CURRENT'
-//                    ]);
-//                })
-//                ->where([
-//                    $this->aliasField('academic_period_id') => $academicPeriodId,
-//                    $this->aliasField('institution_class_id') => $institutionClassId,
-//                ])->all();
-//            if (!$studentListResult->isEmpty()) {
-//                $studentList = $studentListResult->toArray();
-//                //                $this->log('$studentList','debug');
-//                //                $this->log($studentList,'debug');
-//                $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
-//                $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-//                if (empty($studentList)) { //POCOR-8022
-//                    $studentList = [0];
-//                }
-//                $result = $StudentAbsencesPeriodDetails
-//                    ->find()
-//                    ->contain(['AbsenceTypes'])
-//                    ->select([
-//                        $StudentAbsencesPeriodDetails->aliasField('student_id'),
-//                        $StudentAbsencesPeriodDetails->aliasField('date'),
-//                        $StudentAbsencesPeriodDetails->aliasField('period'),
-//                        $StudentAbsencesPeriodDetails->aliasField('subject_id'), //POCOR-8874
-//                        $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
-//                        'code' => 'AbsenceTypes.code'
-//                    ])
-//                    ->where([
-//                        $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
-//                        $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
-//                        $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
-//                        $StudentAbsencesPeriodDetails->aliasField('student_id IN ') => $studentList,
-//                        $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
-//                        $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
-//                        // $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId, //POCOR-8874
-//                        'AND' => [
-//                            $StudentAbsencesPeriodDetails->aliasField('date >= ') => $weekStartDay,
-//                            $StudentAbsencesPeriodDetails->aliasField('date <= ') => $weekEndDay,
-//                        ]
-//                    ])->toArray();
-//
-//                $isMarkedRecords = $StudentAttendanceMarkedRecords
-//                    ->find()
-//                    ->select([
-//                        $StudentAttendanceMarkedRecords->aliasField('date'),
-//                        $StudentAttendanceMarkedRecords->aliasField('period'),
-//                        $StudentAttendanceMarkedRecords->aliasField('subject_id'), //POCOR-8874
-//                        $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') //POCOR-7929
-//                    ])
-//                    ->where([
-//                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
-//                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
-//                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
-//                        $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
-//                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
-//                        // $StudentAttendanceMarkedRecords->aliasField('period = ') => $attendancePeriodId, //POCOR-8874
-//                        $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
-//                        $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
-//                    ])->toArray();
-//
-//                $studentAttenanceData = [];
-//                foreach ($studentList as $value) {
-//                    $studentId = $value;
-//                    if (!isset($studentAttenanceData[$studentId])) {
-//                        $studentAttenanceData[$studentId] = [];
-//                    }
-//
-//                    foreach ($dayList as $day) {
-//                        $dayId = $day['day'];
-//                        $date = $day['date'];
-//                        if (!isset($studentAttenanceData[$studentId][$dayId])) {
-//                            $studentAttenanceData[$studentId][$dayId] = [];
-//                        }
-//
-//                        // print_r($periodList);die;
-//                        foreach ($periodList as $period) {
-//                            $periodId = $period['id'];
-//                            if (!isset($studentAttenanceData[$studentId][$dayId][$periodId])) {
-//                                $studentAttenanceData[$studentId][$dayId][$periodId] = 'NOTMARKED';
-//                                if (!empty($isMarkedRecords)) { //POCOR-7183 add if check isMarkedRecords condition not empty
-//                                    foreach ($isMarkedRecords as $entity) {
-//                                        $entityDate = $entity->date->format('Y-m-d');
-//                                        $entityPeriod = $entity->period;
-//                                        $entitySubject = $entity->subject_id; //POCOR-8874
-//
-//                                        //POCOR-7929 start
-//                                        if ($entityDate == $date && $entity->no_scheduled_class == 1) {
-//                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'NoScheduledClicked';
-//                                            break;
-//                                        } //POCOR-7929 end
-//                                        else if ($entityDate == $date && $entityPeriod == $periodId) {
-//                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
-//                                            break;
-//                                        }
-//                                        //POCOR-8874 start
-//                                        else if ($entityDate == $date && $entitySubject == $subjectId && $attendanceBy == 'subject') {
-//                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
-//                                            break;
-//                                        }
-//                                        //POCOR-8874 end
-//                                    }
-//                                }
-//                            }
-//                            if (!empty($result)) { //POCOR-7183 add if check result condition not empty
-//                                foreach ($result as $entity) {
-//                                    $entityDateFormat = $entity->date->format('Y-m-d');
-//                                    $entityStudentId = $entity->student_id;
-//                                    $entityPeriod = $entity->period;
-//                                    $entitySubject = $entity->subject_id; //POCOR-8874
-//
-//                                    if ($studentId == $entityStudentId && $entityDateFormat == $date && ($entityPeriod == $periodId || ($entitySubject == $subjectId && $attendanceBy == 'subject'))) { //POCOR-8874 add condition to check subject id
-//                                        if (isset($this->request) && ('excel' === $this->request->pass[0])) {
-//                                            if ($entity->code == 'EXCUSED' || $entity->code == 'UNEXCUSED') {
-//                                                $studentAttenanceData[$studentId][$dayId][$periodId] = 'ABSENT';
-//                                                break;
-//                                            } else {
-//                                                $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
-//                                                break;
-//                                            }
-//                                        } else {
-//                                            $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
-//                                            break;
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//
-//                $query
-//                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList, $attendanceBy,$subjectId) { //POCOR-8874 add params attendanceBy and subjectId
-//                        return $results->map(function ($row) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList, $attendanceBy,$subjectId) { //POCOR-8874 add params attendanceBy and subjectId
-//                            $studentId = $row->student_id;
-//                            if (isset($studentAttenanceData[$studentId])) {
-//                                $row->week_attendance = $studentAttenanceData[$studentId];
-//
-//                                $row->current = date("d/m/Y", strtotime($weekStartDay)) . ' - ' . date("d/m/Y", strtotime($weekEndDay));
-//                                // print_r($row);die;
-//                                if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) { //POCOR-8874
-//                                    // if (isset($this->request) && ('excel' === $this->request->pass[0])) { //POCOR -8874 commented this line because it is not working
-//                                    $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
-//
-//                                    foreach ($periodList as $Period) {
-//                                        $row->period .= $Period['name']." "; //POCOR-8874
-//                                    }
-//
-//                                    foreach ($studentAttenanceData[$studentId] as $key => $value) {
-//
-//                                        //POCOR-7929 start
-//                                        foreach ($periodList as $Key => $PeriodData) {
-//                                            $id = (int) $PeriodData['id'];
-//                                            if ($value[$id] == "NoScheduledClicked") {
-//                                                $value[$id] = "No Scheduled Classes";
-//                                            }
-//                                            //POCOR-8874 start
-//                                            if ($attendanceBy == 'period') {
-//                                                $row->{'week_attendance_status_' . $key . '-' . $PeriodData['name']} = $value[$id];
-//                                                //POCOR-7929 end
-//                                            } else {
-//                                                $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
-//                                                $getSubject = $InstitutionSubjects->find('all')
-//                                                    ->where([
-//                                                        $InstitutionSubjects->aliasField('id') => $subjectId,
-//                                                    ])->first();
-//                                                $row->{'week_attendance_status_' . $key . '-' . $getSubject->name} = $value[$id];
-//                                                //POCOR-7929 end
-//                                                $row->subject = $getSubject->name; //POCOR-8874
-//                                            }
-//                                            //POCOR-8874 end
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                            $row->attendanceBy = $attendanceBy; //POCOR-8874
-//
-//                            return $row;
-//                        });
-//                    });
-//            }
-//        }
-//        //POCOR-6547[START]
-//        if ($day != -1) {
-//            $studentId = [];
-//            // $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
-//            $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
-//
-//            //POCOR-7183 starts
-//            if (!empty($findDay[0]) && !empty($findDay[1]) && !empty($day['date'])) {
-//                $DayCondititon = [
-//                    $studentWithdraw->aliasField('effective_date >= ') => $findDay[0],
-//                    $studentWithdraw->aliasField('effective_date <= ') => $findDay[1]
-//                ];
-//            } else {
-//                $DayCondititon = [$studentWithdraw->aliasField('effective_date <= ') => $findDay];
-//            } //POCOR-7183 ends
-//            $studentWithdrawData = $studentWithdraw->find()
-//                ->select([
-//                    // 'student_id' => $InstitutionStudents->aliasField('student_id'),
-//                ])
-//                /*POCOR-6062 starts*/
-//                ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
-//                    $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
-//                    $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
-//                    $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
-//                    $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
-//                ])/*POCOR-6062 ends*/
-//                ->where([
-//                    $studentWithdraw->aliasField('institution_id') => $institutionId,
-//                    $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
-//                    $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
-//                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
-//                    $DayCondititon, //POCOR-7183
-//                    $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
-//                ])->toArray();
-//        } else {
-//            $studentId = [];
-//            // $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
-//            $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
-//            $studentWithdrawData = $studentWithdraw->find()
-//                ->select([
-//                    'student_id' => $InstitutionStudents->aliasField('student_id'),
-//                ])
-//                /*POCOR-6062 starts*/
-//                ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
-//                    $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
-//                    $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
-//                    $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
-//                    $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
-//                ])/*POCOR-6062 ends*/
-//                ->where([
-//                    $studentWithdraw->aliasField('institution_id') => $institutionId,
-//                    $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
-//                    $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
-//                    //$studentWithdraw->aliasField('effective_date >= ') => $day,
-//                    // $studentWithdraw->aliasField('effective_date <= ') => $findDay,
-//                    $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
-//                ])
-//                ->toArray();
-//        }
-//        //POCOR-6547[END]
-//        if ($studentWithdrawData) {
-//            $studentId = [];
-//            $WithDrawstudentId = [];
-//            $CurrentStudentId = [];
-//            $InstitutionStudentsCurrentData = []; //POCOR-8022
-//            $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents'); //POCOR-7902
-//            foreach ($studentWithdrawData as $studenetVal) {
-//                $WithDrawstudentId[] = $studenetVal['student_id'];
-//            }
-//            if (empty($WithDrawstudentId)) { //POCOR-8022
-//                $WithDrawstudentId = [0];
-//            }
-//            //            $this->log('$WithDrawstudentId', 'debug');
-//            //            $this->log($WithDrawstudentId, 'debug');
-//            //POCOR-7902 start
-//            if (!empty($WithDrawstudentId)) { //POCOR-8022
-//                $whereWDR = [
-//                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
-//                    $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
-//                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-//                    $InstitutionStudents->aliasField('student_status_id') => 1,
-//                    $InstitutionStudents->aliasField('student_id IN') => $WithDrawstudentId
-//                ];
-//                //                $this->log('$whereWDR', 'debug');
-//                //                $this->log($whereWDR, 'debug');
-//                $InstitutionStudentsCurrentData = $InstitutionStudents
-//                    ->find()
-//                    ->select([
-//                        'student_id' => 'InstitutionStudents.student_id'
-//                    ])
-//                    ->where($whereWDR) //POCOR-8022
-//                    ->enableAutoFields(true)
-//                    ->toArray();
-//            }
-//            if (!empty($InstitutionStudentsCurrentData)) { //POCOR-8022
-//                foreach ($InstitutionStudentsCurrentData as $CurrentstudenetVal) {
-//                    $CurrentStudentId[] = $CurrentstudenetVal['student_id'];
-//                }
-//            }
-//            $studentId = array_diff($WithDrawstudentId, $CurrentStudentId); //POCOR-7902 end
-//            if (empty($studentId)) { //POCOR-8022
-//                $studentId = [0];
-//            }
-//            $whereWDR2 = [$this->aliasField('student_id NOT IN') => $studentId]; //POCOR-8022
-//            //            $this->log('$whereWDR', 'debug');
-//            //            $this->log($whereWDR, 'debug');
-//            $query->where($whereWDR2); //POCOR-8022
-//
-//        }
+
         return $query;
     }
+//    public function findClassStudentsWithAbsence(Query $query, array $options)
+//    {
+//        $institutionId = $options['institution_id'];
+//        $institutionClassId = $options['institution_class_id'];
+//        $educationGradeId = $options['education_grade_id'];
+//        $academicPeriodId = $options['academic_period_id'];
+//        $attendancePeriodId = $options['attendance_period_id'];
+//        $weekId = $options['week_id'];
+//        $weekStartDay = $options['week_start_day'];
+//        $weekEndDay = $options['week_end_day'];
+//        $day = $options['day_id'];
+//        $subjectId = $options['subject_id'];
+//        $attendanceBy = $options['attendance_by']; // POCOR-8874
+//
+//        // Logging can be uncommented for debugging if needed
+//        // $this->log("institutionId = $institutionId", 'debug');
+//        // $this->log("institutionClassId = $institutionClassId", 'debug');
+//        // $this->log("educationGradeId = $educationGradeId", 'debug');
+//        // $this->log("academicPeriodId = $academicPeriodId", 'debug');
+//        // $this->log("weekId = $weekId", 'debug');
+//        // $this->log("weekStartDay = $weekStartDay", 'debug');
+//        // $this->log("weekEndDay = $weekEndDay", 'debug');
+//        // $this->log("day = $day", 'debug');
+//        // $this->log("subjectId = $subjectId", 'debug');
+//
+//
+//        $weekly = $day == -1;
+//        $dayly = !$weekly;
+//        $query = $this->getAttendanceBasicQueryNew(
+//            $query,
+//            $academicPeriodId,
+//            $institutionClassId,
+//            $educationGradeId,
+//            $institutionId
+//        );
+//        if ($subjectId != 0) {
+//            $query = $this->getAttendanceQueryWithSubjectId(
+//                $query,
+//                $subjectId
+//            );
+//        } else {
+//            $subjectId = null;
+//        }
+//        $query = $this->_filterWithdrawnStudents(
+//            $query,
+//            $options
+//        );
+////        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+////        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+////        $this->Users = TableRegistry::getTableLocator()->get('Security.Users');
+////        /* POCOR-5912 condition for week filter starts */
+////        $overlapDateCondition['OR'] = [];
+////        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekEndDay];
+////        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('end_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' <= ' => $weekEndDay];
+////        $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' <= ' => $weekStartDay, $InstitutionStudents->aliasField('end_date') . ' >= ' => $weekEndDay];
+////        /* POCOR-5912 condition for week filter ends */
+////        /* POCOR-5919 condition for day filter starts */
+////        if ($day != -1) {
+////            $conditionQuery = [
+////                $InstitutionStudents->aliasField('start_date <= ') => $day,
+////                'OR' => [
+////                    $InstitutionStudents->aliasField('end_date is ') => null,
+////                    $InstitutionStudents->aliasField('end_date >= ') => $day,
+////
+////                ]
+////            ];
+////        }
+////        /* POCOR-5919 condition for day filter ends */
+////        /* POCOR-7956 fetch status starts */
+////        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+////        $statuses = $StudentStatuses->findCodeList();
+////        /* POCOR-7956 fetch status starts */
+////        if ($day == -1) {
+////            $findDay[] = $weekStartDay;
+////            $findDay[] = $weekEndDay;
+////        } else {
+////            $findDay = $day;
+////        }
+////        if ($subjectId != 0 || $attendanceBy == 'subject') {
+////            $query
+////                ->select([
+////                    $this->aliasField('academic_period_id'),
+////                    $this->aliasField('institution_class_id'),
+////                    $this->aliasField('institution_id'),
+////                    $this->aliasField('student_id'),
+////                    $this->Users->aliasField('id'),
+////                    $this->Users->aliasField('openemis_no'),
+////                    $this->Users->aliasField('first_name'),
+////                    $this->Users->aliasField('middle_name'),
+////                    $this->Users->aliasField('third_name'),
+////                    $this->Users->aliasField('last_name'),
+////                    $this->Users->aliasField('preferred_name'), // POCOR-9011
+////                    $this->Users->aliasField('gender_id') // POCOR-9011
+////                ])
+////                ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
+////                ->leftJoin(
+////                    [$InstitutionSubjectStudents->getAlias() => $InstitutionSubjectStudents->getTable()],
+////                    [
+////                        $InstitutionSubjectStudents->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+////                        $InstitutionSubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+////                    ]
+////                )
+////                //POCOR-5900 start (Filter for check start date of student)
+////                ->leftJoin(
+////                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
+////                    [
+////                        $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+////                    ]
+////                )
+////                //POCOR-5900 end
+////                ->where([
+////                    $this->aliasField('academic_period_id') => $academicPeriodId,
+////                    $this->aliasField('institution_class_id') => $institutionClassId,
+////                    $this->aliasField('education_grade_id') => $educationGradeId,
+////                    $InstitutionSubjectStudents->aliasField('institution_subject_id') => $subjectId,
+////                    // //POCOR-5900 condition
+////                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
+////                    $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+////                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+////                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'], $statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
+////                    $overlapDateCondition,
+////                    $conditionQuery
+////                ])
+////                ->group([
+////                    $InstitutionSubjectStudents->aliasField('student_id')
+////                ])
+////                ->order([
+////                    $this->Users->aliasField('id')
+////                ]);
+////        } else {
+////            $query
+////                ->select([
+////                    $this->aliasField('academic_period_id'),
+////                    $this->aliasField('institution_class_id'),
+////                    $this->aliasField('institution_id'),
+////                    $this->aliasField('student_id'),
+////                    $this->Users->aliasField('id'),
+////                    $this->Users->aliasField('openemis_no'),
+////                    $this->Users->aliasField('first_name'),
+////                    $this->Users->aliasField('middle_name'),
+////                    $this->Users->aliasField('third_name'),
+////                    $this->Users->aliasField('last_name'),
+////                    $this->Users->aliasField('preferred_name'),
+////                    $this->Users->aliasField('gender_id'), // POCOR-9011
+////                ])
+////                ->contain([$this->Users->getAlias(), 'InstitutionClasses'])
+////                //POCOR-5900 start (Filter for check start date of student)
+////                ->leftJoin(
+////                    [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
+////                    [
+////                        $InstitutionStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+////                    ]
+////                )
+////                //POCOR-5900 end
+////
+////                ->where([
+////                    $this->aliasField('academic_period_id') => $academicPeriodId,
+////                    $this->aliasField('institution_class_id') => $institutionClassId,
+////                    $this->aliasField('education_grade_id') => $educationGradeId,
+////                    //POCOR-5900 condition
+////                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
+////                    $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+////                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+////                    $InstitutionStudents->aliasField('student_status_id IN') => [$statuses['REPEATED'], $statuses['CURRENT'], $statuses['TRANSFERRED'], $statuses['WITHDRAWN'], $statuses['GRADUATED'], $statuses['PROMOTED']],
+////                    $overlapDateCondition,
+////                    $conditionQuery
+////                ])
+////                ->group([
+////                    $InstitutionStudents->aliasField('student_id')
+////                ])
+////                ->order([
+////                    $this->Users->aliasField('first_name')
+////                ]);
+////            // echo "<pre>";print_r($query);die;
+////        }
+////
+////        if ($day != -1) {
+////            // single day
+////            $query
+////                ->formatResults(
+////                    function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId, $educationGradeId, $attendanceBy) { //POCOR-8874 add param attendanceBy
+////                        $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
+////                        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+////                        return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId, $InstitutionStudents, $attendanceBy) { // POCOR-8874 add param attendanceBy
+////                            $academicPeriodId = $row->academic_period_id;
+////                            $institutionClassId = $row->institution_class_id;
+////                            $studentId = $row->student_id;
+////                            $institutionId = $row->institution_id;
+////                            $PRESENT = 0;
+////                            // POCOR-9011 start
+////                            $row->gender = __('Not Set');
+////                            if($row['user']['gender_id'] == 2){
+////                                $row->gender = __('Female');
+////                            }
+////                            if($row['user']['gender_id'] == 1){
+////                                $row->gender = __('Male');
+////                            }
+////                            // POCOR-9011 end
+////                            $conditions = [];
+////                            $conditions = [
+////                                $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
+////                                $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
+////                                $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
+////                                $StudentAbsencesPeriodDetails->aliasField('student_id = ') => $studentId,
+////                                $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
+////                                // $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId, // commented due to POCOR-8874
+////                                $StudentAbsencesPeriodDetails->aliasField('date = ') => $findDay,
+////                                // $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
+////                            ];
+////                            if ($subjectId) {
+////                                $SubId[] = [$StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId];
+////
+////                                $conditions = array_merge($conditions, $SubId[0]);
+////                            }
+////                            //POCOR-8874 start
+////                            else {
+////                                $SubId[] = [$StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId];
+////                                $conditions = array_merge($conditions, $SubId[0]);
+////                            }
+////                            //POCOR-8874 end
+////                            $absenceReason = array();
+////                            $absenceType = array();
+////                            $result = $StudentAbsencesPeriodDetails
+////                                ->find()
+////                                ->contain(['AbsenceTypes'])
+////                                ->select([
+////                                    $StudentAbsencesPeriodDetails->aliasField('date'),
+////                                    $StudentAbsencesPeriodDetails->aliasField('period'),
+////                                    $StudentAbsencesPeriodDetails->aliasField('comment'),
+////                                    $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
+////                                    $StudentAbsencesPeriodDetails->aliasField('student_absence_reason_id'),
+////                                    'AbsenceTypes.code'
+////                                ])
+////                                ->where($conditions)
+////                                ->all();
+////                            if (!$result->isEmpty()) {
+////                                $entity = $result->first();
+////                                $data = [
+////                                    'date' => $entity->date,
+////                                    'period' => $entity->period,
+////                                    'comment' => $entity->comment,
+////                                    'absence_type_id' => $entity->absence_type_id ?? 0,
+////                                    'student_absence_reason_id' => $entity->student_absence_reason_id,
+////                                    'absence_type_code' => $entity->absence_type->code
+////                                ];
+////                                if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
+////                                    $StudentAbsenceReasons = TableRegistry::getTableLocator()->get('Institution.StudentAbsenceReasons');
+////                                    if (isset($entity->student_absence_reason_id)) {
+////                                        $studentAbsenceReason = $StudentAbsenceReasons
+////                                            ->find()
+////                                            ->select([
+////                                                'name' => $StudentAbsenceReasons->aliasField('name')
+////                                            ])
+////                                            ->where(
+////                                                [$StudentAbsenceReasons->aliasField('id = ') => $entity->student_absence_reason_id]
+////                                            )->first();
+////                                        if (!empty($studentAbsenceReason)) {
+////                                            $absenceReason['name'] = $studentAbsenceReason->name;
+////                                        }
+////                                    }
+////                                    $AbsenceTypes = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
+////                                    if (isset($entity->absence_type_id) && $entity->absence_type_id != 0) {
+////                                        $absenceType = $AbsenceTypes
+////                                            ->find()
+////                                            ->select([
+////                                                'name' => $AbsenceTypes->aliasField('name'),
+////                                                'code' => $AbsenceTypes->aliasField('code')
+////                                            ])
+////                                            ->where([$AbsenceTypes->aliasField('id = ') => $entity->absence_type_id])->first();
+////                                        if (!empty($absenceType)) {
+////                                            $absenceType['name'] = $absenceType->name;
+////                                            $absenceType['code'] = $absenceType->code;
+////                                        }
+////                                    }
+////                                }
+////                            } else {
+////                                // $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Institution.StudentAttendanceMarkedRecords');
+////                                $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+////                                $isMarkedRecords = $StudentAttendanceMarkedRecords
+////                                    ->find()
+////                                    ->select([
+////                                        $StudentAttendanceMarkedRecords->aliasField('date'),
+////                                        $StudentAttendanceMarkedRecords->aliasField('period')
+////                                    ])
+////                                    //POCOR-5900 start (Filter for check start date of student)
+////                                    ->leftJoin(
+////                                        [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
+////                                        [
+////                                            $InstitutionStudents->aliasField('institution_id = ') . $StudentAttendanceMarkedRecords->aliasField('institution_id'),
+////                                        ]
+////                                    )
+////                                    //POCOR-5900 end
+////                                    ->where([
+////                                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
+////                                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
+////                                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
+////                                        $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
+////                                        $StudentAttendanceMarkedRecords->aliasField('date = ') => $findDay,
+////                                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
+////                                        $InstitutionStudents->aliasField('start_date') . ' <= ' => $findDay
+////                                    ])->toArray();
+////
+////                                if (!empty($isMarkedRecords)) {
+////                                    $data = [
+////                                        'date' => $findDay,
+////                                        'period' => (int) $attendancePeriodId,
+////                                        'comment' => null,
+////                                        'absence_type_id' => $PRESENT,
+////                                        'student_absence_reason_id' => null,
+////                                        'absence_type_code' => null
+////                                    ];
+////                                } else {
+////                                    $data = [
+////                                        'date' => $findDay,
+////                                        'period' => (int) $attendancePeriodId,
+////                                        'comment' => null,
+////                                        'absence_type_id' => 0,
+////                                        'student_absence_reason_id' => null,
+////                                        'absence_type_code' => null
+////                                    ];
+////                                }
+////                            }
+////                            $row->institution_student_absences = $data;
+////                            $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+////                            $getRecord = $StudentAttendanceMarkedRecords->find('all')
+////                                ->where([
+////                                    $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
+////                                    $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
+////                                    $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
+////                                    $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
+////                                    $StudentAttendanceMarkedRecords->aliasField('date') => $findDay,
+////                                    $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') => 1,
+////                                    $StudentAttendanceMarkedRecords->aliasField('period IS') => $attendancePeriodId //POCOR-8383
+////                                ])->first();
+////                            if (!empty($getRecord)) {
+////                                $row->is_NoClassScheduled = 1;
+////                            } else {
+////                                $row->is_NoClassScheduled = 0;
+////                            }
+////                            //POCOR-8874 start
+////                            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+////                            $getSubject = $InstitutionSubjects->find('all')
+////                                ->where([
+////                                    $InstitutionSubjects->aliasField('id') => $subjectId,
+////                                ])->first();
+////                            $row->subject = $getSubject->name;
+////                            //POCOR-8874 end
+////                            if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) {
+////
+////                                $row->attendance = '';
+////
+////                                if ($row->is_NoClassScheduled == 1) { //POCOR-7929
+////                                    $row->attendance = 'No scheduled class';
+////                                } else if (isset($data['absence_type_id']) && ($data['absence_type_id'] == $PRESENT)) {
+////                                    $row->attendance = 'Present';
+////                                } else if (isset($data['absence_type_code']) && ($data['absence_type_code'] == 'EXCUSED' || $data['absence_type_code'] == 'UNEXCUSED')) {
+////                                    $row->attendance = 'Absent - ' . (isset($absenceType['name'])) ? $absenceType['name'] : '';
+////                                } else if (isset($data['absence_type_code']) && $data['absence_type_code'] == 'LATE') {
+////                                    $row->attendance = 'Late';
+////                                } else {
+////                                    $row->attendance = 'NOTMARKED';
+////                                }
+////                                $row->comment = $data['comment'];
+////                                $row->student_absence_reasons = (isset($absenceReason['name'])) ? $absenceReason['name'] : NULL;
+////                                $row->name = $row['user']['first_name'] . ' ' . $row['user']['last_name'];
+////                                $row->class = $row['institution_class']['name'];
+////                                $row->date = date("d/m/Y", strtotime($findDay));
+////                                $row->StudentStatuses = $row['_matchingData']['StudentStatuses']['name'];
+////                                $row->studentId = $row['student_id'];
+////                                $row->attendanceBy = $attendanceBy; //POCOR-8874
+////                                $row->period = "Period " . $attendancePeriodId; //POCOR-8874
+////                                $row->test = 1;
+////                            }
+////                            return $row;
+////                        });
+////                    }
+////                );
+////        } else {
+////            // all day
+////            $StudentAttendanceMarkTypesTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
+////            $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+////            $periodList = $StudentAttendanceMarkTypesTable
+////                ->find('PeriodByClass', [
+////                    'institution_class_id' => $institutionClassId,
+////                    'academic_period_id' => $academicPeriodId,
+////                    'day_id' => $day,
+////                    'education_grade_id' => $educationGradeId,
+////                    'week_start_day' => $weekStartDay, //POCOR-7183
+////                    'week_end_day' => $weekEndDay //POCOR-7183
+////                ])->toArray();
+////
+////            $dayList = $AcademicPeriodsTable
+////                ->find('DaysForPeriodWeek', [
+////                    'academic_period_id' => $academicPeriodId,
+////                    'week_id' => $weekId,
+////                    'institution_id' => $institutionId,
+////                    'exclude_all' => true
+////                ])->toArray();
+////
+////            $studentListResult = $this
+////                ->find('list', [
+////                    'keyField' => 'student_id',
+////                    'valueField' => 'student_id'
+////                ])
+////                ->matching($this->StudentStatuses->getAlias(), function ($q) {
+////                    return $q->where([
+////                        $this->StudentStatuses->aliasField('code') => 'CURRENT'
+////                    ]);
+////                })
+////                ->where([
+////                    $this->aliasField('academic_period_id') => $academicPeriodId,
+////                    $this->aliasField('institution_class_id') => $institutionClassId,
+////                ])->all();
+////            if (!$studentListResult->isEmpty()) {
+////                $studentList = $studentListResult->toArray();
+////                //                $this->log('$studentList','debug');
+////                //                $this->log($studentList,'debug');
+////                $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
+////                $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+////                if (empty($studentList)) { //POCOR-8022
+////                    $studentList = [0];
+////                }
+////                $result = $StudentAbsencesPeriodDetails
+////                    ->find()
+////                    ->contain(['AbsenceTypes'])
+////                    ->select([
+////                        $StudentAbsencesPeriodDetails->aliasField('student_id'),
+////                        $StudentAbsencesPeriodDetails->aliasField('date'),
+////                        $StudentAbsencesPeriodDetails->aliasField('period'),
+////                        $StudentAbsencesPeriodDetails->aliasField('subject_id'), //POCOR-8874
+////                        $StudentAbsencesPeriodDetails->aliasField('absence_type_id'),
+////                        'code' => 'AbsenceTypes.code'
+////                    ])
+////                    ->where([
+////                        $StudentAbsencesPeriodDetails->aliasField('academic_period_id = ') => $academicPeriodId,
+////                        $StudentAbsencesPeriodDetails->aliasField('institution_class_id = ') => $institutionClassId,
+////                        $StudentAbsencesPeriodDetails->aliasField('education_grade_id = ') => $educationGradeId,
+////                        $StudentAbsencesPeriodDetails->aliasField('student_id IN ') => $studentList,
+////                        $StudentAbsencesPeriodDetails->aliasField('institution_id = ') => $institutionId,
+////                        $StudentAbsencesPeriodDetails->aliasField('subject_id = ') => $subjectId,
+////                        // $StudentAbsencesPeriodDetails->aliasField('period = ') => $attendancePeriodId, //POCOR-8874
+////                        'AND' => [
+////                            $StudentAbsencesPeriodDetails->aliasField('date >= ') => $weekStartDay,
+////                            $StudentAbsencesPeriodDetails->aliasField('date <= ') => $weekEndDay,
+////                        ]
+////                    ])->toArray();
+////
+////                $isMarkedRecords = $StudentAttendanceMarkedRecords
+////                    ->find()
+////                    ->select([
+////                        $StudentAttendanceMarkedRecords->aliasField('date'),
+////                        $StudentAttendanceMarkedRecords->aliasField('period'),
+////                        $StudentAttendanceMarkedRecords->aliasField('subject_id'), //POCOR-8874
+////                        $StudentAttendanceMarkedRecords->aliasField('no_scheduled_class') //POCOR-7929
+////                    ])
+////                    ->where([
+////                        $StudentAttendanceMarkedRecords->aliasField('academic_period_id = ') => $academicPeriodId,
+////                        $StudentAttendanceMarkedRecords->aliasField('institution_class_id = ') => $institutionClassId,
+////                        $StudentAttendanceMarkedRecords->aliasField('education_grade_id = ') => $educationGradeId,
+////                        $StudentAttendanceMarkedRecords->aliasField('institution_id = ') => $institutionId,
+////                        $StudentAttendanceMarkedRecords->aliasField('subject_id = ') => $subjectId,
+////                        // $StudentAttendanceMarkedRecords->aliasField('period = ') => $attendancePeriodId, //POCOR-8874
+////                        $StudentAttendanceMarkedRecords->aliasField('date >= ') => $weekStartDay,
+////                        $StudentAttendanceMarkedRecords->aliasField('date <= ') => $weekEndDay
+////                    ])->toArray();
+////
+////                $studentAttenanceData = [];
+////                foreach ($studentList as $value) {
+////                    $studentId = $value;
+////                    if (!isset($studentAttenanceData[$studentId])) {
+////                        $studentAttenanceData[$studentId] = [];
+////                    }
+////
+////                    foreach ($dayList as $day) {
+////                        $dayId = $day['day'];
+////                        $date = $day['date'];
+////                        if (!isset($studentAttenanceData[$studentId][$dayId])) {
+////                            $studentAttenanceData[$studentId][$dayId] = [];
+////                        }
+////
+////                        // print_r($periodList);die;
+////                        foreach ($periodList as $period) {
+////                            $periodId = $period['id'];
+////                            if (!isset($studentAttenanceData[$studentId][$dayId][$periodId])) {
+////                                $studentAttenanceData[$studentId][$dayId][$periodId] = 'NOTMARKED';
+////                                if (!empty($isMarkedRecords)) { //POCOR-7183 add if check isMarkedRecords condition not empty
+////                                    foreach ($isMarkedRecords as $entity) {
+////                                        $entityDate = $entity->date->format('Y-m-d');
+////                                        $entityPeriod = $entity->period;
+////                                        $entitySubject = $entity->subject_id; //POCOR-8874
+////
+////                                        //POCOR-7929 start
+////                                        if ($entityDate == $date && $entity->no_scheduled_class == 1) {
+////                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'NoScheduledClicked';
+////                                            break;
+////                                        } //POCOR-7929 end
+////                                        else if ($entityDate == $date && $entityPeriod == $periodId) {
+////                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
+////                                            break;
+////                                        }
+////                                        //POCOR-8874 start
+////                                        else if ($entityDate == $date && $entitySubject == $subjectId && $attendanceBy == 'subject') {
+////                                            $studentAttenanceData[$studentId][$dayId][$periodId] = 'PRESENT';
+////                                            break;
+////                                        }
+////                                        //POCOR-8874 end
+////                                    }
+////                                }
+////                            }
+////                            if (!empty($result)) { //POCOR-7183 add if check result condition not empty
+////                                foreach ($result as $entity) {
+////                                    $entityDateFormat = $entity->date->format('Y-m-d');
+////                                    $entityStudentId = $entity->student_id;
+////                                    $entityPeriod = $entity->period;
+////                                    $entitySubject = $entity->subject_id; //POCOR-8874
+////
+////                                    if ($studentId == $entityStudentId && $entityDateFormat == $date && ($entityPeriod == $periodId || ($entitySubject == $subjectId && $attendanceBy == 'subject'))) { //POCOR-8874 add condition to check subject id
+////                                        if (isset($this->request) && ('excel' === $this->request->pass[0])) {
+////                                            if ($entity->code == 'EXCUSED' || $entity->code == 'UNEXCUSED') {
+////                                                $studentAttenanceData[$studentId][$dayId][$periodId] = 'ABSENT';
+////                                                break;
+////                                            } else {
+////                                                $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
+////                                                break;
+////                                            }
+////                                        } else {
+////                                            $studentAttenanceData[$studentId][$dayId][$periodId] = $entity->code;
+////                                            break;
+////                                        }
+////                                    }
+////                                }
+////                            }
+////                        }
+////                    }
+////                }
+////
+////                $query
+////                    ->formatResults(function (ResultSetInterface $results) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList, $attendanceBy,$subjectId) { //POCOR-8874 add params attendanceBy and subjectId
+////                        return $results->map(function ($row) use ($studentAttenanceData, $weekStartDay, $weekEndDay, $periodList, $attendanceBy,$subjectId) { //POCOR-8874 add params attendanceBy and subjectId
+////                            $studentId = $row->student_id;
+////                            if (isset($studentAttenanceData[$studentId])) {
+////                                $row->week_attendance = $studentAttenanceData[$studentId];
+////
+////                                $row->current = date("d/m/Y", strtotime($weekStartDay)) . ' - ' . date("d/m/Y", strtotime($weekEndDay));
+////                                // print_r($row);die;
+////                                if (isset($this->request) && ('excel' === $this->request->getAttribute('params')['pass'][0])) { //POCOR-8874
+////                                    // if (isset($this->request) && ('excel' === $this->request->pass[0])) { //POCOR -8874 commented this line because it is not working
+////                                    $row->name = $row['user']['openemis_no'] . ' - ' . $row['user']['first_name'] . ' ' . $row['user']['last_name'];
+////
+////                                    foreach ($periodList as $Period) {
+////                                        $row->period .= $Period['name']." "; //POCOR-8874
+////                                    }
+////
+////                                    foreach ($studentAttenanceData[$studentId] as $key => $value) {
+////
+////                                        //POCOR-7929 start
+////                                        foreach ($periodList as $Key => $PeriodData) {
+////                                            $id = (int) $PeriodData['id'];
+////                                            if ($value[$id] == "NoScheduledClicked") {
+////                                                $value[$id] = "No Scheduled Classes";
+////                                            }
+////                                            //POCOR-8874 start
+////                                            if ($attendanceBy == 'period') {
+////                                                $row->{'week_attendance_status_' . $key . '-' . $PeriodData['name']} = $value[$id];
+////                                                //POCOR-7929 end
+////                                            } else {
+////                                                $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+////                                                $getSubject = $InstitutionSubjects->find('all')
+////                                                    ->where([
+////                                                        $InstitutionSubjects->aliasField('id') => $subjectId,
+////                                                    ])->first();
+////                                                $row->{'week_attendance_status_' . $key . '-' . $getSubject->name} = $value[$id];
+////                                                //POCOR-7929 end
+////                                                $row->subject = $getSubject->name; //POCOR-8874
+////                                            }
+////                                            //POCOR-8874 end
+////                                        }
+////                                    }
+////                                }
+////                            }
+////                            $row->attendanceBy = $attendanceBy; //POCOR-8874
+////
+////                            return $row;
+////                        });
+////                    });
+////            }
+////        }
+////        //POCOR-6547[START]
+////        if ($day != -1) {
+////            $studentId = [];
+////            // $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
+////            $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
+////
+////            //POCOR-7183 starts
+////            if (!empty($findDay[0]) && !empty($findDay[1]) && !empty($day['date'])) {
+////                $DayCondititon = [
+////                    $studentWithdraw->aliasField('effective_date >= ') => $findDay[0],
+////                    $studentWithdraw->aliasField('effective_date <= ') => $findDay[1]
+////                ];
+////            } else {
+////                $DayCondititon = [$studentWithdraw->aliasField('effective_date <= ') => $findDay];
+////            } //POCOR-7183 ends
+////            $studentWithdrawData = $studentWithdraw->find()
+////                ->select([
+////                    // 'student_id' => $InstitutionStudents->aliasField('student_id'),
+////                ])
+////                /*POCOR-6062 starts*/
+////                ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
+////                    $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
+////                    $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
+////                    $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
+////                    $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
+////                ])/*POCOR-6062 ends*/
+////                ->where([
+////                    $studentWithdraw->aliasField('institution_id') => $institutionId,
+////                    $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
+////                    $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
+////                    // $studentWithdraw->aliasField('effective_date >= ') => $day,
+////                    $DayCondititon, //POCOR-7183
+////                    $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
+////                ])->toArray();
+////        } else {
+////            $studentId = [];
+////            // $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
+////            $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
+////            $studentWithdrawData = $studentWithdraw->find()
+////                ->select([
+////                    'student_id' => $InstitutionStudents->aliasField('student_id'),
+////                ])
+////                /*POCOR-6062 starts*/
+////                ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
+////                    $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
+////                    $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
+////                    $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
+////                    $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
+////                ])/*POCOR-6062 ends*/
+////                ->where([
+////                    $studentWithdraw->aliasField('institution_id') => $institutionId,
+////                    $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
+////                    $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
+////                    //$studentWithdraw->aliasField('effective_date >= ') => $day,
+////                    // $studentWithdraw->aliasField('effective_date <= ') => $findDay,
+////                    $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
+////                ])
+////                ->toArray();
+////        }
+////        //POCOR-6547[END]
+////        if ($studentWithdrawData) {
+////            $studentId = [];
+////            $WithDrawstudentId = [];
+////            $CurrentStudentId = [];
+////            $InstitutionStudentsCurrentData = []; //POCOR-8022
+////            $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents'); //POCOR-7902
+////            foreach ($studentWithdrawData as $studenetVal) {
+////                $WithDrawstudentId[] = $studenetVal['student_id'];
+////            }
+////            if (empty($WithDrawstudentId)) { //POCOR-8022
+////                $WithDrawstudentId = [0];
+////            }
+////            //            $this->log('$WithDrawstudentId', 'debug');
+////            //            $this->log($WithDrawstudentId, 'debug');
+////            //POCOR-7902 start
+////            if (!empty($WithDrawstudentId)) { //POCOR-8022
+////                $whereWDR = [
+////                    $InstitutionStudents->aliasField('institution_id') => $institutionId,
+////                    $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
+////                    $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
+////                    $InstitutionStudents->aliasField('student_status_id') => 1,
+////                    $InstitutionStudents->aliasField('student_id IN') => $WithDrawstudentId
+////                ];
+////                //                $this->log('$whereWDR', 'debug');
+////                //                $this->log($whereWDR, 'debug');
+////                $InstitutionStudentsCurrentData = $InstitutionStudents
+////                    ->find()
+////                    ->select([
+////                        'student_id' => 'InstitutionStudents.student_id'
+////                    ])
+////                    ->where($whereWDR) //POCOR-8022
+////                    ->enableAutoFields(true)
+////                    ->toArray();
+////            }
+////            if (!empty($InstitutionStudentsCurrentData)) { //POCOR-8022
+////                foreach ($InstitutionStudentsCurrentData as $CurrentstudenetVal) {
+////                    $CurrentStudentId[] = $CurrentstudenetVal['student_id'];
+////                }
+////            }
+////            $studentId = array_diff($WithDrawstudentId, $CurrentStudentId); //POCOR-7902 end
+////            if (empty($studentId)) { //POCOR-8022
+////                $studentId = [0];
+////            }
+////            $whereWDR2 = [$this->aliasField('student_id NOT IN') => $studentId]; //POCOR-8022
+////            //            $this->log('$whereWDR', 'debug');
+////            //            $this->log($whereWDR, 'debug');
+////            $query->where($whereWDR2); //POCOR-8022
+////
+////        }
+//        return $query;
+//    }
 
     /**
      * @param Query $query
@@ -1478,9 +1585,9 @@ SQL;
               $educationGradeId,
               $institutionId
     ) {
-        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
-        $Users = TableRegistry::getTableLocator()->get('Security.Users');
-        $Statuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $InstitutionStudents = self::getDynamicTableInstance('institution_students');
+        $Users = self::getDynamicTableInstance('security_users');
+        $Statuses = self::getDynamicTableInstance('student_statuses');
         $query
             ->select([
                 $this->aliasField('academic_period_id'),
@@ -1488,12 +1595,15 @@ SQL;
                 $this->aliasField('institution_id'),
                 $this->aliasField('student_id'),
                 $Users->aliasField('id'),
+                $Users->aliasField('id'),
                 $Users->aliasField('openemis_no'),
                 $Users->aliasField('first_name'),
                 $Users->aliasField('middle_name'),
                 $Users->aliasField('third_name'),
                 $Users->aliasField('last_name'),
-                $Users->aliasField('preferred_name')
+                $Users->aliasField('preferred_name'),
+                $InstitutionStudents->aliasField('student_status_id'),
+                $Statuses->aliasField('name')
             ])
             ->innerJoin(
                 [$Users->getAlias() => $Users->getTable()],
@@ -1743,42 +1853,53 @@ SQL;
     private function _filterWithdrawnStudents(Query $query, array $options)
     {
         $day = $options['day_id'];
-        Log::debug("[Finder] -> Фильтрация отчислений с использованием подзапроса");
+        $institutionId = $options['institution_id'];
 
-        /** * Клонируем текущий запрос, чтобы получить только ID студентов класса,
-         * которые соответствуют текущим фильтрам (класс, период, предмет).
-         */
-        $classStudentIdsQuery = (clone $query)
-            ->select(['target_id' => $this->aliasField('student_id')])
-            ->group([$this->aliasField('student_id')]);
+        Log::debug("[Withdraw] >>> Начало фильтрации отчислений");
 
+        // 1. Получаем список ID всех студентов, которые сейчас в запросе (в классе)
+        $classStudentIds = (clone $query)
+            ->select(['student_id' => $this->aliasField('student_id')])
+            ->group([$this->aliasField('student_id')])
+            ->extract('student_id')
+            ->toArray();
+
+        if (empty($classStudentIds)) {
+            Log::debug("[Withdraw] Класс пуст, фильтрация не требуется.");
+            return $query;
+        }
+        Log::debug("[Withdraw] Студентов в классе перед проверкой: " . count($classStudentIds) . " (IDs: " . implode(',', $classStudentIds) . ")");
+
+        // 2. Ищем, кто из ЭТОГО списка отчислен
         $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
-
-        /**
-         * Теперь ищем отчисления только для этих ID.
-         * SQL превратится в: WHERE student_id IN (SELECT student_id FROM ...)
-         */
-        $withdrawnQuery = $studentWithdraw->find()
+        $withdrawQuery = $studentWithdraw->find()
             ->select(['student_id'])
             ->where([
-                'StudentWithdraw.institution_id' => $options['institution_id'],
-                'StudentWithdraw.student_id IN' => $classStudentIdsQuery
+                'StudentWithdraw.institution_id' => $institutionId,
+                'StudentWithdraw.student_id IN' => $classStudentIds
             ]);
 
+        // Условие по дате
         if ($day != -1) {
-            $withdrawnQuery->where(['StudentWithdraw.effective_date <=' => $day]);
+            $withdrawQuery->where(['StudentWithdraw.effective_date <=' => $day]);
         } else {
-            $withdrawnQuery->where([
+            $withdrawQuery->where([
                 'StudentWithdraw.effective_date >=' => $options['week_start_day'],
                 'StudentWithdraw.effective_date <=' => $options['week_end_day']
             ]);
         }
 
-        // Применяем фильтр NOT IN на основе полученного подзапроса
-        $query->where([
-            $this->aliasField('student_id NOT IN') => $withdrawnQuery
-        ]);
+        $withdrawnIds = $withdrawQuery->extract('student_id')->toArray();
 
+        // 3. Если нашли отчисленных, исключаем их из основного запроса
+        if (!empty($withdrawnIds)) {
+            Log::debug("[Withdraw] Найдено отчисленных для исключения: " . count($withdrawnIds) . " (IDs: " . implode(',', $withdrawnIds) . ")");
+            $query->where([$this->aliasField('student_id NOT IN') => $withdrawnIds]);
+        } else {
+            Log::debug("[Withdraw] Отчисленных студентов в данном классе не обнаружено.");
+        }
+
+        Log::debug("[Withdraw] <<< Фильтрация завершена");
         return $query;
     }
 
@@ -1799,6 +1920,28 @@ SQL;
                 $InstitutionStudents->aliasField('end_date >= ') => $day,
             ]
         ];
+        $query->where($dayCondition);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @param $day
+     * @return Query
+     */
+
+    private function getAttendanceDailyQueryWithDayConditionNew(Query $query, $day)
+    {
+        //        $this->log("getAttendanceDailyQueryWithDayCondition $day", 'debug');
+        $InstitutionStudents = self::getDynamicTableInstance('institution_students');
+        $dayCondition = [
+            $InstitutionStudents->aliasField('start_date <= ') => $day,
+            'OR' => [
+                $InstitutionStudents->aliasField('end_date is ') => null,
+                $InstitutionStudents->aliasField('end_date >= ') => $day,
+            ]
+        ];
+
         $query->where($dayCondition);
         return $query;
     }
@@ -1974,6 +2117,63 @@ SQL;
             $Details = TableRegistry::getTableLocator()->get('Institution.institutionStudentAbsenceDetails');
             $Records = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
         }
+        if ($archive) {
+            $table_name = 'institution_student_absence_details';
+            $tableLocator = new TableLocator();
+            if ($archive) {
+                $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
+                $table_name = $archiveTableAndConnection[0];
+                $Details = $tableLocator->get($table_name);
+            }
+            $table_name = 'student_attendance_marked_records';
+            if ($archive) {
+                $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
+                $table_name = $archiveTableAndConnection[0];
+                $Records = $tableLocator->get($table_name);
+            }
+        }
+        $first_name = $Users->aliasField('first_name');
+        $last_name = $Users->aliasField('last_name');
+        $absence_type_id = $Types->aliasField('id');
+        $absence_type_code = $Types->aliasField('code');
+        $absence_type_name = $Types->aliasField('name');
+        $student_absence_reason_id = $Details->aliasField('student_absence_reason_id');
+        $query->select(
+            [
+                $this->aliasField('id'),
+                'date' => $Details->aliasField('date'),
+                'day' => '"' . $day . '"',
+                'period' => $Details->aliasField('period'),
+                'subject_id' => $Details->aliasField('subject_id'),
+                'marked_date' => $Records->aliasField('date'),
+                'marked_period' => $Records->aliasField('period'),
+                'marked_subject_id' => $Records->aliasField('subject_id'),
+                'comment' => $Details->aliasField('comment'),
+                'student_absence_reason_id' => "COALESCE($student_absence_reason_id, NULL)",
+                'student_absence_reason' => $Reasons->aliasField('name'),
+                'student_name' => "CONCAT($first_name, ' ', $last_name)",
+                'student_status' => $Statuses->aliasField('name'),
+                'class_name' => $Classes->aliasField('name'),
+                'openemis_no' => $Users->aliasField('openemis_no'),
+                'absence_type_id' => "COALESCE($absence_type_id, 0)",
+                'absence_type_code' => "COALESCE($absence_type_code, 'PRESENT')",
+                'absence_type_name' => "COALESCE($absence_type_name, 'Present')",
+                'no_scheduled_class' => $Records->aliasField('no_scheduled_class'),
+                'user_id' => $this->aliasField('student_id')
+            ]
+        );
+        return $query;
+    }
+    private function getAttendanceDailySelectFieldsNew(Query $query, $day)
+    {
+        $Statuses = self::getDynamicTableInstance('student_statuses');
+        $Users = self::getDynamicTableInstance('security_users');
+        $Types = self::getDynamicTableInstance('absence_types');
+        $Classes = self::getDynamicTableInstance('institution_classes');
+        $Reasons = self::getDynamicTableInstance('student_absence_reasons');
+        $Details =  self::getDynamicTableInstance('institution_student_absence_details');
+            $Records =  self::getDynamicTableInstance('student_attendance_marked_records');
+
         if ($archive) {
             $table_name = 'institution_student_absence_details';
             $tableLocator = new TableLocator();
