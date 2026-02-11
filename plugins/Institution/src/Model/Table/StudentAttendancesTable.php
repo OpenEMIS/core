@@ -1259,31 +1259,26 @@ class StudentAttendancesTable extends ControllerActionTable
         $options['subject_id'] = $sheet['subjectId']; //POCOR-8874
         $options['attendance_by'] = $sheet['attendance_by']; //POCOR-8874
 
+        // POCOR-9572: Execute query once and cache results for all onExcelGet* methods
+        $query = $this->findClassStudentsWithAbsence($sheet['query'], $options);
+        $this->_absenceDataCache = [];
 
-        $this->_absenceData = $this->findClassStudentsWithAbsence($sheet['query'], $options);
+        if ($query) {
+            $results = $query->all();
+            foreach ($results as $row) {
+                $studentId = $row->student_id;
+                $date = $row->date ?? '';
+                $this->_absenceDataCache[$studentId][$date] = $row;
+            }
+        }
     }
 
     // POCOR-9572: Get attendance status for Excel export
     public function onExcelGetAttendance(EventInterface $event, Entity $entity)
     {
-        // Get cached data for this student
-        static $absenceDataCache = null;
-        if ($absenceDataCache === null) {
-            $absenceDataCache = [];
-            $query = $this->_absenceData;
-            if ($query) {
-                $results = $query->all();
-                foreach ($results as $row) {
-                    $studentId = $row->student_id;
-                    $date = $row->date ?? '';
-                    $absenceDataCache[$studentId][$date] = $row;
-                }
-            }
-        }
-
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             $absenceTypeName = $row->absence_type_name ?? 'Present';
             return __($absenceTypeName);
         }
@@ -1300,24 +1295,10 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function onExcelGetPeriod(EventInterface $event, Entity $entity)
     {
-        // Get cached data for this student
-        static $absenceDataCache = null;
-        if ($absenceDataCache === null) {
-            $absenceDataCache = [];
-            $query = $this->_absenceData;
-            if ($query) {
-                $results = $query->all();
-                foreach ($results as $row) {
-                    $studentId = $row->student_id;
-                    $date = $row->date ?? '';
-                    $absenceDataCache[$studentId][$date] = $row;
-                }
-            }
-        }
-
+        // POCOR-9572: Use shared cache from onExcelUpdateFields
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             $period = $row->period ?? 1;
             return 'Period ' . $period;
         }
@@ -1396,24 +1377,10 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function onExcelGetStudentAbsenceReasons(EventInterface $event, Entity $entity)
     {
-        // Get cached data for this student
-        static $absenceDataCache = null;
-        if ($absenceDataCache === null) {
-            $absenceDataCache = [];
-            $query = $this->_absenceData;
-            if ($query) {
-                $results = $query->all();
-                foreach ($results as $row) {
-                    $studentId = $row->student_id;
-                    $date = $row->date ?? '';
-                    $absenceDataCache[$studentId][$date] = $row;
-                }
-            }
-        }
-
+        // POCOR-9572: Use shared cache from onExcelUpdateFields
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             return $row->student_absence_reason ?? '';
         }
         return '';
