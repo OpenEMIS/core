@@ -146,11 +146,11 @@ class StudentAttendancesTable extends ControllerActionTable
             $query = $this->getAttendanceDailyQueryWithDayCondition($query, $day);
             Log::debug('[Attendance] Step 4 - After getAttendanceDailyQueryWithDayCondition: ' . (clone $query)->count() . ' students');
 
-            $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $archive);
+            $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $attendanceBy, $archive);
             Log::debug('[Attendance] Step 5 - After getAttendanceDailyQueryWithDetails: ' . (clone $query)->count() . ' students');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceTypes($query, $archive);
-            $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $archive);
+            $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $attendancePeriodId, $subjectId, $attendanceBy, $archive);
             $query = $this->getAttendanceDailyQueryWithAbsenceReasons($query, $archive);
             $query = $this->getAttendanceDailySelectFields($query, $day, $archive);
             Log::debug('[Attendance] Step 6 - After all daily query setup complete');
@@ -177,6 +177,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $weekEndDay,
                 $attendancePeriodId,
                 $subjectId,
+                $attendanceBy, // POCOR-9572
                 false // archive = false for current data
             );
             Log::debug('[Attendance] Step 5 - After getWeekDaysAbsenceArray: got data for ' . count($WeekDaysAbsenceArray) . ' student-day combinations');
@@ -912,6 +913,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $weekEndDay = $options['week_end_day'];
         $day = $options['day_id'];
         $subjectId = $options['subject_id'];
+        $attendanceBy = $options['attendance_by'] ?? 'period'; // POCOR-9572
         //        $this->log("institutionId = $institutionId", 'debug');
         //        $this->log("institutionClassId = $institutionClassId", 'debug');
         //        $this->log("educationGradeId = $educationGradeId", 'debug');
@@ -973,13 +975,13 @@ class StudentAttendancesTable extends ControllerActionTable
             $query = $this->getAttendanceDailyQueryWithDayCondition($query, $day);
             //            $this->log("step 5", 'debug');
 
-            $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $archive);
+            $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $attendanceBy, $archive);
             //            $this->log("step 6", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceTypes($query, $archive);
             //            $this->log("step 7", 'debug');
 
-            $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $archive);
+            $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $attendancePeriodId, $subjectId, $attendanceBy, $archive);
             //            $this->log("step 8", 'debug');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceReasons($query, $archive);
@@ -1004,6 +1006,7 @@ class StudentAttendancesTable extends ControllerActionTable
                 $weekEndDay,
                 $attendancePeriodId,
                 $subjectId,
+                $attendanceBy, // POCOR-9572
                 $archive
             );
             //            $this->log($WeekDaysAbsenceArray, 'debug');
@@ -1086,8 +1089,8 @@ class StudentAttendancesTable extends ControllerActionTable
         ];
 
         $newArray[] = [
-            'key' => 'StudentAttendances.name',
-            'field' => 'name',
+            'key' => 'StudentAttendances.student_name',
+            'field' => 'student_name',
             'type' => 'string',
             'label' => 'Name'
         ];
@@ -1260,41 +1263,160 @@ class StudentAttendancesTable extends ControllerActionTable
         $this->_absenceData = $this->findClassStudentsWithAbsence($sheet['query'], $options);
     }
 
-    public function onExcelRenderAttendance(EventInterface $event, Entity $entity, array $attr)
+    // POCOR-9572: Get attendance status for Excel export
+    public function onExcelGetAttendance(EventInterface $event, Entity $entity)
     {
-        // Get the data from the temporary variable
-        $absenceData = $this->_absenceData;
-        $absenceCodeList = $this->absenceCodeList;
-        if (isset($absenceData[$entity->student_id][$attr['date']])) {
-            $absenceObj = $absenceData[$entity->student_id][$attr['date']];
-            if (!$absenceObj['full_day']) {
-                $startTimeAbsent = $absenceObj['start_time'];
-                $endTimeAbsent = $absenceObj['end_time'];
-                $startTime = new Time($startTimeAbsent);
-                $startTimeAbsent = $startTime->format('h:i A');
-                $endTime = new Time($endTimeAbsent);
-                $endTimeAbsent = $endTime->format('h:i A');
-                if ($absenceCodeList[$absenceObj['absence_type_id']] == 'LATE') {
-                    $secondsLate = intval($endTime->toUnixString()) - intval($startTime->toUnixString());
-                    $minutesLate = $secondsLate / 60;
-                    $hoursLate = floor($minutesLate / 60);
-                    if ($hoursLate > 0) {
-                        $minutesLate = $minutesLate - ($hoursLate * 60);
-                        $lateString = $hoursLate . ' ' . __('Hour') . ' ' . $minutesLate . ' ' . __('Minute');
-                    } else {
-                        $lateString = $minutesLate . ' ' . __('Minute');
-                    }
-                    $timeStr = sprintf(__($absenceObj['absence_type_name']) . ' - (%s)', $lateString);
-                } else {
-                    $timeStr = sprintf(__('Absent') . ' - ' . $absenceObj['absence_reason'] . ' (%s - %s)', $startTimeAbsent, $endTimeAbsent);
+        // Get cached data for this student
+        static $absenceDataCache = null;
+        if ($absenceDataCache === null) {
+            $absenceDataCache = [];
+            $query = $this->_absenceData;
+            if ($query) {
+                $results = $query->all();
+                foreach ($results as $row) {
+                    $studentId = $row->student_id;
+                    $date = $row->date ?? '';
+                    $absenceDataCache[$studentId][$date] = $row;
                 }
-                return $timeStr;
-            } else {
-                return sprintf('%s %s %s', __('Absent'), __('Full'), __('Day'));
             }
-        } else {
-            return '';
         }
+
+        $date = $entity->date ?? null;
+        if (isset($absenceDataCache[$entity->student_id][$date])) {
+            $row = $absenceDataCache[$entity->student_id][$date];
+            $absenceTypeName = $row->absence_type_name ?? 'Present';
+            return __($absenceTypeName);
+        }
+        return 'Present';
+    }
+
+    // POCOR-9572: Excel export methods for flat field structure
+    public function onExcelGetAttendanceBy(EventInterface $event, Entity $entity)
+    {
+        // Get attendance mode from request
+        $attendanceBy = $this->request->getQuery()['attendance_by'] ?? 'period';
+        return $attendanceBy;
+    }
+
+    public function onExcelGetPeriod(EventInterface $event, Entity $entity)
+    {
+        // Get cached data for this student
+        static $absenceDataCache = null;
+        if ($absenceDataCache === null) {
+            $absenceDataCache = [];
+            $query = $this->_absenceData;
+            if ($query) {
+                $results = $query->all();
+                foreach ($results as $row) {
+                    $studentId = $row->student_id;
+                    $date = $row->date ?? '';
+                    $absenceDataCache[$studentId][$date] = $row;
+                }
+            }
+        }
+
+        $date = $entity->date ?? null;
+        if (isset($absenceDataCache[$entity->student_id][$date])) {
+            $row = $absenceDataCache[$entity->student_id][$date];
+            $period = $row->period ?? 1;
+            return 'Period ' . $period;
+        }
+        return 'Period 1';
+    }
+
+    public function onExcelGetSubject(EventInterface $event, Entity $entity)
+    {
+        // Get subject_id from request
+        $subjectId = $this->request->getQuery()['subject_id'] ?? 0;
+
+        if ($subjectId != 0) {
+            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+            $getSubject = $InstitutionSubjects->find('all')
+                ->where([
+                    $InstitutionSubjects->aliasField('id') => $subjectId,
+                ])->first();
+
+            if ($getSubject) {
+                return $getSubject->name;
+            }
+        }
+
+        return '';
+    }
+
+    public function onExcelGetStudentStatuses(EventInterface $event, Entity $entity)
+    {
+        // Get cached data for this student
+        static $absenceDataCache = null;
+        if ($absenceDataCache === null) {
+            $absenceDataCache = [];
+            $query = $this->_absenceData;
+            if ($query) {
+                $results = $query->all();
+                foreach ($results as $row) {
+                    $studentId = $row->student_id;
+                    $date = $row->date ?? '';
+                    $absenceDataCache[$studentId][$date] = $row;
+                }
+            }
+        }
+
+        $date = $entity->date ?? null;
+        if (isset($absenceDataCache[$entity->student_id][$date])) {
+            $row = $absenceDataCache[$entity->student_id][$date];
+            return $row->student_status ?? '';
+        }
+        return '';
+    }
+
+    public function onExcelGetClass(EventInterface $event, Entity $entity)
+    {
+        // Get cached data for this student
+        static $absenceDataCache = null;
+        if ($absenceDataCache === null) {
+            $absenceDataCache = [];
+            $query = $this->_absenceData;
+            if ($query) {
+                $results = $query->all();
+                foreach ($results as $row) {
+                    $studentId = $row->student_id;
+                    $date = $row->date ?? '';
+                    $absenceDataCache[$studentId][$date] = $row;
+                }
+            }
+        }
+
+        $date = $entity->date ?? null;
+        if (isset($absenceDataCache[$entity->student_id][$date])) {
+            $row = $absenceDataCache[$entity->student_id][$date];
+            return $row->class_name ?? '';
+        }
+        return '';
+    }
+
+    public function onExcelGetStudentAbsenceReasons(EventInterface $event, Entity $entity)
+    {
+        // Get cached data for this student
+        static $absenceDataCache = null;
+        if ($absenceDataCache === null) {
+            $absenceDataCache = [];
+            $query = $this->_absenceData;
+            if ($query) {
+                $results = $query->all();
+                foreach ($results as $row) {
+                    $studentId = $row->student_id;
+                    $date = $row->date ?? '';
+                    $absenceDataCache[$studentId][$date] = $row;
+                }
+            }
+        }
+
+        $date = $entity->date ?? null;
+        if (isset($absenceDataCache[$entity->student_id][$date])) {
+            $row = $absenceDataCache[$entity->student_id][$date];
+            return $row->student_absence_reason ?? '';
+        }
+        return '';
     }
 
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -1359,12 +1481,18 @@ class StudentAttendancesTable extends ControllerActionTable
             }
         }
 
+        // POCOR-9572: Determine period based on attendance_by mode
+        // Subject-based: period = 0, subject_id = actual ID
+        // Period-based: period = actual ID, subject_id = 0
+        $attendanceBy = $options['attendance_by'] ?? 'period';
+        $period = ($attendanceBy === 'subject') ? 0 : (int)$options['attendance_period_id'];
+
         $p = [
             'institution_id'       => (int)$options['institution_id'],
             'institution_class_id' => (int)$options['institution_class_id'],
             'education_grade_id'   => (int)$options['education_grade_id'],
             'academic_period_id'   => (int)$options['academic_period_id'],
-            'period'               => (int)$options['attendance_period_id'],
+            'period'               => $period,
             'date'                 => $normalizedDate, // now normalized
             'subject_id'           => $subjectId,
         ];
@@ -1958,7 +2086,7 @@ SQL;
      * @return Query
      * @throws \Exception
      */
-    private function getAttendanceDailyQueryWithDetails(Query $query, $attendancePeriodId, $day, $subjectId, $archive = false)
+    private function getAttendanceDailyQueryWithDetails(Query $query, $attendancePeriodId, $day, $subjectId, $attendanceBy, $archive = false)
     {
         $table_name = 'institution_student_absence_details';
         $tableLocator = new TableLocator();
@@ -1983,13 +2111,20 @@ SQL;
                 . $this->aliasField('student_id'),
             $Details->aliasField('institution_id = ')
                 . $this->aliasField('institution_id'),
-            $Details->aliasField('period = ')
-                . $attendancePeriodId,
             $Details->aliasField('date = "')
                 . $day . '"'
         ];
-        if ($subjectId) {
+
+        // POCOR-9572: Use attendance_by parameter to determine mode
+        if ($attendanceBy === 'subject' && $subjectId) {
+            // Subject-based: period = 0 (or NULL), match specific subject
+            $options[] = '(' . $Details->aliasField('period') . ' = 0 OR ' . $Details->aliasField('period') . ' IS NULL)';
             $options[] = $Details->aliasField('subject_id = ') . $subjectId;
+        } else {
+            // Period-based: match specific period, subject_id = 0 (or NULL)
+            $period = !empty($attendancePeriodId) ? $attendancePeriodId : 0;
+            $options[] = $Details->aliasField('period = ') . $period;
+            $options[] = '(' . $Details->aliasField('subject_id') . ' = 0 OR ' . $Details->aliasField('subject_id') . ' IS NULL)';
         }
         //        $this->log($options, 'debug');
         $query->leftJoin(
@@ -2039,7 +2174,7 @@ SQL;
      * @return Query
      * @throws \Exception
      */
-    private function getAttendanceDailyQueryWithMarkedRecords(Query $query, $day, $archive = false)
+    private function getAttendanceDailyQueryWithMarkedRecords(Query $query, $day, $attendancePeriodId, $subjectId, $attendanceBy, $archive = false)
     {
         //        $this->log($subjectId, 'debug');
         $table_name = 'student_attendance_marked_records';
@@ -2058,9 +2193,21 @@ SQL;
             //            $Records->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
             $Records->aliasField('institution_id = ') . $this->aliasField('institution_id'),
             $Records->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-            $Records->aliasField('date = "') . $day . '"',
-            $Records->aliasField('no_scheduled_class = ') . 1
+            $Records->aliasField('date = "') . $day . '"'
         ];
+
+        // POCOR-9572: Add period/subject filters to match the attendance mode
+        if ($attendanceBy === 'subject' && $subjectId) {
+            // Subject-based: period = 0, match specific subject
+            $options[] = '(' . $Records->aliasField('period') . ' = 0 OR ' . $Records->aliasField('period') . ' IS NULL)';
+            $options[] = $Records->aliasField('subject_id = ') . $subjectId;
+        } else {
+            // Period-based: match specific period, subject_id = 0
+            $period = !empty($attendancePeriodId) ? $attendancePeriodId : 0;
+            $options[] = $Records->aliasField('period = ') . $period;
+            $options[] = '(' . $Records->aliasField('subject_id') . ' = 0 OR ' . $Records->aliasField('subject_id') . ' IS NULL)';
+        }
+
         //        $this->log($options, 'debug');
         $query->leftJoin(
             [$Records->getAlias() => $Records->getTable()],
@@ -2152,32 +2299,33 @@ SQL;
             ->then('Female')
             ->else('Not Set');
 
-        $query->select(
-            [
-                $this->aliasField('id'),
-                $this->aliasField('student_id'), // POCOR-9572: Add student_id field
-                'date' => $Details->aliasField('date'),
-                'day' => '"' . $day . '"',
-                'period' => $Details->aliasField('period'),
-                'subject_id' => $Details->aliasField('subject_id'),
-                'marked_date' => $Records->aliasField('date'),
-                'marked_period' => $Records->aliasField('period'),
-                'marked_subject_id' => $Records->aliasField('subject_id'),
-                'comment' => $Details->aliasField('comment'),
-                'student_absence_reason_id' => "COALESCE($student_absence_reason_id, NULL)",
-                'student_absence_reason' => $Reasons->aliasField('name'),
-                'student_name' => "CONCAT($first_name, ' ', $last_name)",
-                'student_status' => $Statuses->aliasField('name'),
-                'class_name' => $Classes->aliasField('name'),
-                'openemis_no' => $Users->aliasField('openemis_no'),
-                'gender' => $genderExpression, // POCOR-9572: Gender transformation
-                'absence_type_id' => "COALESCE($absence_type_id, 0)",
-                'absence_type_code' => "COALESCE($absence_type_code, 'PRESENT')",
-                'absence_type_name' => "COALESCE($absence_type_name, 'Present')",
-                'no_scheduled_class' => $Records->aliasField('no_scheduled_class'),
-                'user_id' => $this->aliasField('student_id')
-            ]
-        );
+        // POCOR-9572: Base fields for both grid and Excel
+        $selectFields = [
+            $this->aliasField('id'),
+            $this->aliasField('student_id'), // POCOR-9572: Add student_id field
+            'date' => $Details->aliasField('date'),
+            'day' => '"' . $day . '"',
+            'period' => $Details->aliasField('period'),
+            'subject_id' => $Details->aliasField('subject_id'),
+            'marked_date' => $Records->aliasField('date'),
+            'marked_period' => $Records->aliasField('period'),
+            'marked_subject_id' => $Records->aliasField('subject_id'),
+            'comment' => $Details->aliasField('comment'),
+            'student_absence_reason_id' => "COALESCE($student_absence_reason_id, NULL)",
+            'student_absence_reason' => $Reasons->aliasField('name'),
+            'student_name' => "CONCAT($first_name, ' ', $last_name)",
+            'student_status' => $Statuses->aliasField('name'),
+            'class_name' => $Classes->aliasField('name'),
+            'openemis_no' => $Users->aliasField('openemis_no'),
+            'gender' => $genderExpression, // POCOR-9572: Gender transformation
+            'absence_type_id' => "COALESCE($absence_type_id, 0)",
+            'absence_type_code' => "COALESCE($absence_type_code, 'PRESENT')",
+            'absence_type_name' => "COALESCE($absence_type_name, 'Present')",
+            'no_scheduled_class' => $Records->aliasField('no_scheduled_class'),
+            'user_id' => $this->aliasField('student_id')
+        ];
+
+        $query->select($selectFields);
         return $query;
     }
     private function getAttendanceDailySelectFieldsNew(Query $query, $day, $archive=false)
@@ -2285,6 +2433,7 @@ SQL;
         $weekEndDay,
         $attendancePeriodId,
         $subjectId,
+        $attendanceBy = 'period', // POCOR-9572
         $archive = false
     ) {
         $dayList = $this->getWeekDaysList(
@@ -2317,9 +2466,9 @@ SQL;
                     $archive
                 );
                 $wideQuery = clone $query;
-                $wideQuery = $this->getAttendanceDailyQueryWithDetails($wideQuery, $periodId, $date, $subjectId, $archive);
+                $wideQuery = $this->getAttendanceDailyQueryWithDetails($wideQuery, $periodId, $date, $subjectId, $attendanceBy, $archive);
                 $wideQuery = $this->getAttendanceDailyQueryWithAbsenceTypes($wideQuery, $archive);
-                $wideQuery = $this->getAttendanceDailyQueryWithMarkedRecords($wideQuery, $date, $archive);
+                $wideQuery = $this->getAttendanceDailyQueryWithMarkedRecords($wideQuery, $date, $periodId, $subjectId, $attendanceBy, $archive);
                 $wideQuery = $this->getAttendanceDailyQueryWithAbsenceReasons($wideQuery, $archive);
                 $wideQuery = $this->getAttendanceDailySelectFields($wideQuery, $date, $archive);
                 $wideQueryResult = $wideQuery->find('list', [
