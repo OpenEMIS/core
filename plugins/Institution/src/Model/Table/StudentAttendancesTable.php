@@ -144,16 +144,16 @@ class StudentAttendancesTable extends ControllerActionTable
         if ($daily) {
             // --- DAILY MODE: Use Archive pattern ---
             $query = $this->getAttendanceDailyQueryWithDayCondition($query, $day);
-            Log::debug('[Attendance] Step 4 - After getAttendanceDailyQueryWithDayCondition: ' . (clone $query)->count() . ' students');
+            // Log::debug('[Attendance] Step 4 - After getAttendanceDailyQueryWithDayCondition: ' . (clone $query)->count() . ' students');
 
             $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $attendanceBy, $archive);
-            Log::debug('[Attendance] Step 5 - After getAttendanceDailyQueryWithDetails: ' . (clone $query)->count() . ' students');
+            // Log::debug('[Attendance] Step 5 - After getAttendanceDailyQueryWithDetails: ' . (clone $query)->count() . ' students');
 
             $query = $this->getAttendanceDailyQueryWithAbsenceTypes($query, $archive);
             $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $attendancePeriodId, $subjectId, $attendanceBy, $archive);
             $query = $this->getAttendanceDailyQueryWithAbsenceReasons($query, $archive);
             $query = $this->getAttendanceDailySelectFields($query, $day, $archive);
-            Log::debug('[Attendance] Step 6 - After all daily query setup complete');
+            // Log::debug('[Attendance] Step 6 - After all daily query setup complete');
 
             // POCOR-9572: Return flat fields - no nested objects
             // Angular will access fields directly: student_name, absence_type_id, etc.
@@ -162,7 +162,7 @@ class StudentAttendancesTable extends ControllerActionTable
             // --- WEEKLY MODE: Continue with weekly-specific setup ---
             // Add week overlap condition
             $query = $this->getOverlapWeekCondition($query, $weekStartDay, $weekEndDay);
-            Log::debug('[Attendance] Step 4 - After getOverlapWeekCondition: ' . (clone $query)->count() . ' students');
+            // Log::debug('[Attendance] Step 4 - After getOverlapWeekCondition: ' . (clone $query)->count() . ' students');
 
             // Get absence data for all days in the week
             $WeekDaysAbsenceArray = $this->getWeekDaysAbsenceArray(
@@ -180,20 +180,20 @@ class StudentAttendancesTable extends ControllerActionTable
                 $attendanceBy, // POCOR-9572
                 false // archive = false for current data
             );
-            Log::debug('[Attendance] Step 5 - After getWeekDaysAbsenceArray: got data for ' . count($WeekDaysAbsenceArray) . ' student-day combinations');
+            // Log::debug('[Attendance] Step 5 - After getWeekDaysAbsenceArray: got data for ' . count($WeekDaysAbsenceArray) . ' student-day combinations');
 
             // Build weekly SELECT fields
             $query = $this->getAttendanceWeeklySelectFields($query);
-            Log::debug('[Attendance] Step 6 - After getAttendanceWeeklySelectFields: ' . (clone $query)->count() . ' students');
+            // Log::debug('[Attendance] Step 6 - After getAttendanceWeeklySelectFields: ' . (clone $query)->count() . ' students');
 
             // Format results with weekly attendance data
             $query = $this->getAbsenceWeeklyQueryFormatResults($query, $WeekDaysAbsenceArray, $weekStartDay, $weekEndDay);
-            Log::debug('[Attendance] Step 7 - After getAbsenceWeeklyQueryFormatResults: formatResults applied');
+            // Log::debug('[Attendance] Step 7 - After getAbsenceWeeklyQueryFormatResults: formatResults applied');
 
             // POCOR-9572: Return flat fields - Angular will access student_name, openemis_no, week_attendance directly
         }
 
-        Log::debug('[Attendance] ========== END findClassStudentsWithAbsence ==========');
+        // Log::debug('[Attendance] ========== END findClassStudentsWithAbsence ==========');
         return $query;
     }
 //    public function findClassStudentsWithAbsence(Query $query, array $options)
@@ -1953,7 +1953,7 @@ SQL;
         $day = $options['day_id'];
         $institutionId = $options['institution_id'];
 
-        Log::debug("[Withdraw] >>> Начало фильтрации отчислений");
+        // Log::debug("[Withdraw] >>> Начало фильтрации отчислений");
 
         // 1. Получаем список ID всех студентов, которые сейчас в запросе (в классе)
         $classStudentIds = (clone $query)
@@ -1963,10 +1963,10 @@ SQL;
             ->toArray();
 
         if (empty($classStudentIds)) {
-            Log::debug("[Withdraw] Класс пуст, фильтрация не требуется.");
+            // Log::debug("[Withdraw] Класс пуст, фильтрация не требуется.");
             return $query;
         }
-        Log::debug("[Withdraw] Студентов в классе перед проверкой: " . count($classStudentIds) . " (IDs: " . implode(',', $classStudentIds) . ")");
+        // Log::debug("[Withdraw] Студентов в классе перед проверкой: " . count($classStudentIds) . " (IDs: " . implode(',', $classStudentIds) . ")");
 
         // 2. Ищем, кто из ЭТОГО списка отчислен
         $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
@@ -1991,13 +1991,13 @@ SQL;
 
         // 3. Если нашли отчисленных, исключаем их из основного запроса
         if (!empty($withdrawnIds)) {
-            Log::debug("[Withdraw] Найдено отчисленных для исключения: " . count($withdrawnIds) . " (IDs: " . implode(',', $withdrawnIds) . ")");
+            // Log::debug("[Withdraw] Найдено отчисленных для исключения: " . count($withdrawnIds) . " (IDs: " . implode(',', $withdrawnIds) . ")");
             $query->where([$this->aliasField('student_id NOT IN') => $withdrawnIds]);
         } else {
-            Log::debug("[Withdraw] Отчисленных студентов в данном классе не обнаружено.");
+            // Log::debug("[Withdraw] Отчисленных студентов в данном классе не обнаружено.");
         }
 
-        Log::debug("[Withdraw] <<< Фильтрация завершена");
+        // Log::debug("[Withdraw] <<< Фильтрация завершена");
         return $query;
     }
 
