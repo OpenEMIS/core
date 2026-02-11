@@ -189,7 +189,7 @@ function InstitutionStudentAttendancesSvc(
     function getAbsenceTypeOptions() {
         const key = 'all'; // Обычно список типов един для системы
         if (cache.absenceTypes[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.absenceTypes[key]);
         }
 
@@ -209,7 +209,7 @@ function InstitutionStudentAttendancesSvc(
     function getStudentAbsenceReasonOptions() {
         const key = 'all';
         if (cache.absenceReasons[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.absenceReasons[key]);
         }
 
@@ -229,7 +229,7 @@ function InstitutionStudentAttendancesSvc(
     function getAcademicPeriodOptions(institutionId) {
         const key = getCacheKey(institutionId);
         if (cache.academicPeriods[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.academicPeriods[key]);
         }
 
@@ -250,7 +250,7 @@ function InstitutionStudentAttendancesSvc(
     function getWeekListOptions(academicPeriodId) {
         const key = getCacheKey(academicPeriodId);
         if (cache.weeks[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.weeks[key]);
         }
 
@@ -276,7 +276,7 @@ function InstitutionStudentAttendancesSvc(
     function getDayListOptions(academicPeriodId, weekId, institutionId) {
         const key = getCacheKey(academicPeriodId, weekId, institutionId);
         if (cache.days[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.days[key]);
         }
 
@@ -301,7 +301,7 @@ function InstitutionStudentAttendancesSvc(
     function getClassOptions(institutionId, academicPeriodId) {
         const key = getCacheKey(institutionId, academicPeriodId);
         if (cache.classes[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.classes[key]);
         }
 
@@ -324,7 +324,7 @@ function InstitutionStudentAttendancesSvc(
     function getEducationGradeOptions(institutionId, academicPeriodId, classId) {
         const key = getCacheKey(institutionId, academicPeriodId, classId);
         if (cache.grades[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.grades[key]);
         }
 
@@ -348,7 +348,7 @@ function InstitutionStudentAttendancesSvc(
     function getSubjectOptions(institutionId, institutionClassId, academicPeriodId, day_id, educationGradeId) {
         const key = getCacheKey(institutionId, institutionClassId, academicPeriodId, day_id, educationGradeId);
         if (cache.subjects[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.subjects[key]);
         }
 
@@ -374,7 +374,7 @@ function InstitutionStudentAttendancesSvc(
     function getPeriodOptions(institutionClassId, academicPeriodId, day_id, educationGradeId, weekStartDay, weekEndDay) {
         const key = getCacheKey(institutionClassId, academicPeriodId, day_id, educationGradeId, weekStartDay, weekEndDay);
         if (cache.periods[key]) {
-            console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
+            // console.log(`%c [CACHE] Извлечено из кеша в функции ${arguments.callee.name} с ключом: ${key}`, "color: #4CAF50; font-weight: bold;");
             return $q.resolve(cache.periods[key]);
         }
         var success = function (response, deferred) {
@@ -434,7 +434,7 @@ function InstitutionStudentAttendancesSvc(
         }
 
         var success = function (response, deferred) {
-            console.log("🔍 [Debug] Ответ от сервера:", response);
+            // console.log("🔍 [Debug] Ответ от сервера:", response);
 
             if (!response || !response.data) {
                 console.error("❌ [Error] Пустой ответ (Network OK, но данных нет)");
@@ -446,7 +446,7 @@ function InstitutionStudentAttendancesSvc(
             if (response.data.data === null) {
                 console.group("❌ [Fatal] classStudents is NULL");
                 console.error("Бэкенд вернул null. Проверьте логи PHP (debug.log).");
-                console.log("Содержимое response.data:", response.data);
+                // console.log("Содержимое response.data:", response.data);
                 console.groupEnd();
                 deferred.reject("Backend returned null");
                 return;
@@ -455,7 +455,7 @@ function InstitutionStudentAttendancesSvc(
             var classStudents = response.data.data;
 
             if (angular.isArray(classStudents) || angular.isObject(classStudents)) {
-                console.log("✅ [Success] Загружено студентов:", classStudents.length || "Object received");
+                // console.log("✅ [Success] Загружено студентов:", classStudents.length || "Object received");
                 deferred.resolve(classStudents);
             } else {
                 console.error("❌ [Type Error] Ожидался массив, пришло:", typeof classStudents);
