@@ -592,7 +592,8 @@ function InstitutionStudentAttendancesController(
         var attendanceType =
             InstitutionStudentAttendancesSvc.getAttendanceTypeList();
         // console.log(params);
-        var code =  params.data.institution_student_absences.absence_type_code;
+        // POCOR-9572: Use flat field structure (no nested objects)
+        var code = params.data.absence_type_code;
         // console.log('getRowHeight', code);
         switch (code) {
             case null:
@@ -680,20 +681,11 @@ function InstitutionStudentAttendancesController(
 
                 if (vm.totalStudents > 0) {
                     angular.forEach(vm.classStudentList, function (obj, key) {
+                        // POCOR-9572: Use flat field structure (no nested objects)
                         if (
-                            angular.isDefined(
-                                obj["institution_student_absences"]
-                            ) &&
-                            angular.isDefined(
-                                obj["institution_student_absences"][
-                                    "absence_type_code"
-                                ]
-                            )
+                            angular.isDefined(obj["absence_type_code"])
                         ) {
-                            var code =
-                                obj["institution_student_absences"][
-                                    "absence_type_code"
-                                ];
+                            var code = obj["absence_type_code"];
 
                             switch (code) {
                                 case null:

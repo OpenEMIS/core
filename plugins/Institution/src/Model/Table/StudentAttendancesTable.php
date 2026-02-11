@@ -97,100 +97,102 @@ class StudentAttendancesTable extends ControllerActionTable
         $weekId = $options['week_id'];
         $weekStartDay = $options['week_start_day'];
         $weekEndDay = $options['week_end_day'];
-        $day = $options['day_id'];
         $subjectId = $options['subject_id'];
         $attendanceBy = $options['attendance_by']; // POCOR-8874
 
-        // 1. Базовый запрос с необходимыми связями
-//        $Users = TableRegistry::getTableLocator()->get('Security.Users');
-        $AbsenceDetails = self::getDynamicTableInstance('institution_student_absence_details');
-        $AbsenceTypes = self::getDynamicTableInstance('absence_types');
-        $MarkedRecords = self::getDynamicTableInstance('student_attendance_marked_records');
+        // POCOR-9572: Use Archive pattern for both daily and weekly modes
+        $weekly = ($day == -1);
+        $daily = !$weekly;
+        $archive = false; // We're working with current data, not archives
 
-        $query = $this->getAttendanceBasicQueryNew($query,
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('[Attendance] ========== START findClassStudentsWithAbsence ==========');
+        // Log::debug('[Attendance] Mode: ' . ($daily ? 'DAILY' : 'WEEKLY') . ', Class: ' . $institutionClassId . ', Day: ' . $day);
+
+        // Use proven Archive function pattern for consistency
+        $query = $this->getAttendanceBasicQuery(
+            $query,
             $academicPeriodId,
-            $institutionClassId, $educationGradeId,
-            $institutionId);
-//        Log::debug('Base attendance query 1: ' . $query->sql($query->getValueBinder()));
-//        $cloneQuery = clone $query;
-//        $results = $cloneQuery->all()->toArray();
-//        Log::debug('Base attendance query results 1: ' . print_r($results,true));
+            $institutionClassId,
+            $educationGradeId,
+            $institutionId
+        );
+        // Log::debug('[Attendance] Step 1 - After getAttendanceBasicQuery: ' . (clone $query)->count() . ' students');
 
-        // 2. Фильтрация отчисленных (через подзапрос, как мы решили ранее)
-        $query = $this->_filterWithdrawnStudents($query, $options);
-            Log::debug('Base attendance query 2 (after filtering withdrawn): ' . $query->sql($query->getValueBinder()));
-//            $cloneQuery = clone $query;
-//            $results = $cloneQuery->all()->toArray();
-//            Log::debug('Base attendance query results 2: ' . print_r($results,true));
-        if ($day != -1) {
-            // --- DAILY MODE: ПРЯМЫЕ JOIN И SELECT ВМЕСТО MAPPING ---
-
-            // Джойним таблицу прогулов
-            $query = $this->getAttendanceDailyQueryWithDayConditionNew($query, $day);
-//            $cloneQuery = clone $query;
-//            $results = $cloneQuery->all()->toArray();
-//            Log::debug('Base attendance query results count: ' . print_r($results,true));
-//            // Джойним типы прогулов для кодов (EXCUSED, UNEXCUSED и т.д.)
-            $query->leftJoin(
-                ['Types' => $AbsenceTypes->getTable()],
-                ['Types.id = Absences.absence_type_id']
-            );
-//
-//            // Джойним флаг "No Lessons" для всего класса/периода
-            $query->leftJoin(
-                ['Marked' => $MarkedRecords->getTable()],
-                [
-                    'Marked.institution_class_id' => $institutionClassId,
-                    'Marked.date' => $day,
-                    'Marked.period' => $attendancePeriodId,
-                    'Marked.no_scheduled_class' => 1
-                ]
-            );
-//
-//            // Формируем плоский select
-            $query->select([
-                // Данные студента
-                'student_id' => $this->aliasField('student_id'),
-                'openemis_no' => 'User.openemis_no',
-                'first_name' => 'User.first_name',
-                'last_name' => 'User.last_name',
-                'gender' => $query->newExpr()->addCase(
-                    [$query->newExpr()->add(['User.gender_id' => 2]), $query->newExpr()->add(['User.gender_id' => 1])],
-                    [__('Female'), __('Male')],
-                    ['string', 'string']
-                ),
-                // Данные прогула (используем COALESCE для значений по умолчанию)
-                'absence_type_id' => 'COALESCE(Absences.absence_type_id, 0)',
-                'absence_type_code' => 'COALESCE(Types.code, "PRESENT")',
-                'comment' => 'Absences.comment',
-                'student_absence_reason_id' => 'Absences.student_absence_reason_id',
-                'is_NoClassScheduled' => 'COALESCE(Marked.no_scheduled_class, 0)',
-                'date' => 'COALESCE(Absences.date, "' . $day . '")',
-                'period' => 'COALESCE(Absences.period, ' . (int)$attendancePeriodId . ')'
-//            ]);
-
+        // Handle subject filter if needed
+        if ($subjectId != 0) {
+            $query = $this->getAttendanceQueryWithSubjectId($query, $subjectId);
+            // Log::debug('[Attendance] Step 2 - After getAttendanceQueryWithSubjectId: ' . (clone $query)->count() . ' students');
         } else {
-            // НЕДЕЛЬНЫЙ РЕЖИМ (оставляем существующую логику, так как там массив дат)
-            $query = $query->formatResults(function (ResultSetInterface $results) use ($options) {
-                $academicPeriodId = $options['academic_period_id'];
-                $institutionClassId = $options['institution_class_id'];
-                $educationGradeId = $options['education_grade_id'];
-                $institutionId = $options['institution_id'];
-                $attendancePeriodId = $options['attendance_period_id'];
-                $subjectId = $options['subject_id'] ?? 0;
-
-                return $results->map(function ($row) use ($academicPeriodId, $institutionClassId, $educationGradeId, $institutionId, $attendancePeriodId, $subjectId) {
-                    // Логика получения данных по прогулов для каждой строки (студента)
-                    // Здесь можно использовать аналогичный подход с прямыми запросами к БД для оптимизации
-                    // Например, можно сделать один запрос для всех студентов и потом распределить данные по строкам
-
-                    // ... (логика получения данных по прогулов)
-
-                    return $row; // Не забываем вернуть строку
-                });
-            });
+            $subjectId = null;
         }
 
+        // Filter withdrawn students
+        $query = $this->getAttendanceQueryWithoutWithdrawn(
+            $query,
+            $daily,
+            $day,
+            $institutionId,
+            $academicPeriodId,
+            $educationGradeId,
+            $weekStartDay,
+            $weekEndDay,
+            $archive
+        );
+        // Log::debug('[Attendance] Step 3 - After getAttendanceQueryWithoutWithdrawn: ' . (clone $query)->count() . ' students');
+
+        if ($daily) {
+            // --- DAILY MODE: Use Archive pattern ---
+            $query = $this->getAttendanceDailyQueryWithDayCondition($query, $day);
+            Log::debug('[Attendance] Step 4 - After getAttendanceDailyQueryWithDayCondition: ' . (clone $query)->count() . ' students');
+
+            $query = $this->getAttendanceDailyQueryWithDetails($query, $attendancePeriodId, $day, $subjectId, $archive);
+            Log::debug('[Attendance] Step 5 - After getAttendanceDailyQueryWithDetails: ' . (clone $query)->count() . ' students');
+
+            $query = $this->getAttendanceDailyQueryWithAbsenceTypes($query, $archive);
+            $query = $this->getAttendanceDailyQueryWithMarkedRecords($query, $day, $archive);
+            $query = $this->getAttendanceDailyQueryWithAbsenceReasons($query, $archive);
+            $query = $this->getAttendanceDailySelectFields($query, $day, $archive);
+            Log::debug('[Attendance] Step 6 - After all daily query setup complete');
+
+            // POCOR-9572: Return flat fields - no nested objects
+            // Angular will access fields directly: student_name, absence_type_id, etc.
+
+        } else {
+            // --- WEEKLY MODE: Continue with weekly-specific setup ---
+            // Add week overlap condition
+            $query = $this->getOverlapWeekCondition($query, $weekStartDay, $weekEndDay);
+            Log::debug('[Attendance] Step 4 - After getOverlapWeekCondition: ' . (clone $query)->count() . ' students');
+
+            // Get absence data for all days in the week
+            $WeekDaysAbsenceArray = $this->getWeekDaysAbsenceArray(
+                $query,
+                $academicPeriodId,
+                $weekId,
+                $institutionId,
+                $institutionClassId,
+                $day,
+                $educationGradeId,
+                $weekStartDay,
+                $weekEndDay,
+                $attendancePeriodId,
+                $subjectId,
+                false // archive = false for current data
+            );
+            Log::debug('[Attendance] Step 5 - After getWeekDaysAbsenceArray: got data for ' . count($WeekDaysAbsenceArray) . ' student-day combinations');
+
+            // Build weekly SELECT fields
+            $query = $this->getAttendanceWeeklySelectFields($query);
+            Log::debug('[Attendance] Step 6 - After getAttendanceWeeklySelectFields: ' . (clone $query)->count() . ' students');
+
+            // Format results with weekly attendance data
+            $query = $this->getAbsenceWeeklyQueryFormatResults($query, $WeekDaysAbsenceArray, $weekStartDay, $weekEndDay);
+            Log::debug('[Attendance] Step 7 - After getAbsenceWeeklyQueryFormatResults: formatResults applied');
+
+            // POCOR-9572: Return flat fields - Angular will access student_name, openemis_no, week_attendance directly
+        }
+
+        Log::debug('[Attendance] ========== END findClassStudentsWithAbsence ==========');
         return $query;
     }
 //    public function findClassStudentsWithAbsence(Query $query, array $options)
@@ -1674,7 +1676,8 @@ SQL;
                 $Users->aliasField('middle_name'),
                 $Users->aliasField('third_name'),
                 $Users->aliasField('last_name'),
-                $Users->aliasField('preferred_name')
+                $Users->aliasField('preferred_name'),
+                $Users->aliasField('gender_id') // POCOR-9572: Add gender field
             ])
             ->innerJoin(
                 [$Users->getAlias() => $Users->getTable()],
@@ -1759,7 +1762,7 @@ SQL;
         if ($archive) {
             return $query;
         }
-        $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentWithdraw');
+        $studentWithdraw = self::getDynamicTableInstance('institution_student_withdraw');
         if ($dayly) {
             $DayCondititon = [$studentWithdraw->aliasField('effective_date <= ') => $day];
         }
@@ -1770,10 +1773,10 @@ SQL;
             ];
         }
         $withdrawStudentIds = [];
-        $InstitutionStudents = TableRegistry::getTableLocator()->get('institution_students');
+        $InstitutionStudents = self::getDynamicTableInstance('institution_students');
         $studentWithdrawData = $studentWithdraw->find()
             ->select([
-                'student_id' => 'institution_student_withdraw.student_id',
+                'student_id' => $studentWithdraw->aliasField('student_id')
             ])
             /*POCOR-6062 starts*/
             ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
@@ -2113,34 +2116,46 @@ SQL;
         $Types = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $Reasons = TableRegistry::getTableLocator()->get('Institution.StudentAbsenceReasons');
+
+        // POCOR-9572: CRITICAL FIX - Must use same table loading pattern as JOIN functions
+        // to ensure alias matches the JOINed table (was causing "Unknown column" SQL error)
+        $tableLocator = new TableLocator();
         if (!$archive) {
-            $Details = TableRegistry::getTableLocator()->get('Institution.institutionStudentAbsenceDetails');
-            $Records = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+            $Details = $tableLocator->get('institution_student_absence_details');
+            $Records = $tableLocator->get('student_attendance_marked_records');
         }
         if ($archive) {
             $table_name = 'institution_student_absence_details';
-            $tableLocator = new TableLocator();
-            if ($archive) {
-                $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
-                $table_name = $archiveTableAndConnection[0];
-                $Details = $tableLocator->get($table_name);
-            }
+            $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
+            $table_name = $archiveTableAndConnection[0];
+            $Details = $tableLocator->get($table_name);
+
             $table_name = 'student_attendance_marked_records';
-            if ($archive) {
-                $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
-                $table_name = $archiveTableAndConnection[0];
-                $Records = $tableLocator->get($table_name);
-            }
+            $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
+            $table_name = $archiveTableAndConnection[0];
+            $Records = $tableLocator->get($table_name);
         }
         $first_name = $Users->aliasField('first_name');
         $last_name = $Users->aliasField('last_name');
+        $gender_id = $Users->aliasField('gender_id'); // POCOR-9572
         $absence_type_id = $Types->aliasField('id');
         $absence_type_code = $Types->aliasField('code');
         $absence_type_name = $Types->aliasField('name');
         $student_absence_reason_id = $Details->aliasField('student_absence_reason_id');
+
+        // POCOR-9572: Build gender CASE expression using CakePHP's expression builder
+        $genderExpression = $query->newExpr()
+            ->case()
+            ->when(['Users.gender_id' => 1])
+            ->then('Male')
+            ->when(['Users.gender_id' => 2])
+            ->then('Female')
+            ->else('Not Set');
+
         $query->select(
             [
                 $this->aliasField('id'),
+                $this->aliasField('student_id'), // POCOR-9572: Add student_id field
                 'date' => $Details->aliasField('date'),
                 'day' => '"' . $day . '"',
                 'period' => $Details->aliasField('period'),
@@ -2155,6 +2170,7 @@ SQL;
                 'student_status' => $Statuses->aliasField('name'),
                 'class_name' => $Classes->aliasField('name'),
                 'openemis_no' => $Users->aliasField('openemis_no'),
+                'gender' => $genderExpression, // POCOR-9572: Gender transformation
                 'absence_type_id' => "COALESCE($absence_type_id, 0)",
                 'absence_type_code' => "COALESCE($absence_type_code, 'PRESENT')",
                 'absence_type_name' => "COALESCE($absence_type_name, 'Present')",
@@ -2164,7 +2180,7 @@ SQL;
         );
         return $query;
     }
-    private function getAttendanceDailySelectFieldsNew(Query $query, $day)
+    private function getAttendanceDailySelectFieldsNew(Query $query, $day, $archive=false)
     {
         $Statuses = self::getDynamicTableInstance('student_statuses');
         $Users = self::getDynamicTableInstance('security_users');
