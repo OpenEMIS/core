@@ -21,6 +21,16 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
         ]);
     }
 
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
+        $session = $this->request->getSession();
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        if(empty($data['staff_id'])){
+            $data['staff_id'] = $session->read('Auth.User.id');
+        }
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+    }
+
     public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
