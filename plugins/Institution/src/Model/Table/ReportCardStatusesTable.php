@@ -251,7 +251,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-        $this->field('email_status');
+       // $this->field('email_status');
+        $this->field('pdf_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
@@ -330,7 +331,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         //END:POCOR-6785
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_size']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->ReportCardProcesses
@@ -1224,10 +1225,11 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-        $this->field('email_status');
+        //$this->field('email_status');
+        $this->field('pdf_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
-        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_size']);
     }
 
     public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -1478,27 +1480,51 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEmailStatus(EventInterface $event, Entity $entity)
+    //POCOR-9521
+    public function onGetPdfSize(EventInterface $event, Entity $entity)
     {
-        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
-        $value = '<i class="fa fa-minus"></i>';
+        $studentId = $entity->student_id;
+        $academicPeriodId = $entity->academic_period_id;
+        $institutionId = $this->getInstitutionID();
+        $reportCardId = $entity->report_card_id;
+        $gradeId = $entity->education_grade_id;
+        $classId = $entity->institution_class_id;
 
-        if ($entity->has('email_status_id')) {
-            $value = $emailStatuses[$entity->email_status_id];
+        $table = TableRegistry::getTableLocator()
+            ->get('Institution.InstitutionStudentsReportCards');
 
-            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
-                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
+        $record = $table->find()
+              ->select([
+                'pdf_size' => 'LENGTH(file_content_pdf)'
+            ])
+            ->where([
+                'student_id' => $studentId,
+                'academic_period_id' => $academicPeriodId,
+                'institution_id IS' => $institutionId,
+                'report_card_id IS' => $reportCardId,
+                'education_grade_id IS' => $gradeId,
+                'institution_class_id IS' => $classId
+            ])
+
+            ->enableHydration(false)
+            ->first();
+
+        if ($record) {
+            $bytes = (int)$record['pdf_size'];
+            if ($bytes <= 0) {
+                return '0 KB';
             }
+            if ($bytes >= 1048576) { // 1 MB
+                return round($bytes / 1048576, 2) . ' MB';
+            }
+            return round($bytes / 1024, 2) . ' KB';
         }
-
-        return $value;
+       
     }
 
     public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-
-//echo "<pre>"; print_r($params); die;
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
@@ -2681,6 +2707,22 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
         return $buttons;
-    }
-//POCOR-7998:end
+    }//POCOR-7998:end
+
+    /*public function onGetEmailStatus(EventInterface $event, Entity $entity)
+    {
+        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
+        $value = '<i class="fa fa-minus"></i>';
+
+        if ($entity->has('email_status_id')) {
+            $value = $emailStatuses[$entity->email_status_id];
+
+            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
+                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
+            }
+        }
+
+        return $value;
+    }*/
+
 }
