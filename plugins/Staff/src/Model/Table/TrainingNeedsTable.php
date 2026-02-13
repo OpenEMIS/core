@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Event\EventInterface;
 use Staff\Model\Table\TrainingNeedsAppTable;
+use Cake\Datasource\ConnectionManager;
 
 class TrainingNeedsTable extends TrainingNeedsAppTable
 {
@@ -22,6 +23,8 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra) {
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
