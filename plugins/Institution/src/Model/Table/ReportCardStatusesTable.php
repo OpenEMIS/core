@@ -1483,43 +1483,61 @@ class ReportCardStatusesTable extends ControllerActionTable
     //POCOR-9521
     public function onGetPdfSize(EventInterface $event, Entity $entity)
     {
-        $studentId = $entity->student_id;
-        $academicPeriodId = $entity->academic_period_id;
         $institutionId = $this->getInstitutionID();
-        $reportCardId = $entity->report_card_id;
-        $gradeId = $entity->education_grade_id;
-        $classId = $entity->institution_class_id;
+        $query = $this->getQueryString();
+        $reportCardId = !empty($entity->report_card_id)
+            ? $entity->report_card_id
+            : ($query['report_card_id'] ?? null);
 
+        $studentId = !empty($entity->student_id)
+            ? $entity->student_id
+            : ($query['student_id'] ?? null);
+
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+
+        $gradeId = !empty($entity->education_grade_id)
+            ? $entity->education_grade_id
+            : ($query['education_grade_id'] ?? null);
+
+        $classId = !empty($entity->institution_class_id)
+            ? $entity->institution_class_id
+            : ($query['institution_class_id'] ?? null);
+
+        $conditions = [
+            'student_id' => $studentId,
+            'academic_period_id' => $academicPeriodId,
+            'institution_id' => $institutionId,
+        ];
+        if (!empty($reportCardId)) {
+            $conditions['report_card_id'] = $reportCardId;
+        }
+
+        if (!empty($gradeId)) {
+            $conditions['education_grade_id'] = $gradeId;
+        }
+
+        if (!empty($classId)) {
+            $conditions['institution_class_id'] = $classId;
+        }
         $table = TableRegistry::getTableLocator()
             ->get('Institution.InstitutionStudentsReportCards');
 
         $record = $table->find()
-              ->select([
+            ->select([
                 'pdf_size' => 'LENGTH(file_content_pdf)'
             ])
-            ->where([
-                'student_id' => $studentId,
-                'academic_period_id' => $academicPeriodId,
-                'institution_id IS' => $institutionId,
-                'report_card_id IS' => $reportCardId,
-                'education_grade_id IS' => $gradeId,
-                'institution_class_id IS' => $classId
-            ])
-
+            ->where($conditions)
             ->enableHydration(false)
             ->first();
-
-        if ($record) {
-            $bytes = (int)$record['pdf_size'];
-            if ($bytes <= 0) {
-                return '0 KB';
-            }
-            if ($bytes >= 1048576) { // 1 MB
-                return round($bytes / 1048576, 2) . ' MB';
-            }
-            return round($bytes / 1024, 2) . ' KB';
+        if (!$record || empty($record['pdf_size'])) {
+            return '0 KB';
         }
-       
+        $bytes = (int) $record['pdf_size'];
+
+        if ($bytes >= 1048576) { // 1 MB
+            return round($bytes / 1048576, 2) . ' MB';
+        }
+        return round($bytes / 1024, 2) . ' KB';
     }
 
     public function generate(EventInterface $event, ArrayObject $extra)
