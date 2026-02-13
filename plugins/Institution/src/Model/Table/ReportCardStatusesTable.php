@@ -252,7 +252,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
        // $this->field('email_status');
-        $this->field('pdf_size'); //POCOR-9521
+        $this->field('pdf_file_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
@@ -331,7 +331,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         //END:POCOR-6785
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_size']);
+        $this->setFieldOrder(['openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_file_size']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->ReportCardProcesses
@@ -1226,10 +1226,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         //$this->field('email_status');
-        $this->field('pdf_size'); //POCOR-9521
+        $this->field('pdf_file_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
-        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_size']);
+        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_file_size']);
     }
 
     public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -1481,7 +1481,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
 
     //POCOR-9521
-    public function onGetPdfSize(EventInterface $event, Entity $entity)
+    public function onGetPdfFileSize(EventInterface $event, Entity $entity)
     {
         $institutionId = $this->getInstitutionID();
         $query = $this->getQueryString();
