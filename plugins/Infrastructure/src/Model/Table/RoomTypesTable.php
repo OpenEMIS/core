@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -27,48 +27,48 @@ class RoomTypesTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Infrastructure.Types');
 
-        $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
+        $InfrastructureLevels = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $InfrastructureLevels->find('list')->toArray();
         $this->roomLevel = $InfrastructureLevels->getFieldByCode('ROOM', 'id');
         $this->classificationOptions = $this->getSelectOptions($this->aliasField('classifications'));
         $this->setDeleteStrategy('restrict');
     }
 
-    public function onGetInfrastructureLevel(Event $event, Entity $entity)
+    public function onGetInfrastructureLevel(EventInterface $event, Entity $entity)
     {
         return $this->levelOptions[$this->roomLevel];
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Infrastructures', 'action' => 'Fields'];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('infrastructure_level', ['after' => 'national_code']);
     }
 
     // POCOR-9074
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         unset($entity->infrastructure_level);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
     // POCOR-9074
-    public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action,  $request)
+    public function onUpdateFieldInfrastructureLevel(EventInterface $event, array $attr, $action,  $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'readonly';
@@ -80,7 +80,7 @@ class RoomTypesTable extends ControllerActionTable
     }
 
     // POCOR-9074
-    public function onUpdateFieldClassification(Event $event, array $attr, $action,  $request)
+    public function onUpdateFieldClassification(EventInterface $event, array $attr, $action,  $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->classificationOptions;
@@ -110,7 +110,7 @@ class RoomTypesTable extends ControllerActionTable
         }
     }
 
-    public function onGetClassification(Event $event, Entity $entity)
+    public function onGetClassification(EventInterface $event, Entity $entity)
     {
         return $this->classificationOptions[$entity->classification];
     }

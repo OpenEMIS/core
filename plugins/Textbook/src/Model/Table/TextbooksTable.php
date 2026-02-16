@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Validation\Validator;
@@ -41,8 +41,8 @@ class TextbooksTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportTextbooks']);
 
-        $this->EducationLevels = TableRegistry::get('Education.EducationLevels');
-        $this->EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $this->EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+        $this->EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
     }
 
     public function validationDefault(Validator $validator): Validator {
@@ -57,7 +57,7 @@ class TextbooksTable extends ControllerActionTable {
             ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $request = $this->request;
 
@@ -200,7 +200,7 @@ class TextbooksTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $hasSearchKey = $this->request->getSession()->read($this->getRegistryAlias().'.search.key');
 
@@ -241,12 +241,12 @@ class TextbooksTable extends ControllerActionTable {
 
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'AcademicPeriods','EducationSubjects',
@@ -254,31 +254,31 @@ class TextbooksTable extends ControllerActionTable {
         ]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $entity->name = $entity->code . ' - ' . $entity->title;
     }
 
-    public function onGetEducationLevelId(Event $event, Entity $entity)
+    public function onGetEducationLevelId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;//POCOR-5035
         }
     }
 
-    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    public function onGetEducationProgrammeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->education_grade->education_programme->cycle_programme_name;//POCOR-5035
         }
     }
 
-    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    public function onGetEducationSubjectId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->education_subject->code_name;
@@ -286,9 +286,9 @@ class TextbooksTable extends ControllerActionTable {
     }
 
     // POCOR-7362
-    public function onGetTextbookDimensionId(Event $event, Entity $entity)
+    public function onGetTextbookDimensionId(EventInterface $event, Entity $entity)
     {
-        $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
+        $textbookdimensions = TableRegistry::getTableLocator()->get('Textbook.TextbookDimensions');
         $query = $textbookdimensions->find()
                 ->select(['name'])
                 ->where(function ($exp, $q) use ($entity) {
@@ -307,7 +307,7 @@ class TextbooksTable extends ControllerActionTable {
     }
     // POCOR-7362
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->getQuery('period')));
@@ -325,12 +325,12 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
-				$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 				if(!empty($this->request->getQuery('period')) && empty($request->getData($this->aliasField('academic_period_id')))) {
 					$academicPeriodId = $this->request->getQuery('period');
 				} else {
@@ -353,7 +353,7 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationLevel(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         $request->getQuery['programme'] = -1;
@@ -372,7 +372,7 @@ class TextbooksTable extends ControllerActionTable {
          
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -398,7 +398,7 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationProgramme(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationProgramme(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         $request->getQuery['grade'] = -1;
@@ -413,7 +413,7 @@ class TextbooksTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -441,7 +441,7 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeEducationGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         $request->getQuery['subject'] = -1;
@@ -459,7 +459,7 @@ class TextbooksTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
 
@@ -486,7 +486,7 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCode(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
 
@@ -499,15 +499,15 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldExpiryDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExpiryDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['default_date'] = false;
         return $attr;
     }
 
-    public function onUpdateFieldYearPublished(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldYearPublished(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $lowestYear = $ConfigItems->value('lowest_year');
 
         $lowestYear = $ConfigItems->value('lowest_year') ?? '1950';
@@ -527,9 +527,9 @@ class TextbooksTable extends ControllerActionTable {
 
     // POCOR-7362
 
-    public function onUpdateFieldTextbookDimensionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTextbookDimensionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-         $textbookdimensions = TableRegistry::get('Textbook.TextbookDimensions');
+         $textbookdimensions = TableRegistry::getTableLocator()->get('Textbook.TextbookDimensions');
          if ($action == 'add' || $action == 'edit') {
          $dimension = $textbookdimensions->find('list')->toArray();
 
@@ -623,7 +623,7 @@ class TextbooksTable extends ControllerActionTable {
                 ->toArray();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'textbook_dimension_id') {
             return __('Dimension');

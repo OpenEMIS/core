@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
 use Cake\ORM\TableRegistry;
@@ -40,12 +40,12 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('model_reference', ['visible' => false]);
         $this->field('execution_status', ['before' => 'model']);
     }
 
-    public function studentsAfterDelete(Event $event, Entity $student)
+    public function studentsAfterDelete(EventInterface $event, Entity $student)
     {
         $this->removePendingWithdraw($student);
     }
@@ -79,7 +79,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $this->log(' <<<<<<<<<<======== After triggerUpdateStudentStatusShell', 'debug');
     }
 
-    public function onGetExecutionStatus(Event $event, Entity $entity)
+    public function onGetExecutionStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->execution_status == self::NOT_EXECUTED) {
             $status = __('Not Executed');
@@ -130,7 +130,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
     {
         // model - StudentStatusUpdates
         $model = $this->getRegistryAlias();
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($model);
         //Log::write('debug', 'runningProcess >>>>>>>>>>>>>>>>> ');
         //Log::write('debug', $runningProcess);
@@ -196,7 +196,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->addStudentsExtraButtons($extra['toolbarButtons']); // POCOR-9155
@@ -234,7 +234,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 
         $toolbarButtons1->exchangeArray($toolbarButtons);
     }
-    public function writeLastExecutedDateToFile(Event $event)
+    public function writeLastExecutedDateToFile(EventInterface $event)
     {
         $today = date('Y-m-d');
         $passArray = [];
@@ -247,7 +247,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $file->write($message);
         $file->close();
     }
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);

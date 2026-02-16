@@ -3,7 +3,7 @@
 namespace Configuration\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
@@ -48,7 +48,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
             ->requirePresence('label');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('visible', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
@@ -78,7 +78,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([
             $this->aliasField('type') => 'External Data Source - LMS',
@@ -86,7 +86,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => false]);
         $this->field('status', ['visible' => true]);
@@ -97,11 +97,11 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         $this->field('default_value', ['type' => 'hidden']);
     }
 
-    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
+    public function onGetCustomExternalSourceElement(EventInterface $event, $action, Entity $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
-        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalDataSourceAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
@@ -129,7 +129,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         return $event->getSubject()->renderElement('Configuration.external_data_exam_source', ['attr' => $attr]);
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
 
         $errors = $entity->getErrors();
@@ -140,7 +140,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
-            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
 
             $record = $this->find()->where([
                 'type' => $entity->type,
@@ -184,7 +184,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name', ['attr' => ['label' => __('Source')]]);
         $this->field('status');
@@ -192,7 +192,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         $this->field('value_selection', ['visible' => false]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'name') {
             return __('Source');
@@ -203,7 +203,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => false]);
         $this->field('value_selection', ['visible' => false]);
@@ -213,21 +213,21 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         $this->field('enable_user_creation');
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         $getRecord = $this->find()->where(['type' => $entity->type, 'name' => 'Status'])->first()->value;
         $entity->status = $getRecord == 1 ? 'Enabled' : 'Disabled';
         return $entity->status;
     }
 
-    public function onUpdateFieldApiToken(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldApiToken(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $getQueryString = $this->getQueryString();
             $id = $getQueryString['id'];
             $type = $this->find()->where(['id' => $id])->first()->type;
 
-            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
             $apiAttribute = $ExternalDataSourceAttributes->find()->where(['external_data_source_type' => $type, 'attribute_field' => 'api_token'])->first()->value;
 
             $attr['attr']['value'] = $apiAttribute;
@@ -236,14 +236,14 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldBaseUrl(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldBaseUrl(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $getQueryString = $this->getQueryString();
             $id = $getQueryString['id'];
             $type = $this->find()->where(['id' => $id])->first()->type;
 
-            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
             $urlAttribute = $ExternalDataSourceAttributes->find()->where(['external_data_source_type' => $type, 'attribute_field' => 'base_url'])->first()->value;
 
             $attr['attr']['value'] = $urlAttribute;
@@ -251,14 +251,14 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
             return $attr;
         }
     }
-    public function onUpdateFieldEnableUserCreation(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEnableUserCreation(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $getQueryString = $this->getQueryString();
             $id = $getQueryString['id'];
             $type = $this->find()->where(['id' => $id])->first()->type;
 
-            $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+            $ExternalDataSourceAttributes = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
             $userAttribute = $ExternalDataSourceAttributes->find()->where(['external_data_source_type' => $type, 'attribute_field' => 'enable_user_creation'])->first()->value;
 
             $options = $this->getSelectOptions('general.yesno');
@@ -270,7 +270,7 @@ class ExternalDataSourceLMSTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $getQueryString = $this->getQueryString();

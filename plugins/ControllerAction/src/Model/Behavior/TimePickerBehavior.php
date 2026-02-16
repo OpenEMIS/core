@@ -18,7 +18,7 @@ namespace ControllerAction\Model\Behavior;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 use ControllerAction\Model\Traits\PickerTrait;
@@ -26,7 +26,7 @@ use ControllerAction\Model\Traits\PickerTrait;
 class TimePickerBehavior extends Behavior {
 	use PickerTrait;
 	
-	public function beforeSave(Event $event, Entity $entity) {
+	public function beforeSave(EventInterface $event, Entity $entity) {
 		foreach ($this->getConfig() as $field) {
 			if (!empty($entity->{$field})) {
 				$entity->{$field} = $this->convertForTimePicker($entity->{$field});

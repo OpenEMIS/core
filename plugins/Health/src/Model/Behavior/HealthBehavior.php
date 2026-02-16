@@ -3,7 +3,7 @@
 namespace Health\Model\Behavior;
 
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class HealthBehavior extends Behavior
 {
@@ -19,7 +19,7 @@ class HealthBehavior extends Behavior
         return $events;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         // POCOR-8074-6 Unified Tabs
         $controller = $this->_table->controller;

@@ -6,7 +6,7 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Traits\OptionsTrait;
 use Cake\Http\ServerRequest;
 
@@ -30,7 +30,7 @@ class BankAccountsTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['active']['type'] = 'select';
         $this->field('security_user_id', ['type' => 'hidden']);
@@ -117,7 +117,7 @@ class BankAccountsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('bank_name', ['type' => 'select']);
         $this->field('bank_branch_id', ['type' => 'select']);
@@ -126,7 +126,7 @@ class BankAccountsTable extends ControllerActionTable
     }
 
     //POCOR-9300[START]
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $paramsQuery = base64_decode($this->request->getParam('pass')[1]);
         $jsonEndPosition = strpos($paramsQuery, '}') + 1;
@@ -138,7 +138,7 @@ class BankAccountsTable extends ControllerActionTable
     }
     //POCOR-9300[END]
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('bank_name', ['type' => 'select']);
         $this->field('bank_branch_id', ['type' => 'select']);
@@ -146,20 +146,20 @@ class BankAccountsTable extends ControllerActionTable
         $this->setFieldOrder(['bank_name', 'bank_branch_id', 'account_name', 'account_number', 'active']);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //to clear the bank option when toolbar button (back or list) clicked
         $this->request->getQuery['bank_option'] = '';
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $bankId = $this->BankBranches->get($entity->bank_branch_id)->bank_id;
         $this->request->getQuery['bank_option'] = $bankId;
     }
 
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('bank_name');
         $this->setFieldOrder(['account_name', 'account_number', 'active', 'bank_name', 'bank_branch_id']);
@@ -172,7 +172,7 @@ class BankAccountsTable extends ControllerActionTable
         return $validator->requirePresence('bank_name');
     }
 
-    public function onGetActive(Event $event, Entity $entity)
+    public function onGetActive(EventInterface $event, Entity $entity)
     {
         $icons = [
             0 => '<i class="fa kd-cross red"></i>',
@@ -225,16 +225,16 @@ class BankAccountsTable extends ControllerActionTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function onUpdateFieldBankName(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldBankName(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $bankId = $request->getQuery['bank_option'];
 
-            $bankOptions = TableRegistry::get('FieldOption.Banks')
+            $bankOptions = TableRegistry::getTableLocator()->get('FieldOption.Banks')
             ->find('list')
             ->find('order')
             ->toArray();
@@ -250,7 +250,7 @@ class BankAccountsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldBankBranchId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if (array_key_exists('bank_option', $request->getQuery)) {
@@ -268,7 +268,7 @@ class BankAccountsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeBank(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeBank(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->getQuery['bank_option']);
@@ -282,7 +282,7 @@ class BankAccountsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'bank_name') {
             return __('Bank Name');

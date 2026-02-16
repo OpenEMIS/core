@@ -5,9 +5,8 @@ use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
-use Cake\Event\Event;
-use Cake\Utility\Inflector;
 use Cake\Event\EventInterface;
+use Cake\Utility\Inflector;
 
 class SurveysController extends AppController
 {
@@ -129,7 +128,7 @@ class SurveysController extends AppController
         }
     }
 
-    public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    public function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
         if ($model->alias == 'Status') {
             list($statusOptions, $selectedStatus, $moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->_getSelectOptions());

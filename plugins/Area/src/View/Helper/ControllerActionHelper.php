@@ -2,7 +2,7 @@
 namespace Area\View\Helper;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\View\Helper;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;

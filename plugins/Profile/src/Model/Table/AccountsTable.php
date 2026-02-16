@@ -3,7 +3,7 @@ namespace Profile\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
@@ -37,7 +37,7 @@ class AccountsTable extends AppTable
             ]);
 	}
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->ControllerAction->field('username');
         $this->ControllerAction->field('current_password', ['type' => 'password']);
@@ -48,12 +48,12 @@ class AccountsTable extends AppTable
      * POCOR-7159
      * add data in user_activities table while updating password
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) 
     {
-        $userActivities = TableRegistry::get('User.UserActivities');
+        $userActivities = TableRegistry::getTableLocator()->get('User.UserActivities');
         $tableLocator = new TableLocator();
         $userTable = $tableLocator->get('security_users');
-        //$userTable = TableRegistry::get('security_users');
+        //$userTable = TableRegistry::getTableLocator()->get('security_users');
         $user = $this->Auth->user();
         $userId = $user['id'];
         $currentTimeZone = date("Y-m-d H:i:s");
@@ -97,7 +97,7 @@ class AccountsTable extends AppTable
         }//POCOR-8127 ends
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'username') {
             return __('Username');
@@ -114,7 +114,7 @@ class AccountsTable extends AppTable
     }
 
     //For POCOR-8448, POCOR-8449 PHP version 8
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {   
         //POCOR-8844
         $errors = $entity->getErrors();

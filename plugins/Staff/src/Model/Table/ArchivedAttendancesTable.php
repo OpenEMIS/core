@@ -8,7 +8,7 @@ use ArrayObject;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -33,30 +33,30 @@ class ArchivedAttendancesTable extends ControllerActionTable
         $config['Created'] = false;
         $table_name = 'institution_staff_attendances';
         $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
-        
+
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
         $this->connectionName = $targetTableConnection;
-        
+
         $this->getConnection($remoteConnection);
         $this->setTable($targetTableName);
-        
+
         // if($targetTableName == 'institution_staff_attendances'){
         //     $tableLocator = new TableLocator();
         //     $tableArchived = $tableLocator->get('InstitutionStaffAttendances', [
-        //     'connection' => $remoteConnection]); 
+        //     'connection' => $remoteConnection]);
         // }else{
         //     $tableLocator = new TableLocator();
         //     $tableArchived = $tableLocator->get($targetTableName, [
-        //     'connection' => $remoteConnection]); 
+        //     'connection' => $remoteConnection]);
         // }
         // echo "<pre>"; print_r($this->getTable($targetTableName));
         // die;
         parent::initialize($config);
-        
+
 //         echo "<pre>"; print_r($targetTableConnection);
-        
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -64,7 +64,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         $this->field('Date', ['visible' => true]);
@@ -93,7 +93,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
         ];
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
@@ -114,7 +114,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
 
     /**
      * common proc to get/set main variables to use further
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function setInstitutionStaffIDs()
     {
@@ -164,7 +164,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
         $this->staffId = $staffId;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $this->setInstitutionStaffIDs();
         $selectedPeriod = $this->setAcademicPeriodsOptions($query);
@@ -178,7 +178,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'created_user_id') {
             return __('Last Modified By');
@@ -189,7 +189,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
         }
     }
 
-    public function onGetDate(Event $event, Entity $entity)
+    public function onGetDate(EventInterface $event, Entity $entity)
     {
 //        $this->log('$entity->toArray()', 'debug');
 //        $this->log($entity->toArray(), 'debug');
@@ -204,14 +204,14 @@ class ArchivedAttendancesTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getRelatedName($tableName, $relatedField)
     {
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             $name = strval($related->name);
@@ -227,14 +227,14 @@ class ArchivedAttendancesTable extends ControllerActionTable
      * @param $tableName
      * @param $relatedField
      * @return string
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getRelatedNameWithId($tableName, $relatedField)
     {
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::get($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
             $related = $Table->get($relatedField);
             $name = strval($related->nameWithId);
@@ -252,7 +252,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
      */
     private function setAcademicPeriodsOptions(Query $query)
     {
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->institutionId;
         $staffId = $this->staffId;
@@ -303,7 +303,7 @@ class ArchivedAttendancesTable extends ControllerActionTable
      */
     private function setWeekOptions(Query $query, $selectedPeriod, $requestweek)
     {
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $institutionId = $this->institutionId;
         $staffId = $this->staffId;
         $todayDate = date("Y-m-d");

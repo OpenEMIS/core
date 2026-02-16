@@ -4,7 +4,7 @@ namespace System\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
@@ -42,13 +42,13 @@ class LocaleContentsLanguageTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', 'Translations');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // By default English has to be there
         $defaultLocale = 'en';
@@ -81,38 +81,38 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 
     //POCOR-8479 Start
     // Add new Laugauge so need to create this function for display in Listing
-    public function onGetAr(Event $event,$entity)
+    public function onGetAr(EventInterface $event,$entity)
     {
         $localesId = $this->localesData('ar');
 		return $this->translation($entity, $localesId);
 	}
 
-    public function onGetZh(Event $event,$entity)
+    public function onGetZh(EventInterface $event,$entity)
     {
         $localesId = $this->localesData('zh');
 		return $this->translation($entity, $localesId);
 	}
 
-    public function onGetFr(Event $event,$entity)
+    public function onGetFr(EventInterface $event,$entity)
     {
         $localesId = $this->localesData('fr');
 		return $this->translation($entity, $localesId);
 	}
 
-    public function onGetRu(Event $event,$entity)
+    public function onGetRu(EventInterface $event,$entity)
     {
         $localesId = $this->localesData('ru');
 		return $this->translation($entity, $localesId);
 	}
 
-    public function onGetEs(Event $event,$entity)
+    public function onGetEs(EventInterface $event,$entity)
     {
         $localesId = $this->localesData('es');
 		return $this->translation($entity, $localesId);
 	}
     //POCOR-8479 End
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         $localeOptions = $this->Localization->getOptions(); //POCOR-8479
         $isoLocaleOption = array_keys($localeOptions);
@@ -140,13 +140,13 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 		return $result ? $result->translation : '';
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
 
     }
 
     // // POCOR-9503 start
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $localeOptions = $this->Localization->getOptions();
         $selectedOption = $this->queryString('translations_id', $localeOptions);
@@ -172,7 +172,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 
     }
     //POCOR-8479 Start
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
 
         if($this->action == 'edit'
@@ -201,7 +201,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew()) {
             $localeOptions = $this->Localization->getOptions();

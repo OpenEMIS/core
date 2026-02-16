@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
@@ -45,7 +45,7 @@ class StaffBodyMassesTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'download' || $action == 'image') {
             // check for the user permission to download here
@@ -54,14 +54,14 @@ class StaffBodyMassesTable extends ControllerActionTable
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'StaffBodyMasses';
         $userType = '';
         $this->controller->changeHealthHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['attr' => ['label' => __('Academic Period')]]);
         $this->field('comment',['visible' => false]);
@@ -72,7 +72,7 @@ class StaffBodyMassesTable extends ControllerActionTable
         /*POCOR-6307 Ends*/
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
@@ -80,14 +80,14 @@ class StaffBodyMassesTable extends ControllerActionTable
         ->orderDesc($this->aliasField('id'));
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $extra, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $extra, Query $query){
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
         $query->where([$this->aliasField('security_user_id') => $staffUserId])
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
@@ -112,7 +112,7 @@ class StaffBodyMassesTable extends ControllerActionTable
         return $tooltipMessage;
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
         $weight =  $entity['weight'];
         //convert height centimeter to meter
         $height =  ($entity['height'] / 100);
@@ -123,7 +123,7 @@ class StaffBodyMassesTable extends ControllerActionTable
         $entity['body_mass_index'] = $body_mass_index;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'academic_period_id',

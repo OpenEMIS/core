@@ -2,7 +2,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -43,7 +43,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $this->addBehavior('User.UserTab');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $studentId = $queryString['student_id'];
@@ -64,7 +64,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $this->setFieldOrder(['outcome_period_id', 'education_subject_id', 'comments']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // academic period filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -74,7 +74,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         // end
 
         // outcome template filter
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
         $studentGrades = $InstitutionStudents->find()
             ->where([
                 $InstitutionStudents->aliasField('student_id IS') => $this->studentId,
@@ -171,12 +171,12 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $query->where($conditions);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
     }
 
-    public function onGetOutcomePeriodId(Event $event, Entity $entity)
+    public function onGetOutcomePeriodId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('outcome_period')) {
@@ -185,7 +185,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    public function onGetEducationSubjectId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('education_subject')) {
@@ -202,7 +202,7 @@ class StudentOutcomeCommentsTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Outcomes');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'outcome_period_id') {
             return __('Outcome Period');

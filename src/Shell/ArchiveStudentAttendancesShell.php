@@ -11,8 +11,8 @@ use Cake\Datasource\ConnectionManager;
 
 /**
  * Class ArchiveStudentAttendanceShell
- * POCOR-7521-KHINDOL
- * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+ * POCOR-7521-KH
+ *
  * @package App\Shell
  * Archive following tables
  * institution_class_attendance_records
@@ -33,19 +33,17 @@ class ArchiveStudentAttendancesShell extends Shell
     public $recordsInArchive;
 
     /**
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public function initialize(): void
     {
         //POCOR-7521-HINDOL cleaned the code even more
         parent::initialize();
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('Archive.TransferLogs');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->TransferLogs = $this->fetchTable('Archive.TransferLogs');
     }
 
     /**
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * POCOR-7521-KH
      */
     public function main()
     {

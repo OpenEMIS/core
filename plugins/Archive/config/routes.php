@@ -1,6 +1,5 @@
 <?php
 use Cake\Routing\RouteBuilder;
-use Cake\Routing\Router;
 
 /*Router::plugin(
     'Archive',
@@ -10,19 +9,21 @@ use Cake\Routing\Router;
     }
 );*/
 
-Router::scope('/Archive', ['plugin' => 'Archive'], function ($routes) {
-	// Router::connect('/Profiles', ['plugin' => 'Profile', 'controller' => 'Profiles']);
-	// Router::connect('/Profiles/:action/*', ['plugin' => 'Profile', 'controller' => 'Profiles']);
+return function (RouteBuilder $routes) {
+    $routes->scope('/Archive', ['plugin' => 'Archive'], function (RouteBuilder $routes) {
+        // Router::connect('/Profiles', ['plugin' => 'Profile', 'controller' => 'Profiles']);
+        // Router::connect('/Profiles/:action/*', ['plugin' => 'Profile', 'controller' => 'Profiles']);
 
-    $routes->scope('/:controller', [], function ($route) {
-        $route->connect('/:action',
-            [],
-            ['action' => '[a-zA-Z]+']
-        );
+        $routes->scope('/:controller', [], function (RouteBuilder $route) {
+            $route->connect('/:action',
+                [],
+                ['action' => '[a-zA-Z]+']
+            );
 
-        $route->connect('/:action/*',
-            [],
-            ['action' => '[a-zA-Z]+']
-        );
+            $route->connect('/:action/*',
+                [],
+                ['action' => '[a-zA-Z]+']
+            );
+        });
     });
-});
+};

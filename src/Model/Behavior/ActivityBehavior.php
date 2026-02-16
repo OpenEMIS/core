@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
@@ -40,7 +40,7 @@ class ActivityBehavior extends Behavior {
 ** CakePhp events
 **
 ******************************************************************************************************************/
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$model = $this->_table;
 
 		$model->fields['operation']['visible'] = false;
@@ -57,18 +57,18 @@ class ActivityBehavior extends Behavior {
 ** specific field functions
 **
 ******************************************************************************************************************/
-	public function onGetField(Event $event, Entity $entity) {
+	public function onGetField(EventInterface $event, Entity $entity) {
 		$value = str_replace('_id', '', $entity->field);
 		return Inflector::humanize($value);
 	}
 
-	public function onGetOldValue(Event $event, Entity $entity) {
+	public function onGetOldValue(EventInterface $event, Entity $entity) {
 		if (array_key_exists($entity->field_type, $this->_dateTypes)) {
 			return $this->formatToSystemConfig($entity->old_value, $entity->field_type);
 		}
 	}
 
-	public function onGetNewValue(Event $event, Entity $entity) {
+	public function onGetNewValue(EventInterface $event, Entity $entity) {
 		if (array_key_exists($entity->field_type, $this->_dateTypes)) {
 			return $this->formatToSystemConfig($entity->new_value, $entity->field_type);
 		}
@@ -81,7 +81,7 @@ class ActivityBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function formatToSystemConfig($value, $type) {
-		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+		$ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 		if ($type=='datetime') {
 			$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		} else {

@@ -2,7 +2,7 @@
 namespace Examination\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -28,10 +28,17 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
         $this->hasMany('SpecialNeeds', ['className' => 'SpecialNeeds.SpecialNeedsAssessments', 'foreignKey' => 'security_user_id']);
-        
+
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
@@ -42,13 +49,13 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'RegisteredStudents'];
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['SpecialNeeds.SpecialNeedsTypes'])
             ->where([$this->aliasField('super_admin') => 0]);
@@ -60,7 +67,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->toggle('add', false);
 
@@ -96,19 +103,19 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $extra['toolbarButtons']['back'] = $backBtn;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
             $this->setFieldOrder(['openemis_no', 'name', 'date_of_birth', 'gender', 'special_need']);
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['SpecialNeeds.SpecialNeedsTypes', 'SpecialNeeds.SpecialNeedDifficulties']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // add button direct to register students add
         $addBtn['type'] = 'button';
@@ -132,7 +139,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->field('special_needs', ['after' => 'identity_number', 'type' => 'custom_special_needs']);
     }
 
-    public function onGetDateOfBirth(Event $event, Entity $entity)
+    public function onGetDateOfBirth(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('date_of_birth')) {
@@ -141,7 +148,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         return $value;
     }
 
-    public function onGetGenderId(Event $event, Entity $entity)
+    public function onGetGenderId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('gender')) {
@@ -151,7 +158,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         return $value;
     }
 
-    public function onGetSpecialNeed(Event $event, Entity $entity)
+    public function onGetSpecialNeed(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('special_needs') && !empty($entity->special_needs)) {
@@ -166,7 +173,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         return $value;
     }
 
-    public function onGetCustomSpecialNeedsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomSpecialNeedsElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'view') {
             $needsArray = [];
@@ -184,7 +191,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         return $event->getSubject()->renderElement('Examination.special_needs', ['attr' => $attr]);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -205,7 +212,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         return $buttons;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'name') {
             return __('Name');

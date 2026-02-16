@@ -11,7 +11,7 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 use App\Model\Table\ControllerActionTable;
@@ -68,6 +68,15 @@ class EducationGradesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'OpenEMIS_Classroom' => ['index']
         ]);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'education_grade_create',
+                'entity_delete' => 'education_grade_delete',
+                'entity_update' => 'education_grade_update',
+                'table_alias' => 'Education.EducationGrades',
+                'contain' => []
+            ]
+        ); // for webhook
         $this->setDeleteStrategy('restrict');
     }
 
@@ -96,13 +105,13 @@ class EducationGradesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
         if (!$entity->isNew()) {
             if ($entity->setVisible) {
                 // to be revisit
-                // $EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
+                // $EducationGradesSubjects = TableRegistry::getTableLocator()->get('EducationGradesSubjects');
                 // $EducationGradesSubjects->updateAll(
                 //  ['visible' => 0],
                 //  ['education_grade_id' => $entity->id]
@@ -111,47 +120,20 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options){
-        $connection = $this->getConnection();
-        $connection->getDriver()->enableAutoQuoting();
-         // Webhook Education Grade create -- start
-         if($entity->isNew()){
-            $body = array();
-            $body = [
-                'education_programme_id' =>$entity->education_programme_id,
-                'grade_name' =>$entity->name,
-                'grade_id' =>$entity->id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_create', ['username' => $username], $body);
-            }*/
-        }
-        // Webhook Education Grade create -- end
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
+    {
+        // Ensure auto-quoting for DB safety (kept from your original)
+        $this->getConnection()->getDriver()->enableAutoQuoting();
 
-        //webhook Education Grade update -- start
-        if(!$entity->isNew()){
-            $body = array();
-            $body = [
-                'education_programme_id' =>$entity->education_programme_id,
-                'grade_name' =>$entity->name,
-                'grade_id' =>$entity->id,
-            ];
-            /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-            if ($this->Auth->user()) {
-                $Webhooks->triggerShell('education_grade_update', ['username' => $username], $body);
-            }*/
-        }
-        //webhook Education Grade update -- start
     }
     //POCOR 7308 starts
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
             //deleting institution subjects entry end
         //$institutionStudents = $this->institutionstudents;
         //print_r($institutionStudents->exists([$institutionStudents->aliasField($institutionStudents->foreignKey()) => $entity->id]));
         //POCOR-7179[START] delete custom field becouse when user is created from directory it insert value in custom field
-        // TableRegistry::get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
+        // TableRegistry::getTableLocator()->get('student_custom_field_values')->deleteAll(['student_id' => $entity->id]);
         //POCOR-7179[END]
         if($this->checkUsersChildRecords($entity)) {
             $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset'=>true]);
@@ -160,15 +142,15 @@ class EducationGradesTable extends ControllerActionTable
         }
          else{
             //deleting issue of isnstitution_subject
-            $institutionSubjects = TableRegistry::get('Institution.InstitutionSubjects')
+            $institutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects')
                 ->find()->where(['education_grade_id' => $entity->id])->first();
             if($institutionSubjects){
-                TableRegistry::get('institution_subjects')->delete($institutionSubjects);
+                TableRegistry::getTableLocator()->get('institution_subjects')->delete($institutionSubjects);
             }
 
-            $educationGradeTable = TableRegistry::get('Education.EducationGrades')
+            $educationGradeTable = TableRegistry::getTableLocator()->get('Education.EducationGrades')
                 ->find()->where(['id' => $entity->id])->first();
-               if(TableRegistry::get('Education.EducationGrades')->delete($entity)){
+               if(TableRegistry::getTableLocator()->get('Education.EducationGrades')->delete($entity)){
                 $this->Alert->success('general.delete.success', ['reset'=>true]);
                 return $this->controller->redirect(['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades']);
                }
@@ -183,43 +165,43 @@ class EducationGradesTable extends ControllerActionTable
 
         if($educationGradeId) {
             // count all institution_grades
-            $institutionGrades = TableRegistry::get('Institution.InstitutionGrades')
+            $institutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all assessments
-            $assessments = TableRegistry::get('Assessment.Assessments')
+            $assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_fees
-            $institutionFees = TableRegistry::get('Institution.InstitutionFees')
+            $institutionFees = TableRegistry::getTableLocator()->get('Institution.InstitutionFees')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_quality_rubrics
-            $institutionQualityRubrics = TableRegistry::get('Institution.InstitutionRubrics')
+            $institutionQualityRubrics = TableRegistry::getTableLocator()->get('Institution.InstitutionRubrics')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_class_grades
-            $institutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades')
+            $institutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_class_students
-            $institutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents')
+            $institutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_students
-            $institutionStudents = TableRegistry::get('Institution.InstitutionStudents')
+            $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_student_admission
-            $institutionStudentAdmission = TableRegistry::get('Institution.StudentAdmission')
+            $institutionStudentAdmission = TableRegistry::getTableLocator()->get('Institution.StudentAdmission')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all institution_student_withdraw
-            $institutionStudentWithdraw = TableRegistry::get('Institution.StudentWithdraw')
+            $institutionStudentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             // count all education_grades_subjects
-            $educationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects')
+            $educationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects')
                 ->find()->where(['education_grade_id' => $educationGradeId])->count();
 
             if( $institutionGrades||
@@ -240,25 +222,14 @@ class EducationGradesTable extends ControllerActionTable
     }
    //POCOR 7308 ends
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
     {
-
+        // Preserve existing logic
         $this->updateAdmissionAgeAfterDelete($entity);
 
-        // Webhook Education Grade Delete -- Start
-
-        $body = array();
-        $body = [
-            'grade_id' => $entity->id
-        ];
-        /*$Webhooks = TableRegistry::get('Webhook.Webhooks');
-        if($this->Auth->user()){
-            $Webhooks->triggerShell('education_grade_delete', ['username' => $username], $body);
-        }*/
-        // Webhook Education Grade Delete -- End
     }
 
-     /**
+    /**
      * Method to get the education system id for the particular grade given
      *
      * @param integer $gradeId The grade id to check for
@@ -320,9 +291,9 @@ class EducationGradesTable extends ControllerActionTable
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
                 } else {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
                 $results = $gradeOptions + $nextProgrammesGradesOptions;
             } else {
@@ -441,9 +412,9 @@ class EducationGradesTable extends ControllerActionTable
             if ($getNextProgrammeGrades) {
 
                 if ($firstGradeOnly) {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
                 } else {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
                 $results = $gradeOptions + $nextProgrammesGradesOptions;
             } else {
@@ -561,9 +532,9 @@ class EducationGradesTable extends ControllerActionTable
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeFirstGradeList($programmeId);
                 } else {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
                 $results = $gradeOptions + $nextProgrammesGradesOptions;
             } else {
@@ -687,18 +658,18 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         //$this->getAssociation('Education')->name('InstitutionProgrammes');
         $this->getAssociation('EducationInstitutions')->setName('EducationInstitutions');//POCOR-8507
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder($this->_fieldOrder);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Add controls filter to index page
         $toolbarElements = [
@@ -716,7 +687,7 @@ class EducationGradesTable extends ControllerActionTable
         $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'education_stage_id', 'subjects'];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $serverRequest = $this->request;
         /*list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
@@ -727,7 +698,7 @@ class EducationGradesTable extends ControllerActionTable
                           $this->aliasField('modified') => 'DESC'
                         ]); */
         // Academic period filter
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? $serverRequest->getQuery('academic_period_id') : $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
@@ -790,23 +761,23 @@ class EducationGradesTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
         $this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['EducationSubjects']);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
     }
 
-    public function setupFields(Event $event, Entity $entity)
+    public function setupFields(EventInterface $event, Entity $entity)
     {
         $this->field('name');
         $this->field('code');
@@ -815,10 +786,10 @@ class EducationGradesTable extends ControllerActionTable
         $this->field('education_programme_id', ['entity' => $entity]);
     }
 
-    public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomSubjectElement(EventInterface $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'index') {
-            $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+            $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
             $value = $EducationGradesSubjects
                 ->findByEducationGradeId($entity->id)
                 ->where([$EducationGradesSubjects->aliasField('visible') => 1])
@@ -828,7 +799,7 @@ class EducationGradesTable extends ControllerActionTable
             $tableHeaders = [__('Name'), __('Code'), __('Hours Required')];
             $tableCells = [];
 
-            $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
+            $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
             $gradeSubjectData = $EducationGradesSubjects
                 ->findByEducationGradeId($entity->id)
                 ->find('list', ['keyField' =>  'education_subject_id', 'valueField' => 'id'])
@@ -862,7 +833,7 @@ class EducationGradesTable extends ControllerActionTable
         return $event->getSubject()->renderElement('Education.subjects', ['attr' => $attr]);
     }
 
-    public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldAdmissionAge(EventInterface $event, array $attr, $action, ServerRequest $request){
         list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
 
         if ($action == 'add' && !empty($selectedProgramme)) {
@@ -897,7 +868,7 @@ class EducationGradesTable extends ControllerActionTable
         return $attr;
     }
 
-     public function onUpdateFieldEducationStageId(Event $event, array $attr, $action, ServerRequest $request){
+     public function onUpdateFieldEducationStageId(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $stageOptions = $this->EducationStages
                 ->find('list')
@@ -912,7 +883,7 @@ class EducationGradesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
         $attr['onChangeReload'] = true;
@@ -933,7 +904,7 @@ class EducationGradesTable extends ControllerActionTable
     {
         $serverRequest = $this->request;
         // Academic period filter
-        $EducationSystems = TableRegistry::get('Education.EducationSystems');
+        $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $academicPeriodOptions = $this->EducationProgrammes->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($serverRequest->getQuery('academic_period_id')) ? //POCOR-8897
                                     $serverRequest->getQuery('academic_period_id') :
@@ -1015,8 +986,8 @@ class EducationGradesTable extends ControllerActionTable
         $educationGradeId = $options['education_grade_id'];
         $openemis_no = $options['openemis_no'];
         $educationGradeName = $this->get($educationGradeId)->code;
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $UsersData = TableRegistry::get('User.Users');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $UsersData = TableRegistry::getTableLocator()->get('User.Users');
         $studentStatuses = self::getDynamicTableInstance('student_statuses'); // POCOR-8231
         $institutionStudents = self::getDynamicTableInstance('institution_students'); // POCOR-8231
         $EducationGradesData = $EducationGrades->find()
@@ -1065,7 +1036,7 @@ class EducationGradesTable extends ControllerActionTable
      * @param string $tableName The name of the table.
      * @return \Cake\ORM\Table The table instance.
      * @throws \Exception If the table instance cannot be retrieved.
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -1148,9 +1119,9 @@ class EducationGradesTable extends ControllerActionTable
             $educationGradeName = "0";
         }
 
-        $UsersData = TableRegistry::get('User.Users');
+        $UsersData = TableRegistry::getTableLocator()->get('User.Users');
 
-        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents')
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')
         ->extract('id')
         ->toArray();
         if(!empty($openemis_no)){
@@ -1225,7 +1196,7 @@ class EducationGradesTable extends ControllerActionTable
         return $admissionAge;
     }
 
-    public function afterReorder(Event $event, $ids = [])
+    public function afterReorder(EventInterface $event, $ids = [])
     {
         $gradeIds = array_column($ids, 'id');
 
@@ -1265,7 +1236,7 @@ class EducationGradesTable extends ControllerActionTable
     /*POCOR-6257 Starts*/
     public function getEducationGradesByPeriod($academicPeriodId, $institutionId)
     {
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $gradeOptions = $this->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'programme_grade_name'
@@ -1334,9 +1305,9 @@ class EducationGradesTable extends ControllerActionTable
             // Default is to get the list of grades with the next programme grades
             if ($getNextProgrammeGrades) {
                 if ($firstGradeOnly) {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeGradeList($nextProgrammeId, $periodId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextProgrammeGradeList($nextProgrammeId, $periodId);
                 } else {
-                    $nextProgrammesGradesOptions = TableRegistry::get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
+                    $nextProgrammesGradesOptions = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes')->getNextGradeList($programmeId);
                 }
                 //POCOR-6982 Starts
                 if($nexteducationgradeforenrolledStatus == true){
@@ -1407,7 +1378,7 @@ class EducationGradesTable extends ControllerActionTable
     /*POCOR-6498 ends*/
 
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 		$is_manual_exist = $this->getManualUrl('Administration','Education Grades','Education');
 		if(!empty($is_manual_exist)){
@@ -1427,7 +1398,7 @@ class EducationGradesTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
     }
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true){
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true){
         if ($field == 'name') {
             return __('Name');
         }elseif ($field == 'code') {
@@ -1457,7 +1428,7 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

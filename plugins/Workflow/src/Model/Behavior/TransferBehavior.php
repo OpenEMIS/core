@@ -2,7 +2,7 @@
 namespace Workflow\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -59,7 +59,7 @@ class TransferBehavior extends Behavior
         return $validator->notEmpty('institution_owner');
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(EventInterface $event, $data)
     {
         if (!is_null($this->_table->request->getQuery('workflow'))) {
             $selectedWorkflowId = $this->_table->request->getQuery('workflow');
@@ -67,7 +67,7 @@ class TransferBehavior extends Behavior
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         if (isset($model->request->getData()[$model->getAlias()]['workflow_id']) && !empty($model->request->getData()[$model->getAlias()]['workflow_id'])) {
@@ -76,7 +76,7 @@ class TransferBehavior extends Behavior
         }
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         // populate params data
         if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
@@ -92,13 +92,13 @@ class TransferBehavior extends Behavior
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $workflowId = $entity->workflow_id;
         $this->setupInstitutionOwnerField($workflowId);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $workflowId = $entity->workflow_id;
         $this->setupInstitutionOwnerField($workflowId);
@@ -113,7 +113,7 @@ class TransferBehavior extends Behavior
         }
     }
 
-    public function onGetInstitutionOwner(Event $event, Entity $entity)
+    public function onGetInstitutionOwner(EventInterface $event, Entity $entity)
     {
         $value = ' ';
         if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
@@ -124,7 +124,7 @@ class TransferBehavior extends Behavior
         return $value;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
             if (in_array($data['workflow_id'], $this->transferWorkflowIds)) {

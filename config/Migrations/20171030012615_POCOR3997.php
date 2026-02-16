@@ -12,8 +12,8 @@ class POCOR3997 extends AbstractMigration
     // commit
     public function up()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
 
         // rename institution_staff_assignments
         $InstitutionStaffAssignments = $this->table('institution_staff_assignments');
@@ -992,7 +992,7 @@ class POCOR3997 extends AbstractMigration
     // rollback
     public function down()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
 
         // rename z_3997_institution_staff_assignments
         $InstitutionStaffAssignments = $this->table('z_3997_institution_staff_assignments');

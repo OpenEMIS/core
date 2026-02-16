@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 use Institution\Model\Table\InstitutionStaffTransfersTable as TransferType;
@@ -36,7 +36,7 @@ class WorkflowStaffTransferInTable extends AppTable
         ]);
     }
 
-    public function onExcelGetTransferType(Event $event, Entity $entity)
+    public function onExcelGetTransferType(EventInterface $event, Entity $entity)
     {
         $transferTypeOptions = [
             TransferType::FULL_TRANSFER => __('Full Transfer'),
@@ -52,7 +52,7 @@ class WorkflowStaffTransferInTable extends AppTable
     }
 
     //POCOR-7619
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $openemisNo = '';
         if(!empty($entity['user'])){

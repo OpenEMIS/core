@@ -15,6 +15,7 @@ use Cake\I18n\FrozenTime;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\Table;
 use Cake\Log\Log;
+use Cake\Event\EventInterface;
 
 class UsersTable extends ControllerActionTable
 {
@@ -76,6 +77,14 @@ class UsersTable extends ControllerActionTable
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'security_user_create',
+                'entity_delete' => 'security_user_delete',
+                'entity_update' => 'security_user_update',
+                'table_alias' => 'User.Users'
+            ]
+        ); // for webhook
         $this->addBehavior('User.MoodleCreateUser');
         $this->addBehavior('OpenEmis.Section');
         //POCOR-6922 starts
@@ -204,7 +213,7 @@ class UsersTable extends ControllerActionTable
         $this->controller->set('ngController', 'AdvancedSearchCtrl');
     }//POCOR-6922 ends
 
-    public function studentsAfterSave(Event $event, Entity $entity)
+    public function studentsAfterSave(EventInterface $event, Entity $entity)
     {
         if ($entity->isNew()) {
             $this->updateAll(['is_student' => 1], ['id' => $entity->student_id]);
@@ -625,9 +634,9 @@ class UsersTable extends ControllerActionTable
     }
 
      /**
-      * POCOR-6380 starts : overwrite view button as 
+      * POCOR-6380 starts : overwrite view button as
       * it was taking null id after selecting specific columns in indexing*
-      * add change password button 
+      * add change password button
       * POCOR-9370
      **/
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -637,7 +646,7 @@ class UsersTable extends ControllerActionTable
         if (isset($buttons['view'])) {
             $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
         }
-         $currentUser = $this->Auth->user();   
+         $currentUser = $this->Auth->user();
        if (!empty($currentUser['super_admin']) && $currentUser['super_admin'] == 1 && $entity->super_admin) {
             $params = ['id' => $entity->id];
             $manageUsersBtn = ['manage_users' => $buttons['edit']];
@@ -764,7 +773,7 @@ class UsersTable extends ControllerActionTable
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -940,7 +949,7 @@ class UsersTable extends ControllerActionTable
                 }
             }
         } // POCOR-8446
-   
+
 
         return $options;
     }
@@ -966,7 +975,7 @@ class UsersTable extends ControllerActionTable
         $buttons = array_merge($manageUsersBtn, $buttons);
         return $buttons;
 
-        
+
     }
 
 }

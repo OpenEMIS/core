@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -54,7 +54,7 @@ class ExaminationResultsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             // POCOR-8919
@@ -65,7 +65,7 @@ class ExaminationResultsTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedExam = $requestData->examination_id;
@@ -84,7 +84,7 @@ class ExaminationResultsTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -141,7 +141,7 @@ class ExaminationResultsTable extends AppTable
         $selectedExam = $requestData->examination_id;
         $selectedAcademicPeriod = $requestData->academic_period_id;
 
-        $ExaminationSubjects = TableRegistry::get('Examination.ExaminationSubjects');
+        $ExaminationSubjects = TableRegistry::getTableLocator()->get('Examination.ExaminationSubjects');
         $examItems = $ExaminationSubjects
             ->find()
             ->contain('ExaminationGradingTypes')
@@ -203,7 +203,7 @@ class ExaminationResultsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetExaminationId(Event $event, Entity $entity)
+    public function onExcelGetExaminationId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('examination')) {
             return $entity->examination->code_name;
@@ -212,7 +212,7 @@ class ExaminationResultsTable extends AppTable
         }
     }
 
-    public function onExcelGetExaminationCentreId(Event $event, Entity $entity)
+    public function onExcelGetExaminationCentreId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('examination_centre')) {
             return $entity->examination_centre->code_name;
@@ -221,7 +221,7 @@ class ExaminationResultsTable extends AppTable
         }
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity)
+    public function onExcelGetInstitutionId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('institution')) {
             return $entity->institution->code_name;
@@ -230,7 +230,7 @@ class ExaminationResultsTable extends AppTable
         }
     }
 
-    public function onExcelRenderItemMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderItemMark(EventInterface $event, Entity $entity, array $attr)
     {
         $studentId = $entity->student_id;
         $examinationId = $attr['examinationId'];
@@ -239,7 +239,7 @@ class ExaminationResultsTable extends AppTable
         $resultType = $attr['resultType'];
         $weight = $attr['weight'];
 
-        $ExaminationStudentSubjectResultsTable = TableRegistry::get('Examination.ExaminationStudentSubjectResults');
+        $ExaminationStudentSubjectResultsTable = TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjectResults');
         $results = $this->examinationResults;
         if (!(isset($results[$studentId]))) {
             $results = $ExaminationStudentSubjectResultsTable->getExaminationStudentSubjectResults($academicPeriodId, $examinationId, $studentId);
@@ -266,21 +266,21 @@ class ExaminationResultsTable extends AppTable
         return $printedResult;
     }
 
-    public function onExcelGetItemWeightedMark(Event $event, Entity $entity)
+    public function onExcelGetItemWeightedMark(EventInterface $event, Entity $entity)
     {
         $printedResult = $this->itemWeightedMark;
         $this->itemWeightedMark = 0;
         return ' '.$printedResult;
     }
 
-    public function onExcelGetTotalWeightedMark(Event $event, Entity $entity)
+    public function onExcelGetTotalWeightedMark(EventInterface $event, Entity $entity)
     {
         $printedResult = $this->totalWeightedMark;
         $this->totalWeightedMark = 0;
         return $printedResult;
     }
 
-    public function onExcelGetTotalMark(Event $event, Entity $entity)
+    public function onExcelGetTotalMark(EventInterface $event, Entity $entity)
     {
         $printedResult = $this->totalMarks;
         $this->totalMarks = 0;

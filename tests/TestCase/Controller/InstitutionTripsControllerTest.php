@@ -71,7 +71,7 @@ class InstitutionTripsControllerTest extends AppTestCase
 
     //     $this->postData($url, $data);
 
-    //     $table = TableRegistry::get($this->modelPlugin.'.'.$this->modelAlias);
+    //     $table = TableRegistry::getTableLocator()->get($this->modelPlugin.'.'.$this->modelAlias);
     //     $entity = $table->get($this->primaryKey);
     //     $this->assertEquals($data[$this->modelAlias]['name'], $entity->name);
     // }
@@ -97,7 +97,7 @@ class InstitutionTripsControllerTest extends AppTestCase
 
     //     $this->postData($url, $data);
 
-    //     $table = TableRegistry::get($this->modelPlugin.'.'.$this->modelAlias);
+    //     $table = TableRegistry::getTableLocator()->get($this->modelPlugin.'.'.$this->modelAlias);
     //     $entity = $table->get($data[$this->modelAlias]['id']);
     //     $this->assertEquals($data[$this->modelAlias]['name'], $entity->name);
     // }
@@ -110,7 +110,7 @@ class InstitutionTripsControllerTest extends AppTestCase
 
     //     $this->deleteData($url);
 
-    //     $table = TableRegistry::get($this->modelPlugin.'.'.$this->modelAlias);
+    //     $table = TableRegistry::getTableLocator()->get($this->modelPlugin.'.'.$this->modelAlias);
     //     $entity = $table->find()->where($this->primaryKey)->first();
 
     //     $this->assertEquals($entity, null);

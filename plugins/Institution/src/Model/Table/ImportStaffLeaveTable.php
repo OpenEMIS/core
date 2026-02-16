@@ -6,7 +6,7 @@ use PHPExcel_Worksheet;
 use App\Model\Table\AppTable;
 use Cake\Controller\Component;
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -27,9 +27,9 @@ class ImportStaffLeaveTable extends AppTable
             'model' => 'StaffLeave'
         ]);
 
-        $this->Workflows = TableRegistry::get('Workflow.Workflows');
-        $this->WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
-        $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+        $this->Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $this->WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $this->WorkflowsFilters = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
     }
 
     public function implementedEvents()
@@ -42,7 +42,7 @@ class ImportStaffLeaveTable extends AppTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona)
     {
         $session = $request->session();
         $staffName = '';
@@ -52,7 +52,7 @@ class ImportStaffLeaveTable extends AppTable
             $staffName = $persona->name;
         } elseif (!is_null($request->query('user_id'))) {
             $this->staffId = $request->query('user_id');
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             $UserEntity = $Users
                 ->find()
                 ->select([
@@ -67,7 +67,7 @@ class ImportStaffLeaveTable extends AppTable
             $staffName = $UserEntity->name;
         } elseif ($session->check('Staff.Staff.id')) {
             $this->staffId = $session->read('Staff.Staff.id');
-            $Users = TableRegistry::get('Security.Users');
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
             $UserEntity = $Users
                 ->find()
                 ->select([
@@ -92,9 +92,9 @@ class ImportStaffLeaveTable extends AppTable
         $Navigation->substituteCrumb($staffName, $staffName, $personaUrl);
     }
 
-    public function onImportPopulateStaffLeaveTypesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateStaffLeaveTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
         $result = $lookedUpTable
             ->find('all')
@@ -122,9 +122,9 @@ class ImportStaffLeaveTable extends AppTable
         }
     }
 
-    public function onImportPopulateWorkflowStepsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateWorkflowStepsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
 
         $workflowResult = $this->Workflows
             ->find()
@@ -172,7 +172,7 @@ class ImportStaffLeaveTable extends AppTable
     /**
      * onImportPopulateAcademicPeriodsData method description.
      *
-     * @param Event $event The Event to use.
+     * @param EventInterface $event The Event to use.
      * @param  $lookupPlugin value.
      * @param  $lookupModel value.
      * @param  $translatedCol value.
@@ -181,7 +181,7 @@ class ImportStaffLeaveTable extends AppTable
      * @param array $columnOrder value.
      */
     public function onImportPopulateAcademicPeriodsData(
-            Event $event,
+            EventInterface $event,
             $lookupPlugin,
             $lookupModel,
             $lookupColumn,
@@ -189,7 +189,7 @@ class ImportStaffLeaveTable extends AppTable
             ArrayObject $data, 
             $columnOrder
     ) {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
@@ -214,7 +214,7 @@ class ImportStaffLeaveTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         if (!$this->institutionId) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');

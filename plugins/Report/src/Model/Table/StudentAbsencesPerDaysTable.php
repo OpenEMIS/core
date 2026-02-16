@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -43,29 +43,29 @@ class StudentAbsencesPerDaysTable extends AppTable
         ]);
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature');
         $this->ControllerAction->field('format');
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
          $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $grades = TableRegistry::get('Education.EducationGrades');
-        $academicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $securityUsers = TableRegistry::get('User.Users');
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $grades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $securityUsers = TableRegistry::getTableLocator()->get('User.Users');
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
 
@@ -210,7 +210,7 @@ class StudentAbsencesPerDaysTable extends AppTable
             
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
 
         $extraFields = [];
@@ -319,7 +319,7 @@ class StudentAbsencesPerDaysTable extends AppTable
     }
 
     public function getChildren($id, $idArray) {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id

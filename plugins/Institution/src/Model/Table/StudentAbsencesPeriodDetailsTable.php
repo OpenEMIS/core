@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Filesystem\Folder;
 use Cake\Mailer\Email;
 use Cake\ORM\Entity;
@@ -57,7 +57,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 //        return $validator;
 //    }
 
-//    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+//    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
 //    {
 //        $absenceTypeId = $data['absence_type_id'] ?? null;
 //
@@ -73,12 +73,12 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 //        }
 //    }
 
-    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options): Entity
+    public function afterSaveCommit(EventInterface $event, Entity $entity, ArrayObject $options): Entity
     {
 
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
         if ($entity->has('record_source') && $entity->record_source == 'import_student_attendances') {
-            $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+            $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
 
             $date = $entity->date->i18nFormat('YYY-MM-dd');
 
@@ -118,7 +118,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     * return data
     * @ticket POCOR-7165
     */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->absence_type_id == 0) {
             $this->delete($entity);
@@ -157,7 +157,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         return $query->where($conditions)->limit(1);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $requestData): Entity
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData): Entity
     {
 
         $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
@@ -270,7 +270,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

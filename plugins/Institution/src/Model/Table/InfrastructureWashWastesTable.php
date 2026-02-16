@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -33,14 +33,14 @@ class InfrastructureWashWastesTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureWashWastes';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('infrastructure_wash_waste_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('infrastructure_wash_waste_functionality_id', ['attr' => ['label' => __('Functionality')]]);
@@ -89,7 +89,7 @@ class InfrastructureWashWastesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
             case 'infrastructure_wash_waste_type_id':
@@ -101,13 +101,13 @@ class InfrastructureWashWastesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
         ->orderDesc($this->aliasField('created'));
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
 
@@ -122,7 +122,7 @@ class InfrastructureWashWastesTable extends ControllerActionTable
         $this->field('infrastructure_wash_waste_functionality_id', ['attr' => ['label' => __('Functionality')]]);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
         $session = $this->request->getSession();
         //$institutionId = $session->read('Institution.Institutions.id');
         $institutionId  = $this->getInstitutionID();
@@ -137,7 +137,7 @@ class InfrastructureWashWastesTable extends ControllerActionTable
     }
 
     // POCOR-6148 start
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'InfrastructureWashWastes.infrastructure_wash_waste_type_id',

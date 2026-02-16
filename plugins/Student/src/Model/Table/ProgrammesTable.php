@@ -4,7 +4,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
@@ -50,13 +50,13 @@ class ProgrammesTable extends ControllerActionTable
 
 	}
 
-	public function onGetEducationGradeId(Event $event, Entity $entity)
+	public function onGetEducationGradeId(EventInterface $event, Entity $entity)
 	{
 		return $entity->education_grade->programme_grade_name;
 	}
 
 	//POCOR-5742 starts
-	public function onGetEndDate(Event $event, Entity $entity)
+	public function onGetEndDate(EventInterface $event, Entity $entity)
 	{
 		$studentId = $entity->student_id;
 		$gradeId = $entity->education_grade->id;
@@ -83,16 +83,16 @@ class ProgrammesTable extends ControllerActionTable
 	//POCOR-5742 ends
 
     // POCOR-8980
-	public function onGetInstitution(Event $event, Entity $entity)
+	public function onGetInstitution(EventInterface $event, Entity $entity)
 	{
 
 		return $entity->institution->code_name;
 	}
 
 	//POCOR-8870 start
-	public function onGetRegistrationNumber(Event $event, Entity $entity)
+	public function onGetRegistrationNumber(EventInterface $event, Entity $entity)
 	{
-		$InstitutionStudentProgrammesTable = TableRegistry::get('Student.InstitutionStudentProgrammes');
+		$InstitutionStudentProgrammesTable = TableRegistry::getTableLocator()->get('Student.InstitutionStudentProgrammes');
 		// Find existing record
 		$institutionStudentProgramme = $InstitutionStudentProgrammesTable
 		->find()
@@ -102,14 +102,14 @@ class ProgrammesTable extends ControllerActionTable
 	}
 	//POCOR-8870 end
 
-	public function beforeAction(Event $event, ArrayObject $extra)
+	public function beforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->field('previous_institution_student_id', ['visible' => false]);
 		$this->field('registration_number', ['after'=>'student_id' , 'visible' => true]);
 	}
 
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
 	{
 		$this->fields['student_id']['visible'] = 'false';
 		$this->fields['start_year']['visible'] = 'false';
@@ -191,7 +191,7 @@ class ProgrammesTable extends ControllerActionTable
 		// End POCOR-5188
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		$session = $this->request->getSession();
 
@@ -249,7 +249,7 @@ class ProgrammesTable extends ControllerActionTable
 		$extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
 		$this->field('openemis_no', ['before' => 'student_id']);
@@ -304,7 +304,7 @@ class ProgrammesTable extends ControllerActionTable
 		//POCOR-5671
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+	public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
 	{
         // POCOR-8980 start
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -385,7 +385,7 @@ class ProgrammesTable extends ControllerActionTable
         // POCOR-8980 end
 	}
 
-	public function onGetOpenemisNo(Event $event, Entity $entity)
+	public function onGetOpenemisNo(EventInterface $event, Entity $entity)
 	{
 		$value = '';
 		if ($entity->has('user')) {
@@ -405,17 +405,17 @@ class ProgrammesTable extends ControllerActionTable
 		$this->controller->set('selectedAction', $this->getAlias());
 	}
 
-	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+	public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
 	{
 		$this->setupTabElements();
 	}
 
-	public function editBeforeQuery(Event $event, Query $query)
+	public function editBeforeQuery(EventInterface $event, Query $query)
 	{
 		$query->contain(['Users', 'EducationGrades', 'AcademicPeriods', 'StudentStatuses']);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity)
+	public function editAfterAction(EventInterface $event, Entity $entity)
 	{
 		$this->field('start_year', ['visible' => 'false']);
 		$this->field('end_year', ['visible' => 'false']);
@@ -439,7 +439,7 @@ class ProgrammesTable extends ControllerActionTable
 			$this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
 			//POCOR-8870 start
-			$InstitutionStudentProgrammesTable = TableRegistry::get('Student.InstitutionStudentProgrammes');
+			$InstitutionStudentProgrammesTable = TableRegistry::getTableLocator()->get('Student.InstitutionStudentProgrammes');
 			// Find existing record
 			$institutionStudentProgramme = $InstitutionStudentProgrammesTable
 			->find()
@@ -466,10 +466,10 @@ class ProgrammesTable extends ControllerActionTable
 	}
 
 	// POCOR-8870 start
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+	public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
 	{
 		if ($this->action == 'edit') {
-			$InstitutionStudentProgrammesTable = TableRegistry::get('Student.InstitutionStudentProgrammes');
+			$InstitutionStudentProgrammesTable = TableRegistry::getTableLocator()->get('Student.InstitutionStudentProgrammes');
 			// Find existing record or create a new one
 			$institutionStudentProgramme = $InstitutionStudentProgrammesTable
 				->find()
@@ -493,7 +493,7 @@ class ProgrammesTable extends ControllerActionTable
 	//POCOR-8870 end
 
 	//POCOR-8414 start
-	public function afterAction(Event $event, ArrayObject $options)
+	public function afterAction(EventInterface $event, ArrayObject $options)
 	{
 		$plugin = __($this->controller->getPlugin());
 		if ($plugin != 'Profile' && $plugin != 'GuardianNav') {
@@ -507,7 +507,7 @@ class ProgrammesTable extends ControllerActionTable
 				$userId = $queryString['student_id'];
 			}
 			//POCOR-8489 --End
-			$Users = TableRegistry::get('User.Users');
+			$Users = TableRegistry::getTableLocator()->get('User.Users');
 			$result = $Users
 				->find()
 				->select(['first_name', 'last_name'])
@@ -525,9 +525,9 @@ class ProgrammesTable extends ControllerActionTable
 		}
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
 	{
-		$LabelTable = TableRegistry::get('Labels');
+		$LabelTable = TableRegistry::getTableLocator()->get('Labels');
 		if ($field == 'name') {
 			return __('Name');
 		}elseif ($field == 'registration_number') { //POCOR-9125, POCOR-9048

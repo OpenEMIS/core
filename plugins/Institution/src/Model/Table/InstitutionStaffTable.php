@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Session;
 
@@ -40,9 +40,19 @@ class InstitutionStaffTable extends AppTable
         ]);
         $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.AreaList');//POCOR-7794
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'staff_create',
+                'entity_delete' => 'staff_delete',
+                'entity_update' => 'staff_update',
+                'table_alias' => 'Institution.InstitutionStaff',
+                'contain' => []
+            ]
+        ); // for webhook
+
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->alias(),
@@ -52,7 +62,7 @@ class InstitutionStaffTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // Setting request data and modifying fetch condition
         $requestData = json_decode($settings['process']['params']);
@@ -219,7 +229,7 @@ class InstitutionStaffTable extends AppTable
         });
     }
 
-    public function onExcelGetUserIdentitiesDefault(Event $event, Entity $entity)
+    public function onExcelGetUserIdentitiesDefault(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -237,7 +247,7 @@ class InstitutionStaffTable extends AppTable
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetUserIdentities(Event $event, Entity $entity)
+    public function onExcelGetUserIdentities(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -245,7 +255,7 @@ class InstitutionStaffTable extends AppTable
                 if (!empty($entity->user->identities)) {
                     $identities = $entity->user->identities;
                     foreach ($identities as $key => $value) {
-                        if ($value->identity_type->default == 0) {                            
+                        if ($value->identity_type->default == 0) {
                             $return[] = '([' . $value->identity_type->name . ']' . ' - ' . $value->number . ')';
                         }
                     }
@@ -256,12 +266,12 @@ class InstitutionStaffTable extends AppTable
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetFTE(Event $event, Entity $entity)
+    public function onExcelGetFTE(EventInterface $event, Entity $entity)
     {
         return $entity->FTE*100;
     }
 
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr)
+    public function onExcelRenderAge(EventInterface $event, Entity $entity, $attr)
     {
         $age = '';
         if ($entity->has('user')) {
@@ -275,23 +285,23 @@ class InstitutionStaffTable extends AppTable
         }
         return $age;
     }
-    
 
-    public function onExcelGetEducationGrades(Event $event, Entity $entity)
+
+    public function onExcelGetEducationGrades(EventInterface $event, Entity $entity)
     {
         $grades = [];
 
         if ($entity->has('staff_id')) {
             $staffId = $entity->staff_id;
             $academicPeriodId = $entity->academic_period_id;
-            $ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
-            $ClassesSecondaryStaffTable = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+            $ClassesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $ClassesSecondaryStaffTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
             //Start:POCOR-6714
             $EducationGrades = TableRegistry::get('Education.EducationGrades');
             $subStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
             $InsSubTable = TableRegistry::get('Institution.InstitutionSubjects');
             $AcademicTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-	     
+
 	        $AcademicData = $AcademicTable->find()->where(['id'=> $entity->academic_period_id])->first();
             $startDateYear = $AcademicData->start_year;
             $endDateYear = $AcademicData->end_year; // POCOR-7544
@@ -302,18 +312,18 @@ class InstitutionStaffTable extends AppTable
                 $startDateYear = $AcademicData->end_year;
                 $subStaffData = $subStaffTable->find()->where(['staff_id'=>$staffId,'institution_id'=>$entity->institution_id,'start_date >' => "$startDateYear-01-01",'end_date <' => "$endDateYear-12-31"])->toArray();
             }
-            foreach ($subStaffData as $key => $value) { 
+            foreach ($subStaffData as $key => $value) {
                 $insSubData = $InsSubTable->find()->where(['id' => $value->institution_subject_id])->first();
                 $EducationGradeData = $EducationGrades->find()->where(['id'=> $insSubData->education_grade_id])->first();
                 $edGrade[$key] = $EducationGradeData->name;
             }
             //END:POCOR-6714
-            
-            //echo "<pre>"; print_r($value->start_date->format('Y')); 
+
+            //echo "<pre>"; print_r($value->start_date->format('Y'));
             //die();
             // $connection = ConnectionManager::get('default');
             // $institutionClassesData = $connection->execute("SELECT academic_period_id,homeroom_or_secondary.institution_class_id,homeroom_or_secondary.staff_id,education_grade_id FROM
-            //     institution_classes 
+            //     institution_classes
             //     INNER JOIN
             //     (SELECT id institution_class_id,staff_id FROM institution_classes
 
@@ -368,13 +378,13 @@ class InstitutionStaffTable extends AppTable
         return implode(', ', array_values(array_unique($edGrade))); //POCOR-6714
     }
 
-    public function onExcelGetPositionTitleTeaching(Event $event, Entity $entity)
+    public function onExcelGetPositionTitleTeaching(EventInterface $event, Entity $entity)
     {
         $yesno = $this->getSelectOptions('general.yesno');
         return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
     }
 
-    public function onExcelRenderContactOption(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderContactOption(EventInterface $event, Entity $entity, array $attr)
     {
         $contactTypes = $attr['contactTypes'];
 
@@ -393,9 +403,9 @@ class InstitutionStaffTable extends AppTable
         return implode(', ', $result);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $settings['identity'] = $identity;
@@ -610,13 +620,13 @@ class InstitutionStaffTable extends AppTable
         ];
 
         $displayContactOptions = ['MOBILE', 'PHONE', 'EMAIL'];
-        $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
+        $ContactOptionsTable = TableRegistry::getTableLocator()->get('User.ContactOptions');
         $options = $ContactOptionsTable->find('list')
             ->where([$ContactOptionsTable->aliasField('code IN') => $displayContactOptions])
             ->order('order')
             ->toArray();
 
-        $ContactTypesTable = TableRegistry::get('User.ContactTypes');
+        $ContactTypesTable = TableRegistry::getTableLocator()->get('User.ContactTypes');
         foreach ($options as $id => $name) {
             $contactTypes = $ContactTypesTable->find()
                 ->where([$ContactTypesTable->aliasField('contact_option_id') => $id])

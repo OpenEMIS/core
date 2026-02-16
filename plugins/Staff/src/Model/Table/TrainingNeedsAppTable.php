@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Http\Session;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -101,14 +101,14 @@ class TrainingNeedsAppTable extends ControllerActionTable
             });
     }
 
-    public function onGetType(Event $event, Entity $entity)
+    public function onGetType(EventInterface $event, Entity $entity)
     {
         $typeOptions = $this->getTypes();
 
         return $typeOptions[$entity->type];
     }
 
-    public function onGetTrainingCourseId(Event $event, Entity $entity)
+    public function onGetTrainingCourseId(EventInterface $event, Entity $entity)
     {
         $isCatalogue = $this->isCatalogue($entity);
 
@@ -122,27 +122,27 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetCourseCode(Event $event, Entity $entity)
+    public function onGetCourseCode(EventInterface $event, Entity $entity)
     {
         return $entity->training_course->code;
     }
 
-    public function onGetCourseName(Event $event, Entity $entity)
+    public function onGetCourseName(EventInterface $event, Entity $entity)
     {
         return $entity->training_course->name;
     }
 
-    public function onGetCourseDescription(Event $event, Entity $entity)
+    public function onGetCourseDescription(EventInterface $event, Entity $entity)
     {
         return $entity->training_course->description;
     }
 
-    public function onGetTrainingRequirementId(Event $event, Entity $entity)
+    public function onGetTrainingRequirementId(EventInterface $event, Entity $entity)
     {
         return $entity->training_course->training_requirement->name;
     }
 
-    public function onGetTrainingNeedCategoryId(Event $event, Entity $entity)
+    public function onGetTrainingNeedCategoryId(EventInterface $event, Entity $entity)
     {
         $isCatalogue = $this->isCatalogue($entity);
 
@@ -156,7 +156,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetTrainingNeedStandardId(Event $event, Entity $entity)
+    public function onGetTrainingNeedStandardId(EventInterface $event, Entity $entity)
     {
         $isNeed = $this->isNeed($entity);
 
@@ -172,7 +172,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $value;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('training_need_competency_id', ['visible' => false]);
         $this->field('training_need_sub_standard_id', ['visible' => false]);
@@ -184,7 +184,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         $this->setFieldOrder(['type', 'training_course_id', 'training_need_category_id','assignee_id']);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
 
@@ -216,31 +216,31 @@ class TrainingNeedsAppTable extends ControllerActionTable
             ->enableAutoFields(true);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $query->contain([
             'TrainingNeedSubStandards.TrainingNeedStandards',
             'TrainingCourses.TrainingRequirements'
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->has('training_need_sub_standard') && !empty($entity->training_need_sub_standard)) {
             $entity->training_need_standard_id = $entity->training_need_sub_standard->training_need_standard_id;
         }
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $typeOptions = $this->getTypes();
 
@@ -260,7 +260,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingCourseId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
@@ -295,7 +295,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCourseCode(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCourseCode(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
@@ -323,7 +323,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCourseName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCourseName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
@@ -351,7 +351,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldCourseDescription(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldCourseDescription(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
@@ -379,7 +379,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingRequirementId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingRequirementId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isCatalogue = $this->isCatalogue($entity);
@@ -407,7 +407,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingNeedCategoryId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
@@ -426,7 +426,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedCompetencyId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingNeedCompetencyId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
@@ -445,7 +445,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedStandardId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingNeedStandardId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
@@ -456,7 +456,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
             }
         } else if ($action == 'add' || $action == 'edit') {
             if ($isNeed) {
-                $TrainingNeedStandards = TableRegistry::get('Training.TrainingNeedStandards');
+                $TrainingNeedStandards = TableRegistry::getTableLocator()->get('Training.TrainingNeedStandards');
                 $trainingNeedStandardOptions = $TrainingNeedStandards
                     ->find('list')
                     ->find('visible')
@@ -473,7 +473,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingNeedSubStandardId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTrainingNeedSubStandardId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = isset($attr['entity']) ? $attr['entity'] : null;
         $isNeed = $this->isNeed($entity);
@@ -514,7 +514,7 @@ class TrainingNeedsAppTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $session = $request->getSession();
@@ -687,13 +687,13 @@ class TrainingNeedsAppTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Staff > Training > Needs';
-            $workflowModelsTable = TableRegistry::get('Workflow.WorkflowModels');
-            $workflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $workflowModelsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels');
+            $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $workModelId = $Workflows
                             ->find()
                             ->select(['id'=>$workflowModelsTable->aliasField('id'),
@@ -721,12 +721,12 @@ class TrainingNeedsAppTable extends ControllerActionTable
             $institutionId = $institutionId;
             $assigneeOptions = [];
             if (!is_null($stepId)) {
-                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
                 $stepRoles = $WorkflowStepsRoles->getRolesByStep($stepId);
                 if (!empty($stepRoles)) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-                    $Areas = TableRegistry::get('Area.Areas');
-                    $Institutions = TableRegistry::get('Institution.Institutions');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
                         if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');

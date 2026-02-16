@@ -16,10 +16,10 @@ class UpdateAssigneeShell extends Shell
 	public function initialize(): void
 	{
 		parent::initialize();
-		$this->loadModel('Workflow.WorkflowModels');
-		$this->loadModel('Workflow.WorkflowTransitions');
-		$this->loadModel('Security.SecurityGroupUsers');
-		$this->loadModel('Institution.Institutions');
+		$this->WorkflowModels = $this->fetchTable('Workflow.WorkflowModels');
+		$this->WorkflowTransitions = $this->fetchTable('Workflow.WorkflowTransitions');
+		$this->SecurityGroupUsers = $this->fetchTable('Security.SecurityGroupUsers');
+		$this->Institutions = $this->fetchTable('Institution.Institutions');
 	}
 
  	public function main()
@@ -49,7 +49,7 @@ class UpdateAssigneeShell extends Shell
 	public function autoAssignAssignee(Entity $workflowModelEntity, $id=0, $statusId=0, $groupId=0, $userId=0, $roleId=0)
 	{
 		try {
-			$model = TableRegistry::get($workflowModelEntity->model);
+			$model = TableRegistry::getTableLocator()->get($workflowModelEntity->model);
 			$isSchoolBased = $workflowModelEntity->is_school_based;
 			$this->out("Initialize Update Assignee Shell of " . $workflowModelEntity->name);
 

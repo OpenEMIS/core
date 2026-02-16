@@ -118,7 +118,7 @@ class InstitutionsControllerTest extends AppTestCase
 
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Institution.Institutions');
+        $table = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $data = [
             'Institutions' => [
                 'id' => '517',
@@ -176,7 +176,7 @@ class InstitutionsControllerTest extends AppTestCase
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Institution.Institutions');
+        $table = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $data = [
             'Institutions' => [
                 'name' => 'Test College',
@@ -240,7 +240,7 @@ class InstitutionsControllerTest extends AppTestCase
             ],
             'submit' => 'save'
         ];
-        $table = TableRegistry::get('Institution.Institutions');
+        $table = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $originalRecord = $table->find()
             ->where([
                 $table->aliasField('id') => $this->academicInstitutionId
@@ -255,7 +255,7 @@ class InstitutionsControllerTest extends AppTestCase
 
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institution.Institutions');
+        $table = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $record = $table->find()
             ->where([
                 $table->aliasField('id') => $this->academicInstitutionId
@@ -280,7 +280,7 @@ class InstitutionsControllerTest extends AppTestCase
     public function testNonAcademicInstitutionUpdate()
     {
         $testUrl = $this->url('edit/'.$this->nonAcademicInstitutionId);
-        $table = TableRegistry::get('Institution.Institutions');
+        $table = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
@@ -343,7 +343,7 @@ class InstitutionsControllerTest extends AppTestCase
     {
         $testUrl = $this->url('remove/'.$this->nonAcademicInstitutionId);
 
-        $table = TableRegistry::get('Institution.Institutions');
+        $table = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $record = $table->find()
             ->where([
@@ -373,7 +373,7 @@ class InstitutionsControllerTest extends AppTestCase
     {
         $testUrl = $this->url('remove/'.$this->academicInstitutionId);
 
-        $table = TableRegistry::get('Institution.Institutions');
+        $table = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         $record = $table->find()
             ->where([
@@ -401,7 +401,7 @@ class InstitutionsControllerTest extends AppTestCase
 
     private function getSecurityGroupAreaRecord($securityGroupId, $areaId)
     {
-        $SecurityGroupAreasTable = TableRegistry::get('Security.SecurityGroupAreas');
+        $SecurityGroupAreasTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
         return $SecurityGroupAreasTable->find()
             ->where([
                 $SecurityGroupAreasTable->aliasField('security_group_id') => $securityGroupId,
@@ -412,7 +412,7 @@ class InstitutionsControllerTest extends AppTestCase
 
     private function getSecurityGroupInstitutionRecord($securityGroupId, $institutionId)
     {
-        $SecurityGroupInstitutionsTable = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $SecurityGroupInstitutionsTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
         return $SecurityGroupInstitutionsTable->find()
             ->where([
                 $SecurityGroupInstitutionsTable->aliasField('security_group_id') => $securityGroupId,

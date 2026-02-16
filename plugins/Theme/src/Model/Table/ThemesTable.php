@@ -3,7 +3,7 @@ namespace Theme\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\Cache\Cache;
@@ -43,7 +43,7 @@ class ThemesTable extends ControllerActionTable
 // POCOR-8951 end
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
@@ -55,7 +55,7 @@ class ThemesTable extends ControllerActionTable
         //POCOR-8741 end
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //$selectedFeature = $extra['selectedFeature'];
 
@@ -66,7 +66,7 @@ class ThemesTable extends ControllerActionTable
 
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('content', ['visible' => false]);
         $this->field('default_content', ['visible' => false]);
@@ -79,10 +79,10 @@ class ThemesTable extends ControllerActionTable
      * It modifies the 'color_themes' field by setting its type to 'element'
      * and associates it with a custom element named 'themecolor'.
      *
-     * @param Event $event The event that triggered the action
+     * @param EventInterface $event The event that triggered the action
      * @param Entity $entity The entity being processed
      */
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(EventInterface $event, Entity $entity)
     {
         $configName = $entity->name;
 
@@ -114,7 +114,7 @@ class ThemesTable extends ControllerActionTable
     /**
      * POCOR-8951 refactured
      */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $entityName = $entity->name;
 
@@ -150,7 +150,7 @@ class ThemesTable extends ControllerActionTable
 
 
 
-    public function onGetDefaultValue(Event $event, Entity $entity)
+    public function onGetDefaultValue(EventInterface $event, Entity $entity)
     {
 
         if($entity->name == 'Colour'){
@@ -159,7 +159,7 @@ class ThemesTable extends ControllerActionTable
         }
     }
 
-    public function onGetValue(Event $event, Entity $entity)
+    public function onGetValue(EventInterface $event, Entity $entity)
     {
         if($entity->name == 'Colour'){
             $entity->value = '<div style="float: left; width: 150px; height: 20px; margin: 5px; border: 1px solid rgba(0, 0, 0, .2); background-color: #'.$entity->value.';"></div>';
@@ -168,10 +168,10 @@ class ThemesTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         Cache::delete('themes');
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $themeConfigItemRecord = $configItems->findByCode('themes')->first();
         $themeConfigItemRecord->value = Time::now()->toUnixString();
         $configItems->save($themeConfigItemRecord);
@@ -186,7 +186,7 @@ class ThemesTable extends ControllerActionTable
 
     }
     //POCOR-8716 START
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         switch ($data['name']) { // POCOR-8951
             case 'Login Page Image': // POCOR-8951
@@ -214,9 +214,9 @@ class ThemesTable extends ControllerActionTable
     /**
      * POCOR-8951
      */
-    public function onUpdateFieldConfigItemId(Event $event, array $attr, $action)
+    public function onUpdateFieldConfigItemId(EventInterface $event, array $attr, $action)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configOptions = $ConfigItems->find('list')
             ->toArray();
         $entity = $attr['entity'];

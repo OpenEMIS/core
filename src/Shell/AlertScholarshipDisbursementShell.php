@@ -17,7 +17,7 @@ class AlertScholarshipDisbursementShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('Scholarship.RecipientPaymentStructureEstimates');
+        $this->RecipientPaymentStructureEstimates = $this->fetchTable('Scholarship.RecipientPaymentStructureEstimates');
     }
 
     public function main()

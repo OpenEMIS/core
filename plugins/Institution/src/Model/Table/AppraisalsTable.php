@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\Chronos\Date;
 use Cake\Chronos\Chronos;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
@@ -54,7 +54,7 @@ class AppraisalsTable extends ControllerActionTable
         );
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
         // start pocor-5188
@@ -79,7 +79,7 @@ class AppraisalsTable extends ControllerActionTable
 
     }
 
-   public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+   public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {   
         $doneStatus = WorkflowSteps::DONE;
         $Statuses = $this->Statuses;
@@ -102,13 +102,13 @@ class AppraisalsTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('institution_id');
         $this->setFieldOrder(['academic_period_id', 'appraisal_type_id', 'appraisal_period_id', 'appraisal_form_id', 'appraisal_period_from', 'appraisal_period_to', 'date_appraised', 'file_content', 'comment']);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'appraisal_period_from':

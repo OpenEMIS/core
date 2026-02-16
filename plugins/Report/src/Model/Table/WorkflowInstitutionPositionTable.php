@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Network\Request;
@@ -38,10 +38,10 @@ class WorkflowInstitutionPositionTable extends AppTable
         ]);
     }
 
-    public function onExcelGetIsHomeroom(Event $event, Entity $entity)
+    public function onExcelGetIsHomeroom(EventInterface $event, Entity $entity)
     {
-        $institutionStaff = TableRegistry::get('Institution.InstitutionStaff');
-        $institutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $institutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
         
         $options = $this->getSelectOptions('general.yesno');
         $homeroomData =  $institutionPositions->find('all')

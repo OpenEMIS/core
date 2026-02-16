@@ -5,7 +5,7 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -55,7 +55,7 @@ class AuditsTable extends AppTable
         return $validator;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -67,7 +67,7 @@ class AuditsTable extends AppTable
         $this->ControllerAction->field('format');
     }
     //POCOR-6637::START
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         if ($entity->has('feature')) {
             $feature = $entity->feature;
@@ -135,12 +135,12 @@ class AuditsTable extends AppTable
         }
     }
     //POCOR-6637::END
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $this->checkForDateFields($requestData);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
@@ -155,7 +155,7 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldUserType(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldUserType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -174,7 +174,7 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldSortBy(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldSortBy(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -197,7 +197,7 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldReportStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldReportStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -209,7 +209,7 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldReportEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldReportEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -233,7 +233,7 @@ class AuditsTable extends AppTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':
@@ -258,7 +258,7 @@ class AuditsTable extends AppTable
     }
 
     //POCOR-9381
-    public function onUpdateFieldReferenceTable(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldReferenceTable(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];

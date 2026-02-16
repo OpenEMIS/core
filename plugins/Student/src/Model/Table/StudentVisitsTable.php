@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -51,7 +51,7 @@ class StudentVisitsTable extends ControllerActionTable
             ->allowEmpty('file_content');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'student_visit_type_id':
@@ -63,7 +63,7 @@ class StudentVisitsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -80,7 +80,7 @@ class StudentVisitsTable extends ControllerActionTable
         // Academic Periods Filter - END
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         /*if (is_null($this->request->getQuery('academic_period_id'))) {
             $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
@@ -117,22 +117,22 @@ class StudentVisitsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -160,7 +160,7 @@ class StudentVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldEvaluatorId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEvaluatorId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $userId = $this->Session->read('Auth.User.id');
@@ -176,7 +176,7 @@ class StudentVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $institutionId = $this->getInstitutionID();
@@ -190,7 +190,7 @@ class StudentVisitsTable extends ControllerActionTable
         }
     }
 
-    public function onGetEvaluatorId(Event $event, Entity $entity)
+    public function onGetEvaluatorId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view' || $this->action == 'index') {
             if ($entity->has('evaluator_id')) {

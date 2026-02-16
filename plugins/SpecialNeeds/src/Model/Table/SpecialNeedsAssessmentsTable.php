@@ -4,7 +4,7 @@ namespace SpecialNeeds\Model\Table;
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Core\Configure;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -79,7 +79,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'special_need_type_id':
@@ -110,7 +110,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -200,22 +200,22 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
+    public function institutionStudentRiskCalculateRiskValue(EventInterface $event, ArrayObject $params)
     {
         // $institutionId = $params['institution_id'];
         // $studentId = $params['student_id'];
@@ -275,7 +275,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     }
 
     //POCOR-6873[START]
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key' => '',
@@ -323,7 +323,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     }
     //POCOR-6873[END]
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $userId = $this->getUserID();
         $query
@@ -339,7 +339,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
      * @ticket POCOR-6873
      */
 
-    public function onUpdateFieldAssessorId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssessorId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $dataKey = 'assessor_id';
@@ -377,7 +377,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
      * @ticket POCOR-6873
      */
 
-    public function onGetAssessorId(Event $event, Entity $entity)
+    public function onGetAssessorId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             if ($entity->has('assessor_id')) {
@@ -408,7 +408,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         if ($this->request->is(['ajax'])) {
             $term = $this->request->getQuery('term'); // POCOR-9061
             $term = str_replace(' ', '%', $term); // POCOR-9061
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $this->Assessor
                 ->find()
@@ -452,12 +452,12 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     }
 
     // Start POCOR-7467
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $monthOptions = ['1'=> '1', '2'=> '2','3'=> '3','4'=> '4', '5'=> '5', '6'=> '6','7'=> '7','8'=> '8','9'=> '9','10'=> '10', '11'=>'11', '12'=> '12'];
         $monthOptions = ['-1' => '-- ' . __('Select Month') . ' --'] + $monthOptions;
         $selectedmonth = !is_null($this->request->getQuery('month')) ? $this->request->getQuery('month') : '-1';
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodsOptions = $AcademicPeriods
                     ->find('list', ['keyField' => 'start_year', 'valueField' => 'start_year'])
                     ->order([$AcademicPeriods->aliasField('start_year') => 'DESC']);

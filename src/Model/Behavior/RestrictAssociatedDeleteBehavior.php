@@ -3,7 +3,7 @@ namespace App\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 
 class RestrictAssociatedDeleteBehavior extends Behavior {
@@ -20,7 +20,7 @@ class RestrictAssociatedDeleteBehavior extends Behavior {
 		return $events;
 	}
 
-	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+	public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra) {
 		if ($this->_table->hasAssociatedRecords($this->_table, $entity, $extra)) {
 			$event->stopPropagation();
 			$extra['Alert']['message'] = $this->getConfig('message');

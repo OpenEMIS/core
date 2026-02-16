@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use CustomField\Model\Behavior\RenderBehavior;
 
@@ -14,7 +14,7 @@ class RenderNoteBehavior extends RenderBehavior
         parent::initialize($config);
     }
 
-    public function onGetCustomNoteElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomNoteElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $value = '';
 

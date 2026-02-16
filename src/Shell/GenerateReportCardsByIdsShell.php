@@ -16,10 +16,10 @@ class GenerateReportCardsByIdsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('CustomExcel.ReportCards');
-        $this->loadModel('ReportCard.ReportCardProcesses');
-        $this->loadModel('Institution.ReportCardStatuses');
-        $this->loadModel('SystemProcesses');
+        $this->ReportCards = $this->fetchTable('CustomExcel.ReportCards');
+        $this->ReportCardProcesses = $this->fetchTable('ReportCard.ReportCardProcesses');
+        $this->ReportCardStatuses = $this->fetchTable('Institution.ReportCardStatuses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()

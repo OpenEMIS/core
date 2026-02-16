@@ -7,7 +7,7 @@ use DateInterval;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
@@ -62,7 +62,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         return $validator;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('number_of_days', [
@@ -80,7 +80,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         $this->setFieldOrder(['status','assignee','institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'start_time', 'end_time','full_day', 'number_of_days', 'comments', 'academic_period_id', 'file_name', 'file_content']);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -88,7 +88,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
             ]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('full_day');
         $this->field('institution_id', ['entity' => $entity]);
@@ -100,9 +100,9 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         $this->setFieldOrder(['staff_leave_type_id', 'institution_type_id', 'institution_id', 'date_from', 'date_to', 'full_day', 'start_time', 'end_time', 'number_of_days', 'comments', 'file_name', 'file_content']);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
         $daysPerWeek = $ConfigItems->value('days_per_week');
 
@@ -141,32 +141,32 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         $entity->number_of_days = $dayCount * $day;
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         return '<span class="status highlight">Historical</span>';
     }
 
-    public function onGetAssignee(Event $event, Entity $entity)
+    public function onGetAssignee(EventInterface $event, Entity $entity)
     {
         return '-';
     }
 
-    public function onGetFullDay(Event $event, Entity $entity)
+    public function onGetFullDay(EventInterface $event, Entity $entity)
     {
         return $this->getSelectOptions('general.yesno')[$entity->full_day];
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
         return $entity->institution->code_name;
     }
 
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit'){
             $attr['visible'] = false;
         } elseif ($action == 'add') {
-            $TypesTable = TableRegistry::get('Institution.Types');
+            $TypesTable = TableRegistry::getTableLocator()->get('Institution.Types');
             $typeOptions = $TypesTable
                 ->find('list')
                 ->find('visible')
@@ -181,7 +181,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit'){
             $entity = $attr['entity'];
@@ -195,7 +195,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
                 if (array_key_exists('institution_type_id', $requestData[$this->getAlias()]) && !empty($requestData[$this->getAlias()]['institution_type_id'])) {
                     $institutionTypeId = $requestData[$this->getAlias()]['institution_type_id'];
                     
-                    $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+                    $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -230,7 +230,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStaffLeaveTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStaffLeaveTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -238,7 +238,7 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldFullDay(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFullDay(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['select'] = false;
@@ -248,19 +248,19 @@ class HistoricalStaffLeaveTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartTime(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartTime(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr = $this->_setupTimeField($event, $attr, $action, $request);
         return $attr;
     }
 
-    public function onUpdateFieldEndTime(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndTime(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr = $this->_setupTimeField($event, $attr, $action, $request);
         return $attr;
     }
 
-    private function _setupTimeField(Event $event, array $attr, $action, ServerRequest $request)
+    private function _setupTimeField(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['visible'] = false;
         switch ($action) {

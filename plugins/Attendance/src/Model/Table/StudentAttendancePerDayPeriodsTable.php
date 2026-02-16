@@ -3,7 +3,7 @@ namespace Attendance\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query;

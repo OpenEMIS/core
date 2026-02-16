@@ -10,16 +10,16 @@ use Cake\Console\Shell;
 /**
  * Class ArchiveStudentAssessmentsShell
  * @package App\Shell
- * POCOR-7521-KHINDOL
- * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+ * POCOR-7521-KH
+ *
  * table
  * assessment_item_results
  */
 class ArchiveStudentAssessmentsShell extends Shell
 {
     /**
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * POCOR-7521-KH
+     *
      */
 
     public $pid;
@@ -31,19 +31,19 @@ class ArchiveStudentAssessmentsShell extends Shell
     public $recordsInArchive;
 
     /**
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function initialize(): void
     {
         //POCOR-7521-HINDOL cleaned the code even more
         parent::initialize();
-        $this->loadModel('SystemProcesses');
-        $this->loadModel('Archive.TransferLogs');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
+        $this->TransferLogs = $this->fetchTable('Archive.TransferLogs');
     }
 
     /**
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     * POCOR-7521-KH
+     *
      */
     public function main()
     {

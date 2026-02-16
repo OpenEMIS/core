@@ -5,7 +5,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\Log\Log;
@@ -30,7 +30,7 @@ class StudentHealthsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
@@ -48,12 +48,12 @@ class StudentHealthsTable extends AppTable
         $this->controller->set('contentHeader', __($institutions_crumb) . ' ' . $parent_crumb . ' - ' . $reportName);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $session = $this->request->getSession();
         $institution_id = $session->read('Institution.Institutions.id');
@@ -68,7 +68,7 @@ class StudentHealthsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $options = $this->controller->getInstitutionStatisticStandardReportFeature();
         $attr['options'] = $options;
@@ -82,12 +82,12 @@ class StudentHealthsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $requestData = $request->getData($this->getAlias());
         if (isset($requestData['feature'])) {
             $feature                = $this->request->getData($this->getAlias())['feature'];
-            $AcademicPeriodTable    = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriodTable    = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $academicPeriodOptions  = $AcademicPeriodTable->getYearList();
             $currentPeriod          = $AcademicPeriodTable->getCurrent();
             $attr['options']        = $academicPeriodOptions;
@@ -104,7 +104,7 @@ class StudentHealthsTable extends AppTable
     /**
      * Generating the tabs of sheet
      */
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheet_tabs = [
             'Overview',
@@ -129,7 +129,7 @@ class StudentHealthsTable extends AppTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData           = json_decode($settings['process']['params']);
         $sheetData             = $settings['sheet']['sheetData'];
@@ -140,8 +140,8 @@ class StudentHealthsTable extends AppTable
         $group_by              = [];
         $group_by[]            = $this->aliasField('openemis_no');
         // START:POCOR-6819
-        $ClassStudents         = TableRegistry::get('Institution.InstitutionClassStudents');
-        $Classes               = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassStudents         = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $Classes               = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         // End:POCOR-6819
 
         //$group_by[]            = 'InstitutionStudent.student_status_id';
@@ -416,9 +416,9 @@ class StudentHealthsTable extends AppTable
     /**
      * Generate the all Header for sheet tab wise
      */
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType         = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType         = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity             = $IdentityType->getDefaultEntity();
         $settings['identity'] = $identity;
         $sheetData            = $settings['sheet']['sheetData'];

@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -34,14 +34,14 @@ class SubjectsBookListsTable extends AppTable
         ]);
     }
 
-   public function beforeAction(Event $event)
+   public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
     }
 
-   public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+   public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
        $sheets[] = [
             'name' => $this->getAlias(),
@@ -51,7 +51,7 @@ class SubjectsBookListsTable extends AppTable
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
        $requestData = json_decode($settings['process']['params']);
        $academicPeriodId = $requestData->academic_period_id;
@@ -142,7 +142,7 @@ class SubjectsBookListsTable extends AppTable
         }
 
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $cloneFields = $fields->getArrayCopy();
 

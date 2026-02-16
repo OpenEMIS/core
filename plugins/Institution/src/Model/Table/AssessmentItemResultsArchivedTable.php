@@ -6,7 +6,7 @@ use ArrayObject;
 
 use Cake\Controller\Component;
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -54,7 +54,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('assessment_grading_option_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
@@ -174,7 +174,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             }); //POCOR-6573 ends;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Setup period options
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -354,7 +354,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         }
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // POCOR-7327 starts
 
@@ -438,7 +438,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         ;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
 
@@ -522,12 +522,12 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'education_subject_id') {
             return __('Subject');

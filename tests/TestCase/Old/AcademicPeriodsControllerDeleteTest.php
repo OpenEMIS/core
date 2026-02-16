@@ -316,7 +316,7 @@ class AcademicPeriodsControllerDeleteTest extends AppTestCase
     public function testDelete() {
         $testUrl = $this->url('remove');
 
-        $table = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $table = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $exists = $table->exists([$table->primaryKey() => $this->testingId]);
         $this->assertTrue($exists);

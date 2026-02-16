@@ -2,12 +2,12 @@
 
 namespace App\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 class UserAccountsTable extends AppTable
 {
-    public function initialize(array $config)
+    public function initialize(array $config):void
     {
         $this->addBehavior('User.Account', ['userRole' => 'Preferences', 'targetField' => 'new_password', 'permission' => ['Preferences', 'UserAccounts', 'edit']]);
         parent::initialize($config);
@@ -19,7 +19,7 @@ class UserAccountsTable extends AppTable
         return $validator;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         try {
             $tabElements = $this->controller->getUserTabElements();

@@ -3,7 +3,7 @@ namespace System\Model\Table;
 
 use ArrayObject;
 use InvalidArgumentException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -42,18 +42,18 @@ class SystemUpdatesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetAllowedActions(Event $event)
+    public function onGetAllowedActions(EventInterface $event)
     {
         return ['index'];
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('approved_by', ['after' => 'date_approved']);
         $this->field('status', ['options' => ['1' => __('Pending'), '2' => __('Approved')], 'after' => 'approved_by']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $query = $this->find();
         $latestVersion = $query
@@ -75,7 +75,7 @@ class SystemUpdatesTable extends ControllerActionTable
             );
         }
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $domain = $ConfigItems->value('version_api_domain');
         $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-id';
 
@@ -90,7 +90,7 @@ class SystemUpdatesTable extends ControllerActionTable
         // $response = $http->get($api);
         //Old Code[END]
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $supportEmails = $ConfigItems->value('version_support_emails');
         $emails = explode(',', $supportEmails);
         $request = new ServerRequest();
@@ -178,7 +178,7 @@ class SystemUpdatesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         if (!isset($queryParams['sort'])) {
@@ -196,7 +196,7 @@ class SystemUpdatesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'updates') {
             $name = str_replace('Save', 'Update', $buttons[0]['name']);
@@ -208,7 +208,7 @@ class SystemUpdatesTable extends ControllerActionTable
 
     public function updates(Event $mainEvent, ArrayObject $extra)
     {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $supportEmails = $ConfigItems->value('version_support_emails');
 
         if (!$this->exists(['status' => 1])) { // if there are nothing to update
@@ -256,7 +256,7 @@ class SystemUpdatesTable extends ControllerActionTable
         }
     }
 
-     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'version':

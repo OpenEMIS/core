@@ -10,7 +10,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Traits\OptionsTrait;
 
 use Cake\Validation\Validator;
@@ -57,7 +57,7 @@ class InstitutionAssetsTable extends ControllerActionTable
     }
 
     // POCOR-6152 set breadcrumb header <vikas.rathore@mail.valuecoders.com>
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InstitutionAssets';
         $userType = '';
@@ -102,7 +102,7 @@ class InstitutionAssetsTable extends ControllerActionTable
     }
     // POCOR-8914 end
     // setting up  fields and filter POCOR-6152
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $extra = $this->setFilterOptions($extra);
         $this->setFieldsOrder();
@@ -110,7 +110,7 @@ class InstitutionAssetsTable extends ControllerActionTable
     // setting up  fields and filter POCOR-6152
 
     // setting up query for index POCOR-6152 start
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //$academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
         $assetType = ($this->request->getQuery('asset_type_id')) ? $this->request->getQuery('asset_type_id') : 0;
@@ -148,7 +148,7 @@ class InstitutionAssetsTable extends ControllerActionTable
     // setting up query for index POCOR-6152 ends
 
     // POCOR-6152 Export Functionality
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $query->select([]);
         if(isset( $this->request)){
@@ -191,7 +191,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         /**/
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         //$this->log($fields, 'debug');
         $extraField[] = [
@@ -323,7 +323,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // purpose fields POCOR-6152
         $this->purposeOptions = $this->getSelectOptions($this->aliasField('purpose'));
@@ -481,17 +481,17 @@ class InstitutionAssetsTable extends ControllerActionTable
 
     // set up fields in add page POCOR-6152
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setFieldsOrder();
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setFieldsOrder();
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setFieldsOrder();
     }
@@ -537,7 +537,7 @@ class InstitutionAssetsTable extends ControllerActionTable
 
 
 
-    public function onGetUserId(Event $event, Entity $entity)
+    public function onGetUserId(EventInterface $event, Entity $entity)
     {
         $user = self::getRelatedRecord('security_users', $entity->user_id);
         if (!$entity->user_id) {
@@ -549,7 +549,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return 'Deleted User Record. Id #:' . $entity->user_id;
     }
 
-    public function onGetPurpose(Event $event, Entity $entity)
+    public function onGetPurpose(EventInterface $event, Entity $entity)
     {
         // POCOR-8914 start
         if ($entity->purpose) {
@@ -561,7 +561,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $purpose;
     }
 
-    public function onGetAccessibility(Event $event, Entity $entity)
+    public function onGetAccessibility(EventInterface $event, Entity $entity)
     {
         // POCOR-8914 start
         if ($entity->accessibility) {
@@ -573,7 +573,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $accessibility;
     }
 
-    public function onGetCost(Event $event, Entity $entity)
+    public function onGetCost(EventInterface $event, Entity $entity)
     {
         if (!$entity->cost) {
             return "";
@@ -582,15 +582,15 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $formattedAmount; // Output: $1,234.56
     }
 
-    public function onExcelGetPurchaseDate(Event $event, Entity $entity) {
+    public function onExcelGetPurchaseDate(EventInterface $event, Entity $entity) {
         return $this->formatDate($entity->purchase_date);
     }
 
-    public function onExcelGetStocktakeDate(Event $event, Entity $entity) {
+    public function onExcelGetStocktakeDate(EventInterface $event, Entity $entity) {
         return $this->formatDate($entity->stocktake_date);
     }
 
-    public function onExcelGetCost(Event $event, Entity $entity)
+    public function onExcelGetCost(EventInterface $event, Entity $entity)
     {
         if (!$entity->cost) {
             return "";
@@ -599,7 +599,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $formattedAmount; // Output: $1,234.56
     }
 
-    public function onGetDepreciation(Event $event, Entity $entity)
+    public function onGetDepreciation(EventInterface $event, Entity $entity)
     {
         //if (!$entity->depreciation) {
             return "";
@@ -608,7 +608,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         //return $formattedAmount; // Output: $1,234.56
     }
 
-    public function onExcelGetDepreciation(Event $event, Entity $entity)
+    public function onExcelGetDepreciation(EventInterface $event, Entity $entity)
     {
         //if (!$entity->depreciation) {
             return "";
@@ -621,7 +621,7 @@ class InstitutionAssetsTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
@@ -644,7 +644,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return null;
     }
 
-    public function onUpdateFieldAssetTypeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAssetTypeId(EventInterface $event, array $attr, $action, $request)
     {
         $optionsTable = TableRegistry::getTableLocator()->get('Institution.AssetTypes');
         $getOptions = $optionsTable->find('list')->select(['id','name'])->toArray();
@@ -658,12 +658,12 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAssetTypeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAssetTypeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $this->request->getData($this->getAlias())['asset_type_id'] = $entity->asset_type_id;
     }
 
-    public function onUpdateFieldAssetMakeId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAssetMakeId(EventInterface $event, array $attr, $action, $request)
     {
         $getRequest = $this->request->getData();
         $data = isset($getRequest) ? $getRequest : null;
@@ -687,7 +687,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAssetModelId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAssetModelId(EventInterface $event, array $attr, $action, $request)
     {
         $getRequest = $this->request->getData();
         $data = isset($getRequest) ? $getRequest : null;
@@ -708,7 +708,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAssetMakeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeAssetMakeId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $this->request->getData($this->getAlias())['asset_make_id'] = $entity->asset_make_id;
     }
@@ -735,7 +735,7 @@ class InstitutionAssetsTable extends ControllerActionTable
         $this->field('asset_status_id', ['visible' => true]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'asset_status_id') {
             return __('Status');

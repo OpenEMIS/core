@@ -1,3 +1,14 @@
+### [4.51.1] - 2026-02-02
+- Bug Fixed: Institutions>Performance>Assessment: Exempt button is missing for non admin roles
+- Bug Fixed: Remove own personal details from the OpenEMIS Core code
+- Bug Fixed: Institutions>Performance>Assessment: GPA is showing 0.00 even though there are marks
+- Bug Fixed: Institutions > Performance > Outcomes: User gets a HTTP Error 500 message.
+- Bug Fixed: Attendance API is getting 500 error
+- Bug Fixed: Institutions>Appointment>Positions: Unable to access Appointments>Positions page
+- Bug Fixed: Preferences: Page is not loading
+- Bug Fixed: Report>Staff>Staff Subjects: Subject column should be showing education subject
+- Bug Fixed: Report>Institutions:Unable to generate Assets Report as the page shows and Error "This page isn't working". Error 500.
+
 ### [4.51.0] - 2026-01-13
 - Implemented: Develop changes to Reports > Performance Assessment Report
 - Implemented: Develop Student Marks Audit Report

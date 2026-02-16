@@ -2,7 +2,7 @@
 namespace Outcome\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 
 use App\Controller\AppController;
@@ -72,7 +72,7 @@ class OutcomesController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Outcome');
         $header .= ' - ' . $model->getHeader($model->alias);

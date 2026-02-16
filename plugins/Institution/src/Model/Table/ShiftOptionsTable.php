@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use ArrayObject;
@@ -20,7 +20,7 @@ class ShiftOptionsTable extends ControllerActionTable
         $this->toggle('remove', true);//POCOR-7393 Case 3rd
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->field('default', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
@@ -30,7 +30,7 @@ class ShiftOptionsTable extends ControllerActionTable
         $this->field('end_time', ['after' => 'start_time']);
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         $this->field('default', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
@@ -38,7 +38,7 @@ class ShiftOptionsTable extends ControllerActionTable
         $this->field('national_code', ['visible' => false]);
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         return __($entity->name);
     }
@@ -91,19 +91,19 @@ class ShiftOptionsTable extends ControllerActionTable
         return $query;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

@@ -4,7 +4,7 @@ namespace Area\Controller;
 use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\UtilityTrait;
@@ -52,7 +52,7 @@ class AreasController extends AppController
 
 	}
 
-	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+	public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra) {
 		$header = __('Area');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

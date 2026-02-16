@@ -1,7 +1,7 @@
 <?php
 namespace Counselling\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Controller\PageController;
 

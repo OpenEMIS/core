@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderTextBehavior extends RenderBehavior {
@@ -11,7 +11,7 @@ class RenderTextBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-	public function onGetCustomTextElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomTextElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
         // for edit
@@ -90,7 +90,7 @@ class RenderTextBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function processTextValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processTextValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $settings['valueKey'] = 'text_value';
         $this->processValues($entity, $data, $settings);
     }

@@ -4,7 +4,7 @@ namespace AcademicPeriod\Model\Table;
 use ArrayObject;
 
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 
 use App\Model\Table\ControllerActionTable;
@@ -15,7 +15,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 		$this->hasMany('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
+	public function beforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->field('level');
 		$this->setFieldOrder(['level', 'name']);
 
@@ -40,15 +40,15 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 		// End POCOR-5188
 	}
 
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+	public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$this->fields['level']['type'] = 'hidden';
 	}
 
-	public function afterAction(Event $event, ArrayObject $extra) {
+	public function afterAction(EventInterface $event, ArrayObject $extra) {
 		$this->field('editable', ['visible' => false]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
 		if (!$entity->editable) {
 			$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 			unset($toolbarButtonsArray['edit']);
@@ -57,7 +57,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onUpdateFieldLevel(Event $event, array $attr, $action, ServerRequest $request) {
+	public function onUpdateFieldLevel(EventInterface $event, array $attr, $action, ServerRequest $request) {
 		if ($action == 'add') {
 			$query = $this->find();
 			$results = $query
@@ -76,7 +76,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(EventInterface $event, Entity $entity) {
 		if ($entity->editable == 0) {
 			// POCOR-2588 - add logic to AcademicPeriodLevelsTable so that records that are not editable, cannot be deleted or edited
 			$event->stopPropagation();
@@ -84,7 +84,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra) {
+	public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra) {
 		if ($entity->editable == 0) {
 			// POCOR-2588 - add logic to AcademicPeriodLevelsTable so that records that are not editable, cannot be deleted or edited
 			$event->stopPropagation();
@@ -94,7 +94,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
     	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
 		if ($entity->editable == 0) {
@@ -105,7 +105,7 @@ class AcademicPeriodLevelsTable extends ControllerActionTable {
     	return $buttons;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'level':

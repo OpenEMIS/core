@@ -4,7 +4,7 @@ namespace Survey\Model\Table;
 use CustomField\Model\Table\CustomFormsTable;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\ORM\Query;
@@ -90,7 +90,7 @@ class SurveyFormsTable extends CustomFormsTable
         return $validator;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -123,7 +123,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-   /* public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+   /* public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7263::Start
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -206,12 +206,12 @@ class SurveyFormsTable extends CustomFormsTable
       //  $this->setAllCustomFilter($entity);
     }*/
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->getQuery['module'] = $entity->custom_module_id;
         $this->setupFields($entity);
@@ -240,7 +240,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         unset($this->fields['apply_to_all']);
 
@@ -255,12 +255,12 @@ class SurveyFormsTable extends CustomFormsTable
         $this->setFieldOrder($fieldsOrder);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $entity->code = substr(Text::uuid(), 0, 8);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         parent::editOnInitialize($event, $entity, $extra);
         $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
@@ -271,7 +271,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->CustomFields->getAlias()
@@ -280,7 +280,7 @@ class SurveyFormsTable extends CustomFormsTable
     }
 
     //POCOR-8549 START
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $paginator = new NumericPaginator();
         $customModuleId = $extra['redirect']['module'] ?? 1;
@@ -316,7 +316,7 @@ class SurveyFormsTable extends CustomFormsTable
     //POCOR-8549 END
 
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->CustomFields->getAlias()
@@ -349,12 +349,12 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-    public function onGetCustomModuleId(Event $event, Entity $entity)
+    public function onGetCustomModuleId(EventInterface $event, Entity $entity)
     {
         return $entity->custom_module->code;
     }
 
-    public function onGetCustomFilters(Event $event, Entity $entity)
+    public function onGetCustomFilters(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'index' || $this->action == 'view') {
             $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
@@ -387,7 +387,7 @@ class SurveyFormsTable extends CustomFormsTable
         }
     }
 
-    /*public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
+    /*public function onUpdateFieldCustomModuleId(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $moduleQuery = $this->getModuleQuery();
@@ -402,7 +402,7 @@ class SurveyFormsTable extends CustomFormsTable
         return parent::onUpdateFieldCustomModuleId($event, $attr, $action, $request);
     }*/
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $entity->is_deletable = true;
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -426,7 +426,7 @@ class SurveyFormsTable extends CustomFormsTable
 
         return $buttons;
     }
-    /*public function onUpdateFieldCustomFilterSelection(Event $event, array $attr, $action, Request $request)
+    /*public function onUpdateFieldCustomFilterSelection(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
             $attr['visible'] = false;
@@ -458,7 +458,7 @@ class SurveyFormsTable extends CustomFormsTable
         return $attr;
     }
 */
-    /*public function onUpdateFieldCustomFilters(Event $event, array $attr, $action, Request $request)
+    /*public function onUpdateFieldCustomFilters(EventInterface $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
             parent::onUpdateFieldCustomFilters($event, $attr, $action, $request);
@@ -646,7 +646,7 @@ class SurveyFormsTable extends CustomFormsTable
         return $query;
     }
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 		$is_manual_exist = $this->getManualUrl('Administration','Forms','Survey');
 		if(!empty($is_manual_exist)){
@@ -668,7 +668,7 @@ class SurveyFormsTable extends CustomFormsTable
     }
     // End POCOR-5188
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('name');
         $this->field('code');
@@ -679,7 +679,7 @@ class SurveyFormsTable extends CustomFormsTable
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'survey_forms_questions') {
             return __('Question');

@@ -3,7 +3,7 @@ namespace CustomExcel\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
@@ -67,9 +67,9 @@ class ClassProfilesTable extends AppTable
         return $events;
     }
 
-    public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateBeforeGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
-        $ClassProfiles = TableRegistry::get('Institution.ClassProfiles');
+        $ClassProfiles = TableRegistry::getTableLocator()->get('Institution.ClassProfiles');
         unset($params['area_id']);//POCOR-7382
         if (!$ClassProfiles->exists($params)) {
             // insert institution report card record if it does not exist
@@ -86,9 +86,9 @@ class ClassProfilesTable extends AppTable
         }
     }
 
-    public function onExcelTemplateAfterGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateAfterGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
-        $ClassesProfiles = TableRegistry::get('Institution.ClassProfiles');
+        $ClassesProfiles = TableRegistry::getTableLocator()->get('Institution.ClassProfiles');
         $classProfileData = $ClassesProfiles
             ->find()
             ->select([
@@ -150,7 +150,7 @@ class ClassProfilesTable extends AppTable
         ]);
     }
 
-    public function afterRenderExcelTemplate(Event $event, ArrayObject $extra, $controller)
+    public function afterRenderExcelTemplate(EventInterface $event, ArrayObject $extra, $controller)
     {
         $params = $extra['params'];
         $url = [
@@ -168,11 +168,11 @@ class ClassProfilesTable extends AppTable
         return $controller->redirect($url);
     }
 
-    public function onExcelTemplateInitialiseProfiles(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseProfiles(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['class_profile_template_id'])) {
-            //$ProfileTemplates = TableRegistry::get('ProfileTemplate.ProfileTemplates');
-            $ProfileTemplates = TableRegistry::get('ProfileTemplate.ClassTemplates');
+            //$ProfileTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.ProfileTemplates');
+            $ProfileTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.ClassTemplates');
             $entity = $ProfileTemplates->get($params['class_profile_template_id'], ['contain' => ['AcademicPeriods']]);
 
             $extra['report_card_start_date'] = $entity->start_date;
@@ -182,10 +182,10 @@ class ClassProfilesTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutions(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $entity = $Institutions->get($params['institution_id'], ['contain' => ['AreaAdministratives', 'Types', 'Genders', 'Sectors', 'Providers','Ownerships','Areas','InstitutionLands']]); //POCOR-6328
             $shift_types = [1=>'Single Shift Owner',
                             2=>'Single Shift Occupier',
@@ -204,42 +204,42 @@ class ClassProfilesTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialisePrincipal(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialisePrincipal(EventInterface $event, array $params, ArrayObject $extra)
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
-            $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+            $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getPrincipalRoleId();
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
             $staffPosnId = $StaffPositionTitles->getPrincipalRoleId();
             $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             return $staff;
         }
     }
 
-    public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseDeputyPrincipal(EventInterface $event, array $params, ArrayObject $extra)
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
-            $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+            $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
             $staffRoleId = $SecurityRoles->getDeputyPrincipalRoleId();
             $institutionId = $params['institution_id'];
             //POCOR-8093 to fetch staff position
-            $StaffPositionTitles = TableRegistry::get('Institution.StaffPositionTitles');
+            $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
             $staffPosnId = $StaffPositionTitles->getDeputyPrincipalRoleId();
             $staff = $ReportCards::getInstitutionSecurityStaff($institutionId, $staffPosnId);
             return $staff;
         }
     }
 
-    public function onExcelTemplateInitialiseStaffPositions(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStaffPositions(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id'])) {
-            $StaffPositionTitles = TableRegistry::get('staff_position_titles');
+            $StaffPositionTitles = TableRegistry::getTableLocator()->get('staff_position_titles');
             $entity = $StaffPositionTitles
                 ->find()
                 ->select([
@@ -286,10 +286,10 @@ class ClassProfilesTable extends AppTable
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionCommittees(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutionCommittees(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $InstitutionCommittees = TableRegistry::get('Institution.InstitutionCommittees');
+            $InstitutionCommittees = TableRegistry::getTableLocator()->get('Institution.InstitutionCommittees');
             $entity = $InstitutionCommittees
                 ->find()
                 ->where([$InstitutionCommittees->aliasField('academic_period_id') => $params['academic_period_id']])
@@ -306,10 +306,10 @@ class ClassProfilesTable extends AppTable
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
      * @ticket POCOR-6519
      */
-    public function onExcelTemplateInitialiseReportStudentAssessmentSummary(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseReportStudentAssessmentSummary(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $ReportStudentAssessmentSummary = TableRegistry::get('summary_student_assessments');
+            $ReportStudentAssessmentSummary = TableRegistry::getTableLocator()->get('summary_student_assessments');
             $AssessmentSummaryData = $ReportStudentAssessmentSummary->find()
                 ->select([
                 //'id' => $ReportStudentAssessmentSummary->aliasField('id'),
@@ -371,13 +371,13 @@ class ClassProfilesTable extends AppTable
      * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
      * @ticket POCOR-6519
      */
-    public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) ) { // POCOR-9336
-            $InstitutionRooms = TableRegistry::get('institution_rooms');
-            $RoomTypes = TableRegistry::get('room_types');
-            $RoomCustomFieldValues = TableRegistry::get('room_custom_field_values');
-            $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
+            $InstitutionRooms = TableRegistry::getTableLocator()->get('institution_rooms');
+            $RoomTypes = TableRegistry::getTableLocator()->get('room_types');
+            $RoomCustomFieldValues = TableRegistry::getTableLocator()->get('room_custom_field_values');
+            $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
             $InstitutionRoomsData = $InstitutionRooms->find()
                 ->select([
                     'id' => $InstitutionRooms->aliasField('id'),
@@ -452,9 +452,9 @@ class ClassProfilesTable extends AppTable
      * @ticket POCOR-6519
      */
     public function getInfrastructureRoomCustomFieldValues($room_id, $room_custom_field_id){
-        $RoomCustomFieldTbl = TableRegistry::get('room_custom_field_values');
-        $InfrastructureCustomFields = TableRegistry::get('infrastructure_custom_fields');
-        $InfrastructureCustomFieldOptions = TableRegistry::get('infrastructure_custom_field_options');
+        $RoomCustomFieldTbl = TableRegistry::getTableLocator()->get('room_custom_field_values');
+        $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
+        $InfrastructureCustomFieldOptions = TableRegistry::getTableLocator()->get('infrastructure_custom_field_options');
         $RoomCustomFieldValues[] = $RoomCustomFieldTbl
                         ->find()
                         ->select([
@@ -535,7 +535,7 @@ class ClassProfilesTable extends AppTable
      * @return array
      * @ticket POCOR-7382
      */
-    public function onExcelTemplateInitialiseStudentDetails(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStudentDetails(EventInterface $event, array $params, ArrayObject $extra)
     {
         ini_set("memory_limit", "1G");
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['institution_class_id'])) {

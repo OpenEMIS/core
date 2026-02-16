@@ -3,7 +3,7 @@ namespace Scholarship\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -182,7 +182,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
             });
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons'])) {
             $extra['toolbarButtons']->offsetUnset('add');
@@ -225,7 +225,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
             });
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew()) {
 
@@ -457,7 +457,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
         }
         return $query;
     }
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('scholarship_recipient_activity_status_id', ['visible' => false]);
         $this->field('approved_amount', ['visible' => false]);
         $this->field('status', ['attr' => ['label' => __('status')], 'visible' => true, 'sort' => true]);
@@ -478,7 +478,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
         $this->field('scholarship_id', ['attr' => ['label' => __('Scholarship Name')], 'visible' => true, 'sort' => true]);
     }
 
-    public function onGetStatus(Event $event, Entity $entity)
+    public function onGetStatus(EventInterface $event, Entity $entity)
     {
         if ($entity->has('recipient_activity_status') && $entity->recipient_activity_status->has('name')) {
             return '<span class="status highlight">' . $entity->recipient_activity_status->name . '</span>';
@@ -486,7 +486,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
 
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         if ($entity->has('recipient') && $entity->recipient->has('openemis_no')) {
             return  $entity->recipient->openemis_no;
@@ -494,7 +494,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
     }
 
     //POCOR-9505 -- Start
-    public function onGetRecipient(Event $event, Entity $entity)
+    public function onGetRecipient(EventInterface $event, Entity $entity)
     {
         $recipient = $entity->getOriginal('recipient');
 
@@ -505,7 +505,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
         return null;
     }
 
-    public function onGetScholarship(Event $event, Entity $entity)
+    public function onGetScholarship(EventInterface $event, Entity $entity)
     {
         $scholarship = $entity->getOriginal('scholarship');
 
@@ -516,7 +516,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
         return null;
     }
 
-    public function onGetFinancialAssistanceType(Event $event, Entity $entity)
+    public function onGetFinancialAssistanceType(EventInterface $event, Entity $entity)
     {
         $scholarship = $entity->getOriginal('scholarship');
 
@@ -539,7 +539,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
     }
     //POCOR-9505 -- End
 
-    public function onGetFinancialAssistanceTypeOrg(Event $event, Entity $entity)
+    public function onGetFinancialAssistanceTypeOrg(EventInterface $event, Entity $entity)
     {
 
         if ($entity->has('scholarship') && $entity->scholarship->has('scholarship_financial_assistance_type_id')) {
@@ -552,7 +552,7 @@ class ScholarshipRecipientsTable extends ControllerActionTable
 
     }
 
-    // public function onGetScholarshipId(Event $event, Entity $entity)
+    // public function onGetScholarshipId(EventInterface $event, Entity $entity)
     // {
     //     if ($entity->has('scholarship') && $entity->scholarship->has('name')) {
     //         return  $entity->scholarship->name;

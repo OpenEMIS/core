@@ -4,14 +4,14 @@ namespace OpenEmis\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class AutocompleteBehavior extends Behavior {
 	public function initialize(array $config): void {
 		parent::initialize($config);
 	}
 
-	public function onGetAutocompleteElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetAutocompleteElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
 		$value = '';
 
 		if ($action == 'edit') {

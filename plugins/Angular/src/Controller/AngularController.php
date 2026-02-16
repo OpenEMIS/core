@@ -4,7 +4,7 @@ namespace Angular\Controller;
 
 use Angular\Controller\AppController;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 class AngularController extends AppController
@@ -32,7 +32,7 @@ class AngularController extends AppController
         $this->viewBuilder()->layout(false);
         $requestAttr = json_decode($this->request->query['attributes'], true);
         if (is_array($requestAttr)) {
-            $table = TableRegistry::get($requestAttr['className']);
+            $table = TableRegistry::getTableLocator()->get($requestAttr['className']);
             $fields = array_fill_keys(array_keys($table->fields), '');
             $data = $table->newEntity($fields, ['validate' => false]);
 

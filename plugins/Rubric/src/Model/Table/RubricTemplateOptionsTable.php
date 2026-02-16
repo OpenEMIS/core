@@ -5,7 +5,7 @@ use ArrayObject;
 
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 class RubricTemplateOptionsTable extends AppTable
@@ -30,7 +30,7 @@ class RubricTemplateOptionsTable extends AppTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'name';
     }
@@ -51,13 +51,13 @@ class RubricTemplateOptionsTable extends AppTable
         return $validator;
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         //Setup special fields - Remarks: select fields are automatically handled using foreignkey therefore setup in addEditBeforeAction() only
         $this->fields['color']['type'] = 'color';
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(EventInterface $event)
     {
         //Add controls filter to index page
         $toolbarElements = [
@@ -67,7 +67,7 @@ class RubricTemplateOptionsTable extends AppTable
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(EventInterface $event)
     {
         //Setup fields
         list($templateOptions) = array_values($this->getSelectOptions());
@@ -78,7 +78,7 @@ class RubricTemplateOptionsTable extends AppTable
         $this->ControllerAction->setFieldOrder('rubric_template_id', 1);
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         //Initialize field values
         list(, $selectedTemplate) = array_values($this->getSelectOptions());
@@ -99,7 +99,7 @@ class RubricTemplateOptionsTable extends AppTable
         return compact('templateOptions', 'selectedTemplate');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'rubric_template_id') {
             return __('Template');
@@ -120,13 +120,13 @@ class RubricTemplateOptionsTable extends AppTable
         }
     }
 
-     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

@@ -19,9 +19,9 @@ class POCOR7058 extends AbstractMigration
         $this->execute('INSERT INTO `zz_7058_institution_classes` SELECT * FROM `institution_classes`');
         
         $institutionClassesData = $this->fetchAll('SELECT * FROM `institution_classes`');
-         $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-         $InstitutionClass = TableRegistry::get('Institution.InstitutionClasses');
-         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+         $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+         $InstitutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+         $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 
         foreach ($institutionClassesData as $row) {
             $grades = [];
@@ -41,7 +41,7 @@ class POCOR7058 extends AbstractMigration
                     $grades[] = $data->grade_id;
                 }
             }
-            $StudentStatuses = TableRegistry::get('student_statuses');
+            $StudentStatuses = TableRegistry::getTableLocator()->get('student_statuses');
             $status = ['CURRENT','REPEATED','PROMOTED','GRADUATED'];
              $genderMale_id = 1;
              $genderfemale_id = 2;

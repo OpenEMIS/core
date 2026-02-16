@@ -48,13 +48,13 @@ class IndexesControllerTest extends AppTestCase
 
         $this->postData('/Indexes/Indexes/add', $data);
 
-        $table = TableRegistry::get('Indexes.Indexes');
+        $table = TableRegistry::getTableLocator()->get('Indexes.Indexes');
         $this->assertNotEmpty($table->get(99));
     }
 
     public function testViewIndexes()
     {
-        $table = TableRegistry::get('Indexes.Indexes');
+        $table = TableRegistry::getTableLocator()->get('Indexes.Indexes');
         $urlParams = $table->paramsEncode(['id' => 19]);
 
         $this->get('/Indexes/Indexes/view/' . $urlParams);
@@ -69,7 +69,7 @@ class IndexesControllerTest extends AppTestCase
             'name' => 'Dropout Risk 2015 - update name'
         ];
 
-        $table = TableRegistry::get('Indexes.Indexes');
+        $table = TableRegistry::getTableLocator()->get('Indexes.Indexes');
         $urlParams = $table->paramsEncode(['id' => 19]);
 
         $this->postData('/Indexes/Indexes/edit/' . $urlParams, $data);

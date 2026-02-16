@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 
 class AlertRuleBehavior extends Behavior
@@ -50,7 +50,7 @@ class AlertRuleBehavior extends Behavior
         return $events;
     }
 
-    protected function onAlertRuleSetupFields(Event $event, Entity $entity)
+    protected function onAlertRuleSetupFields(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
         $thresholdConfig = $this->getConfig('threshold');
@@ -70,7 +70,7 @@ class AlertRuleBehavior extends Behavior
                             $options = $model->getSelectOptions($model->getAlias().".".$attr['options']);
 //                            Log::debug(print_r([$model->getAlias().".".$attr['options'] => $options], true));
                         } else if (isset($attr['lookupModel']) && !empty($attr['lookupModel'])) {
-                            $modelTable = TableRegistry::get($attr['lookupModel']);
+                            $modelTable = TableRegistry::getTableLocator()->get($attr['lookupModel']);
                             $options = $modelTable->getList()->toArray();
 //                            Log::debug(print_r(['opt2' => $options], true));
                         }

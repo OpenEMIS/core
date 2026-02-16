@@ -2,7 +2,7 @@
 namespace User\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -20,7 +20,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 		}
 	}
 
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany)
+	public function onBuildQuery(EventInterface $event, Query $query, $advancedSearchHasMany)
 	{
         $identityType = $advancedSearchHasMany['identity_type'];
 		$identityNumber = $advancedSearchHasMany['identity_number'];
@@ -60,7 +60,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
         return $events;
     }
 
-    public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData)
+    public function onSetupFormField(EventInterface $event, ArrayObject $searchables, $advanceSearchModelData)
     {
         $searchables['identity_type'] = [
             'label' => __('Identity Type'),

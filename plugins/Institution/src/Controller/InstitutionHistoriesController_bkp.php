@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Controller\PageController;
 
@@ -11,7 +11,7 @@ class InstitutionHistoriesController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Institution.Institutions');
+        $this->Institutions = $this->fetchTable('Institution.Institutions');
         $this->Page->loadElementsFromTable($this->InstitutionHistories);
         $this->Page->disable(['add', 'edit', 'view', 'delete']);
     }

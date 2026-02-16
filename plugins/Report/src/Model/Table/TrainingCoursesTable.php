@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
@@ -67,7 +67,7 @@ class TrainingCoursesTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),
@@ -77,7 +77,7 @@ class TrainingCoursesTable extends AppTable  {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedStatus = $requestData->status;
@@ -93,7 +93,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraFields = [];
         $extraFields[] = [
@@ -145,7 +145,7 @@ class TrainingCoursesTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetCoursePrerequisites(Event $event, Entity $entity)
+    public function onExcelGetCoursePrerequisites(EventInterface $event, Entity $entity)
     {
         if ($entity->has('course_prerequisites') && !empty($entity->course_prerequisites)) {
             $prerequisites = [];
@@ -158,7 +158,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetTrainingProviders(Event $event, Entity $entity)
+    public function onExcelGetTrainingProviders(EventInterface $event, Entity $entity)
     {
         if ($entity->has('training_providers') && !empty($entity->training_providers)) {
             $providers = [];
@@ -171,7 +171,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetResultTypes(Event $event, Entity $entity)
+    public function onExcelGetResultTypes(EventInterface $event, Entity $entity)
     {
         if ($entity->has('result_types') && !empty($entity->result_types)) {
             $types = [];
@@ -184,7 +184,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetSpecialisations(Event $event, Entity $entity)
+    public function onExcelGetSpecialisations(EventInterface $event, Entity $entity)
     {
         if ($entity->has('specialisations') && !empty($entity->specialisations)) {
             $specialisations = [];
@@ -197,7 +197,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetTargetPopulations(Event $event, Entity $entity)
+    public function onExcelGetTargetPopulations(EventInterface $event, Entity $entity)
     {
         if ($entity->has('target_populations') && !empty($entity->target_populations)) {
             $targetPopulations = [];

@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
@@ -76,7 +76,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
     }
 
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('institution_id', ['visible' => false]);
         $this->field('staff', [
@@ -97,7 +97,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona=false)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona=false)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -110,7 +110,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
      ** index action methods
      **
      ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
@@ -136,7 +136,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
     }
 
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $extra['auto_contain'] = false;
         $extra['auto_order'] = false;
@@ -194,7 +194,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -249,12 +249,12 @@ class InstitutionDepartmentsTable extends ControllerActionTable
      **
      ******************************************************************************************************************/
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
     }
 
-    public function setupFields(Event $event, Entity $entity)
+    public function setupFields(EventInterface $event, Entity $entity)
     {
 
         $this->fields['institution_id']['visible'] = false;
@@ -266,7 +266,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         ]);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         if (!isset($entity['institution_id'])) {
@@ -285,7 +285,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldManagerId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldManagerId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -309,7 +309,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return match ($field) {
             'manager_id' => __('Manager'),
@@ -358,7 +358,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
             });
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 //        POCOR-8391 start
         if (!$entity->isNew()) {
@@ -402,7 +402,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 //        dd($entity);
         $this->fields['staff']['data']['staff'] = $entity->assigned_staff;
@@ -412,7 +412,7 @@ class InstitutionDepartmentsTable extends ControllerActionTable
         return $entity;
 
     }
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([

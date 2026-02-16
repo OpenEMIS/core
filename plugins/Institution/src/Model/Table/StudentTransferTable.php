@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -79,14 +79,14 @@ class StudentTransferTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students'];
         $Navigation->substituteCrumb('Transfer', 'Students', $url);
         $Navigation->addCrumb('Transfer');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->Grades = self::getDynamicTableInstance('Institution.InstitutionGrades');
         $this->GradeStudents = self::getDynamicTableInstance('Institution.StudentTransfer');
@@ -108,7 +108,7 @@ class StudentTransferTable extends ControllerActionTable
         ];
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $queryParams = $this->request->getQueryParams();
         $queryParams = [];
@@ -119,7 +119,7 @@ class StudentTransferTable extends ControllerActionTable
     }
 
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('student_status_id');//POCOR-6230
         $this->field('student_id', ['visible' => false]);
@@ -143,7 +143,7 @@ class StudentTransferTable extends ControllerActionTable
     }
 
     //POCOR-6230 Starts
-    public function onUpdateFieldStudentStatusId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentStatusId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $Status = $this->StudentStatuses->findCodeList();
         $statusNames = $this->StudentStatuses->find('list')->where([$this->StudentStatuses->aliasField('id IN ') => [$Status['CURRENT'], $Status['PROMOTED'], $Status['GRADUATED']]])->toArray();//comment graduated status because we will work on it in next ticket in future as per umairah says
@@ -152,7 +152,7 @@ class StudentTransferTable extends ControllerActionTable
         return $attr;
     }//POCOR-6230 Ends
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
 //        $this->log('addBeforeSave', 'debug');
 //        $this->log($requestData[$this->getAlias()], 'debug');
@@ -242,14 +242,14 @@ class StudentTransferTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
-    public function onUpdateFieldFromAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFromAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData()[$this->getAlias()]['from_academic_period_id'])) {
             $fromAcademicPeriodId = $request->getData()[$this->getAlias()]['from_academic_period_id'];
@@ -308,7 +308,7 @@ class StudentTransferTable extends ControllerActionTable
         return $attr;
     }
 
-    /* public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    /* public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
      {
          $gradeOptions = [];
 
@@ -372,14 +372,14 @@ class StudentTransferTable extends ControllerActionTable
          return $attr;
      } */
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'];
         $selectedAcademicPeriodId = $this->currentPeriod->id;
@@ -468,7 +468,7 @@ class StudentTransferTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNextAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNextAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $nextPeriodOptions = [];
         if (!is_null($this->currentPeriod)) {
@@ -523,7 +523,7 @@ class StudentTransferTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldNextEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNextEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $selectedGrade = !empty($request->getQuery('education_grade_id')) ? $request->getQuery('education_grade_id') : $request->getData('StudentTransfer.education_grade_id');
         //$selectedGrade = $request->getQuery('education_grade_id');
@@ -641,14 +641,14 @@ class StudentTransferTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         $next_period_id = !empty($request->getQuery('next_academic_period_id')) ? $request->getQuery('next_academic_period_id') : $request->getData('StudentTransfer.next_academic_period_id');
@@ -704,14 +704,14 @@ class StudentTransferTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
      * @return array
-     * @author of fixes Dr. Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
-    public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNextInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //bulk student
         $next_period_id = !empty($request->getQuery('next_academic_period_id')) ? $request->getQuery('next_academic_period_id') : $request->getData('StudentTransfer.next_academic_period_id');
@@ -775,14 +775,14 @@ class StudentTransferTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentTransferReasonId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentTransferReasonId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $StudentTransferReasons = self::getDynamicTableInstance('Student.StudentTransferReasons');
         $attr['options'] = $StudentTransferReasons->getList()->toArray();
         return $attr;
     }
 
-    public function onUpdateFieldStudents(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudents(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $institutionId = $this->institutionId;
         //$selectedGrade = $request->getQuery('education_grade_id');
@@ -919,7 +919,7 @@ class StudentTransferTable extends ControllerActionTable
      * POCOR-8946
      * @param string $tableName
      * @return Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -963,7 +963,7 @@ class StudentTransferTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldClass(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['type'] = 'select';
         $attr['options'] = [];
@@ -1005,7 +1005,7 @@ class StudentTransferTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeClass(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->getQuery['institution_class']);
 
@@ -1099,7 +1099,7 @@ class StudentTransferTable extends ControllerActionTable
         return $query;
     }
 
-    public function addOnChangeFromAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeFromAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data[$this->getAlias()]['education_grade_id'])) {
             unset($data[$this->getAlias()]['education_grade_id']);
@@ -1109,7 +1109,7 @@ class StudentTransferTable extends ControllerActionTable
         }
     }
 
-    public function addOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->getQuery['education_grade_id']);
         unset($this->request->getQuery['institution_class']);
@@ -1129,7 +1129,7 @@ class StudentTransferTable extends ControllerActionTable
 
     }
 
-    public function addOnChangeNextPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeNextPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->getQuery['next_academic_period_id']);
         unset($this->request->getQuery['next_education_grade_id']);
@@ -1145,7 +1145,7 @@ class StudentTransferTable extends ControllerActionTable
         }
     }
 
-    public function addOnChangeNextGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeNextGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         unset($this->request->getQuery['next_education_grade_id']);
 
@@ -1161,7 +1161,7 @@ class StudentTransferTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Student Transfer > Sending';

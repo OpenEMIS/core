@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -83,22 +83,22 @@ class AppraisalFormsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['AppraisalCriterias.FieldTypes']);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('custom_fields', ['type' => 'custom_order_field', 'after' => 'name']);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('custom_fields', ['type' => 'custom_order_field', 'after' => 'name']);
     }
 
-    public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomOrderFieldElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'view') {
             $tableHeaders = [__('Criteria'), __('Field Type'), __('Is Mandatory')];
@@ -300,20 +300,20 @@ class AppraisalFormsTable extends ControllerActionTable
         return $event->getSubject()->renderElement('StaffAppraisal.form_criterias', ['attr' => $attr]);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->AppraisalCriterias->getAlias()
         ];
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData)
     {
         $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
         $appraisalScore->dispatchEvent('Model.Appraisal.add.afterSave', [$entity, $requestData, $this->getAlias()], $appraisalScore);
     }
 
-    /*public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    /*public function editBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         echo "<pre>"; print_r($requestData); die;
         $appraisalScore = $this->AppraisalCriterias->AppraisalScores;
@@ -328,7 +328,7 @@ class AppraisalFormsTable extends ControllerActionTable
      * @param array $requestData The request data containing appraisal form details
      * @param array $extra Additional data passed to the event
      */
-    public function editBeforeSave(Event $event, $entity, $requestData, $extra)
+    public function editBeforeSave(EventInterface $event, $entity, $requestData, $extra)
     {
         // Extract appraisal criterias and new sections data
         $appraisalCriterias = $requestData['AppraisalForms']['appraisal_criterias'] ?? [];
@@ -372,7 +372,7 @@ class AppraisalFormsTable extends ControllerActionTable
     }
 
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $is_manual_exist = $this->getManualUrl('Administration','Forms','Staff Appraisals');
         if(!empty($is_manual_exist)){
@@ -393,7 +393,7 @@ class AppraisalFormsTable extends ControllerActionTable
         }
     }// End POCOR-5188
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':
@@ -422,13 +422,13 @@ class AppraisalFormsTable extends ControllerActionTable
     }
     
     //POCOR-8620 -- Start
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

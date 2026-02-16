@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/CustomExcels', ['plugin' => 'CustomExcel'], function ($routes) {
-    Router::connect('/CustomExcels', ['plugin' => 'CustomExcel', 'controller' => 'CustomExcels']);
-    Router::connect('/CustomExcels/:action/*', ['plugin' => 'CustomExcel', 'controller' => 'CustomExcels']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/CustomExcels', ['plugin' => 'CustomExcel'], function (RouteBuilder $routes) {
+        $routes->connect('/CustomExcels', ['plugin' => 'CustomExcel', 'controller' => 'CustomExcels']);
+        $routes->connect('/CustomExcels/:action/*', ['plugin' => 'CustomExcel', 'controller' => 'CustomExcels']);
+    });
+};

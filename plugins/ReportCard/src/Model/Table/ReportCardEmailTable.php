@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
@@ -63,7 +63,7 @@ class ReportCardEmailTable extends ControllerActionTable
             ->allowEmpty('education_grade_id');
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (isset($toolbarButtonsArray['back'])) {
@@ -85,7 +85,7 @@ class ReportCardEmailTable extends ControllerActionTable
         $this->setupFields($event, $entity);
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -104,13 +104,13 @@ class ReportCardEmailTable extends ControllerActionTable
             ]);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
         $this->setupFields($event, $entity);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -123,7 +123,7 @@ class ReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -137,7 +137,7 @@ class ReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -151,7 +151,7 @@ class ReportCardEmailTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
@@ -171,7 +171,7 @@ class ReportCardEmailTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    private function setupFields(Event $event, Entity $entity)
+    private function setupFields(EventInterface $event, Entity $entity)
     {
         $this->field('report_card_information', ['type' => 'section']);
         $this->field('code', ['type' => 'readonly', 'attr' => ['required' => false]]);
@@ -202,7 +202,7 @@ class ReportCardEmailTable extends ControllerActionTable
     }
 
     // Start POCOR-5188
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 		$is_manual_exist = $this->getManualUrl('Administration','Email Templates','Report Cards');
 		if(!empty($is_manual_exist)){
@@ -223,7 +223,7 @@ class ReportCardEmailTable extends ControllerActionTable
 		}
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'modified':

@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -42,7 +42,7 @@ class AllergiesTable extends ControllerActionTable
             'pages' => ['index'],
         ]);
     }
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
@@ -130,28 +130,28 @@ class AllergiesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function onGetSevere(Event $event, Entity $entity)
+    public function onGetSevere(EventInterface $event, Entity $entity)
     {
         $severeOptions = $this->getSelectOptions('general.yesno');
         return $severeOptions[$entity->severe];
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setupFields($entity);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->setupFields($entity);
     }
 
-    // public function onUpdateFieldSevere(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldSevere(Event $event, array $attr, $action)
+    // public function onUpdateFieldSevere(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSevere(EventInterface $event, array $attr, $action)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
@@ -173,7 +173,7 @@ class AllergiesTable extends ControllerActionTable
         return $validator;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key'   => 'description',
@@ -214,7 +214,7 @@ class AllergiesTable extends ControllerActionTable
     }
 
     //POCOR-6131
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query){
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
         $userId = $this->getUserID();
         $query
         ->select([
@@ -227,7 +227,7 @@ class AllergiesTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'file_content') {
             return __('Attachment');
@@ -237,7 +237,7 @@ class AllergiesTable extends ControllerActionTable
     }
 
     //POCOR-8293s
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;

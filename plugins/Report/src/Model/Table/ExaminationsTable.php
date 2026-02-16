@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
@@ -64,14 +64,14 @@ class ExaminationsTable extends AppTable
                 });
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':
@@ -91,7 +91,7 @@ class ExaminationsTable extends AppTable
         }
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id');
         $this->ControllerAction->field('examination_id');
@@ -99,7 +99,7 @@ class ExaminationsTable extends AppTable
         $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $option = $this->controller->getFeatureOptions($this->getAlias());
@@ -115,7 +115,7 @@ class ExaminationsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -130,7 +130,7 @@ class ExaminationsTable extends AppTable
         }
     }
 
-    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeAcademicPeriodId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // POCOR-8919 start
         $alias = $this->getAlias();
@@ -148,7 +148,7 @@ class ExaminationsTable extends AppTable
         // POCOR-8919 end
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
 // POCOR-8919
@@ -176,7 +176,7 @@ class ExaminationsTable extends AppTable
         }
     }
 
-    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangeExaminationId(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (array_key_exists($this->getAlias(), (array)$data)) {
             if (array_key_exists('examination_centre_id', $data[$this->getAlias()])) {
@@ -188,7 +188,7 @@ class ExaminationsTable extends AppTable
         }
     }
     //POCOR-6637::START
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         if ($entity->has('feature')) {
             $feature = $entity->feature;
@@ -231,7 +231,7 @@ class ExaminationsTable extends AppTable
     }
     //POCOR-6637::END
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldExaminationCentreId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -278,7 +278,7 @@ class ExaminationsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -289,7 +289,7 @@ class ExaminationsTable extends AppTable
                 if (!empty($request->getData($this->getAlias())['examination_id'])) {
                     $selectedExamination = $request->getData($this->getAlias())['examination_id'];
 
-                    $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+                    $ExamCentreStudents = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
                     $institutionOptions = $ExamCentreStudents
                         ->find('list', [
                             'keyField' => 'institution_id',

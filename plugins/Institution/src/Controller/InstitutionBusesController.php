@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Controller\PageController;
 use Cake\ORM\TableRegistry;
 
@@ -11,11 +11,11 @@ class InstitutionBusesController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Institution.InstitutionTransportProviders');
-        $this->loadModel('Institution.InstitutionBuses');
-        $this->loadModel('Transport.BusTypes');
-        $this->loadModel('Transport.TransportStatuses');
-        $this->loadModel('Transport.TransportFeatures');
+        $this->InstitutionTransportProviders = $this->fetchTable('Institution.InstitutionTransportProviders');
+        $this->InstitutionBuses = $this->fetchTable('Institution.InstitutionBuses');
+        $this->BusTypes = $this->fetchTable('Transport.BusTypes');
+        $this->TransportStatuses = $this->fetchTable('Transport.TransportStatuses');
+        $this->TransportFeatures = $this->fetchTable('Transport.TransportFeatures');
 
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
@@ -98,7 +98,7 @@ class InstitutionBusesController extends PageController
         // end Transport Statuses
 
         // reorder fields
-        $Users = TableRegistry::get('labels');
+        $Users = TableRegistry::getTableLocator()->get('labels');
         $result = $Users
         ->find()
         ->where(['module' => 'InstitutionBuses', 'field_name' => 'Capacity'])

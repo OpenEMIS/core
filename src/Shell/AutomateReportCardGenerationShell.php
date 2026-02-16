@@ -22,8 +22,8 @@ class AutomateReportCardGenerationShell extends Shell
             $this->out('initializing AutomateReportCardGenerationShell..' . ' (' . Time::now() .')');
         }
         parent::initialize();
-        $this->loadModel('Institution.ReportCardStatuses');
-        $this->loadModel('ReportCard.ReportCardProcesses');
+        $this->ReportCardStatuses = $this->fetchTable('Institution.ReportCardStatuses');
+        $this->ReportCardProcesses = $this->fetchTable('ReportCard.ReportCardProcesses');
     }
 
     public function main()
@@ -72,7 +72,7 @@ class AutomateReportCardGenerationShell extends Shell
 
     private function _totalRunningSystemProcesses()
     {
-        $SystemProcesses = TableRegistry::get('SystemProcesses');
+        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->ReportCardStatuses->registryAlias());
 
         foreach ($runningProcess as $key => $processData) {

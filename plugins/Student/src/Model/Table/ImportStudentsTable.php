@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 
 use ArrayObject;
 use PHPExcel_Worksheet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
 use App\Model\Table\AppTable;
@@ -17,7 +17,7 @@ class ImportStudentsTable extends AppTable {
 	    $this->addBehavior('Import.ImportUser');
 
 	    // register the target table once 
-	    $this->Students = TableRegistry::get('Student.Students');
+	    $this->Students = TableRegistry::getTableLocator()->get('Student.Students');
 	}
 
 	public function implementedEvents(): array {
@@ -33,7 +33,7 @@ class ImportStudentsTable extends AppTable {
 		return $events;
 	}
 
-	public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
+	public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes) {
 		$columns = new Collection($columns);
 		$filtered = $columns->filter(function ($value, $key, $iterator) {
 		    return $value == 'openemis_no';
@@ -56,7 +56,7 @@ class ImportStudentsTable extends AppTable {
 		$tempRow['is_student'] = 1;
 	}
 
-	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+	public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
 		return true;
 	}
 }

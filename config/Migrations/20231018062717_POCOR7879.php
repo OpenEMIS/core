@@ -129,7 +129,7 @@ WHERE attendance_marked.institution_id IS NULL";
 //
 //        try {
             /*create necessary entries */
-            $ReportQueries = TableRegistry::get('report_queries');
+            $ReportQueries = TableRegistry::getTableLocator()->get('report_queries');
             $data = [
                 'name' => 'report_student_attendance_summary_truncate',
                 'query_sql' => $truncate_sql,

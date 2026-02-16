@@ -3,7 +3,7 @@ namespace Meal\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -44,9 +44,9 @@ class StudentMealMarkedRecordsTable extends AppTable
             
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity)
+    public function afterSaveCommit(EventInterface $event, Entity $entity)
     {
-        $MealRecords = TableRegistry::get('Meal.StudentMealMarkedRecords');
+        $MealRecords = TableRegistry::getTableLocator()->get('Meal.StudentMealMarkedRecords');
         $MealRecords->dispatchEvent('Model.StudentMeals.afterSaveCommit', [$entity], $MealRecords);
     }
 }

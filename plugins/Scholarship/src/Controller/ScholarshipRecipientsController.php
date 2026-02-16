@@ -3,7 +3,7 @@ namespace Scholarship\Controller;
 use App\Controller\AppController;
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\I18n\Date;
 use Page\Model\Entity\PageElement;
@@ -14,10 +14,10 @@ class ScholarshipRecipientsController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Scholarship.Scholarships');
-        $this->loadModel('Scholarship.FinancialAssistanceTypes');
-        $this->loadModel('Scholarship.RecipientActivityStatuses');
-        $this->loadModel('Scholarship.RecipientActivities');
+        $this->Scholarships = $this->fetchTable('Scholarship.Scholarships');
+        $this->FinancialAssistanceTypes = $this->fetchTable('Scholarship.FinancialAssistanceTypes');
+        $this->RecipientActivityStatuses = $this->fetchTable('Scholarship.RecipientActivityStatuses');
+        $this->RecipientActivities = $this->fetchTable('Scholarship.RecipientActivities');
         $this->loadComponent('Scholarship.ScholarshipTabs');
         $this->loadComponent('Page.Page');
         // $this->Page->loadElementsFromTable($this->ScholarshipRecipients);
@@ -219,7 +219,7 @@ class ScholarshipRecipientsController extends AppController
     //     $page->getTab('Recipients')->setActive('true');
     // }
 
-    // public function onRenderStatus(Event $event, Entity $entity, PageElement $element)
+    // public function onRenderStatus(EventInterface $event, Entity $entity, PageElement $element)
     // {
     //     $page = $this->Page;
 
@@ -230,7 +230,7 @@ class ScholarshipRecipientsController extends AppController
     //     }
     // }
 
-    // public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
+    // public function getEntityRowActions(EventInterface $event, $entity, ArrayObject $rowActions)
     // {
     //     $rowActionsArray = $rowActions->getArrayCopy();
 

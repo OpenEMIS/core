@@ -8,7 +8,7 @@ use DateTime;
 use DateTimeInterface;
 use Exception;
 use InvalidArgumentException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Network\Session;
@@ -154,7 +154,7 @@ class ImportPositionBehavior extends Behavior
         ]);
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $queryString = $this->_table->request->getParam('pass');
         $encodedQueryString = $queryString[1];
@@ -183,7 +183,7 @@ class ImportPositionBehavior extends Behavior
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $buttons[0]['name'] = '<i class="fa kd-import"></i> ' . __('Import');
     }
@@ -251,12 +251,12 @@ class ImportPositionBehavior extends Behavior
             ]);
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $options['validate'] = 'importFile';
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         ini_set('max_execution_time', 3600);
 
@@ -330,9 +330,9 @@ class ImportPositionBehavior extends Behavior
                     continue;
                 }
 
-                if ($row == $highestRow && !$this->checkRowCells($sheet, $totalColumns, $row)) {
-                    break;
-                }
+                // if ($row == $highestRow && !$this->checkRowCells($sheet, $totalColumns, $row)) {
+                //     break;
+                // }
 
                 $tempRow = new ArrayObject();
                 $rowInvalidCodeCols = new ArrayObject();
@@ -364,7 +364,7 @@ class ImportPositionBehavior extends Behavior
                 }
 
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
-
+                
                 if ($rowPass !== NULL && !$rowPass) {
                     $activeModel->setImportValidationFailed();
                 } else {
@@ -1204,7 +1204,6 @@ class ImportPositionBehavior extends Behavior
             } else {
                 $originalValue = $cell->getValue();
             }
-
             $cellValue = $originalValue;
             if (gettype($cellValue) == 'double' || gettype($cellValue) == 'boolean') {
                 $cellValue = (string)$cellValue;
@@ -1260,7 +1259,6 @@ class ImportPositionBehavior extends Behavior
             if (!$isOptional) {
                 $isOptional = substr_count($columnDescription, 'not required');
             }
-
             if ($foreignKey == self::FIELD_OPTION) {
                 if (!empty($cellValue)) {
                     if (array_key_exists($cellValue, $lookup[$col])) {
@@ -1562,7 +1560,7 @@ class ImportPositionBehavior extends Behavior
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {

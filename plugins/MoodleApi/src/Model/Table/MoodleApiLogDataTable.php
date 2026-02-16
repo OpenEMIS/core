@@ -5,7 +5,7 @@ namespace MoodleApi\Model\Table;
 use ArrayObject;
 use Cake\Utility\Inflector;
 use InvalidArgumentException;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -36,13 +36,13 @@ class MoodleApiLogDataTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', 'Moodle Api Log');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('action', ['visible' => true, 'sort' => true]);
         $this->field('params', ['visible' => true, 'sort' => true]);
@@ -54,28 +54,28 @@ class MoodleApiLogDataTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         
 
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    /*public function afterAction(Event $event, ArrayObject $extra)
+    /*public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setfieldOrder($this->fieldsOrder);
     }*/
 
-    public function onGetResponse(Event $event, Entity $entity)
+    public function onGetResponse(EventInterface $event, Entity $entity)
     {
         if ($entity->status == 1) {
             // Success response

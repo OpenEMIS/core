@@ -2,7 +2,7 @@
 namespace Outcome\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -58,12 +58,12 @@ class OutcomePeriodsTable extends ControllerActionTable
             // ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getOutcomeTabs();
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // academic period filter
         $serverRequest = $this->request;
@@ -113,12 +113,12 @@ class OutcomePeriodsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setFieldOrder(['outcome_template_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled']);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('outcome_template_id', ['entity' => $entity]);
@@ -126,7 +126,7 @@ class OutcomePeriodsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'outcome_template_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled']);
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -148,7 +148,7 @@ class OutcomePeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->query['period']);
@@ -162,7 +162,7 @@ class OutcomePeriodsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldOutcomeTemplateId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldOutcomeTemplateId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedPeriod = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
@@ -186,7 +186,7 @@ class OutcomePeriodsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period_id') {
             return __('Academic Period');

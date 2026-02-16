@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -21,37 +21,37 @@ class StudentContactsTable extends AppTable  {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$this->fields = [];
 		$this->ControllerAction->field('feature');
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
 		return $attr;
 	}
 
     //POCOR-7491:: Start ---Changes in query remove extra function
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
-        $institutionStudents = TableRegistry::get('Institution.InstitutionStudents');
-        $institutionIds = TableRegistry::get('Institution.Institutions');
-        $educationGrades = TableRegistry::get('Education.EducationGrades');
-        $userIdentity = TableRegistry::get('User.Identities');
-        $identityType = TableRegistry::get('FieldOption.IdentityTypes');
-        $userContacts = TableRegistry::get('User.Contacts');
-        $contactsOptions = TableRegistry::get('User.ContactOptions');
-        $contactsType = TableRegistry::get('User.ContactTypes');
-        $academicPeriods = TableRegistry::get('academic_periods');
+        $institutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $institutionIds = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $educationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $userIdentity = TableRegistry::getTableLocator()->get('User.Identities');
+        $identityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $userContacts = TableRegistry::getTableLocator()->get('User.Contacts');
+        $contactsOptions = TableRegistry::getTableLocator()->get('User.ContactOptions');
+        $contactsType = TableRegistry::getTableLocator()->get('User.ContactTypes');
+        $academicPeriods = TableRegistry::getTableLocator()->get('academic_periods');
 
-        $UserIdentities = TableRegistry::get('user_identities');
-        $IdentityTypes = TableRegistry::get('identity_types');
+        $UserIdentities = TableRegistry::getTableLocator()->get('user_identities');
+        $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
 
         $conditions = [];
         if (!empty($academicPeriodId)) {
@@ -148,7 +148,7 @@ class StudentContactsTable extends AppTable  {
     }
     //POCOR-7491:: End
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $extraFields[] = [
             'key' => 'institution_code',

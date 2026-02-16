@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
@@ -19,6 +19,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\I18n\FrozenTime;
+use Cake\I18n\FrozenDate; //POCOR-9545
 use Cake\Http\Session; // POCOR-9162
 
 /**
@@ -62,7 +63,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
 
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -105,7 +106,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_name', ['type' => 'integer','sort' => ['field' => 'Users.first_name']]);
@@ -122,7 +123,7 @@ class ReportCardGpaTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $institutionId = $this->getInstitutionID();
         $params = $this->request->getQuery();
@@ -331,7 +332,7 @@ class ReportCardGpaTable extends ControllerActionTable
     }
 
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $gradeId = $this->request->getQuery('education_grade_id');
         //POCOR-9170[START]
@@ -485,13 +486,13 @@ class ReportCardGpaTable extends ControllerActionTable
 
 
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
         //$this->field('institution_class_id', ['visible' => true]);
@@ -505,7 +506,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'gpa']);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
 
         $value = '';
@@ -515,7 +516,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $value;
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString() ?? [];
         $url = $this->url('index');
@@ -538,7 +539,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $this->controller->redirect($url);
     }
 
-    public function generateAll(Event $event, ArrayObject $extra)
+    public function generateAll(EventInterface $event, ArrayObject $extra)
     {
         $this->AcademicPeriods =self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods'); // POCOR-9162
 
@@ -575,7 +576,7 @@ class ReportCardGpaTable extends ControllerActionTable
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
-    
+
     public static function addGpaReportCards(
         $studentId,
         $academicPeriodId,
@@ -628,17 +629,26 @@ class ReportCardGpaTable extends ControllerActionTable
          *    - Prevents future-term GPA generation
          *    - Still allows regeneration for past terms
          */
+        $today = FrozenDate::today();
         $gpaIds = [];
         $firstTermStart = $gpaResults[0]->start_date;
 
+        // foreach ($gpaResults as $gpa) {
+        //     if ($gpa->start_date == $firstTermStart) {
+        //         $gpaIds[] = $gpa->id;
+        //     }
+        // }
+
         foreach ($gpaResults as $gpa) {
-            if ($gpa->start_date == $firstTermStart) {
+            // Allow all GPA terms that have already started
+            if ($gpa->start_date <= $today) {
                 $gpaIds[] = $gpa->id;
             }
         }
 
         // Optional but recommended guard
-        $gpaIds = array_values($gpaIds);
+        // $gpaIds = array_values($gpaIds);
+        $gpaIds = array_values(array_unique($gpaIds));
 
         /**
          * 4. Generate GPA per valid GPA term
@@ -860,12 +870,12 @@ class ReportCardGpaTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getInstitutionGpaTab();
     }
 
-   public function onGetGpa(Event $event, Entity $entity)
+   public function onGetGpa(EventInterface $event, Entity $entity)
     {
         $studentsGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
         $gpa_id = $entity->education_grades_gpa_id;
@@ -889,7 +899,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return '';
     }
 
-    public function onGetCreated(Event $event, Entity $entity)
+    public function onGetCreated(EventInterface $event, Entity $entity)
     {
         if($this->action == 'index' && !empty($entity->gpa)){
             $studentsGpa =self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
@@ -917,7 +927,7 @@ class ReportCardGpaTable extends ControllerActionTable
     }
 
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if (($field == 'created' || $field == 'modified') && $this->action == 'index') {
             return 'Updated';
@@ -930,12 +940,12 @@ class ReportCardGpaTable extends ControllerActionTable
         }
     }
 
-    public function onGetStudentName(Event $event, Entity $entity)
+    public function onGetStudentName(EventInterface $event, Entity $entity)
     {
         return $entity->user->name;
     }
 
-    public function onGetInstitutionClass(Event $event, Entity $entity)
+    public function onGetInstitutionClass(EventInterface $event, Entity $entity)
     {
         $InstitutionClasses =self::getDynamicTableInstance('Institution.InstitutionClasses');
         $getName = $InstitutionClasses->find()
@@ -985,7 +995,7 @@ class ReportCardGpaTable extends ControllerActionTable
         }
     }
 
-    public function onGetGpaName(Event $event, Entity $entity)
+    public function onGetGpaName(EventInterface $event, Entity $entity)
     {
 
         $gpaTable =self::getDynamicTableInstance('Gpa.GpaSystem');
@@ -1008,7 +1018,7 @@ class ReportCardGpaTable extends ControllerActionTable
     }
 
 
-    /*public function viewBeforeQuery(Event $event, Query $query, Entity $entity)
+    /*public function viewBeforeQuery(EventInterface $event, Query $query, Entity $entity)
     {
 
         $query->where([$this->aliasField('institution_class_id IS') => $entity-]);
@@ -1117,7 +1127,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 subq.institution_id,
                 subq.student_id,
                 ROUND(
-                    SUM(IFNULL(gpa_grading_options.point, 0)) 
+                    SUM(IFNULL(gpa_grading_options.point, 0))
                     /
                     COUNT(DISTINCT subq.education_subject_id),
                 2
@@ -1275,7 +1285,12 @@ class ReportCardGpaTable extends ControllerActionTable
             institution_subject_students.student_id,
             term_info.academic_term
             ) subq
-        INNER JOIN education_grades_gpa ON subq.assessment_period_end_date >= education_grades_gpa.start_date AND subq.assessment_period_end_date <= education_grades_gpa.end_date AND subq.assessment_period_start_date >= education_grades_gpa.start_date AND subq.assessment_period_start_date <= education_grades_gpa.end_date AND education_grades_gpa.academic_period_id = subq.academic_period_id AND education_grades_gpa.education_grade_id = subq.education_grade_id AND education_grades_gpa.id = $educationGradeGpaId
+        INNER JOIN education_grades_gpa ON 
+        subq.assessment_period_start_date <= education_grades_gpa.end_date
+        AND subq.assessment_period_end_date   >= education_grades_gpa.start_date
+        AND education_grades_gpa.academic_period_id = subq.academic_period_id 
+        AND education_grades_gpa.education_grade_id = subq.education_grade_id 
+        AND education_grades_gpa.id = $educationGradeGpaId
         INNER JOIN gpa_grading_options ON subq.total_mark >= gpa_grading_options.min AND subq.total_mark <= gpa_grading_options.max AND education_grades_gpa.gpa_grading_type_id = gpa_grading_options.gpa_grading_type_id
         GROUP BY
             subq.academic_period_id,
@@ -1298,7 +1313,7 @@ class ReportCardGpaTable extends ControllerActionTable
         return $result['gpa'] ?? 0.00;
     }
 
-    //Commenting Dr.Khindol's logic as the exemption scenario is not working as expected.
+    //Commenting Dr.Kh's logic as the exemption scenario is not working as expected.
     //DO NOT DELETE -- Needed for reference.
     public static function getGpaForStudentGpaOriginal(
         int $institutionId,

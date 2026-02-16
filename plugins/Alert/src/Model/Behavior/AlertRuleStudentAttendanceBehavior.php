@@ -7,7 +7,7 @@ use Alert\Model\Behavior\AlertRuleBehavior;
 
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
 {
@@ -57,7 +57,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
 
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
 
         $model = $this->_table;
@@ -75,13 +75,13 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         }
     }
 
-    public function onStudentAttendanceSetupFields(Event $event, Entity $entity)
+    public function onStudentAttendanceSetupFields(EventInterface $event, Entity $entity)
     { ////echo "heey";die;
         $this->onAlertRuleSetupFields($event, $entity);
 
     }
 
-    public function onUpdateFieldStudentAttendanceThreshold(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStudentAttendanceThreshold(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['visible'] = true;
 

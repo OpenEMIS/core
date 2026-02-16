@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
 
@@ -66,7 +66,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             ]);
     }*/
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'academic_period_id':
@@ -96,7 +96,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         if (isset($extra['selectedAcademicPeriodOptions'])) {
             $query->where([
@@ -111,7 +111,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->getQuery();
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //to show list of academic period for selection
@@ -197,7 +197,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $committeeTypeOptions;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $this->field('academic_period_id', ['entity' => $entity]);
@@ -212,7 +212,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($attr['entity']->academic_period_id));
         if ($action == 'add') {
@@ -229,7 +229,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
     // OnUpdate Events
-    public function onUpdateFieldInstitutionCommitteeTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionCommitteeTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $InstitutionCommitteeTypes = TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeTypes');
         if ($action == 'add' || $action == 'edit') {
@@ -244,7 +244,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
      // OnUpdate Events
-    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') {
@@ -255,7 +255,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         return $attr;
     }
     // OnUpdate Events
-    public function onUpdateFieldComment(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldComment(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -269,7 +269,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     }
 
     // Change Events
-    public function addEditOnAddTimeslot(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddTimeslot(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $fieldKey = 'meeting';
 
@@ -284,7 +284,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -292,7 +292,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['entity' => $entity]);
         $this->field('name');
@@ -337,7 +337,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         $this->controller->set('selectedAction','InstitutionCommittees');
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $data) {
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data) {
     $newEntities = [];
 
     if (isset($entity['meeting']) && $entity['meeting'] != '') {
@@ -356,7 +356,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
             if (\Cake\ORM\TableRegistry::getTableLocator()->exists('Institution.InstitutionCommitteeMeeting')) {
                 $meetingTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeMeeting');
             } else {
-                $meetingTable = \Cake\ORM\TableRegistry::get('Institution.InstitutionCommitteeMeeting', ['table' => 'institution_committee_meeting']);
+                $meetingTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionCommitteeMeeting', ['table' => 'institution_committee_meeting']);
             }
 
             $return = true;
@@ -389,7 +389,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     }
 
     // POCOR-6171 start
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         // $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionId = $this->Session->read('Institution.Institutions.primaryKey.institution_id');
@@ -426,7 +426,7 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [

@@ -7,11 +7,20 @@ use Cake\Core\Configure;
 
 class TabPermissionComponent extends Component
 {
-    // The other component your component uses
-    public $components = ['AccessControl'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['AccessControl'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         $this->controller = $this->_registry->getController();
     }
 

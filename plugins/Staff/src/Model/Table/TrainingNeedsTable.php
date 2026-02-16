@@ -3,7 +3,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Staff\Model\Table\TrainingNeedsAppTable;
 
 class TrainingNeedsTable extends TrainingNeedsAppTable
@@ -21,7 +21,7 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
         ]);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupTabElements();
         // start pocor-5188
@@ -52,7 +52,7 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'type':

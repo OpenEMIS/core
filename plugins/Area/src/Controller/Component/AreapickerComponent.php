@@ -3,7 +3,7 @@ namespace Area\Controller\Component;
 
 use Cake\Controller\Component;
 use Page\Model\Entity\PageElement;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -55,7 +55,7 @@ class AreapickerComponent extends Component
     public function getAreaLevelName($targetModel, $areaId)
     {
 
-        $targetTable = TableRegistry::get($targetModel);
+        $targetTable = TableRegistry::getTableLocator()->get($targetModel);
         $levelAssociation = Inflector::singularize($targetTable->getAlias()).'Levels';
         $path = $targetTable
             ->find('path', ['for' => $areaId])

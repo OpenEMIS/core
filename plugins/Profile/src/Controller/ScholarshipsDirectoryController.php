@@ -1,7 +1,7 @@
 <?php
 namespace Profile\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
@@ -18,9 +18,9 @@ class ScholarshipsDirectoryController extends PageController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Profile.ScholarshipsDirectory');
-        $this->loadModel('Education.EducationFieldOfStudies');
-        $this->loadModel('Configuration.ConfigItems');
+        $this->ScholarshipsDirectory = $this->fetchTable('Profile.ScholarshipsDirectory');
+        $this->EducationFieldOfStudies = $this->fetchTable('Education.EducationFieldOfStudies');
+        $this->ConfigItems = $this->fetchTable('Configuration.ConfigItems');
         $this->loadComponent('Page.Page');//POCOR-7485
 
         if ($this->Page !== null && $this->ScholarshipsDirectory !== null) {
@@ -174,7 +174,7 @@ class ScholarshipsDirectoryController extends PageController
         ]);
     }
 
-    public function onRenderFieldOfStudies(Event $event, Entity $entity, PageElement $element)
+    public function onRenderFieldOfStudies(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
@@ -199,7 +199,7 @@ class ScholarshipsDirectoryController extends PageController
         }
     }
 
-    public function onRenderBond(Event $event, Entity $entity, PageElement $element)
+    public function onRenderBond(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 
@@ -208,7 +208,7 @@ class ScholarshipsDirectoryController extends PageController
         }
     }
 
-    public function onRenderDuration(Event $event, Entity $entity, PageElement $element)
+    public function onRenderDuration(EventInterface $event, Entity $entity, PageElement $element)
     {
         $page = $this->Page;
 

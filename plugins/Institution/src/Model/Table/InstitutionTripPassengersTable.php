@@ -3,7 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
@@ -21,7 +21,7 @@ class InstitutionTripPassengersTable extends AppTable
         $this->belongsTo('InstitutionTrips', ['className' => 'Institution.InstitutionTrips']);
     }
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
     	if ($entity->isNew()) {
 			$entity->id = Text::uuid();

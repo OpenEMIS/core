@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -16,13 +16,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Http\ServerRequest;
 use Cake\Http\Session;
 // Events
-// public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
-// public function onExcelGenerate(Event $event, $writer, ArrayObject $settings) {}
-// public function onExcelGenerateComplete(Event $event, ArrayObject $settings) {}
-// public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {}
-// public function onExcelStartSheet(Event $event, ArrayObject $settings, $totalCount) {}
-// public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
-// public function onExcelGetLabel(Event $event, $column) {}
+// public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelGenerate(EventInterface $event, $writer, ArrayObject $settings) {}
+// public function onExcelGenerateComplete(EventInterface $event, ArrayObject $settings) {}
+// public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {}
+// public function onExcelStartSheet(EventInterface $event, ArrayObject $settings, $totalCount) {}
+// public function onExcelEndSheet(EventInterface $event, ArrayObject $settings, $totalProcessed) {}
+// public function onExcelGetLabel(EventInterface $event, $column) {}
 
 class SubjectExcelBehavior extends Behavior
 {
@@ -85,7 +85,7 @@ class SubjectExcelBehavior extends Behavior
         $this->generateXLXS($ids);
     }
 
-    public function excelV4(Event $mainEvent, ArrayObject $extra)
+    public function excelV4(EventInterface $mainEvent, ArrayObject $extra)
     {
         $id = 0;
         $break = false;
@@ -183,8 +183,8 @@ class SubjectExcelBehavior extends Behavior
             $class_id = $this->_table->request->getQuery()['class_id'];//POCOR-8324
             $academic_period_id = $this->_table->request->getQuery()['academic_period_id'];//POCOR-8324
 
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-            $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+            $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
             $conditions = [
                 $InstitutionClassSubjects->aliasField('institution_class_id') => $class_id,
                 $InstitutionSubjects->aliasField('InstitutionSubjects.academic_period_id') => $academic_period_id,
@@ -204,13 +204,13 @@ class SubjectExcelBehavior extends Behavior
             $footer = $this->getFooter();
             $Query = $sheet['query'];
 
-			$EducationGrades = TableRegistry::get('Education.EducationGrades');
-			$InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-			$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-			$InstitutionStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-			$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-			$InstitutionSubjectsRooms = TableRegistry::get('Institution.InstitutionSubjectsRooms');
+			$EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+			$InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+			$InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+			$InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+			$InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+			$InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+			$InstitutionSubjectsRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectsRooms');
             /**
             * added condition to make query on the bases on selected subject and exporting student's list
             * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
@@ -384,13 +384,13 @@ class SubjectExcelBehavior extends Behavior
                     return $results->map(function ($row) {
                         $openemisId = $row->openEMIS_ID;//POCOR-8324 starts
                         if ($openemisId !== null) {
-                            $Users = TableRegistry::get('Security.Users');
+                            $Users = TableRegistry::getTableLocator()->get('Security.Users');
                             $user_data= $Users
                                         ->find()
                                         ->where([$Users->aliasField('openemis_no') => $row->openEMIS_ID])
                                         ->first();
-                            $UserIdentities = TableRegistry::get('User.Identities');//POCOR-5852 starts
-                            $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');//POCOR-5852 ends
+                            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');//POCOR-5852 starts
+                            $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');//POCOR-5852 ends
                             $conditions = [
                                 $UserIdentities->aliasField('security_user_id') => $user_data->id,
                             ];
@@ -884,7 +884,7 @@ class SubjectExcelBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
         //POCOR-5852 starts add  || $action == 'index' condition
@@ -913,7 +913,7 @@ class SubjectExcelBehavior extends Behavior
         //POCOR-5852 ends
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];

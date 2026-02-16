@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
@@ -37,10 +37,10 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
 
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
-        $SpecialNeedsAssessments = TableRegistry::get('SpecialNeeds.SpecialNeedsAssessments');
-        $SpecialNeedTypes = TableRegistry::get('SpecialNeeds.SpecialNeedsTypes');
+        $SpecialNeedsAssessments = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsAssessments');
+        $SpecialNeedTypes = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsTypes');
 
         $SpecialNeedsStudents = $SpecialNeedsAssessments
             ->find()
@@ -65,15 +65,15 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
         $this->_specialNeeds = $specialNeedsNames;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $specialNeedsNames = $settings['special_needs_name'];
         $academicPeriodId = $requestData->academic_period_id;
 
-        $Class = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $Class = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
         if ($academicPeriodId !=0 ) {
             $query->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
@@ -197,7 +197,7 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
             ]);
     }
 
-    public function onExcelRenderAge(Event $event, Entity $entity, $attr)
+    public function onExcelRenderAge(EventInterface $event, Entity $entity, $attr)
     {
         $age = '';
         if ($entity->has('date_of_birth') && !empty($entity->date_of_birth)) {
@@ -208,7 +208,7 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
         return $age;
     }
 
-    public function onExcelGetAllNationalities(Event $event, Entity $entity)
+    public function onExcelGetAllNationalities(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('user')) {
@@ -226,7 +226,7 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetSpecialNeedType(Event $event, Entity $entity)
+    public function onExcelGetSpecialNeedType(EventInterface $event, Entity $entity)
     {
         $studentId = $entity->student_id;
 
@@ -238,9 +238,9 @@ class InstitutionSpecialNeedsStudentsTable extends AppTable  {
         return '';
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
+        $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
 
         $requestData = json_decode($settings['process']['params']);

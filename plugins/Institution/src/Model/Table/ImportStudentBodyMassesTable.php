@@ -5,7 +5,7 @@ use App\Model\Table\AppTable;
 use ArrayObject;
 use Cake\I18n\Date;
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use DateTimeInterface;
@@ -24,7 +24,7 @@ class ImportStudentBodyMassesTable extends AppTable
         $this->addBehavior('Institution.ImportStudent');
 
         // register the target table once
-        $this->InstitutionStudents = TableRegistry::get('Institution.Students');
+        $this->InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
     }
 
     public function beforeAction($event) {
@@ -42,7 +42,7 @@ class ImportStudentBodyMassesTable extends AppTable
         $events = array_merge($events, $newEvent);
         return $events;
     }
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $plugin = $toolbarButtons['back']['url']['plugin'];
         if ($plugin == 'Institution') {
@@ -50,15 +50,15 @@ class ImportStudentBodyMassesTable extends AppTable
         }
     }
 
-    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona) 
+    public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona) 
     {
         $crumbTitle = $this->getHeader($this->alias());
         $Navigation->substituteCrumb($crumbTitle, $crumbTitle);
     }
 
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateAcademicPeriodsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $modelData = $lookedUpTable->getAvailableAcademicPeriods(false);
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $startDateLabel = $this->getExcelLabel($lookedUpTable, 'start_date');
@@ -80,13 +80,13 @@ class ImportStudentBodyMassesTable extends AppTable
         }
     }   
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
+    public function onImportPopulateUsersData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
         unset($data[$columnOrder]);
     }
 
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
     {        
         // from string to dateObject
         $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['date']);

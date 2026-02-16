@@ -53,7 +53,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
     protected function getPendingItems(string $featureKey): array
     {
 
-        $this->loadModel('Staff.EmploymentStatuses');
+        $this->EmploymentStatuses = $this->fetchTable('Staff.EmploymentStatuses');
 
         $thresholdArray = json_decode($this->rule['threshold'], true);
         $value = (int)($thresholdArray['value'] ?? 0);

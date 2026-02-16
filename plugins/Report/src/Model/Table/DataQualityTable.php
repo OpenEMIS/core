@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -30,7 +30,7 @@ class DataQualityTable extends AppTable {
 		$this->addBehavior('Report.ReportList');
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(EventInterface $event) {
 		$controllerName = $this->controller->getName();
 		$reportName = __('Data Quality');
 		$this->controller->Navigation->substituteCrumb($this->getAlias(), $reportName);
@@ -44,12 +44,12 @@ class DataQualityTable extends AppTable {
 		//$this->ControllerAction->field('format');
 	}
 
-	/*public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
+	/*public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
 		return $attr;
 	}*/
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
@@ -63,7 +63,7 @@ class DataQualityTable extends AppTable {
         }
     }
 
-    /*public function addAfterAction(Event $event, Entity $entity)
+    /*public function addAfterAction(EventInterface $event, Entity $entity)
     {
     	if ($entity->has('feature')) {
             $feature = $entity->feature;
@@ -79,7 +79,7 @@ class DataQualityTable extends AppTable {
     }*/
 
     //POCOR-7211
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
         $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
@@ -93,7 +93,7 @@ class DataQualityTable extends AppTable {
      * add academic period id
      * POCOR-7211
      */
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
     	if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -113,7 +113,7 @@ class DataQualityTable extends AppTable {
         }
     }
 
-    public function onUpdateFieldAreaLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData()[$this->getAlias()]['feature'])) {
             $feature = $this->request->getData()[$this->getAlias()]['feature'];
@@ -121,7 +121,7 @@ class DataQualityTable extends AppTable {
             if ((in_array($feature, ['Report.ValidationReport','Report.StaffWithMissingQualificationReport'
 
             ]))) {
-                $Areas = TableRegistry::get('Area.AreaLevels');
+                $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -143,7 +143,7 @@ class DataQualityTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldAreaEducationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData()[$this->getAlias()]['feature'])) {
             $feature = $this->request->getData()[$this->getAlias()]['feature'];
@@ -152,7 +152,7 @@ class DataQualityTable extends AppTable {
                 [
                     'Report.ValidationReport', 'Report.StaffWithMissingQualificationReport'
                 ]))) {
-                $Areas = TableRegistry::get('Area.Areas');
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                 $entity = $attr['entity'];
 
                 if ($action == 'add') {
@@ -184,10 +184,10 @@ class DataQualityTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $areaId = $request->getData()[$this->getAlias()]['area_education_id'];
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if (isset($this->request->getData()[$this->getAlias()]['feature'])) {
             $feature = $this->request->getData()[$this->getAlias()]['feature'];
 
@@ -219,7 +219,7 @@ class DataQualityTable extends AppTable {
                     $institutionList = $institutionQuery->toArray();
                 } elseif (!$institutionTypeId && array_key_exists('area_education_id', $request->getData()[$this->getAlias()]) && !empty($request->getData()[$this->getAlias()]['area_education_id']) && $areaId != -1) {
                     //Start:POCOR-6818 Modified this for POCOR-6859
-                    $AreaT = TableRegistry::get('Area.Areas'); //POCOR-9262
+                    $AreaT = TableRegistry::getTableLocator()->get('Area.Areas'); //POCOR-9262
                     //Level-1
                     $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
                     $childArea =[];
@@ -325,7 +325,7 @@ class DataQualityTable extends AppTable {
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Datasource\ResultSetInterface;
@@ -84,13 +84,13 @@ class StudentWithdrawTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
 
-    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    public function getWorkflowEvents(EventInterface $event, ArrayObject $eventsObject)
     {
         foreach ($this->workflowEvents as $key => $attr) {
             $attr['text'] = __($attr['text']);
@@ -99,7 +99,7 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
-    public function studentsAfterDelete(Event $event, Entity $student)
+    public function studentsAfterDelete(EventInterface $event, Entity $student)
     {
         $this->removePendingWithdraw($student->student_id, $student->institution_id);
     }
@@ -107,7 +107,7 @@ class StudentWithdrawTable extends ControllerActionTable
     protected function removePendingWithdraw($studentId, $institutionId)
     {
         //could not include grade / academic period because not always valid. (promotion/graduation/repeat and withdraw can be done on different grade / academic period)
-        $pendingStatus = TableRegistry::get('Workflow.WorkflowModels')->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
+        $pendingStatus = TableRegistry::getTableLocator()->get('Workflow.WorkflowModels')->getWorkflowStatusSteps('Institution.StudentWithdraw', 'PENDING');
 
         $conditions = [
             'student_id' => $studentId,
@@ -127,12 +127,12 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
-    public function updateStudentStatusId(Event $event, Entity $entity)
+    public function updateStudentStatusId(EventInterface $event, Entity $entity)
     {
         Log::write('debug', 'Event successfully dispatched to updateStudentStatusId.');
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         $statuses = $StudentStatuses->findCodeList();
 
         $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
@@ -168,15 +168,15 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
-    public function onApproval(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onApproval(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         /*POCOR-6588 starts*/
         $id = $workflowTransitionEntity->model_reference;
         /*POCOR-6588 ends*/
         $entity = $this->get($id);
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
@@ -184,10 +184,10 @@ class StudentWithdrawTable extends ControllerActionTable
         $gradeId = $entity->education_grade_id;
         Log::write('debug', 'initializing insert newEntity to student_status_updates queue: id >>>> '. $entity->student_id.' student_id >>>> '.$entity->student_id);
         /*POCOR-6651 starts - workflow_action_name Approve was not working on UAT server as it uses Arabic language*/
-        $configItems = TableRegistry::get('Configuration.ConfigItems');
-        $localeContents = TableRegistry::get('LocaleContents');
-        $locales = TableRegistry::get('locales');
-        $localeContentTrans = TableRegistry::get('LocaleContentTranslations');
+        $configItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $localeContents = TableRegistry::getTableLocator()->get('LocaleContents');
+        $locales = TableRegistry::getTableLocator()->get('locales');
+        $localeContentTrans = TableRegistry::getTableLocator()->get('LocaleContentTranslations');
         $systemLang = $configItems->find()
                     ->select(['lang_id' => $locales->aliasField('id')])
                     ->LeftJoin([$locales->getAlias() => $locales->getTable()], [
@@ -240,12 +240,12 @@ class StudentWithdrawTable extends ControllerActionTable
         Log::write('debug', 'newEntity record inserted into student_status_updates queue: id >>>> '. $newEntity->id.' student_id >>>> '.$newEntity->security_user_id);
     }
 
-    public function onCancel(Event $event, $id, Entity $workflowTransitionEntity)
+    public function onCancel(EventInterface $event, $id, Entity $workflowTransitionEntity)
     {
         $entity = $this->get($id);
 
-        $Students = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $statuses = $StudentStatuses->findCodeList();
         $institutionId = $entity->institution_id;
         $studentId = $entity->student_id;
@@ -261,7 +261,7 @@ class StudentWithdrawTable extends ControllerActionTable
         ])
         ->first();
 
-        $StudentStatusUpdates = TableRegistry::get('Institution.StudentStatusUpdates');
+        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         $studentStatusUpdates = $StudentStatusUpdates->find()->where([
             $StudentStatusUpdates->aliasField('institution_id') => $institutionId,
             $StudentStatusUpdates->aliasField('security_user_id') => $studentId,
@@ -280,7 +280,7 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
+    public function editOnInitialize(EventInterface $event, Entity $entity)
     {
         $alias = $this->getAlias();
         $this->request = $this->request->withData($alias,
@@ -358,7 +358,7 @@ class StudentWithdrawTable extends ControllerActionTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->request->getData()[$this->getAlias()]['status_id'] = $entity->status_id;
         $this->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
@@ -370,16 +370,16 @@ class StudentWithdrawTable extends ControllerActionTable
     }
 
 
-    public function onUpdateFieldEffectiveDate(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEffectiveDate(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
             $entity = $attr['attr']['entity'];
             $studentId = $entity->student_id;
 
-            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
             $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
-            $Students = TableRegistry::get('Institution.Students');
+            $Students = TableRegistry::getTableLocator()->get('Institution.Students');
             $StudentsData = $Students
                 ->find()
                 ->where([$Students->aliasField('student_id') => $studentId, $Students->aliasField('student_status_id') => $enrolledStatus])
@@ -472,13 +472,13 @@ class StudentWithdrawTable extends ControllerActionTable
 
         return $query;
     }
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
          $this->field('openemis_no', ['visible' => false]);
          $this->field('photo_content', ['visible' => false]);
     }
 
-     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $search = $this->getSearchKey();
         if (!empty($search)) {
@@ -492,16 +492,16 @@ class StudentWithdrawTable extends ControllerActionTable
      * POCOR-7097
      * check if the student has an existing enrollment. If yes, this step cannot proceed.
      * */
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $url  = $_SERVER['REQUEST_URI'];
         $stringUrl = 'academic_period_id';
         $stringUrlTwo = 'institution_id'; //POCOR-9414 if user came from Dashboard page
         if (strpos($url, $stringUrlTwo) !== false && strpos($url, $stringUrl) === false){ //POCOR-9414 start
-            $findstudent = TableRegistry::get('Institution.InstitutionStudents');
-            $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
-            $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+            $findstudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+            $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
+            $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $stepStatusId = $WorkflowStepsTable
                                 ->find()
                                 ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],
@@ -521,10 +521,10 @@ class StudentWithdrawTable extends ControllerActionTable
             }    
             //POCOR-9414 end     
         }elseif(strpos($url, $stringUrl) == false){
-            $findstudent = TableRegistry::get('Institution.InstitutionStudents');
-            $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
-            $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-            $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+            $findstudent = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+            $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
+            $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+            $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
             $stepStatusId = $WorkflowStepsTable
                                 ->find()
                                 ->leftJoin([$WorkflowsTable->getAlias() => $WorkflowsTable->getTable()],

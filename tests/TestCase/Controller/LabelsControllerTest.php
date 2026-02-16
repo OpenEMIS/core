@@ -56,7 +56,7 @@ class LabelsControllerTest extends AppTestCase
 
         $this->postData($url, $data);
 
-        $table = TableRegistry::get($this->modelAlias);
+        $table = TableRegistry::getTableLocator()->get($this->modelAlias);
         $entity = $table->get($this->primaryKey);
         $this->assertEquals($data[$this->modelAlias]['name'], $entity->name);
     }

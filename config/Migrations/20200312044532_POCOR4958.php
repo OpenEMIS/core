@@ -12,8 +12,8 @@ class POCOR4958 extends AbstractMigration
        $this->execute('CREATE TABLE `zz_4958_institution_classes` LIKE `institution_classes`');
        $this->execute('INSERT INTO `zz_4958_institution_classes` SELECT * FROM `institution_classes`');
 	   
-	   $InstitutionClassesTable = TableRegistry::get('Institution.InstitutionClasses');
-	   $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
+	   $InstitutionClassesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+	   $InstitutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
 	   
 	   $InstitutionClasses = $InstitutionClassesTable->find()
 			->hydrate(false)
