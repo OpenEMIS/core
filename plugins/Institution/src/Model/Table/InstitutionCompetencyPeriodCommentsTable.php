@@ -4,7 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionCompetencyPeriodCommentsTable extends ControllerActionTable
@@ -24,7 +24,7 @@ class InstitutionCompetencyPeriodCommentsTable extends ControllerActionTable
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // do not save new record if comment is empty
         $comments = $entity->comments;
@@ -33,7 +33,7 @@ class InstitutionCompetencyPeriodCommentsTable extends ControllerActionTable
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // delete record if user removes comment
         $comments = $entity->comments;

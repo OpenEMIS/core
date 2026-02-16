@@ -2,7 +2,7 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -46,7 +46,7 @@ class SystemGroupsListTable extends ControllerActionTable
     }
 
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         unset($extra['indexButtons']['remove']);
         $this->field('security_group_id', [
@@ -79,13 +79,13 @@ class SystemGroupsListTable extends ControllerActionTable
         ];
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', [
             'visible' => true]);
         $this->setFieldOrder(['openemis_no','security_user_id', 'security_role_id']);
     }
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userGroupId = $this->request->getQuery('userGroupId');
         $query->contain(['Users','SecurityRoles'])
@@ -106,14 +106,14 @@ class SystemGroupsListTable extends ControllerActionTable
     }
 
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $entity->user->openemis_no;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $userGroupId = $this->request->query['userGroupId'];
         $entity->security_group_id = $userGroupId;
     }

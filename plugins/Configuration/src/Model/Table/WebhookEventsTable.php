@@ -8,7 +8,7 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;

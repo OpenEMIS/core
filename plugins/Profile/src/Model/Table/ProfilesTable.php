@@ -3,7 +3,7 @@ namespace Profile\Model\Table;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -56,7 +56,7 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
 
@@ -93,7 +93,7 @@ class ProfilesTable extends ControllerActionTable
 
 
     // POCOR-5684
-    public function onGetIdentityNumber(Event $event, Entity $entity){
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity){
 
         // Case 1: if user has only one identity, show the same,
         // Case 2: if user has more than one identity and also has more than one nationality, and no one is linked to any nationality, then, check, if any nationality has default identity, then show that identity else show the first identity.
@@ -143,7 +143,7 @@ class ProfilesTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::getTableLocator()->get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number'])
                 ->where([
@@ -167,7 +167,7 @@ class ProfilesTable extends ControllerActionTable
     }
 
     // POCOR-5684
-    public function onGetIdentityTypeID(Event $event, Entity $entity)
+    public function onGetIdentityTypeID(EventInterface $event, Entity $entity)
     {
         $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_identities = $users_ids->find()
@@ -177,7 +177,7 @@ class ProfilesTable extends ControllerActionTable
         ])
         ->all();
 
-        $users_ids = TableRegistry::get('user_identities');
+        $users_ids = TableRegistry::getTableLocator()->get('user_identities');
         $user_id_data = $users_ids->find()
         ->select(['number', 'identity_type_id'])
         ->where([
@@ -187,7 +187,7 @@ class ProfilesTable extends ControllerActionTable
 
         if(count($user_identities) == 1){
             // Case 1
-            $users_id_type = TableRegistry::get('identity_types');
+            $users_id_type = TableRegistry::getTableLocator()->get('identity_types');
             $user_id_name = $users_id_type->find()
             ->select(['name'])
             ->where([
@@ -199,7 +199,7 @@ class ProfilesTable extends ControllerActionTable
             // Case 2 or 3
 
             // Get all nationalities, which has any default identity
-            $nationalities = TableRegistry::get('nationalities');
+            $nationalities = TableRegistry::getTableLocator()->get('nationalities');
             $nationalities_ids = $nationalities->find('all',
                 [
                     'fields' => [
@@ -220,7 +220,7 @@ class ProfilesTable extends ControllerActionTable
 
             $nationality_based_ids = [];
             foreach ($nat_ids as $nat_id) {
-                $users_ids = TableRegistry::get('user_identities');
+                $users_ids = TableRegistry::getTableLocator()->get('user_identities');
                 $user_id_data_nat = $users_ids->find()
                 ->select(['number','identity_type_id'])
                 ->where([
@@ -234,7 +234,7 @@ class ProfilesTable extends ControllerActionTable
             }
             if(count($nationality_based_ids) > 0){
                 // Case 2 - returning value
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::getTableLocator()->get('identity_types');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -244,7 +244,7 @@ class ProfilesTable extends ControllerActionTable
                 return $entity->identity_type_id = $user_id_name->name;
             }else{
                 // Case 3 - returning value, return again from Case 1
-                $users_id_type = TableRegistry::get('identity_types');
+                $users_id_type = TableRegistry::getTableLocator()->get('identity_types');
                 $user_id_name = $users_id_type->find()
                 ->select(['name'])
                 ->where([
@@ -256,7 +256,7 @@ class ProfilesTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'MainNationalities',
@@ -265,7 +265,7 @@ class ProfilesTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //print_r($entity);die;
         // Remove back toolbarButton
@@ -276,7 +276,7 @@ class ProfilesTable extends ControllerActionTable
         $this->setupTabElements($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         // remove the list toolbarButton
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -313,7 +313,7 @@ class ProfilesTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'first_name') {
             return __('First Name');

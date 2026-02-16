@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\Log\Log;
@@ -19,6 +19,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Http\Session; // POCOR-9162
 use Cake\I18n\FrozenTime; // POCOR-9162
 use Cake\ORM\Table; // POCOR-9162
+use Cake\I18n\FrozenDate; //POCOR-9545
 use Cake\Utility\Inflector; // POCOR-9162
 
 // POCOR-9162
@@ -64,7 +65,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $events;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $educationGradeId = $this->request->getQuery('education_grade_id');
@@ -99,7 +100,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_name', ['type' => 'integer','sort' => ['field' => 'Users.first_name']]);
@@ -115,7 +116,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     }
 
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         $institutionId = $this->getInstitutionID();
@@ -250,7 +251,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $educationGradeId = $this->request->getQuery('education_grade_id');
         $classId = $this->request->getQuery('class_id');
@@ -437,13 +438,13 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         }
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'student_id';
         $searchableFields[] = 'openemis_no';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
         //$this->field('institution_class_id', ['visible' => true]);
@@ -456,7 +457,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'cumulative_gpa']);
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
 
         $value = '';
@@ -466,7 +467,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $value;
     }
 
-    public function generate(Event $event, ArrayObject $extra)
+    public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 //        Log::debug(print_r([$params['student_id'],
@@ -488,7 +489,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function generateAll(Event $event, ArrayObject $extra)
+    public function generateAll(EventInterface $event, ArrayObject $extra)
     {
 
         $params = $this->getQueryString();
@@ -1073,13 +1074,22 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
      *    (prevents future GPA & cumulative GPA generation)
      */
     $firstTermStart = $gpaResults[0]->start_date;
+    $today = FrozenDate::today();
     $gpaIds = [];
 
+    // foreach ($gpaResults as $gpa) {
+    //     if ($gpa->start_date === $firstTermStart) {
+    //         $gpaIds[] = $gpa->id;
+    //     }
+    // }
+
     foreach ($gpaResults as $gpa) {
-        if ($gpa->start_date === $firstTermStart) {
+        // Allow all GPA terms that have already started
+        if ($gpa->start_date <= $today) {
             $gpaIds[] = $gpa->id;
         }
     }
+    $gpaIds = array_values(array_unique($gpaIds));
 
     if (empty($gpaIds)) {
         return [];
@@ -2502,12 +2512,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->getInstitutionGpaTab();
     }
 
-    public function onGetCumulativeGpa(Event $event, Entity $entity)
+    public function onGetCumulativeGpa(EventInterface $event, Entity $entity)
     {
         $findCumulativeGpa =  '';
         $studentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
@@ -2520,7 +2530,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     }
         return $findCumulativeGpa;
     }
-    public function onGetCreated(Event $event, Entity $entity)
+    public function onGetCreated(EventInterface $event, Entity $entity)
     {
         if($this->action == 'index' && !empty($entity->cumulative_gpa)){
             $studentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
@@ -2541,7 +2551,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'cumulative_gpa') {
             return 'Cumulative GPA';
@@ -2553,12 +2563,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
     }
 
-    public function onGetStudentName(Event $event, Entity $entity)
+    public function onGetStudentName(EventInterface $event, Entity $entity)
     {
         return $entity->user->name;
     }
 
-    public function onGetInstitutionClass(Event $event, Entity $entity)
+    public function onGetInstitutionClass(EventInterface $event, Entity $entity)
     {
         $InstitutionClasses = self::getDynamicTableInstance('Institution.InstitutionClasses');
         $getName = $InstitutionClasses->find()

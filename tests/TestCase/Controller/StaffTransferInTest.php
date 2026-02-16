@@ -47,7 +47,7 @@ class StaffTransferInTest extends AppTestCase
     {
         parent::setUp();
 
-        $this->InstitutionStaffTransfers = TableRegistry::get('Institution.InstitutionStaffTransfers');
+        $this->InstitutionStaffTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
         $this->encodedInstitutionId = $this->paramsEncode(['id' => $this->institutionId]);
     }
 
@@ -306,9 +306,9 @@ class StaffTransferInTest extends AppTestCase
         $this->checkSuccessfulWorkflowTransition($data, false);
 
         // check staff successfully transferred
-        $StaffTable = TableRegistry::get('Institution.Staff');
-        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
-        $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+        $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $transferEntity = $this->InstitutionStaffTransfers->get($this->primaryKey);
 
         $oldStaffRecord = $StaffTable->get($transferEntity->institution_staff_id);
@@ -454,9 +454,9 @@ class StaffTransferInTest extends AppTestCase
         $this->checkSuccessfulWorkflowTransition($data, false);
 
         // check staff not transferred
-        $StaffTable = TableRegistry::get('Institution.Staff');
-        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
-        $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+        $StaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $StaffStatusesTable = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $transferEntity = $this->InstitutionStaffTransfers->get($this->primaryKey);
 
         $oldStaffRecord = $StaffTable->get($transferEntity->institution_staff_id);
@@ -509,7 +509,7 @@ class StaffTransferInTest extends AppTestCase
         }
 
         // check workflow transitions record inserted
-        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+        $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
         $transitionEntity = $WorkflowTransitions->find()
             ->where([
                 $WorkflowTransitions->aliasField('prev_workflow_step_name') => $data['WorkflowTransitions']['prev_workflow_step_name'],

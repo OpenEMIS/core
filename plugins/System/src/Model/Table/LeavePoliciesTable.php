@@ -4,7 +4,7 @@ namespace System\Model\Table;
 
 use ArrayObject;
 use Cake\Utility\Inflector;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use Cake\Log\Log;
@@ -34,7 +34,7 @@ class LeavePoliciesTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
         $this->controller->set('contentHeader', $header);
@@ -42,12 +42,12 @@ class LeavePoliciesTable extends ControllerActionTable
         $this->controller->Navigation->substituteCrumb(__('Systems'), __('Staff'));
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         if (!isset($queryParams['sort'])) {
@@ -58,17 +58,17 @@ class LeavePoliciesTable extends ControllerActionTable
 
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
 
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
 //        $this->setupFields($entity);
         $this->setfieldOrder($this->fieldsOrder);
@@ -89,14 +89,14 @@ class LeavePoliciesTable extends ControllerActionTable
             ]
         ]);
     }
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $action = 'edit';
         $entity->staff_leave_types = $this->getStaffLeaveTypesElement($entity, $action);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 
         $this->setupFields($entity);
@@ -285,7 +285,7 @@ class LeavePoliciesTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 //        Log::debug(print_r($entity, true));
 //        Log::debug(print_r($options, true));
@@ -294,7 +294,7 @@ class LeavePoliciesTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 //        Log::debug(print_r($entity, true));
 //        Log::debug(print_r($options, true));
@@ -304,7 +304,7 @@ class LeavePoliciesTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $staffPositionTitlesTable = self::getDynamicTableInstance('staff_position_titles');
 
@@ -322,7 +322,7 @@ class LeavePoliciesTable extends ControllerActionTable
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $staffLeavePolicyTypesTable = self::getDynamicTableInstance('staff_leave_policy_types');
 

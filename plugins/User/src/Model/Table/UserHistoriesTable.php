@@ -4,7 +4,7 @@ namespace User\Model\Table;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use ArrayObject;
 
@@ -25,14 +25,14 @@ class UserHistoriesTable extends ControllerActionTable
         $this->addBehavior('Activity');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $userId = $this->getQueryString('security_user_id');
         $query->where([$this->aliasField('security_user_id') => $userId]);
 
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->field('security_user_id', ['visible' => false]);
     }
 }

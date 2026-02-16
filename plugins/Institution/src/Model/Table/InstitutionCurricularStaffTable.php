@@ -6,7 +6,7 @@ use stdClass;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Utility\Text;

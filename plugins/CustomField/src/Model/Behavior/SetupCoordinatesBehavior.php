@@ -3,7 +3,7 @@ namespace CustomField\Model\Behavior;
 
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
@@ -17,7 +17,7 @@ class SetupCoordinatesBehavior extends SetupBehavior
         parent::initialize($config);
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $fieldType = '';
         $requestData = $this->_table->request->getData();

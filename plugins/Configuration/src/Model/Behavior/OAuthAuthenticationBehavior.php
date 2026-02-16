@@ -2,7 +2,7 @@
 namespace Configuration\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -32,7 +32,7 @@ class OAuthAuthenticationBehavior extends Behavior
         return $events;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $entity->getErrors($entity->getErrors('o_auth'), null, true);
         $this->model->field('client_id', ['attr' => ['required' => true, 'label' => __('Client ID')]]);
@@ -65,7 +65,7 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role', 'mapped_email']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->model->field('client_id', ['attr' => ['label' => __('Client ID')]]);
         $this->model->field('client_secret');
@@ -86,7 +86,7 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->setFieldOrder(['name', 'authentication_type_id', 'status', 'client_id', 'client_secret', 'redirect_uri', 'well_known_uri', 'authorization_endpoint', 'token_endpoint', 'userinfo_endpoint', 'issuer', 'jwks_uri', 'allow_create_user', 'mapped_username', 'mapped_first_name', 'mapped_last_name', 'mapped_date_of_birth', 'mapped_gender', 'mapped_role', 'mapped_email']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->model->fields['name']['type'] = 'readonly';
         $this->model->fields['client_id']['attr']['value'] = $entity->o_auth->client_id;
@@ -101,52 +101,52 @@ class OAuthAuthenticationBehavior extends Behavior
         $this->model->fields['jwks_uri']['attr']['value'] = $entity->o_auth->jwks_uri;
     }
 
-    public function onGetClientId(Event $event, Entity $entity)
+    public function onGetClientId(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->client_id;
     }
 
-    public function onGetClientSecret(Event $event, Entity $entity)
+    public function onGetClientSecret(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->client_secret;
     }
 
-    public function onGetRedirectUri(Event $event, Entity $entity)
+    public function onGetRedirectUri(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->redirect_uri;
     }
 
-    public function onGetAuthorizationEndpoint(Event $event, Entity $entity)
+    public function onGetAuthorizationEndpoint(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->authorization_endpoint;
     }
 
-    public function onGetTokenEndpoint(Event $event, Entity $entity)
+    public function onGetTokenEndpoint(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->token_endpoint;
     }
 
-    public function onGetUserinfoEndpoint(Event $event, Entity $entity)
+    public function onGetUserinfoEndpoint(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->userinfo_endpoint;
     }
 
-    public function onGetIssuer(Event $event, Entity $entity)
+    public function onGetIssuer(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->issuer;
     }
 
-    public function onGetJwksUri(Event $event, Entity $entity)
+    public function onGetJwksUri(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->jwks_uri;
     }
 
-    public function onGetWellKnownUri(Event $event, Entity $entity)
+    public function onGetWellKnownUri(EventInterface $event, Entity $entity)
     {
         return $entity->o_auth->well_known_uri;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra = null)
+    public function beforeAction(EventInterface $event, ArrayObject $extra = null)
     {
 
     }

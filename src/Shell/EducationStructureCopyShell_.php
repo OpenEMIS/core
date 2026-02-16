@@ -9,7 +9,7 @@ class EducationStructureCopyShell_ extends Shell
 {
     public function initialize(): void
     {
-        $this->loadModel('Education.EducationSystem');
+        $this->EducationSystem = $this->fetchTable('Education.EducationSystem');
         parent::initialize();
     }
 
@@ -30,7 +30,7 @@ class EducationStructureCopyShell_ extends Shell
     {
         $canCopy = false;
 
-        $EducationSystemTable = TableRegistry::get('Education.EducationSystems');
+        $EducationSystemTable = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $count =   $EducationSystemTable->find()->where([$EducationSystemTable->aliasField('academic_period_id') => $copyTo])->count();
         if ($count == 0) {
             $canCopy = true;
@@ -42,7 +42,7 @@ class EducationStructureCopyShell_ extends Shell
     {
         try {
             //copy education systems
-            $EducationSystemTable = TableRegistry::get('education_systems');
+            $EducationSystemTable = TableRegistry::getTableLocator()->get('education_systems');
             $educationSystemPreviousRecords=$EducationSystemTable->find()->where([$EducationSystemTable->aliasField('academic_period_id') => $copyFrom])->toArray();
 
             foreach( $educationSystemPreviousRecords as $key=>$educationsystem){
@@ -64,7 +64,7 @@ class EducationStructureCopyShell_ extends Shell
                     if($resEntity=$EducationSystemTable->save($newRecord)){//saving education system
                         $savedId=$resEntity->id;
                         //copy education levels
-                        $education_levels = TableRegistry::get('education_levels');
+                        $education_levels = TableRegistry::getTableLocator()->get('education_levels');
                         $educationLevelsData = $education_levels
                             ->find()
                             ->where([$education_levels->aliasField('education_system_id') =>$educationsystem->id])
@@ -96,7 +96,7 @@ class EducationStructureCopyShell_ extends Shell
 
                                         if(!empty($level_result)){
                                             //copy cycle data
-                                            $education_cycles = TableRegistry::get('education_cycles');
+                                            $education_cycles = TableRegistry::getTableLocator()->get('education_cycles');
                                             $educationCyclesData = $education_cycles
                                                                     ->find()
                                                                     ->where([$education_cycles->aliasField('education_level_id') => $level_val['id']])
@@ -121,7 +121,7 @@ class EducationStructureCopyShell_ extends Shell
 
                                                         if(!empty($cycle_result)){
                                                             //programmes data
-                                                            $education_programmes = TableRegistry::get('education_programmes');
+                                                            $education_programmes = TableRegistry::getTableLocator()->get('education_programmes');
                                                             $educationProgrammesData = $education_programmes
                                                                                             ->find()
                                                                                             ->where([$education_programmes->aliasField('education_cycle_id') => $cycle_val['id']])
@@ -149,7 +149,7 @@ class EducationStructureCopyShell_ extends Shell
                                                                         if(!empty($program_result)){
 
                                                                             //next programmes data
-                                                                            $EducationProgrammesNextProgrammesTable = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
+                                                                            $EducationProgrammesNextProgrammesTable = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes');
                                                                             $nextProgrammesData = $EducationProgrammesNextProgrammesTable->find()
                                                                                                         ->where([$EducationProgrammesNextProgrammesTable->aliasField('education_programme_id') => $prog_val['id']])
                                                                                                         ->toArray();
@@ -169,7 +169,7 @@ class EducationStructureCopyShell_ extends Shell
                                                                             }
 
                                                                             //grades data
-                                                                            $education_grades = TableRegistry::get('education_grades');
+                                                                            $education_grades = TableRegistry::getTableLocator()->get('education_grades');
                                                                             $educationGradesData = $education_grades
                                                                                                             ->find()
                                                                                                             ->where([$education_grades->aliasField('education_programme_id') => $prog_val['id']])
@@ -195,7 +195,7 @@ class EducationStructureCopyShell_ extends Shell
 
                                                                                     if(!empty($grade_result)){
                                                                                             //grades subject data
-                                                                                            $education_grades_subjects = TableRegistry::get('education_grades_subjects');
+                                                                                            $education_grades_subjects = TableRegistry::getTableLocator()->get('education_grades_subjects');
                                                                                             $educationGradesSubjects = $education_grades_subjects
                                                                                                                         ->find()
                                                                                                                         ->where([$education_grades_subjects->aliasField('education_grade_id') => $grade_val['id']])

@@ -4,7 +4,6 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
 use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\Http\ServerRequest;
@@ -18,7 +17,7 @@ class AddBehavior extends Behavior {
         $events['ControllerAction.Model.add'] = 'add';
         return $events;
     }
-    public function add(Event $mainEvent, ArrayObject $extra) {
+    public function add(EventInterface $mainEvent, ArrayObject $extra) {
         $model = $this->_table;
         //POCOR-7485 use this for adminsitration > System Setup > Acadmic Period add starts
         if($model->getAlias() == 'AcademicPeriods'){
@@ -189,11 +188,11 @@ class AddBehavior extends Behavior {
 
     /**
      * // POCOR-8534
-     * @param Event $mainEvent
+     * @param EventInterface $mainEvent
      * @param Table $model
      * @return mixed
      */
-    private function redirectToDashboard(Event $mainEvent, Table $model)
+    private function redirectToDashboard(EventInterface $mainEvent, Table $model)
     {
         $mainEvent->stopPropagation();
         $model->Alert->warning('general.notAccess');

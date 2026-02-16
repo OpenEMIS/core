@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -73,16 +73,16 @@ class StudentFeesTable extends ControllerActionTable
         $this->addBehavior('Excel', ['pages' => ['index']]);//POCOR-6165
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         //$this->institutionId = $session->read('Institution.Institutions.id');
         $this->institutionId = $this->getQueryString('institution_id');//POCOR-8360
 
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $this->currency = $ConfigItems->value('currency');
-        $this->StudentFeesAbstract = TableRegistry::get('Institution.StudentFeesAbstract');
-        $this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
+        $this->StudentFeesAbstract = TableRegistry::getTableLocator()->get('Institution.StudentFeesAbstract');
+        $this->InstitutionFees = TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
 
         $this->field('institution_id', ['visible' => false]);
         $this->field('student_status_id', ['visible' => false]);
@@ -163,7 +163,7 @@ class StudentFeesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
     {
         if ($action == 'edit' || $action == 'add') {
             $includes['fees'] = [
@@ -180,7 +180,7 @@ class StudentFeesTable extends ControllerActionTable
         return $events;
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'openemis_no';
         $searchableFields[] = 'student_id';
@@ -192,7 +192,7 @@ class StudentFeesTable extends ControllerActionTable
     ** index action methods
     **
     ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder([
             'openemis_no', 'student_id', 'total_fee', 'amount_paid', 'outstanding_fee'
@@ -255,7 +255,7 @@ class StudentFeesTable extends ControllerActionTable
             ];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $conditions = [];
 
@@ -300,7 +300,7 @@ class StudentFeesTable extends ControllerActionTable
     ** view action methods
     **
     ******************************************************************************************************************/
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         if (isset($toolbarButtonsArray['edit'])) {
@@ -314,9 +314,9 @@ class StudentFeesTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $this->InstitutionFees = TableRegistry::get('Institution.InstitutionFees');
+        $this->InstitutionFees = TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
         $this->InstitutionFeeEntity = $this->InstitutionFees
         ->find()
         ->select([
@@ -378,7 +378,7 @@ class StudentFeesTable extends ControllerActionTable
     ** add action methods
     **
     ******************************************************************************************************************/
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $requestData = $this->request->getData();
         if (isset($requestData[$this->getAlias()]['id'])) {
@@ -430,7 +430,7 @@ class StudentFeesTable extends ControllerActionTable
         }
     }
 
-    private function _addActionSetup(Event $event, Entity $entity)
+    private function _addActionSetup(EventInterface $event, Entity $entity)
     {
         $this->fields['student_id']['type'] = 'readonly';
         $this->fields['openemis_no']['type'] = 'readonly';
@@ -522,7 +522,7 @@ class StudentFeesTable extends ControllerActionTable
         ]);
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $model = $this;
         $StudentFees = $this->StudentFeesAbstract;
@@ -597,7 +597,7 @@ class StudentFeesTable extends ControllerActionTable
         return $process;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data['hasError'])) {
             $this->Alert->success('general.edit.success', ['reset' => true]);
@@ -605,7 +605,7 @@ class StudentFeesTable extends ControllerActionTable
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $extra['toolbarButtons']['back']['url'] = $extra['indexButtons']['view']['url'];
         $extra['toolbarButtons']['back']['label'] = '<i class="fa kd-back"></i>';
@@ -626,7 +626,7 @@ class StudentFeesTable extends ControllerActionTable
     ** field specific methods
     **
     ******************************************************************************************************************/
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         return $this->getOpenemisNo($entity);
     }
@@ -636,7 +636,7 @@ class StudentFeesTable extends ControllerActionTable
         return $entity->user->openemis_no;
     }
 
-    public function onGetTotalFee(Event $event, Entity $entity)
+    public function onGetTotalFee(EventInterface $event, Entity $entity)
     {
         return $this->currency.' '.number_format($this->getTotalFee($entity), 2);
     }
@@ -661,7 +661,7 @@ class StudentFeesTable extends ControllerActionTable
         }
     }
 
-    public function onGetAmountPaid(Event $event, Entity $entity)
+    public function onGetAmountPaid(EventInterface $event, Entity $entity)
     {
         return $this->currency.' '.number_format($this->getAmountPaid($entity), 2);
     }
@@ -687,7 +687,7 @@ class StudentFeesTable extends ControllerActionTable
         }
     }
 
-    public function onGetOutstandingFee(Event $event, Entity $entity)
+    public function onGetOutstandingFee(EventInterface $event, Entity $entity)
     {
         return $this->currency.' '.$this->getOutstandingFee($entity);
     }
@@ -701,7 +701,7 @@ class StudentFeesTable extends ControllerActionTable
         }
     }
 
-    public function onGetEducationProgramme(Event $event, Entity $entity)
+    public function onGetEducationProgramme(EventInterface $event, Entity $entity)
     {
         return $entity->education_grade->programme_name;
     }
@@ -753,7 +753,7 @@ class StudentFeesTable extends ControllerActionTable
         return $associations;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -777,7 +777,7 @@ class StudentFeesTable extends ControllerActionTable
         return $newButtons;
     }
     //POCOR-6165 start
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
      {
         //added if acacdemic_period is not received
         if (empty($this->request->getQuery('academic_period_id'))) {
@@ -820,7 +820,7 @@ class StudentFeesTable extends ControllerActionTable
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
 
-                    $InstitutionFees= TableRegistry::get('Institution.InstitutionFees');
+                    $InstitutionFees= TableRegistry::getTableLocator()->get('Institution.InstitutionFees');
                     
                     $InstitutionFeeEntity = $InstitutionFees
                                              ->find()
@@ -887,7 +887,7 @@ class StudentFeesTable extends ControllerActionTable
 
    }
 
-   public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+   public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [
@@ -928,7 +928,7 @@ class StudentFeesTable extends ControllerActionTable
     }
     //POCOR-6165 end
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'total_fee':

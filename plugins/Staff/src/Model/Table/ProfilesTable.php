@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
@@ -49,7 +49,7 @@ class ProfilesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 
-		$this->StaffReportCards = TableRegistry::get('Institution.StaffReportCards');
+		$this->StaffReportCards = TableRegistry::getTableLocator()->get('Institution.StaffReportCards');
         $this->addBehavior('Institution.InstitutionTab');
     }
 
@@ -64,7 +64,7 @@ class ProfilesTable extends ControllerActionTable
         return $events;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period');
         $this->field('profile_name');
@@ -102,12 +102,12 @@ class ProfilesTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 		$institutionId = $this->getInstitutionID();
 
-		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$StaffProfileTemplates = TableRegistry::get('ProfileTemplate.StaffProfileTemplates');
+		$AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		$StaffProfileTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StaffProfileTemplates');
 
 		$where[$this->aliasField('status')] = self::PUBLISHED;
 		$where[$this->aliasField('institution_id')] = $institutionId;
@@ -137,10 +137,10 @@ class ProfilesTable extends ControllerActionTable
 
     }
 
-	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-		$StaffProfileTemplates = TableRegistry::get('ProfileTemplate.StaffProfileTemplates');
+		$AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		$StaffProfileTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StaffProfileTemplates');
 
         $query
             ->select([
@@ -161,7 +161,7 @@ class ProfilesTable extends ControllerActionTable
             ->autoFields(true);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period');
         $this->field('profile_name');
@@ -173,12 +173,12 @@ class ProfilesTable extends ControllerActionTable
 		$this->field('completed_on', ['visible' => false]);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -219,7 +219,7 @@ class ProfilesTable extends ControllerActionTable
         return $buttons;
     }
 
-	public function downloadExcel(Event $event, ArrayObject $extra)
+	public function downloadExcel(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
@@ -249,7 +249,7 @@ class ProfilesTable extends ControllerActionTable
         exit();
     }
 
-	public function downloadPDF(Event $event, ArrayObject $extra)
+	public function downloadPDF(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
@@ -288,7 +288,7 @@ class ProfilesTable extends ControllerActionTable
     * @ticket POCOR-6667
     */
 
-    public function viewPDF(Event $event, ArrayObject $extra)
+    public function viewPDF(EventInterface $event, ArrayObject $extra)
     {
 		$model = $this->StaffReportCards;
         $ids = $this->getQueryString();
@@ -330,7 +330,7 @@ class ProfilesTable extends ControllerActionTable
         return $file;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period') {
             return __('Academic Period');

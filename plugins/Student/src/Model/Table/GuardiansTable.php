@@ -3,7 +3,7 @@
 namespace Student\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -37,6 +37,15 @@ class GuardiansTable extends ControllerActionTable
             $this->addBehavior('Risk.Risks');
         }
         $this->addBehavior('ControllerAction.Image');
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'student_guardian_create',
+                'entity_delete' => 'student_guardian_delete',
+                'entity_update' => 'student_guardian_update',
+                'table_alias' => 'Student.StudentGuardians',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -62,15 +71,15 @@ class GuardiansTable extends ControllerActionTable
         return $events;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
-            TableRegistry::get('Student.GuardianUser')
+            TableRegistry::getTableLocator()->get('Student.GuardianUser')
         ];
         $this->dispatchEventToModels('Model.Guardian.afterSave', [$entity], $this, $listeners);
     }
 
-    public function afterAction(Event $event, $data)
+    public function afterAction(EventInterface $event, $data)
     {
         if ($this->action != 'view') {
             $this->setupTabElements();
@@ -106,14 +115,14 @@ class GuardiansTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function onGetGuardianId(Event $event, Entity $entity)
+    public function onGetGuardianId(EventInterface $event, Entity $entity)
     {
         if ($entity->has('_matchingData')) {
             return $entity->_matchingData['Users']->name;
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
         if ($this->controller->getName() == 'Directories') {
@@ -188,13 +197,13 @@ class GuardiansTable extends ControllerActionTable
 
     }
 
-    public function addDeleteBeforeAction(Event $event, ArrayObject $extra)
+    public function addDeleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $url = $this->url('index', 'PASS');
         $extra['redirect'] = $url;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString('security_user_id');
         $search = $this->getSearchKey();
@@ -208,7 +217,7 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addAfterPatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $errors = $entity->getErrors();
         if (!empty($errors)) {
@@ -217,7 +226,7 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('id', ['value' => Text::uuid()]);
         $this->field('guardian_relation_id', [
@@ -226,23 +235,23 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('photo_content', ['type' => 'image', 'order' => 0]);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
     }
 
-    public function editBeforeQuery(Event $event, Query $query)
+    public function editBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain(['StudentUser', 'Users']);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('guardian_id', [
             'type' => 'readonly',
@@ -255,7 +264,7 @@ class GuardiansTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGuardianId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $params = $this->getQueryString();
@@ -327,7 +336,7 @@ class GuardiansTable extends ControllerActionTable
      *
      * @param string $tableName . POCOR-8231
      * @return \Cake\ORM\Table
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
@@ -376,7 +385,7 @@ class GuardiansTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    public function onUpdateFieldGuardianRelationId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldGuardianRelationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -394,12 +403,12 @@ class GuardiansTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnInitialize(Event $event, Entity $entity)
+    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $this->Session->delete('Student.Guardians.new');
     }
 
-    public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnNew(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $options['validate'] = true;
         $patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
@@ -427,7 +436,7 @@ class GuardiansTable extends ControllerActionTable
         if ($this->request->is(['ajax'])) {
             $term = $this->request->getQuery['term'];
 
-            $UserIdentitiesTable = TableRegistry::get('User.Identities');
+            $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
             $query = $this->Users
                 ->find()
@@ -470,7 +479,7 @@ class GuardiansTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 //        die(print_r($entity, true));

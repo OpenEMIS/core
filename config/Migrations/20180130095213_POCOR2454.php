@@ -291,9 +291,9 @@ class POCOR2454 extends AbstractMigration
     // STUDENT-ADMISSION-1001
     public function setupAdmissionWorkflow()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
 
         $admissionWorkflowId = $WorkflowsTable->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->admissionModelId])
@@ -629,9 +629,9 @@ class POCOR2454 extends AbstractMigration
     // STUDENT-TRANSFER-1001
     public function setupIncomingTransferWorkflow()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
 
         $incomingTransferWorkflowId = $WorkflowsTable->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->incomingTransferModelId])
@@ -1132,9 +1132,9 @@ class POCOR2454 extends AbstractMigration
     // STUDENT-TRANSFER-2001
     public function setupOutgoingTransferWorkflow()
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
-        $WorkflowStepsTable = TableRegistry::get('Workflow.WorkflowSteps');
-        $WorkflowStatusesTable = TableRegistry::get('Workflow.WorkflowStatuses');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+        $WorkflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $WorkflowStatusesTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowStatuses');
 
         $outgoingTransferWorkflowId = $WorkflowsTable->find()
             ->where([$WorkflowsTable->aliasField('workflow_model_id') => $this->outgoingTransferModelId])
@@ -1723,7 +1723,7 @@ class POCOR2454 extends AbstractMigration
 
     public function cascadeDeleteWorkflowModel($workflowModelId)
     {
-        $WorkflowsTable = TableRegistry::get('Workflow.Workflows');
+        $WorkflowsTable = TableRegistry::getTableLocator()->get('Workflow.Workflows');
 
         // delete workflow_models
         $this->execute("DELETE FROM `workflow_models` WHERE `id` = " . $workflowModelId);

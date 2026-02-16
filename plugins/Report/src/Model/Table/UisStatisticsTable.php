@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -74,7 +74,7 @@ class UisStatisticsTable extends AppTable
     }
 
    
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
         $controllerName = $this->controller->getName();
@@ -86,12 +86,12 @@ class UisStatisticsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
-    public function onGetReportName(Event $event, ArrayObject $data)
+    public function onGetReportName(EventInterface $event, ArrayObject $data)
     {
         return __('Overview');
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 
@@ -129,7 +129,7 @@ class UisStatisticsTable extends AppTable
         $this->ControllerAction->field('education_level_id', ['type' => 'hidden']);
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data[$this->getAlias()]['feature'] == 'Report.InstitutionSubjectsClasses') {
             $options['validate'] = 'subjectsClasses';
@@ -158,7 +158,7 @@ class UisStatisticsTable extends AppTable
 
     }
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         if ($entity->has('feature')) {
             $feature = $entity->feature;
@@ -360,7 +360,7 @@ class UisStatisticsTable extends AppTable
         }
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
 
         $requestData = json_decode($settings['process']['params']);
@@ -377,7 +377,7 @@ class UisStatisticsTable extends AppTable
         }
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $requestData = json_decode($settings['process']['params']);
         $feature = $requestData->feature;
@@ -432,7 +432,7 @@ class UisStatisticsTable extends AppTable
         }
     }
 
-    public function onExcelGetShiftType(Event $event, Entity $entity)
+    public function onExcelGetShiftType(EventInterface $event, Entity $entity)
     {
 
         if (isset($this->shiftTypes[$entity->shift_type])) {
@@ -443,12 +443,12 @@ class UisStatisticsTable extends AppTable
     }
 
 
-    public function onExcelGetClassification(Event $event, Entity $entity)
+    public function onExcelGetClassification(EventInterface $event, Entity $entity)
     {
         return __($this->classificationOptions[$entity->classification]);
     }
 
-    public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $option = $this->controller->getFeatureOptions($this->getAlias());
@@ -467,7 +467,7 @@ class UisStatisticsTable extends AppTable
 
   
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -531,7 +531,7 @@ class UisStatisticsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -568,7 +568,7 @@ class UisStatisticsTable extends AppTable
     }
     
    
-    public function onUpdateFieldFromDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFromDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -585,7 +585,7 @@ class UisStatisticsTable extends AppTable
     }
 
 
-    public function onUpdateFieldToDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldToDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
@@ -601,7 +601,7 @@ class UisStatisticsTable extends AppTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

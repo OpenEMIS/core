@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\Behavior;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ConnectionManager;
 use Cake\Log\Log;
 use Cake\I18n\Time;
@@ -52,7 +52,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $events;
     }
 
-    public function unregister(Event $event, ArrayObject $extra) {
+    public function unregister(EventInterface $event, ArrayObject $extra) {
         $model = $this->_table;
         $request = $model->request;
         $extra['config']['form'] = true;
@@ -110,7 +110,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
                 if ($result) {
                     // event to delete all associated records for student
-                    $listeners[] = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+                    $listeners[] = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminationsStudents');
                     $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $examinationId, $examinationCentreId], $this, $listeners);
 
                     $model->Alert->success('general.delete.success', ['reset' => 'override']);
@@ -139,7 +139,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $entity;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons) {
         $model = $this->_table;
         switch ($model->action) {
             case 'unregister':
@@ -149,7 +149,7 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $model = $this->_table;
         // sort attr is required by sortWhitelist
         $model->field('registration_number', [
@@ -172,7 +172,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('transferred');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $this->_table->Session;
@@ -246,13 +246,13 @@ class RegisteredStudentsBehavior extends Behavior {
             ]);
     }
 
-    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'openemis_no';
         $searchableFields[] = 'student_id';
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -283,7 +283,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_type', 'identity_number', 'repeated', 'transferred', 'tooltip_column', 'institution_id']);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $model = $this->_table;
         $query
             ->contain([
@@ -299,8 +299,8 @@ class RegisteredStudentsBehavior extends Behavior {
             ->matching('Examinations');  //POCOR-7512  
        }
    //POCOR-7512 start
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-        $subjectTable=TableRegistry::get('Examination.ExaminationStudentSubjects');
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
+        $subjectTable=TableRegistry::getTableLocator()->get('Examination.ExaminationStudentSubjects');
         $subjectData = $subjectTable->find()
             ->select([
                 'id' => 'ExaminationSubjects.id',
@@ -366,14 +366,14 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true) 
     {
         if ($this->_table->action == 'view') {
             if ($field == 'identity_number') {
                 if ($this->identityType) {
                     return __($this->identityType);
                 } else {
-                    return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+                    return __(TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
                 }
             }
         }
@@ -383,10 +383,10 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetRepeated(Event $event, Entity $entity)
+    public function onGetRepeated(EventInterface $event, Entity $entity)
     {  
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
 
         $statuses = $StudentStatuses->findCodeList();
         $repeatedStatus = $statuses['REPEATED'];
@@ -433,10 +433,10 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetTransferred(Event $event, Entity $entity)
+    public function onGetTransferred(EventInterface $event, Entity $entity)
     {
         //check whether there is transfer record for the current academic year that already approved.
-        $StudentTransfers = TableRegistry::get('Institution.InstitutionStudentTransfers');
+        $StudentTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentTransfers');
 
         if ($entity) {
             if ($entity->extractOriginal(['student_id'])) {
@@ -479,7 +479,7 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetTooltipColumn(Event $event, Entity $entity)
+    public function onGetTooltipColumn(EventInterface $event, Entity $entity)
     {
         if (!empty($this->transferred)) {
             $tooltipMessage = __('Student has been transferred to') . ' (' . $this->transferred[1] . ') ' . __('after registration');
@@ -489,7 +489,7 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetNationality(Event $event, Entity $entity)
+    public function onGetNationality(EventInterface $event, Entity $entity)
     {   
         if ($this->_table->action == 'index') {
             if (!empty($entity)) {
@@ -500,7 +500,7 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetIdentityType(Event $event, Entity $entity)
+    public function onGetIdentityType(EventInterface $event, Entity $entity)
     {   
         if ($this->_table->action == 'index') {
             if (!empty($entity)) {
@@ -511,7 +511,7 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetIdentityNumber(Event $event, Entity $entity)
+    public function onGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         if (!empty($entity)) {
             if ($entity->user->has('identity_number') && !empty($entity->user->identity_number)) {
@@ -520,7 +520,7 @@ class RegisteredStudentsBehavior extends Behavior {
         }
     }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -532,7 +532,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetStudentId(Event $event, Entity $entity)
+    public function onGetStudentId(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('user')) {
@@ -543,7 +543,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetDateOfBirth(Event $event, Entity $entity) {
+    public function onGetDateOfBirth(EventInterface $event, Entity $entity) {
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->date_of_birth;
@@ -552,7 +552,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetGenderId(Event $event, Entity $entity) {
+    public function onGetGenderId(EventInterface $event, Entity $entity) {
         $value = '';
         if ($entity->has('user')) {
             $value = $entity->user->gender->name;
@@ -561,7 +561,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity) {
+    public function onGetInstitutionId(EventInterface $event, Entity $entity) {
         $value = '';
         if ($entity->has('institution')) {
             $value = $entity->institution->code_name;
@@ -572,14 +572,14 @@ class RegisteredStudentsBehavior extends Behavior {
         return $value;
     }
 
-    public function onGetSpecialNeeds(Event $event, Entity $entity) {
+    public function onGetSpecialNeeds(EventInterface $event, Entity $entity) {
         $specialNeeds = $this->extractSpecialNeeds($entity);
 
         return implode(", ", $specialNeeds);
     }
 
-    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action) {
+    // public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -592,8 +592,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request) {
-        public function onUpdateFieldExaminationId(Event $event, array $attr, $action) {
+    // public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -606,8 +606,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request) {
-    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action) {
+    // public function onUpdateFieldOpenemisNo(EventInterface $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldOpenemisNo(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -621,8 +621,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request) {
-        public function onUpdateFieldStudentId(Event $event, array $attr, $action) {
+    // public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister'||$action=="edit") {//POCOR-7512 
             $entity = $attr['entity'];
 
@@ -635,8 +635,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, Request $request) {
-        public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action) {
+    // public function onUpdateFieldDateOfBirth(EventInterface $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldDateOfBirth(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
             $dateOfBirth = $entity->user->date_of_birth;
@@ -650,8 +650,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldGenderId(Event $event, array $attr, $action, Request $request) {
-    public function onUpdateFieldGenderId(Event $event, array $attr, $action) {
+    // public function onUpdateFieldGenderId(EventInterface $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldGenderId(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -664,8 +664,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request) {
-        public function onUpdateFieldInstitutionId(Event $event, array $attr, $action) {
+    // public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -684,8 +684,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, Request $request) {
-    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action) {
+    // public function onUpdateFieldSpecialNeeds(EventInterface $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldSpecialNeeds(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -701,8 +701,8 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    // public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, Request $request) {
-        public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action) {
+    // public function onUpdateFieldRegistrationNumber(EventInterface $event, array $attr, $action, Request $request) {
+        public function onUpdateFieldRegistrationNumber(EventInterface $event, array $attr, $action) {
         if ($action == 'unregister') {
             $entity = $attr['entity'];
 
@@ -724,7 +724,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
         // in institutions, only show examinations for grades available in the institution
         if (in_array($model->getAlias(), ['InstitutionExaminationStudents', 'ExaminationResults']) && !is_null($institutionId)) {
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
             $availableGrades = $InstitutionGrades
                 ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
                 ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
@@ -781,7 +781,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $specialNeeds;
     }
     //POCOR-7512 start
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity,$extra);
     }

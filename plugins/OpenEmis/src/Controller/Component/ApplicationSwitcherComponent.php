@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 
 class ApplicationSwitcherComponent extends Component {
@@ -19,7 +19,7 @@ class ApplicationSwitcherComponent extends Component {
         $this->controller = $this->_registry->getController();
     }
 
-    public function startup(Event $event) {
+    public function startup(EventInterface $event) {
         $controller = $this->controller;
         $displayProducts = $this->onUpdateProductList();
         $controller->set('products', $displayProducts);

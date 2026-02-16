@@ -3,7 +3,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
@@ -39,7 +39,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
             ->allowEmpty('file_content');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         if($this->action == 'download'){
             return;
         }
@@ -63,7 +63,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         {
             $header = $session->read('Auth.User.name');
         } else {
-            $userTable = TableRegistry::get('Security.Users');
+            $userTable = TableRegistry::getTableLocator()->get('Security.Users');
             $staffId = $this->getStaffID();
             $header = $userTable->get($staffId)->name;
         }
@@ -164,7 +164,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         return $alertData->toArray();
     }
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+	public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'status_type_id') {
             return __('Status Type');

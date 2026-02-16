@@ -104,7 +104,8 @@ class ControllerActionComponent extends Component
     public $Session;
     public $debug = false;
 
-    public $components = ['ControllerAction.Alert', 'Paginator'];
+    // Components are defined in the parent class as protected $components = []
+    // We set them in initialize() method instead to avoid type declaration conflicts
 
     private $cakephpReservedPassKeys = [
             'controller',
@@ -120,6 +121,15 @@ class ControllerActionComponent extends Component
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config): void
     {
+        // Set components to avoid redeclaring the property (which causes type conflicts in CakePHP 5)
+        $this->components = ['ControllerAction.Alert', 'Paginator'];
+        
+        // Manually populate _componentMap since we set components after constructor
+        // This is needed for __get() to work properly in CakePHP 5
+        if ($this->components) {
+            $this->_componentMap = $this->_registry->normalizeArray($this->components);
+        }
+        
         if (isset($config['templates'])) {
             $this->templatePath = $config['templates'];
         }
@@ -141,7 +151,7 @@ class ControllerActionComponent extends Component
     }
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
-    public function startup(Event $event)
+    public function startup(EventInterface $event)
     {
         $controller = $this->getController();
 
@@ -383,7 +393,7 @@ class ControllerActionComponent extends Component
             }
             $this->plugin = $this->getPlugin($model);
 
-            $this->model = $this->getController()->loadModel($model);
+            $this->model = $this->getController()->fetchTable($model);
             $this->model->alias = $this->model->getAlias();
 
             $this->getFields($this->model);
@@ -668,6 +678,13 @@ class ControllerActionComponent extends Component
     private function initComponentsForModel()
     {
         $this->debug(__METHOD__);
+        //POCOR-9447 Start
+        if(empty($this->model)) { 
+            $model = $this->getController()->getName();
+            $this->model = $this->getController()->loadModel($model);
+            $this->model->alias = $this->model->getAlias();
+        }
+        //POCOR-9447 End
         $this->model->controller = $this->getController();
         $this->model->request = $this->getController()->getRequest();
         $this->model->Session = $this->getController()->getRequest()->getSession();
@@ -1519,7 +1536,7 @@ class ControllerActionComponent extends Component
             if ($settings['model'] instanceof Table) {
                 $model = $settings['model'];
             } else {
-                $model = TableRegistry::get($settings['model']);
+                $model = TableRegistry::getTableLocator()->get($settings['model']);
             }
         }
         if ($settings->offsetExists('deleteStrategy')) {

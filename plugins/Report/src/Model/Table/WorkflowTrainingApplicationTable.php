@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 
 class WorkflowTrainingApplicationTable extends AppTable  
@@ -35,7 +35,7 @@ class WorkflowTrainingApplicationTable extends AppTable
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query) {
         $query
             ->select([
                 'name' => 'Statuses.name',
@@ -91,7 +91,7 @@ class WorkflowTrainingApplicationTable extends AppTable
             ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields) {
         $newFields = [];
 
         $newFields[] = [

@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
@@ -33,7 +33,7 @@ class WorkflowStudentAdmissionTable extends AppTable
     }
 
     //POCOR-7619
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
+    public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         $openemisNo = '';
         if (!empty($entity['user'])) {
@@ -44,7 +44,7 @@ class WorkflowStudentAdmissionTable extends AppTable
     }
 
     //POCOR-9367 start
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $InstitutionStudentProgrammes = TableRegistry::getTableLocator()->get('Student.InstitutionStudentProgrammes');
 
@@ -74,7 +74,7 @@ class WorkflowStudentAdmissionTable extends AppTable
         });
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $fields[] = [
             'key' => 'registration_number',

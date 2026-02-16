@@ -2,7 +2,7 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
@@ -68,14 +68,14 @@ class StaffClassesTable extends ControllerActionTable
         ]);
         $this->addBehavior('Staff.StaffTab');
     }
-    public function beforeAction(Event $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
     // Academic Period	Institution	Grade	Class	Male Students	Female Students
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['class_number']['visible'] = false;
         $this->fields['institution_shift_id']['visible'] = false;
@@ -135,7 +135,7 @@ class StaffClassesTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // POCOR-5914
         $staffId = $this->getStaffID();
@@ -144,7 +144,7 @@ class StaffClassesTable extends ControllerActionTable
         } else {
             $staffId =$this->Session->read('Auth.User.id');
         }
-        $InstitutionClassesSecondaryStaff = TableRegistry::get('Institution.InstitutionClassesSecondaryStaff');
+        $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
         $classData = $InstitutionClassesSecondaryStaff->find()
                     ->select([$InstitutionClassesSecondaryStaff->aliasField('institution_class_id')])
                     ->where([$InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId])->toArray();
@@ -180,16 +180,16 @@ class StaffClassesTable extends ControllerActionTable
 
 
 
-    public function onGetTotalStudents(Event $event, Entity $entity)
+    public function onGetTotalStudents(EventInterface $event, Entity $entity)
     {
         if (!isset($this->InstitutionClassStudents)) {
-            $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $this->InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         }
         $count = $this->InstitutionClassStudents->getMaleCountByClass($entity->id) + $this->InstitutionClassStudents->getFemaleCountByClass($entity->id);
         return $count.' ';
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view'])) {
@@ -207,7 +207,7 @@ class StaffClassesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $options = ['type' => 'staff'];
         $tabElements = $this->getCareerTabElements($options);
@@ -220,17 +220,17 @@ class StaffClassesTable extends ControllerActionTable
         $this->controller->set('selectedAction', $selectedAction);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         $session = $this->request->getSession();
         $staffId = $this->getStaffID();
         $institutionId = $this->getInstitutionID();
-        $institutionName = TableRegistry::get('Institution.Institutions')->get($institutionId)->name;
+        $institutionName = TableRegistry::getTableLocator()->get('Institution.Institutions')->get($institutionId)->name;
 
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $academicPeriodOptions = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getYearList();
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $academicPeriodOptions = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getYearList();
         $selectedAcademicPeriod = '';
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriod, [
             'message' => '{{label}} - ' . $this->getMessage('StaffClasses.notActiveHomeroomTeacher'),
@@ -292,107 +292,19 @@ class StaffClassesTable extends ControllerActionTable
         return $classOptions;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $classOptions = $this->getClassOptions();
         // this 'save' does not redirect, need to re-extract the $classOptions after saving is done
         $this->fields['classes']['data']['classes'] = $classOptions;
         $extra['classOptions'] = $classOptions;
 
-        //Webhook Feature class update -- start POCOR-6995
+        // POCOR-9403 webhook call moved to institutionclass
 
-        $classIds = [];
-        foreach($entity['Classes'] as $keys=>$val){
-           if($val['class_id'] != 0){
-                $classIds[] = $val['class_id'];
-           }
-        }
-        $bodyData = $this->find('all',
-                    [ 'contain' => [
-                        'Institutions',
-                        'EducationGrades',
-                        'Staff',
-                        'AcademicPeriods',
-                        'InstitutionShifts',
-                        'InstitutionShifts.ShiftOptions',
-                        'ClassesSecondaryStaff.SecondaryStaff',
-                        'Students',
-                        'Students.Genders'
-                    ],
-                    ])->where([
-                        $this->aliasField('id IN') => $classIds
-                    ]);
-        $grades = $gradeId = $secondaryTeachers = $students = [];
-        $dataVal = [];
-        if (!empty($bodyData)) {
-            foreach ($bodyData as $key => $value) {
-                $dataVal[$key]['institutions_id'] = $value->institution->id;
-                $dataVal[$key]['institutions_name'] = $value->institution->name;
-                $dataVal[$key]['institutions_code'] = $value->institution->code;
-                $dataVal[$key]['institutions_classes_name'] = $value->name;
-                $dataVal[$key]['institutions_classes_id'] = $value->id;
-                $dataVal[$key]['shift_options_name'] = $value->institution_shift->shift_option->name;
-                $dataVal[$key]['academic_periods_name'] = $value->academic_period->name;
-                $dataVal[$key]['institutions_classes_capacity'] = $value->capacity;
-                $dataVal[$key]['institution_classes_staff_openemis_no'] = $value->staff->openemis_no; // for home room teacher
-
-                if(!empty($value->education_grades)) {
-                    foreach ($value->education_grades as $i => $gradeOptions) {
-                        $dataVal[$key]['Grades'][$i]['education_grades_name'] = $gradeOptions->name;
-                        $dataVal[$key]['Grades'][$i]['education_grades_id'] = $gradeOptions->id;
-                    }
-                }else{
-                    $dataVal[$key]['Grades']['education_grades_name'] = NULL;
-                    $dataVal[$key]['Grades']['education_grades_name'] = NULL;
-                }
-
-                if(!empty($value->classes_secondary_staff)) {
-                    foreach ($value->classes_secondary_staff as $j => $secondaryStaffs) {
-                       $dataVal[$key]['secondaryTeachers'][$j]['institution_classes_secondary_staff_openemis_no'] = $secondaryStaffs->secondary_staff->openemis_no;
-                    }
-
-                }else{
-                   $dataVal[$key]['secondaryTeachers']['institution_classes_secondary_staff_openemis_no'] = NULL;
-                }
-                $maleStudents = 0;
-                $femaleStudents = 0;
-                if(!empty($value->students)) {
-                    foreach ($value->students as $k => $studentsData) {
-                        $dataVal[$key]['students'][$k]['institution_class_students_openemis_no'] = $studentsData->openemis_no;
-                        if($studentsData->gender->code == 'M') {
-                            $maleStudents = $maleStudents + 1;
-                            $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = $maleStudents;
-                        }
-                        if($studentsData->gender->code == 'F') {
-                            $femaleStudents = $femaleStudents + 1;
-                            $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = $femaleStudents;
-                        }
-
-                    }
-                    $totalStudent = $maleStudents + $femaleStudents ;
-                    $dataVal[$key]['total_students'] = $totalStudent;
-                }else{
-                    $dataVal[$key]['total_students'] = NULL;
-                    $dataVal[$key]['students']['institution_class_students_openemis_no'] = NULL;
-                    $dataVal[$key]['maleStudents']['institution_classes_total_male_students'] = NULL;
-                    $dataVal[$key]['femaleStudents']['institution_classes_total_female_studentss'] = NULL;
-                }
-
-
-            }
-        }
-
-        $body = array();
-        $body = [
-            'institutions_classes' => !empty($dataVal) ? $dataVal : NULL,
-        ];
-        $Webhooks = TableRegistry::get('Webhook.Webhooks');
-        $Webhooks->triggerShell('class_update', ['username' => ''], $body);
-        // end POCOR-6995
     }
 
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $extra['redirect'] = false;
         $classOptions = (isset($extra['classOptions']))? $extra['classOptions']: [];
@@ -442,7 +354,7 @@ class StaffClassesTable extends ControllerActionTable
         return $process;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'total_male_students') {
             return  __('Male Students');
@@ -459,7 +371,7 @@ class StaffClassesTable extends ControllerActionTable
         }
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         if ($this->action == 'add') {
             if (array_key_exists('classes', $this->fields) && empty($this->fields['classes']['data']['classes'])) {

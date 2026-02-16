@@ -8,7 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Datasource\ResultSetInterface;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use Cake\Http\ServerRequest;
@@ -43,7 +43,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportTrainingSessionTraineeResults']);//5695
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
          
@@ -74,7 +74,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         }
     }
 
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 	{   
         $process = function($model, $entity) use ($data) {
         	$sessionId = $data[$model->getAlias()]['training_session_id'];
@@ -168,7 +168,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         return $process;
 	}
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         // To manually clear all records in training_session_trainee_results when delete
         $TraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
@@ -178,19 +178,19 @@ class TrainingSessionResultsTable extends ControllerActionTable
         // End
     }
 
-	public function onGetTrainingCourse(Event $event, Entity $entity)
+	public function onGetTrainingCourse(EventInterface $event, Entity $entity)
 	{
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->course->name;
 	}
 
-	public function onGetTrainingProvider(Event $event, Entity $entity)
+	public function onGetTrainingProvider(EventInterface $event, Entity $entity)
 	{
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->_matchingData['TrainingProviders']->name;
 	}
 
-	public function onGetResultType(Event $event, Entity $entity)
+	public function onGetResultType(EventInterface $event, Entity $entity)
 	{
 		$html = '';
 
@@ -235,7 +235,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		return $html;
 	}
 
-	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
+	public function onGetTraineeTableElement(EventInterface $event, $action, $entity, $attr, $options=[])
 	{ 
         $sessionId = $entity->training_session_id;
 		//$selectedResultType = $this->request->query('result_type'); //5695 starts
@@ -464,7 +464,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		return $event->getSubject()->renderElement('Training.Results/' . $key, ['attr' => $attr]);
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra)
+	public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->openStatusIds = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'OPEN');
         $this->approvedStatusIds = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'APPROVED');
@@ -490,7 +490,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->buildRecords();
 
@@ -502,17 +502,17 @@ class TrainingSessionResultsTable extends ControllerActionTable
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'edit') {
             $statusOptions = $this->getWorkflowStepList();
@@ -527,7 +527,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingCourse(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldTrainingCourse(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'view') {
             // refer onGetTrainingCourse
@@ -545,7 +545,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingProvider(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldTrainingProvider(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'view') {
             // refer onGetTrainingProvider
@@ -563,7 +563,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldTrainingSessionId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldTrainingSessionId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
@@ -580,7 +580,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldResultType(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldResultType(EventInterface $event, array $attr, $action, $request)
     {
         $resultTypeOptions = [];
 
@@ -608,7 +608,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function editOnChangeResultType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editOnChangeResultType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->getQuery['result_type']);
@@ -771,7 +771,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     }
 
     //POCOR-6925
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Administration > Training > Results';
@@ -865,7 +865,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
     private static function getIdByName($tableName, $name)
     {
         $tableLocator = new TableLocator();
-        //$table = TableRegistry::get($tableName);
+        //$table = TableRegistry::getTableLocator()->get($tableName);
         $table =  $tableLocator->get($tableName);
         $entity = $table->find()->where([$table->aliasField('name') => $name])->first();
         if ($entity) {
@@ -875,7 +875,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'status_id' || $field == 'status') {
             return __('Status');

@@ -5,7 +5,7 @@ namespace Institution\Model\Table;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use ArrayObject;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
@@ -59,7 +59,7 @@ class StudentAttendancesTable extends ControllerActionTable
             'pages' => ['index']
         ]);
 
-        $AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
+        $AbsenceTypesTable = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
         $this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
         $this->absenceCodeList = $AbsenceTypesTable->getCodeList();
 
@@ -82,9 +82,9 @@ class StudentAttendancesTable extends ControllerActionTable
         $subjectId = $options['subject_id'];
 
 
-        $InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $this->Users = TableRegistry::get('Security.Users');
+        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+        $this->Users = TableRegistry::getTableLocator()->get('Security.Users');
         /* POCOR-5912 condition for week filter starts */
         $overlapDateCondition['OR'] = [];
         $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekEndDay];
@@ -103,7 +103,7 @@ class StudentAttendancesTable extends ControllerActionTable
         }
         /* POCOR-5919 condition for day filter ends */
          /* POCOR-7956 fetch status starts */
-         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
          $statuses = $StudentStatuses->findCodeList();
          /* POCOR-7956 fetch status starts */
         if ($day == -1) {
@@ -211,8 +211,8 @@ class StudentAttendancesTable extends ControllerActionTable
             // single day
             $query
                 ->formatResults(function (ResultSetInterface $results) use ($findDay, $attendancePeriodId, $subjectId, $educationGradeId) {
-                    $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-                    $InstitutionStudents = TableRegistry::get('Institution.Students');
+                    $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
+                    $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
                     return $results->map(function ($row) use ($StudentAbsencesPeriodDetails, $findDay, $attendancePeriodId, $subjectId, $educationGradeId, $InstitutionStudents) {
                         $academicPeriodId = $row->academic_period_id;
                         $institutionClassId = $row->institution_class_id;
@@ -263,7 +263,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
                             if (isset($this->request) && ('excel' === $this->request->pass[0])) {
 
-                                $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
+                                $StudentAbsenceReasons = TableRegistry::getTableLocator()->get('Institution.StudentAbsenceReasons');
                                 $studentAbsenceReason = $StudentAbsenceReasons
                                     ->find()
                                     ->select([
@@ -276,7 +276,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                     $absenceReason['name'] = $studentAbsenceReason->name;
                                 }
 
-                                $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
+                                $AbsenceTypes = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
                                 $absenceType = $AbsenceTypes
                                     ->find()
                                     ->select([
@@ -291,7 +291,7 @@ class StudentAttendancesTable extends ControllerActionTable
                                 }
                             }
                         } else {
-                            $StudentAttendanceMarkedRecords = TableRegistry::get('Institution.StudentAttendanceMarkedRecords');
+                            $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Institution.StudentAttendanceMarkedRecords');
                             $isMarkedRecords = $StudentAttendanceMarkedRecords
                                 ->find()
                                 ->select([
@@ -338,7 +338,7 @@ class StudentAttendancesTable extends ControllerActionTable
                         }
 
                         $row->institution_student_absences = $data;
-                        $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
                         $getRecord = $StudentAttendanceMarkedRecords->find('all')
                             ->where([
                                 $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
@@ -385,8 +385,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 );
         } else {
             // all day
-            $StudentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
-            $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $StudentAttendanceMarkTypesTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
+            $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodList = $StudentAttendanceMarkTypesTable
                 ->find('PeriodByClass', [
                     'institution_class_id' => $institutionClassId,
@@ -423,8 +423,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 $studentList = $studentListResult->toArray();
 //                $this->log('$studentList','debug');
 //                $this->log($studentList,'debug');
-                $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
-                $StudentAttendanceMarkedRecords = TableRegistry::get('Attendance.StudentAttendanceMarkedRecords');
+                $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
+                $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
                 if (empty($studentList)) { //POCOR-8022
                     $studentList = [0];
                 }
@@ -560,7 +560,7 @@ class StudentAttendancesTable extends ControllerActionTable
         //POCOR-6547[START]
         if ($day != -1) {
             $studentId = [];
-            $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+            $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
             //POCOR-7183 starts
             if (!empty($findDay[0]) && !empty($findDay[1]) && !empty($day['date'])) {
                 $DayCondititon = [
@@ -591,8 +591,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 ])->toArray();
         } else {
             $studentId = [];
-            // $studentWithdraw = TableRegistry::get('institution_student_withdraw');
-            $studentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
+            // $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
+            $studentWithdraw = TableRegistry::getTableLocator()->get('Institution.StudentWithdraw');
             $studentWithdrawData = $studentWithdraw->find()
                 ->select([
                     'student_id' =>$InstitutionStudents->aliasField('student_id'),
@@ -620,7 +620,7 @@ class StudentAttendancesTable extends ControllerActionTable
             $WithDrawstudentId = [];
             $CurrentStudentId = [];
             $InstitutionStudentsCurrentData = []; //POCOR-8022
-            $InstitutionStudents = TableRegistry::get('InstitutionStudents');//POCOR-7902
+            $InstitutionStudents = TableRegistry::getTableLocator()->get('InstitutionStudents');//POCOR-7902
             foreach ($studentWithdrawData as $studenetVal) {
                 $WithDrawstudentId[] = $studenetVal['student_id'];
             }
@@ -782,10 +782,10 @@ class StudentAttendancesTable extends ControllerActionTable
         return $query;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        $Users = TableRegistry::get('Security.Users');
-        $StudentAbsencesPeriodDetails = TableRegistry::get('Institution.StudentAbsencesPeriodDetails');
+        $Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $StudentAbsencesPeriodDetails = TableRegistry::getTableLocator()->get('Institution.StudentAbsencesPeriodDetails');
         $institution_id = !empty($this->request->query['institution_id']) ? $this->request->query['institution_id'] : 0;
 
         $query
@@ -798,7 +798,7 @@ class StudentAttendancesTable extends ControllerActionTable
             ->where([$this->aliasField('institution_id') => $institution_id]);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         ini_set("memory_limit", "-1");
 
@@ -835,7 +835,7 @@ class StudentAttendancesTable extends ControllerActionTable
     }
 
     // To select another one more field from the containable data
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         // echo "<pre>"; print_r($settings); die();
         $weekStartDay = $this->request->query['week_start_day'];
@@ -858,11 +858,11 @@ class StudentAttendancesTable extends ControllerActionTable
         if ($day_id == -1) {
 
 
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
             $firstDayOfWeek = $ConfigItems->value('first_day_of_week');
             $daysPerWeek = $ConfigItems->value('days_per_week');
 
-            $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+            $optionTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
             $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
                 ->where([
                     'ConfigItemOptions.option_type' => 'first_day_of_week',
@@ -870,8 +870,8 @@ class StudentAttendancesTable extends ControllerActionTable
                 ])
                 ->toArray();
             //POCOR-7929 start
-            $StudentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
-            $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $StudentAttendanceMarkTypesTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
+            $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodList = $StudentAttendanceMarkTypesTable
                 ->find('PeriodByClass', [
                     'institution_class_id' => $this->request->query['institution_class_id'],
@@ -963,7 +963,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
         $sheet = $settings['sheet'];
 
-        $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         // Set data into a temporary variable
         $options['education_grade_id'] = $sheet['educationGradeId'];
@@ -980,7 +980,7 @@ class StudentAttendancesTable extends ControllerActionTable
         $this->_absenceData = $this->findClassStudentsWithAbsence($sheet['query'], $options);
     }
 
-    public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderAttendance(EventInterface $event, Entity $entity, array $attr)
     {
         // Get the data from the temporary variable
         $absenceData = $this->_absenceData;
@@ -1017,7 +1017,7 @@ class StudentAttendancesTable extends ControllerActionTable
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         //echo "<pre>";print_r($data);die;
     }
@@ -1077,10 +1077,10 @@ class StudentAttendancesTable extends ControllerActionTable
                                              $educationGradeId,
                                              $institutionId)
     {
-        $InstitutionStudents = TableRegistry::get('institution_students');
-        $Users = TableRegistry::get('security_users');
-        $Classes = TableRegistry::get('institution_classes');
-        $Statuses = TableRegistry::get('student_statuses');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('institution_students');
+        $Users = TableRegistry::getTableLocator()->get('security_users');
+        $Classes = TableRegistry::getTableLocator()->get('institution_classes');
+        $Statuses = TableRegistry::getTableLocator()->get('student_statuses');
         $query
             ->select([
                 $this->aliasField('academic_period_id'),
@@ -1147,7 +1147,7 @@ class StudentAttendancesTable extends ControllerActionTable
      */
     private function getAttendanceQueryWithSubjectId(Query $query, $subjectId)
     {
-        $InstitutionSubjectStudents = TableRegistry::get('institution_subject_students');
+        $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('institution_subject_students');
         $query
             ->innerJoin(
                 [$InstitutionSubjectStudents->alias() => $InstitutionSubjectStudents->table()],
@@ -1178,7 +1178,7 @@ class StudentAttendancesTable extends ControllerActionTable
         if ($archive) {
             return $query;
         }
-        $studentWithdraw = TableRegistry::get('institution_student_withdraw');
+        $studentWithdraw = TableRegistry::getTableLocator()->get('institution_student_withdraw');
         if ($dayly) {
             $DayCondititon = [$studentWithdraw->aliasField('effective_date <= ') => $day];
         }
@@ -1189,7 +1189,7 @@ class StudentAttendancesTable extends ControllerActionTable
             ];
         }
         $withdrawStudentIds = [];
-        $InstitutionStudents = TableRegistry::get('institution_students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('institution_students');
         $studentWithdrawData = $studentWithdraw->find()
             ->select([
                 'student_id' => 'institution_student_withdraw.student_id',
@@ -1229,7 +1229,7 @@ class StudentAttendancesTable extends ControllerActionTable
     private function getAttendanceDailyQueryWithDayCondition(Query $query, $day)
     {
 //        $this->log("getAttendanceDailyQueryWithDayCondition $day", 'debug');
-        $InstitutionStudents = TableRegistry::get('institution_students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('institution_students');
         $dayCondition = [$InstitutionStudents->aliasField('start_date <= ') => $day,
             'OR' => [
                 $InstitutionStudents->aliasField('end_date is ') => null,
@@ -1253,12 +1253,12 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         $table_name = 'institution_student_absence_details';
         if (!$archive) {
-            $Details = TableRegistry::get($table_name);
+            $Details = TableRegistry::getTableLocator()->get($table_name);
         }
         if ($archive) {
             $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
             $table_name = $archiveTableAndConnection[0];
-            $Details = TableRegistry::get($table_name);
+            $Details = TableRegistry::getTableLocator()->get($table_name);
         }
 
 //        $this->log($subjectId, 'debug');
@@ -1299,14 +1299,14 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         $table_name = 'institution_student_absence_details';
         if (!$archive) {
-            $Details = TableRegistry::get($table_name);
+            $Details = TableRegistry::getTableLocator()->get($table_name);
         }
         if ($archive) {
             $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
             $table_name = $archiveTableAndConnection[0];
-            $Details = TableRegistry::get($table_name);
+            $Details = TableRegistry::getTableLocator()->get($table_name);
         }
-        $Types = TableRegistry::get('absence_types');
+        $Types = TableRegistry::getTableLocator()->get('absence_types');
 
         $options = [
             $Types->aliasField('id = ')
@@ -1333,12 +1333,12 @@ class StudentAttendancesTable extends ControllerActionTable
 //        $this->log($subjectId, 'debug');
         $table_name = 'student_attendance_marked_records';
         if (!$archive) {
-            $Records = TableRegistry::get($table_name);
+            $Records = TableRegistry::getTableLocator()->get($table_name);
         }
         if ($archive) {
             $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
             $table_name = $archiveTableAndConnection[0];
-            $Records = TableRegistry::get($table_name);
+            $Records = TableRegistry::getTableLocator()->get($table_name);
         }
 
         $options = [
@@ -1369,14 +1369,14 @@ class StudentAttendancesTable extends ControllerActionTable
 //        $this->log($subjectId, 'debug');
         $table_name = 'institution_student_absence_details';
         if (!$archive) {
-            $Details = TableRegistry::get($table_name);
+            $Details = TableRegistry::getTableLocator()->get($table_name);
         }
         if ($archive) {
             $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
             $table_name = $archiveTableAndConnection[0];
-            $Details = TableRegistry::get($table_name);
+            $Details = TableRegistry::getTableLocator()->get($table_name);
         }
-        $Reasons = TableRegistry::get('student_absence_reasons');
+        $Reasons = TableRegistry::getTableLocator()->get('student_absence_reasons');
         $options = [
             $Details->aliasField('student_absence_reason_id = ') . $Reasons->aliasField('id'),
         ];
@@ -1398,27 +1398,27 @@ class StudentAttendancesTable extends ControllerActionTable
 
     private function getAttendanceDailySelectFields(Query $query, $day, $archive = false)
     {
-        $Statuses = TableRegistry::get('student_statuses');
-        $Users = TableRegistry::get('security_users');
-        $Types = TableRegistry::get('absence_types');
-        $Classes = TableRegistry::get('institution_classes');
-        $Reasons = TableRegistry::get('student_absence_reasons');
+        $Statuses = TableRegistry::getTableLocator()->get('student_statuses');
+        $Users = TableRegistry::getTableLocator()->get('security_users');
+        $Types = TableRegistry::getTableLocator()->get('absence_types');
+        $Classes = TableRegistry::getTableLocator()->get('institution_classes');
+        $Reasons = TableRegistry::getTableLocator()->get('student_absence_reasons');
         if (!$archive) {
-            $Details = TableRegistry::get('institution_student_absence_details');
-            $Records = TableRegistry::get('student_attendance_marked_records');
+            $Details = TableRegistry::getTableLocator()->get('institution_student_absence_details');
+            $Records = TableRegistry::getTableLocator()->get('student_attendance_marked_records');
         }
         if ($archive) {
             $table_name = 'institution_student_absence_details';
             if ($archive) {
                 $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
                 $table_name = $archiveTableAndConnection[0];
-                $Details = TableRegistry::get($table_name);
+                $Details = TableRegistry::getTableLocator()->get($table_name);
             }
             $table_name = 'student_attendance_marked_records';
             if ($archive) {
                 $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
                 $table_name = $archiveTableAndConnection[0];
-                $Records = TableRegistry::get($table_name);
+                $Records = TableRegistry::getTableLocator()->get($table_name);
             }
         }
         $first_name = $Users->aliasField('first_name');
@@ -1460,7 +1460,7 @@ class StudentAttendancesTable extends ControllerActionTable
      */
     private function getOverlapWeekCondition(Query $query, $weekStartDay, $weekEndDay)
     {
-        $InstitutionStudents = TableRegistry::get('institution_students');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('institution_students');
         $overlapDateCondition = [];
         $overlapDateCondition['OR'] = [];
         $overlapDateCondition['OR'][] = [$InstitutionStudents->aliasField('start_date') . ' >= ' => $weekStartDay, $InstitutionStudents->aliasField('start_date') . ' <= ' => $weekEndDay];
@@ -1564,8 +1564,8 @@ class StudentAttendancesTable extends ControllerActionTable
 
     private function getAttendanceWeeklySelectFields(Query $query)
     {
-        $Users = TableRegistry::get('security_users');
-        $Classes = TableRegistry::get('institution_classes');
+        $Users = TableRegistry::getTableLocator()->get('security_users');
+        $Classes = TableRegistry::getTableLocator()->get('institution_classes');
         $first_name = $Users->aliasField('first_name');
         $last_name = $Users->aliasField('last_name');
 
@@ -1587,7 +1587,7 @@ class StudentAttendancesTable extends ControllerActionTable
      */
     private function getWeekDaysList($academicPeriodId, $weekId, $institutionId)
     {
-        $AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $dayList = $AcademicPeriodsTable
             ->find('DaysForPeriodWeek', [
@@ -1610,7 +1610,7 @@ class StudentAttendancesTable extends ControllerActionTable
      */
     private function getPeriodList($institutionClassId, $academicPeriodId, $day, $educationGradeId, $weekStartDay, $weekEndDay)
     {
-        $StudentAttendanceMarkTypesTable = TableRegistry::get('Attendance.StudentAttendanceMarkTypes');
+        $StudentAttendanceMarkTypesTable = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkTypes');
 
         $periodList = $StudentAttendanceMarkTypesTable
             ->find('PeriodByClass', [
@@ -1647,12 +1647,12 @@ class StudentAttendancesTable extends ControllerActionTable
     {
         $table_name = 'student_attendance_marked_records';
         if (!$archive) {
-            $Records = TableRegistry::get($table_name);
+            $Records = TableRegistry::getTableLocator()->get($table_name);
         }
         if ($archive) {
             $archiveTableAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
             $table_name = $archiveTableAndConnection[0];
-            $Records = TableRegistry::get($table_name);
+            $Records = TableRegistry::getTableLocator()->get($table_name);
         }
         $where = [
             $Records->aliasField('institution_id') => $institutionId,

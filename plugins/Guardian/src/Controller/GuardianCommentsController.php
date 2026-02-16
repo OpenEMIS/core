@@ -1,7 +1,7 @@
 <?php
 namespace Guardian\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 
 use Profile\Controller\CommentsController as BaseController;

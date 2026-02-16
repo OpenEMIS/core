@@ -4,7 +4,7 @@ namespace Rubric\Model\Table;
 use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 class RubricCriteriaOptionsTable extends AppTable {
@@ -24,7 +24,7 @@ class RubricCriteriaOptionsTable extends AppTable {
 		return $validator;
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
 		//Unset rubric_template_option to avoid it is being saved unintentionally.
 		unset($entity->rubric_template_option);
 	}

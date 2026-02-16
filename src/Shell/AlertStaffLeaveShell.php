@@ -15,7 +15,7 @@ class AlertStaffLeaveShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('Institution.StaffLeave');
+        $this->StaffLeave = $this->fetchTable('Institution.StaffLeave');
     }
 
     public function main()

@@ -20,8 +20,8 @@ class POCOR5915 extends AbstractMigration
         $this->execute('CREATE TABLE `zz_5915_backup_of_drop_table_staff_salary_deductions` LIKE `staff_salary_deductions`');
         $this->execute('INSERT INTO `zz_5915_backup_of_drop_table_staff_salary_deductions` SELECT * FROM `staff_salary_deductions`');
 
-        $StaffSalaryAdditions     = TableRegistry::get('Staff.SalaryAdditions');
-        $StaffSalaryDeductions    = TableRegistry::get('Staff.SalaryDeductions');
+        $StaffSalaryAdditions     = TableRegistry::getTableLocator()->get('Staff.SalaryAdditions');
+        $StaffSalaryDeductions    = TableRegistry::getTableLocator()->get('Staff.SalaryDeductions');
 
         $data = $StaffSalaryAdditions->find()
                                     ->select([

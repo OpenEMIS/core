@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 
@@ -48,7 +48,7 @@ class WorkflowStaffLicenseTable extends AppTable
     }
 
     //POCOR-7637
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
         $query->contain(['Users', 'Assignees', 'LicenseTypes', 'WorkflowSteps']);
         $query->select(['id', 'license_number', 'issue_date', 'expiry_date', 'issuer', 'comments']);
@@ -86,7 +86,7 @@ class WorkflowStaffLicenseTable extends AppTable
      */
     private function addInstitutionFields(Query $query)
     {
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $query = $query->select([
             'institution_name' => $InstitutionsTable->aliasField('name'),
             'institution_code' => $InstitutionsTable->aliasField('code')
@@ -141,7 +141,7 @@ class WorkflowStaffLicenseTable extends AppTable
      */
     private function addInstitutionStaffToQuery(Query $query)
     {
-        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $query
             ->innerJoin([$InstitutionStaffTable->alias() => $InstitutionStaffTable->table()], [
                 $InstitutionStaffTable->aliasField('staff_id = ') . $this->aliasField('security_user_id')
@@ -155,8 +155,8 @@ class WorkflowStaffLicenseTable extends AppTable
      */
     private function addInstitutionToQuery(Query $query)
     {
-        $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $query
             ->innerJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
                 $InstitutionStaffTable->aliasField('institution_id = ') . $InstitutionsTable->aliasField('id')]);
@@ -176,7 +176,7 @@ class WorkflowStaffLicenseTable extends AppTable
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         //redeclare fields for sorting purpose.
         $extraField[] = [

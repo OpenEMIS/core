@@ -25,10 +25,10 @@ class POCOR6971 extends AbstractMigration
         $this->execute('SET SESSION FOREIGN_KEY_CHECKS=1');
 
         //updating shift_id column value
-        $shift = TableRegistry::get('institution_staff_shifts');
-        $staff = TableRegistry::get('institution_staff');
-        $position = TableRegistry::get('institution_positions');
-        $shiftOption = TableRegistry::get('institution_shifts');
+        $shift = TableRegistry::getTableLocator()->get('institution_staff_shifts');
+        $staff = TableRegistry::getTableLocator()->get('institution_staff');
+        $position = TableRegistry::getTableLocator()->get('institution_positions');
+        $shiftOption = TableRegistry::getTableLocator()->get('institution_shifts');
         $staffIds = $shift->find()->select(['staff_id'])->group([$shift->aliasField('staff_id')])->toArray();  
         foreach($staffIds as $staffId){
            $staffidss =  $staffId['staff_id'];

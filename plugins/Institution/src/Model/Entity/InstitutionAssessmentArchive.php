@@ -17,7 +17,7 @@ class InstitutionAssessmentArchive extends Entity
         } else {
             $grade = $this->education_grade_id;
             $class = $this->institution_class_id;
-            $table = TableRegistry::get('Education.EducationGradesSubjects');
+            $table = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
             $value = $table
                        ->find()
                         ->where([$table->aliasField('education_grade_id') => $grade])

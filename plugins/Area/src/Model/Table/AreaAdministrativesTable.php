@@ -7,7 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 
 use App\Model\Table\AppTable;
@@ -52,7 +52,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         return $events;
     }
 
-    public function isAuthorized(Event $event, $scope, $action, $extra)
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
     {
         if ($action == 'index' || $action == 'view') {
             // check for the user permission to view here
@@ -82,7 +82,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             ]);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         if($this->action != 'index'){
             $this->field('area_administrative_level_id');
@@ -115,12 +115,12 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->recover();
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setfieldOrder($this->fieldsOrder);
     }
 
-    public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
+    public function onGetConvertOptions(EventInterface $event, Entity $entity, Query $query)
     {
         $level = $entity->area_administrative_level_id;
         $query->where([
@@ -294,7 +294,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Add breadcrumb
         $toolbarElements = [
@@ -344,18 +344,18 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->field('rght',['visible'=> false]);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->getData()[$this->getAlias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
         $this->field('is_main_country');
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('is_main_country');
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         if ($parentId != null) {
@@ -365,7 +365,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         //Setup fields
         $this->fieldsOrder = ['area_administrative_level_id', 'code', 'name'];
@@ -399,7 +399,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetName(EventInterface $event, Entity $entity)
     {
         return $event->getSubject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->getPlugin(),
@@ -410,14 +410,14 @@ class AreaAdministrativesTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetIsMainCountry(Event $event, Entity $entity)
+    public function onGetIsMainCountry(EventInterface $event, Entity $entity)
     {
         ($entity->is_main_country) ? $return = __('Yes') : $return = __('No');
 
         return $return;
     }
 
-    public function onUpdateFieldIsMainCountry(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldIsMainCountry(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action=='add') {
             $attr['visible'] = true;
@@ -444,7 +444,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldAreaAdministrativeLevelId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAreaAdministrativeLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         $results = $this
@@ -509,7 +509,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldName(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldName(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $parentId = !is_null($this->request->getQuery('parent')) ? $this->request->getQuery('parent') : null;
         $results = $this
@@ -524,7 +524,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             $parentId = $data->parent_id;
 
             if ($parentId == null) {    //World
-                $Countries = TableRegistry::get('FieldOption.Countries');
+                $Countries = TableRegistry::getTableLocator()->get('FieldOption.Countries');
                 $countryOptions = $Countries
                     ->find('list', ['keyField' => 'name', 'valueField' => 'name'])
                     ->find('visible')
@@ -554,7 +554,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         return $crumbs;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->getDirty('is_main_country')) {
             if ($entity->is_main_country == 1) { //if set as main country
@@ -571,23 +571,23 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $listeners = [
-            TableRegistry::get('Institution.Institutions'),
-            TableRegistry::get('Directory.Directories')
+            TableRegistry::getTableLocator()->get('Institution.Institutions'),
+            TableRegistry::getTableLocator()->get('Directory.Directories')
         ];
 
         $this->dispatchEventToModels('Model.AreaAdministrative.afterDelete', [$entity], $this, $listeners);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

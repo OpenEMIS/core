@@ -22,7 +22,7 @@ class InstitutionPosition extends Entity
 		if ($this->has('staff_position_title')) {
 			$name .= $this->staff_position_title->name;
 		} else {
-			$table = TableRegistry::get('Institution.StaffPositionTitles');
+			$table = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
 			$id = $this->staff_position_title_id;
 			try {
 				$name .= $table->get($id)->name;

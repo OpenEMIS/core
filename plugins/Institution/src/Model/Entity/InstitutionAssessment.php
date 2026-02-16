@@ -17,8 +17,8 @@ class InstitutionAssessment extends Entity
             $grade = $this->education_grade_id;
             $class = $this->institution_class_id;
             // POCOR-9006 start
-            $icst = TableRegistry::get('Institution.InstitutionClassSubjects');
-            $ist = TableRegistry::get('Institution.InstitutionSubjects');
+            $icst = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+            $ist = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
             $value = $icst
                        ->find()
                         ->select([$icst->aliasField('id'),

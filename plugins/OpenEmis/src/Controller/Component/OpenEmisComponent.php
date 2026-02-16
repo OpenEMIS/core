@@ -2,7 +2,7 @@
 namespace OpenEmis\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
@@ -57,7 +57,7 @@ class OpenEmisComponent extends Component
     }
 
     // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
-    public function startup(Event $event)
+    public function startup(EventInterface $event)
     {
         $controller = $this->controller;
         $session = $this->getController()->getRequest()->getSession();

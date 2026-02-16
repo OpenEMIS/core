@@ -2,7 +2,7 @@
 namespace StaffAppraisal\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -30,14 +30,14 @@ class AppraisalAnswersTable extends AppTable
             });
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew() && $entity->answer === '') {
           //  return $event->stopPropagation(); //POCOR-8688
         }
     }
 
-    public function afterSaveCommit(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSaveCommit(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->answer === '' || is_null($entity->answer)) {
             $this->delete($entity);

@@ -2,7 +2,7 @@
 namespace Report\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
@@ -22,14 +22,14 @@ class StaffEmploymentStatusesTable extends AppTable {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $academicPeriodId = $requestData->academic_period_id;
-        $InstitutionsTable = TableRegistry::get('Institution.Institutions');
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
@@ -78,7 +78,7 @@ class StaffEmploymentStatusesTable extends AppTable {
             ->order([$this->aliasField('staff_id')]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newArray = [];
 

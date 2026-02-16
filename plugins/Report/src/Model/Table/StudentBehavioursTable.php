@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -49,7 +49,7 @@ class StudentBehavioursTable extends AppTable  {
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
 
@@ -74,7 +74,7 @@ class StudentBehavioursTable extends AppTable  {
             $where['Institutions.area_id IN'] = $allselectedAreas;
         }
 
-        $Statuses1 = TableRegistry::get('Workflow.WorkflowSteps');
+        $Statuses1 = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
         $query->select([
              "institution_code"=>'Institutions.code',
              "institution_name"=>"Institutions.name",
@@ -112,7 +112,7 @@ class StudentBehavioursTable extends AppTable  {
         });
     
 }
- public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+ public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $extraField[] = [
             'key' => 'StudentBehaviour.Institutions.code',
@@ -191,7 +191,7 @@ class StudentBehavioursTable extends AppTable  {
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelRenderDate(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDate(EventInterface $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
         
@@ -209,7 +209,7 @@ class StudentBehavioursTable extends AppTable  {
 
     public function getChildren($id, $idArray) 
     {
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
                                $Areas->aliasField('parent_id') => $id

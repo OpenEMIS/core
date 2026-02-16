@@ -1,7 +1,7 @@
 <?php
 namespace Profile\Controller;
 
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Profile\Controller\CommentsController as BaseController;
 
 class ProfileCommentsController extends BaseController
@@ -19,7 +19,7 @@ class ProfileCommentsController extends BaseController
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         return true;
     }

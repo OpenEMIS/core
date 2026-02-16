@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
@@ -41,7 +41,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         ]);
     }
 
-    public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
+    public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings) {
         set_time_limit(0);//POCOR-7268 starts
         ini_set('memory_limit', -1);
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
@@ -50,7 +50,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         $settings['file'] = str_replace($this->getAlias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets) {
         set_time_limit(0);//POCOR-7268 starts
         ini_set('memory_limit', -1);
         ini_set('max_execution_time', 9600); //POCOR-7268 ends
@@ -131,7 +131,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('class_number', ['visible' => false]);
         $this->field('staff_id', ['visible' => false]);
         $this->field('institution_unit_id', ['visible' => false]);//POCOR-6863
@@ -160,7 +160,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 		// End POCOR-5188
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $session = $this->Session;
         $archive_query_string = $session->read('archive_query_string.queryString');
         $queryString = $this->getQueryString();
@@ -178,7 +178,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID();
 
@@ -398,7 +398,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'name') {
             return __('Class Name');
         } else if ($field == 'total_male_students') {
@@ -410,14 +410,14 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
         }
     }
 
-    public function onGetEducationGrade(Event $event, Entity $entity) {
+    public function onGetEducationGrade(EventInterface $event, Entity $entity) {
         $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
 
         return $grade->programme_grade_name;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $entity->institution_id = $this->getInstitutionID();
         if (isset($buttons['view']['url'])) {
@@ -440,10 +440,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * Function to get Total Male Students on index page - POCOR-6183
-     * @param Entity $entity and Event $event
+     * @param Entity $entity and EventInterface $event
      * @return int
      */
-    public function onGetTotalMaleStudents(Event $event, Entity $entity) {
+    public function onGetTotalMaleStudents(EventInterface $event, Entity $entity) {
         $url = [
             'plugin' => $this->controller->getPlugin(),
             'controller' => $this->controller->getName(),
@@ -491,10 +491,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * Function to get Total Female Students on index page - POCOR-6183
-     * @param Entity $entity and Event $event
+     * @param Entity $entity and EventInterface $event
      * @return int
      */
-    public function onGetTotalFemaleStudents(Event $event, Entity $entity) {
+    public function onGetTotalFemaleStudents(EventInterface $event, Entity $entity) {
         $grade = $entity->education_grade_id;
         $class = $entity->institution_class_id;
         $institutionId = $entity->institution->id;
@@ -523,10 +523,10 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * Function to get class name on index page - POCOR-6183
-     * @param Entity $entity and Event $event
+     * @param Entity $entity and EventInterface $event
      * @return string
      */
-    public function onGetName(Event $event, Entity $entity) {
+    public function onGetName(EventInterface $event, Entity $entity) {
         $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
         $class = $InstitutionClasses->get($entity->institution_class_id);
 
@@ -535,7 +535,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * common proc to add extra buttons, to call in indexBeforeAction
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @param ArrayObject $extra
      */
     private function addExtraButtons(ArrayObject $extra)
@@ -547,7 +547,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * common proc to add an archive button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @param $toolbarButtons
      */
     private function addArchiveButton($toolbarButtons)
@@ -571,7 +571,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
 
     /**
      * common proc to check if there is an archive
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @return bool
      */
     private function isArchiveExists()
@@ -593,7 +593,7 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
      * @param $url
      * @param null $btnAttr
      * common proc to generate button
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null)
     {

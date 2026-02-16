@@ -1,7 +1,9 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Angular', ['plugin' => 'Angular'], function ($routes) {
-	Router::connect('/Angular', ['plugin' => 'Angular', 'controller' => 'Angular']);
-	Router::connect('/Angular/:action/*', ['plugin' => 'Angular', 'controller' => 'Angular']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Angular', ['plugin' => 'Angular'], function (RouteBuilder $routes) {
+        $routes->connect('/Angular', ['plugin' => 'Angular', 'controller' => 'Angular']);
+        $routes->connect('/Angular/:action/*', ['plugin' => 'Angular', 'controller' => 'Angular']);
+    });
+};

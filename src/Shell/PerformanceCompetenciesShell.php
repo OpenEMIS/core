@@ -4,7 +4,7 @@ namespace App\Shell;
 use Exception;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Date;
@@ -18,7 +18,7 @@ class PerformanceCompetenciesShell extends Shell
     {
         parent::initialize();
         
-        $this->loadModel('SystemProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()
@@ -67,10 +67,10 @@ class PerformanceCompetenciesShell extends Shell
     public function getRecords($fromAcademicPeriod, $toAcademicPeriod, $competency_criterias_value, $competency_templates_value, $competency_items_value, $competency_periods_value){
 
         $connection = ConnectionManager::get('default');
-        $CompetencyCriteriasTable = TableRegistry::get('Competency.CompetencyCriterias');
-        $CompetencyTemplatesTable = TableRegistry::get('Competency.CompetencyTemplates');
-        $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
-        $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods'); // POCOR-8504 START
+        $CompetencyCriteriasTable = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
+        $CompetencyTemplatesTable = TableRegistry::getTableLocator()->get('Competency.CompetencyTemplates');
+        $CompetencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('Academic.AcademicPeriods'); // POCOR-8504 START
 
         //POCOOR-7670 start
         //CompetencyTemplates[START]
@@ -122,7 +122,7 @@ class PerformanceCompetenciesShell extends Shell
                //CompetencyItem[START]
                 if(!empty($newTemplateDataId)){
                         if(isset($competency_items_value) && $competency_items_value == 0){
-                            $CompetencyItemsTable = TableRegistry::get('Competency.CompetencyItems');
+                            $CompetencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
                             $CompetencyItemsData = $CompetencyItemsTable
                             ->find()
                             ->where(['academic_period_id' => $fromAcademicPeriod,
@@ -221,7 +221,7 @@ class PerformanceCompetenciesShell extends Shell
                                //CompetencyPeriods[START] POCOR-8504 Start
                                 if(!empty($newItemDataId)){
                                     if(isset($competency_periods_value) && $competency_periods_value == 0){
-                                        $CompetencyPeriodsTable = TableRegistry::get('Competency.CompetencyPeriods');
+                                        $CompetencyPeriodsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyPeriods');
                                         $CompetencyPeriodsData = $CompetencyItemsValue->periods;
                                         foreach($CompetencyPeriodsData AS $key => $CompetencyPeriodsValue){
                                             if(isset($CompetencyPeriodsValue['modified'])){
@@ -243,7 +243,7 @@ class PerformanceCompetenciesShell extends Shell
                                             }else{
                                                 $created = date('Y-m-d H:i:s');
                                             }
-                                            $CompetencyItemsPeriodsTable = TableRegistry::get('Competency.CompetencyItemsPeriods');
+                                            $CompetencyItemsPeriodsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItemsPeriods');
                                             $newCompetencyPeriodId=[];
                                             $this->out('Performance Competency Periods Data Copy Start');
                                             try{

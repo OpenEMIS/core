@@ -3,7 +3,7 @@
 namespace Security\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -76,7 +76,7 @@ class UserGroupsTable extends ControllerActionTable
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $controller = $this->controller;
         $tabElements = [
@@ -109,7 +109,7 @@ class UserGroupsTable extends ControllerActionTable
 
     /** Start POCOR 7213 */
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $buttons['edit']['label'] = '<i class="fa fa-edit"></i> Edit Group';
@@ -128,7 +128,7 @@ class UserGroupsTable extends ControllerActionTable
 
     /** End POCOR 7213 */
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('no_of_users', ['visible' => ['index' => true]]);
         $this->setFieldOrder(['name', 'no_of_users', 'institution_id']);
@@ -154,17 +154,17 @@ class UserGroupsTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function onGetNoOfUsers(Event $event, Entity $entity)
+    public function onGetNoOfUsers(EventInterface $event, Entity $entity)
     {
         $id = $entity->id;
 
-        $GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+        $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $count = $GroupUsers->findAllBySecurityGroupId($id)->count();
 
         return $count;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryParams = $this->request->getQuery();
         $query->find('notInInstitutions');
@@ -241,7 +241,7 @@ class UserGroupsTable extends ControllerActionTable
         return $query;
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('area_id', [
             'type' => 'chosenSelect',
@@ -256,12 +256,12 @@ class UserGroupsTable extends ControllerActionTable
     }
 
 
-    // public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request)
-    public function onUpdateFieldAreaId(Event $event, array $attr, $action)
+    // public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action)
     {
         $areaId = isset($request->data) ? $request->data['UserGroups']['area_id']['_ids'] : 0;
 //        $this->log($attr, 'debug');
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         if ($action == 'add' || $action == 'edit') {
             $areaOptions = $Areas
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
@@ -292,7 +292,7 @@ class UserGroupsTable extends ControllerActionTable
 
     }
 
-    public function onGetAreaAdministrativeId(Event $event, Entity $entity)
+    public function onGetAreaAdministrativeId(EventInterface $event, Entity $entity)
     {
         return $this->getAreaList($entity);
     }
@@ -303,11 +303,11 @@ class UserGroupsTable extends ControllerActionTable
     * return string
     * @ticket POCOR-7187
     */
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function onGetInstitutionId(EventInterface $event, Entity $entity)
     {
 
-        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-        $InstitutionsTable = TableRegistry::get('Institution.institutions');
+        $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.institutions');
         //POCOR-7331 start
         $SecurityGroupInstitutionsData = $SecurityGroupInstitutions
             ->find()
@@ -332,14 +332,14 @@ class UserGroupsTable extends ControllerActionTable
 
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param array $attr
      * @param $action
      * @param Request $request
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      * @return array
      */
-     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+     public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $areaList = !is_null($request->getData()) ? $request->getData()['UserGroups']['area_id']['_ids'] : null;
         if ($action == 'edit') {
@@ -367,7 +367,7 @@ class UserGroupsTable extends ControllerActionTable
         return $attr;
     }
 
-    function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $toolbarAttr = [
@@ -394,15 +394,15 @@ class UserGroupsTable extends ControllerActionTable
     }
 
     public
-    function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
     public
-    function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
         $dispatchTable = [];
         $dispatchTable[] = $SecurityGroupInstitutions;
         foreach ($dispatchTable as $model) {
@@ -447,10 +447,10 @@ class UserGroupsTable extends ControllerActionTable
     }
 
     public
-    function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         //POCOR-7187[START]
-        $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+        $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
         $SecurityGroupInstitutionsData = $SecurityGroupInstitutions
             ->find()
             ->where(['security_group_id' => $query->toArray()[0]->id])
@@ -459,9 +459,9 @@ class UserGroupsTable extends ControllerActionTable
             $SecurityGroupId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
             $query->formatResults(function (\Cake\Collection\CollectionInterface $results) {
                 return $results->map(function ($row) {
-                    $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+                    $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
 
-                    $institution = TableRegistry::get('institutions');
+                    $institution = TableRegistry::getTableLocator()->get('institutions');
                     $SecurityGroupInstitutionsData = $SecurityGroupInstitutions->find()
                         // ->contain(['Institutions'])
                         ->select([
@@ -478,7 +478,7 @@ class UserGroupsTable extends ControllerActionTable
                             $institutionArr[] = $institutionData->institutions['id'];
                         }
 
-                        $Institutions = TableRegistry::get('Institution.Institutions');
+                        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                         $InstitutionsResult = $Institutions
                             ->find()
                             ->where(['id IN' => $institutionArr])
@@ -489,8 +489,8 @@ class UserGroupsTable extends ControllerActionTable
                         }
                         $row['institution_id'] = $InstitutionsData;
 
-                        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-                        $areas = TableRegistry::get('areas');
+                        $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
+                        $areas = TableRegistry::getTableLocator()->get('areas');
 
                         $SecurityGroupAreasData = $SecurityGroupAreas->find()
                             ->select([
@@ -505,7 +505,7 @@ class UserGroupsTable extends ControllerActionTable
                             foreach ($SecurityGroupAreasData AS $AreaData) {
                                 $areaArr[] = $AreaData->areas['id'];
                             }
-                            $Areas = TableRegistry::get('Area.Areas');
+                            $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                             $AreasResult = $Areas
                                 ->find()
                                 ->where(['id IN' => $areaArr])
@@ -524,10 +524,10 @@ class UserGroupsTable extends ControllerActionTable
     }
 
     public
-    function editBeforeSave(Event $event, Entity $entity, ArrayObject $extra)
+    function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $SecurityInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
 
         $conditions1 = [
             $SecurityInstitutions->aliasField('security_group_id') => $entity->id
@@ -540,8 +540,8 @@ class UserGroupsTable extends ControllerActionTable
         ];
         $SecurityGroupAreas->deleteAll($conditions2);
 
-        $SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
-        $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+        $SecurityInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
         if ($entity->institution_id['_ids']) {
             foreach ($entity->institution_id['_ids'] as $key => $value) {
                 $securityInstitution = $SecurityInstitutions->newEntity([
@@ -577,7 +577,7 @@ class UserGroupsTable extends ControllerActionTable
             $areaArr = [0];
         }
         $AreaDataVal = [];
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         if (!empty($areaArr)) {
             $AreasResult = $Areas
                 ->find('list')
@@ -594,14 +594,14 @@ class UserGroupsTable extends ControllerActionTable
     /**
      * @param Entity|null $entity
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private
     function getAreaIdList(Entity $entity = null)
     {
         $areaArr = [];
         if ($entity) {
-            $SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+            $SecurityGroupAreas = TableRegistry::getTableLocator()->get('Security.SecurityGroupAreas');
             $result = $SecurityGroupAreas
                 ->find()
                 ->select([$SecurityGroupAreas->aliasField('area_id')])
@@ -609,7 +609,7 @@ class UserGroupsTable extends ControllerActionTable
                 ->all();
         }
         if (!$entity) {
-            $Areas = TableRegistry::get('areas');
+            $Areas = TableRegistry::getTableLocator()->get('areas');
             $result = $Areas
                 ->find()
                 ->select(['area_id' => $Areas->aliasField('id')])
@@ -624,14 +624,14 @@ class UserGroupsTable extends ControllerActionTable
     /**
      * @param Entity $entity
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private
     function getInstitutionIdList(Entity $entity)
     {
         $institutionArr = [];
         if ($entity) {
-            $SecurityGroupInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
             $result = $SecurityGroupInstitutions
                 ->find()
                 ->select([$SecurityGroupInstitutions->aliasField('institution_id')])
@@ -649,11 +649,11 @@ class UserGroupsTable extends ControllerActionTable
      * @param $ids
      * @param $idArray
      * @return array
-     * @author for a patch Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function getChildren($ids, $idArray) {
 
-        $Areas = TableRegistry::get('Area.Areas');
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
             ->where([
                 $Areas->aliasField('parent_id IN') => $ids
@@ -669,12 +669,12 @@ class UserGroupsTable extends ControllerActionTable
     /**
      * @param null $areaList
      * @return array
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private function getInstitutionOptions($areaList = null)
     {
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $InstitutionStatuses = TableRegistry::get('Institution.Statuses');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionStatuses = TableRegistry::getTableLocator()->get('Institution.Statuses');
         $institutionQuery = $Institutions
             ->find('list', [
                 'keyField' => 'id',
@@ -702,7 +702,7 @@ class UserGroupsTable extends ControllerActionTable
         return $institutionList;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'custom_module_id') {
             return __('Custom Module');

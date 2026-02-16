@@ -4,10 +4,9 @@ namespace Infrastructure\Controller;
 use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\Http\ServerRequest;
-use Cake\Event\EventInterface;
 
 class InfrastructuresController extends AppController
 {
@@ -106,7 +105,7 @@ class InfrastructuresController extends AppController
         $this->set('selectedAction', $selectedAction);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Infrastructure');
         $header .= ' - ' . __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));

@@ -1,6 +1,8 @@
 <?php
-use Cake\Routing\Router;
+use Cake\Routing\RouteBuilder;
 
-Router::scope('/Appraisals', ['plugin' => 'StaffAppraisal'], function ($routes) {
-    $routes->connect('/:action/*', ['controller' => 'StaffAppraisals']);
-});
+return function (RouteBuilder $routes) {
+    $routes->scope('/Appraisals', ['plugin' => 'StaffAppraisal'], function (RouteBuilder $routes) {
+        $routes->connect('/:action/*', ['controller' => 'StaffAppraisals']);
+    });
+};

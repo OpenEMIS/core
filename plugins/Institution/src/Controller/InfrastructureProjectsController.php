@@ -2,7 +2,7 @@
 namespace Institution\Controller;
 
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Routing\Router;
 
 use App\Controller\PageController;
@@ -19,7 +19,7 @@ class InfrastructureProjectsController extends PageController
     {
         parent::initialize();
 
-        $this->loadModel('Institution.InfrastructureProjectsNeeds');
+        $this->InfrastructureProjectsNeeds = $this->fetchTable('Institution.InfrastructureProjectsNeeds');
         // to disable actions if institution is not active
         $this->loadComponent('Institution.InstitutionInactive');
 
@@ -71,7 +71,7 @@ class InfrastructureProjectsController extends PageController
             ->setOptions($this->projectStatusesOptions);
 
         // set field order
-        $Users = TableRegistry::get('labels');
+        $Users = TableRegistry::getTableLocator()->get('labels');
         $result = $Users
             ->find()
             ->where(['module' => 'InfrastructureProjects', 'field_name' => 'Funding Source'])
@@ -82,7 +82,7 @@ class InfrastructureProjectsController extends PageController
             $page->move('infrastructure_project_funding_source_id')->after('description')->setLabel(__('Funding Source'));
         }
 
-        $Users = TableRegistry::get('labels');
+        $Users = TableRegistry::getTableLocator()->get('labels');
         $result = $Users
             ->find()
             ->where(['module' => 'InfrastructureProjects', 'field_name' => 'Contract Date'])
@@ -105,7 +105,7 @@ class InfrastructureProjectsController extends PageController
         $page->exclude(['description', 'funding_source_description', 'contract_amount', 'date_started', 'date_completed', 'file_name', 'file_content', 'comment', 'institution_id']);
 
         $page->get('infrastructure_project_funding_source_id')->setSortable(false);
-        // $Users = TableRegistry::get('labels');
+        // $Users = TableRegistry::getTableLocator()->get('labels');
         // $result = $Users
         //     ->find()
         //     ->where(['module' => 'InfrastructureProjects', 'field_name' => 'Contract Date'])

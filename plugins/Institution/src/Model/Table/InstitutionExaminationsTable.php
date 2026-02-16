@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
@@ -53,7 +53,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -84,7 +84,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
      {
         $institutionId = $this->getInstitutionID();
 
@@ -97,7 +97,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
         //End
 
         // get available grades in institution
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $educationGrades = $InstitutionGrades
             ->find('list', [
                     'keyField' => 'education_grade_id',
@@ -117,12 +117,12 @@ class InstitutionExaminationsTable extends ControllerActionTable
         }
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['ExaminationSubjects.EducationSubjects', 'ExaminationSubjects.ExaminationGradingTypes']);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('examination_subjects', [
             'type' => 'element',
@@ -132,7 +132,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'description', 'education_grade_id', 'registration_start_date', 'registration_end_date', 'examination_subjects']);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
      
         $extraField[] = [
@@ -180,7 +180,7 @@ class InstitutionExaminationsTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $academicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('                 academic_period_id') : $this->AcademicPeriods->getCurrent();
         

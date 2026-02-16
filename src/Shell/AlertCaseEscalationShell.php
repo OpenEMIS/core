@@ -14,7 +14,7 @@ class AlertCaseEscalationShell extends AlertShell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Cases.InstitutionCases');
+        $this->InstitutionCases = $this->fetchTable('Cases.InstitutionCases');
     }
     public function main()
     {

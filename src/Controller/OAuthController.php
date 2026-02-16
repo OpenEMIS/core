@@ -10,8 +10,8 @@ class OAuthController extends AbstractOAuthController
     {
         parent::initialize();
         $this->loadComponent('RequestHandler');
-        $this->loadModel('ApiCredentials');
-        $this->loadModel('ApiScopes');
+        $this->ApiCredentials = $this->fetchTable('ApiCredentials');
+        $this->ApiScopes = $this->fetchTable('ApiScopes');
     }
 
     /**

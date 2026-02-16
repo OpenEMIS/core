@@ -9,7 +9,7 @@ namespace Report\Model\Table;
 
 use App\Model\Table\AppTable;
 use Cake\Datasource\ConnectionManager;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -26,7 +26,7 @@ class StaffRequirementsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $studentPerTeacherRatio = $requestData->student_per_teacher_ratio;
@@ -1044,7 +1044,7 @@ class StaffRequirementsTable extends AppTable
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
     {
         $newFields = [];
         

@@ -3,7 +3,7 @@ namespace ProfileTemplate\Controller;
 
 use App\Controller\AppController;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -32,7 +32,7 @@ class ProfileTemplatesController extends AppController
 
 	public function StudentProfiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'ProfileTemplate.StudentProfiles']); }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Profile');
         $header .= ' - ' . $model->getHeader($model->alias);

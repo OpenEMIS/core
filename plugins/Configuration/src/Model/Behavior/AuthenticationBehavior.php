@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
@@ -30,7 +30,7 @@ class AuthenticationBehavior extends Behavior
         return $events;
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         $controller = $event->getSubject()->getController(); // Get the controller
         $request = $controller->getRequest(); // Get the request from the controller
@@ -76,7 +76,7 @@ class AuthenticationBehavior extends Behavior
         $toolbarElements = [
             ['name' => 'Configuration.idp_controls', 'data' => [], 'options' => []]
         ];
-        $ConfigItem = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $typeList = $ConfigItem
             ->find('list', [
                 'keyField' => 'type',

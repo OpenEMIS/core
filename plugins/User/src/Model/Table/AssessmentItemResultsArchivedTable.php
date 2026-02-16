@@ -4,7 +4,7 @@ namespace User\Model\Table;
 use ArrayObject;
 
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -39,7 +39,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         $this->toggle('search', false);
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('assessment_grading_option_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
@@ -72,11 +72,11 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         ];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         // Setup period options
-        $InstitutionStaffAttendances = TableRegistry::get('Staff.InstitutionStaffAttendances');
-        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $this->Session->read('Institution.Institutions.id');
         if ($this->request->query('user_id') !== null) {
@@ -117,7 +117,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
 
             //toolbar filter
             //Assessment[Start]
-            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
             $assessmentOptions = $Assessments
                 ->find('list')
                 ->where([$Assessments->aliasField('academic_period_id') => $selectedPeriod])
@@ -251,7 +251,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                         ];
                 }
             }
-            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $AssessmentPeriods = TableRegistry::getTableLocator()->get('Assessment.AssessmentPeriods');
             if($selectedassessment != '-1'){
                 $AssessmentPeriodsconditions = [
                     $AssessmentPeriods->aliasField('assessment_id') => $selectedPeriod
@@ -267,7 +267,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $this->advancedSelectOptions($AssessmentPeriodsOptions, $selectedAssessmentPeriods);
             $this->controller->set(compact('AssessmentPeriodsOptions', 'selectedAssessmentPeriods'));
 
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
             $subjectOptions = $EducationSubjects
                 ->find('list')
                 ->find('visible')
@@ -281,7 +281,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             $this->controller->set(compact('subjectOptions', 'selectedSubject'));
             
             
-            // $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            // $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
             $query
                 ->find('all')
                 ->where($conditions);
@@ -291,7 +291,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'created_user_id') {
             return __('Last Modified By');

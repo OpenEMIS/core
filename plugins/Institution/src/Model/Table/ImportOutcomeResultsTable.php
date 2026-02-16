@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -26,16 +26,16 @@ class ImportOutcomeResultsTable extends AppTable
         ]);
 
         // register table once
-        $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $this->EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $this->StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        $this->EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-        $this->OutcomeTemplates = TableRegistry::get('Outcome.OutcomeTemplates');
-        $this->OutcomePeriods = TableRegistry::get('Outcome.OutcomePeriods');
-        $this->OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
-        $this->OutcomeGradingTypes = TableRegistry::get('Outcome.OutcomeGradingTypes');
+        $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $this->InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+        $this->InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $this->EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $this->StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $this->EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+        $this->OutcomeTemplates = TableRegistry::getTableLocator()->get('Outcome.OutcomeTemplates');
+        $this->OutcomePeriods = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
+        $this->OutcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+        $this->OutcomeGradingTypes = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingTypes');
     }
 
     public function implementedEvents(): array
@@ -52,16 +52,16 @@ class ImportOutcomeResultsTable extends AppTable
             ->notEmpty(['academic_period','class' ,'education_subject', 'outcome_template', 'outcome_period', 'select_file']);
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         $request = $this->request;
-        if (empty($request->getQuery('education_subject'))) {
+        if (empty($request->getData()['ImportOutcomeResults']['education_subject'])) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
     }
 
-   public function addOnInitialize(Event $event, Entity $entity)
+   public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         $request = $this->request;
         $query = $request->getQuery(); // Get the query parameters
@@ -79,7 +79,7 @@ class ImportOutcomeResultsTable extends AppTable
     }
 
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         $this->dependency = [];
         $this->dependency["academic_period"] = ["class"];
@@ -125,24 +125,25 @@ class ImportOutcomeResultsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldEducationSubject(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationSubject(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = $this->request->getData()[$this->getAlias()]['academic_period'];
+            $data = $request->getData('ImportOutcomeResults');
+            $academicPeriodId = $data['academic_period'] ?? $this->AcademicPeriods->getCurrent();
+            $outcomeTemplate = $data['outcome_template'] ?? null;
             $conditions = [];
-            if (!empty($request->getData()[$this->getAlias()]['academic_period']) && !empty($request->getData()[$this->getAlias()]['outcome_template'])) {
+            if (!empty($academicPeriodId) && !empty($outcomeTemplate)) {
                 $conditions[] =
                 [
-                    $this->OutcomeCriterias->aliasField('academic_period_id') => $request->getData()[$this->getAlias()]['academic_period'],
-                    $this->OutcomeCriterias->aliasField('outcome_template_id') => $request->getData()[$this->getAlias()]['outcome_template']
+                    $this->OutcomeCriterias->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->OutcomeCriterias->aliasField('outcome_template_id') => $outcomeTemplate
                 ];
             }
-
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
             $classId = $this->request->getQuery('class') !== null ? $this->request->getQuery('class') : 'default_value';
-            $OutcomeCriterias = TableRegistry::get('Outcome.OutcomeCriterias');
-            $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+            $OutcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
+            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
             $allowedEducationSubjectList = $InstitutionSubjects
              ->find('list', [
                     'keyField' => 'education_subject_id',
@@ -170,7 +171,7 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['select'] = false;
@@ -182,16 +183,22 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldClass(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
-            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
-// POCOR-7977 start
+            $data = $request->getData('ImportOutcomeResults');
+            $academicPeriodId = $data['academic_period'] ?? $this->AcademicPeriods->getCurrent();
+//            $outcomeTemplate = $data['outcome_template'] ?? null;
+//            $classId = $data['class'] ?? 'default_value';
+            $institutionId = $this->getQueryString('institution_id');
+            $this->institutionId = $institutionId;
+//            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
+//            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+//// POCOR-7977 start
 //            $userId = $this->Auth->user('id');
 //            $AccessControl = $this->AccessControl;
-//            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-//            $Institutions = TableRegistry::get('Institution.Institutions');
+//            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+//            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 //            $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
 //            $query = $InstitutionClasses->find();
 //            if (!$AccessControl->isAdmin()) {
@@ -285,9 +292,9 @@ class ImportOutcomeResultsTable extends AppTable
             if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
                 $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['institution_id'];
             }
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-            $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+            $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
             $classNameOption = $InstitutionClasses->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name'
@@ -318,7 +325,7 @@ class ImportOutcomeResultsTable extends AppTable
     }
 
 
-    public function onUpdateFieldClassBkp(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldClassBkp(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
@@ -326,8 +333,8 @@ class ImportOutcomeResultsTable extends AppTable
 
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $Institutions = TableRegistry::get('Institution.Institutions');
+            $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $roles = $Institutions->getInstitutionRoles($userId, $institutionId);
             $query = $InstitutionClasses->find();
             if (!$AccessControl->isAdmin()) {
@@ -399,7 +406,7 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomeTemplate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldOutcomeTemplate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
@@ -410,15 +417,15 @@ class ImportOutcomeResultsTable extends AppTable
             }
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
             if (!is_null($classId) && !empty($classId)) {
-                $InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+                $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
                 $educationGrades = $InstitutionClassGrades->find()
                     ->where([$InstitutionClassGrades->aliasField('institution_class_id') => $classId])
                     ->extract('education_grade_id')
                     ->toArray();
             } else {
-                $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+                $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
                 $educationGrades = $InstitutionGrades->find()
-                    ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+                    ->where([$InstitutionGrades->aliasField('institution_id IS') => $institutionId])
                     ->extract('education_grade_id')
                     ->toArray();
             }
@@ -442,19 +449,19 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldOutcomePeriod(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldOutcomePeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
-
+            $data = $request->getData('ImportOutcomeResults');
+            $academicPeriodId = $data['academic_period'] ?? $this->AcademicPeriods->getCurrent();
+            $outcomeTemplate = $data['outcome_template'] ?? null;
             $outcomePeriodOptions = [];
-            if (!is_null($request->getQuery('outcome_template'))) {
+            if (!is_null($request->getData('ImportOutcomeResults')['outcome_template'])) {
                 $outcomePeriodOptions = $this->OutcomePeriods
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                     ->where([
-                        $this->OutcomePeriods->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->OutcomePeriods->aliasField('outcome_template_id ') => $request->getQuery('outcome_template')
+                        $this->OutcomePeriods->aliasField('academic_period_id IS') => $academicPeriodId,
+                        $this->OutcomePeriods->aliasField('outcome_template_id IS') => $request->getData('ImportOutcomeResults')['outcome_template']
                     ])
                     ->toArray();
             }
@@ -466,7 +473,7 @@ class ImportOutcomeResultsTable extends AppTable
         return $attr;
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
 
         $requestData = $this->request->getData()[$this->getAlias()];
@@ -474,6 +481,7 @@ class ImportOutcomeResultsTable extends AppTable
         $tempRow['outcome_template_id'] = $requestData['outcome_template'];
         $tempRow['outcome_period_id'] = $requestData['outcome_period'];
         $tempRow['institution_class_id'] = $requestData['class'];
+        $tempRow['education_subject_id'] = $requestData['education_subject'];
         $tempRow['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
 
         $outcomeCriteriaEntity = $this->OutcomeCriterias->find()

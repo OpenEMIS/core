@@ -2,7 +2,7 @@
 namespace App\Controller\Component;
 
 use Cake\Controller\Component;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class PhpExcelComponent extends Component {
     /**

@@ -28,15 +28,15 @@ class InstitutionProgramAndGradeShell_ extends Shell // POCOR-9354
             //start
             ini_set('memory_limit', '2G');
             $connection = ConnectionManager::get('default');
-            $EducationLevels = TableRegistry::get('Education.EducationLevels');
-            $EducationCycles = TableRegistry::get('Education.EducationCycles');
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $AcademicPeriods = TableRegistry::get('Academic.AcademicPeriods');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $EducationLevels = TableRegistry::getTableLocator()->get('Education.EducationLevels');
+            $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('Academic.AcademicPeriods');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
             $currentDate = "'" . date('Y-m-d H:i:s') . "'";
-            $institutionGradeSubjects = TableRegistry::get('institution_program_grade_subjects');
+            $institutionGradeSubjects = TableRegistry::getTableLocator()->get('institution_program_grade_subjects');
             $from_academic_period = $copyFrom;
             $to_academic_period = $copyTo;
 
@@ -212,7 +212,7 @@ class InstitutionProgramAndGradeShell_ extends Shell // POCOR-9354
         }
     }
     public function updateEducationGrade($copyFrom,$copyTo){
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
         $connection = ConnectionManager::get('default');
         $statement1 = $connection->prepare("Select subq1.grade_id as wrong_grade_id,subq1.grade_name,subq1.period_name,subq1.programme_name ,  subq2.grade_id as correct_grade_id,subq2.grade_name ,subq2.period_name,subq2.programme_name from
                             (SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name FROM education_grades

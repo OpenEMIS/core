@@ -4,7 +4,7 @@ namespace Workflow\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
@@ -37,7 +37,7 @@ class RuleStudentUnmarkedAttendancesBehavior extends RuleBehavior
         parent::initialize($config);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {

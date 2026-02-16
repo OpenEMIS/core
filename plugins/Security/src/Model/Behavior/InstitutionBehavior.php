@@ -6,7 +6,7 @@ use Cake\Core\Configure;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 
 class InstitutionBehavior extends Behavior
@@ -20,14 +20,14 @@ class InstitutionBehavior extends Behavior
 		return $events;
 	}
 
-	public function beforeFind(Event $event, Query $query, ArrayObject $options, $primary)
+	public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
 	{
 		if (Configure::read('schoolMode')) {
 			$query->limit(1);
 		}
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
 	{
 		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
 			$userId = $this->_table->Auth->user('id');
@@ -37,8 +37,8 @@ class InstitutionBehavior extends Behavior
 
 	public function findByAccess(Query $query, array $options)
 	{
-		$apiSecuritiesScopes = TableRegistry::get('ApiSecuritiesScopes');
-		$apiSecurities = TableRegistry::get('ApiSecurities');
+		$apiSecuritiesScopes = TableRegistry::getTableLocator()->get('ApiSecuritiesScopes');
+		$apiSecurities = TableRegistry::getTableLocator()->get('ApiSecurities');
         $apiSecuritiesData = $apiSecurities->find('all')
         ->select([
             'ApiSecurities.id','ApiSecurities.name','ApiSecurities.execute'
@@ -60,9 +60,9 @@ class InstitutionBehavior extends Behavior
 			||
 		(isset($options['user']["super_admin"]) && $options['user']["super_admin"] && $apiSecuritiesScopesData->view == 1 && $apiSecuritiesScopesData->index == 1)
 		) {
-			$Types = TableRegistry::get('Institution.Types');
-       		$Areas = TableRegistry::get('Area.Areas');
-       		$Institutions = TableRegistry::get('Institution.Institutions');
+			$Types = TableRegistry::getTableLocator()->get('Institution.Types');
+       		$Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+       		$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 			   
 					   
        		if (isset($options['_controller']->request->getQuery['_order'])) {

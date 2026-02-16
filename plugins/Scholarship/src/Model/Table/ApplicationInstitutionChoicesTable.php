@@ -2,7 +2,7 @@
 namespace Scholarship\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 
@@ -50,7 +50,7 @@ class ApplicationInstitutionChoicesTable extends AppTable
             ]);
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->dirty('is_selected')) {
             if ($entity->is_selected == 1) {

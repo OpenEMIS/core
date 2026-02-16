@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -83,6 +83,15 @@ class InstitutionClassStudentsTable extends AppTable
             'StudentOutcomes' => ['index'],
             'AssessmentItemStudentExemptions' => ['index', 'edit'], // POCOR-8224
         ]);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'class_student_create',
+                'entity_delete' => 'class_student_delete',
+                'entity_update' => 'class_student_update',
+                'table_alias' => 'Institution.InstitutionClassStudents',
+                'contain' => []
+            ]
+        ); // for webhook
     }
 
     public function implementedEvents(): array
@@ -92,7 +101,7 @@ class InstitutionClassStudentsTable extends AppTable
         return $events;
     }
 
-    public function studentsAfterSave(Event $event, $student)
+    public function studentsAfterSave(EventInterface $event, $student)
     {
         if ($student->isNew()) {
             if ($this->StudentStatuses->get($student->student_status_id)->code == 'CURRENT') {
@@ -159,7 +168,7 @@ class InstitutionClassStudentsTable extends AppTable
         }
     }
 
-    public function onExcelBeforeGenerate(Event $event, ArrayObject $settings)
+    public function onExcelBeforeGenerate(EventInterface $event, ArrayObject $settings)
     {
         $this->institution_class_id = $settings['class_id'];
         $this->institution_id = $settings['institution_id'];
@@ -185,7 +194,7 @@ class InstitutionClassStudentsTable extends AppTable
         $settings['file'] = str_replace($this->getAlias(), str_replace(' ', '_', $institution_code) . '-' . str_replace(' ', '_', $className) . '_Results', $settings['file']);
     }
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $classId = $settings['class_id'];
         $assessmentId = $settings['assessment_id'];
@@ -273,7 +282,7 @@ class InstitutionClassStudentsTable extends AppTable
         $this->i = 1;
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $originalField)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $originalField)
     {
         $assessmentId = $this->assessment_id;
         $academicPeriodId = $this->academic_period_id;
@@ -408,7 +417,7 @@ class InstitutionClassStudentsTable extends AppTable
         $originalField->exchangeArray($fields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
 //        $enrolledStatus = self::getDynamicTableInstance('Student.StudentStatuses')->getIdByCode('CURRENT');
         $sheet = $settings['sheet'];
@@ -492,20 +501,20 @@ class InstitutionClassStudentsTable extends AppTable
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         if($entity->isNew() || $entity->getDirty('student_status_id')) {
-            $id = $entity->institution_class_id;
-            $countMale = $this->getMaleCountByClass($id);
-            $countFemale = $this->getFemaleCountByClass($id);
-            $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+            $institution_class_id = $entity->institution_class_id;
+            $countMale = $this->getMaleCountByClass($institution_class_id);
+            $countFemale = $this->getFemaleCountByClass($institution_class_id);
+            $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_class_id]);
         }
 
         $listeners = [
@@ -514,7 +523,7 @@ class InstitutionClassStudentsTable extends AppTable
         $this->dispatchEventToModels('Model.InstitutionClassStudents.afterSave', [$entity], $this, $listeners);
     }
 
-    public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderSubject(EventInterface $event, Entity $entity, array $attr)
     {
         $studentId = $entity->student_id;
         $classId = $entity->institution_class_id;
@@ -600,7 +609,7 @@ class InstitutionClassStudentsTable extends AppTable
         return $printedResult;
     }
 
-    public function onExcelRenderNationality(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderNationality(EventInterface $event, Entity $entity, array $attr)
     {
         if ($entity->user->nationalities) {
             $nationalities = $entity->user->nationalities;
@@ -614,7 +623,7 @@ class InstitutionClassStudentsTable extends AppTable
         }
     }
 
-    public function onExcelRenderAssessmentPeriodWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderAssessmentPeriodWeightedMark(EventInterface $event, Entity $entity, array $attr)
     {
 //        $marksum = array_sum($this->assessmentMarks);
         $weightsum = array_sum($this->assessmentPeriodWeights);
@@ -641,7 +650,7 @@ class InstitutionClassStudentsTable extends AppTable
         return ' '.$assessmentPeriodWeightedMark;
     }
 
-    public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderTotalWeightedMark(EventInterface $event, Entity $entity, array $attr)
     {
         $totalWeightedMark = $this->totalWeightedMark;
         $this->totalWeightedMark = 0;
@@ -651,7 +660,7 @@ class InstitutionClassStudentsTable extends AppTable
         return ' '.$totalWeightedMark;
     }
 
-    public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderTotalMark(EventInterface $event, Entity $entity, array $attr)
     {
         $totalMark = $this->totalMark;
         $this->totalMark = 0;
@@ -729,12 +738,12 @@ class InstitutionClassStudentsTable extends AppTable
         $this->save($entity);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $id = $entity->institution_class_id;
-        $countMale = $this->getMaleCountByClass($id);
-        $countFemale = $this->getFemaleCountByClass($id);
-        $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $id]);
+        $institution_class_id = $entity->institution_class_id;
+        $countMale = $this->getMaleCountByClass($institution_class_id);
+        $countFemale = $this->getFemaleCountByClass($institution_class_id);
+        $this->InstitutionClasses->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_class_id]);
 
         $listeners = [
             self::getDynamicTableInstance('Institution.InstitutionCompetencyResults'),
@@ -1648,7 +1657,7 @@ class InstitutionClassStudentsTable extends AppTable
     //POCOR-9289 -- Updated function to include logic to display only selected subject (one) regardless of marks
     public function findExemptStudents(Query $query, array $options): Query
     {
-        
+
         // Extract the parameters from the options array
         $assessment_item_id = preg_replace("/[^a-fA-F0-9\-]/", "", $options['assessment_item_id']);  // Still using assessment_item_id for reference
         $assessment_period_id = intval($options['assessment_period_id']);

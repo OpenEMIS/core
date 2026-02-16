@@ -56,7 +56,7 @@ class StaffAppraisalsControllerTest extends AppTestCase
     {
         parent::setUp();
         $this->urlPrefix('/Institutions/StaffAppraisals/');
-        $this->table = TableRegistry::get('Institution.StaffAppraisals');
+        $this->table = TableRegistry::getTableLocator()->get('Institution.StaffAppraisals');
         $this->setInstitutionSession(2);
     }
 

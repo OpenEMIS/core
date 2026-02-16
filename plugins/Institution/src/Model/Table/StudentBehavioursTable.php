@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\Date;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -89,7 +89,7 @@ class StudentBehavioursTable extends ControllerActionTable
      * @param Query $query
      * @param array $options
      * @return Query
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public function findWorkbench(Query $query, array $options)
     {
@@ -208,7 +208,7 @@ class StudentBehavioursTable extends ControllerActionTable
         // }
     // }
 
-    public function onGetOpenemisNo(Event $event, Entity $entity)
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $event->getSubject()->Html->link($entity->student->openemis_no, [
@@ -224,7 +224,7 @@ class StudentBehavioursTable extends ControllerActionTable
     }
 
     // START POCOR-7473
-    public function onGetStatusId(Event $event, Entity $entity)
+    public function onGetStatusId(EventInterface $event, Entity $entity)
     {
         if ($entity->status_id > 0) {
             return '<span class="status highlight">' . $entity->status->name . '</span>';
@@ -246,7 +246,7 @@ class StudentBehavioursTable extends ControllerActionTable
     } */
 
     // POCOR 6154 start set fields on index page
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['visible' => true]);
         $this->field('student_id', ['visible' => true]);
@@ -287,7 +287,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->fields['assignee_id']['sort'] = ['field' => 'Assignees.first_name'];//POCOR-5186
     }
     // setting up index page with required fields
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
@@ -391,7 +391,7 @@ class StudentBehavioursTable extends ControllerActionTable
     }
     // POCOR 6154 end
 
-    /* public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    /* public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options)
     {
         $toolbarElements = [
             ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => []]
@@ -468,7 +468,7 @@ class StudentBehavioursTable extends ControllerActionTable
         // end POCOR-2547
     } */
 
-    public function addAfterAction(Event $event, Entity $entity)
+    public function addAfterAction(EventInterface $event, Entity $entity)
     {
         // POCOR 6154
         $this->field('academic_period_id', ['entity' => $entity]);
@@ -482,17 +482,17 @@ class StudentBehavioursTable extends ControllerActionTable
     }
 
     // PHPOE-1916
-    // public function viewAfterAction(Event $event, Entity $entity) {
+    // public function viewAfterAction(EventInterface $event, Entity $entity) {
     //  $this->request->data[$this->alias()]['student_id'] = $entity->student_id;
     //  $this->request->data[$this->alias()]['date_of_behaviour'] = $entity->date_of_behaviour;
     // }
 
-    public function editBeforeQuery(Event $event, Query $query)
+    public function editBeforeQuery(EventInterface $event, Query $query)
     {
         $query->contain(['AcademicPeriods','Students','StudentBehaviourCategories','Assignees']);// POCOR 6154
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(EventInterface $event, Entity $entity)
     {
         $this->field('student_behaviour_category_id', ['entity' => $entity, 'onChangeReload' => 'changeBehaviourCategory']);  //POCOR-8665
         $this->field('student_behaviour_classification_id', ['attr' => ['entity' => $entity]]);
@@ -528,7 +528,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
     // PHPOE-1916
     // Not yet implemented due to possible performance issue
-    // public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    // public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
     //  if ($action == 'view') {
     //      $institutionId = $this->getInstitutionID();
     //      $studentId = $this->request->data[$this->alias()]['student_id'];
@@ -557,7 +557,7 @@ class StudentBehavioursTable extends ControllerActionTable
     //  }
     // }
     /* pocor-6154 start set fields order on edit page */
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity, $extra);
     }
@@ -575,7 +575,7 @@ class StudentBehavioursTable extends ControllerActionTable
     /* pocor-6154 end */
 
     /* pocor-6154 set fields on add page */
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->fields['student_id']['type'] = 'select';
         $this->field('student_id', ['attr' => ['label' => __('Student')]]);
@@ -589,7 +589,7 @@ class StudentBehavioursTable extends ControllerActionTable
     }
     /* pocor-6154 */
 
-    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldOpenemisNo(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit' || $action == 'add') {
             $attr['visible'] = false;
@@ -597,7 +597,7 @@ class StudentBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, $request)
     {
         $institutionId = $this->getInstitutionID();
 
@@ -644,12 +644,12 @@ class StudentBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnChangePeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $data[$this->getAlias()]['class'] = 0;
     }
 
-    public function onUpdateFieldClass(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldClass(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             $institutionId = $this->getInstitutionID();
@@ -694,7 +694,7 @@ class StudentBehavioursTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldDateOfBehaviour(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
@@ -737,13 +737,13 @@ class StudentBehavioursTable extends ControllerActionTable
     }
 
     // Start PHPOE-1897
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(EventInterface $event)
     {
         $tabElements = $this->getStudentBehaviourTabElements();
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->getAlias());
     }
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['visible' => false]);// POCOR 6154
         $this->request->getData($this->getAlias())['student_id'] = $entity->student_id;
@@ -752,7 +752,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $this->setupFields($entity, $extra);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         // $ClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
@@ -771,7 +771,7 @@ class StudentBehavioursTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($action == 'view') {
             $institutionId = $this->getInstitutionID();
@@ -786,7 +786,7 @@ class StudentBehavioursTable extends ControllerActionTable
     }
     // End PHPOE-1897
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStudentId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             $studentOptions = [];
@@ -813,7 +813,7 @@ class StudentBehavioursTable extends ControllerActionTable
     }
 
 
-    public function institutionStudentRiskCalculateRiskValue(Event $event, ArrayObject $params)
+    public function institutionStudentRiskCalculateRiskValue(EventInterface $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];
@@ -907,7 +907,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
 
         $extraField[] = [
@@ -949,7 +949,7 @@ class StudentBehavioursTable extends ControllerActionTable
         $fields->exchangeArray($extraField);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->getInstitutionID();
         // POCOR 6154
@@ -990,7 +990,7 @@ class StudentBehavioursTable extends ControllerActionTable
     }
 
     /*POCOR-5177 starts*/
-    public function deleteBeforeAction(Event $event, ArrayObject $extra)
+    public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $id = $this->request->getData('primaryKey');
         $jsonData = base64_decode($id);
@@ -1027,7 +1027,7 @@ class StudentBehavioursTable extends ControllerActionTable
     /**
      * POCOR-5186 Assignee id
     */
-    public function onGetAssigneeId(Event $event, Entity $entity)
+    public function onGetAssigneeId(EventInterface $event, Entity $entity)
     {
         if ($this->action == 'view') {
             return $entity->assignee->name;
@@ -1038,7 +1038,7 @@ class StudentBehavioursTable extends ControllerActionTable
      * POCOR-5186 Assignee id
      *add assignee dropdown in edit and view page
     */
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $workflowModel = 'Institutions > Behaviour > Students';
@@ -1172,7 +1172,7 @@ class StudentBehavioursTable extends ControllerActionTable
     }
 
     //POCOR-7223 start
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'academic_period_id':
@@ -1218,18 +1218,18 @@ class StudentBehavioursTable extends ControllerActionTable
     }
 
     //POCOR-8665 Start
-    public function onUpdateFieldStudentBehaviourClassificationId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldStudentBehaviourClassificationId(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $behaviourClassificationOptions = [];
             //POCOR-8866 start
             $behaviourClassificationOptions = $this->StudentBehaviourClassifications
             ->find('list', [
-                'keyField' => 'id', 
-                'valueField' => 'name' 
+                'keyField' => 'id',
+                'valueField' => 'name'
             ])
             ->toArray();
-           
+
             // $behaviourCategoryId = 0;
             // if ($request->is(['post', 'put'])) {
             //     $behaviourCategoryId = $request->getData($this->aliasField('student_behaviour_category_id'));
@@ -1250,7 +1250,7 @@ class StudentBehavioursTable extends ControllerActionTable
                 //     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                 //     ->where([$this->StudentBehaviourClassifications->aliasField('id') => $behaviourCategories])
                 //     ->toArray();
-                // } 
+                // }
             // }
             $attr['options'] = $behaviourClassificationOptions;
             //POCOR-8866 end

@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Table; // POCOR-8683
 use Cake\Utility\Inflector; // POCOR-8683
@@ -18,18 +18,13 @@ class UserCascadeBehavior extends Behavior {
 		// $this->showSQL();
 	}
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
-		$userId = $entity->id;
-		$this->cleanUserRecords($userId);
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    {
+        $userId = $entity->id;
+        $this->cleanUserRecords($userId);
+    }
 
-        $body = [];
-        $body = [
-        	'security_user_id' => $userId
-        ];
 
-		$Webhooks = TableRegistry::get('Webhook.Webhooks');
-		$Webhooks->triggerShell('security_user_delete', ['username' => ''], $body);
-	}
 
 	// this function is to delete all records from user's related tables
 	// (tables that contains security_user_id, student_id, staff_id, guardian_id)
@@ -42,6 +37,7 @@ class UserCascadeBehavior extends Behavior {
 		$fields = ['security_user_id', 'student_id', 'staff_id', 'guardian_id', 'trainee_id'];
 
 		foreach ($tables as $key => $table) {
+            $table = Inflector::underscore($table);
 			if ($this->_table->startsWith($table, 'z_')) { // to exclude all z_ prefix tables
 				continue;
 			}
@@ -54,10 +50,16 @@ class UserCascadeBehavior extends Behavior {
 			try {
 				if (!in_array($table, $excludes)) {
                     $tableObj = self::getDynamicTableInstance($table); // POCOR-8683
+                    $table = Inflector::underscore($table);
+
 					foreach ($fields as $field) {
                         $column = $tableObj->getSchema()->getColumn($field); // POCOR-8683
                         if ($column) {
-							$tableObj->deleteAll([$field => $userId]);
+                            $connection = $tableObj->getConnection();
+                            $quotedTable = $connection->quoteIdentifier($table);
+                            $quotedField = $connection->quoteIdentifier($field);
+                            $sql = "DELETE FROM {$quotedTable} WHERE {$quotedField} = :userId";
+                            $connection->execute($sql, ['userId' => $userId]);
                         }
 					}
 				}
@@ -66,7 +68,7 @@ class UserCascadeBehavior extends Behavior {
 			}
 		}
 
-		$table = TableRegistry::get('Institution.InstitutionClasses');
+		$table = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
 		$table->updateAll(
 			['staff_id' => 0],
 			['staff_id' => $userId]
@@ -103,43 +105,59 @@ class UserCascadeBehavior extends Behavior {
      */
     private static function getDynamicTableInstance(string $tableName): Table
     {
-        // Parse plugin and table names if dot notation is used
         $locator = TableRegistry::getTableLocator();
-        try {
-            return $locator->get($tableName);
-        } catch (\Exception $exception) {
 
+        // First check for exact alias
+        if ($locator->exists($tableName)) {
+            return $locator->get($tableName);
         }
+
+        // Parse plugin and table
         $parts = explode('.', $tableName);
         $plugin = count($parts) > 1 ? $parts[0] : null;
         $table = count($parts) > 1 ? $parts[1] : $parts[0];
 
-        // Convert the table name to camel case as expected by CakePHP conventions
-        $tableFullAlias = Inflector::camelize($tableName);
-        $tableAlias = Inflector::camelize($table);
+        // Try fallback to underscored DB table name
+        $fallbackTable = Inflector::underscore($table);
+        $fallbackAlias = Inflector::camelize($fallbackTable);
 
-        // Create the fully qualified class name if a plugin is specified
         if ($plugin) {
-            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+            $className = $plugin . '\\Model\\Table\\' . $fallbackAlias . 'Table';
         } else {
-            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+            $className = 'App\\Model\\Table\\' . $fallbackAlias . 'Table';
         }
-        // Check if the table instance already exists
-        if (!$locator->exists($tableFullAlias)) {
-            // Check if the specific table class exists
-            if (!class_exists($className)) {
-                $className = Table::class; // Fallback to generic Table class
-            }
 
-            // Configure a new table instance
-            $locator->setConfig($tableAlias, [
+        if (!class_exists($className)) {
+            $className = Table::class; // fallback to base table class
+        }
+
+        if ($locator->exists($fallbackAlias)) {
+            $existingConfig = $locator->getConfig($fallbackAlias);
+
+            // Only override if the existing table config is incorrect
+            if (
+                empty($existingConfig['table']) ||
+                $existingConfig['table'] !== $fallbackTable
+            ) {
+                // Remove and reset only if the config is wrong
+                $locator->remove($fallbackAlias);
+
+                $locator->setConfig($fallbackAlias, [
+                    'className' => $className,
+                    'table' => $fallbackTable,
+                    'alias' => $fallbackAlias,
+                ]);
+            }
+        } else {
+            // Table not registered yet, safe to register
+            $locator->setConfig($fallbackAlias, [
                 'className' => $className,
-                'table' => $table,
-                'alias' => $tableAlias,
+                'table' => $fallbackTable,
+                'alias' => $fallbackAlias,
             ]);
         }
 
-        // Return the table instance
-        return $locator->get($tableFullAlias);
+        return $locator->get($fallbackAlias);
     }
+
 }

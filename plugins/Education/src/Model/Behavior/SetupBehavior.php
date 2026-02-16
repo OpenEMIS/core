@@ -2,7 +2,7 @@
 namespace Education\Model\Behavior;
 
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use ArrayObject;
 
@@ -29,7 +29,7 @@ class SetupBehavior extends Behavior {
 		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => $data, 'order' => 2];
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+	public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
 		$controller = $this->_table->controller;
 
 		// Get page options and their key

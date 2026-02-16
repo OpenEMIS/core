@@ -2,6 +2,7 @@
 namespace User\Model\Behavior;
 
 use ArrayObject;
+use Cake\Event\EventInterface;
 use Cake\Event\Event;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
@@ -20,7 +21,7 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 		}
 	}
 
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany)
+	public function onBuildQuery(EventInterface $event, Query $query, $advancedSearchHasMany)
 	{
 		$search = $advancedSearchHasMany['contact_number'];
 
@@ -51,16 +52,16 @@ class AdvancedContactNumberSearchBehavior extends Behavior {
 		return $events;
 	}
 
-	public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
+	public function onSetupFormField(EventInterface $event, ArrayObject $searchables, $advanceSearchModelData) {
 		$searchables['contact_number'] = [
 			'label' => __('Contact Number'),
 			'value' => (isset($advanceSearchModelData['hasMany']) && isset($advanceSearchModelData['hasMany']['contact_number'])) ? $advanceSearchModelData['hasMany']['contact_number'] : '',
 		];
 	}
 
-	public function onGetContactNumbers(Event $event, Entity $entity) {
+	public function onGetContactNumbers(EventInterface $event, Entity $entity) {
 		$userId = $entity->id;
-		$Contacts = TableRegistry::get('User.Contacts');
+		$Contacts = TableRegistry::getTableLocator()->get('User.Contacts');
 		$studentContacts = $Contacts->find()
 			->contain(['ContactTypes'])
 			->where([

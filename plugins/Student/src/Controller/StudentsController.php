@@ -4,7 +4,7 @@ namespace Student\Controller;
 
 use App\Controller\AppController;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Log\Log;
@@ -77,8 +77,8 @@ class StudentsController extends AppController
         $this->loadComponent('Institution.InstitutionAccessControl');
         $this->attachAngularModules();
 
-        $this->loadModel('User.UserBodyMasses');
-        $this->loadModel('User.UserInsurances');
+        $this->UserBodyMasses = $this->fetchTable('User.UserBodyMasses');
+        $this->UserInsurances = $this->fetchTable('User.UserInsurances');
 
         $this->set('contentHeader', 'Students');
 
@@ -389,8 +389,8 @@ class StudentsController extends AppController
     public
     function getAcademicTabElements($options = [])
     {
-        //$tabElements = TableRegistry::get('Institution.StudentUser')->getAcademicTabElementsNew($options);//PCOOR-8388
-        $this->loadModel('Institution.StudentUser');//PCOOR-8388
+        //$tabElements = TableRegistry::getTableLocator()->get('Institution.StudentUser')->getAcademicTabElementsNew($options);//PCOOR-8388
+        $this->StudentUser = $this->fetchTable('Institution.StudentUser');//PCOOR-8388
         $tabElements = $this->StudentUser->getAcademicTabElements($options, $this);//PCOOR-8388
         return $tabElements;
     }
@@ -444,7 +444,7 @@ class StudentsController extends AppController
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     public
     function getInstitutionID($debugString = "")
@@ -526,7 +526,7 @@ class StudentsController extends AppController
 
 
             // Start POCOR-5188
-            $manualTable = TableRegistry::get('Manuals');
+            $manualTable = TableRegistry::getTableLocator()->get('Manuals');
             $ManualContent = $manualTable->find()->select(['url'])->where([
                 $manualTable->aliasField('function') => 'Examinations',
                 $manualTable->aliasField('module') => 'Institutions',
@@ -746,7 +746,7 @@ class StudentsController extends AppController
 //        return $this->TabPermission->checkTabPermission($tabElements);
 //    }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
 
         $isInstitutionIndex = $this->isStudentIDSkipped();
@@ -794,7 +794,7 @@ class StudentsController extends AppController
                 $institutionIds = $session->read('AccessControl.Institutions.ids');
                 $studentId = $this->getStudentID();
                 $enrolledStatus = false;
-                $InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+                $InstitutionStudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
                  foreach ($institutionIds as $id) {
                     $enrolledStatus = $InstitutionStudentsTable->checkEnrolledInInstitution($studentId, $id);
                     if ($enrolledStatus) {
@@ -863,7 +863,7 @@ class StudentsController extends AppController
     function getStatusPermission($model)
     {
         $institutionId = $this->getInstitutionID();
-        $Institutions = TableRegistry::get('Institution.Institutions');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $isActive = $Institutions->isActive($institutionId);
 
         // institution status is INACTIVE
@@ -883,13 +883,13 @@ class StudentsController extends AppController
     }
 
     public
-    function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra)
+    function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
     {
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
     public
-    function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options)
+    function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
     {
         $session = $this->request->getSession();
         // POCOR-8014-n
@@ -1029,7 +1029,7 @@ class StudentsController extends AppController
         }
 
         $InstitutionStudents =
-            TableRegistry::get('Institution.InstitutionStudents')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')
                 ->find()
                 ->where([
                     'InstitutionStudents.student_id' => $userId
@@ -1038,11 +1038,11 @@ class StudentsController extends AppController
                 ->first();
 
         $institutionId = $InstitutionStudents['institution_id'];
-        $academicPeriodId = TableRegistry::get('AcademicPeriod.AcademicPeriods')
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
             ->getCurrent();
 
         $InstitutionClassStudentsResult =
-            TableRegistry::get('Institution.InstitutionClassStudents')
+            TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents')
                 ->find()
                 ->where([
                     'academic_period_id' => $academicPeriodId,
@@ -1054,7 +1054,7 @@ class StudentsController extends AppController
 
         $institutionClassId = (!empty($InstitutionClassStudentsResult)) ? $InstitutionClassStudentsResult['institution_class_id'] : 0;
 
-        $ScheduleTimetables = TableRegistry::get('Schedule.ScheduleTimetables')
+        $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables')
             ->find()
             ->where([
                 'academic_period_id' => $academicPeriodId,
@@ -1073,7 +1073,7 @@ class StudentsController extends AppController
         $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
 
         // Start POCOR-5188
-        $manualTable = TableRegistry::get('Manuals');
+        $manualTable = TableRegistry::getTableLocator()->get('Manuals');
         $ManualContent = $manualTable->find()->select(['url'])->where([
             $manualTable->aliasField('function') => 'Students',
             $manualTable->aliasField('module') => 'Institutions',

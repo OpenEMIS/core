@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -57,7 +57,7 @@ class CustomReportsTable extends AppTable
         return $validator->notEmpty('feature');
     }
 
-	public function beforeAction(Event $event)
+	public function beforeAction(EventInterface $event)
 	{
 		$controllerName = $this->controller->getName();
 		$reportName = __('Custom');
@@ -66,7 +66,7 @@ class CustomReportsTable extends AppTable
 		$this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
 	}
 
-	public function addBeforeAction(Event $event)
+	public function addBeforeAction(EventInterface $event)
     {
         $this->fields = [];
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
@@ -196,7 +196,7 @@ class CustomReportsTable extends AppTable
         }
     }
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, ServerRequest $request)
+	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         ini_set('memory_limit', '-1');
         if ($action == 'add') {
@@ -240,7 +240,7 @@ class CustomReportsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldFormat(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFormat(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             if (isset($this->request->getData($this->getAlias())['feature']) && !empty($this->request->getData($this->getAlias())['feature'])) {
@@ -262,10 +262,10 @@ class CustomReportsTable extends AppTable
     }
 
     // academic period filter
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
 
@@ -279,7 +279,7 @@ class CustomReportsTable extends AppTable
         }
     }
 
-    public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateBeforeGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
         $str = $this->get($params['feature'])->name;
         $reportName = str_replace(' ', '_', $str);
@@ -288,7 +288,7 @@ class CustomReportsTable extends AppTable
         ]);
     }
 
-    public function onExcelTemplateInitialiseQueryVariables(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseQueryVariables(EventInterface $event, array $params, ArrayObject $extra)
     {
         // get json query from reports database table
         $customReportData = $this->get($params['feature']);
@@ -303,7 +303,7 @@ class CustomReportsTable extends AppTable
         return $variables;
     }
 
-    public function onCsvBeforeGenerate(Event $event, ArrayObject $settings)
+    public function onCsvBeforeGenerate(EventInterface $event, ArrayObject $settings)
     {
         $params = $settings['requestQuery'];
         $customReportData = $this->get($params['feature']);
@@ -328,10 +328,10 @@ class CustomReportsTable extends AppTable
     }
 
     /*POCOR-6451 starts- institution filter*/
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $InstitutionsTable = TableRegistry::get('Institution.Institutions');
+            $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $institutionTypeId = $request->data['CustomReports']['institution_type_id'];
             $institutionQuery = $InstitutionsTable
                                 ->find('list', [
@@ -365,10 +365,10 @@ class CustomReportsTable extends AppTable
     /*POCOR-6451 ends*/
 
     // Institution Type filter POCOR-7069
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $TypesTable = TableRegistry::get('Institution.Types');
+            $TypesTable = TableRegistry::getTableLocator()->get('Institution.Types');
             $typeOptions = $TypesTable
                     ->find('list')
                     ->find('visible')
@@ -384,20 +384,20 @@ class CustomReportsTable extends AppTable
     }
 
     // POCOR-7096 education grade filter
-    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodOptions = $AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $AcademicPeriods->getCurrent();
 
             $selectedPeriod = $request->data['CustomReports']['academic_period_id'];
             $institutionId = $request->data['CustomReports']['institution_id'];
             $institutionTypeId = $request->data['CustomReports']['institution_type_id'];
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $grades = TableRegistry::get('Institution.InstitutionGrades');
-            $institutions = TableRegistry::get('Institution.Institutions');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+            $grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+            $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 
             //POCOR-7178 start
             $conditions = [];
@@ -437,17 +437,17 @@ class CustomReportsTable extends AppTable
     }
 
     // POCOR-7069 education sujbect filter
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $selectedPeriod = $request->data['CustomReports']['academic_period_id'];
             $institutionId = $request->data['CustomReports']['institution_id'];
             $institutionTypeId = $request->data['CustomReports']['institution_type_id'];
             $educationGradeId = $request->data['CustomReports']['education_grade_id'];
-            $EducationGrades = TableRegistry::get('Education.EducationGrades');
-            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-            $grades = TableRegistry::get('Institution.InstitutionGrades');
-            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+            $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+            $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+            $grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+            $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
 
             $subjects = $EducationSubjects->find()
                     ->find('list')
@@ -466,7 +466,7 @@ class CustomReportsTable extends AppTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

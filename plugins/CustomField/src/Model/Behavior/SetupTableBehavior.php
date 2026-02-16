@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\Datasource\ResultSetInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\Http\ServerRequest;
 
@@ -34,7 +34,7 @@ class SetupTableBehavior extends SetupBehavior
         ];
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(EventInterface $event)
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
@@ -45,7 +45,7 @@ class SetupTableBehavior extends SetupBehavior
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterQuery(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->field_type == $this->fieldTypeCode) {
             $this->buildTableValidator();
@@ -140,7 +140,7 @@ class SetupTableBehavior extends SetupBehavior
         ;
     }
 
-    public function onSetTableElements(Event $event, Entity $entity)
+    public function onSetTableElements(EventInterface $event, Entity $entity)
     {
         $model = $this->_table;
 
@@ -287,7 +287,7 @@ class SetupTableBehavior extends SetupBehavior
         // end tables element
     }
 
-    public function onGetTableValidationRule(Event $event, Entity $entity)
+    public function onGetTableValidationRule(EventInterface $event, Entity $entity)
     {
         $value = '';
         $selectedValidationRule = $entity->has('table_validation_rule') ? $entity->table_validation_rule : key($this->ruleOptions);
@@ -296,7 +296,7 @@ class SetupTableBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onGetTableNumberValidation(Event $event, Entity $entity)
+    public function onGetTableNumberValidation(EventInterface $event, Entity $entity)
     {
         $value = '';
         $selectedNumberValidation = $entity->has('table_number_validation') ? $entity->table_number_validation : key($this->numberValidationOptions);
@@ -305,7 +305,7 @@ class SetupTableBehavior extends SetupBehavior
         return $value;
     }
 
-    public function onUpdateFieldTableValidationRule(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTableValidationRule(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'select';
@@ -324,7 +324,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableNumberValidation(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTableNumberValidation(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -336,7 +336,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableDecimalLength(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTableDecimalLength(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
@@ -361,7 +361,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function onUpdateFieldTableDecimalPrecision(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldTableDecimalPrecision(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
@@ -386,7 +386,7 @@ class SetupTableBehavior extends SetupBehavior
         return $attr;
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryCopy = clone($query);
         $entity = $queryCopy->first();
@@ -408,7 +408,7 @@ class SetupTableBehavior extends SetupBehavior
         });
     }
 
-    public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -424,7 +424,7 @@ class SetupTableBehavior extends SetupBehavior
         }
     }
 
-    public function addEditOnAddColumn(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddColumn(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
@@ -442,7 +442,7 @@ class SetupTableBehavior extends SetupBehavior
         }
     }
 
-    public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnAddRow(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
         if ($data[$model->getAlias()]['field_type'] == $this->fieldTypeCode) {
@@ -460,7 +460,7 @@ class SetupTableBehavior extends SetupBehavior
         }
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
             if (isset($data['table_validation_rule'])) {

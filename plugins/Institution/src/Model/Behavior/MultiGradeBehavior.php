@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\I18n\Time;
 
 use ControllerAction\Model\Traits\EventTrait;
@@ -27,7 +27,7 @@ class MultiGradeBehavior extends Behavior
         return $events;
     }
 
-    public function buildValidator(Event $event, Validator $validator, $name)
+    public function buildValidator(EventInterface $event, Validator $validator, $name)
     {
         $validator->notEmpty('education_grades');
     }
@@ -37,7 +37,7 @@ class MultiGradeBehavior extends Behavior
 ** add action methods
 **
 ******************************************************************************************************************/
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         /**
          * add form setup
@@ -95,7 +95,7 @@ class MultiGradeBehavior extends Behavior
         ]);
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $model = $this->_table;
         $request = $this->_table->request;
@@ -126,7 +126,7 @@ class MultiGradeBehavior extends Behavior
         $model->fields['multi_grade_field']['selected'] = $selected;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $model = $this->_table;
         $errors = $entity->getErrors();
@@ -232,7 +232,7 @@ class MultiGradeBehavior extends Behavior
     }
     //POCOR-8538 end
 
-    public function afterSaveCommit(Event $event, Entity $entity)
+    public function afterSaveCommit(EventInterface $event, Entity $entity)
     {
         if ($entity->has('secondary_staff') && !empty($entity->secondary_staff['_ids'])) {
             $secondaryStaffIds = $entity->secondary_staff['_ids'];

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
@@ -191,7 +191,7 @@ class InstitutionRubricAnswersTable extends AppTable {
 			}
 
 			// Rubric Template Options
-			$RubricTemplateOptions = TableRegistry::get('Rubric.RubricTemplateOptions');
+			$RubricTemplateOptions = TableRegistry::getTableLocator()->get('Rubric.RubricTemplateOptions');
 			$optionQuery = $RubricTemplateOptions
 				->find()
 				->find('order')
@@ -223,7 +223,7 @@ class InstitutionRubricAnswersTable extends AppTable {
 		}
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+	public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		$toolbarButtons['back'] = $buttons['back'];
 		$toolbarButtons['back']['url']['action'] = 'Rubrics';
 		if (isset($toolbarButtons['back']['url']['section'])) {
@@ -235,7 +235,7 @@ class InstitutionRubricAnswersTable extends AppTable {
 		$toolbarButtons['back']['attr']['title'] = __('Back');
 	}
 
-	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
+	public function onGetFormButtons(EventInterface $event, ArrayObject $buttons) {
 		$cancelButton = $buttons[1];
 		$buttons[0] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Save As Draft'),

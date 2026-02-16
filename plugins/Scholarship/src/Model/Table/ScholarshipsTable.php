@@ -6,7 +6,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Controller\Component;
@@ -76,7 +76,7 @@ class ScholarshipsTable extends ControllerActionTable
         $this->fieldOfStudySelection = $this->getSelectOptions($this->aliasField('field_of_study_selection'));
         $this->interestRateOptions = $this->getSelectOptions($this->aliasField('interest_rate'));
         $this->mandatoryOptions = $this->getSelectOptions('general.yesno');
-        $this->currency = TableRegistry::get('Configuration.ConfigItems')->value('currency');
+        $this->currency = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('currency');
 
         $this->addBehavior('Excel', [
             'pages' => ['index']
@@ -90,7 +90,7 @@ class ScholarshipsTable extends ControllerActionTable
     //     return $events;
     // }
 
-    // public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    // public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona)
     // {
     //     if (in_array($this->action, ['view', 'edit'])) {
     //         $scholarshipId = $this->ControllerAction->getQueryString('id');
@@ -142,7 +142,7 @@ class ScholarshipsTable extends ControllerActionTable
             // ]);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
         $query
             ->contain([
                 'Loans.PaymentFrequencies',
@@ -187,7 +187,7 @@ class ScholarshipsTable extends ControllerActionTable
             ]);
     }
 
-     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
      {
             $newArray = [];
             $newArray[] = [
@@ -313,7 +313,7 @@ class ScholarshipsTable extends ControllerActionTable
             $fields->exchangeArray($newArray);
     }
 
-    public function onExcelGetInterestRateType(Event $event, Entity $entity)
+    public function onExcelGetInterestRateType(EventInterface $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('interest_rate_type')) {
@@ -325,7 +325,7 @@ class ScholarshipsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onExcelGetAllAttachmentTypes(Event $event, Entity $entity)
+    public function onExcelGetAllAttachmentTypes(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('attachment_types')) {
@@ -338,7 +338,7 @@ class ScholarshipsTable extends ControllerActionTable
         return implode(', ', array_values($return));
     }
 
-    public function onExcelGetAllFieldOfStudies(Event $event, Entity $entity)
+    public function onExcelGetAllFieldOfStudies(EventInterface $event, Entity $entity)
     {
         $return = [];
         if ($entity->has('field_of_studies')) {
@@ -347,7 +347,7 @@ class ScholarshipsTable extends ControllerActionTable
                         $return[] = $studyField->name;
                 }
             }else {
-                $EducationFieldOfStudies = TableRegistry::get('Education.EducationFieldOfStudies')->getList()->toArray();
+                $EducationFieldOfStudies = TableRegistry::getTableLocator()->get('Education.EducationFieldOfStudies')->getList()->toArray();
                 foreach ($EducationFieldOfStudies as $educationFieldOfStudy) {
                     $return [] = $educationFieldOfStudy;
                 }
@@ -356,12 +356,12 @@ class ScholarshipsTable extends ControllerActionTable
         return implode(', ', array_values($return));
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->controller->set('contentHeader', __($this->getHeader($this->getAlias())) . ' - ' . __('Details'));
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('description', ['visible' => false]);
         $this->field('scholarship_financial_assistance_type_id', ['visible' => false]);
@@ -394,17 +394,17 @@ class ScholarshipsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $entity->field_of_study_selection = self::SELECT_FIELD_OF_STUDIES;
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $isSelectAll = $this->checkIsSelectAll($entity);
 
@@ -415,12 +415,12 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $code = $entity->financial_assistance_type->code;
         switch ($code) {
@@ -451,7 +451,7 @@ class ScholarshipsTable extends ControllerActionTable
         $this->setupFields($entity);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
             ->contain([
@@ -463,14 +463,14 @@ class ScholarshipsTable extends ControllerActionTable
             ]);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->AttachmentTypes->getAlias(), $this->FieldOfStudies->getAlias()
         ];
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         /** Start POCOR-7158 */
         $connection = ConnectionManager::get('default');
@@ -478,7 +478,7 @@ class ScholarshipsTable extends ControllerActionTable
         /** End POCOR-7158 */
 
         if ($entity->has('field_of_study_selection') && $entity->field_of_study_selection == self::SELECT_ALL_FIELD_OF_STUDIES) {
-            $ScholarshipsFieldOfStudies = TableRegistry::get('Scholarship.ScholarshipsFieldOfStudies');
+            $ScholarshipsFieldOfStudies = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipsFieldOfStudies');
 
             $data = [
                 'scholarship_id' => $entity->id,
@@ -496,7 +496,7 @@ class ScholarshipsTable extends ControllerActionTable
         /** End POCOR-7158 */
     }
 
-    public function onGetFieldOfStudies(Event $event, Entity $entity)
+    public function onGetFieldOfStudies(EventInterface $event, Entity $entity)
     {
         $isSelectAll = $this->checkIsSelectAll($entity);
 
@@ -511,12 +511,12 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
     //Start:POCOR-6839
-    public function onGetScholarshipFinancialAssistanceId(Event $event, Entity $entity)
+    public function onGetScholarshipFinancialAssistanceId(EventInterface $event, Entity $entity)
     {
         $isSelectAll = $this->checkIsSelectAll($entity);
     }
     //End:POCOR-6839
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'maximum_award_amount') {
             return __('Annual Award Amount');
@@ -563,39 +563,39 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
-    public function onGetBond(Event $event, Entity $entity)
+    public function onGetBond(EventInterface $event, Entity $entity)
     {
         return $entity->bond . ' ' . __('Years');
     }
 
-    public function onGetDuration(Event $event, Entity $entity)
+    public function onGetDuration(EventInterface $event, Entity $entity)
     {
         return $entity->duration . ' ' . __('Years');
     }
 
-    public function onGetInterestRate(Event $event, Entity $entity)
+    public function onGetInterestRate(EventInterface $event, Entity $entity)
     {
         return $entity->loan->interest_rate;
     }
 
-    public function onGetInterestRateType(Event $event, Entity $entity)
+    public function onGetInterestRateType(EventInterface $event, Entity $entity)
     {
         $interestRateType = $entity->loan->interest_rate_type;
         $value = $this->interestRateOptions[$interestRateType];
         return $value;
     }
 
-    public function onGetScholarshipPaymentFrequencyId(Event $event, Entity $entity)
+    public function onGetScholarshipPaymentFrequencyId(EventInterface $event, Entity $entity)
     {
         return $entity->loan->payment_frequency->name;
     }
 
-    public function onGetLoanTerm(Event $event, Entity $entity)
+    public function onGetLoanTerm(EventInterface $event, Entity $entity)
     {
         return $entity->loan->loan_term . ' ' . __('Years');
     }
 
-    public function onUpdateFieldFieldOfStudySelection(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldFieldOfStudySelection(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->fieldOfStudySelection;
             $attr['select'] = false;
@@ -604,7 +604,7 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
     //Start:POCOR-6839
-    // public function onUpdateFieldScholarshipFinancialAssistanceTypeId(Event $event, array $attr, $action, Request $request)
+    // public function onUpdateFieldScholarshipFinancialAssistanceTypeId(EventInterface $event, array $attr, $action, Request $request)
     // {
     //     if ($action == 'add' || $action == 'edit') {
     //         $attr['onChangeReload'] = 'changeScholarshipFinancialAssistanceId';
@@ -627,7 +627,7 @@ class ScholarshipsTable extends ControllerActionTable
     //     return $attr;
     // }
     //END:POCOR-6839
-    public function onUpdateFieldFieldOfStudies(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldFieldOfStudies(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
             $fieldOfStudySelection = $entity->field_of_study_selection;
@@ -645,7 +645,7 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBond(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldBond(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->getBondOptions(self::MAX_YEARS);
@@ -653,7 +653,7 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
 
-   public function onUpdateFieldDuration(Event $event, array $attr, $action, ServerRequest $request)
+   public function onUpdateFieldDuration(EventInterface $event, array $attr, $action, ServerRequest $request)
    {
         if ($action == 'add' || $action == 'edit') {
             $attr['options'] = $this->getDurationOptions(self::MAX_YEARS);
@@ -661,7 +661,7 @@ class ScholarshipsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnSelectAttachmentType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnSelectAttachmentType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $fieldKey = 'attachment_types';
 
@@ -684,7 +684,7 @@ class ScholarshipsTable extends ControllerActionTable
         }
     }
 
-    public function onGetCustomAttachmentTypeElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomAttachmentTypeElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'index') {
             // No implementation yet
@@ -807,10 +807,10 @@ class ScholarshipsTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
-		 $tableSFA = TableRegistry::get('Scholarship.FinancialAssistanceTypes');
+		 $tableSFA = TableRegistry::getTableLocator()->get('Scholarship.FinancialAssistanceTypes');
          $tableSFAFirst = $tableSFA->find('all',['conditions'=>['name' => 'Grant' ]])->first();
         if($entity->scholarship_financial_assistance_type_id == $tableSFAFirst->id){
-            $tavle = TableRegistry::get('Scholarship.ScholarshipFinancialAssistances');
+            $tavle = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipFinancialAssistances');
             $dataSelections = $tavle->find('list',['keyField' => 'id', 'valueField' => 'name'])->toArray();
             $this->field('scholarship_financial_assistance_id', [
                 'type' => 'select',
@@ -898,7 +898,7 @@ class ScholarshipsTable extends ControllerActionTable
         ]);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
@@ -949,7 +949,7 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function checkIsSelectAll($entity)
     {
-        $ScholarshipsFieldOfStudies = TableRegistry::get('Scholarship.ScholarshipsFieldOfStudies');
+        $ScholarshipsFieldOfStudies = TableRegistry::getTableLocator()->get('Scholarship.ScholarshipsFieldOfStudies');
 
         $isSelectAll = $ScholarshipsFieldOfStudies->exists([
             $ScholarshipsFieldOfStudies->aliasField('scholarship_id') => $entity->id,

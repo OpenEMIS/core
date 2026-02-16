@@ -14,7 +14,7 @@ class PeriodBehavior extends Behavior
         $table = $this->_table;
 
         if (isset($options['academic_period_id'])) {
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodObj = $AcademicPeriods
                 ->findById($options['academic_period_id'])
                 ->first();
@@ -131,7 +131,7 @@ class PeriodBehavior extends Behavior
         $field = $options['field'];
         $academicPeriodId = $options['academic_period_id'];
 
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
 
         $startDate = $periodEntity->start_date->format('Y-m-d');

@@ -4,7 +4,7 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -20,7 +20,7 @@ class StudentsRiskAssessmentTable extends AppTable  {
 
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    public function onExcelBeforeStart (EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $sheets[] = [
             'name' => $this->getAlias(),

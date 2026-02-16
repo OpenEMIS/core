@@ -3,7 +3,7 @@ namespace Schedule\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -108,7 +108,7 @@ class ScheduleTermsTable extends ControllerActionTable
      }
     // POCOR-8985 end
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->order([$this->aliasField('start_date') => 'ASC']);
 
@@ -119,7 +119,7 @@ class ScheduleTermsTable extends ControllerActionTable
         }
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupField();
 
@@ -166,18 +166,18 @@ class ScheduleTermsTable extends ControllerActionTable
 		// End POCOR-5188
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupField($entity);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupField();
     }
 
     // OnUpdate Events
-    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             $attr['type'] = 'select';
@@ -190,14 +190,14 @@ class ScheduleTermsTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldStartDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
             return $this->updateDateRangeField('start_date', $attr, $request);
         }
     }
 
-    public function onUpdateFieldEndDate(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
 
         if ($action == 'add' || $action == 'edit') {
@@ -247,7 +247,7 @@ class ScheduleTermsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'code', 'name', 'start_date', 'end_date']);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'code':

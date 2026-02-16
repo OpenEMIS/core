@@ -26,13 +26,13 @@ class InstitutionHistoriesTable extends ControllerActionTable
         $this->addBehavior('Activity');
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(EventInterface $event) {
         $this->field('model_reference', ['visible' => false]);
         $this->field('field_type', ['visible' => false]);
         $this->field('operation', ['visible' => false]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'created') {
             return __('Modified On');

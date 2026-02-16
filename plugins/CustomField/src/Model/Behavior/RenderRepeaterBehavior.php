@@ -4,7 +4,7 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 use Cake\Log\Log;
 use Cake\Utility\Text;
@@ -21,12 +21,12 @@ class RenderRepeaterBehavior extends RenderBehavior {
         parent::initialize($config);
     }
 
-	public function onGetCustomRepeaterElement(Event $event, $action, $entity, $attr, $options=[]) {
-        $CustomFieldTypes = TableRegistry::get('CustomField.CustomFieldTypes');
-        $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
-        $CustomFormsFields = TableRegistry::get('Survey.SurveyFormsQuestions');
-        $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-        $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+	public function onGetCustomRepeaterElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
+        $CustomFieldTypes = TableRegistry::getTableLocator()->get('CustomField.CustomFieldTypes');
+        $CustomFields = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
+        $CustomFormsFields = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        $RepeaterSurveys = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
+        $RepeaterSurveyAnswers = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyAnswers');
 
         $model = $this->_table;
         $session = $model->request->getSession();
@@ -477,7 +477,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function formatRepeaterEntity(Event $event, Entity $entity, ArrayObject $settings) {
+    public function formatRepeaterEntity(EventInterface $event, Entity $entity, ArrayObject $settings) {
         $surveysArray = $entity->has('institution_repeater_surveys') ? $entity->institution_repeater_surveys : [];
         $repeatersArray = $entity->has('institution_repeaters') ? $entity->institution_repeaters : [];
 
@@ -488,8 +488,8 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
             $params = json_decode($customField->params, true);
             if (array_key_exists($formKey, $params)) {
-                $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
-                $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
+                $RepeaterSurveys = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
+                $RepeaterSurveyAnswers = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyAnswers');
 
                 $status = $entity->status_id;
                 $institutionId = $entity->institution_id;
@@ -569,9 +569,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         $entity->set('institution_repeaters', $repeatersArray);
     }
 
-    public function processRepeaterValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processRepeaterValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         if ($entity->has('institution_repeater_surveys')) {
-            $CustomFields = TableRegistry::get('Survey.SurveyQuestions');
+            $CustomFields = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
 
             $fieldKey = 'survey_question_id';
             $formKey = 'survey_form_id';
@@ -653,9 +653,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
     }
 
     // TODO: To implement delete logic for survey relevance
-    // public function deleteCustomFieldValues(Event $event, $parentFormId, $deleteFieldIds)
+    // public function deleteCustomFieldValues(EventInterface $event, $parentFormId, $deleteFieldIds)
     // {
-        // $RepeaterSurveys = TableRegistry::get('InstitutionRepeater.RepeaterSurveys');
+        // $RepeaterSurveys = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveys');
         // $institutionRepeaterSurveyIds = $RepeaterSurveys
         //     ->find()
         //     ->where([$RepeaterSurveys->aliasField('parent_form_id') => $parentFormId])
@@ -663,7 +663,7 @@ class RenderRepeaterBehavior extends RenderBehavior {
 
 
 
-        // $SurveyQuestions = TableRegistry::get('Survey.SurveyQuestions');
+        // $SurveyQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyQuestions');
         // $formIds = $SurveyQuestions
         //     ->find()
         //     ->where([
@@ -680,9 +680,9 @@ class RenderRepeaterBehavior extends RenderBehavior {
         // }
 
         // if (!empty($surveyFormId)) {
-        //     $SurveyFormsQuestions = TableRegistry::get('Survey.SurveyFormsQuestions');
-        //     $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
-        //     $RepeaterSurveyTableCells = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells')
+        //     $SurveyFormsQuestions = TableRegistry::getTableLocator()->get('Survey.SurveyFormsQuestions');
+        //     $RepeaterSurveyAnswers = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyAnswers');
+        //     $RepeaterSurveyTableCells = TableRegistry::getTableLocator()->get('InstitutionRepeater.RepeaterSurveyTableCells')
         //     $questionId = $SurveyFormsQuestions
         //         ->find()
         //         ->innerJoinWith('CustomFields')

@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
@@ -73,14 +73,14 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $events;
     }
 
-    public function onGetBreadcrumb(Event $event, ServerRequest $request, Component $Navigation, $persona=false)
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona=false)
     {
         $url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentTransferIn'];
         $Navigation->substituteCrumb('Bulk Student Transfer In', 'Student Transfer In', $url);
         $Navigation->addCrumb('Bulk Student Transfer In');
     }
 
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $request = $this->request;
         $session = $this->Session;
@@ -119,7 +119,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
 //        $this->log($query->sql(), 'debug');
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         switch ($this->action) {
             case 'edit':
@@ -136,12 +136,12 @@ class BulkStudentTransferInTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldWorkflowId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -160,7 +160,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStatus(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldStatus(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -179,14 +179,14 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeStatus(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeStatus(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $data[$this->getAlias()]['action'] = null;
         $data[$this->getAlias()]['next_step'] = null;
         $data[$this->getAlias()]['assignee_id'] = null;
     }
 
-    public function onUpdateFieldAction(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAction(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -210,13 +210,13 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $attr;
     }
 
-    public function addEditOnChangeAction(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addEditOnChangeAction(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $data[$this->getAlias()]['next_step'] = null;
         $data[$this->getAlias()]['assignee_id'] = null;
     }
 
-    public function onUpdateFieldNextStep(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldNextStep(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -242,7 +242,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -263,7 +263,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                     ->first();
                 $isSchoolBased = $workflowModelEntity['WorkflowModels']['is_school_based'];
                 if (!$autoAssignAssignee) {
-                    $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                    $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
                     $params = [
                         'is_school_based' => $isSchoolBased,
                         'workflow_step_id' => $nextStepId
@@ -285,7 +285,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                 break;
 
             case 'reconfirm':
-                $SecurityUsers = TableRegistry::get('Security.Users');
+                $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
                 $value = $SecurityUsers
                     ->find()
                     ->where([$SecurityUsers->aliasField('id') => $this->_currentData->assignee_id])
@@ -302,7 +302,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldComment(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldComment(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'reconfirm':
@@ -315,7 +315,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldBulkStudentTransferIn(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldBulkStudentTransferIn(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         switch ($this->action) {
             case 'edit':
@@ -372,7 +372,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return true;
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         $process = function ($model, $entity) use ($event, $data) {
             $data = $data->getArrayCopy();
@@ -470,7 +470,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
                 }
             }
         }
-        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+        $WorkflowTransitions = TableRegistry::getTableLocator()->get('Workflow.WorkflowTransitions');
         $workflowTransitionEntities = $WorkflowTransitions->newEntities($workflowTransitionObj);
         if ($WorkflowTransitions->saveMany($workflowTransitionEntities)) {
             //$this->Alert->success($this->aliasField('success'), ['reset' => true]);
@@ -486,7 +486,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         return $this->controller->redirect($url);
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
     {
         switch ($this->action) {
             case 'edit':
@@ -544,7 +544,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param $statusId
      * @return int
      */
@@ -564,7 +564,7 @@ class BulkStudentTransferInTable extends ControllerActionTable
         if (empty($roleIds)) {
             $roleIds = [0];
         }
-        $all_steps_and_roles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+        $all_steps_and_roles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
         $distinct_step = $all_steps_and_roles->find()
             ->select(['workflow_step_id'])
             ->where(['workflow_step_id' => $statusId,

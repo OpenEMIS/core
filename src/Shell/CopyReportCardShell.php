@@ -30,7 +30,7 @@ class CopyReportCardShell extends Shell
     {
         $canCopy = false;
 
-        $ReportCard = TableRegistry::get('ReportCard.ReportCards');
+        $ReportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $count = $ReportCard->find()->where([$ReportCard->aliasField('academic_period_id') => $copyTo])->count();
         // can copy if no assessment created in current acedemic period before
         if ($count == 0) {
@@ -41,9 +41,9 @@ class CopyReportCardShell extends Shell
     }
     private function copyProcess($copyFrom, $copyTo)
     {
-        $ReportCardTable = TableRegistry::get('ReportCard.ReportCards');
-        $ReportCardExcludedSecurityRolesTable = TableRegistry::get('ReportCard.ReportCardExcludedSecurityRoles');
-        $ReportCardSubjectsTable = TableRegistry::get('ReportCard.ReportCardSubjects');
+        $ReportCardTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
+        $ReportCardExcludedSecurityRolesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardExcludedSecurityRoles');
+        $ReportCardSubjectsTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardSubjects');
         $ReportCardData = $ReportCardTable->find()->where([$ReportCardTable->aliasField('academic_period_id') => $copyFrom])->toArray();
         $connection = ConnectionManager::get('default');
         try{

@@ -3,7 +3,7 @@ namespace SpecialNeeds\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -35,7 +35,7 @@ class SpecialNeedsDiagnosticsDegreeTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $SpecialNeedsDiagnosticsTypesTable = TableRegistry::get('SpecialNeeds.SpecialNeedsDiagnosticsTypes');
+        $SpecialNeedsDiagnosticsTypesTable = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsDiagnosticsTypes');
         $SpecialNeedsDiagnosticsTypesOptions = $SpecialNeedsDiagnosticsTypesTable->getDiagnosticsTypeList();
         $this->field('name');
         $this->field('default', ['entity' => $entity]);
@@ -46,22 +46,22 @@ class SpecialNeedsDiagnosticsDegreeTable extends ControllerActionTable
         $this->setFieldOrder(['special_needs_diagnostics_types_id', 'name', 'default', 'international_code', 'national_code']);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['special_needs_diagnostics_types_id', 'name', 'default', 'international_code', 'national_code']);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -82,19 +82,19 @@ class SpecialNeedsDiagnosticsDegreeTable extends ControllerActionTable
     }
     // End POCOR-7286
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {  
         switch ($field) {
             case 'modified':

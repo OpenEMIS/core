@@ -2,7 +2,7 @@
 namespace App\Model\Behavior;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Behavior;
@@ -69,7 +69,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         $this->generateXLXS($ids);
     }
 
-    public function excelV4(Event $mainEvent, ArrayObject $extra)
+    public function excelV4(EventInterface $mainEvent, ArrayObject $extra)
     {
         $id = 0;
         $break = false;
@@ -161,19 +161,19 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
 
     //POCOR-5863 starts
     private function getData($settings) {
-        $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+        $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->getIdByCode('CURRENT');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaEducationId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
         $education_programme_id = $requestData->education_programme_id;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-        $Institutions = TableRegistry::get('Institution.Institutions');
-        $StudentsEnrollmentSummary = TableRegistry::get('Institution.InstitutionStudents');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $StudentsEnrollmentSummary = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
         $area_id_array=[];
         if(!empty($areaEducationId)){
-            $Areas = TableRegistry::get('Area.Areas');
+            $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
             if($areaEducationId == -1){
                 $regionAreaArr = $Areas->find()->All();
             }else{
@@ -277,7 +277,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                                      $StudentsEnrollmentSummary->aliasfield('institution_id') => $ins_value->id,
                                      $StudentsEnrollmentSummary->aliasfield('student_status_id') => 1,
                                      $conditionEdn,
-                                     
+
                                     //POCOR-6620[START]
                                     //$StudentsEnrollmentSummary->aliasfield('student_status_id') => $enrolledStatus  //POCOR-6712
                                     //POCOR-6620[END]
@@ -353,7 +353,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
                             $gender,
                             $status_data['count'],
                             $status_data['status_name'],   //POCOR-6712
-                            
+
                         ];
                      }
                 }
@@ -559,7 +559,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $action = $this->_table->action;
         if (in_array($action, $this->config('pages'))) {
@@ -586,7 +586,7 @@ class StudentsEnrollmentSummaryExcelBehavior extends Behavior
         }
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];

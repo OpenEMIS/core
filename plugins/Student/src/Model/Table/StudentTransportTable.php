@@ -4,7 +4,7 @@ namespace Student\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
 
 class StudentTransportTable extends ControllerActionTable
@@ -31,7 +31,7 @@ class StudentTransportTable extends ControllerActionTable
             ]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['type' => 'integer']);
         $this->field('institution_trip_id', ['type' => 'integer']);
@@ -62,7 +62,7 @@ class StudentTransportTable extends ControllerActionTable
         // End POCOR-5188
     }
 
-    public function viewAfterAction(Event $event)
+    public function viewAfterAction(EventInterface $event)
     {
         $this->field('academic_period_id', ['type' => 'integer']);
         $this->field('institution_trip_id', ['type' => 'integer']);
@@ -97,7 +97,7 @@ class StudentTransportTable extends ControllerActionTable
         $this->controller->set('selectedAction', $this->getAlias());
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
@@ -110,24 +110,24 @@ class StudentTransportTable extends ControllerActionTable
             ->contain(['InstitutionTrips.TripTypes','InstitutionTrips.InstitutionBuses','InstitutionTrips.InstitutionTransportProviders'])
             ->where([$this->aliasField('student_id') => $userId]);
     }
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 
         $query
             ->contain(['InstitutionTrips.TripTypes','InstitutionTrips.InstitutionBuses','InstitutionTrips.InstitutionTransportProviders']);
     }
 
-    public function onGetTripTypeId(Event $event, Entity $entity)
+    public function onGetTripTypeId(EventInterface $event, Entity $entity)
     {
         return $entity->institution_trip->trip_type->name;
     }
 
-    public function onGetBusId(Event $event, Entity $entity)
+    public function onGetBusId(EventInterface $event, Entity $entity)
     {
         return $entity->institution_trip->institution_bus->plate_number;
     }
 
-    public function onGetProviderId(Event $event, Entity $entity)
+    public function onGetProviderId(EventInterface $event, Entity $entity)
     {
         return $entity->institution_trip->institution_transport_provider->name;
     }

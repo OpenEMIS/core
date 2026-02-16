@@ -6,7 +6,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Utility\Hash;
@@ -79,7 +79,7 @@ class InstitutionExcelReportBehavior extends Behavior
         return $events;
     }
 
-    public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
+    public function onGetExcelTemplateVars(EventInterface $event, ArrayObject $extra)
     {
         $model = $this->_table;
 
@@ -95,7 +95,7 @@ class InstitutionExcelReportBehavior extends Behavior
         die;
     }
 
-    public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
+    public function onRenderExcelTemplate(EventInterface $event, ArrayObject $extra)
     {
         ini_set('max_execution_time', 180);
         $this->renderExcelTemplate($extra);
@@ -154,7 +154,7 @@ class InstitutionExcelReportBehavior extends Behavior
 			$pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['institution_id'].'.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
 
-			$InstitutionReportCards = TableRegistry::get('Institution.InstitutionReportCards');
+			$InstitutionReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionReportCards');
 			// save Pdf file
 			$InstitutionReportCards->updateAll([
 				'file_content_pdf' => $pdfFileContent
@@ -190,7 +190,7 @@ class InstitutionExcelReportBehavior extends Behavior
             $recordId = $model->getQueryString($this->getConfig('templateTableKey'));
         }
 
-        $Table = TableRegistry::get($this->getConfig('templateTable'));
+        $Table = TableRegistry::getTableLocator()->get($this->getConfig('templateTable'));
 
         if (empty($recordId)) {
             $objSpreadsheet = new Spreadsheet();

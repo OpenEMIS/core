@@ -11,8 +11,8 @@ class PatchMissingStudentReportCardCommentsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Institution.InstitutionStudentsReportCards');
-        $this->loadModel('Institution.InstitutionStudentsReportCardsComments');
+        $this->InstitutionStudentsReportCards = $this->fetchTable('Institution.InstitutionStudentsReportCards');
+        $this->InstitutionStudentsReportCardsComments = $this->fetchTable('Institution.InstitutionStudentsReportCardsComments');
     }
 
     public function main()

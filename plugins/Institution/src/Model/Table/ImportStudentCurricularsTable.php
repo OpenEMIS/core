@@ -5,7 +5,7 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
 use Cake\Collection\Collection;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use PHPExcel_Worksheet;
@@ -22,7 +22,7 @@ class ImportStudentCurricularsTable extends AppTable
         $this->addBehavior('Import.Import');
 
         // register the target table once
-        $this->Institutions = TableRegistry::get('Institution.InstitutionCurriculars');
+        $this->Institutions = TableRegistry::getTableLocator()->get('Institution.InstitutionCurriculars');
     }
 
     public function implementedEvents()
@@ -42,13 +42,13 @@ class ImportStudentCurricularsTable extends AppTable
         return $events;
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         $toolbarButtons['back']['url'][0] = $toolbarButtons['back']['url']['action'];
         $toolbarButtons['back']['url']['action'] = 'Institutions';
     }
 
-    public function onImportCheckUnique(Event $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
     {
         $columns = new Collection($columns);
         $filtered = $columns->filter(function ($value, $key, $iterator) {
@@ -70,7 +70,7 @@ class ImportStudentCurricularsTable extends AppTable
         }
     }
 
-    public function onImportGetClassificationId(Event $event, $cellValue)
+    public function onImportGetClassificationId(EventInterface $event, $cellValue)
     {
         $options = $this->getSelectOptions('Institutions.classifications');
         foreach ($options as $key => $value) {
@@ -81,16 +81,16 @@ class ImportStudentCurricularsTable extends AppTable
         return null;
     }    
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
+    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity)
     {
         $importedUniqueCodes[] = $entity->code;
     }
 
-    public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAreasData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $selectFields = ['name', $lookupColumn];
         $modelData = $lookedUpTable->find('all')
                                 ->select($selectFields)
@@ -110,11 +110,11 @@ class ImportStudentCurricularsTable extends AppTable
         }
     }
 
-    public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateAreaAdministrativesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
 
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $selectFields = ['name', $lookupColumn];
         $modelData = $lookedUpTable->find('all')
                                 ->select($selectFields)
@@ -134,7 +134,7 @@ class ImportStudentCurricularsTable extends AppTable
         }
     }
 
-    public function onImportPopulateClassificationData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateClassificationData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $translatedReadableCol = $this->getExcelLabel('Classification', 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
@@ -149,7 +149,7 @@ class ImportStudentCurricularsTable extends AppTable
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
         return true;
     }

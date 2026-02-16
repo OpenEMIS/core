@@ -3,7 +3,7 @@ namespace StaffAppraisal\Model\Table;
 
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use ArrayObject;
 use Cake\ORM\Entity;
 

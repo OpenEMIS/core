@@ -4,7 +4,7 @@ namespace Report\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Datasource\ConnectionManager;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
@@ -86,7 +86,7 @@ class CsvBehavior extends Behavior
         // Escape SQL query
         //$sql = $this->escapeSql($sql); //POCOR-8787 
 
-        $ReportProgress = TableRegistry::get('Report.ReportProgress');
+        $ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
         $ReportProgress->updateAll(
             ['`sql`' => $sql],
             ['id' => $process->id]
@@ -110,7 +110,7 @@ class CsvBehavior extends Behavior
 
         $this->deleteSqlFile($settings);
 
-        $ReportProgress = TableRegistry::get('Report.ReportProgress');
+        $ReportProgress = TableRegistry::getTableLocator()->get('Report.ReportProgress');
 
         $sqlFile = new File($sqlFilepath, true, 0777);
         $sqlStatement = $ReportProgress->get($processId)->sql;

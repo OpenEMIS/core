@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\Controller\Exception\MissingActionException;
 use Cake\Http\Session;
@@ -213,7 +214,7 @@ trait ControllerActionV4Trait {
 
 		$className = $options['className'];
 		$alias = $options['alias'];
-		$model = $this->controller->loadModel($className);
+		$model = $this->controller->fetchTable($className);
 		$model->alias = $alias;
 		return $model;
 	}

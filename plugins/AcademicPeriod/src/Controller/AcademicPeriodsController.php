@@ -3,7 +3,7 @@ namespace AcademicPeriod\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 
 class AcademicPeriodsController extends AppController
@@ -56,7 +56,7 @@ class AcademicPeriodsController extends AppController
 
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Academic Period');
 

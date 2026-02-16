@@ -19,15 +19,15 @@ class GenerateAllReportCardsShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('CustomExcel.ReportCards');
-        $this->loadModel('ReportCard.ReportCardProcesses');
-        $this->loadModel('SystemProcesses');
+        $this->ReportCards = $this->fetchTable('CustomExcel.ReportCards');
+        $this->ReportCardProcesses = $this->fetchTable('ReportCard.ReportCardProcesses');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()
     {
         //POCOR-7067 Starts
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $timeZone = $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         if (!empty($this->args[0]) && !empty($this->args[1])) {

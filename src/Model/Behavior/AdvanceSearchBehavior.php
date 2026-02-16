@@ -3,7 +3,7 @@ namespace App\Model\Behavior;
 
 use ArrayObject;
 use Cake\I18n\Time;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
@@ -55,7 +55,7 @@ class AdvanceSearchBehavior extends Behavior
 **
 ******************************************************************************************************************/
 
-    public function afterAction(Event $event, $extra)
+    public function afterAction(EventInterface $event, $extra)
     {
         $order = $this->getConfig('order');
         if ($this->_table->action == 'index') {
@@ -214,12 +214,12 @@ class AdvanceSearchBehavior extends Behavior
 **
 ******************************************************************************************************************/
 
-    public function indexBeforePaginate(Event $event, ServerRequest $request, Query $query, ArrayObject $options)
+    public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options)
     {
         $this->indexBeforeQuery($event, $query, $options);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $request = $this->_table->request;
         $reset = $request->getData('reset');
@@ -331,7 +331,7 @@ class AdvanceSearchBehavior extends Behavior
                             //Start:POCOR-6798
                             $tableName = 'area_administratives';
                             $id = $advancedSearchBelongsTo[$key];
-                            $AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
+                            $AreaAdministrativeTable = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
                             $query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
                             break;
                             //End:POCOR-6798
@@ -340,13 +340,13 @@ class AdvanceSearchBehavior extends Behavior
                         case 'shift_type':
                             $tableName = 'institution_shifts';
                             $id = $advancedSearchBelongsTo[$key];
-                            $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+                            $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
                            $query->find('ShiftOptions', ['shift_option_id' => $id, 'columnName' => 'shift_option_id', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
                             break;
                         case 'alternative_name':
                             $tableName = 'institution_shifts';
                             $id = $advancedSearchBelongsTo[$key];
-                            $InstitutionShiftsTable = TableRegistry::get('Institution.InstitutionShifts');
+                            $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
                            $query->find('ShiftOwnership', ['shift_ownership' => $id, 'columnName' => 'shift_ownership', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
                             break;
 
@@ -354,7 +354,7 @@ class AdvanceSearchBehavior extends Behavior
                         case 'address_area_id':
                             $tableName = 'area_administratives';
                             $id = $advancedSearchBelongsTo[$key];
-                            $AreaAdministrativeTable = TableRegistry::get('Area.AreaAdministratives');
+                            $AreaAdministrativeTable = TableRegistry::getTableLocator()->get('Area.AreaAdministratives');
                             $query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
                             break;
                     }

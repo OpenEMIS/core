@@ -46,7 +46,7 @@ use Cake\Utility\Exception\XmlException;
 
 class ApiController extends AppController
 {
-	public $components = [
+	public array $components = [
 		'API.ApiVOne',
 		'API.ApiSISB'
 	];
@@ -79,7 +79,7 @@ class ApiController extends AppController
 
 		$securityToken = $this->request->getQuery('security_token');
 		if ($this->request->isGet() && !empty($this->request->getQuery()) && !empty($securityToken)) {
-			$this->ApiAuthorizations = TableRegistry::get('API.ApiAuthorizations');
+			$this->ApiAuthorizations = TableRegistry::getTableLocator()->get('API.ApiAuthorizations');
 			$this->_externalApplication = $this->ApiAuthorizations->find()
 					->where([
 						$this->ApiAuthorizations->aliasField('security_token') => $securityToken

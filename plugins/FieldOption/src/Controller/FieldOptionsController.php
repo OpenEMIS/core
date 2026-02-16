@@ -4,11 +4,10 @@ namespace FieldOption\Controller;
 
 use ArrayObject;
 use FieldOption\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
-use Cake\Event\EventInterface;//POCOR-8470
 
 class FieldOptionsController extends AppController
 {
@@ -32,7 +31,7 @@ class FieldOptionsController extends AppController
         $this->set('contentHeader', __($header));
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $alias = $model->alias;
         //POCOR-5890 starts

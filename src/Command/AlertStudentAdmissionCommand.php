@@ -39,8 +39,8 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     public function execute(Arguments $args, ConsoleIo $io): int
     {
-        $this->loadModel('Institution.Students');
-        $this->loadModel('Institution.StudentAdmission');
+        $this->Students = $this->fetchTable('Institution.Students');
+        $this->StudentAdmission = $this->fetchTable('Institution.StudentAdmission');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;
         }

@@ -4,13 +4,13 @@ namespace CustomField\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use CustomField\Model\Behavior\RenderBehavior;
 
 class RenderCoordinatesBehavior extends RenderBehavior {
 
     // assign values for validation
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options) {
         $dataArray = $data->getArrayCopy();
         if (isset($dataArray['custom_field_values'])) {
             foreach ($dataArray['custom_field_values'] as $key => $value) {
@@ -93,7 +93,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         return $value;
     }
 
-    public function processCoordinatesValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processCoordinatesValues(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
         $settings['customValue']['text_value'] = json_encode([
             'latitude' => $settings['customValue']['latitude'],
             'longitude' => $settings['customValue']['longitude']

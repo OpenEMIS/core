@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 use App\Controller\AppController;
 
@@ -17,7 +17,7 @@ class CustomExcelsController extends AppController
         $this->loadComponent('CustomExcel.ExcelReport');
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $this->Navigation->addCrumb('Custom Excel', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
@@ -34,7 +34,7 @@ class CustomExcelsController extends AppController
         return $events;
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action)
     {
         if (in_array($action, ['export', 'viewVars', 'exportPDF'])) {
             return true;

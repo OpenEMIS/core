@@ -2,7 +2,7 @@
 namespace Log\Controller;
 
 use Log\Controller\AppController;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 
 class LogsController extends AppController {
 	public function initialize() {

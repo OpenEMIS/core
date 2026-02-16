@@ -4,6 +4,7 @@ namespace Examination\Controller;
 
 use App\Controller\AppController;
 use ArrayObject;
+use Cake\Event\EventInterface;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
@@ -128,7 +129,7 @@ class ExaminationsController extends AppController
         }
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $header = __('Examination');
 

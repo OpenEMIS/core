@@ -24,7 +24,7 @@ class InfrastructureShell extends Shell
 
     private function checkIfCanCopy($modelAlias, $copyTo)
     {
-        $model = TableRegistry::get($modelAlias);
+        $model = TableRegistry::getTableLocator()->get($modelAlias);
         $count = $model->find()->where([$model->aliasField('academic_period_id') => $copyTo])->count();
         // can copy if no room created in current acedemic period before
         if ($count > 0) {
@@ -38,16 +38,16 @@ class InfrastructureShell extends Shell
     {
         $this->out('Start infrastructure copy process');
         $containCount = 0;
-        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $AcademicPeriodObj = $AcademicPeriods->get($copyTo);
         $startDate = $AcademicPeriodObj->start_date;
         $startYear = $AcademicPeriodObj->start_year;
         $endDate = $AcademicPeriodObj->end_date;
         $endYear = $AcademicPeriodObj->end_year;
-        $InfrastructureStatuses = TableRegistry::get('Infrastructure.InfrastructureStatuses');
+        $InfrastructureStatuses = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureStatuses');
         $inUseId = $InfrastructureStatuses->getIdByCode('IN_USE');
         $query = null;
-        $InstitutionLands = TableRegistry::get('Institution.InstitutionLands');
+        $InstitutionLands = TableRegistry::getTableLocator()->get('Institution.InstitutionLands');
         if ($this->checkIfCanCopy('Institution.InstitutionLands', $copyTo)) {
             $query = $InstitutionLands->find()->where([
                 $InstitutionLands->aliasField('land_status_id') => $inUseId,

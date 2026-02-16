@@ -13,7 +13,7 @@ class ReportShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadModel('Report.ReportProgress');
+        $this->ReportProgress = $this->fetchTable('Report.ReportProgress');
     }
 
     public function main()
@@ -62,7 +62,7 @@ class ReportShell extends Shell
                 $excelParams['requestQuery'] = $params;
                 $excelParams['process'] = $entity;
 
-                $table = TableRegistry::get($excelParams['className']);
+                $table = TableRegistry::getTableLocator()->get($excelParams['className']);
                 echo "$date: Start Processing $name\n";
                 echo "$date: Process ID: $id; Table Report.CustomReports\n";
                 try {
@@ -73,7 +73,7 @@ class ReportShell extends Shell
                 }
 
             } else {
-                $table = TableRegistry::get($feature);
+                $table = TableRegistry::getTableLocator()->get($feature);
                 echo "$date: Start Processing $name\n";
                 echo "$date: Process ID: $id; Table $feature\n";
                 try {
@@ -99,14 +99,14 @@ class ReportShell extends Shell
             $name = $entity->name;
 
             if ($entity->module == 'CustomReports') {
-                $table = TableRegistry::get('Report.CustomReports');
+                $table = TableRegistry::getTableLocator()->get('Report.CustomReports');
                 echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
                 $table->generateCSV(['process' => $entity, 'requestQuery' => $params]);
                 echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";
             }
             /*PCORO-6403 Starts*/
             if ($entity->module == 'InstitutionStatistics') {
-                $table = TableRegistry::get('Institution.InstitutionStatistics');
+                $table = TableRegistry::getTableLocator()->get('Institution.InstitutionStatistics');
                 echo date('d-m-Y H:i:s') . ': Start Processing ' . $name . "\n";
                 $table->generateCSV(['process' => $entity, 'requestQuery' => $params]);
                 echo date('d-m-Y H:i:s') . ': End Processing ' . $name . "\n";

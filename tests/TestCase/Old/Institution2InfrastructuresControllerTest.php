@@ -46,7 +46,7 @@ class Institution2InfrastructuresControllerTest extends AppTestCase
     {
         parent::setUp();
         $this->urlPrefix('/Institutions/Infrastructures/');
-        $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionInfrastructures');
     }
 
 // Test as an owner
@@ -96,7 +96,7 @@ class Institution2InfrastructuresControllerTest extends AppTestCase
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
-        $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+        $table = TableRegistry::getTableLocator()->get('Institution.InstitutionInfrastructures');
         $data = [
             'InstitutionInfrastructures' => [
                 'code' => 'ABS6653804',
@@ -143,7 +143,7 @@ class Institution2InfrastructuresControllerTest extends AppTestCase
     //     $testUrl = $this->url('edit/'. $this->testingId, ['level' => 1, 'type' => 1]);
 
     //     // TODO: DO A GET FIRST
-    //     $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+    //     $table = TableRegistry::getTableLocator()->get('Institution.InstitutionInfrastructures');
     //     $this->get($testUrl);
 
     //     $this->assertResponseCode(200);
@@ -178,7 +178,7 @@ class Institution2InfrastructuresControllerTest extends AppTestCase
 
     //     $testUrl = $this->url('remove/15', ['level' => 1, 'type' => 1]);
 
-    //     $table = TableRegistry::get('Institution.InstitutionInfrastructures');
+    //     $table = TableRegistry::getTableLocator()->get('Institution.InstitutionInfrastructures');
 
     //     // will check if the data exists, exists will be true
     //     $exists = $table->exists([$table->primaryKey() => 15]);

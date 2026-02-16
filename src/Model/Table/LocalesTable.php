@@ -3,7 +3,7 @@ namespace App\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use App\Model\Table\AppTable;
@@ -49,7 +49,7 @@ class LocalesTable extends AppTable
             ;
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         // translations won't work with uppercase codes
         $data['iso'] = strtolower($data['iso']);
