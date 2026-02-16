@@ -265,7 +265,8 @@ class ReportsController extends AppController
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry'),
                 'Report.Assessments' => __('Assessment'),
-                'Report.OutcomesResult' => __('Outcomes')
+                'Report.OutcomesResult' => __('Outcomes'),
+                'Report.PerformanceCompetencies' => __('Competencies')//POCOR-9077
             ];
         }/*POCOR-6513 ends*/
         elseif ($module == 'Meals') {//POCOR-9267 Starts
