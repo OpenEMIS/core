@@ -5,7 +5,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -30,7 +30,7 @@ class InfrastructureElectricitiesHistoryTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $modelAlias = 'InfrastructureUtilityElectricities';
         $userType = '';
@@ -41,7 +41,7 @@ class InfrastructureElectricitiesHistoryTable extends ControllerActionTable
         $this->field('parent_id',['visible' => false]);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('utility_electricity_type_id', ['attr' => ['label' => __('Type')]]);
         $this->field('utility_electricity_condition_id', ['attr' => ['label' => __('Condition')]]);
@@ -66,7 +66,7 @@ class InfrastructureElectricitiesHistoryTable extends ControllerActionTable
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
         $recordId = $queryString['record_id'] ?? null;
