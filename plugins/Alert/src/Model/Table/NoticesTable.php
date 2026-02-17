@@ -66,7 +66,12 @@ class NoticesTable extends ControllerActionTable
         $this->field('notice_status', ['entity' => $entity, 'visible' => false]);
         $this->field('subject', ['entity' => $entity, 'visible' => true]);
         $this->field('message', ['entity' => $entity, 'visible' => true]);
+        $this->field('message_editor', ['visible' => false]);
         $this->setFieldOrder(['status', 'security_role_id', 'subject', 'message']);
+        $this->field('message_editor', [
+            'type' => 'element',
+            'element' => 'message_editor',
+        ]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
