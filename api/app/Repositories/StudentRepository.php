@@ -619,16 +619,19 @@ class StudentRepository extends Controller
         }
 
         return $query;
-    }
+    }// POCOR-9530 end
+
     private function loadAbsenceDateData($institutionId, $studentId, $params = [])
     {
+        $absencePeriod = $this->attendancePeriod($params, $institutionId, $studentId); //POCOR-9570
         $query = InstitutionStudentAbsenceDetails::with([
             'absenceType:id,name',
             'studentAbsenceReason:id,name',
-            'attendancePeriod:id,name',
+           // 'attendancePeriod:id,name',
             'subject:id,name'
-        ])->where('student_id', $studentId)
-            ->where('institution_id', $institutionId);
+        ])
+        ->where('student_id', $studentId)
+        ->where('institution_id', $institutionId);
 
         if (!empty($params['date'])) {
             $query->whereDate('date', $params['date']);
@@ -641,25 +644,42 @@ class StudentRepository extends Controller
         if (!empty($params['subject_id'])) {
             $query->where('subject_id', $params['subject_id']);
         }
-
         $records = $query->get();
+       
 
-        return $records->map(function ($record) {
+        return $records->map(function ($record) use ($absencePeriod) {
+            // Default values
+            $periodId = null;
+            $periodName = null;
+            // If attendance type has periods
+            if ($absencePeriod['type'] === 'period' || $absencePeriod['type'] === 'both') {
+                $matchedPeriod = collect($absencePeriod['periods'])
+                    ->firstWhere('period', $record->period);
+                if ($matchedPeriod) {
+                    $periodId   = $matchedPeriod->id;
+                    $periodName = $matchedPeriod->name;
+                }
+            }
             return [
-                'period_id' => $record->attendancePeriod->id ?? null,
-                'period_name' => $record->attendancePeriod->name ?? null,
-                'subject_id' => $record->subject->id ?? null,
+                'type' => $absencePeriod['type'],
+
+                'period_id'   => $periodId,
+                'period_name' => $periodName,
+
+                'subject_id'   => $record->subject->id ?? null,
                 'subject_name' => $record->subject->name ?? null,
-                'absence_type_id' => $record->absenceType->id ?? null,
+
+                'absence_type_id'   => $record->absenceType->id ?? null,
                 'absence_type_name' => $record->absenceType->name ?? null,
-                'student_absence_reason_id' => $record->studentAbsenceReason->id ?? null,
+
+                'student_absence_reason_id'   => $record->studentAbsenceReason->id ?? null,
                 'student_absence_reason_name' => $record->studentAbsenceReason->name ?? null,
+
                 'comment' => $record->comment,
-                'date' => $record->date,
+                'date'    => $record->date,
             ];
         })->toArray();
     }
-    // POCOR-9530 end
 
     //POCOR-7547 Starts...
     public function getEducationGrades($request)
@@ -743,7 +763,6 @@ class StudentRepository extends Controller
         }
     }
 
-
     public function getClassesSubjects($request, $institutionId)
     {
         try {
@@ -824,7 +843,6 @@ class StudentRepository extends Controller
         }
     }
 
-
     public function addClassAttendances($request)
     {
         DB::beginTransaction();
@@ -889,8 +907,6 @@ class StudentRepository extends Controller
             return $this->sendErrorResponse('Class Attendances Not Added');
         }
     }
-
-
 
     public function addStudentAbsences($request)
     {
@@ -1005,7 +1021,6 @@ class StudentRepository extends Controller
         }
     }
 
-
     public function addStaffAttendances($request)
     {
         DB::beginTransaction();
@@ -1062,7 +1077,6 @@ class StudentRepository extends Controller
         }
     }
 
-
     public function updateStaffDetails($request)
     {
         DB::beginTransaction();
@@ -1088,11 +1102,7 @@ class StudentRepository extends Controller
 
             return $this->sendErrorResponse('Staff data not updated');
         }
-    }
-
-    //POCOR-7547 End...
-
-
+    }//POCOR-7547 End...
 
     public function checkIfStudentLinked($param)
     {
@@ -1116,7 +1126,6 @@ class StudentRepository extends Controller
         }
     }
 
-
     //For POCOR-8505 Start...
     public function deleteStudentAbsenceRecord($param)
     {
@@ -1136,7 +1145,6 @@ class StudentRepository extends Controller
         }
     }
     //For POCOR-8505 End...
-
 
     //For POCOR-8491 Start...
     public function getStudentClasses($institutionId, $studentId)
@@ -1331,4 +1339,143 @@ class StudentRepository extends Controller
             return $this->sendErrorResponse('Student Absences Data Not Found.');
         }
     }
+
+    //POCOR-9570
+    public function attendancePeriod($params, $institutionId, $studentId)
+    {
+        $classId          = $params['institution_class_id'] ?? null;
+        $academicPeriodId = $params['academic_period_id'] ?? null;
+        $educationGradeId = $params['education_grade_id'] ?? null;
+
+        // Base Mark Type Query
+        $baseQuery = DB::table('student_attendance_mark_types as samt')
+            ->join('student_attendance_types as sat', 'sat.id', '=', 'samt.student_attendance_type_id')
+            ->select(
+                'samt.id',
+                'samt.code',
+                'samt.attendance_per_day',
+                'sat.code as attendance_type_code'
+            );
+        
+        // Apply Filters ONLY If Params Exist
+        if ($academicPeriodId && $educationGradeId) {
+
+            $baseQuery->join('student_mark_type_statuses as smts', 'smts.student_attendance_mark_type_id', '=', 'samt.id')
+                ->join('student_mark_type_status_grades as smtsg', 'smtsg.student_mark_type_status_id', '=', 'smts.id')
+                ->where('smts.academic_period_id', $academicPeriodId)
+                ->where('smtsg.education_grade_id', $educationGradeId);
+
+            if ($classId) {
+                $baseQuery->join('institution_class_grades as icg', 'icg.education_grade_id', '=', 'smtsg.education_grade_id')
+                    ->where('icg.institution_class_id', $classId);
+            }
+        }
+
+        $markType = (clone $baseQuery)
+            ->where('sat.code', 'DAY_AND_SUBJECT')
+            ->first();
+
+        if (!$markType) {
+            $markType = $baseQuery->first();
+        }
+
+        if (!$markType) {
+            return [
+                'type'      => 'day',
+                'subject'   => false,
+                'periods'   => [],
+                'mark_type' => null
+            ];
+        }
+
+        $periods = DB::table('student_attendance_per_day_periods')
+        ->where('student_attendance_mark_type_id', $markType->id)
+        ->orderBy('order')
+        ->get();
+
+        if ($periods->isEmpty()) {
+
+            $absenceRecord = DB::table('institution_student_absence_details')
+                ->where('student_id', $studentId)
+                ->where('institution_id', $institutionId)
+                ->first();
+            if ($absenceRecord && $absenceRecord->period) {
+
+                $periodNumber = (int) $absenceRecord->period;
+
+                $periods = collect([
+                    (object)[
+                        'id' => $periodNumber,
+                        'name' => 'Period ' . $periodNumber,
+                        'student_attendance_mark_type_id' => $markType->id,
+                        'period' => $periodNumber, 
+                        'modified_user_id' => null,
+                        'modified' => null,
+                        'created_user_id' => null,
+                        'created' => null,
+                        'order' => $periodNumber
+                    ]
+                ]);
+               
+            }
+        }
+        $hasPeriod  = $periods->isNotEmpty();
+        $hasSubject = ($markType->attendance_type_code === 'DAY_AND_SUBJECT');
+
+        if ($hasSubject && $hasPeriod) {
+            $type = 'both';
+        } elseif ($hasSubject) {
+            $type = 'subject';
+        } elseif ($hasPeriod) {
+            $type = 'period';
+        } else {
+            $type = 'day';
+        }
+        return [
+            'type'      => $type,
+            'subject'   => $hasSubject,
+            'periods'   => $periods->values()->toArray(),
+            'mark_type' => $markType->code
+        ];
+    }
+
+    /*private function loadAbsenceDateDatabkp($institutionId, $studentId, $params = [])
+    {
+        $query = InstitutionStudentAbsenceDetails::with([
+            'absenceType:id,name',
+            'studentAbsenceReason:id,name',
+            'attendancePeriod:id,name',
+            'subject:id,name'
+        ])->where('student_id', $studentId)
+            ->where('institution_id', $institutionId);
+
+        if (!empty($params['date'])) {
+            $query->whereDate('date', $params['date']);
+        }
+
+        if (!empty($params['period'])) {
+            $query->where('period', $params['period']);
+        }
+
+        if (!empty($params['subject_id'])) {
+            $query->where('subject_id', $params['subject_id']);
+        }
+
+        $records = $query->get();
+
+        return $records->map(function ($record) {
+            return [
+                'period_id' => $record->attendancePeriod->id ?? null,
+                'period_name' => $record->attendancePeriod->name ?? null,
+                'subject_id' => $record->subject->id ?? null,
+                'subject_name' => $record->subject->name ?? null,
+                'absence_type_id' => $record->absenceType->id ?? null,
+                'absence_type_name' => $record->absenceType->name ?? null,
+                'student_absence_reason_id' => $record->studentAbsenceReason->id ?? null,
+                'student_absence_reason_name' => $record->studentAbsenceReason->name ?? null,
+                'comment' => $record->comment,
+                'date' => $record->date,
+            ];
+        })->toArray();
+    }*/
 }
