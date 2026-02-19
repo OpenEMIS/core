@@ -2,21 +2,27 @@
 
 namespace App\Imports;
 
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
-use Maatwebsite\Excel\Concerns\WithStartRow;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
-class StudentMealImport implements WithMultipleSheets
+class StudentMealImport
 {
     /**
-    * @param Collection $collection
-    */
-    public function sheets(): array
+     * Load the uploaded file and return all sheets as a nested array,
+     * mirroring the shape that the old Excel::toArray() call returned.
+     *
+     * @param  string|\Illuminate\Http\UploadedFile  $file
+     * @return array
+     */
+    public static function toArray($file): array
     {
-        return [
-            new StudentMealImport(),
-        ];
+        $path        = is_string($file) ? $file : $file->getRealPath();
+        $spreadsheet = IOFactory::load($path);
+
+        $result = [];
+        foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
+            $result[] = $worksheet->toArray(null, true, true, false);
+        }
+
+        return $result;
     }
 }

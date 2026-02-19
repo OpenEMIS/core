@@ -2,32 +2,23 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Events\AfterSheet;
-use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
-class StudentAttendanceArchiveExport implements FromArray, WithHeadings, WithEvents
+class StudentAttendanceArchiveExport
 {
+    private array $params;
+
     public function __construct($params)
     {
         $this->params = $params;
     }
 
-
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function array(): array
+    public function build(): Spreadsheet
     {
-        return $this->params;
-    }
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-
-    public function headings(): array
-    {
-        return [
+        $headings = [
             'Student',
             'Academic Period',
             'Institution Class',
@@ -39,20 +30,18 @@ class StudentAttendanceArchiveExport implements FromArray, WithHeadings, WithEve
             'Student Absence Reason',
             'Subject',
         ];
-    }
 
+        $sheet->fromArray([$headings], null, 'A1');
 
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                // Get the total number of rows
-                $rowCount = $event->sheet->getHighestRow();
+        $row = 2;
+        foreach ($this->params as $record) {
+            $sheet->fromArray(array_values((array) $record), null, 'A' . $row);
+            $row++;
+        }
 
-                // Add custom text after the last row
-                $customText = 'Report Generated: '.Date('Y-m-d H:i:s');
-                $event->sheet->setCellValue('A' . ($rowCount + 2), $customText);
-            },
-        ];
+        $customText = 'Report Generated: ' . date('Y-m-d H:i:s');
+        $sheet->setCellValue('A' . ($row + 1), $customText);
+
+        return $spreadsheet;
     }
 }
