@@ -54,25 +54,61 @@ class RenderCheckboxBehavior extends RenderBehavior
             $form = $event->getSubject()->Form;
             $unlockFields = [];
 
-            $html = '';
+            $hasInteracted = !empty($checkedValues) ? 1 : 0;
+            $isMandatory   = isset($attr['attr']['required']) && $attr['attr']['required'] === 'required';
+            $showSilent    = $isMandatory && !$hasInteracted;
+
+            $groupId     = 'cf-group-' . $fieldId;
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
+            // Wrapper div — carries silent state data attribute
+            $html = '<div id="' . $groupId . '"'
+                  . ' data-has-interacted="' . $hasInteracted . '"'
+                  . ($showSilent ? ' class="cf-checkbox-silent"' : '') . '>';
+
             foreach ($checkboxOptions as $key => $value) {
-                $html .= '<div class="input" style="display:flex;">';//POCOR-7950
+                $html .= '<div class="input" style="display:flex;">';
                 $option = ['kd-checkbox-radio' => ''];
-                if (!empty($checkedValues)) {
-                    if (in_array($key, $checkedValues)) {
-                        $option['checked'] = true;
-                    }
+                if (!empty($checkedValues) && in_array($key, $checkedValues)) {
+                    $option['checked'] = true;
                 }
                 $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
                 $unlockFields[] = "$fieldPrefix.number_value.$key";
-                $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">'. $value .'</label>';//POCOR-7950
-
+                $labelColor = $showSilent ? 'color:#999;' : '';
+                $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;' . $labelColor . '">' . $value . '</label>';
                 $html .= '</div>';
             }
-            $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
-            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
+
+            // has_interacted hidden field — validated server-side
+            $hasInteractedFieldId = 'has-interacted-' . $fieldId;
+            $html .= $form->hidden("$fieldPrefix.has_interacted", [
+                'value' => $hasInteracted,
+                'id'    => $hasInteractedFieldId
+            ]);
+            $unlockFields[] = "$fieldPrefix.has_interacted";
+
+            $html .= $form->hidden($fieldPrefix . '.' . $attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix . '.' . $attr['attr']['fieldKey'];
+
+            $html .= '</div>'; // end group wrapper
+
+            // Inline JS: set indeterminate on load; clear on first interaction
+            if ($showSilent) {
+                $html .= '<script>(function(){
+            var g  = document.getElementById("' . $groupId . '");
+            var cb = g.querySelectorAll("input[type='checkbox']");
+            cb.forEach(function(el){ el.indeterminate = true; });
+            g.addEventListener("change", function handler(e){
+                if (e.target.type === "checkbox") {
+                    g.dataset.hasInteracted = "1";
+                    g.classList.remove("cf-checkbox-silent");
+                    cb.forEach(function(el){ el.indeterminate = false; });
+                    document.getElementById("' . $hasInteractedFieldId . '").value = "1";
+                    g.removeEventListener("change", handler);
+                }
+            });
+        })();</script>';
+            }
 
             $attr['output'] = $html;
             $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
