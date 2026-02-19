@@ -6,8 +6,6 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
@@ -62,8 +60,8 @@ class ExcelReportBehavior extends Behavior
             $this->setConfig('filename', $model->getAlias());
         }
 
-        new Folder($folder, true, 0777);
-        new Folder($subfolder, true, 0777);
+        @mkdir($folder, 0777, true);
+        @mkdir($subfolder, 0777, true);
     }
 
     public function implementedEvents(): array
@@ -203,10 +201,8 @@ class ExcelReportBehavior extends Behavior
         }
 
         if ($this->getConfig('download')) {
-            $tempfile = new File($temppath);
-            $tempinfo = $tempfile->info();
-            $tempcontent = $tempfile->read();
-            $tempfile->close();
+            $tempcontent = file_get_contents($temppath);
+            $tempinfo = ['filesize' => strlen($tempcontent)];
 
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
@@ -252,9 +248,9 @@ class ExcelReportBehavior extends Behavior
                 $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_') . '.xls';
                 $extra['tmp_file_path'] = $filepath;
 
-                $excelTemplate = new File($filepath, true, 0777);
-                $excelTemplate->write($file);
-                $excelTemplate->close();
+                file_put_contents($filepath, $file);
+                // Bake image transparency into the template via Laravel artisan
+                exec(PHP_BINARY . ' ' . escapeshellarg(ROOT . DS . 'api' . DS . 'artisan') . ' reportcards:fix-transparency ' . escapeshellarg($filepath) . ' 2>&1');
 
                 try {
                     // Read back from the same temporary file
@@ -792,8 +788,9 @@ class ExcelReportBehavior extends Behavior
 
     public function deleteFile($filepath)
     {
-        $file = new File($filepath);
-        $file->delete();
+        if (file_exists($filepath)) {
+            unlink($filepath);
+        }
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
