@@ -1,10 +1,5 @@
 <?php if ($ControllerAction['action'] == 'index') : ?>
 <?php else : ?>
-<style>
-/* Silent/never-answered mandatory checkbox — matches the disabled kd-checkbox-radio gray appearance */
-.cf-checkbox-silent [type="checkbox"]:indeterminate + label { opacity: 0.5; }
-.cf-checkbox-silent [type="checkbox"]:not(:checked):not(:indeterminate) + label { opacity: 0.5; }
-</style>
 	<div class="input">
 		<label>
 			<?= $attr['attr']['label']; ?>

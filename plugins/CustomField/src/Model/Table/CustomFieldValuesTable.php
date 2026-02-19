@@ -127,8 +127,16 @@ class CustomFieldValuesTable extends AppTable
 						|| strtoupper($context['data']['field_type']) !== 'CHECKBOX') {
 						return true;
 					}
-					// has_interacted = 1 means user made a choice (checked or unchecked)
-					return !empty($context['data']['has_interacted']);
+					// At least one option must be checked (consent-style: unchecked = not acceptable)
+					if (is_array($value)) {
+						foreach ($value as $checked) {
+							if (!empty($checked)) {
+								return true;
+							}
+						}
+						return false;
+					}
+					return !empty($value);
 				},
 				'message' => __('This field cannot be empty')
 			])
