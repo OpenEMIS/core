@@ -118,6 +118,20 @@ class CustomFieldValuesTable extends AppTable
 					}
 			    }
 			])
+			->add('number_value', 'ruleCheckboxMandatory', [
+				'rule' => function ($value, $context) {
+					if (empty($context['data']['mandatory'])) {
+						return true;
+					}
+					if (!isset($context['data']['field_type'])
+						|| strtoupper($context['data']['field_type']) !== 'CHECKBOX') {
+						return true;
+					}
+					// has_interacted = 1 means user made a choice (checked or unchecked)
+					return !empty($context['data']['has_interacted']);
+				},
+				'message' => __('This field cannot be empty')
+			])
 			// DECIMAL validation
 			->allowEmpty('decimal_value', function ($context) {
 				if (array_key_exists('mandatory', $context['data'])) {
