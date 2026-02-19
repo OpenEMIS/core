@@ -10,7 +10,6 @@ use App\Http\Requests\StudentMealImportRequest;
 use App\Http\Requests\StudentMealExportRequest;
 use App\Http\Requests\StudentMealImportTemplateRequest;
 use App\Exports\StudentMealExport;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentMealImport;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -1192,7 +1191,13 @@ class MealController extends Controller
             $params = $request->all();
             $str = time();
             $fileName = 'StudentMeals_'.$str.'.xlsx';
-            return Excel::download(new StudentMealExport($params), $fileName);
+            $spreadsheet = (new StudentMealExport($params))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_');
+            $writer->save($tempFile);
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
             
         } catch (\Exception $e) {
             Log::error(
