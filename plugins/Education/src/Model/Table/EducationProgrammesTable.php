@@ -17,7 +17,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     use HtmlTrait;
 
     private $_contain = ['EducationNextProgrammes._joinData'];
-    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion', 'next_programme_option_id', 'next_programme_options', 'next_programmes'];//POCOR-4746 //POCOR-9485
+    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id','education_cycle_id', 'academic_period', 'education_certification_id' ,'same_grade_promotion', 'next_programme_option_id', 'next_programme_options', 'next_programmes'];//POCOR-4746 //POCOR-9485
     private  $arrayNextProgrammes = []; // POCOR-9403
     public function initialize(array $config): void {
         parent::initialize($config);
@@ -72,6 +72,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function beforeAction(EventInterface $event, ArrayObject $extra) {
         if ($this->action != 'index') {
+            $this->field('academic_period', ['after' => 'education_cycle_id']); // POCOR-9485: show which period this programme belongs to
             $this->field('same_grade_promotion');//POCOR-4746
             $this->field('next_programme_option_id', ['before' => 'same_grade_promotion']); // POCOR-9485
             $this->field('next_programmes', ['after' => 'next_programme_option_id', 'type' => 'custom_next_programme', 'valueClass' => 'table-full-width','after'=>'same_grade_promotion']);
@@ -475,13 +476,9 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private function getCycleAndLevelInfo($cycleId): array
     {
-        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $EducationCycles  = TableRegistry::getTableLocator()->get('Education.EducationCycles');
         $EducationLevels  = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
-
-        // Get current academic period
-        $academicPeriodId = $AcademicPeriods->getCurrent();
 
         // Build query explicitly (no contain)
         $cycleRecord = $EducationCycles->find()
@@ -491,6 +488,9 @@ class EducationProgrammesTable extends ControllerActionTable {
                 'level_order'        => $EducationLevels->aliasField('order'),
                 'level_id'           => $EducationLevels->aliasField('id'),
                 'system_id'          => $EducationSystems->aliasField('id'),
+                // Use the academic period that owns this programme's education system,
+                // not the system-wide current period (POCOR-9485 fix).
+                'academic_period_id' => $EducationSystems->aliasField('academic_period_id'),
             ])
             ->innerJoin(
                 [$EducationLevels->getAlias() => $EducationLevels->getTable()],
@@ -509,6 +509,8 @@ class EducationProgrammesTable extends ControllerActionTable {
             ->where([$EducationCycles->aliasField('id') => $cycleId])
             ->enableHydration(false)
             ->first();
+
+        $academicPeriodId = $cycleRecord['academic_period_id'] ?? null;
 
         return [$academicPeriodId, $cycleRecord];
     }
@@ -670,6 +672,27 @@ class EducationProgrammesTable extends ControllerActionTable {
         return $attr;
     }
 
+    // POCOR-9485: show the academic period this programme's education system belongs to (readonly)
+    public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $entity  = $attr['entity'];
+        $cycleId = $entity->has('education_cycle_id') ? $entity->education_cycle_id : null;
+
+        $periodName = '';
+        if (!empty($cycleId)) {
+            $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
+            $cycle = $EducationCycles->find()
+                ->contain(['EducationLevels.EducationSystems.AcademicPeriods'])
+                ->where([$EducationCycles->aliasField('id') => $cycleId])
+                ->first();
+            $periodName = $cycle->education_level->education_system->academic_period->name ?? '';
+        }
+
+        $attr['type']          = 'readonly';
+        $attr['attr']['value'] = $periodName;
+        return $attr;
+    }
+
     // POCOR-9485
     public function onUpdateFieldNextProgrammeOptionId(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $attr['type'] = 'select';
@@ -734,6 +757,8 @@ class EducationProgrammesTable extends ControllerActionTable {
             return __('Visible');
         }elseif ($field == 'education_cycle_id') {
             return __('Education Cycle');
+        }elseif ($field == 'academic_period') {
+            return __('Academic Period');
         }elseif ($field == 'education_certification_id') {
             return __('Education Certifications');
         }elseif ($field == 'same_grade_promotion') {
