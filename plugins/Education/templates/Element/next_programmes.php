@@ -15,7 +15,6 @@
 	</div>
 <?php elseif ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
     <?php
-        echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
     ?>
@@ -35,7 +34,7 @@
     </div>
     <div class="table-wrapper">
         <div class="table-responsive">
-            <table id="sortable" class="table table-curved table-input">
+            <table class="table table-curved table-input">
                 <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
                 <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
             </table>
