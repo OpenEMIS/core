@@ -16,10 +16,15 @@
         float: left;
     }
 </style>
-<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
 
+<?php echo $this->Html->script('https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js', ['block' => true]) ?>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
+    if (typeof CKEDITOR !== 'undefined') {
+        //Destroy existing instance if already created
+        if (CKEDITOR.instances['notices-message']) {
+            CKEDITOR.instances['notices-message'].destroy(true);
+        }
         CKEDITOR.replace('notices-message', {
             toolbar: [
                 { name: 'basicstyles', items: ['Bold','Italic','Underline','Strike'] },
@@ -30,5 +35,7 @@
                 { name: 'tools', items: ['Maximize','Source'] }
             ]
         });
-    });
+    }
+
+});
 </script>
