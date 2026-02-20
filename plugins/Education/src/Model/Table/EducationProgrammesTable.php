@@ -358,20 +358,6 @@ class EducationProgrammesTable extends ControllerActionTable {
 
         $arrayNextProgrammes = $this->collectSelectedNextProgrammes($entity);
 
-        // POCOR-9485: handle move-up / move-down reorder requests
-        $reloadValue = $requestData['reload'] ?? null;
-        if (!empty($reloadValue)) {
-            if (str_starts_with($reloadValue, 'moveUp_')) {
-                $targetId = (int) substr($reloadValue, 7);
-                $arrayNextProgrammes = $this->reorderProgrammes($arrayNextProgrammes, $targetId, 'up');
-                $this->arrayNextProgrammes = array_column($arrayNextProgrammes, null, 'next_programme_id');
-            } elseif (str_starts_with($reloadValue, 'moveDown_')) {
-                $targetId = (int) substr($reloadValue, 9);
-                $arrayNextProgrammes = $this->reorderProgrammes($arrayNextProgrammes, $targetId, 'down');
-                $this->arrayNextProgrammes = array_column($arrayNextProgrammes, null, 'next_programme_id');
-            }
-        }
-
         // Build table rows
         [$headers, $cells] = $this->buildProgrammeTableRows($form, $attr['model'], $arrayNextProgrammes, $nextProgrammeOptions);
 
@@ -384,42 +370,6 @@ class EducationProgrammesTable extends ControllerActionTable {
         $attr['options'] = $nextProgrammeOptions;
 
         return $attr;
-    }
-
-    // POCOR-9485: swap order of the target programme with its neighbour
-    private function reorderProgrammes(array $programmes, int $targetId, string $direction): array
-    {
-        usort($programmes, function ($a, $b) {
-            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
-        });
-
-        $targetIndex = null;
-        foreach ($programmes as $i => $prog) {
-            if (($prog['next_programme_id'] ?? null) == $targetId) {
-                $targetIndex = $i;
-                break;
-            }
-        }
-
-        if ($targetIndex === null) {
-            return $programmes;
-        }
-
-        if ($direction === 'up' && $targetIndex > 0) {
-            $tmp = $programmes[$targetIndex]['order'];
-            $programmes[$targetIndex]['order'] = $programmes[$targetIndex - 1]['order'];
-            $programmes[$targetIndex - 1]['order'] = $tmp;
-        } elseif ($direction === 'down' && $targetIndex < count($programmes) - 1) {
-            $tmp = $programmes[$targetIndex]['order'];
-            $programmes[$targetIndex]['order'] = $programmes[$targetIndex + 1]['order'];
-            $programmes[$targetIndex + 1]['order'] = $tmp;
-        }
-
-        usort($programmes, function ($a, $b) {
-            return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
-        });
-
-        return $programmes;
     }
 
     /**
@@ -442,8 +392,9 @@ class EducationProgrammesTable extends ControllerActionTable {
         $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
         $EducationProgrammesNext = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes');
 
-        // Load existing ones from DB (for edit mode or first GET)
-        if (empty($arrayNextProgrammes) && !empty($entity->id)) {
+        // Load existing ones from DB only on GET — on POST/PUT the hidden fields are the source of truth.
+        // Loading from DB on POST causes deleted rows to reappear because the DB still holds old data.
+        if (empty($arrayNextProgrammes) && !empty($entity->id) && !$this->request->is(['post', 'put'])) {
             // POCOR-9485: fetch with order column
             $existingRows = $EducationProgrammesNext
                 ->find()
@@ -665,11 +616,14 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private function buildProgrammeTableRows($form, string $model, array $programmes, array &$options): array
     {
-        // POCOR-9485: added Order column and up/down reorder buttons
-        $headers = [__('Cycle - (Programme)'), __('Order'), ''];
+        // POCOR-9485: drag-handle reorder column (jQuery UI Sortable via ControllerAction.reorder JS)
+        $headers = [
+            __('Cycle - (Programme)'),
+            [__('Reorder') => ['class' => 'cell-reorder']],
+            '',
+        ];
         $cells = [];
         $count = 0;
-        $total = count($programmes);
 
         foreach ($programmes as $obj) {
             $prefix = $model . ".education_next_programmes.{$count}";
@@ -684,19 +638,17 @@ class EducationProgrammesTable extends ControllerActionTable {
                 $form->hidden("{$joinPrefix}.name", ['value' => $name]),
                 $form->hidden("{$joinPrefix}.education_programme_id", ['value' => $obj['education_programme_id'] ?? null]),
                 $form->hidden("{$joinPrefix}.next_programme_id", ['value' => $obj['next_programme_id'] ?? null]),
-                $form->hidden("{$joinPrefix}.order", ['value' => $order]),
+                // class="order" is required by reorder.js Reorder.updateOrder() to renumber after drag
+                $form->hidden("{$joinPrefix}.order", ['value' => $order, 'class' => 'order']),
             ]);
 
-            $upBtn = ($count > 0)
-                ? '<a href="javascript:void(0)" onclick="$(\'#reload\').val(\'moveUp_' . $id . '\').click(); return false;" class="btn btn-xs btn-default" title="' . __('Move Up') . '"><i class="fa fa-arrow-up"></i></a>'
-                : '';
-            $downBtn = ($count < $total - 1)
-                ? '<a href="javascript:void(0)" onclick="$(\'#reload\').val(\'moveDown_' . $id . '\').click(); return false;" class="btn btn-xs btn-default" title="' . __('Move Down') . '"><i class="fa fa-arrow-down"></i></a>'
-                : '';
+            $reorderIcon = '<div class="reorder-icon"><a href="#"><i class="fa fa-arrows-alt"></i></a></div>';
 
-            $actionCell = $hidden . ' ' . $upBtn . ' ' . $downBtn . ' ' . $this->getDeleteButton();
-
-            $cells[] = [$name, $order, $actionCell];
+            $cells[] = [
+                $name,
+                [$reorderIcon, ['class' => 'sorter rowlink-skip']],
+                $hidden . ' ' . $this->getDeleteButton(),
+            ];
             unset($options[$id]);
             $count++;
         }
@@ -745,6 +697,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     // POCOR-9485
     public function onUpdateFieldNextProgrammeOptionId(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $attr['options'] = [0 => __('Show All Programmes'), 1 => __('Show One Programme')];
+        $attr['onChangeReload'] = true;
         return $attr;
     }
 
