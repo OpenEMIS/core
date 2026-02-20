@@ -237,6 +237,7 @@ class AdvanceSearchBehavior extends Behavior
                 if ($model->Session->check($alias.'.advanceSearch.tableField')) {
                      $model->Session->delete($alias.'.advanceSearch.tableField');
                 }
+                
                 // clear fields value
                 if (array_key_exists('belongsTo', $request->getData()['AdvanceSearch'][$alias])) {
                     // foreach ($request->getData()['AdvanceSearch'][$alias]['belongsTo'] as $key => $value) {
@@ -336,12 +337,13 @@ class AdvanceSearchBehavior extends Behavior
                             break;
                             //End:POCOR-6798
                         case 'birthplace_area_id':
+                            break;
                         // start POCOR-6764
                         case 'shift_type':
                             $tableName = 'institution_shifts';
                             $id = $advancedSearchBelongsTo[$key];
                             $InstitutionShiftsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
-                           $query->find('ShiftOptions', ['shift_option_id' => $id, 'columnName' => 'shift_option_id', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
+                            $query->find('ShiftOptions', ['shift_option_id' => $id, 'columnName' => 'shift_option_id', 'table' => $tableName,'conditionCheck' => $advancedSearchBelongsTo]);
                             break;
                         case 'alternative_name':
                             $tableName = 'institution_shifts';

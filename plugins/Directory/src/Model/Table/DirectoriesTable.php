@@ -1530,6 +1530,10 @@ class DirectoriesTable extends ControllerActionTable
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);
+        } else if (isset($_GET['sort']) || isset($_REQUEST['direction'])) {
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
+                'showOnLoad' => 0,
+            ]);
         } else {
             $event->stopPropagation();
             return;
