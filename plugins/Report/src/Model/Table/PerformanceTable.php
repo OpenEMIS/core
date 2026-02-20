@@ -255,7 +255,7 @@ class PerformanceTable extends AppTable
      * @param  \Cake\Network\Request  $request
      * @return attr
      */
-    public function onUpdateFieldInstitutionTypeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldInstitutionTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature']) && $this->request->getData($this->getAlias())['feature'] == 'Report.Assessments') {
             $InstitutionTypes = TableRegistry::getTableLocator()->get('Institution.Types');
@@ -333,7 +333,7 @@ class PerformanceTable extends AppTable
     }
 
     //POCOR-9404
-    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $request = $this->request;
             $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
@@ -758,7 +758,7 @@ class PerformanceTable extends AppTable
     }
 
     //POCOR-9484
-    public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, $request)
     {
         $requestData = $request->getData();
         if (
