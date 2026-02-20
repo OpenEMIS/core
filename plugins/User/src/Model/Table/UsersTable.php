@@ -1212,7 +1212,7 @@ class UsersTable extends AppTable
     }
 
 
-    public function onChangeUserNationalities(Event $event, Entity $entity)
+    public function onChangeUserNationalities(EventInterface $event, Entity $entity)
     {
         $nationalityId = $entity->nationality_id;
         $Nationalities = TableRegistry::getTableLocator()->get('FieldOption.Nationalities');

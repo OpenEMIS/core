@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\Event\EventInterface;
 use Staff\Model\Table\TrainingNeedsAppTable;
+use Cake\Datasource\ConnectionManager;
 
 class TrainingNeedsTable extends TrainingNeedsAppTable
 {
@@ -19,6 +20,18 @@ class TrainingNeedsTable extends TrainingNeedsAppTable
                 ['id'],
             ]
         ]);
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra) {
+        $connection = ConnectionManager::get('default');
+        $connection->execute('SET foreign_key_checks = 0');
+        $session = $this->request->getSession();
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        if(empty($data['staff_id'])){
+            $data['staff_id'] = $session->read('Auth.User.id');
+        }
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
