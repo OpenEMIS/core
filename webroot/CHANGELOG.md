@@ -1,3 +1,19 @@
+### [5.1.0] - 2026-01-20
+- Implemented: Develop a migration script to convert attendance / absence triggers to a stored procedure 
+- Bug Fixed: Institutions>Performance>Report Cards: When generating report cards, it is including withdrawn students
+- Bug Fixed: Institutions>Attendance>Staff: System checks the Timezone configuration before applying the validation on marking Student/Staff attendance
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5(Directory)
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5(Personal)
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5(Reports)
+- Bug Fixed: Institutions>Academic>Classes: User getting 404 error when programmes are no created
+- Bug Fixed: Administration>Data Management>Copy: When copying Institution Programmes for 2026, start date of the programme is showing wrongly
+- Bug Fixed: Administration>Scholarships>Recipients: When adding or editing scholarship, it should redirect to the correct page
+
+### [5.0.0] - 2026-01-06
+- Implemented: Develop changes to existing webhooks in OpenEMIS Core to integrate with OpenEMIS Exams 
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Urgent issues)
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5
+
 ### [4.51.1] - 2026-02-02
 - Bug Fixed: Institutions>Performance>Assessment: Exempt button is missing for non admin roles
 - Bug Fixed: Remove own personal details from the OpenEMIS Core code
