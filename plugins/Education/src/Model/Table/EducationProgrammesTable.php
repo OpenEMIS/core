@@ -17,7 +17,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     use HtmlTrait;
 
     private $_contain = ['EducationNextProgrammes._joinData'];
-    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'next_programme_option_id', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion'];//POCOR-4746 //POCOR-9485
+    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'next_programme_option_id', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion', 'next_programmes'];//POCOR-4746 //POCOR-9485
     private  $arrayNextProgrammes = []; // POCOR-9403
     public function initialize(array $config): void {
         parent::initialize($config);
@@ -73,8 +73,8 @@ class EducationProgrammesTable extends ControllerActionTable {
     public function beforeAction(EventInterface $event, ArrayObject $extra) {
         if ($this->action != 'index') {
             $this->field('same_grade_promotion');//POCOR-4746
-            $this->field('next_programme_option_id', ['before' => 'education_cycle_id']); // POCOR-9485
-            $this->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width','after'=>'next_programme_option_id']);
+            $this->field('next_programme_option_id', ['after' => 'same_grade_promotion']); // POCOR-9485
+            $this->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width','after'=>'same_grade_promotion']);
             $this->_fieldOrder[] =['next_programmes'];
         }
     }
@@ -696,8 +696,8 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     // POCOR-9485
     public function onUpdateFieldNextProgrammeOptionId(EventInterface $event, array $attr, $action, ServerRequest $request) {
-        $attr['options'] = [0 => __('Show All Programmes'), 1 => __('Show One Programme')];
-        $attr['onChangeReload'] = true;
+        $attr['options'] = [1 => __('Show One Programme'), 0 => __('Show All Programmes')];
+        $attr['onChangeReload'] = false;
         return $attr;
     }
 
