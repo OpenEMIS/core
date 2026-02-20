@@ -81,6 +81,7 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 					->where([
 						$EducationGrades->aliasField('education_programme_id') => $nextProgrammeId
 					])
+                    ->limit(1)
 					->toArray();
 
 				$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];
@@ -114,16 +115,16 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 					])
 					->order([$EducationGrades->aliasField('order')])
 					->toArray();
-					
+
 				if (!is_null(key($nextProgrammeGradeResults))) {
 					$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];
 				}
-				
+
 			}
 		} else {
 			$results = [];
 		}
-		
+
 		return $results;
 	}
 	/*POCOR-6498 ends*/
