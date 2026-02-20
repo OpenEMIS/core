@@ -1073,11 +1073,11 @@ function InstitutionStudentAttendancesController(
     vm.changeClass = function () {
         const startTime = performance.now();
         const logStep = (stepName) => {
-            const elapsed = (performance.now() - startTime).toFixed(2);
-            console.log(`⏱ [${stepName}] выполнено за ${elapsed} ms`);
+            // const elapsed = (performance.now() - startTime).toFixed(2);
+            // console.log(`⏱ [${stepName}] выполнено за ${elapsed} ms`);
         };
 
-        console.log("🚀 Начинаю смену класса...");
+        // console.log("🚀 Начинаю смену класса...");
         UtilsSvc.isAppendLoader(true);
 
         if (vm.superAdmin == 0) {
@@ -1159,9 +1159,9 @@ function InstitutionStudentAttendancesController(
                 vm.setColumnDef();
                 UtilsSvc.isAppendLoader(false);
 
-                const endTime = performance.now();
-                const totalDuration = (endTime - startTime).toFixed(2);
-                console.log(`✅ [FINAL] changeClass полностью завершен за ${totalDuration} ms`);
+                // const endTime = performance.now();
+                // const totalDuration = (endTime - startTime).toFixed(2);
+                // console.log(`✅ [FINAL] changeClass полностью завершен за ${totalDuration} ms`);
             });
     };
 
