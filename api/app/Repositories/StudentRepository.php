@@ -1343,6 +1343,7 @@ class StudentRepository extends Controller
     //POCOR-9570
     public function attendancePeriod($params, $institutionId, $studentId)
     {
+
         $classId          = $params['institution_class_id'] ?? null;
         $academicPeriodId = $params['academic_period_id'] ?? null;
         $educationGradeId = $params['education_grade_id'] ?? null;
@@ -1370,6 +1371,7 @@ class StudentRepository extends Controller
                     ->where('icg.institution_class_id', $classId);
             }
         }
+        
 
         $markType = (clone $baseQuery)
             ->where('sat.code', 'DAY_AND_SUBJECT')
@@ -1379,7 +1381,7 @@ class StudentRepository extends Controller
             $markType = $baseQuery->first();
         }
 
-        if (!$markType) {
+        if (!$markType && $markType !=null) {
             return [
                 'type'      => 'day',
                 'subject'   => false,
@@ -1387,12 +1389,10 @@ class StudentRepository extends Controller
                 'mark_type' => null
             ];
         }
-
         $periods = DB::table('student_attendance_per_day_periods')
-        ->where('student_attendance_mark_type_id', $markType->id)
         ->orderBy('order')
         ->get();
-
+       
         if ($periods->isEmpty()) {
 
             $absenceRecord = DB::table('institution_student_absence_details')
@@ -1407,7 +1407,6 @@ class StudentRepository extends Controller
                     (object)[
                         'id' => $periodNumber,
                         'name' => 'Period ' . $periodNumber,
-                        'student_attendance_mark_type_id' => $markType->id,
                         'period' => $periodNumber, 
                         'modified_user_id' => null,
                         'modified' => null,
@@ -1420,7 +1419,7 @@ class StudentRepository extends Controller
             }
         }
         $hasPeriod  = $periods->isNotEmpty();
-        $hasSubject = ($markType->attendance_type_code === 'DAY_AND_SUBJECT');
+        $hasSubject  = $markType && $markType->attendance_type_code === 'DAY_AND_SUBJECT';
 
         if ($hasSubject && $hasPeriod) {
             $type = 'both';
@@ -1435,7 +1434,7 @@ class StudentRepository extends Controller
             'type'      => $type,
             'subject'   => $hasSubject,
             'periods'   => $periods->values()->toArray(),
-            'mark_type' => $markType->code
+            'mark_type' => $markType?->code
         ];
     }
 
