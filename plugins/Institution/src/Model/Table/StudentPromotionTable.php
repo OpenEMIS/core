@@ -1434,7 +1434,7 @@ class StudentPromotionTable extends AppTable
         $firstGradeOnly      = ($nextProgrammeOption == 1);
         $nextProgrammeGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, $firstGradeOnly);
 
-        // Grades offered at this institution in the target period.
+        // Grades offered at this institution in the target period (used only as a membership filter).
         $periodInstitutionGrades = $EducationGrades->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
             ->find('visible')
             ->find('order')
@@ -1443,12 +1443,15 @@ class StudentPromotionTable extends AppTable
                 $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id'),
             ])
             ->where([
-                'EducationSystems.academic_period_id'       => $academicPeriodId,
-                $InstitutionGrades->aliasField('institution_id') => $institutionId,
+                'EducationSystems.academic_period_id'             => $academicPeriodId,
+                $InstitutionGrades->aliasField('institution_id')  => $institutionId,
             ])
             ->toArray();
 
-        return array_intersect($periodInstitutionGrades, $nextProgrammeGrades);
+        // Use $nextProgrammeGrades as the source of truth for ordering (next_programmes.order → grade.order).
+        // array_intersect_key filters by grade ID (key), keeping only grades the institution
+        // actually offers in the target period, without disturbing the next-programme ordering.
+        return array_intersect_key($nextProgrammeGrades, $periodInstitutionGrades);
     }
 
     /**
