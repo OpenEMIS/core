@@ -154,48 +154,49 @@ class InstitutionRubricsTable extends AppTable {
 				$feature = $this->request->getData($this->getAlias())['feature'];
 				$templateId = $this->request->getData($this->getAlias())['rubric_template_id'];
 				$academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
+				if(!empty($templateId)){
+						if ($feature == $this->getRegistryAlias() && !empty($academicPeriodId)) {
 
-				if ($feature == $this->getRegistryAlias() && !empty($academicPeriodId)) {
+						$attr['options'] = [
+							self::COMPLETED => __('Completed'),
+							'-1' => __('Not Completed')
+						];
 
-					$attr['options'] = [
-						self::COMPLETED => __('Completed'),
-						'-1' => __('Not Completed')
-					];
+						$attr['type'] = 'select';
 
-					$attr['type'] = 'select';
+						$rubricsTable = $this;
+						$selected = self::COMPLETED;
 
-					$rubricsTable = $this;
-					$selected = self::COMPLETED;
+						$this->advancedSelectOptions($attr['options'], $selected, [
+							'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noRubrics')),
+							'callable' => function($id) use ($rubricsTable, $templateId, $academicPeriodId) {
 
-					$this->advancedSelectOptions($attr['options'], $selected, [
-						'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noRubrics')),
-						'callable' => function($id) use ($rubricsTable, $templateId, $academicPeriodId) {
-
-							$query = $rubricsTable->find('list', [
-								'keyField' => 'rubricsStatus',
-								'valueField' => 'statusCount'
-							]);
-
-							// Add a case to check if the rubrics is completed or not
-							$completedRubrics = $query->newExpr()->addCase(
-								[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)],
-								[self::COMPLETED, -1],
-								['integer', 'integer']);
-
-							$query->select([
-									'rubricsStatus' => $completedRubrics,
-									'statusCount' => $query->func()->count($this->aliasField('id'))
-								])
-								->group(['rubricsStatus'])
-								->where([
-									$rubricsTable->aliasField('rubric_template_id') => $templateId,
-									$rubricsTable->aliasField('academic_period_id') => $academicPeriodId
+								$query = $rubricsTable->find('list', [
+									'keyField' => 'rubricsStatus',
+									'valueField' => 'statusCount'
 								]);
 
-							return $query->having(['rubricsStatus' => $id])->count();
-						}
-					]);
-					return $attr;
+								// Add a case to check if the rubrics is completed or not
+								$completedRubrics = $query->newExpr()->addCase(
+									[$query->newExpr()->eq($this->aliasField('status'), self::COMPLETED)],
+									[self::COMPLETED, -1],
+									['integer', 'integer']);
+
+								$query->select([
+										'rubricsStatus' => $completedRubrics,
+										'statusCount' => $query->func()->count($this->aliasField('id'))
+									])
+									->group(['rubricsStatus'])
+									->where([
+										$rubricsTable->aliasField('rubric_template_id') => $templateId,
+										$rubricsTable->aliasField('academic_period_id') => $academicPeriodId
+									]);
+
+								return $query->having(['rubricsStatus' => $id])->count();
+							}
+						]);
+						return $attr;
+					}
 				}
 			}
 		}
