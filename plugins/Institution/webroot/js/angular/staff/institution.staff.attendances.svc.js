@@ -12,6 +12,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         StaffAttendances: 'Institution.StaffAttendances',
         InstitutionShiftsTable:'Institution.InstitutionShifts',
         InstitutionShifts: 'Institution.InstitutionShifts',
+       ConfigItems: 'Configuration.ConfigItems',
     };
 
     var translateText = {
@@ -40,7 +41,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         getAllStaffAttendances: getAllStaffAttendances,
         getColumnDefs: getColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,
-        getShiftListOptions: getShiftListOptions
+        getShiftListOptions: getShiftListOptions,
+        getConfigItemValue: getConfigItemValue,
     };
     return service;
 
@@ -763,39 +765,52 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function saveStaffAttendance(params, dataKey, dataValue, academicPeriodId) {
         var dateString = params.data.date;
+        var $scope = params.context.$scope; // Cache the scope
 
-        // ---- Prevent saving attendance for future dates ----
-        var today = new Date();
-        today.setHours(8, 0, 0, 0); // normalize
+        // 1. Fetch the timezone and validate asynchronously
+        // We return the promise chain so the grid/caller knows when it's done
+        return getConfigItemValue('time_zone').then(function(timeZone) {
 
-        try {
+            var now = new Date();
+            var formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: timeZone,
+                year: 'numeric', month: '2-digit', day: '2-digit'
+            });
+
+            var parts = formatter.formatToParts(now);
+            var d = parts.reduce((acc, part) => {
+                if (part.type !== 'literal') acc[part.type] = part.value;
+                return acc;
+            }, {});
+
+            var institutionToday = new Date(d.year, d.month - 1, d.day);
             var selectedDate = new Date(dateString);
-            if (selectedDate > today) {
-                AlertSvc.warning(params.context.$scope, 'Future dates cannot be saved');
+            selectedDate.setHours(0, 0, 0, 0);
 
-                return false; // prevent API call or further execution
+            // Debugging logs - perfect for checking Tonga vs Bahamas
+            console.log("Saving Attendance - TZ:", timeZone);
+            console.log("Institution Today:", institutionToday.toDateString());
+            console.log("Selected Date:", selectedDate.toDateString());
+
+            // ---- Prevent saving attendance for future dates ----
+            if (selectedDate > institutionToday) {
+                if ($scope) {
+                    AlertSvc.warning($scope, 'Future dates cannot be saved');
+                } else {
+                    console.error('AlertSvc failed: scope is undefined in params.context');
+                }
+                return false;
             }
-        } catch (error) {
-            console.error('Failed to show alert for future date:', error);
-            // optionally: AlertSvc.error(params.context.$scope, 'Warning display failed');
-        }
 
-        // ----------------------------------------------------
-
-        var staffAttendanceData = {};
-        try {
+            // --- Rest of your data preparation logic ---
+            var staffAttendanceData = {};
             var timeIn  = params.data.attendance[dateString].time_in;
             var timeOut = params.data.attendance[dateString].time_out;
 
-            // If user entered reversed time — fix automatically
             if (timeIn && timeOut && timeIn > timeOut) {
-                console.warn('time_in is after time_out — swapping automatically');
-                var tmp   = timeIn;
-                timeIn    = timeOut;
-                timeOut   = tmp;
-
-                // Optional UI alert
-                // AlertSvc.info(params.context.$scope, 'Time in/out order was corrected automatically');
+                var tmp = timeIn;
+                timeIn = timeOut;
+                timeOut = tmp;
             }
 
             staffAttendanceData = {
@@ -803,24 +818,25 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 institution_id: params.data.institution_id,
                 academic_period_id: academicPeriodId,
                 date: dateString,
-                shift_id: params.context.date, // POCOR-6971
+                shift_id: params.context.date,
                 time_in: timeIn,
                 time_out: timeOut,
                 comment: params.data.attendance[dateString].comment
             };
 
-        } catch (error) {
-            console.error('Error building staffAttendanceData:', error);
-            AlertSvc.error(params.context.$scope, 'Unable to prepare attendance data');
-            return false; // stop execution if something breaks
-        }
+            staffAttendanceData[dataKey] = dataValue;
 
-        staffAttendanceData[dataKey] = dataValue;
-        if(!params.data.attendance[dateString].isNew) {
-            return InstitutionStaffAttendances.edit(staffAttendanceData);
-        } else {
-            return InstitutionStaffAttendances.save(staffAttendanceData);
-        }
+            if(!params.data.attendance[dateString].isNew) {
+                return InstitutionStaffAttendances.edit(staffAttendanceData);
+            } else {
+                return InstitutionStaffAttendances.save(staffAttendanceData);
+            }
+
+        }).catch(function(err) {
+            console.error('Error in saveStaffAttendance:', err);
+            if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            return false;
+        });
     }
 
     function setError(data, dataKey, error, input) {
@@ -851,5 +867,26 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             elm.className = elm.className.replace(/ form-error/gi, '');
         });
         errorElms = {};
+    }
+
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 };

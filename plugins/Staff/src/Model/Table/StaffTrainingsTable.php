@@ -87,6 +87,17 @@ class StaffTrainingsTable extends ControllerActionTable
         }
     }
 
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $staffId = $this->getStaffID();
+        if (empty($staffId)) {
+            $staffId = $this->request->getSession()->read('Auth.User.id');
+        }
+        if (!empty($staffId)) {
+            $query->where([$this->aliasField('staff_id') => $staffId]);
+        }
+    }
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('description', ['visible' => false]);
@@ -163,7 +174,19 @@ class StaffTrainingsTable extends ControllerActionTable
     {
         $connection = ConnectionManager::get('default');
         $connection->execute('SET foreign_key_checks = 0');
-        $this->field('staff_id', ['type' => 'hidden', 'value' => $this->getStaffID()]);
+        $session = $this->request->getSession();
+        $queryString = $this->getQueryString();
+        $data['staff_id'] = $queryString['staff_id'];
+        if(empty($data['staff_id'])){
+            $data['staff_id'] = $session->read('Auth.User.id');
+        }
+        $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+        // $this->field('staff_id', ['type' => 'hidden', 'value' => $this->getStaffID()]);
+    }
+
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        $entity->staff_id = $entity['staff_id'];
     }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
