@@ -249,7 +249,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
     {
         $ItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults');
         $options = ["student_id" => $entity->student_id,
-//            "institution_id" => $entity->institution_id,
+            "institution_id" => $entity->institution_id, //POCOR-9568
 //            "institution_class_id" => $entity->institution_class_id,
             "academic_period_id" => $entity->academic_period_id,
             "education_grade_id" => $entity->education_grade_id,
@@ -659,11 +659,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         ];
     }
 
-<<<<<<< HEAD
     public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
-=======
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
->>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
     {
         return $entity->user->openemis_no;
     }
