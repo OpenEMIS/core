@@ -708,7 +708,9 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+
         $entity           = $attr['entity'];
+        dd($entity);
         $studentStatusId  = $entity->has('student_status_id')       ? $entity->student_status_id       : null;
         $academicPeriodId = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
         $educationGradeId = $entity->has('grade_to_promote')        ? $entity->grade_to_promote        : null;
@@ -1448,24 +1450,11 @@ class StudentPromotionTable extends AppTable
             ])
             ->toArray();
 
-        // Walk $nextProgrammeGrades in next-programme order (next_programmes.order -> grade.order).
-        // For each grade, look up its counterpart in $periodInstitutionGrades by display name and
-        // emit the target-period grade ID from $periodInstitutionGrades.
-        //
-        // We cannot use array_intersect_key because the education structure may assign
-        // different grade IDs across academic periods (same programme name, different ID),
-        // so the IDs in $nextProgrammeGrades (no period filter) may differ from those in
-        // $periodInstitutionGrades (filtered to $academicPeriodId). Matching by display name
-        // is the safe common key, and it restores the original behaviour of returning the
-        // correct target-period grade IDs that the institution actually uses.
-        $periodByName = array_flip($periodInstitutionGrades); // [display_name => target_period_grade_id]
-        $results = [];
-        foreach ($nextProgrammeGrades as $gradeName) {
-            if (isset($periodByName[$gradeName])) {
-                $results[$periodByName[$gradeName]] = $gradeName;
-            }
-        }
-        return $results;
+        // Keep grades from $periodInstitutionGrades (correct target-period grade IDs)
+        // whose display names appear in $nextProgrammeGrades (the next programme candidates).
+        // POCOR-6257 original logic: array_intersect by value (display name) ensures we return
+        // the grade IDs the institution actually uses in the target period.
+        return array_intersect($periodInstitutionGrades, $nextProgrammeGrades);
     }
 
     /**
