@@ -29,7 +29,9 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 		} else {
 			$query->where([$this->aliasField('education_programme_id') => $id]);
 		}
-		//POCOR-9342 -- End 
+		//POCOR-9342 -- End
+		// POCOR-9485: honour user-defined order of next programmes
+		$query->order([$this->aliasField('order') => 'ASC']);
 		return $query->toArray();
 	}
 
