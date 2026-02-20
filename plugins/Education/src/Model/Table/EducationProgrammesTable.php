@@ -17,7 +17,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     use HtmlTrait;
 
     private $_contain = ['EducationNextProgrammes._joinData'];
-    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion', 'next_programme_option_id'];//POCOR-4746 //POCOR-9485
+    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'next_programme_option_id', 'education_field_of_study_id','education_cycle_id', 'education_certification_id' ,'same_grade_promotion'];//POCOR-4746 //POCOR-9485
     private  $arrayNextProgrammes = []; // POCOR-9403
     public function initialize(array $config): void {
         parent::initialize($config);
@@ -73,7 +73,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     public function beforeAction(EventInterface $event, ArrayObject $extra) {
         if ($this->action != 'index') {
             $this->field('same_grade_promotion');//POCOR-4746
-            $this->field('next_programme_option_id', ['after' => 'same_grade_promotion']); // POCOR-9485
+            $this->field('next_programme_option_id', ['before' => 'education_cycle_id']); // POCOR-9485
             $this->field('next_programmes', ['type' => 'custom_next_programme', 'valueClass' => 'table-full-width','after'=>'next_programme_option_id']);
             $this->_fieldOrder[] =['next_programmes'];
         }
@@ -188,10 +188,10 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('education_cycle_id');
+        $this->fields['next_programme_option_id']['type'] = 'select'; // POCOR-9485
         $this->fields['education_field_of_study_id']['type'] = 'select';
         $this->fields['education_certification_id']['type'] = 'select';
         $this->fields['same_grade_promotion']['type'] = 'select';//POCOR-4746
-        $this->fields['next_programme_option_id']['type'] = 'select'; // POCOR-9485
     }
 
     public function onUpdateFieldEducationCycleId(EventInterface $event, array $attr, $action, ServerRequest $request) {
@@ -647,7 +647,7 @@ class EducationProgrammesTable extends ControllerActionTable {
             $cells[] = [
                 $name,
                 [$reorderIcon, ['class' => 'sorter rowlink-skip']],
-                $hidden . ' ' . $this->getDeleteButton(),
+                $hidden . ' ' . $this->getDeleteButton(['onclick' => 'jsTable.doRemove(this); $(\'#reload\').click();']),
             ];
             unset($options[$id]);
             $count++;
