@@ -30,8 +30,6 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 			$query->where([$this->aliasField('education_programme_id') => $id]);
 		}
 		//POCOR-9342 -- End
-		// POCOR-9485: honour user-defined order of next programmes
-		$query->order([$this->aliasField('order') => 'ASC']);
 		return $query->toArray();
 	}
 
@@ -46,23 +44,14 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 
 		$nextProgrammeList = $this->getNextProgrammeList($id);
 		if (!empty($nextProgrammeList)) {
-			// Iterate in next-programme order (from getNextProgrammeList ORDER BY order ASC)
-			// and sort each programme's grades by grade order.
-			// A single WHERE IN query does not honour the ordering of the IN list, so
-			// we query per programme and merge — matching the pattern in
-			// getNextProgrammeFirstGradeList() and getNextProgrammeGradeList().
-			$results = [];
-			foreach ($nextProgrammeList as $nextProgrammeId) {
-				$programmeGrades = $EducationGrades
-					->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-					->find('visible')
-					->find('order')
-					->where([
-						$EducationGrades->aliasField('education_programme_id') => $nextProgrammeId
-					])
-					->toArray();
-				$results = $results + $programmeGrades;
-			}
+			$results = $EducationGrades
+				->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+				->find('visible')
+				->find('order')
+				->where([
+					$EducationGrades->aliasField('education_programme_id IN') => $nextProgrammeList
+				])
+				->toArray();
 		} else {
 			$results = [];
 		}
