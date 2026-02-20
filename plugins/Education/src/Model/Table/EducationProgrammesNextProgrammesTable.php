@@ -47,7 +47,6 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 			$results = $EducationGrades
 				->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
 				->find('visible')
-				->find('order')
 				->where([
 					$EducationGrades->aliasField('education_programme_id IN') => $nextProgrammeList
 				])
@@ -80,7 +79,6 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 					->where([
 						$EducationGrades->aliasField('education_programme_id') => $nextProgrammeId
 					])
-                    ->limit(1)
 					->toArray();
 
 				$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];

@@ -17,7 +17,18 @@ class EducationProgrammesTable extends ControllerActionTable {
     use HtmlTrait;
 
     private $_contain = ['EducationNextProgrammes._joinData'];
-    private $_fieldOrder = ['code', 'name', 'duration', 'visible', 'education_field_of_study_id','education_cycle_id', 'academic_period', 'education_certification_id' ,'same_grade_promotion', 'next_programme_option_id', 'next_programme_options', 'next_programmes'];//POCOR-4746 //POCOR-9485
+    private $_fieldOrder = ['academic_period',
+        'code',
+        'name',
+        'duration',
+        'visible',
+        'education_field_of_study_id',
+        'education_cycle_id',
+        'education_certification_id',
+        'same_grade_promotion',
+        'next_programme_option_id',
+        'next_programme_options',
+        'next_programmes'];//POCOR-4746 //POCOR-9485
     private  $arrayNextProgrammes = []; // POCOR-9403
     public function initialize(array $config): void {
         parent::initialize($config);
@@ -72,11 +83,13 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function beforeAction(EventInterface $event, ArrayObject $extra) {
         if ($this->action != 'index') {
-            $this->field('academic_period', ['after' => 'education_cycle_id']); // POCOR-9485: show which period this programme belongs to
+            $this->field('academic_period', ['before' => 'code']); // POCOR-9485: show which period this programme belongs to
             $this->field('same_grade_promotion');//POCOR-4746
             $this->field('next_programme_option_id', ['before' => 'same_grade_promotion']); // POCOR-9485
-            $this->field('next_programmes', ['after' => 'next_programme_option_id', 'type' => 'custom_next_programme', 'valueClass' => 'table-full-width','after'=>'same_grade_promotion']);
-            $this->_fieldOrder[] =['next_programme_option_id', 'next_programmes'];
+            $this->field('next_programmes', ['after' => 'next_programme_option_id',
+                'type' => 'custom_next_programme',
+                'valueClass' => 'table-full-width'
+                ]);
         }
     }
 
@@ -88,7 +101,13 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
+        $this->field('academic_period', ['entity' => $entity]);
         $this->field('next_programme_options', ['entity' => $entity]);
+//        dd($entity);
+    }
+
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
+        $this->field('academic_period', ['entity' => $entity]);
     }
 
 
@@ -354,7 +373,6 @@ class EducationProgrammesTable extends ControllerActionTable {
 
         [$academicPeriodId, $cycleInfo] = $this->getCycleAndLevelInfo($cycleId);
         if (empty($cycleInfo)) {
-
             return $attr;
         }
 
@@ -476,9 +494,13 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private function getCycleAndLevelInfo($cycleId): array
     {
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $EducationCycles  = TableRegistry::getTableLocator()->get('Education.EducationCycles');
         $EducationLevels  = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
+
+        // Get current academic period
+        $fallBackAcademicPeriodId = $AcademicPeriods->getCurrent();
 
         // Build query explicitly (no contain)
         $cycleRecord = $EducationCycles->find()
@@ -510,13 +532,17 @@ class EducationProgrammesTable extends ControllerActionTable {
             ->enableHydration(false)
             ->first();
 
-        $academicPeriodId = $cycleRecord['academic_period_id'] ?? null;
-
+        $academicPeriodId = $cycleRecord['academic_period_id'] ?? 0;
         return [$academicPeriodId, $cycleRecord];
     }
 
     private function getNextProgrammeOptions($cycleInfo, $academicPeriodId): array
     {
+        $AcademicPeriods = $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods;
+        $currentAcademicPeriod = $AcademicPeriods->getCurrent();
+        $nextAcademicPeriodId = $AcademicPeriods->getNextAcademicPeriodId($academicPeriodId) ?? $currentAcademicPeriod;
+        $academicPeriodId = $academicPeriodId ?? 0;
+
         // 1) Build excluded IDs as a simple array [1,2,3]
         $EducationSystems     = TableRegistry::getTableLocator()->get('Education.EducationSystems');
         $EducationLevels      = TableRegistry::getTableLocator()->get('Education.EducationLevels');
@@ -581,7 +607,7 @@ class EducationProgrammesTable extends ControllerActionTable {
                 ])
             ])
             ->where([
-                $EducationSystems->aliasField('academic_period_id') => $academicPeriodId,
+                $EducationSystems->aliasField('academic_period_id') => $nextAcademicPeriodId,
                 $EducationLevels->aliasField('order >=')            => $cycleInfo['level_order'],
             ])
             ->order([
@@ -635,7 +661,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-        // to be revisit
+
         // $data[$this->alias()]['setVisible'] = true;
         // To handle when delete all programmes
         if (!array_key_exists('education_next_programmes', $data[$this->getAlias()])) {
@@ -676,6 +702,9 @@ class EducationProgrammesTable extends ControllerActionTable {
     public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity  = $attr['entity'];
+        if(!$entity){
+            return 'a';
+        };
         $cycleId = $entity->has('education_cycle_id') ? $entity->education_cycle_id : null;
 
         $periodName = '';
