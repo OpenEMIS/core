@@ -722,10 +722,13 @@ class StudentPromotionTable extends AppTable
 
                 $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
                 if ($isLastGrade) {
-                    // list of next first grades from all next programme available to promote to
-                    // 'true' means get all the grades of the next programmes plus the current programme grades
-                    // 'true' means get first grade only from all available next programme
-                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, true);
+                    // POCOR-9485: read next_programme_option_id from this grade's programme
+                    $gradeObj = $this->EducationGrades->get($educationGradeId, ['contain' => ['EducationProgrammes']]);
+                    $nextProgrammeOptionId = $gradeObj->education_programme->next_programme_option_id ?? 1;
+                    // option=1 (Show One Programme) → first grade of each linked next programme (current behaviour)
+                    // option=0 (Show All Programmes) → all grades of all linked next programmes (cross-cycle)
+                    $firstGradeOnly = ($nextProgrammeOptionId == 1);
+                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, $firstGradeOnly);
                     //POCOR-6257 when status is Graduated getting To grade option on to academic preiod and next program
                     $grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
                     $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
