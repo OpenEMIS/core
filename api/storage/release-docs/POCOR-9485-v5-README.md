@@ -22,9 +22,9 @@ This feature adds a per-programme configuration option (`next_programme_option_i
 | Layer | Change |
 |---|---|
 | Database | `next_programme_option_id TINYINT(1) DEFAULT 1` added to `education_programmes`; `order INT(11) DEFAULT 0` added to `education_programmes_next_programmes` |
-| EducationProgrammesNextProgrammesTable | `getNextProgrammeList()` now includes `ORDER BY order ASC` |
-| EducationProgrammesTable | Exposes `next_programme_option_id` as a select field with label "Next Programme Options"; tracks `order` in `collectSelectedNextProgrammes()`; handles `moveUp_*` / `moveDown_*` reload signals in `buildEditAddTable()`; renders Order column and up/down buttons in `buildProgrammeTableRows()`; `buildViewTable()` shows Order column sorted by `order` |
-| StudentPromotionTable | Reads `next_programme_option_id` from the grade's programme and sets `$firstGradeOnly` accordingly before calling `getNextAvailableEducationGrades()` |
+| EducationProgrammesNextProgrammesTable | `getNextProgrammeFirstGradeList()` now includes `->limit(1)` so exactly one grade per next programme is returned; whitespace normalised |
+| EducationProgrammesTable | Exposes `next_programme_option_id` as a select field ("Next Programme Options"); tracks `order` in `collectSelectedNextProgrammes()`; handles `moveUp_*` / `moveDown_*` reload signals; renders Order column and ▲/▼ buttons in `buildProgrammeTableRows()`; **bug fix** — delete button now triggers `#reload` so removed items immediately reappear in the add-dropdown |
+| StudentPromotionTable | Full clean-code refactor of `onUpdateFieldEducationGradeId`: early returns replace nested conditionals; grade/programme info fetched once; `next_programme_option_id` respected for all GRADUATED+isLastGrade paths; two private helpers extracted — `getGradesForGraduation()` and `findMatchingGradeInPeriod()`; raw SQL with variable interpolation (SQL-injection risk) replaced by equivalent CakePHP ORM query in `findMatchingGradeInPeriod()` |
 
 ### Files Changed Summary
 
@@ -106,3 +106,5 @@ cd /var/www/html/emis/core
 | Up/down buttons not responding | JavaScript error (jQuery not loaded) | Check browser console; ensure jQuery is available |
 | Order not persisting after save | `order` field not in `_joinData` hidden field | Verify `buildProgrammeTableRows()` includes `{$joinPrefix}.order` hidden field |
 | Graduation dropdown still shows only first grade despite option=0 | Cache stale | Clear CakePHP cache; confirm migration ran |
+| Deleted Next Programme item does not reappear in add dropdown | Old code — delete button lacked reload trigger | Ensure `buildProgrammeTableRows()` uses `getDeleteButton(['onclick' => 'jsTable.doRemove(this); $(\'#reload\').click();'])` |
+| PROMOTED grade list incorrect for same_grade_promotion programmes | Raw SQL was querying wrong table join | Confirm `findMatchingGradeInPeriod()` ORM helper is present; check `education_grades.name` match logic |
