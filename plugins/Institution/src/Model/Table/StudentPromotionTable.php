@@ -1448,10 +1448,24 @@ class StudentPromotionTable extends AppTable
             ])
             ->toArray();
 
-        // Use $nextProgrammeGrades as the source of truth for ordering (next_programmes.order → grade.order).
-        // array_intersect_key filters by grade ID (key), keeping only grades the institution
-        // actually offers in the target period, without disturbing the next-programme ordering.
-        return array_intersect_key($nextProgrammeGrades, $periodInstitutionGrades);
+        // Walk $nextProgrammeGrades in next-programme order (next_programmes.order -> grade.order).
+        // For each grade, look up its counterpart in $periodInstitutionGrades by display name and
+        // emit the target-period grade ID from $periodInstitutionGrades.
+        //
+        // We cannot use array_intersect_key because the education structure may assign
+        // different grade IDs across academic periods (same programme name, different ID),
+        // so the IDs in $nextProgrammeGrades (no period filter) may differ from those in
+        // $periodInstitutionGrades (filtered to $academicPeriodId). Matching by display name
+        // is the safe common key, and it restores the original behaviour of returning the
+        // correct target-period grade IDs that the institution actually uses.
+        $periodByName = array_flip($periodInstitutionGrades); // [display_name => target_period_grade_id]
+        $results = [];
+        foreach ($nextProgrammeGrades as $gradeName) {
+            if (isset($periodByName[$gradeName])) {
+                $results[$periodByName[$gradeName]] = $gradeName;
+            }
+        }
+        return $results;
     }
 
     /**
