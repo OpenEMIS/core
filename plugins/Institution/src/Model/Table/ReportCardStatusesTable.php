@@ -241,6 +241,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->fields['student_status_id']['visible'] = false;
     }
 
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
@@ -419,13 +420,18 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
-        $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
+
         //POCOR-7212 starts
         if (!empty($educationGradeByReportCardId)) {
             $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId;
         }//POCOR-7212 ends
         //End
         $UsersTable = TableRegistry::getTableLocator()->get('Security.Users');
+        // POCOR-9569: Start
+        $StudentStatuses = $this->StudentStatuses;
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        $query->contain('StudentStatuses')->where($where);
+        // POCOR-9569: End
         $query
             ->select([
                 'institution_class_id' => $this->aliasField('institution_class_id'),
@@ -1861,10 +1867,16 @@ class ReportCardStatusesTable extends ControllerActionTable
         $classStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+
         if (!is_null($studentId)) {
             $where[$classStudentsTable->aliasField('student_id')] = $studentId;
         }
+        // POCOR-9569: filter out students with withdrawn or transferred status
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        // POCOR-9569 end
         $classStudents = $classStudentsTable->find()
+            ->contain('StudentStatuses')
             ->select([
                 $classStudentsTable->aliasField('student_id'),
                 $classStudentsTable->aliasField('institution_id'),

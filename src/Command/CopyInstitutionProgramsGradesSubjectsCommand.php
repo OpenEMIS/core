@@ -211,7 +211,9 @@ class CopyInstitutionProgramsGradesSubjectsCommand extends CopyCommandBase
             $params = [
                 'grade' => $newGrade,
                 'period'=> $toPeriod,
-                'sdate' => $toAp->start_date ?? null,
+                'sdate' => $toAp->start_date
+                ? $toAp->start_date->format('Y-m-d')
+                : null, //POCOR-9533
                 'syear' => $toAp->start_year ?? null,
                 'edate' => null,
                 'eyear' => null,
