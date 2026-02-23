@@ -63,7 +63,6 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         $this->field('start_date',['visible' => false]);
         $this->field('end_date',['visible' => false]);
         $this->field('is_current',['visible' => false]);
-        $this->field('parent_id',['visible' => false]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -263,11 +262,6 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
 
         //Always make new record current
         $entity->is_current = true;
-
-        //parent handling
-        if (empty($entity->parent_id)) {
-            $entity->parent_id = null;
-        }
     }
 
     //POCOR-9475
@@ -292,10 +286,7 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         //Convert EDIT into INSERT
         $entity->setNew(true);
         $entity->unset('id');
-
-        //Set parent_id correctly
-        $entity->parent_id = $originalId;
-
+        
         //Set academic period dates
         $academicPeriods = TableRegistry::getTableLocator()
             ->get('AcademicPeriod.AcademicPeriods');
