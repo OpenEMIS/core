@@ -2427,7 +2427,7 @@ SQL;
                     $academicPeriodId,
                     $institutionClassId,
                     $educationGradeId,
-                    $attendancePeriodId,
+                    $periodId,
                     $subjectId,
                     $date,
                     $archive
