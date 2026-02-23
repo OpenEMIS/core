@@ -18,7 +18,7 @@ class UserCascadeBehavior extends Behavior {
 		// $this->showSQL();
 	}
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         $userId = $entity->id;
         $this->cleanUserRecords($userId);
