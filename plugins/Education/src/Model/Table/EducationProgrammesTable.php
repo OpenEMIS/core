@@ -109,7 +109,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     }
 
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // Always perform related child cleanup
         $this->deleteChildProgrammes($entity); // POCOR-9403 cleancoded
@@ -274,7 +274,7 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     // POCOR-9403 cleancoded
 
-    public function onGetCustomNextProgrammeElement(Event $event, $action, $entity, $attr, $options = [])
+    public function onGetCustomNextProgrammeElement(EventInterface $event, $action, $entity, $attr, $options = [])
     {
         $EducationProgrammesNextProgrammes = TableRegistry::get('Education.EducationProgrammesNextProgrammes');
 
@@ -329,7 +329,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         return $attr;
     }
 
-    private function buildEditAddTable(Event $event, $entity, array $attr): array
+    private function buildEditAddTable(EventInterface $event, $entity, array $attr): array
     {
         $requestData = $this->request->getData()[$this->getAlias()] ?? [];
         $form = $event->getSubject()->Form;
@@ -613,7 +613,7 @@ class EducationProgrammesTable extends ControllerActionTable {
         return [$headers, $cells];
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
         // to be revisit
         // $data[$this->alias()]['setVisible'] = true;
         // To handle when delete all programmes

@@ -84,7 +84,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
         $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function afterAction(EventInterface $event, ArrayObject $extra)
     {
         // visible field is not used for now
         $this->field('visible', ['visible' => 'hidden']);
@@ -595,7 +595,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
      *
      * @return array The modified attributes array with dropdown type and options for the "requirement" field.
      */
-    public function onUpdateFieldRequirement(Event $event, array $attr, $action, ServerRequest $request){
+    public function onUpdateFieldRequirement(EventInterface $event, array $attr, $action, ServerRequest $request){
 
         $options = ['Compulsory','Elective'];
         $optionsAssoc = array_combine($options, $options);

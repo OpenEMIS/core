@@ -10,7 +10,8 @@ use Cake\Controller\Component;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+// use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use DateTime;
 use PHPExcel_Worksheet;
 use Cake\Utility\Inflector;
@@ -29,7 +30,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         ]);
         // register table once
         $this->Users = TableRegistry::getTableLocator()->get('User.Users');
-        $this->TrainingSessions = TableRegistry::getTableLocator()->get('training_sessions');
+        $this->TrainingSessions = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $this->TrainingSessionTraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
     }
 
@@ -83,7 +84,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     public function addOnInitialize(EventInterface $event, Entity $entity)
     { 
         $request = $this->request;
-        unset($request->query['training_courses']);
+        unset($request->getQuery['training_courses']);
     }
 
     public function addAfterAction(EventInterface $event, Entity $entity)
@@ -92,22 +93,22 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         $this->dependency["training_courses"] = ["select_file"];
 
         $this->ControllerAction->field('training_courses', ['type' => 'select']);
-        $this->ControllerAction->field('select_file', ['visible' => false]);
+        $this->ControllerAction->field('select_file', ['visible' => true]);
         $this->ControllerAction->setFieldOrder(['training_courses', 'select_file']);
 
         //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
 
-        if (isset($this->request->data[$this->alias()])) {
+        if (isset($this->request->data[$this->getAlias()])) {
 
             $unsetFlag = false;
-            $aryRequestData = $this->request->data[$this->alias()];
+            $aryRequestData = $this->getRequest()->getData()[$this->getAlias()];
 
             foreach ($aryRequestData as $requestData => $value) {
                 if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
                     foreach ($aryDependencies as $dependency) {
-                        $this->request->query = $this->request->data[$this->alias()];
+                        $this->request->query = $this->getRequest()->getData()[$this->getAlias()];
                         $this->ControllerAction->field($dependency, ['visible' => true]);
                     }
                 }
@@ -122,9 +123,9 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldTrainingCourses(EventInterface $event, array $attr, $action, Request $request) { 
+    public function onUpdateFieldTrainingCourses(EventInterface $event, array $attr, $action, ServerRequest $request) { 
         if ($action == 'add') {
-            $TrainingCourses =  TableRegistry::getTableLocator()->get('training_courses');
+            $TrainingCourses =  TableRegistry::getTableLocator()->get('Training.TrainingCourses');
             $training_courses_options = $TrainingCourses->find('list', [
                                         'keyField' => 'id',
                                         'valueField' => 'name'
@@ -144,10 +145,10 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
     public function onImportPopulateTrainingResultTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
-        $training_courses = $this->request->query['training_courses'];
+        $training_courses = $this->request->getQuery['training_courses'];
 
-        $TrainingResultTypes = TableRegistry::getTableLocator()->get('training_result_types');
-        $TrainingCoursesResultTypes = TableRegistry::getTableLocator()->get('training_courses_result_types');
+        $TrainingResultTypes = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
+        $TrainingCoursesResultTypes = TableRegistry::getTableLocator()->get('Training.TrainingCoursesResultTypes');
         $TrainingCoursesResultTypesData = $TrainingCoursesResultTypes->find()
                                         ->select([
                                             $TrainingCoursesResultTypes->aliasField('training_course_id'),
@@ -191,9 +192,9 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
     public function onImportPopulateTrainingSessionsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {   
-        $training_courses = $this->request->query['training_courses'];
+        $training_courses = $this->request->getQuery['training_courses'];
         
-        $TrainingSession = TableRegistry::getTableLocator()->get('training_sessions');
+        $TrainingSession = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $TrainingSessionData = $TrainingSession->find()
                                 ->where([
                                     $TrainingSession->aliasField('training_course_id') => $training_courses,
@@ -224,7 +225,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         $openemis_no = $tempRow['OpenEMIS_ID'];
         $training_session_id = $tempRow['training_session'];
         $tempRow['training_session_id'] = $training_session_id;
-        $Users = TableRegistry::getTableLocator()->get('security_users');
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
         $userData = $Users->find()
                         ->where([$Users->aliasField('openemis_no') => $openemis_no])
                         ->first();
@@ -232,7 +233,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
             $tempRow['trainee_id'] = $userData->id;
         }
 
-        $TrainingSessionTraineeResults = TableRegistry::getTableLocator()->get('training_session_trainee_results');
+        $TrainingSessionTraineeResults = TableRegistry::getTableLocator()->get('Training.TrainingSessionTraineeResults');
         $TraineeData = $TrainingSessionTraineeResults->find()
                         ->where([$TrainingSessionTraineeResults->aliasField('trainee_id') => $userData->id,  $TrainingSessionTraineeResults->aliasField('training_session_id') => $training_session_id])
                         ->first();
