@@ -133,7 +133,7 @@ class EducationSubjectsTable extends ControllerActionTable
 
 
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['FieldOfStudies']);
     }

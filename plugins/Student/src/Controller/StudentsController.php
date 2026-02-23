@@ -544,7 +544,7 @@ class StudentsController extends AppController
         }
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $StudentUser = TableRegistry::getTableLocator()->get('Institution.StudentUser');
         parent::beforeFilter($event);

@@ -134,7 +134,7 @@ class RemoveBehavior extends Behavior
         }
     }
 
-    public function remove(Event $mainEvent, ArrayObject $extra)
+    public function remove(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $request = $model->request;
@@ -327,7 +327,7 @@ class RemoveBehavior extends Behavior
         }
     }
 
-    public function transfer(Event $mainEvent, ArrayObject $extra)
+    public function transfer(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $controller = $model->controller;

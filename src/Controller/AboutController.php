@@ -54,7 +54,7 @@ class AboutController extends AppController
         return true;
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $this->set('contentHeader', __($this->name));

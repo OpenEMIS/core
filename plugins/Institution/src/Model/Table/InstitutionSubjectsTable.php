@@ -570,9 +570,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $countMale = $this->SubjectStudents->getMaleCountBySubject($institution_subject_id);
         $countFemale = $this->SubjectStudents->getFemaleCountBySubject($institution_subject_id);
         $this->updateAll(['total_male_students' => $countMale, 'total_female_students' => $countFemale], ['id' => $institution_subject_id]);
-        $this->getEventManager()->dispatch(
-            new Event('Model.afterFullSave', $this, compact('entity', 'options'))
-        );
+        $this->dispatchEvent('Model.afterFullSave', compact('entity', 'options'));
     }
 
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)

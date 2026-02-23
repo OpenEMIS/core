@@ -4,7 +4,6 @@ namespace Report\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -62,7 +61,7 @@ class ReportsController extends AppController
         // POCOR-8034: end
     }
 
-    public function onInitialize(Event $event, Table $table, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $table, ArrayObject $extra)
     {
         $header = __('Reports') . ' - ' . __($table->getAlias());
         $this->set('contentHeader', $header);
