@@ -57,43 +57,45 @@ class InstitutionTextbooksTable extends AppTable  {
         /*POCOR-6296 starts*/
         $areaId = $requestData->area_id;
         $institutionId = $requestData->institution_id;
-        if (!empty($institutionId) && $institutionId > 0) {
-            $query->where([
-                $this->aliasField('institution_id') => $institutionId
-            ]);
-        }
-        if (!empty($areaId) && $areaId != -1) {
-            $query->where([
-                'Institutions.area_id' => $areaId
-            ]);
-        }
-        /*POCOR-6296 ends*/
-        if ($academicPeriodId != 0) {
-            $query->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId
-            ]);
-        }
+        if(!empty($institutionId) && !empty($institutionId)){
+            if (!empty($institutionId) && $institutionId > 0) {
+                $query->where([
+                    $this->aliasField('institution_id') => $institutionId
+                ]);
+            }
+            if (!empty($areaId) && $areaId != -1) {
+                $query->where([
+                    'Institutions.area_id' => $areaId
+                ]);
+            }
+            /*POCOR-6296 ends*/
+            if ($academicPeriodId != 0) {
+                $query->where([
+                    $this->aliasField('academic_period_id') => $academicPeriodId
+                ]);
+            }
 
-        $superAdmin = $requestData->super_admin;
-        $userId = $requestData->user_id;
-        $institutionIds = [];
-        if (!$superAdmin) {
-            $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
-            if (isset($instituitionData)) {
-                foreach ($instituitionData as $key => $value) {
-                    $institutionIds[] = $value->id;
+            $superAdmin = $requestData->super_admin;
+            $userId = $requestData->user_id;
+            $institutionIds = [];
+            if (!$superAdmin) {
+                $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
+                if (isset($instituitionData)) {
+                    foreach ($instituitionData as $key => $value) {
+                        $institutionIds[] = $value->id;
+                    }
                 }
             }
-        }
-        if ($institutionId == 0) {
-            $query->where([
-                $this->aliasField('institution_id IN') => $institutionIds
-            ]);
-        }
+            if ($institutionId == 0) {
+                $query->where([
+                    $this->aliasField('institution_id IN') => $institutionIds
+                ]);
+            }
 
-        $query->contain('Textbooks', 'Institutions');
-        pr($query);
+            $query->contain('Textbooks', 'Institutions');
+            pr($query);
+        }
     }
 
     public function onExcelGetInstitutionId(EventInterface $event, Entity $entity) {

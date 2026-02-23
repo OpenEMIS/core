@@ -241,6 +241,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->fields['student_status_id']['visible'] = false;
     }
 
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
@@ -251,7 +252,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-       // $this->field('email_status');
+        //$this->field('email_status');
         $this->field('pdf_file_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
@@ -420,13 +421,18 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
-        $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
+
         //POCOR-7212 starts
         if (!empty($educationGradeByReportCardId)) {
             $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId;
         }//POCOR-7212 ends
         //End
         $UsersTable = TableRegistry::getTableLocator()->get('Security.Users');
+        // POCOR-9569: Start
+        $StudentStatuses = $this->StudentStatuses;
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        $query->contain('StudentStatuses')->where($where);
+        // POCOR-9569: End
         $query
             ->select([
                 'institution_class_id' => $this->aliasField('institution_class_id'),
@@ -1530,7 +1536,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->enableHydration(false)
             ->first();
         if (!$record || empty($record['pdf_size'])) {
-            return '0 KB';
+            return '';
         }
         $bytes = (int) $record['pdf_size'];
 
@@ -1543,6 +1549,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function generate(EventInterface $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+
+//echo "<pre>"; print_r($params); die;
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
@@ -1887,10 +1895,16 @@ class ReportCardStatusesTable extends ControllerActionTable
         $classStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+
         if (!is_null($studentId)) {
             $where[$classStudentsTable->aliasField('student_id')] = $studentId;
         }
+        // POCOR-9569: filter out students with withdrawn or transferred status
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        // POCOR-9569 end
         $classStudents = $classStudentsTable->find()
+            ->contain('StudentStatuses')
             ->select([
                 $classStudentsTable->aliasField('student_id'),
                 $classStudentsTable->aliasField('institution_id'),
@@ -2725,22 +2739,6 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
         return $buttons;
-    }//POCOR-7998:end
-
-    /*public function onGetEmailStatus(EventInterface $event, Entity $entity)
-    {
-        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
-        $value = '<i class="fa fa-minus"></i>';
-
-        if ($entity->has('email_status_id')) {
-            $value = $emailStatuses[$entity->email_status_id];
-
-            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
-                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
-            }
-        }
-
-        return $value;
-    }*/
-
+    }
+//POCOR-7998:end
 }
