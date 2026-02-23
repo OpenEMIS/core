@@ -56,7 +56,6 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		$this->setFieldOrder(['status_type_id', 'status_date', 'comment', 'file_content']);
 
         $this->setupTabElements();
-
         $session = $this->request->getSession();
         $controllerName = $this->controller->getName();
         if ($controllerName == 'Profiles')
@@ -115,6 +114,9 @@ class EmploymentStatusesTable extends ControllerActionTable {
 		// End POCOR-5188
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
+        if(empty($data['staff_id'])){
+            $data['staff_id'] = $session->read('Auth.User.id');
+        }
         $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
 	}
 

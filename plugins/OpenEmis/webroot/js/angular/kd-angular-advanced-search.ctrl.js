@@ -40,6 +40,17 @@
                 $scope.disableElement = '';
             }
 
+            //Reset the values on the Advanced Search
+            $scope.resetFields = function() {
+                window.location.reload();
+                var searchForm = angular.element('#search-form');
+                var resetCheckbox = angular.element('input[type="checkbox"]');  
+
+                $scope.inputModelText = angular.copy(JSON.parse(JSON.stringify($scope.originalModel)));
+                searchForm.find('input:text, select').val('');
+                resetCheckbox.removeAttr('checked');
+            }
+
             $scope.submitSearch = function () {
                 $scope.showAdvSearch = false;
                 $scope.searchResultsHeader = true;
