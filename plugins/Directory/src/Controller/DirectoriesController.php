@@ -966,7 +966,12 @@ class DirectoriesController extends AppController
                     $alias = substr($alias, 7);
                 }
                 $this->Navigation->addCrumb($model->getHeader($alias));
-                $header = $header . ' - ' . $model->getHeader($alias);
+                $directoryUrl =  $this->request->getAttribute('params')['pass'][0];
+                if($directoryUrl == 'index'){
+                    $header = $model->getHeader($alias);
+                }else{
+                    $header = $header . ' - ' . $model->getHeader($alias);
+                }
             }
 
             $this->set('contentHeader', $header);

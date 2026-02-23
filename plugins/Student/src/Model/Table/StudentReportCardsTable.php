@@ -170,6 +170,29 @@ class StudentReportCardsTable extends ControllerActionTable
     public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        //POCOR-9557[START] unset view here and regenrate view URL
+        unset($buttons['view']); // reason to unset view here is: It getting the by default query string and lead to 404 error
+        $params = [
+            'report_card_id' => $entity->report_card_id,
+            'student_id' => $entity->student_id,
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'education_grade_id' => $entity->education_grade_id
+        ];
+
+        $viewUrl = $this->url('view');
+        $viewUrl[1] = $this->paramsEncode($params);
+        $buttons['viewReport'] = [
+                'label' => '<i class="fa fa-eye"></i>'.__('View'),
+                'attr' =>[ 'role' => 'menuitem',
+                    'tabindex' => '-1',
+                    'escape' => false,
+                    'target'=>'_blank'],
+                'url' => $viewUrl
+        ];
+        //POCOR-9557[END]
+        
         //POCOR 7321 start
         $params = [
             'report_card_id' => $entity->report_card_id,
@@ -189,6 +212,7 @@ class StudentReportCardsTable extends ControllerActionTable
                     'target'=>'_blank'],
                 'url' => $viewPdfUrl
         ];
+
         //POCOR-7321 end
         $downloadAccess = false;
         if ($this->controller->getName() == 'Students') {

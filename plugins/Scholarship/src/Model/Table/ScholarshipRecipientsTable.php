@@ -63,7 +63,134 @@ class ScholarshipRecipientsTable extends ControllerActionTable
         $this->addBehavior('User.AdvancedNameSearch');
     }
 
+    //POCOR-9505 -- Start
+    public function checkApprovedAmount($value, array $context)
+    {
+        $RecipientPaymentStructureEstimates =
+            TableRegistry::getTableLocator()->get('Scholarship.RecipientPaymentStructureEstimates');
+        $RecipientDisbursements =
+            TableRegistry::getTableLocator()->get('Scholarship.RecipientDisbursements');
+        $RecipientCollections =
+            TableRegistry::getTableLocator()->get('Scholarship.RecipientCollections');
+
+        $data = $context['data'];
+
+        $approvedAmount = (float)$value;
+
+        $conditions = [
+            'recipient_id' => $data['recipient_id'] ?? null,
+            'scholarship_id' => $data['scholarship_id'] ?? null,
+        ];
+
+        $estimatedAmount = (float)(
+            $RecipientPaymentStructureEstimates->find()
+                ->where($conditions)
+                ->select([
+                    'total' => $RecipientPaymentStructureEstimates->find()->func()->sum('estimated_amount')
+                ])
+                ->first()
+                ->total ?? 0
+        );
+
+        $disbursedAmount = (float)(
+            $RecipientDisbursements->find()
+                ->where($conditions)
+                ->select([
+                    'total' => $RecipientDisbursements->find()->func()->sum('amount')
+                ])
+                ->first()
+                ->total ?? 0
+        );
+
+        $collectedAmount = (float)(
+            $RecipientCollections->find()
+                ->where($conditions)
+                ->select([
+                    'total' => $RecipientCollections->find()->func()->sum('amount')
+                ])
+                ->first()
+                ->total ?? 0
+        );
+
+        if ($approvedAmount < $estimatedAmount) {
+            return $this->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithEstimated');
+        }
+
+        if ($approvedAmount < $disbursedAmount) {
+            return $this->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithDisbursed');
+        }
+
+        if ($approvedAmount < $collectedAmount) {
+            return $this->getMessage('Scholarship.ScholarshipRecipients.approved_amount.ruleCheckApprovedWithCollected');
+        }
+
+        return true;
+    }
+
     public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('approved_amount', [
+                'comparison' => [
+                    'rule' => function ($value, $context) {
+
+                        if (empty($context['data']['scholarship_id'])) {
+                            return true;
+                        }
+
+                        $Scholarships = TableRegistry::getTableLocator()
+                            ->get('Scholarship.Scholarships');
+
+                        $scholarship = $Scholarships->find()
+                            ->select(['total_amount'])
+                            ->where(['id' => $context['data']['scholarship_id']])
+                            ->first();
+
+                        if (!$scholarship) {
+                            return true;
+                        }
+
+                        return (float)$value <= (float)$scholarship->total_amount;
+                    },
+                    'message' => $this->getMessage(
+                        'Scholarship.ScholarshipRecipients.approved_amount.comparison'
+                    )
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                    'message' => $this->getMessage('Scholarship.ScholarshipRecipients.approved_amount.validateDecimal')
+                ],
+                'ruleCheckApprovedAmount' => [
+                    'rule' => function ($value, $context) {
+                        return $this->checkApprovedAmount($value, $context);
+                    }
+                ]
+            ])
+            ->allowEmpty('date', function ($context) {
+                if (!empty($context['data']['next_status'])) {
+                    return false;
+                }
+                return true;
+            })
+            ->allowEmpty('next_status', function ($context) {
+                if (!empty($context['data']['date'])) {
+                    return false;
+                }
+                return true;
+            });
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        if (isset($extra['toolbarButtons'])) {
+            $extra['toolbarButtons']->offsetUnset('add');
+        }
+    }
+    //POCOR-9505 -- End
+
+    public function validationDefaultOrg(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
 
@@ -335,6 +462,18 @@ class ScholarshipRecipientsTable extends ControllerActionTable
         $this->field('approved_amount', ['visible' => false]);
         $this->field('status', ['attr' => ['label' => __('status')], 'visible' => true, 'sort' => true]);
         $this->field('openemis_no', ['attr' => ['label' => __('status')], 'visible' => true, 'sort' => true]);
+        //POCOR-9505 -- Start
+        $this->field('recipient', [
+            'attr' => ['label' => __('Recipient')],
+            'visible' => true,
+            'sort' => false
+        ]);
+        $this->field('scholarship', [
+            'attr' => ['label' => __('Scholarship')],
+            'visible' => true,
+            'sort' => false
+        ]);
+        //POCOR-9505 -- End
         $this->field('financial_assistance_type', ['attr' => ['label' => __('status')], 'visible' => true, 'sort' => true]);
         $this->field('scholarship_id', ['attr' => ['label' => __('Scholarship Name')], 'visible' => true, 'sort' => true]);
     }
@@ -354,7 +493,53 @@ class ScholarshipRecipientsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9505 -- Start
+    public function onGetRecipient(EventInterface $event, Entity $entity)
+    {
+        $recipient = $entity->getOriginal('recipient');
+
+        if ($recipient instanceof \Cake\ORM\Entity) {
+            return $recipient->name ?? null;
+        }
+
+        return null;
+    }
+
+    public function onGetScholarship(EventInterface $event, Entity $entity)
+    {
+        $scholarship = $entity->getOriginal('scholarship');
+
+        if ($scholarship instanceof \Cake\ORM\Entity) {
+            return $scholarship->name ?? null;
+        }
+
+        return null;
+    }
+
     public function onGetFinancialAssistanceType(EventInterface $event, Entity $entity)
+    {
+        $scholarship = $entity->getOriginal('scholarship');
+
+        if (
+            !$scholarship instanceof \Cake\ORM\Entity ||
+            empty($scholarship->scholarship_financial_assistance_type_id)
+        ) {
+            return null;
+        }
+
+        $typesTable = TableRegistry::getTableLocator()
+            ->get('Scholarship.FinancialAssistanceTypes');
+
+        $type = $typesTable->find()
+            ->select(['name'])
+            ->where(['id' => $scholarship->scholarship_financial_assistance_type_id])
+            ->first();
+
+        return $type->name ?? null;
+    }
+    //POCOR-9505 -- End
+
+    public function onGetFinancialAssistanceTypeOrg(EventInterface $event, Entity $entity)
     {
 
         if ($entity->has('scholarship') && $entity->scholarship->has('scholarship_financial_assistance_type_id')) {
