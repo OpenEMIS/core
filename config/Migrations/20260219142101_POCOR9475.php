@@ -41,7 +41,6 @@ class POCOR9475 extends AbstractMigration
                 ADD COLUMN `start_date` DATE NULL AFTER `academic_period_id`,
                 ADD COLUMN `end_date` DATE NULL AFTER `start_date`,
                 ADD COLUMN `is_current` TINYINT(1) NOT NULL DEFAULT 0 AFTER `end_date`,
-                ADD COLUMN `parent_id` INT(11) NULL AFTER `is_current`
             ");
         }
         

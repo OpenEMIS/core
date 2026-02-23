@@ -38,7 +38,6 @@ class InfrastructureInternetHistoryTable extends ControllerActionTable
         $this->field('start_date',['visible' => true]);
         $this->field('end_date',['visible' => true]);
         $this->field('is_current',['visible' => false]);
-        $this->field('parent_id',['visible' => false]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -72,30 +71,16 @@ class InfrastructureInternetHistoryTable extends ControllerActionTable
     {
         $queryString = $this->getQueryString();
         $recordId = $queryString['record_id'] ?? null;
-
-        if (empty($recordId)) {
-            // No record_id → show no data
-            return $query->where(['1 = 0']);
+        $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        if($academicPeriodId == null){
+           $academicPeriodId =  $academicPeriod->getCurrent();
         }
-
-        $record = $this->find()
-            ->select(['id', 'parent_id'])
-            ->where(['id' => $recordId])
-            ->first();
-
-        if (!$record) {
-            return $query->where(['1 = 0']);
-        }
-        $rootId = $record->parent_id ?? $record->id;
         $query
             ->where([
-                'OR' => [
-                    $this->aliasField('id') => $rootId,
-                    $this->aliasField('parent_id') => $rootId
-                ],
+                $this->aliasField('academic_period_id IS') => $academicPeriodId,
                 $this->aliasField('is_current') => 0
-            ])
-            ->orderDesc($this->aliasField('created'));
+            ])->orderDesc($this->aliasField('created'));
 
         return $query;
     }

@@ -41,7 +41,6 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         $this->field('start_date',['visible' => false]);
         $this->field('end_date',['visible' => false]);
         $this->field('is_current',['visible' => false]);
-        $this->field('parent_id',['visible' => false]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -154,11 +153,6 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
 
         //Always make new record current
         $entity->is_current = true;
-
-        //parent handling
-        if (empty($entity->parent_id)) {
-            $entity->parent_id = null;
-        }
     }
 
     //POCOR-9475
@@ -184,8 +178,6 @@ class InfrastructureUtilityTelephonesTable extends ControllerActionTable
         $entity->setNew(true);
         $entity->unset('id');
 
-        //Set parent_id correctly
-        $entity->parent_id = $originalId;
 
         //Set academic period dates
         $academicPeriods = TableRegistry::getTableLocator()
