@@ -971,11 +971,11 @@ class ConfigItemsTable extends AppTable
             'rule' => ['range', 0, 1000],
             'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
-        ],
-        'checkMaxStudentsPerSubject' => [
+        ]
+        /*'checkMaxStudentsPerSubject' => [
             'rule' => ['checkMaxStudentsPerSubject'],
             'provider' => 'table'
-        ]
+        ]*/
     ];
      //POCOR-9554[END]
 
