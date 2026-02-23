@@ -143,7 +143,7 @@ class WorkflowStaffLicenseTable extends AppTable
     {
         $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $query
-            ->innerJoin([$InstitutionStaffTable->alias() => $InstitutionStaffTable->table()], [
+            ->innerJoin([$InstitutionStaffTable->getAlias() => $InstitutionStaffTable->getTable()], [
                 $InstitutionStaffTable->aliasField('staff_id = ') . $this->aliasField('security_user_id')
             ]);
         return $query;
@@ -158,7 +158,7 @@ class WorkflowStaffLicenseTable extends AppTable
         $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $query
-            ->innerJoin([$InstitutionsTable->alias() => $InstitutionsTable->table()], [
+            ->innerJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
                 $InstitutionStaffTable->aliasField('institution_id = ') . $InstitutionsTable->aliasField('id')]);
         $query->group([$this->aliasField('id')]);
         return $query;
