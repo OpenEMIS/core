@@ -65,6 +65,8 @@ class AttachmentsTable extends ControllerActionTable
         } elseif ($user->is_student == 1) {
             $validator->setProvider('custom', $this)->requirePresence('student_attachment_type_id', 'create')->notEmpty('student_attachment_type_id');
         }
+        // POCOR-9584: Require file during creation
+        $validator->requirePresence('file_content', 'create')->notEmpty('file_content', __('Please select a file to upload'));
         return $validator;
     }
 
@@ -462,9 +464,11 @@ class AttachmentsTable extends ControllerActionTable
             $data[$fileName] = null;
             $data[$fileContent] = null;
         } elseif (!isset($data[$fileName])) {
-            $var = null;
-            $data[$fileName] = null;
-            $data[$fileContent] = null;
+            // Do not set file_name and file_content to null on creation
+            // Only unset if they don't have values
+            if ($data->offsetExists($fileContent)) {
+                $data->offsetUnset($fileContent);
+            }
         }
 
     }
