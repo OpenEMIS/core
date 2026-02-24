@@ -108,12 +108,30 @@ function InstitutionStudentAttendancesController(
         ensureDomOrder: true,
         suppressCellSelection: true,
         onGridSizeChanged: function () {
-            this.api.sizeColumnsToFit();
+            // POCOR-9572-GH: Removed direct call to sizeColumnsToFit to prevent UI freeze during resizing.
+            // Will use a debounced resize instead.
         },
         onGridReady: function () {
             if (angular.isDefined(vm.gridOptions.api)) {
                 vm.setGridData();
                 vm.setColumnDef();
+                // POCOR-9572-GH: Debounce column sizing to prevent UI freeze on rapid resizing.
+                var resizeTimeout;
+                var debounceResize = function() {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(function() {
+                        vm.gridOptions.api.sizeColumnsToFit();
+                    }, 200); // Adjust debounce delay as needed (e.g., 200ms)
+                };
+                // Attach debounced resize to window and grid API resize events
+                angular.element($window).on('resize', debounceResize);
+                vm.gridOptions.api.addEventListener('columnResized', debounceResize); // For manual column resizing
+                vm.gridOptions.api.addEventListener('displayedColumnsChanged', debounceResize); // For column visibility changes
+
+                // POCOR-9572-GH: Listen for bgSplitterResized event and trigger ag-Grid column sizing
+                $scope.$on('bgSplitterResized', function() {
+                    debounceResize();
+                });
             }
         },
         context: {
@@ -302,6 +320,7 @@ function InstitutionStudentAttendancesController(
                     ) {
                         classStudents = [];
                     }
+
                     vm.updateClassStudentList(classStudents);
                 }, vm.error)
                 .finally(function () {
@@ -313,8 +332,25 @@ function InstitutionStudentAttendancesController(
 
     // error
     vm.error = function (error, test) {
-        UtilsSvc.isAppendLoader(false); //POCOR-8022
-        console.error(error);
+        UtilsSvc.isAppendLoader(false);
+
+        // Детальное логирование
+        console.group("🚨 Ошибка в цепочке changeClass");
+        console.error("Original Error Object:", error);
+        if (test) console.log("Test Context:", test);
+
+        // Если ошибка null или undefined, пытаемся понять на каком этапе упало
+        if (!error) {
+            console.warn("Предупреждение: Получена пустая ошибка (null/undefined). Скорее всего, бэкенд вернул пустой результат или сработал пустой reject.");
+        }
+
+        // Если это объект ошибки от $http
+        if (error && error.data) {
+            console.error("Backend Message:", error.data.message || "No message provided");
+            console.error("Backend Status:", error.status);
+        }
+        console.groupEnd();
+
         return $q.reject(error);
     };
 
@@ -529,6 +565,7 @@ function InstitutionStudentAttendancesController(
     };
 
     vm.updateClassStudentList = function (classStudents) {
+        UtilsSvc.isAppendLoader(false);
         vm.classStudents = [];
         vm.classStudentList = classStudents;
     };
@@ -555,7 +592,8 @@ function InstitutionStudentAttendancesController(
         var attendanceType =
             InstitutionStudentAttendancesSvc.getAttendanceTypeList();
         // console.log(params);
-        var code =  params.data.institution_student_absences.absence_type_code;
+        // POCOR-9572: Use flat field structure (no nested objects)
+        var code = params.data.absence_type_code;
         // console.log('getRowHeight', code);
         switch (code) {
             case null:
@@ -643,20 +681,11 @@ function InstitutionStudentAttendancesController(
 
                 if (vm.totalStudents > 0) {
                     angular.forEach(vm.classStudentList, function (obj, key) {
+                        // POCOR-9572: Use flat field structure (no nested objects)
                         if (
-                            angular.isDefined(
-                                obj["institution_student_absences"]
-                            ) &&
-                            angular.isDefined(
-                                obj["institution_student_absences"][
-                                    "absence_type_code"
-                                ]
-                            )
+                            angular.isDefined(obj["absence_type_code"])
                         ) {
-                            var code =
-                                obj["institution_student_absences"][
-                                    "absence_type_code"
-                                ];
+                            var code = obj["absence_type_code"];
 
                             switch (code) {
                                 case null:
@@ -1042,16 +1071,26 @@ function InstitutionStudentAttendancesController(
     };
 
     vm.changeClass = function () {
+        const startTime = performance.now();
+        const logStep = (stepName) => {
+            // const elapsed = (performance.now() - startTime).toFixed(2);
+            // console.log(`⏱ [${stepName}] выполнено за ${elapsed} ms`);
+        };
+
+        // console.log("🚀 Начинаю смену класса...");
         UtilsSvc.isAppendLoader(true);
+
         if (vm.superAdmin == 0) {
             vm.updateClassRoles(vm.selectedClass);
         }
+
         InstitutionStudentAttendancesSvc.getEducationGradeOptions(
             vm.institutionId,
             vm.selectedAcademicPeriod,
             vm.selectedClass
         )
             .then(function (educationGradeListOptions) {
+                logStep("getEducationGradeOptions"); // Шаг 1
                 vm.updateEducationGradeList(educationGradeListOptions);
                 return InstitutionStudentAttendancesSvc.isMarkableSubjectAttendance(
                     vm.institutionId,
@@ -1061,34 +1100,20 @@ function InstitutionStudentAttendancesController(
                 );
             }, vm.error)
             .then(function (attendanceType) {
+                logStep("isMarkableSubjectAttendance"); // Шаг 2
                 vm.isMarkableSubjectAttendance = attendanceType;
-                //POCOR-8874 start
-                // return InstitutionStudentAttendancesSvc.getSubjectOptions(
-                //     vm.institutionId,
-                //     vm.selectedClass,
-                //     vm.selectedAcademicPeriod,
-                //     vm.selectedDay,
-                //     vm.selectedEducationGrade
-                // );
-                // Call isMarkableAttendance separately before continuing
                 return InstitutionStudentAttendancesSvc.isMarkableAttendance(
                     vm.institutionId,
                     vm.selectedAcademicPeriod,
                     vm.selectedClass,
                     vm.selectedDay
                 );
-                 //POCOR-8874 end
             }, vm.error)
-             //POCOR-8874 start
             .then(function (isMarkable) {
-                vm.isMarkableAttendance = isMarkable; // Store the resolved value
+                logStep("isMarkableAttendance"); // Шаг 3
+                vm.isMarkableAttendance = isMarkable;
                 vm.updateAttendanceByList();
-                // console.log(
-                //     "Final isMarkableAttendance:",
-                //     vm.isMarkableAttendance
-                // );
 
-                // Continue with getSubjectOptions
                 return InstitutionStudentAttendancesSvc.getSubjectOptions(
                     vm.institutionId,
                     vm.selectedClass,
@@ -1097,12 +1122,9 @@ function InstitutionStudentAttendancesController(
                     vm.selectedEducationGrade
                 );
             }, vm.error)
-             //POCOR-8874 end
             .then(function (subjectListOptions) {
-                vm.updateSubjectList(
-                    subjectListOptions,
-                    vm.isMarkableSubjectAttendance
-                );
+                logStep("getSubjectOptions"); // Шаг 4
+                vm.updateSubjectList(subjectListOptions, vm.isMarkableSubjectAttendance);
                 return InstitutionStudentAttendancesSvc.getPeriodOptions(
                     vm.selectedClass,
                     vm.selectedAcademicPeriod,
@@ -1110,33 +1132,36 @@ function InstitutionStudentAttendancesController(
                     vm.selectedEducationGrade,
                     vm.selectedWeekStartDate,
                     vm.selectedWeekEndDate
-                ); //POCOR-7183 add params vm.selectedWeekStartDate, vm.selectedWeekEndDate
+                );
             }, vm.error)
             .then(function (attendancePeriodOptions) {
+                logStep("getPeriodOptions"); // Шаг 5
                 vm.updateAttendancePeriodList(attendancePeriodOptions);
-                return InstitutionStudentAttendancesSvc.getIsMarked(
-                    vm.getIsMarkedParams()
-                );
+                return InstitutionStudentAttendancesSvc.getIsMarked(vm.getIsMarkedParams());
             }, vm.error)
             .then(function (isMarked) {
+                logStep("getIsMarked"); // Шаг 6
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(
-                    vm.getClassStudentParams()
-                );
+                return InstitutionStudentAttendancesSvc.getClassStudent(vm.getClassStudentParams());
             }, vm.error)
             .then(function (classStudents) {
-                if (
-                    vm.isMarkableSubjectAttendance == true &&
-                    vm.subjectListOptions.length == 0
-                ) {
+                logStep("getClassStudent (Data received)"); // Шаг 7
+                if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
                     classStudents = [];
                 }
                 vm.updateClassStudentList(classStudents);
             }, vm.error)
             .finally(function () {
+                // Замеряем время ДО тяжелых функций рендеринга
+                logStep("Before UI Rendering (setGridData/setColumnDef)");
+
                 vm.setGridData();
                 vm.setColumnDef();
                 UtilsSvc.isAppendLoader(false);
+
+                // const endTime = performance.now();
+                // const totalDuration = (endTime - startTime).toFixed(2);
+                // console.log(`✅ [FINAL] changeClass полностью завершен за ${totalDuration} ms`);
             });
     };
 
