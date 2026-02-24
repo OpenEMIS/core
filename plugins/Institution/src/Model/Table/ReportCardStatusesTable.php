@@ -636,7 +636,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ])
                         ->count();
 
-                        if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
+                        if (
+                            // ($dataCount == $generatedCount) &&
+                            ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-9537
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
