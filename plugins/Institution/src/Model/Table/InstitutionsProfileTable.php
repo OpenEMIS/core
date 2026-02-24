@@ -121,6 +121,17 @@ class InstitutionsProfileTable extends ControllerActionTable
             $queryString = $this->paramsEncode($params);
             // Download button, status must be generated or published
             if ($this->AccessControl->check(['Institutions', 'InstitutionProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+                //START:POCOR-6793
+                $downloadUrl =$this->url('downloadExcel');
+                $downloadUrl['1'] = $queryString;
+                $buttons['download'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadUrl
+                ];
+            }
+
+            if ($this->AccessControl->check(['Institutions', 'InstitutionProfiles', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
                 //START:POCOR-6667
                 $viewPdfUrl = $this->url('viewPDF');
                 $viewPdfUrl['1'] = $queryString;
@@ -136,14 +147,6 @@ class InstitutionsProfileTable extends ControllerActionTable
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
-                ];
-                //START:POCOR-6793
-                $downloadUrl =$this->url('downloadExcel');
-                $downloadUrl['1'] = $queryString;
-                $buttons['download'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                    'attr' => $indexAttr,
-                    'url' => $downloadUrl
                 ];
             }
 
@@ -856,3 +859,4 @@ class InstitutionsProfileTable extends ControllerActionTable
         }
     }
 }
+
