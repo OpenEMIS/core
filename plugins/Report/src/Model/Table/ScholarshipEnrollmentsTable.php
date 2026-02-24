@@ -119,11 +119,11 @@ class ScholarshipEnrollmentsTable extends AppTable
                     ]
                 ],
             ])
-            ->leftJoin([$RecipientAcademicStandings->alias() => $RecipientAcademicStandings->table()], [
+            ->leftJoin([$RecipientAcademicStandings->getAlias() => $RecipientAcademicStandings->getTable()], [
                 $RecipientAcademicStandings->aliasField('recipient_id'). ' = ' .$this->aliasField('applicant_id'),
                 $RecipientAcademicStandings->aliasField('scholarship_id'). ' = ' .$this->aliasField('scholarship_id'),
             ])
-            ->leftJoin([$Semesters->alias() => $Semesters->table()], [
+            ->leftJoin([$Semesters->getAlias() => $Semesters->getTable()], [
                 $RecipientAcademicStandings->aliasField('scholarship_semester_id'). ' = ' .$Semesters->aliasField('id'),
             ])
             ->where([

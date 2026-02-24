@@ -1321,6 +1321,14 @@ class InstitutionGradesTable extends ControllerActionTable
         ->where($conditions);
 
         $result = $query->toArray();
+
+        // POCOR-9538: If no institution grades exist, return early with empty array
+        // This prevents InvalidArgumentException when building queries with null dates
+        if (empty($result)) {
+            $Alert->warning('Institution.Institutions.noProgrammes');
+            return [];
+        }
+
         $startDateObject = null;
 
         foreach ($result as $key=>$value) {
