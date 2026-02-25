@@ -84,6 +84,9 @@ return function (RouteBuilder $routes) {
     $routes->connect('/Systems/Updates/*', ['plugin' => 'System', 'controller' => 'Systems', 'action' => 'Updates']);
 
     $routes->connect('/ProfileTemplates/Students/*', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates', 'action' => 'Students']);
+    $routes->connect('/ProfileTemplates/Staff/*', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates', 'action' => 'Staff']);
+    $routes->connect('/ProfileTemplates/Classes/*', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates', 'action' => 'Classes']);
+    $routes->connect('/ProfileTemplates/Institutions/*', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates', 'action' => 'Institutions']);
     $routes->connect('/:controller/:action/*', ['action' => 'Healths', '_method' => 'GET'], ['pass' => ['key']]);
 
     /**
