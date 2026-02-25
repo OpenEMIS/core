@@ -65,6 +65,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->add('postal_code', 'ruleCustomPostalCode', [
                 'rule' => ['validateCustomPattern', 'postal_code'],
                 'provider' => 'table',
+                'message' => __('The postal code does not match the configured format.'),
                 'last' => true
             ])
             ;
@@ -304,13 +305,14 @@ class ExaminationCentresTable extends ControllerActionTable {
         $AddNewSpecialNeedIds = array_diff($specialNeedIds, $associatedSpecialNeedsTemp);
 
         foreach($AddNewSpecialNeedIds as $AddNewSpecialNeedId) {
-            $data = [];
-            $data = $this->ExaminationCentreSpecialNeeds->newEntity();
-            $data['examination_centre_id'] = $entity->institution_id;
-            $data['special_need_type_id'] = $AddNewSpecialNeedId;
-            $data['created_user_id'] = $entity->created_user_id;
-            $data['created'] = Time::now();
-            $this->ExaminationCentreSpecialNeeds->save($data);
+            $data = [
+                'examination_centre_id' => $entity->institution_id,
+                'special_need_type_id' => $AddNewSpecialNeedId,
+                'created_user_id' => $entity->created_user_id,
+                'created' => Time::now(),
+            ];
+            $newEntity = $this->ExaminationCentreSpecialNeeds->newEntity($data);
+            $this->ExaminationCentreSpecialNeeds->save($newEntity);
         }
     }
 

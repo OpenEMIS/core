@@ -31,7 +31,7 @@ class EducationSystemsTable extends ControllerActionTable
                 'entity_delete' => 'education_system_delete',
                 'entity_update' => 'education_system_update',
                 'table_alias' => 'Education.EducationSystems',
-                'contain' => ['FieldOfStudies']
+                'contain' => []
             ]
         ); // for webhook
     }
