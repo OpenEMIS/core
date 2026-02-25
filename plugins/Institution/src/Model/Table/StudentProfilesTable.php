@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
+
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -10,6 +11,7 @@ use Cake\ORM\ResultSet;
 use Cake\Event\EventInterface;
 use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
+
 use App\Model\Table\ControllerActionTable;
 
 /**
@@ -138,39 +140,32 @@ class StudentProfilesTable extends ControllerActionTable
                 'education_grade_id' => $entity->education_grade_id,
             ];
 
-            // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel'])
-                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
-            {
-                $downloadUrl = $this->url('downloadExcel');
-                $downloadUrl['1'] = $queryString;
-                $buttons['download'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                    'attr' => $indexAttr,
-                    'url' => $downloadUrl
-                ];
-            }
 
-            //POCOR-9585 start
-            if($this->AccessControl->check(['Institutions', 'StudentProfiles', 'download']) &&
-             $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED]))
-            {
-                $viewPdfUrl = $this->url('viewPDF');
-                $viewPdfUrl['1'] = $queryString;
+            // Download button, status must be generated or published
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+                //START:POCOR-6667
+                $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
                 $buttons['viewPdf'] = [
                     'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
-                    'attr' => $indexAttr,
+                    'attr' => $viewAttr, // POCOR-9292
                     'url' => $viewPdfUrl
                 ];
 
-                $downloadPdfUrl =$this->url('downloadPDF');
-                $downloadPdfUrl['1'] = $queryString;
+                //END:POCOR-6667
+                $downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
                 $buttons['downloadPdf'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
-            } //POCOR-9585 end
+                // POCOR-9292
+                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                 $buttons['download'] = [
+                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                     'attr' => $indexAttr,
+                     'url' => $downloadUrl
+                 ];
+            }
 
             // Generate button, all statuses
             if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'generate'])) {
@@ -216,7 +211,7 @@ class StudentProfilesTable extends ControllerActionTable
         $securitygroupusersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
         $institutionId = $this->getInstitutionID();
         $insData = $instituttionnTable->get($institutionId);
-        $security_group_id = $insData->security_group_id;
+       // $security_group_id = $insData->security_group_id;
         $user_id = $this->Session->read('Auth.User.id');
         $ProfileTemplatesId = $this->request->getQuery('student_profile_template_id');
         if($ProfileTemplatesId != null){
@@ -224,7 +219,7 @@ class StudentProfilesTable extends ControllerActionTable
         }
         //print_r($this->request->getQuery('student_profile_template_id'));die;
 
-        $curr_u_roles = $securitygroupusersTable->find()->where(['security_group_id'=> $security_group_id, 'security_user_id'=>$user_id])->toArray();
+        $curr_u_roles = $securitygroupusersTable->find()->where(['security_user_id'=>$user_id])->toArray();
         $rolArr = [];
         $rolArrrr = [];
         foreach($roles as $rol){
@@ -238,14 +233,13 @@ class StudentProfilesTable extends ControllerActionTable
         $nResult = reset($result);
         //echo "<pre>";print_r(($rolArr));die;
 
-
         if($this->Session->read('Auth.User.super_admin') != 1){
             if(!empty($nResult)){
                 if(!in_array($nResult, $rolArr)){
-                    unset($buttons);
+                    $buttons = [];
                 }
             }else{
-                unset($buttons);
+                $buttons = [];
             }
         }
         //POCOR-5191::End
