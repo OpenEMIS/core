@@ -81,6 +81,10 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function onGetStatusesStepsElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
+		$requestAction = $this->request->getAttribute('params')['pass'][0];
+		if(!empty($requestAction)){
+			$action = $this->request->getAttribute('params')['pass'][0];
+		}
 		switch ($action) {
 			case 'view':
 				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name')];
@@ -341,8 +345,8 @@ class WorkflowStatusesTable extends AppTable {
 	            }
 	        }
 	        // Clear previously selected steps when changing the model
-	        if (array_key_exists($this->getAlias(), $data)) {
-	            if (array_key_exists('temporary', $data[$this->getAlias()])) {
+	        if (array_key_exists($this->getAlias(), (array) $data)) {
+	            if (array_key_exists('temporary', (array) $data[$this->getAlias()])) {
 	                $data[$this->getAlias()]['temporary'] = [];
 	            }
 	        }

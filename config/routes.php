@@ -77,6 +77,13 @@ return function (RouteBuilder $routes) {
     $routes->connect('/Profiles/ScholarshipsDirectory/*', ['controller' => 'ScholarshipsDirectory', 'action' => 'ScholarshipsDirectory']);
     $routes->connect('/Locales/*', ['controller' => 'Locales', 'action' => 'Locales']);
     $routes->connect('/LocaleContents/*', ['controller' => 'LocaleContents', 'action' => 'LocaleContents']);
+
+    // Redirect /Systems/* to System plugin (controller is SystemsController in plugin System)
+    $routes->connect('/Systems/StaffPolicies/*', ['plugin' => 'System', 'controller' => 'Systems', 'action' => 'StaffPolicies']);
+    $routes->connect('/Systems/StaffEntitlements/*', ['plugin' => 'System', 'controller' => 'Systems', 'action' => 'StaffEntitlements']);
+    $routes->connect('/Systems/Updates/*', ['plugin' => 'System', 'controller' => 'Systems', 'action' => 'Updates']);
+
+    $routes->connect('/ProfileTemplates/Students/*', ['plugin' => 'ProfileTemplate', 'controller' => 'ProfileTemplates', 'action' => 'Students']);
     $routes->connect('/:controller/:action/*', ['action' => 'Healths', '_method' => 'GET'], ['pass' => ['key']]);
 
     /**
