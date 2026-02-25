@@ -3,7 +3,6 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -11,7 +10,6 @@ use Cake\ORM\ResultSet;
 use Cake\Event\EventInterface;
 use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
-
 use App\Model\Table\ControllerActionTable;
 
 /**
@@ -128,28 +126,38 @@ class StaffProfilesTable extends ControllerActionTable
             ];
 
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                //START:POCOR-6667
-                $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
-                $buttons['viewPdf'] = [
-                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
-                    'attr' => $indexAttr,
-                    'url' => $viewPdfUrl
-                ];
-                //END:POCOR-6667
-                $downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
-                $buttons['downloadPdf'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
-                    'attr' => $indexAttr,
-                    'url' => $downloadPdfUrl
-                ];
-                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'downloadExcel'])
+                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
+            {
+                $downloadUrl = $this->url('downloadExcel');
+                $downloadUrl['1'] = $queryString;
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
                     'attr' => $indexAttr,
                     'url' => $downloadUrl
                 ];
             }
+
+            //POCOR-9585 start
+            if($this->AccessControl->check(['Institutions', 'StaffProfiles', 'download']) &&
+             $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED]))
+            {
+                $viewPdfUrl = $this->url('viewPDF');
+                $viewPdfUrl['1'] = $queryString;
+                $buttons['viewPdf'] = [
+                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
+                    'attr' => $indexAttr,
+                    'url' => $viewPdfUrl
+                ];
+
+                $downloadPdfUrl =$this->url('downloadPDF');
+                $downloadPdfUrl['1'] = $queryString;
+                $buttons['downloadPdf'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadPdfUrl
+                ];
+            } //POCOR-9585 end
 
             // Generate button, all statuses
             if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'generate'])) {
