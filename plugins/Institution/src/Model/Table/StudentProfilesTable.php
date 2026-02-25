@@ -139,7 +139,7 @@ class StudentProfilesTable extends ControllerActionTable
             ];
 
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'downloadExcel'])
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel'])
                 && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
             {
                 $downloadUrl = $this->url('downloadExcel');
@@ -152,7 +152,7 @@ class StudentProfilesTable extends ControllerActionTable
             }
 
             //POCOR-9585 start
-            if($this->AccessControl->check(['Institutions', 'StaffProfiles', 'download']) &&
+            if($this->AccessControl->check(['Institutions', 'StudentProfiles', 'download']) &&
              $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED]))
             {
                 $viewPdfUrl = $this->url('viewPDF');
