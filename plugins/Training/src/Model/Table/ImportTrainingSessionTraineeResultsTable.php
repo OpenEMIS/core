@@ -39,6 +39,32 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
         $this->systemDateFormat = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
     }
 
+    /**
+     * Merge session-stored add form params into $this->request so getData(alias) has training_courses, education_subject.
+     * Template download is a separate request; this makes request look like the add form request.
+     * POCOR-9566
+     */
+    
+    private function ensureAddParamsInRequest(): void
+    {
+        $alias = $this->getAlias();
+        if ($this->request->getData($alias) && !empty($this->request->getData($alias)['training_courses'])) {
+            return; // already in request
+        }
+        $session = $this->request->getSession();
+        $sessionKey = $this->getRegistryAlias() . '.add_params';
+        if (!$session->check($sessionKey)) {
+            return;
+        }
+        $params = $session->read($sessionKey);
+        $parsed = $this->request->getParsedBody();
+        if (!is_array($parsed)) {
+            $parsed = [];
+        }
+        $parsed[$alias] = array_merge($parsed[$alias] ?? [], $params);
+        $this->request = $this->request->withParsedBody($parsed);
+    }
+
     public function implementedEvents(): array { 
         $events = parent::implementedEvents();
         $newEvent = [
@@ -98,17 +124,25 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
         //Assumption - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
-
-        if (isset($this->request->data[$this->getAlias()])) {
+        if (isset($this->request->getData()[$this->getAlias()])) {
 
             $unsetFlag = false;
-            $aryRequestData = $this->getRequest()->getData()[$this->getAlias()];
+            $aryRequestData = $this->request->getData()[$this->getAlias()];
+
+            // Store in session so template download request can have same data in $this->request
+            $session = $this->request->getSession();
+            $sessionKey = $this->getRegistryAlias() . '.add_params';
+            $session->write($sessionKey, [
+                'training_courses' => $aryRequestData['training_courses'] ?? null,
+                'education_subject' => $aryRequestData['education_subject'] ?? null,
+            ]);
 
             foreach ($aryRequestData as $requestData => $value) {
                 if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
+                    $requestDataArray = $this->request->getData()[$this->getAlias()]; // Get request data
                     foreach ($aryDependencies as $dependency) {
-                        $this->request->query = $this->getRequest()->getData()[$this->getAlias()];
+                         $this->request = $this->request->withQueryParams($requestDataArray); // Set modified query parameters
                         $this->ControllerAction->field($dependency, ['visible' => true]);
                     }
                 }
@@ -131,21 +165,37 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
                                         'valueField' => 'name'
                                     ])
                                     ->toArray();
-                
             $attr['options'] = $training_courses_options;
             $attr['onChangeReload'] = 'changeTrainingCourses';
         }
         return $attr;
     }
 
+    public function addEditOnChangeTrainingCourses(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $alias = $this->getAlias();
+        $training_courses_id = $data[$alias]['training_courses'];
+        $data['training_courses'] = $training_courses_id;
+        $this->request = $this->request->withQueryParams(['training_courses' => $training_courses_id]);
+
+    }
+
     public function onImportGetTrainingResultTypesId(EventInterface $event, $cellValue)
     {  
+        $this->ensureAddParamsInRequest();
         return $cellValue;
     }
 
     public function onImportPopulateTrainingResultTypesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {
-        $training_courses = $this->request->getQuery['training_courses'];
+        $this->ensureAddParamsInRequest();
+        $requestData = $this->request->getData($this->getAlias());
+        $training_courses = is_array($requestData) && isset($requestData['training_courses']) ? $requestData['training_courses'] : $this->request->getQuery('training_courses');
+        if (empty($training_courses)) {
+            $data[$columnOrder]['lookupColumn'] = 1;
+            $data[$columnOrder]['data'][] = ['Result Type'];
+            return;
+        }
 
         $TrainingResultTypes = TableRegistry::getTableLocator()->get('Training.TrainingResultTypes');
         $TrainingCoursesResultTypes = TableRegistry::getTableLocator()->get('Training.TrainingCoursesResultTypes');
@@ -184,6 +234,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
     public function onImportGetTrainingSessionsId(EventInterface $event, $cellValue)
     {  
+        $this->ensureAddParamsInRequest();
         $record = $this->TrainingSessions->find()->select([$this->TrainingSessions->aliasField('id')])->where([$this->TrainingSessions->aliasField('code') => $cellValue])->first();
         
         $trainingSessionsId = $record->id;
@@ -192,8 +243,15 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
 
     public function onImportPopulateTrainingSessionsData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) 
     {   
-        $training_courses = $this->request->getQuery['training_courses'];
-        
+        $this->ensureAddParamsInRequest();
+        $requestData = $this->request->getData($this->getAlias());
+        $training_courses = is_array($requestData) && isset($requestData['training_courses']) ? $requestData['training_courses'] : $this->request->getQuery('training_courses');
+        if (empty($training_courses)) {
+            $data[$columnOrder]['lookupColumn'] = 1;
+            $data[$columnOrder]['data'][] = [$translatedCol, 'Name'];
+            return;
+        }
+
         $TrainingSession = TableRegistry::getTableLocator()->get('Training.TrainingSessions');
         $TrainingSessionData = $TrainingSession->find()
                                 ->where([
@@ -222,6 +280,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
                         
     public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+        $this->ensureAddParamsInRequest();
         $openemis_no = $tempRow['OpenEMIS_ID'];
         $training_session_id = $tempRow['training_session'];
         $tempRow['training_session_id'] = $training_session_id;
