@@ -309,7 +309,7 @@ class ClassProfilesTable extends AppTable
     public function onExcelTemplateInitialiseReportStudentAssessmentSummary(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) && isset($params['academic_period_id'])) {
-            $ReportStudentAssessmentSummary = TableRegistry::getTableLocator()->get('summary_student_assessments');
+            $ReportStudentAssessmentSummary = TableRegistry::getTableLocator()->get('Assessment.SummaryStudentAssessments');
             $AssessmentSummaryData = $ReportStudentAssessmentSummary->find()
                 ->select([
                 //'id' => $ReportStudentAssessmentSummary->aliasField('id'),
@@ -374,10 +374,10 @@ class ClassProfilesTable extends AppTable
     public function onExcelTemplateInitialiseInfrastructureRoomCustomFields(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (isset($params['institution_id']) ) { // POCOR-9336
-            $InstitutionRooms = TableRegistry::getTableLocator()->get('institution_rooms');
-            $RoomTypes = TableRegistry::getTableLocator()->get('room_types');
-            $RoomCustomFieldValues = TableRegistry::getTableLocator()->get('room_custom_field_values');
-            $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
+            $InstitutionRooms = TableRegistry::getTableLocator()->get('Institution.InstitutionRooms');
+            $RoomTypes = TableRegistry::getTableLocator()->get('Infrastructure.RoomTypes');
+            $RoomCustomFieldValues = TableRegistry::getTableLocator()->get('Infrastructure.RoomCustomFieldValues');
+            $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureCustomFields');
             $InstitutionRoomsData = $InstitutionRooms->find()
                 ->select([
                     'id' => $InstitutionRooms->aliasField('id'),
@@ -452,9 +452,9 @@ class ClassProfilesTable extends AppTable
      * @ticket POCOR-6519
      */
     public function getInfrastructureRoomCustomFieldValues($room_id, $room_custom_field_id){
-        $RoomCustomFieldTbl = TableRegistry::getTableLocator()->get('room_custom_field_values');
-        $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('infrastructure_custom_fields');
-        $InfrastructureCustomFieldOptions = TableRegistry::getTableLocator()->get('infrastructure_custom_field_options');
+        $RoomCustomFieldTbl = TableRegistry::getTableLocator()->get('Infrastructure.RoomCustomFieldValues');
+        $InfrastructureCustomFields = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureCustomFields');
+        $InfrastructureCustomFieldOptions = TableRegistry::getTableLocator()->get('Infrastructure.InfrastructureCustomFieldOptions');
         $RoomCustomFieldValues[] = $RoomCustomFieldTbl
                         ->find()
                         ->select([
