@@ -142,8 +142,22 @@ class StudentProfilesTable extends ControllerActionTable
 
 
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                //START:POCOR-6667
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) 
+                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
+            {
+                //POCOR-9585
+                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                 $buttons['download'] = [
+                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                     'attr' => $indexAttr,
+                     'url' => $downloadUrl
+                 ];
+            }
+            
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'download']) 
+                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
+            {
+                 //POCOR-9585
                 $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
                 $buttons['viewPdf'] = [
                     'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
@@ -158,13 +172,6 @@ class StudentProfilesTable extends ControllerActionTable
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
-                // POCOR-9292
-                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
-                 $buttons['download'] = [
-                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                     'attr' => $indexAttr,
-                     'url' => $downloadUrl
-                 ];
             }
 
             // Generate button, all statuses
@@ -231,7 +238,6 @@ class StudentProfilesTable extends ControllerActionTable
         }
         $result = array_intersect($rolArrrr, $rolArr);
         $nResult = reset($result);
-        //echo "<pre>";print_r(($rolArr));die;
 
         if($this->Session->read('Auth.User.super_admin') != 1){
             if(!empty($nResult)){
