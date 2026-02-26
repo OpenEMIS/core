@@ -9,16 +9,16 @@ class POCOR9586 extends AbstractMigration
     public function up()
     {
         $this->backupTables();
-        $this->disableTriggers();
+
         $this->addUniqueKeyAndCleanupDuplicates();
-        $this->enableTriggers();
+
     }
 
     public function down()
     {
-        $this->disableTriggers();
+
         $this->restoreTable();
-        $this->enableTriggers();
+
     }
 
     private function backupTables()
@@ -45,28 +45,6 @@ class POCOR9586 extends AbstractMigration
                 $this->execute("RENAME TABLE `$backup` TO `$table`");
             }
         }
-    }
-
-    private function disableTriggers()
-    {
-        // Disable the trigger on the summary table to allow the DDL operation to complete faster
-        $this->execute('DROP TRIGGER IF EXISTS trigger_summary_area_institution_grade_attendances_update;');
-    }
-
-    private function enableTriggers()
-    {
-        // Recreate the trigger after schema changes
-        $this->execute(<<<'SQL'
-CREATE TRIGGER trigger_summary_area_institution_grade_attendances_update
-BEFORE UPDATE ON summary_area_institution_grade_attendances
-FOR EACH ROW
-BEGIN
-    SET NEW.present_total_count = NEW.present_female_count + NEW.present_male_count,
-        NEW.absent_total_count = NEW.absent_female_count + NEW.absent_male_count,
-        NEW.late_total_count = NEW.late_female_count + NEW.late_male_count;
-END;
-SQL
-        );
     }
 
     private function addUniqueKeyAndCleanupDuplicates()
