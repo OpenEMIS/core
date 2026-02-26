@@ -123,26 +123,30 @@ class WorkflowStatusesTable extends AppTable {
 				$form->unlockField('WorkflowStatuses.temporary');
 				$tableCells = [];
 				$arraySteps = [];
-
 				$selectedModel = $entity->workflow_model_id;
 				if($selectedModel == null){
 					$selectedModel = $this->request->getQuery('model') == null ? -1 : $this->request->getQuery('model');
 				}
-				$workflowStepOptions = $this->WorkflowSteps
+				$WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+
+				$query = $WorkflowSteps
 					->find('list', [
-						'groupField' => 'group',
+						'groupField' => 'Workflows.name',
 						'keyField' => 'id',
 						'valueField' => 'name'
 					])
-					->matching('Workflows', function($q) use ($selectedModel) {
-						return $q->where(['Workflows.workflow_model_id' => $selectedModel]);
+					->innerJoinWith('Workflows', function ($q) use ($selectedModel) {
+						return $q->where([
+							'Workflows.workflow_model_id' => $selectedModel
+						]);
 					})
 					->select([
-						'id' => $this->WorkflowSteps->aliasField('id'), 
-						'name' => $this->WorkflowSteps->aliasField('name'),
-						'group' => 'Workflows.name'
-					])
-					->toArray();
+						'id' => $WorkflowSteps->aliasField('id'),
+						'name' => $WorkflowSteps->aliasField('name'),
+						'Workflows.name'
+					]);
+
+				$workflowStepOptions = $query->toArray();
 				
 				if ($this->request->is(['get'])) {
 					if(isset($this->request->getAttribute('params')['pass'][1])){
@@ -245,6 +249,140 @@ class WorkflowStatusesTable extends AppTable {
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;
 				break;
+				case 'add':
+					$tableHeaders = [__('Workflow Step Name'), __('Workflow Name'),''];
+					$form = $event->getSubject()->Form;
+					$form->unlockField('WorkflowStatuses.workflow_steps');
+					$form->unlockField('WorkflowStatuses.temporary');
+					$tableCells = [];
+					$arraySteps = [];
+
+					$selectedModel = $entity->workflow_model_id;
+					if($selectedModel == null){
+						$selectedModel = $this->request->getQuery('model') == null ? -1 : $this->request->getQuery('model');
+					}
+					$WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+
+					$query = $WorkflowSteps
+						->find('list', [
+							'groupField' => 'Workflows.name',
+							'keyField' => 'id',
+							'valueField' => 'name'
+						])
+						->innerJoinWith('Workflows', function ($q) use ($selectedModel) {
+							return $q->where([
+								'Workflows.workflow_model_id' => $selectedModel
+							]);
+						})
+						->select([
+							'id' => $WorkflowSteps->aliasField('id'),
+							'name' => $WorkflowSteps->aliasField('name'),
+							'Workflows.name'
+						]);
+
+					$workflowStepOptions = $query->toArray();
+
+					if ($this->request->is(['get'])) {
+					if(isset($this->request->getAttribute('params')['pass'][1])){
+							$modelId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+							$steps = $this->getSteps($modelId);
+							foreach($steps as $step) {
+								$stepInfo = $step['_matchingData']['WorkflowSteps'];
+								$arraySteps[] = [
+									'id' => $step['_matchingData']['WorkflowStatusesSteps']['id'],
+									'status_id' => $step['id'],
+									'step_id' => $stepInfo['id'],
+									'name' => $stepInfo['name'],
+									'workflow_name' => $step['_matchingData']['Workflows']['name']
+								];
+							}
+						}
+					} elseif ($this->request->is(['post', 'put'])) {
+						$requestData = $this->request->getData();
+						if (array_key_exists('workflow_steps', $requestData[$this->getAlias()])) {
+							foreach ($requestData[$this->getAlias()]['temporary'] as $key => $obj) {
+								if(!empty($obj['temporary']['id'])){
+									$arraySteps[] = [
+										'name' => $obj['name'],
+										'status_id' => $obj['workflow_status_id'],
+										'step_id' => $obj['workflow_step_id'],
+										'id' => $obj['id'],
+										'workflow_name' => $obj['workflow_name']
+									];
+								}else{	
+									$arraySteps[] = [
+										'name' => $obj['name'],
+										'status_id' => $obj['workflow_status_id'],
+										'step_id' => $obj['workflow_step_id'],
+										'workflow_name' => $obj['workflow_name']
+									];
+								}
+							}
+						}
+						if (array_key_exists('step', $requestData[$this->getAlias()])) {
+							$stepId = $requestData[$this->getAlias()]['step'];
+							if($stepId != -1){
+								$stepObj = $this->WorkflowSteps
+									->find()
+									->matching('Workflows')
+									->where([$this->WorkflowSteps->aliasField('id') => $stepId])
+									->first();
+								$arraySteps[] = [
+										'name' => $stepObj->name,
+										'step_id' => $stepObj->id,
+										'status_id' => $entity->id,
+										'workflow_name' => $stepObj['_matchingData']['Workflows']['name']
+									];
+							}
+						}
+					}
+					$cellCount = 0;
+					foreach($arraySteps as $obj) {
+						$fieldPrefix = $attr['model'] . '.workflow_steps';
+						$temporaryPrefix = $attr['model'] . '.temporary.'.$cellCount;
+						$statusId = $obj['status_id'];
+						$stepId = $obj['step_id'];
+						$stepName = $obj['name'];
+						$workflowName = $obj['workflow_name'];
+
+						$cellData = "";
+						$cellData .= $form->hidden($fieldPrefix."._ids.".$cellCount++, ['value' => $stepId]);
+						$cellData .= $form->hidden($temporaryPrefix.".workflow_step_id", ['value' => $stepId]);
+						$cellData .= $form->hidden($temporaryPrefix.".name", ['value' => $stepName]);
+						$cellData .= $form->hidden($temporaryPrefix.".workflow_status_id", ['value' => $statusId]);
+						$cellData .= $form->hidden($temporaryPrefix.".workflow_name", ['value' => $workflowName]);
+
+						if (isset($obj['id'])) {
+							$cellData .= $form->hidden($temporaryPrefix.".id", ['value' => $obj['id']]);
+						}
+
+						$rowData = [];
+						$rowData[] = $stepName.$cellData;
+						$rowData[] = $workflowName;
+						$rowData[] = '<button onclick="jsTable.doRemove(this); $(\'#reload\').click();" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
+						$tableCells[] = $rowData;
+
+						foreach ($workflowStepOptions as $key => $workflowGroup) {
+							if(isset($workflowGroup[$stepId])) {
+								unset($workflowStepOptions[$key][$stepId]);
+							}
+						}
+						unset($workflowStepOptions[$stepId]);
+					}
+					// recursive count and substract the first level
+					$stepsCount = count($workflowStepOptions, COUNT_RECURSIVE) - count($workflowStepOptions);
+					if ($stepsCount == 0) {
+						$workflowStepOptions = [
+							-1 => $this->Alert->getMessage($this->aliasField('noSteps'))
+						];
+					} else {
+						$workflowStepOptions[-1] = "-- ".__('Add Workflow Step') ." --";
+						ksort($workflowStepOptions);
+					}
+					$attr['options'] = $workflowStepOptions;
+					$attr['tableHeaders'] = $tableHeaders;
+					$attr['tableCells'] = $tableCells;
+					break;
 		}
 		return $event->getSubject()->renderElement('Workflow.mappings', ['attr' => $attr]);
 	}
@@ -271,6 +409,12 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function editAfterAction(EventInterface $event, Entity $entity) {
+		$request = $this->request;
+        $this->request = $request->withQueryParams([
+            'workflow_model_id' => $entity->workflow_model_id,
+            'code' => $entity->code,
+			'name' => $entity->name,
+			'is_editable' => $entity->is_editable]);
 		$this->request->getData()[$this->getAlias()]['workflow_model_id'] = $entity->workflow_model_id;
 		$this->request->getData()[$this->getAlias()]['code'] = $entity->code;
 		$this->request->getData()[$this->getAlias()]['name'] = $entity->name;
@@ -298,9 +442,15 @@ class WorkflowStatusesTable extends AppTable {
 			$attr['onChangeReload'] = 'changeModel';
 		} else if ($action == 'edit') {
 			$workflowModelId = $this->request->getData($this->getAlias())['workflow_model_id'];
-			$workflowModelId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+			//POCOR-9551[START]
+			// $workflowModelId = $this->paramsDecode($this->request->getAttribute('params')['pass'][1])['id'];
+			$workflowModelId = $this->request->getAttribute('params')['?']['model'];
+			//POCOR-9551[END]
 			if($workflowModelId == null){
 				$workflowModelId = $this->request->getQuery('model');
+			}
+			if($workflowModelId == null){
+				$workflowModelId = $this->request->getQuery('workflow_model_id');
 			}
 			$attr['attr']['value'] = $this->WorkflowModels->get($workflowModelId)->name;
 		}
@@ -367,7 +517,8 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function getWorkflowSteps($workflowStatusId) {
-		return $this
+		if(!empty($workflowStatusId)){
+			return $this
 			->find('list', [
 				'keyField' => 'id',
 				'valueField' => 'name'
@@ -376,5 +527,6 @@ class WorkflowStatusesTable extends AppTable {
 			->where([ $this->aliasField('id'). ' IN ' => $workflowStatusId ])
 			->select(['id' => 'WorkflowSteps.id', 'name' => 'WorkflowSteps.name'])
 			->toArray();
+		}
 	}
 }
