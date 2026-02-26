@@ -81,7 +81,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
 
     public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona) {
-        $crumbTitle = $this->getHeader($this->alias());
+        $crumbTitle = $this->getHeader($this->getAlias());
         $url = ['plugin' => 'Training', 'controller' => 'Trainings', 'action' => 'TrainingSessionTraineeResults'];
 
         $Navigation->substituteCrumb($crumbTitle, 'TrainingSessionTraineeResults', $url);
@@ -89,19 +89,31 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
     }
 
     public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
-        $tempRow['entity'] = $this->TrainingSessionTraineeResults->newEntity();  
+        $tempRow['entity'] = $this->TrainingSessionTraineeResults->newEntity([]);
     }
 
     public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity) {}
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
-    {   
+    {
         if (isset($buttons[1])) {
             $buttons[1]['url'] = $this->ControllerAction->url('Results');
-            //$buttons[1]['url']['action'] = 'TrainingSessionTraineeResults';
         }
-        $request = $this->request;
-        if (empty($request->query('training_courses'))) {
+        $trainingCourses = $this->request->getQuery('training_courses');
+        if ($trainingCourses === null || $trainingCourses === '') {
+            $alias = $this->getAlias();
+            $requestData = $this->request->getData($alias);
+            $trainingCourses = is_array($requestData) && isset($requestData['training_courses']) ? $requestData['training_courses'] : null;
+        }
+        if ($trainingCourses === null || $trainingCourses === '') {
+            $session = $this->request->getSession();
+            $sessionKey = $this->getRegistryAlias() . '.add_params';
+            if ($session->check($sessionKey)) {
+                $params = $session->read($sessionKey);
+                $trainingCourses = $params['training_courses'] ?? null;
+            }
+        }
+        if (empty($trainingCourses)) {
             unset($buttons[0]);
             unset($buttons[1]);
         }
@@ -206,7 +218,7 @@ class ImportTrainingSessionTraineeResultsTable extends AppTable
                                             $TrainingResultTypes->aliasField('id'),
                                             $TrainingResultTypes->aliasField('name')
                                         ])
-                                        ->leftJoin([$TrainingResultTypes->alias() => $TrainingResultTypes->table()], [
+                                        ->leftJoin([$TrainingResultTypes->getAlias() => $TrainingResultTypes->getTable()], [
                                             $TrainingResultTypes->aliasField('id = ') . $TrainingCoursesResultTypes->aliasField('training_result_type_id')
                                         ])
                                         ->where([
