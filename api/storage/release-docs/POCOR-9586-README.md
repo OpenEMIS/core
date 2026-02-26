@@ -2,7 +2,7 @@
 
 ## What is the Task?
 
-Add a UNIQUE KEY constraint on the `summary_area_institution_grade_attendances` table across the composite columns (academic_period_id, institution_id, education_grade_id, attendance_date) to prevent duplicate summary records and ensure data integrity. The migration includes duplicate cleanup logic for small/test databases and safely manages the existing BEFORE UPDATE trigger during schema changes.
+Add a UNIQUE KEY constraint on the `summary_area_institution_grade_attendances` table across the composite columns (academic_period_id, institution_id, education_grade_id, attendance_date) to prevent duplicate summary records and ensure data integrity. The migration includes duplicate cleanup logic for small/test databases.
 
 ## Situation Before
 
@@ -16,10 +16,8 @@ Add a UNIQUE KEY constraint on the `summary_area_institution_grade_attendances` 
 
 1. **CakePHP Migration** (`config/Migrations/20260225120000_POCOR9586.php`)
     - Backs up the table before any modifications for safe rollback
-    - Temporarily disables the existing BEFORE UPDATE trigger to speed up DDL operations
     - Cleans up any duplicate rows using a temp table with INSERT IGNORE — one row per unique key group is kept (first encountered by storage order)
     - Adds UNIQUE KEY constraint: `uq_sai_ap_inst_grade_date(academic_period_id, institution_id, education_grade_id, attendance_date)`
-    - Recreates the trigger to restore original functionality
     - Provides complete rollback support via `down()` method
 
 2. **Duplicate Cleanup Logic**
@@ -27,11 +25,6 @@ Add a UNIQUE KEY constraint on the `summary_area_institution_grade_attendances` 
     - Copies all rows using INSERT IGNORE — duplicate key conflicts are silently skipped
     - Drops the original table and renames the temp table in its place
     - The UNIQUE KEY is already present on the renamed table — no separate ALTER TABLE needed
-
-3. **Trigger Management**
-    - Drops the `trigger_summary_area_institution_grade_attendances_update` trigger during migration
-    - Recreates it after schema changes with original logic intact
-    - Both `up()` and `down()` manage trigger state for consistency
 
 ### Files Changed Summary
 
@@ -51,7 +44,6 @@ Add a UNIQUE KEY constraint on the `summary_area_institution_grade_attendances` 
 | **Required** | YES |
 | **Tables Affected** | `summary_area_institution_grade_attendances` |
 | **Backward Compatible** | YES (fully reversible via `down()`) |
-| **Triggers Modified** | `trigger_summary_area_institution_grade_attendances_update` (disabled/recreated) |
 | **Backup Created** | `z_9586_summary_area_institution_grade_attendances` (automatically dropped on rollback) |
 
 ## Deployment Instructions (User Experience)
