@@ -18,9 +18,22 @@ class SalariesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        //POCOR-9584: Load all transactions without filtering - will be separated in template
-        $this->hasMany('SalaryAdditions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SalaryDeductions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        //POCOR-9584: Use mutually exclusive conditions to differentiate additions from deductions
+        // A transaction can only be an addition (has salary_addition_type_id, no salary_deduction_type_id)
+        // or a deduction (has salary_deduction_type_id, no salary_addition_type_id)
+        $this->hasMany('SalaryAdditions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'conditions' => ['SalaryAdditions.salary_addition_type_id IS NOT NULL', 'SalaryAdditions.salary_deduction_type_id IS NULL']
+        ]);
+        $this->hasMany('SalaryDeductions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'conditions' => ['SalaryDeductions.salary_deduction_type_id IS NOT NULL', 'SalaryDeductions.salary_addition_type_id IS NULL']
+        ]);
+        //POCOR-9584: All transactions (additions OR deductions) - used for business logic
         $this->hasMany('SalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
 
@@ -244,32 +257,13 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        //POCOR-9584: Separate additions and deductions based on which type_id is set
-        $salary_additions = [];
-        $salary_deductions = [];
+        //POCOR-9584: Relationships now load properly filtered data via conditions
+        // salary_additions = records with salary_addition_type_id NOT NULL and salary_deduction_type_id IS NULL
+        // salary_deductions = records with salary_deduction_type_id NOT NULL and salary_addition_type_id IS NULL
+        $additions_count = !empty($entity->salary_additions) ? count($entity->salary_additions) : 0;
+        $deductions_count = !empty($entity->salary_deductions) ? count($entity->salary_deductions) : 0;
 
-        // Separate the transactions based on type_id from loaded relationships
-        if (!empty($entity->salary_additions)) {
-            foreach ($entity->salary_additions as $item) {
-                if ($item->has('salary_addition_type_id') && $item->salary_addition_type_id !== null) {
-                    $salary_additions[] = $item;
-                }
-            }
-        }
-
-        if (!empty($entity->salary_deductions)) {
-            foreach ($entity->salary_deductions as $item) {
-                if ($item->has('salary_deduction_type_id') && $item->salary_deduction_type_id !== null) {
-                    $salary_deductions[] = $item;
-                }
-            }
-        }
-
-        // Update the entity with separated data
-        $entity->salary_additions = $salary_additions;
-        $entity->salary_deductions = $salary_deductions;
-
-        error_log('[POCOR-9584] addEditBeforePatch - Separated into ' . count($salary_additions) . ' additions and ' . count($salary_deductions) . ' deductions');
+        error_log('[POCOR-9584] addEditBeforePatch - Loaded ' . $additions_count . ' additions and ' . $deductions_count . ' deductions');
     }
 
 
