@@ -15,7 +15,7 @@ class LocaleContentsController extends AppController
         $this->LocaleContentTranslations = $this->fetchTable('LocaleContentTranslations');
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $name = $this->name;

@@ -12,7 +12,7 @@ class ProfileApplicationInstitutionChoicesController extends BaseController
         $this->Scholarships = $this->fetchTable('Scholarship.Scholarships');
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
 

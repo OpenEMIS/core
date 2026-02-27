@@ -2,12 +2,11 @@
 namespace Profile\Controller;
 
 use Cake\Event\EventInterface;
-use Profile\Controller\EventInterface;
 use Profile\Controller\BodyMassesController as BaseController;
 
 class ProfileBodyMassesController extends BaseController
 {
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
 
@@ -35,7 +34,7 @@ class ProfileBodyMassesController extends BaseController
         $page->Disable(['add', 'edit', 'delete']);
     }
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         // if (!array_key_exists('_serialize', $this->viewVars) &&
         //     in_array($this->response->type(), ['application/json', 'application/xml'])
