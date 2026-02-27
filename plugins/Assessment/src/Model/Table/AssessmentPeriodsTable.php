@@ -182,7 +182,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $event->getSubject()->renderElement('Assessment.Assessments/assessment_terms', ['attr' => $attr, 'entity' => $entity]);
     }
 
-    public function editAcademicTerm(Event $mainEvent, ArrayObject $extra)
+    public function editAcademicTerm(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->Assessments;
         $request = $mainEvent->getSubject()->request;

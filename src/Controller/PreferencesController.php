@@ -33,7 +33,7 @@ class PreferencesController extends AppController {
     public function Preferences()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Preferences']); }
     // End
 
-	public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+    public function beforeFilter(EventInterface $event) {
 		parent::beforeFilter($event);
 		$header = __('Preferences');
 
@@ -50,7 +50,7 @@ class PreferencesController extends AppController {
 		$this->set('contentHeader', $header);
 	}
 	//POCOR-9447 Start
-	public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

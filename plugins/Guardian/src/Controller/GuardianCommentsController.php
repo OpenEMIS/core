@@ -8,7 +8,7 @@ use Profile\Controller\CommentsController as BaseController;
 
 class GuardianCommentsController extends BaseController
 {
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
         $session = $this->request->getSession();

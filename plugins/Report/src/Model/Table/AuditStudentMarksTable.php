@@ -5,7 +5,6 @@ namespace Report\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
@@ -16,6 +15,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
 use Cake\I18n\FrozenTime;
+use Cake\Event\EventInterface;
 
 //POCOR-9444
 class AuditStudentMarksTable extends AppTable
@@ -57,7 +57,7 @@ class AuditStudentMarksTable extends AppTable
     }
 
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
     {
 
         $requestData = json_decode($settings['process']['params']);
@@ -238,7 +238,7 @@ class AuditStudentMarksTable extends AppTable
 
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $originalField)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $originalField)
     {
         $requestData = json_decode($settings['process']['params']);
         $startDate = $requestData->report_start_date ?? null;
@@ -473,7 +473,7 @@ class AuditStudentMarksTable extends AppTable
 
     
 
-    public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderSubject(EventInterface $event, Entity $entity, array $attr)
     {
         $subjectId = $attr['subjectId'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
@@ -509,7 +509,7 @@ class AuditStudentMarksTable extends AppTable
     }
 
     //POCOR-9305
-    public function onExcelRenderAssessmentPeriodWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderAssessmentPeriodWeightedMark(EventInterface $event, Entity $entity, array $attr)
     {
         $weightsum = array_sum($this->assessmentPeriodWeights);
         $assessmentPeriodWeightedMark = $this->assessmentPeriodWeightedMark;
@@ -532,12 +532,12 @@ class AuditStudentMarksTable extends AppTable
         return ' ' . $assessmentPeriodWeightedMark;
     }
 
-    public function onExcelGetModified(Event $event, Entity $entity) {
+    public function onExcelGetModified(EventInterface $event, Entity $entity) {
         if (!empty($entity->modified)) {
             return $this->formatDate($entity->modified);
         }
     }
-    public function onExcelGetCreated(Event $event, Entity $entity) {
+    public function onExcelGetCreated(EventInterface $event, Entity $entity) {
         if (!empty($entity->created)) {
             return $this->formatDate($entity->created);
         }
