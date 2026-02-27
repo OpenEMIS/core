@@ -542,12 +542,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
                     foreach ($data as $student) {
-                        if ($student->has('report_card_status')) {
-                            if ($student->report_card_status == self::GENERATED) {
-                                $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
-                            }
+                        // POCOR-9537 recheck the status
+                        $conditions = [
+                            'report_card_id IS' => $student->report_card_id,
+                            'student_id' => $student->student_id,
+                            'institution_id IS' => $this->getInstitutionID(),
+                            'academic_period_id IS' => $student->academic_period_id,
+                            'education_grade_id IS' => $student->education_grade_id,
+                        ];
+                        $finalStatus = $this->determineReportCardStatus($conditions);
+
+                        if ($finalStatus == self::GENERATED) {
+                            $generatedCount += 1;
+                        } else if ($finalStatus == self::PUBLISHED) {
+                            $generatedCount += 1;
+                            $publishedCount += 1;
                         }
                     }
 
@@ -627,7 +636,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ])
                         ->count();
 
-                        if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
+                        if (
+                            // ($dataCount == $generatedCount) &&
+                            ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-9537
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
@@ -789,13 +800,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $publishedCount = 0;
                     $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
+                    // POCOR-9537 recheck the status
                     foreach ($data as $student) {
-                        if ($student->has('report_card_status')) {
-                            if ($student->report_card_status == self::GENERATED) {
-                                $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
-                            }
+                        $conditions = [
+                            'report_card_id IS' => $student->report_card_id,
+                            'student_id' => $student->student_id,
+                            'institution_id IS' => $this->getInstitutionID(),
+                            'academic_period_id IS' => $student->academic_period_id,
+                            'education_grade_id IS' => $student->education_grade_id,
+                        ];
+                        $finalStatus = $this->determineReportCardStatus($conditions);
+
+                        if ($finalStatus == self::GENERATED) {
+                            $generatedCount += 1;
+                        } else if ($finalStatus == self::PUBLISHED) {
+                            $publishedCount += 1;
                         }
                     }
 
@@ -1101,6 +1120,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 file_put_contents($filepath, $pdfBinary);
                 $filePaths[] = $path . $filename;
+                $counter++;  // POCOR-9537: Increment counter to ensure unique filenames
 
             }
             if (!empty($filePaths)) {

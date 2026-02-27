@@ -206,7 +206,7 @@ class SystemUpdatesTable extends ControllerActionTable
         }
     }
 
-    public function updates(Event $mainEvent, ArrayObject $extra)
+    public function updates(EventInterface $mainEvent, ArrayObject $extra)
     {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $supportEmails = $ConfigItems->value('version_support_emails');

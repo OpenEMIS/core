@@ -131,7 +131,7 @@ class InstitutionOutcomeResultsTable extends AppTable
             ->toArray();
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
         $session = $this->request->getSession();

@@ -44,7 +44,7 @@ class UserComponent extends Component
         return $event;
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $request = $this->request;
         $action = $request->action;
