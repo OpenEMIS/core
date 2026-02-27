@@ -4,7 +4,6 @@ namespace Scholarship\Controller;
 use ArrayObject;
 
 use Cake\Event\EventInterface;
-use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\Utility\Inflector;
@@ -145,8 +144,7 @@ class ScholarshipsController extends AppController
         $this->set('contentHeader', $header);
 
         $persona = true;
-        $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
-        $event = $model->getEventManager()->dispatch($event);
+        $event = $model->dispatchEvent('Model.Navigation.breadcrumb', [$this->request, $this->Navigation, $persona], $this);
     }
 
     public function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
@@ -165,7 +163,7 @@ class ScholarshipsController extends AppController
         }
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Scholarship') {
             $this->Security->setConfig('validatePost', false);

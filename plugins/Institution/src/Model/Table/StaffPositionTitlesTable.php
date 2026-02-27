@@ -647,11 +647,6 @@ class StaffPositionTitlesTable extends ControllerActionTable
 
         $StaffPositionTitlesGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitlesGrades');
 
-        // Only sync grades when editing an existing record (entity has id); on add there are no rows yet.
-        if ($entity->id === null || $entity->id === '') {
-            return;
-        }
-
         // Remove -1 if some real grades are selected
         if ($hasSomeRealGrades) {
 //            Log::debug('[beforeSave] Real grades selected — removing -1 if it exists');

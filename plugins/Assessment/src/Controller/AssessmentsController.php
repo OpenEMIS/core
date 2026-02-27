@@ -21,7 +21,7 @@ class AssessmentsController extends AppController
 	public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Assessment.AssessmentGradingTypes']); }
 	// End
 
-	public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+	public function beforeFilter(EventInterface $event) {
 
 		if ($this->getPlugin() == 'Assessment') {
             $this->Security->setConfig('validatePost', false);
