@@ -18,8 +18,19 @@ class SalariesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->hasMany('SalaryAdditions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SalaryDeductions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        //POCOR-9584: Add conditions to filter additions and deductions based on which type_id is set
+        $this->hasMany('SalaryAdditions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'conditions' => ['SalaryAdditions.salary_addition_type_id IS NOT NULL']
+        ]);
+        $this->hasMany('SalaryDeductions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+            'conditions' => ['SalaryDeductions.salary_deduction_type_id IS NOT NULL']
+        ]);
         $this->hasMany('SalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
 
