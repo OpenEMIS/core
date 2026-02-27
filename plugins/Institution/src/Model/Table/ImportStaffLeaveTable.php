@@ -17,11 +17,11 @@ class ImportStaffLeaveTable extends AppTable
     private $institutionId;
     private $staffId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('import_mapping');
+        $this->setTable('import_mapping');
         parent::initialize($config);
-        
+
         $this->addBehavior('Import.Import', [
             'plugin' => 'Institution',
             'model' => 'StaffLeave'
@@ -32,7 +32,7 @@ class ImportStaffLeaveTable extends AppTable
         $this->WorkflowsFilters = TableRegistry::getTableLocator()->get('Workflow.WorkflowsFilters');
     }
 
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = ['callable' => 'onGetBreadcrumb', 'priority' => 15];
@@ -41,6 +41,7 @@ class ImportStaffLeaveTable extends AppTable
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
         return $events;
     }
+
 
     public function onGetBreadcrumb(EventInterface $event, Request $request, Component $Navigation, $persona)
     {
@@ -85,7 +86,7 @@ class ImportStaffLeaveTable extends AppTable
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
         }
-        
+
         $staffUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff', 'institutionId' => $this->paramsEncode(['id' => $this->institutionId])];
         $personaUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->paramsEncode(['id' => $this->staffId])];
         $Navigation->substituteCrumb('Imports', 'Staff', $staffUrl);
@@ -140,7 +141,7 @@ class ImportStaffLeaveTable extends AppTable
             })
             ->matching($lookupModel)
             ->leftJoin(
-                [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
+                [$this->WorkflowsFilters->getAlias() => $this->WorkflowsFilters->getTable()],
                 [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
             )
             ->order([
@@ -178,7 +179,7 @@ class ImportStaffLeaveTable extends AppTable
      * @param  $translatedCol value.
      * @param  $lookupColumn value.
      * @param  array|\ArrayObject $data .
-     * @param array $columnOrder value.
+     * @param $columnOrder .
      */
     public function onImportPopulateAcademicPeriodsData(
             EventInterface $event,
@@ -186,7 +187,7 @@ class ImportStaffLeaveTable extends AppTable
             $lookupModel,
             $lookupColumn,
             $translatedCol,
-            ArrayObject $data, 
+            ArrayObject $data,
             $columnOrder
     ) {
         $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
@@ -196,7 +197,7 @@ class ImportStaffLeaveTable extends AppTable
         $endDateLabel = $this->getExcelLabel($lookedUpTable, 'end_date');
         $data[$columnOrder]['lookupColumn'] = 4;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $startDateLabel, $endDateLabel, $translatedCol];
-       
+
         if (!empty($modelData)) {
             foreach ($modelData as $row) {
 
@@ -240,9 +241,9 @@ class ImportStaffLeaveTable extends AppTable
             ->matching('WorkflowModels', function ($q) {
                 return $q->where(['WorkflowModels.model' => 'Institution.StaffLeave']);
             })
-            ->matching($this->WorkflowSteps->alias())
+            ->matching($this->WorkflowSteps->getAlias())
             ->leftJoin(
-                [$this->WorkflowsFilters->alias() => $this->WorkflowsFilters->table()],
+                [$this->WorkflowsFilters->getAlias() => $this->WorkflowsFilters->getTable()],
                 [$this->Workflows->aliasField('id = ') . $this->WorkflowsFilters->aliasField('workflow_id')]
             )
             ->where([$this->WorkflowsFilters->aliasField('filter_id') => $tempRow['staff_leave_type_id']]);

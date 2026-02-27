@@ -5,6 +5,7 @@ namespace Staff\Controller;
 use App\Controller\AppController;
 use ArrayObject;
 use Cake\Event\EventInterface;
+use Cake\Log\Log;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -87,6 +88,7 @@ class StaffController extends AppController
             'Extracurriculars' => ['className' => 'Staff.Extracurriculars', 'actions' => ['index', 'view', 'search']],
             'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStaff' => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
+            'ImportStaffLeave' => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']],
             'TrainingResults' => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
             'Achievements' => ['className' => 'Staff.Achievements'],
             'ImportSalaries' => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']],
@@ -681,7 +683,7 @@ class StaffController extends AppController
             $pass = $this->request->getParam('pass');
             $subaction = isset($pass[0]) ? $pass[0] : null;
 
-            if($model->alias = 'StaffAppraisals'){
+            if($model->alias == 'StaffAppraisals'){ //POCOR-9584: fix assignment operator causing alias corruption for all models
                 return true;
             }
             if ($subaction != 'index') {
@@ -1087,6 +1089,12 @@ class StaffController extends AppController
             'Healths'
         ];
 
+        $templateActions = [
+            'StaffAppraisals',
+            'StaffLeaves',
+            'ImportStaffLeave'
+        ];
+
         $ajaxActions = [
             'image',
             'download',
@@ -1095,6 +1103,16 @@ class StaffController extends AppController
         ];
 
         if ($pass[0] == 'download' && in_array($action, $downloadActions) && ($plugin == 'Staff') && ($controller == 'Staff')) {
+            return true;
+        }
+
+        if ($pass[0] == 'template'){
+            return true;
+        }
+        if ($pass[0] == 'add'
+            && in_array($action, $templateActions)
+            && ($plugin == 'Staff') && ($controller == 'Staff')) {
+
             return true;
         }
 
