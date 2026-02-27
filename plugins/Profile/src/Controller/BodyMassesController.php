@@ -33,7 +33,7 @@ class BodyMassesController extends PageController
         parent::index();
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -270,7 +270,7 @@ class BodyMassesController extends PageController
         return $tooltipMessage;
     }
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         // if (!array_key_exists('_serialize', $this->viewVars) &&
         //     in_array($this->response->type(), ['application/json', 'application/xml'])
