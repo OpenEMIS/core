@@ -256,21 +256,25 @@ class SalariesTable extends ControllerActionTable
         $findData = $SalaryTransactions->find()
                     ->select([
                       $SalaryTransactions->aliasField('salary_addition_type_id'),
-                      $SalaryTransactions->aliasField('salary_deduction_type_id')   
+                      $SalaryTransactions->aliasField('salary_deduction_type_id')
                     ])
                     ->where([$SalaryTransactions->aliasField('staff_salary_id') => $paramsPass['id']])->toArray();
-        
-        $addition  = $deduction = []; 
+
+        $addition  = $deduction = [];
         if (!empty($findData)) {
             foreach ($findData as $key => $value) {
                $addition[] = $value->salary_addition_type_id;
-               $deduction[] = $value->salary_deduction_type_id;        
+               $deduction[] = $value->salary_deduction_type_id;
             }
-            if (!empty($addition[0]) && empty($deduction[1])) {
+            //POCOR-9584: Filter out null values and check if arrays have any non-empty elements
+            $addition = array_filter($addition);
+            $deduction = array_filter($deduction);
+
+            if (!empty($addition) && empty($deduction)) {
                 $query->contain([
                     'SalaryAdditions'
                 ]);
-            } elseif (empty($addition[0]) && !empty($deduction[1])) {
+            } elseif (empty($addition) && !empty($deduction)) {
                 $query->contain([
                     'SalaryDeductions'
                 ]);
@@ -278,7 +282,7 @@ class SalariesTable extends ControllerActionTable
                 $query->contain([
                     'SalaryAdditions',
                     'SalaryDeductions'
-                ]);    
+                ]);
             }
         }
     }
