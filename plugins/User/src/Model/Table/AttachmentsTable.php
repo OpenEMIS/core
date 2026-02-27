@@ -464,11 +464,12 @@ class AttachmentsTable extends ControllerActionTable
             $data[$fileName] = null;
             $data[$fileContent] = null;
         } elseif (!isset($data[$fileName])) {
-            // Do not set file_name and file_content to null on creation
+            //POCOR-9584: start - Do not set file_name and file_content to null on creation
             // Only unset if they don't have values
             if ($data->offsetExists($fileContent)) {
                 $data->offsetUnset($fileContent);
             }
+            //POCOR-9584: end
         }
 
     }

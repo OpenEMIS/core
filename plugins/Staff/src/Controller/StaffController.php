@@ -1077,11 +1077,31 @@ class StaffController extends AppController
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
-        $furtherAction = $pass[0];
+        $furtherAction = $pass[0] ?? '';
 
-        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips' || 'Healths') && ($plugin == 'Staff') && ($controller == 'Staff')) {
+        //POCOR-9584: start - Support AJAX autocomplete and clean code with arrays
+        $downloadActions = [
+            'Qualifications',
+            'EmploymentStatuses',
+            'Payslips',
+            'Healths'
+        ];
+
+        $ajaxActions = [
+            'image',
+            'download',
+            'ajaxReferrerAutocomplete',
+            'ajaxAssessorAutocomplete'
+        ];
+
+        if ($pass[0] == 'download' && in_array($action, $downloadActions) && ($plugin == 'Staff') && ($controller == 'Staff')) {
             return true;
         }
+
+        if (in_array($furtherAction, $ajaxActions)) {
+            return true;
+        }
+        //POCOR-9584: end
 
         return false;
     }
