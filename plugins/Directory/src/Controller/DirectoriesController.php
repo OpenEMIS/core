@@ -1477,6 +1477,12 @@ class DirectoriesController extends AppController
                 'identity_type_id' => $nationalitiesTable->aliasField('identity_type_id'),
                 'identity_type_name' => 'IdentityTypes.name'
             ])
+            //POCOR-9542[START]
+            ->order([
+                $nationalitiesTable->aliasField('default') => 'DESC', // default = 1 first
+                $nationalitiesTable->aliasField('name') => 'ASC'      // optional: then by name
+            ])
+            //POCOR-9542[END]
             ->toArray();
 
         $resultArray = array_map(function ($nationality) {
