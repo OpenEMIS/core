@@ -670,7 +670,7 @@ class QualificationsTable extends ControllerActionTable
     }
 
     //POCOR-9531
-    public function onUpdateFieldQualificationInstitution(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldQualificationInstitution(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $institutionOptions = $this->find('list', [
@@ -731,7 +731,7 @@ class QualificationsTable extends ControllerActionTable
     }
 
     //POCOR-9531
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data){
+    public function beforeSave(EventInterface  $event, Entity $entity, ArrayObject $data){
         $qualificationInstitution = $this->request->getData()['Qualifications']['qualification_institution']['_ids'][0];
         if (is_numeric($qualificationInstitution)) {
             $record = $this->find()
