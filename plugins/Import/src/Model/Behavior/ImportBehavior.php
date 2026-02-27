@@ -211,6 +211,7 @@ class ImportBehavior extends Behavior
         }
 
         $downloadUrl = $toolbarButtons['back']['url'];
+
         $downloadUrl[0] = 'template';
 
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
