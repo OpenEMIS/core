@@ -453,6 +453,9 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
 
     // save
     function saveAbsences(data, context) {
+        // POCOR-9572: Determine period based on attendance_by mode
+        var isSubjectBased = context.attendance_by === "subject";
+
         var studentAbsenceData = {
             student_id: data.student_id,
             institution_id: data.institution_id,
@@ -461,9 +464,9 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
             absence_type_id: data.absence_type_id,
             student_absence_reason_id: data.student_absence_reason_id,
             comment: data.comment,
-            period: context.period,
+            period: isSubjectBased ? 0 : context.period,
             date: context.date,
-            subject_id: context.subject_id,
+            subject_id: isSubjectBased ? context.subject_id : 0,
             education_grade_id: context.education_grade_id
         };
 
@@ -471,14 +474,17 @@ function InstitutionStudentAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, 
     }
 
     function savePeriodMarked(params, scope) {
+        // POCOR-9572: Determine period based on attendance_by mode
+        var isSubjectBased = params.attendance_by === "subject";
+
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
             education_grade_id: params.education_grade_id,
             academic_period_id: params.academic_period_id,
             date: params.day_id,
-            period: params.attendance_period_id,
-            subject_id: params.subject_id
+            period: isSubjectBased ? 0 : params.attendance_period_id,
+            subject_id: isSubjectBased ? params.subject_id : 0
         };
 
         UtilsSvc.isAppendSpinner(true, 'institution-student-attendances-table');

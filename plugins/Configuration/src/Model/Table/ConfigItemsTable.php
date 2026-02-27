@@ -947,16 +947,17 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ]
     ];
-
+    
+    //POCOR-9554[START] initially it was 200
     private $validateMaxStudentsPerClass = [
         'num' => [
             'rule' => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 200',
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
         ],
         'bet' => [
-            'rule' => ['range', 0, 200],
-            'message' => 'Numeric Value should be between 0 to 200',
+            'rule' => ['range', 0, 1000],
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
         ]
     ];
@@ -964,19 +965,20 @@ class ConfigItemsTable extends AppTable
     private $validateMaxStudentsPerSubject = [
         'num' => [
             'rule' => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 200',
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
         ],
         'bet' => [
-            'rule' => ['range', 0, 200],
-            'message' => 'Numeric Value should be between 0 to 200',
+            'rule' => ['range', 0, 1000],
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
-        ],
-        'checkMaxStudentsPerSubject' => [
+        ]
+        /*'checkMaxStudentsPerSubject' => [
             'rule' => ['checkMaxStudentsPerSubject'],
             'provider' => 'table'
-        ]
+        ]*/
     ];
+     //POCOR-9554[END]
 
     private $validateLatitudeMinimum = [
         'num' => [
