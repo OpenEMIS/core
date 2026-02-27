@@ -18,22 +18,9 @@ class SalariesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        //POCOR-9584: Use mutually exclusive conditions to differentiate additions from deductions
-        // A transaction can only be an addition (has salary_addition_type_id, no salary_deduction_type_id)
-        // or a deduction (has salary_deduction_type_id, no salary_addition_type_id)
-        $this->hasMany('SalaryAdditions', [
-            'className' => 'Staff.StaffSalaryTransactions',
-            'dependent' => true,
-            'cascadeCallbacks' => true,
-            'conditions' => ['SalaryAdditions.salary_addition_type_id IS NOT NULL', 'SalaryAdditions.salary_deduction_type_id IS NULL']
-        ]);
-        $this->hasMany('SalaryDeductions', [
-            'className' => 'Staff.StaffSalaryTransactions',
-            'dependent' => true,
-            'cascadeCallbacks' => true,
-            'conditions' => ['SalaryDeductions.salary_deduction_type_id IS NOT NULL', 'SalaryDeductions.salary_addition_type_id IS NULL']
-        ]);
-        //POCOR-9584: All transactions (additions OR deductions) - used for business logic
+        //POCOR-9584: Load all transactions - filtering will happen in addEditBeforePatch based on type_id
+        $this->hasMany('SalaryAdditions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SalaryDeductions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
 
@@ -257,35 +244,56 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        //POCOR-9584: Log detailed info about loaded relationships
+        //POCOR-9584: Separate additions and deductions from loaded transactions
+        // Since both relationships load from the same table, manually separate by type_id
         error_log('[POCOR-9584] addEditBeforePatch START - Salary ID: ' . ($entity->id ?? 'NEW'));
 
-        // Check what's in the entity
-        error_log('[POCOR-9584] addEditBeforePatch - Entity keys: ' . json_encode(array_keys($entity->toArray())));
+        $salary_additions = [];
+        $salary_deductions = [];
 
-        // Check salary_additions
+        // Process all loaded transactions to separate them
         if ($entity->has('salary_additions')) {
-            error_log('[POCOR-9584] addEditBeforePatch - salary_additions exists, count: ' . count($entity->salary_additions));
-            foreach ($entity->salary_additions as $key => $item) {
-                error_log('[POCOR-9584] addEditBeforePatch - Addition[' . $key . ']: id=' . ($item->id ?? 'NULL') .
-                    ', addition_type_id=' . ($item->salary_addition_type_id ?? 'NULL') .
-                    ', deduction_type_id=' . ($item->salary_deduction_type_id ?? 'NULL'));
+            error_log('[POCOR-9584] addEditBeforePatch - Raw salary_additions count: ' . count($entity->salary_additions));
+
+            foreach ($entity->salary_additions as $item) {
+                $add_type = $item->salary_addition_type_id ?? null;
+                $ded_type = $item->salary_deduction_type_id ?? null;
+
+                error_log('[POCOR-9584] addEditBeforePatch - Item: id=' . ($item->id ?? 'NULL') .
+                    ', add_type=' . $add_type . ', ded_type=' . $ded_type);
+
+                // Only add to additions if it has an addition_type_id and NO deduction_type_id
+                if ($add_type !== null && $ded_type === null) {
+                    $salary_additions[] = $item;
+                    error_log('[POCOR-9584] addEditBeforePatch - -> Added to ADDITIONS');
+                }
             }
-        } else {
-            error_log('[POCOR-9584] addEditBeforePatch - salary_additions NOT in entity');
         }
 
-        // Check salary_deductions
+        // Process deductions the same way
         if ($entity->has('salary_deductions')) {
-            error_log('[POCOR-9584] addEditBeforePatch - salary_deductions exists, count: ' . count($entity->salary_deductions));
-            foreach ($entity->salary_deductions as $key => $item) {
-                error_log('[POCOR-9584] addEditBeforePatch - Deduction[' . $key . ']: id=' . ($item->id ?? 'NULL') .
-                    ', addition_type_id=' . ($item->salary_addition_type_id ?? 'NULL') .
-                    ', deduction_type_id=' . ($item->salary_deduction_type_id ?? 'NULL'));
+            error_log('[POCOR-9584] addEditBeforePatch - Raw salary_deductions count: ' . count($entity->salary_deductions));
+
+            foreach ($entity->salary_deductions as $item) {
+                $add_type = $item->salary_addition_type_id ?? null;
+                $ded_type = $item->salary_deduction_type_id ?? null;
+
+                error_log('[POCOR-9584] addEditBeforePatch - Item: id=' . ($item->id ?? 'NULL') .
+                    ', add_type=' . $add_type . ', ded_type=' . $ded_type);
+
+                // Only add to deductions if it has a deduction_type_id and NO addition_type_id
+                if ($ded_type !== null && $add_type === null) {
+                    $salary_deductions[] = $item;
+                    error_log('[POCOR-9584] addEditBeforePatch - -> Added to DEDUCTIONS');
+                }
             }
-        } else {
-            error_log('[POCOR-9584] addEditBeforePatch - salary_deductions NOT in entity');
         }
+
+        // Update entity with properly separated data
+        $entity->salary_additions = $salary_additions;
+        $entity->salary_deductions = $salary_deductions;
+
+        error_log('[POCOR-9584] addEditBeforePatch DONE - Final: ' . count($salary_additions) . ' additions, ' . count($salary_deductions) . ' deductions');
     }
 
 
