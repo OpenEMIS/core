@@ -3,6 +3,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\EntityInterface;
 use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
@@ -19,8 +20,23 @@ class SalariesTable extends ControllerActionTable
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         //POCOR-9584: Load all transactions - filtering will happen in addEditBeforePatch based on type_id
-        $this->hasMany('SalaryAdditions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SalaryDeductions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SalaryAdditions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'foreignKey' => 'staff_salary_id', // <-- put your real FK here
+            'conditions' => ['SalaryAdditions.salary_addition_type_id IS NOT' => null],
+            'dependent' => true,
+            'saveStrategy' => 'replace',
+            'cascadeCallbacks' => true,
+        ]);
+
+        $this->hasMany('SalaryDeductions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'foreignKey' => 'staff_salary_id', // <-- same FK
+            'conditions' => ['SalaryDeductions.salary_deduction_type_id IS NOT' => null],
+            'dependent' => true,
+            'saveStrategy' => 'replace',
+            'cascadeCallbacks' => true,
+        ]);
         $this->hasMany('SalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
 
@@ -167,134 +183,34 @@ class SalariesTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
-    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options)
     {
         $totalAddition = 0;
         $totalDeduction = 0;
 
-        //POCOR-9584: Log salary additions data
+        // --- ADDITIONS ---
         if ($entity->has('salary_additions')) {
-            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - salary_additions: ' . json_encode($entity->salary_additions));
-        } else {
-            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - No salary_additions property');
-        }
-
-        $SalaryAdditions = TableRegistry::getTableLocator()->get('Staff.SalaryAdditions');
-        $present = [];
-        if ($entity->has('salary_additions')) {
-            foreach ($entity->salary_additions as $key => $value) {
-                if ($value->has('amount')) {
-                    $totalAddition += $value->amount;
-                }
-                if ($value->has($SalaryAdditions->getPrimaryKey())) {
-                    $present[] = $value->{$SalaryAdditions->getPrimaryKey()};
+            foreach ((array)$entity->salary_additions as $item) {
+                if ($item && $item->has('amount')) {
+                    $totalAddition += (float)$item->amount;
                 }
             }
         }
-        if(!empty($entity->id)){
-            $deleteOptions = [
-                'staff_salary_id' => $entity->id,
-            ];
-        }
-        if (!empty($present)) {
-            $deleteOptions[$SalaryAdditions->getPrimaryKey().' NOT IN'] = $present;
-        }
-        //POCOR-9584: Log deletion of additions
-        \Cake\Log\Log::debug('[POCOR-9584] beforeSave - Deleting old salary_additions with options: ' . json_encode($deleteOptions ?? []));
-        $SalaryAdditions->deleteAll($deleteOptions ?? []);
 
-        //POCOR-9584: Log salary deductions data
+        // --- DEDUCTIONS ---
         if ($entity->has('salary_deductions')) {
-            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - salary_deductions: ' . json_encode($entity->salary_deductions));
-        } else {
-            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - No salary_deductions property');
-        }
-
-        $SalaryDeductions = TableRegistry::getTableLocator()->get('Staff.SalaryDeductions');
-        $present = [];
-        if ($entity->has('salary_deductions')) {
-            foreach ($entity->salary_deductions as $key => $value) {
-                if ($value->has('amount')) {
-                    $totalDeduction += $value->amount;
-                }
-                if ($value->has($SalaryDeductions->getPrimaryKey())) {
-                    $present[] = $value->{$SalaryDeductions->getPrimaryKey()};
+            foreach ((array)$entity->salary_deductions as $item) {
+                if ($item && $item->has('amount')) {
+                    $totalDeduction += (float)$item->amount;
                 }
             }
         }
-        if(!empty($entity->id)){
-            $deleteOptions = [
-                'staff_salary_id' => $entity->id,
-            ];
-        }
-        if (!empty($present)) {
-            $deleteOptions[$SalaryDeductions->getPrimaryKey().' NOT IN'] = $present;
-        }
-        //POCOR-9584: Log deletion of deductions
-        \Cake\Log\Log::debug('[POCOR-9584] beforeSave - Deleting old salary_deductions with options: ' . json_encode($deleteOptions ?? []));
-        $SalaryDeductions->deleteAll($deleteOptions ?? []);
 
-        //POCOR-9584: Log totals being saved
-        \Cake\Log\Log::debug('[POCOR-9584] beforeSave - Total Addition: ' . $totalAddition . ', Total Deduction: ' . $totalDeduction);
-
-        $data = ['additions' => $totalAddition, 'deductions' => $totalDeduction];
-
-        $entity = $this->patchEntity($entity, $data);
+        // Set totals directly (do NOT patchEntity here)
+        $entity->additions = $totalAddition;
+        $entity->deductions = $totalDeduction;
     }
 
-    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        //POCOR-9584: Separate additions and deductions from loaded transactions
-        // Since both relationships load from the same table, manually separate by type_id
-        error_log('[POCOR-9584] addEditBeforePatch START - Salary ID: ' . ($entity->id ?? 'NEW'));
-
-        $salary_additions = [];
-        $salary_deductions = [];
-
-        // Process all loaded transactions to separate them
-        if ($entity->has('salary_additions')) {
-            error_log('[POCOR-9584] addEditBeforePatch - Raw salary_additions count: ' . count($entity->salary_additions));
-
-            foreach ($entity->salary_additions as $item) {
-                $add_type = $item->salary_addition_type_id ?? null;
-                $ded_type = $item->salary_deduction_type_id ?? null;
-
-                error_log('[POCOR-9584] addEditBeforePatch - Item: id=' . ($item->id ?? 'NULL') .
-                    ', add_type=' . $add_type . ', ded_type=' . $ded_type);
-
-                // Only add to additions if it has an addition_type_id and NO deduction_type_id
-                if ($add_type !== null && $ded_type === null) {
-                    $salary_additions[] = $item;
-                    error_log('[POCOR-9584] addEditBeforePatch - -> Added to ADDITIONS');
-                }
-            }
-        }
-
-        // Process deductions the same way
-        if ($entity->has('salary_deductions')) {
-            error_log('[POCOR-9584] addEditBeforePatch - Raw salary_deductions count: ' . count($entity->salary_deductions));
-
-            foreach ($entity->salary_deductions as $item) {
-                $add_type = $item->salary_addition_type_id ?? null;
-                $ded_type = $item->salary_deduction_type_id ?? null;
-
-                error_log('[POCOR-9584] addEditBeforePatch - Item: id=' . ($item->id ?? 'NULL') .
-                    ', add_type=' . $add_type . ', ded_type=' . $ded_type);
-
-                // Only add to deductions if it has a deduction_type_id and NO addition_type_id
-                if ($ded_type !== null && $add_type === null) {
-                    $salary_deductions[] = $item;
-                    error_log('[POCOR-9584] addEditBeforePatch - -> Added to DEDUCTIONS');
-                }
-            }
-        }
-
-        // Update entity with properly separated data
-        $entity->salary_additions = $salary_additions;
-        $entity->salary_deductions = $salary_deductions;
-
-        error_log('[POCOR-9584] addEditBeforePatch DONE - Final: ' . count($salary_additions) . ' additions, ' . count($salary_deductions) . ' deductions');
-    }
 
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
