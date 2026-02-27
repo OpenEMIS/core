@@ -659,11 +659,7 @@ class CurrentAssessmentsTable extends ControllerActionTable
         ];
     }
 
-<<<<<<< HEAD
     public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)
-=======
-    public function onExcelGetOpenemisNo(Event $event, Entity $entity)
->>>>>>> 30c1e730a8ff7bbb59a0ed44166ad027a97a39da
     {
         return $entity->user->openemis_no;
     }

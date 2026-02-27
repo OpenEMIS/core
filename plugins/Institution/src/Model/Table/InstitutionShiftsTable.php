@@ -1047,7 +1047,7 @@ class InstitutionShiftsTable extends ControllerActionTable
         return $selectedAcademicPeriod;
     }
 
-    public function ajaxInstitutionsAutocomplete(Event $mainEvent, ArrayObject $extra)
+    public function ajaxInstitutionsAutocomplete(EventInterface $mainEvent, ArrayObject $extra)
     {
         $this->ControllerAction->autoRender = false;
         $this->controller->autoRender = false;

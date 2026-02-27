@@ -27,7 +27,7 @@ class ScholarshipRecipientAcademicStandingsController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
     	$page = $this->Page;
         parent::beforeFilter($event);
