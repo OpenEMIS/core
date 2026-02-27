@@ -82,6 +82,11 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $SpecialNeedsDiagnosticsDegree = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsDiagnosticsDegree');
+
+            if (!isset($attr['attr'])) {
+                $attr['attr'] = [];
+            }
+
             $attr['type'] = 'select';
             $attr['placeholder'] = __('--Select--');
             $attr['onChangeReload'] = true;
@@ -94,9 +99,13 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 //POCOR-9584: end
             }else{
                 //POCOR-9584: start - Get degree type from entity for edit mode
-                $degreeId = $attr['entity']->special_needs_diagnostics_type_id;
-                $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($degreeId);
-                $attr['attr']['options'] = $degreeListOptions;
+                $typeId = $attr['entity']->special_needs_diagnostics_type_id;
+                if (!empty($typeId)) {
+                    $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($typeId);
+                    if (!empty($degreeListOptions)) {
+                        $attr['attr']['options'] = $degreeListOptions;
+                    }
+                }
                 $attr['value'] = $attr['entity']->special_needs_diagnostics_degree_id;
                 //POCOR-9584: end
             }
