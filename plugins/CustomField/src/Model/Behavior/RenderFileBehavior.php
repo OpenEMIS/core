@@ -446,7 +446,7 @@ class RenderFileBehavior extends RenderBehavior
         return ['fileName' => $fileName, 'fileContent' => $fileContent];
     }
 
-    public function downloadFile(Event $mainEvent, ArrayObject $extra)
+    public function downloadFile(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table->CustomFieldValues->getTarget();
         $ids = $model->paramsDecode($this->_table->paramsPass(0));

@@ -560,9 +560,7 @@ class InstitutionClassesTable extends ControllerActionTable
         // POCOR-9403 cleancoded
         $this->handleClassCustomFields($entity);
         $this->syncClassStudents($entity, $options);
-        $this->getEventManager()->dispatch(
-            new Event('Model.afterFullSave', $this, compact('entity', 'options'))
-        );
+        $this->dispatchEvent('Model.afterFullSave', compact('entity', 'options'));
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
         }
