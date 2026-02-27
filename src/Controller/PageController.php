@@ -44,7 +44,7 @@ class PageController extends BaseController
         return $events;
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         //POCOR-7534 Starts comment it only for POCOR-7534 ticket's given urls in task
@@ -448,7 +448,7 @@ class PageController extends BaseController
         return $flag;
     }//POCOR-7534 Ends
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->initializeToolbars();

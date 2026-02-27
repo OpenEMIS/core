@@ -1086,7 +1086,7 @@ class StaffTable extends AppTable  {
     //POCOR-5185[end]
 
     // POCOR-9510 start
-    public function onExcelGetBirthDate(Event $event, Entity $entity) {
+    public function onExcelGetBirthDate(EventInterface $event, Entity $entity) {
         if (!empty($entity->birth_date)) {
             return $this->formatDate($entity->birth_date);
         }else{
@@ -1094,7 +1094,7 @@ class StaffTable extends AppTable  {
         }
     }
 
-    public function onExcelGetDeathDate(Event $event, Entity $entity) {
+    public function onExcelGetDeathDate(EventInterface $event, Entity $entity) {
         if (!empty($entity->death_date)) {
             return $this->formatDate($entity->death_date);
         } else {
@@ -1103,7 +1103,7 @@ class StaffTable extends AppTable  {
     }
 
     // POCOR-9510 end
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'feature':

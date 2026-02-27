@@ -26,7 +26,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
         }
     }
 
-    public function onGetCustomCoordinatesElement(Event $event, $action, $entity, $attr, $options=[]) {
+    public function onGetCustomCoordinatesElement(EventInterface $event, $action, $entity, $attr, $options=[]) {
         $value = '';
 
         $fieldType = strtolower($this->fieldTypeCode);
