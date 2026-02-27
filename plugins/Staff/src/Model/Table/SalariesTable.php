@@ -257,13 +257,35 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        //POCOR-9584: Relationships now load properly filtered data via conditions
-        // salary_additions = records with salary_addition_type_id NOT NULL and salary_deduction_type_id IS NULL
-        // salary_deductions = records with salary_deduction_type_id NOT NULL and salary_addition_type_id IS NULL
-        $additions_count = !empty($entity->salary_additions) ? count($entity->salary_additions) : 0;
-        $deductions_count = !empty($entity->salary_deductions) ? count($entity->salary_deductions) : 0;
+        //POCOR-9584: Log detailed info about loaded relationships
+        error_log('[POCOR-9584] addEditBeforePatch START - Salary ID: ' . ($entity->id ?? 'NEW'));
 
-        error_log('[POCOR-9584] addEditBeforePatch - Loaded ' . $additions_count . ' additions and ' . $deductions_count . ' deductions');
+        // Check what's in the entity
+        error_log('[POCOR-9584] addEditBeforePatch - Entity keys: ' . json_encode(array_keys($entity->toArray())));
+
+        // Check salary_additions
+        if ($entity->has('salary_additions')) {
+            error_log('[POCOR-9584] addEditBeforePatch - salary_additions exists, count: ' . count($entity->salary_additions));
+            foreach ($entity->salary_additions as $key => $item) {
+                error_log('[POCOR-9584] addEditBeforePatch - Addition[' . $key . ']: id=' . ($item->id ?? 'NULL') .
+                    ', addition_type_id=' . ($item->salary_addition_type_id ?? 'NULL') .
+                    ', deduction_type_id=' . ($item->salary_deduction_type_id ?? 'NULL'));
+            }
+        } else {
+            error_log('[POCOR-9584] addEditBeforePatch - salary_additions NOT in entity');
+        }
+
+        // Check salary_deductions
+        if ($entity->has('salary_deductions')) {
+            error_log('[POCOR-9584] addEditBeforePatch - salary_deductions exists, count: ' . count($entity->salary_deductions));
+            foreach ($entity->salary_deductions as $key => $item) {
+                error_log('[POCOR-9584] addEditBeforePatch - Deduction[' . $key . ']: id=' . ($item->id ?? 'NULL') .
+                    ', addition_type_id=' . ($item->salary_addition_type_id ?? 'NULL') .
+                    ', deduction_type_id=' . ($item->salary_deduction_type_id ?? 'NULL'));
+            }
+        } else {
+            error_log('[POCOR-9584] addEditBeforePatch - salary_deductions NOT in entity');
+        }
     }
 
 
@@ -284,9 +306,18 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        //POCOR-9584: Always load both SalaryAdditions and SalaryDeductions relationships
-        // Filtering will be done in the template based on which type_id is set
-        $query->contain(['SalaryAdditions', 'SalaryDeductions']);
+        //POCOR-9584: Load both relationships with conditions to filter additions vs deductions
+        error_log('[POCOR-9584] editBeforeQuery - Loading relationships with conditions');
+        $query->contain([
+            'SalaryAdditions' => function(Query $q) {
+                error_log('[POCOR-9584] editBeforeQuery - Building SalaryAdditions query');
+                return $q;
+            },
+            'SalaryDeductions' => function(Query $q) {
+                error_log('[POCOR-9584] editBeforeQuery - Building SalaryDeductions query');
+                return $q;
+            }
+        ]);
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
