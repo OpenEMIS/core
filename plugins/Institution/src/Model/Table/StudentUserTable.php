@@ -648,10 +648,10 @@ class StudentUserTable extends ControllerActionTable
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
-        $this->getEventManager()->dispatch(new Event('Model.Students.afterSaveCustom', $this, [
+        $this->dispatchEvent('Model.Students.afterSaveCustom', [
             'entity' => $entity,
             'options' => $options
-        ]));
+        ]);
 
     }
 

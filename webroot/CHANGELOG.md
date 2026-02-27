@@ -1,3 +1,15 @@
+### [5.2.0] - 2026-01-27
+- Implemented: Develop a standard report with filters for Reports > Performance > Competencies
+- Bug Fixed: Administration>System Configuration>Student Settings>Maximum Students Per Class/Subject: Allows user to set to 1000
+- Bug Fixed: Institution>Attendance>Student>Classes: When switching classes, the loader starts and the page doesn't finish loading
+- Bug Fixed: Institutions>Students>Add: The default country name does not figure on top of the Nationality dropdown
+- Bug Fixed: Reports>Institutions>Students: Report is showing wrong status
+- Bug Fixed: Institutions>General>Contacts>People: The Phone number and Email address fields should not be mandatory in the Institution Contact Persons page/form
+- Bug Fixed: Institution > Staff > Finance > Salaries: Create labels for Gross Salary and Net Salary
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting same user when error is occured for one of the users
+- Bug Fixed: Institutions > Students > Timetable > View: Getting 404 error when viewed
+- Bug Fixed: Institutions>Students>General>Overview>Edit: 404 error when viewed
+
 ### [5.1.0] - 2026-01-20
 - Implemented: Develop a migration script to convert attendance / absence triggers to a stored procedure 
 - Bug Fixed: Institutions>Performance>Report Cards: When generating report cards, it is including withdrawn students
