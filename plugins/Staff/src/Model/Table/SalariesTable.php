@@ -245,33 +245,31 @@ class SalariesTable extends ControllerActionTable
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         //POCOR-9584: Separate additions and deductions based on which type_id is set
-        if (array_key_exists($this->getAlias(), (array) $data)) {
-            $salary_additions = [];
-            $salary_deductions = [];
+        $salary_additions = [];
+        $salary_deductions = [];
 
-            // Separate the transactions based on type_id
-            if (!empty($entity->salary_additions)) {
-                foreach ($entity->salary_additions as $item) {
-                    if ($item->has('salary_addition_type_id') && $item->salary_addition_type_id !== null) {
-                        $salary_additions[] = $item;
-                    }
+        // Separate the transactions based on type_id from loaded relationships
+        if (!empty($entity->salary_additions)) {
+            foreach ($entity->salary_additions as $item) {
+                if ($item->has('salary_addition_type_id') && $item->salary_addition_type_id !== null) {
+                    $salary_additions[] = $item;
                 }
             }
-
-            if (!empty($entity->salary_deductions)) {
-                foreach ($entity->salary_deductions as $item) {
-                    if ($item->has('salary_deduction_type_id') && $item->salary_deduction_type_id !== null) {
-                        $salary_deductions[] = $item;
-                    }
-                }
-            }
-
-            // Set the separated data
-            $data[$this->getAlias()]['salary_additions'] = $salary_additions;
-            $data[$this->getAlias()]['salary_deductions'] = $salary_deductions;
-
-            error_log('[POCOR-9584] addEditBeforePatch - Separated into ' . count($salary_additions) . ' additions and ' . count($salary_deductions) . ' deductions');
         }
+
+        if (!empty($entity->salary_deductions)) {
+            foreach ($entity->salary_deductions as $item) {
+                if ($item->has('salary_deduction_type_id') && $item->salary_deduction_type_id !== null) {
+                    $salary_deductions[] = $item;
+                }
+            }
+        }
+
+        // Update the entity with separated data
+        $entity->salary_additions = $salary_additions;
+        $entity->salary_deductions = $salary_deductions;
+
+        error_log('[POCOR-9584] addEditBeforePatch - Separated into ' . count($salary_additions) . ' additions and ' . count($salary_deductions) . ' deductions');
     }
 
 
