@@ -21,12 +21,10 @@ class StaffSalaryTransactionsTable extends AppTable {
 		return $validator
 			->add('salary_addition_type_id', [
 			])
-			->add('addition_amount', 'ruleMoney',  [
-				'rule' => ['money']
-			])
 			->add('salary_deduction_type_id', [
 			])
-			->add('deduction_amount', 'ruleMoney',  [
+			//POCOR-9584: Validate 'amount' field - same field is used for both additions and deductions
+			->add('amount', 'ruleMoney',  [
 				'rule' => ['money']
 			])
 		;
