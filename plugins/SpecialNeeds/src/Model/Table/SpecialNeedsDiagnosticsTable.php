@@ -57,11 +57,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
                 ])
-                ->add('date',
-                 'ruleCheckInputWithinRange',
-                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
-                )
-                ;
+                ; //POCOR-9584: Removed academic period range validation
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
