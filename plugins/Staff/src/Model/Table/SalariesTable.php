@@ -18,19 +18,9 @@ class SalariesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        //POCOR-9584: Add conditions to filter additions and deductions based on which type_id is set
-        $this->hasMany('SalaryAdditions', [
-            'className' => 'Staff.StaffSalaryTransactions',
-            'dependent' => true,
-            'cascadeCallbacks' => true,
-            'conditions' => ['SalaryAdditions.salary_addition_type_id IS NOT NULL']
-        ]);
-        $this->hasMany('SalaryDeductions', [
-            'className' => 'Staff.StaffSalaryTransactions',
-            'dependent' => true,
-            'cascadeCallbacks' => true,
-            'conditions' => ['SalaryDeductions.salary_deduction_type_id IS NOT NULL']
-        ]);
+        //POCOR-9584: Load all transactions without filtering - will be separated in template
+        $this->hasMany('SalaryAdditions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('SalaryDeductions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
 
@@ -254,13 +244,33 @@ class SalariesTable extends ControllerActionTable
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        if (array_key_exists($this->getAlias(), (array) $data)) { //POCOR-9300[START] added array in second param
-            if (!array_key_exists('salary_additions', $data[$this->getAlias()])) {
-                $data[$this->getAlias()]['salary_additions'] = [];
+        //POCOR-9584: Separate additions and deductions based on which type_id is set
+        if (array_key_exists($this->getAlias(), (array) $data)) {
+            $salary_additions = [];
+            $salary_deductions = [];
+
+            // Separate the transactions based on type_id
+            if (!empty($entity->salary_additions)) {
+                foreach ($entity->salary_additions as $item) {
+                    if ($item->has('salary_addition_type_id') && $item->salary_addition_type_id !== null) {
+                        $salary_additions[] = $item;
+                    }
+                }
             }
-            if (!array_key_exists('salary_deductions', $data[$this->getAlias()])) {
-                $data[$this->getAlias()]['salary_deductions'] = [];
+
+            if (!empty($entity->salary_deductions)) {
+                foreach ($entity->salary_deductions as $item) {
+                    if ($item->has('salary_deduction_type_id') && $item->salary_deduction_type_id !== null) {
+                        $salary_deductions[] = $item;
+                    }
+                }
             }
+
+            // Set the separated data
+            $data[$this->getAlias()]['salary_additions'] = $salary_additions;
+            $data[$this->getAlias()]['salary_deductions'] = $salary_deductions;
+
+            error_log('[POCOR-9584] addEditBeforePatch - Separated into ' . count($salary_additions) . ' additions and ' . count($salary_deductions) . ' deductions');
         }
     }
 
@@ -282,51 +292,9 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        //$paramsPass = $this->paramsDecode($this->ControllerAction->getParam('Pass')[1]);cakephp 3
-        $paramsPass = $this->paramsDecode($this->request->getParam('pass.1'));
-        $SalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
-        $findData = $SalaryTransactions->find()
-                    ->select([
-                      $SalaryTransactions->aliasField('salary_addition_type_id'),
-                      $SalaryTransactions->aliasField('salary_deduction_type_id')
-                    ])
-                    ->where([$SalaryTransactions->aliasField('staff_salary_id') => $paramsPass['id']])->toArray();
-
-        $addition  = $deduction = [];
-        if (!empty($findData)) {
-            foreach ($findData as $key => $value) {
-               $addition[] = $value->salary_addition_type_id;
-               $deduction[] = $value->salary_deduction_type_id;
-            }
-            //POCOR-9584: Filter out null values and check if arrays have any non-empty elements
-            $addition = array_filter($addition);
-            $deduction = array_filter($deduction);
-
-            //POCOR-9584: Log the data being loaded
-            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Salary ID: ' . $paramsPass['id']);
-            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Addition IDs: ' . json_encode($addition));
-            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Deduction IDs: ' . json_encode($deduction));
-
-            if (!empty($addition) && empty($deduction)) {
-                \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Loading only SalaryAdditions');
-                $query->contain([
-                    'SalaryAdditions'
-                ]);
-            } elseif (empty($addition) && !empty($deduction)) {
-                \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Loading only SalaryDeductions');
-                $query->contain([
-                    'SalaryDeductions'
-                ]);
-            } else {
-                \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Loading both SalaryAdditions and SalaryDeductions');
-                $query->contain([
-                    'SalaryAdditions',
-                    'SalaryDeductions'
-                ]);
-            }
-        } else {
-            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - No salary transactions found for ID: ' . $paramsPass['id']);
-        }
+        //POCOR-9584: Always load both SalaryAdditions and SalaryDeductions relationships
+        // Filtering will be done in the template based on which type_id is set
+        $query->contain(['SalaryAdditions', 'SalaryDeductions']);
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
