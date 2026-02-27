@@ -171,6 +171,13 @@ class SalariesTable extends ControllerActionTable
         $totalAddition = 0;
         $totalDeduction = 0;
 
+        //POCOR-9584: Log salary additions data
+        if ($entity->has('salary_additions')) {
+            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - salary_additions: ' . json_encode($entity->salary_additions));
+        } else {
+            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - No salary_additions property');
+        }
+
         $SalaryAdditions = TableRegistry::getTableLocator()->get('Staff.SalaryAdditions');
         $present = [];
         if ($entity->has('salary_additions')) {
@@ -191,7 +198,16 @@ class SalariesTable extends ControllerActionTable
         if (!empty($present)) {
             $deleteOptions[$SalaryAdditions->getPrimaryKey().' NOT IN'] = $present;
         }
-        $SalaryAdditions->deleteAll($deleteOptions);
+        //POCOR-9584: Log deletion of additions
+        \Cake\Log\Log::debug('[POCOR-9584] beforeSave - Deleting old salary_additions with options: ' . json_encode($deleteOptions ?? []));
+        $SalaryAdditions->deleteAll($deleteOptions ?? []);
+
+        //POCOR-9584: Log salary deductions data
+        if ($entity->has('salary_deductions')) {
+            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - salary_deductions: ' . json_encode($entity->salary_deductions));
+        } else {
+            \Cake\Log\Log::debug('[POCOR-9584] beforeSave - No salary_deductions property');
+        }
 
         $SalaryDeductions = TableRegistry::getTableLocator()->get('Staff.SalaryDeductions');
         $present = [];
@@ -213,7 +229,12 @@ class SalariesTable extends ControllerActionTable
         if (!empty($present)) {
             $deleteOptions[$SalaryDeductions->getPrimaryKey().' NOT IN'] = $present;
         }
-        $SalaryDeductions->deleteAll($deleteOptions);
+        //POCOR-9584: Log deletion of deductions
+        \Cake\Log\Log::debug('[POCOR-9584] beforeSave - Deleting old salary_deductions with options: ' . json_encode($deleteOptions ?? []));
+        $SalaryDeductions->deleteAll($deleteOptions ?? []);
+
+        //POCOR-9584: Log totals being saved
+        \Cake\Log\Log::debug('[POCOR-9584] beforeSave - Total Addition: ' . $totalAddition . ', Total Deduction: ' . $totalDeduction);
 
         $data = ['additions' => $totalAddition, 'deductions' => $totalDeduction];
 
@@ -270,20 +291,30 @@ class SalariesTable extends ControllerActionTable
             $addition = array_filter($addition);
             $deduction = array_filter($deduction);
 
+            //POCOR-9584: Log the data being loaded
+            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Salary ID: ' . $paramsPass['id']);
+            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Addition IDs: ' . json_encode($addition));
+            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Deduction IDs: ' . json_encode($deduction));
+
             if (!empty($addition) && empty($deduction)) {
+                \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Loading only SalaryAdditions');
                 $query->contain([
                     'SalaryAdditions'
                 ]);
             } elseif (empty($addition) && !empty($deduction)) {
+                \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Loading only SalaryDeductions');
                 $query->contain([
                     'SalaryDeductions'
                 ]);
             } else {
+                \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - Loading both SalaryAdditions and SalaryDeductions');
                 $query->contain([
                     'SalaryAdditions',
                     'SalaryDeductions'
                 ]);
             }
+        } else {
+            \Cake\Log\Log::debug('[POCOR-9584] editBeforeQuery - No salary transactions found for ID: ' . $paramsPass['id']);
         }
     }
 
