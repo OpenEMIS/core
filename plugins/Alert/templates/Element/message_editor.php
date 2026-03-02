@@ -15,6 +15,12 @@
         display: none;
         float: left;
     }
+    div#cke_105_uiElement {
+        display: none;
+    }
+    select.cke_dialog_ui_input_select{
+        height: 32%;
+    }
 </style>
 
 <?php echo $this->Html->script('https://cdn.ckeditor.com/4.22.1/full/ckeditor.js', ['block' => true]) ?>
