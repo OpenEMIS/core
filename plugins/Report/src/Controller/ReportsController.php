@@ -4,7 +4,6 @@ namespace Report\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -62,7 +61,7 @@ class ReportsController extends AppController
         // POCOR-8034: end
     }
 
-    public function onInitialize(Event $event, Table $table, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $table, ArrayObject $extra)
     {
         $header = __('Reports') . ' - ' . __($table->getAlias());
         $this->set('contentHeader', $header);
@@ -265,7 +264,8 @@ class ReportsController extends AppController
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry'),
                 'Report.Assessments' => __('Assessment'),
-                'Report.OutcomesResult' => __('Outcomes')
+                'Report.OutcomesResult' => __('Outcomes'),
+                'Report.PerformanceCompetencies' => __('Competencies')//POCOR-9077
             ];
         }/*POCOR-6513 ends*/
         elseif ($module == 'Meals') {//POCOR-9267 Starts

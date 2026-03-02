@@ -43,7 +43,7 @@ class ScholarshipsDirectoryController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -217,7 +217,7 @@ class ScholarshipsDirectoryController extends PageController
         }
     }
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
 
         $this->viewBuilder()->addHelpers(['Html', 'Form', 'Paginator', 'Label', 'Url']);

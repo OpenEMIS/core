@@ -124,7 +124,7 @@ class SalariesTable extends ControllerActionTable
         $this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 
         if($this->request->getAttribute('params')['controller'] == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Personal','Salaries','Staff - Finance');       
+            $is_manual_exist = $this->getManualUrl('Personal','Salaries','Staff - Finance');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -133,7 +133,7 @@ class SalariesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -141,8 +141,8 @@ class SalariesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getAttribute('params')['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Salary List','Staff - Finance');       
+        }elseif($this->request->getAttribute('params')['controller'] == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Salary List','Staff - Finance');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -151,7 +151,7 @@ class SalariesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -256,15 +256,15 @@ class SalariesTable extends ControllerActionTable
         $findData = $SalaryTransactions->find()
                     ->select([
                       $SalaryTransactions->aliasField('salary_addition_type_id'),
-                      $SalaryTransactions->aliasField('salary_deduction_type_id')   
+                      $SalaryTransactions->aliasField('salary_deduction_type_id')
                     ])
                     ->where([$SalaryTransactions->aliasField('staff_salary_id') => $paramsPass['id']])->toArray();
-        
-        $addition  = $deduction = []; 
+
+        $addition  = $deduction = [];
         if (!empty($findData)) {
             foreach ($findData as $key => $value) {
                $addition[] = $value->salary_addition_type_id;
-               $deduction[] = $value->salary_deduction_type_id;        
+               $deduction[] = $value->salary_deduction_type_id;
             }
             if (!empty($addition[0]) && empty($deduction[1])) {
                 $query->contain([
@@ -278,7 +278,7 @@ class SalariesTable extends ControllerActionTable
                 $query->contain([
                     'SalaryAdditions',
                     'SalaryDeductions'
-                ]);    
+                ]);
             }
         }
     }
@@ -385,12 +385,25 @@ class SalariesTable extends ControllerActionTable
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
+        $LabelTable = TableRegistry::getTableLocator()->get('Labels'); // POCOR-9525
+
         if ($field == 'salary_date') {
             return __('Salary Date');
-        } elseif ($field == 'gross_salary') {
+        } elseif ($field == 'gross_salary') { // POCOR-9525 start
+            $label = $LabelTable->find()->where(['module' => 'InstitutionStaffFinanceSalaries', 'field' => 'gross_salary'])->first();
+            if (!empty($label) && $label->name) {
+                return $label->name;
+            } else {
             return __('Gross Salary');
+            }
         } elseif ($field == 'net_salary') {
-            return __('Net Salary');
+            $label = $LabelTable->find()->where(['module' => 'InstitutionStaffFinanceSalaries', 'field' => 'net_salary'])->first();
+            if (!empty($label) && $label->name) {
+                return $label->name;
+            } else {
+                return __('Net Salary');
+            }
+            // POCOR-9525 end
         } elseif ($field == 'comment') {
             return __('Comment');
         } elseif ($field == 'modified_user_id') {

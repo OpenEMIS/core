@@ -332,7 +332,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         //END:POCOR-6785
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_file_size']);
+        $this->setFieldOrder(['openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->ReportCardProcesses
@@ -543,12 +543,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
                     foreach ($data as $student) {
-                        if ($student->has('report_card_status')) {
-                            if ($student->report_card_status == self::GENERATED) {
-                                $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
-                            }
+                        // POCOR-9537 recheck the status
+                        $conditions = [
+                            'report_card_id IS' => $student->report_card_id,
+                            'student_id' => $student->student_id,
+                            'institution_id IS' => $this->getInstitutionID(),
+                            'academic_period_id IS' => $student->academic_period_id,
+                            'education_grade_id IS' => $student->education_grade_id,
+                        ];
+                        $finalStatus = $this->determineReportCardStatus($conditions);
+
+                        if ($finalStatus == self::GENERATED) {
+                            $generatedCount += 1;
+                        } else if ($finalStatus == self::PUBLISHED) {
+                            $generatedCount += 1;
+                            $publishedCount += 1;
                         }
                     }
 
@@ -628,7 +637,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ])
                         ->count();
 
-                        if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
+                        if (
+                            // ($dataCount == $generatedCount) &&
+                            ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-9537
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
@@ -790,13 +801,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $publishedCount = 0;
                     $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
+                    // POCOR-9537 recheck the status
                     foreach ($data as $student) {
-                        if ($student->has('report_card_status')) {
-                            if ($student->report_card_status == self::GENERATED) {
-                                $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
-                            }
+                        $conditions = [
+                            'report_card_id IS' => $student->report_card_id,
+                            'student_id' => $student->student_id,
+                            'institution_id IS' => $this->getInstitutionID(),
+                            'academic_period_id IS' => $student->academic_period_id,
+                            'education_grade_id IS' => $student->education_grade_id,
+                        ];
+                        $finalStatus = $this->determineReportCardStatus($conditions);
+
+                        if ($finalStatus == self::GENERATED) {
+                            $generatedCount += 1;
+                        } else if ($finalStatus == self::PUBLISHED) {
+                            $publishedCount += 1;
                         }
                     }
 
@@ -1102,6 +1121,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 file_put_contents($filepath, $pdfBinary);
                 $filePaths[] = $path . $filename;
+                $counter++;  // POCOR-9537: Increment counter to ensure unique filenames
 
             }
             if (!empty($filePaths)) {
@@ -1232,10 +1252,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         //$this->field('email_status');
-        $this->field('pdf_file_size'); //POCOR-9521
+        this->field('pdf_file_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
-        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'pdf_file_size']);
+        $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
     }
 
     public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -2739,6 +2759,21 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
         return $buttons;
-    }
-//POCOR-7998:end
+    }//POCOR-7998:end
+
+    /*public function onGetEmailStatus(EventInterface $event, Entity $entity)
+    {
+        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
+        $value = '<i class="fa fa-minus"></i>';
+
+        if ($entity->has('email_status_id')) {
+            $value = $emailStatuses[$entity->email_status_id];
+
+            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
+                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
+            }
+        }
+
+        return $value;
+    }*/
 }
