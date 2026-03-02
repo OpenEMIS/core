@@ -16,7 +16,7 @@ class StaffAppraisalsController extends AppController
         //$this->loadComponent('FormProtection');
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         $header = 'Appraisals';

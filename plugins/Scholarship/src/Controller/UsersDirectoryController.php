@@ -2,7 +2,7 @@
 namespace Scholarship\Controller;
 
 use ArrayObject;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use App\Controller\AppController;
 // POCOR-9435 upgraded to cakephp4
 class UsersDirectoryController extends AppController
@@ -25,12 +25,12 @@ class UsersDirectoryController extends AppController
     }
 
     // Added to satisfy event registration; row actions are handled in the table layer.
-    public function getEntityRowActions(Event $event, $entity, ArrayObject $rowActions)
+    public function getEntityRowActions(EventInterface $event, $entity, ArrayObject $rowActions)
     {
         return $rowActions;
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
