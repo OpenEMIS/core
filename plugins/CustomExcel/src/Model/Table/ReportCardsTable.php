@@ -317,6 +317,12 @@ class ReportCardsTable extends AppTable
             $academic_period_id = $params['academic_period_id'];
             $report_card_id = $params['report_card_id'] ?? null; //POCOR-9196
 
+            $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
+            $reportCard = $ReportCards->get($report_card_id);
+
+            $reportStartDate = $reportCard->start_date;
+            $reportEndDate   = $reportCard->end_date;
+
             if (!empty($student_id) && !empty($institution_id) &&
                 !empty($education_grade_id) && !empty($academic_period_id)) {
 //                ReportCardGpaTable::addGpaReportCards(
@@ -328,7 +334,9 @@ class ReportCardsTable extends AppTable
                     $student_id,
                     $academic_period_id,
                     $institution_id,
-                    $education_grade_id);
+                    $education_grade_id,
+                    $reportStartDate,
+                    $reportEndDate);
             }
 
             $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards');
