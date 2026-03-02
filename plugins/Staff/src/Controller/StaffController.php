@@ -1106,10 +1106,7 @@ class StaffController extends AppController
             'EmploymentStatuses',
             'Payslips',
             'Healths',
-            'Courses'
         ];
-
-        $
 
         $ajaxActions = [
             'image',
