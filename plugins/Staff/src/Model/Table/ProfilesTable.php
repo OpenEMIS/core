@@ -42,6 +42,7 @@ class ProfilesTable extends ControllerActionTable
     public function initialize(array $config): void
     {
         $this->setTable('staff_report_cards');
+        $this->setPrimaryKey('id'); //POCOR-9584: override composite MySQL PK so CakePHP uses 'id' for view/exists checks
 
         parent::initialize($config);
 
@@ -69,15 +70,16 @@ class ProfilesTable extends ControllerActionTable
         $this->field('academic_period');
         $this->field('profile_name');
         $this->field('file_name');
-		$this->field('status', ['visible' => false]);
-		$this->field('file_content', ['visible' => false]);
-		$this->field('file_content_pdf', ['visible' => false]);
-		$this->field('started_on', ['visible' => false]);
-		$this->field('completed_on', ['visible' => false]);
+        $this->field('status'); //POCOR-9584: show status (GENERATED / PUBLISHED) now that both are listed
+        $this->field('file_content', ['visible' => false]);
+        $this->field('file_content_pdf', ['visible' => false]);
+        $this->field('started_on', ['visible' => false]);
+        $this->field('completed_on', ['visible' => false]);
         $this->setFieldOrder([
             'academic_period',
             'profile_name',
-            'file_name'
+            'file_name',
+            'status' //POCOR-9584: status column
         ]);
 
 
@@ -153,17 +155,17 @@ class ProfilesTable extends ControllerActionTable
                 'academic_period' => $AcademicPeriods->aliasField('name'),
                 'profile_name' => $StaffProfileTemplates->aliasField('name'),
             ])
-			->innerJoin([$AcademicPeriods->alias() => $AcademicPeriods->table()],
+	        ->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()], //POCOR-9584: CakePHP 5 getAlias()/getTable()
                 [
                     $AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id'),
                 ]
             )
-			->innerJoin([$StaffProfileTemplates->alias() => $StaffProfileTemplates->table()],
+        ->innerJoin([$StaffProfileTemplates->getAlias() => $StaffProfileTemplates->getTable()], //POCOR-9584: CakePHP 5 getAlias()/getTable()
                 [
                     $StaffProfileTemplates->aliasField('id = ') . $this->aliasField('staff_profile_template_id'),
                 ]
             )
-            ->autoFields(true);
+            ->enableAutoFields(true); //POCOR-9584: CakePHP 5 enableAutoFields()
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -335,10 +337,25 @@ class ProfilesTable extends ControllerActionTable
         return $file;
     }
 
+    //POCOR-9584: start - display human-readable status label instead of raw integer
+    public function onGetStatus(EventInterface $event, Entity $entity)
+    {
+        $statusMap = [
+            self::NEW_REPORT  => __('New'),
+            self::IN_PROGRESS => __('In Progress'),
+            self::GENERATED   => __('Generated'),
+            self::PUBLISHED   => __('Published'),
+        ];
+        return $statusMap[$entity->status] ?? $entity->status;
+    }
+    //POCOR-9584: end
+
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         if ($field == 'academic_period') {
             return __('Academic Period');
+        } elseif ($field == 'status') { //POCOR-9584: status label
+            return __('Status');
         } elseif ($field == 'file_name') {
             return __('File Name');
         } elseif ($field == 'description') {
