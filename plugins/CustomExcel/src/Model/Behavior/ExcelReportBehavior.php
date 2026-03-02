@@ -166,10 +166,13 @@ class ExcelReportBehavior extends Behavior
         Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
         if (!empty($paramVal)) { // POCOR-6908
             Log::write('debug', 'ExcelReportBehavior2 >>> filepath1: ' . $paramVal);
-            $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'], $paramVal);
+            $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'] ?? null, $paramVal);
         } else {
             Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
-            $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'], $params['report_card_id']);
+            // Custom Reports use requestQuery and do not have student_id/report_card_id
+            $studentId = $params['student_id'] ?? null;
+            $reportCardId = $params['report_card_id'] ?? null;
+            $this->saveFile($objSpreadsheet, $temppath, $format, $studentId, $reportCardId);
         }
 
         if ($extra->offsetExists('temp_logo')) {

@@ -2207,7 +2207,7 @@ class InstitutionsTable extends AppTable
         }
     }
 
-   public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+   public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $filter = $requestData->institution_filter;
