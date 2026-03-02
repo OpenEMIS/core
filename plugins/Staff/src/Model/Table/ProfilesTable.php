@@ -105,12 +105,17 @@ class ProfilesTable extends ControllerActionTable
 	public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
 		$institutionId = $this->getInstitutionID();
+		$staffId = $this->getStaffID(); //POCOR-9584: filter to this staff's own records only
 
 		$AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 		$StaffProfileTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StaffProfileTemplates');
 
-		$where[$this->aliasField('status')] = self::PUBLISHED;
+		//POCOR-9584: start - show GENERATED (3) and PUBLISHED (4) records, not just PUBLISHED;
+		//            records with status=GENERATED are ready to view but not yet formally published
+		$where[$this->aliasField('status') . ' IN'] = [self::GENERATED, self::PUBLISHED];
+		//POCOR-9584: end
 		$where[$this->aliasField('institution_id')] = $institutionId;
+		$where[$this->aliasField('staff_id')] = $staffId; //POCOR-9584: only show this staff's own reports
 
         $query
             ->select([
