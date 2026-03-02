@@ -1106,7 +1106,9 @@ class StaffController extends AppController
         $templateActions = [
             'StaffAppraisals',
             'StaffLeaves',
+            'Qualifications', //POCOR-9584
             'ImportStaffLeave',
+            'ImportStaffQualifications', //POCOR-9584: no staff_id in URL on results/download pages
             'ImportStaffQualifications', //POCOR-9584: no staff_id in URL on results/download pages
             'ImportSalaries',            //POCOR-9584: no staff_id in URL on results/download pages
         ];
