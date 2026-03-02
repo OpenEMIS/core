@@ -1252,7 +1252,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         //$this->field('email_status');
-        this->field('pdf_file_size'); //POCOR-9521
+        $this->field('pdf_file_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
         $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
