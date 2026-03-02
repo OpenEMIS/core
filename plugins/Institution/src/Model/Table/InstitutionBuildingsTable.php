@@ -38,6 +38,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         // POCOR-8037 removed academic period code
         $this->belongsTo('BuildingTypes', ['className' => 'Infrastructure.BuildingTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'institution_land_id']);
         $this->belongsTo('PreviousBuildings', ['className' => 'Institution.InstitutionBuildings', 'foreignKey' => 'previous_institution_building_id']);
         $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
