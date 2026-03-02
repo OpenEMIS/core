@@ -927,13 +927,24 @@ class StaffController extends AppController
 
         $tabElements = array_merge($tabElements, $trainingTabElements);
 
-        foreach ($trainingTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+        //POCOR-9584: start - pass[1] carries the encoded query string (institution_id, staff_id, user_id);
+        //            append it to every tab URL so staff context is not lost when navigating between tabs
+        $pass = $this->request->getParam('pass');
+        $encodedQueryString = $pass[1] ?? null;
+        //POCOR-9584: end
 
+        foreach ($trainingTabElements as $key => $tab) {
             if ($key == 'Courses') {
-                $trainingUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+                $coursesUrl = ['plugin' => 'Staff', 'controller' => 'Staff']; //POCOR-9584: Courses lives in Staff controller
+                $tabElements[$key]['url'] = array_merge($coursesUrl, ['action' => $key, 'index']);
+            } else {
                 $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
             }
+            //POCOR-9584: start - append encoded params so all tabs preserve staff/institution context
+            if ($encodedQueryString) {
+                $tabElements[$key]['url'][1] = $encodedQueryString;
+            }
+            //POCOR-9584: end
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
