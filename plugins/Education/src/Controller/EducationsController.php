@@ -14,7 +14,7 @@ class EducationsController extends AppController {
         $this->loadComponent('Paginator');
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+    public function beforeFilter(EventInterface $event) {
         if ($this->getPlugin() == 'Education') {
             $this->Security->setConfig('validatePost', false);
         }

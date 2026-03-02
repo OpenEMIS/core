@@ -1,3 +1,31 @@
+### [5.2.0] - 2026-01-27
+- Implemented: Develop a standard report with filters for Reports > Performance > Competencies
+- Bug Fixed: Administration>System Configuration>Student Settings>Maximum Students Per Class/Subject: Allows user to set to 1000
+- Bug Fixed: Institution>Attendance>Student>Classes: When switching classes, the loader starts and the page doesn't finish loading
+- Bug Fixed: Institutions>Students>Add: The default country name does not figure on top of the Nationality dropdown
+- Bug Fixed: Reports>Institutions>Students: Report is showing wrong status
+- Bug Fixed: Institutions>General>Contacts>People: The Phone number and Email address fields should not be mandatory in the Institution Contact Persons page/form
+- Bug Fixed: Institution > Staff > Finance > Salaries: Create labels for Gross Salary and Net Salary
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting same user when error is occured for one of the users
+- Bug Fixed: Institutions > Students > Timetable > View: Getting 404 error when viewed
+- Bug Fixed: Institutions>Students>General>Overview>Edit: 404 error when viewed
+
+### [5.1.0] - 2026-01-20
+- Implemented: Develop a migration script to convert attendance / absence triggers to a stored procedure 
+- Bug Fixed: Institutions>Performance>Report Cards: When generating report cards, it is including withdrawn students
+- Bug Fixed: Institutions>Attendance>Staff: System checks the Timezone configuration before applying the validation on marking Student/Staff attendance
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5(Directory)
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5(Personal)
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5(Reports)
+- Bug Fixed: Institutions>Academic>Classes: User getting 404 error when programmes are no created
+- Bug Fixed: Administration>Data Management>Copy: When copying Institution Programmes for 2026, start date of the programme is showing wrongly
+- Bug Fixed: Administration>Scholarships>Recipients: When adding or editing scholarship, it should redirect to the correct page
+
+### [5.0.0] - 2026-01-06
+- Implemented: Develop changes to existing webhooks in OpenEMIS Core to integrate with OpenEMIS Exams 
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Urgent issues)
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5
+
 ### [4.51.1] - 2026-02-02
 - Bug Fixed: Institutions>Performance>Assessment: Exempt button is missing for non admin roles
 - Bug Fixed: Remove own personal details from the OpenEMIS Core code

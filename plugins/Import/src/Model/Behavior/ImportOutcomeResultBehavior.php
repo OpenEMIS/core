@@ -893,7 +893,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         return $rowPass;
     }
 
-    public function addBeforeSavebkp(Event $event, Entity $entity, ArrayObject $data)
+    public function addBeforeSavebkp(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         /**
          * currently, extending the max execution time for individual scripts from the default of 30 seconds to 180 seconds

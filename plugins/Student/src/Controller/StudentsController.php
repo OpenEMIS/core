@@ -544,8 +544,9 @@ class StudentsController extends AppController
         }
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
+        $StudentUser = TableRegistry::getTableLocator()->get('Institution.StudentUser');
         parent::beforeFilter($event);
         $isInstitutionIDSkipped = $this->isStudentIDSkipped();
         if ($isInstitutionIDSkipped) {
@@ -596,9 +597,9 @@ class StudentsController extends AppController
                     $id = $checkStudentId;
                 }
             }
-            if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $id])) {
+            if ($StudentUser->exists([$StudentUser->getPrimaryKey() => $id])) {
 
-                $entity = $this->StudentUser->get($id);
+                $entity = $StudentUser->get($id);
                 $queryString = $this->getQueryString();
                 $name = $entity->name;
                 $header = $action == 'Assessments' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
@@ -748,7 +749,7 @@ class StudentsController extends AppController
 
     public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
-
+        $StudentUser = TableRegistry::getTableLocator()->get('Institution.StudentUser');
         $isInstitutionIndex = $this->isStudentIDSkipped();
         if ($isInstitutionIndex) {
             return;
@@ -767,8 +768,8 @@ class StudentsController extends AppController
 
 
         if ($studentID) { // POCOR-9061
-            if ($this->StudentUser->exists([$this->StudentUser->getPrimaryKey() => $studentID])) {
-                $entity = $this->StudentUser->get($studentID);
+            if ($StudentUser->exists([$StudentUser->getPrimaryKey() => $studentID])) {
+                $entity = $StudentUser->get($studentID);
                 $name = $entity->name;
             }
             $header = '';
@@ -780,7 +781,7 @@ class StudentsController extends AppController
                  $userId  = $this->getUserID();
                 }
                 $session->write('Student.Students.id', $userId);
-                $student = $this->StudentUser->get($userId);
+                $student = $StudentUser->get($userId);
                 $session->write('Student.Students.name', $student->name);
             } catch (\Exception $exception) {
                 $userId = null;

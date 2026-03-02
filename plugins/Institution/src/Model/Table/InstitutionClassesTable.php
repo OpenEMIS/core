@@ -358,6 +358,20 @@ class InstitutionClassesTable extends ControllerActionTable
         $institutionId = $this->getInstitutionID(__FUNCTION__ . ':' . __LINE__);
         $extra['institution_id'] = $institutionId;
         $academicPeriodOptions = $this->getAcademicPeriodOptions($institutionId);
+
+        // POCOR-9538: If no academic periods available (no programmes/grades exist),
+        // redirect to Programmes add page with flash message
+        if (empty($academicPeriodOptions)) {
+            $this->Alert->error(__('Please add a Programme/Grade in the Institution before accessing Classes.'), ['type' => 'string', 'reset' => true]);
+            $event->stopPropagation();
+            $url = $this->url('index');
+            $url['action'] = 'Programmes';
+            $this->controller->redirect(
+                    Router::url($url, true)
+            );
+            return false;
+        }
+
         $selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
 
         if ($this->action == 'index') {
@@ -546,9 +560,7 @@ class InstitutionClassesTable extends ControllerActionTable
         // POCOR-9403 cleancoded
         $this->handleClassCustomFields($entity);
         $this->syncClassStudents($entity, $options);
-        $this->getEventManager()->dispatch(
-            new Event('Model.afterFullSave', $this, compact('entity', 'options'))
-        );
+        $this->dispatchEvent('Model.afterFullSave', compact('entity', 'options'));
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
         }

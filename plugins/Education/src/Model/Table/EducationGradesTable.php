@@ -222,7 +222,7 @@ class EducationGradesTable extends ControllerActionTable
     }
    //POCOR 7308 ends
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
         // Preserve existing logic
         $this->updateAdmissionAgeAfterDelete($entity);
