@@ -1103,10 +1103,11 @@ class StaffController extends AppController
             'Healths'
         ];
 
-        $templateActions = [
+        $addActions = [ //POCOR-9584: renamed from $templateActions; used for add/results/download pass-through
             'StaffAppraisals',
             'StaffLeaves',
             'Qualifications', //POCOR-9584
+            'Salaries', //POCOR-9584
             'ImportStaffLeave',
             'ImportStaffQualifications', //POCOR-9584: no staff_id in URL on results/download pages
             'ImportStaffQualifications', //POCOR-9584: no staff_id in URL on results/download pages
@@ -1128,7 +1129,6 @@ class StaffController extends AppController
             return true;
         }
         if (in_array($pass[0], ['add', 'results', 'downloadFailed', 'downloadPassed']) //POCOR-9584: results + downloadFailed have no staff_id in URL
-            && in_array($action, $templateActions)
             && ($plugin == 'Staff') && ($controller == 'Staff')) {
 
             return true;
