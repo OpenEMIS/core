@@ -91,7 +91,7 @@ class AreasTable extends ControllerActionTable
             ]);
     }
 
-    public function synchronize(Event $mainEvent, ArrayObject $extra)
+    public function synchronize(EventInterface $mainEvent, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarAttr = [
@@ -228,7 +228,7 @@ class AreasTable extends ControllerActionTable
         $this->setfieldOrder($this->fieldsOrder);
     }
 
-    public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
+    public function onGetConvertOptions(EventInterface $event, Entity $entity, Query $query)
     {
         $level = $entity->area_level_id;
         $query->where([

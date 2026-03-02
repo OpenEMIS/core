@@ -67,7 +67,7 @@ class EducationLevelsTable extends ControllerActionTable
 		// End POCOR-5188
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
 	{
 		$query->where([$this->aliasField('education_system_id') => $entity->education_system_id]);
 	}

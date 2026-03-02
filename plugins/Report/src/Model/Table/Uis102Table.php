@@ -103,7 +103,7 @@ class Uis102Table extends AppTable
                 'total_staffs1' => 'summary_programme_sector_specialization_genders.total_staff_teaching',
                 'total_new_staff1' => 'summary_programme_sector_specialization_genders.total_staff_teaching_newly_recruited',
             ])
-            ->LeftJoin([$SummaryProgrammeSectorSpecializationGenders->alias() => $SummaryProgrammeSectorSpecializationGenders->table() ], [
+            ->LeftJoin([$SummaryProgrammeSectorSpecializationGenders->getAlias() => $SummaryProgrammeSectorSpecializationGenders->getTable() ], [
                 $this->aliasField('academic_period_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('academic_period_id'),
                 $this->aliasField('education_system_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_system_id'),
                 $this->aliasField('education_level_isced_id'). ' = ' . $SummaryProgrammeSectorSpecializationGenders->aliasField('education_level_isced_id'),

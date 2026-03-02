@@ -40,7 +40,7 @@ class ProfileTemplatesController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'ProfileTemplate') {
             $this->Security->setConfig('validatePost', false);

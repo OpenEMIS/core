@@ -241,6 +241,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->fields['student_status_id']['visible'] = false;
     }
 
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
@@ -419,13 +420,18 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
-        $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
+
         //POCOR-7212 starts
         if (!empty($educationGradeByReportCardId)) {
             $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId;
         }//POCOR-7212 ends
         //End
         $UsersTable = TableRegistry::getTableLocator()->get('Security.Users');
+        // POCOR-9569: Start
+        $StudentStatuses = $this->StudentStatuses;
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        $query->contain('StudentStatuses')->where($where);
+        // POCOR-9569: End
         $query
             ->select([
                 'institution_class_id' => $this->aliasField('institution_class_id'),
@@ -536,12 +542,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
                     foreach ($data as $student) {
-                        if ($student->has('report_card_status')) {
-                            if ($student->report_card_status == self::GENERATED) {
-                                $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
-                            }
+                        // POCOR-9537 recheck the status
+                        $conditions = [
+                            'report_card_id IS' => $student->report_card_id,
+                            'student_id' => $student->student_id,
+                            'institution_id IS' => $this->getInstitutionID(),
+                            'academic_period_id IS' => $student->academic_period_id,
+                            'education_grade_id IS' => $student->education_grade_id,
+                        ];
+                        $finalStatus = $this->determineReportCardStatus($conditions);
+
+                        if ($finalStatus == self::GENERATED) {
+                            $generatedCount += 1;
+                        } else if ($finalStatus == self::PUBLISHED) {
+                            $generatedCount += 1;
+                            $publishedCount += 1;
                         }
                     }
 
@@ -621,7 +636,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ])
                         ->count();
 
-                        if (($dataCount == $generatedCount) && ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-8300
+                        if (
+                            // ($dataCount == $generatedCount) &&
+                            ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-9537
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
@@ -783,13 +800,21 @@ class ReportCardStatusesTable extends ControllerActionTable
                     $publishedCount = 0;
                     $dataCount = count($data);//POCOR-8300
                     // count statuses to determine which buttons are shown
+                    // POCOR-9537 recheck the status
                     foreach ($data as $student) {
-                        if ($student->has('report_card_status')) {
-                            if ($student->report_card_status == self::GENERATED) {
-                                $generatedCount += 1;
-                            } else if ($student->report_card_status == self::PUBLISHED) {
-                                $publishedCount += 1;
-                            }
+                        $conditions = [
+                            'report_card_id IS' => $student->report_card_id,
+                            'student_id' => $student->student_id,
+                            'institution_id IS' => $this->getInstitutionID(),
+                            'academic_period_id IS' => $student->academic_period_id,
+                            'education_grade_id IS' => $student->education_grade_id,
+                        ];
+                        $finalStatus = $this->determineReportCardStatus($conditions);
+
+                        if ($finalStatus == self::GENERATED) {
+                            $generatedCount += 1;
+                        } else if ($finalStatus == self::PUBLISHED) {
+                            $publishedCount += 1;
                         }
                     }
 
@@ -1095,6 +1120,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
                 file_put_contents($filepath, $pdfBinary);
                 $filePaths[] = $path . $filename;
+                $counter++;  // POCOR-9537: Increment counter to ensure unique filenames
 
             }
             if (!empty($filePaths)) {
@@ -1843,10 +1869,16 @@ class ReportCardStatusesTable extends ControllerActionTable
         $classStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $where = [];
         $where[$classStudentsTable->aliasField('institution_class_id')] = $institutionClassId;
+
         if (!is_null($studentId)) {
             $where[$classStudentsTable->aliasField('student_id')] = $studentId;
         }
+        // POCOR-9569: filter out students with withdrawn or transferred status
+        $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        // POCOR-9569 end
         $classStudents = $classStudentsTable->find()
+            ->contain('StudentStatuses')
             ->select([
                 $classStudentsTable->aliasField('student_id'),
                 $classStudentsTable->aliasField('institution_id'),

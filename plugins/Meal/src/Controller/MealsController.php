@@ -55,13 +55,13 @@ class MealsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Meal.MealProgrammes']);
     }
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Meal') {
             $this->Security->setConfig('validatePost', false);

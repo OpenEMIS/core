@@ -38,7 +38,14 @@
         'left': 'main-content',
         'right': 'split-content'
     };
-
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
     var loadDefaultPanes = {
         layoutPane: true,
         contentPane: true
@@ -227,7 +234,7 @@
                 drag = false;
             });
 
-            angular.element(window).bind('resize', function(_event) {
+            angular.element(window).bind('resize', debounce(function(_event) { // POCOR-9572-GH: Debounce window resize
                 panelObj = reCalPanelSize();
                 if (window.innerWidth <= 1024) { //mobile view
                     disableDrag();
@@ -266,7 +273,10 @@
                         panelObj.collapse = defaultConfig.collapse;
                     }
                 }
-            });
+                // POCOR-9572-GH: Broadcast event after splitter resize settles to notify consumers (e.g., ag-Grid)
+                scope.$broadcast('bgSplitterResized');
+
+            }, 250)); // POCOR-9572-GH: Debounce delay of 250ms
 
             enableDrag();
         }
@@ -386,7 +396,7 @@
         function addFloatButton() {
             angular.element('.menu-btn').remove();
             if (panelObj.floatBtn === 'true') {
-                //add button 
+                //add button
                 //
                 initFloatButton().then(function() {
                     var btnWrapperElem = angular.element(button);
@@ -522,7 +532,7 @@
         }
 
         function addAnimationDelay() {
-            //Adding animation 
+            //Adding animation
             addTransition(paneElems.right);
             addTransition(paneElems.splitter);
 

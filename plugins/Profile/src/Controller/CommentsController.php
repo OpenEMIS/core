@@ -20,7 +20,7 @@ class CommentsController extends PageController
         $this->Page->loadElementsFromTable($this->Comments);
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
