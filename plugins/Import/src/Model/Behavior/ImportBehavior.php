@@ -582,7 +582,15 @@ class ImportBehavior extends Behavior
                         //     $newEntity = $activeModel->save($tableEntity); // Initial code
                         // }
                         //POCOR-9294[END]
+                        //$model->log('@ImportBehavior pre-save errors=' . json_encode($errors), 'debug');
                         $newEntity = $activeModel->save($tableEntity);
+                        //POCOR-9584: merge errors set during beforeSave (not captured before save() runs)
+                        if (!$newEntity) {
+                            $afterSaveErrors = $tableEntity->getErrors();
+                            //$model->log('@ImportBehavior post-save errors=' . json_encode($afterSaveErrors), 'debug');
+                            $errors = array_merge($errors, $afterSaveErrors);
+                            //$model->log('@ImportBehavior merged errors=' . json_encode($errors), 'debug');
+                        }
                     } catch (Exception $e) {
                         $newEntity = false;
                         $message = $e->getMessage();
