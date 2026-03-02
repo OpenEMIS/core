@@ -1,4 +1,4 @@
-# POCOR-9584: Fix Staff Attachments File Upload Error
+# POCOR-9584: Fix Staff Import / Staff Attachments Bugs
 
 ## What is the Task?
 
@@ -70,3 +70,35 @@ git revert [commit-hash]
 ```
 
 This will restore the original (buggy) code; users will again encounter the database error when uploading without a file.
+
+---
+
+## Staff Leave Import Bugs (additional fix in same branch)
+
+### What is the Task?
+
+Fix two errors that occurred when uploading an Excel file to import Staff Leave records from the Staff module (StaffController).
+
+### Situation Before
+
+- Error 1: `@ImportBehavior line 629: Institution.StaffLeave -> assignee_id => This field is required` — appeared on every import row
+- Error 2: `Record not found in table "institutions" with primary key` — appeared from StaffController when navigating to StaffLeave pages without institution_id in the URL
+
+### What Was Implemented
+
+**Bug 1 – `assignee_id` validation failure (`ImportStaffLeaveTable.php`)**
+
+Root cause: `onGetBreadcrumb` read `institution_id` only from the CakePHP session key `Institution.Institutions.id`. When accessed from StaffController the institution_id is carried in the encoded URL querystring, not necessarily already written to that session key. Because `$this->institutionId` was null, `onImportModelSpecificValidation` returned early without setting `$tempRow['assignee_id']`, triggering WorkflowBehavior's `notEmpty` rule.
+
+Fix: Changed `onGetBreadcrumb` to first try `$this->ControllerAction->getQueryString('institution_id')` (same pattern used by `ImportStaffAttendancesTable`), falling back to the session for backward compatibility.
+
+**Bug 2 – `return $_SESSION;` debugging artifact (`StaffController.php`)**
+
+Root cause: `getInstitutionID()` contained an accidental `return $_SESSION;` at line 401 that returned the entire PHP session superglobal instead of reading institution_id from the CakePHP session. This made the session-fallback branch dead code, causing `$this->Institutions->get($institutionId)` in `beforeFilter` to receive an array and throw `RecordNotFoundException`.
+
+Fix: Removed the `return $_SESSION;` line, restoring the original intended session fallback.
+
+### Files Changed
+
+- `plugins/Staff/src/Controller/StaffController.php` — removed `return $_SESSION;` from `getInstitutionID()`
+- `plugins/Institution/src/Model/Table/ImportStaffLeaveTable.php` — updated `onGetBreadcrumb` to read institution_id from URL querystring first

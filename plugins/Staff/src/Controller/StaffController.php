@@ -398,7 +398,7 @@ class StaffController extends AppController
         }
         if (!$institution_id) {
             $session = $this->request->getSession();
-            return $_SESSION;
+            //POCOR-9584: removed accidental `return $_SESSION;` that blocked the session fallback
             $institution_id = $session->read('Institution.Institutions.id');
             if(!$institution_id){
                 if ($debugString != "") {
@@ -592,6 +592,7 @@ class StaffController extends AppController
     public function beforeFilter(EventInterface $event)//POCOR-8456
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
+//        Log::debug(print_r([__FUNCTION__ => $this->getQueryString()], true));
         if ($isInstitutionIndex) {
             return;
         }
@@ -648,6 +649,16 @@ class StaffController extends AppController
     public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
+        //POCOR-9584: log full request details to trace where query string gets stripped
+        //Log::debug('@StaffController::onInitialize'
+        //    . ' url=' . $this->request->getRequestTarget()
+        //    . ' action=' . $this->request->getParam('action')
+        //    . ' pass=' . json_encode($this->request->getParam('pass'))
+        //    . ' query=' . json_encode($this->request->getQueryParams())
+        //    . ' model=' . $model->getAlias()
+        //    . ' isInstitutionIndex=' . var_export($isInstitutionIndex, true));
+//        Log::debug(print_r([__FUNCTION__ => $this->getQueryString()], true));
+
         if ($isInstitutionIndex) {
             return;
         }
@@ -731,7 +742,8 @@ class StaffController extends AppController
                 }
             }
         } else {
-            if ($model->getAlias() == 'ImportStaff') {
+            //POCOR-9584: ImportStaffLeave results page has no staff_id in URL (ImportBehavior only encodes institution_id)
+            if ($model->getAlias() == 'ImportStaff' || $model->getAlias() == 'ImportStaffLeave') {
                 $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
                 $header = __('Staff') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
@@ -1074,13 +1086,14 @@ class StaffController extends AppController
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
+//        Log::debug(print_r([__FUNCTION__ => $this->getQueryString()], true));
 
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
         $furtherAction = $pass[0] ?? '';
-
+//        Log::debug(print_r([$pass, $action, $controller, $plugin, $furtherAction], true));
         //POCOR-9584: start - Support AJAX autocomplete and clean code with arrays
         $downloadActions = [
             'Qualifications',
@@ -1109,7 +1122,7 @@ class StaffController extends AppController
         if ($pass[0] == 'template'){
             return true;
         }
-        if ($pass[0] == 'add'
+        if (in_array($pass[0], ['add', 'results', 'downloadFailed', 'downloadPassed']) //POCOR-9584: results + downloadFailed have no staff_id in URL
             && in_array($action, $templateActions)
             && ($plugin == 'Staff') && ($controller == 'Staff')) {
 
