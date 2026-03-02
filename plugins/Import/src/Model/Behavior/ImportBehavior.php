@@ -217,7 +217,16 @@ class ImportBehavior extends Behavior
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
             $downloadUrl[1] = $buttons['add']['url'][1];
         } else {
-            $downloadUrl[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            //POCOR-9584: start - only add [1] when institutionId is set; for non-institution contexts carry pass[1] if present
+            if ($this->institutionId) {
+                $downloadUrl[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            } else {
+                $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+                if ($fullEncodedParam) {
+                    $downloadUrl[1] = $fullEncodedParam;
+                }
+            }
+            //POCOR-9584: end
         }
 
         $url = Router::url($downloadUrl);
@@ -228,7 +237,14 @@ class ImportBehavior extends Behavior
     {
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
-            $toolbarButtons['back']['url'][1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            //POCOR-9584: start - only add encoded [1] when institutionId is set; otherwise clear stale pass params
+            if ($this->institutionId) {
+                $toolbarButtons['back']['url'][1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            } else {
+                unset($toolbarButtons['back']['url'][0]);
+                unset($toolbarButtons['back']['url'][1]);
+            }
+            //POCOR-9584: end
             return;
         }
 
