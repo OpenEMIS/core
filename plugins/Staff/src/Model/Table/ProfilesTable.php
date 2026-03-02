@@ -67,19 +67,19 @@ class ProfilesTable extends ControllerActionTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
+        //POCOR-9584: start - reset auto-fields so only explicitly defined columns appear;
+        //            without this, all schema columns (staff_id, institution_id, academic_period_id, etc.) show as raw IDs
+        $this->fields = [];
+        //POCOR-9584: end
         $this->field('academic_period');
         $this->field('profile_name');
         $this->field('file_name');
         $this->field('status'); //POCOR-9584: show status (GENERATED / PUBLISHED) now that both are listed
-        $this->field('file_content', ['visible' => false]);
-        $this->field('file_content_pdf', ['visible' => false]);
-        $this->field('started_on', ['visible' => false]);
-        $this->field('completed_on', ['visible' => false]);
         $this->setFieldOrder([
             'academic_period',
             'profile_name',
             'file_name',
-            'status' //POCOR-9584: status column
+            'status'
         ]);
 
 
@@ -146,38 +146,48 @@ class ProfilesTable extends ControllerActionTable
 
 	public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-		$AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-		$StaffProfileTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StaffProfileTemplates');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $StaffProfileTemplates = TableRegistry::getTableLocator()->get('ProfileTemplate.StaffProfileTemplates');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions'); //POCOR-9584: join to get institution name
 
         $query
             ->select([
-                'file_name' => $this->aliasField('file_name'),
+                'file_name'       => $this->aliasField('file_name'),
                 'academic_period' => $AcademicPeriods->aliasField('name'),
-                'profile_name' => $StaffProfileTemplates->aliasField('name'),
+                'profile_name'    => $StaffProfileTemplates->aliasField('name'),
+                'institution_name' => $Institutions->aliasField('name'), //POCOR-9584: select institution name
             ])
-	        ->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()], //POCOR-9584: CakePHP 5 getAlias()/getTable()
-                [
-                    $AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id'),
-                ]
+            ->innerJoin([$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()],
+                [$AcademicPeriods->aliasField('id = ') . $this->aliasField('academic_period_id')]
             )
-        ->innerJoin([$StaffProfileTemplates->getAlias() => $StaffProfileTemplates->getTable()], //POCOR-9584: CakePHP 5 getAlias()/getTable()
-                [
-                    $StaffProfileTemplates->aliasField('id = ') . $this->aliasField('staff_profile_template_id'),
-                ]
+            ->innerJoin([$StaffProfileTemplates->getAlias() => $StaffProfileTemplates->getTable()],
+                [$StaffProfileTemplates->aliasField('id = ') . $this->aliasField('staff_profile_template_id')]
             )
-            ->enableAutoFields(true); //POCOR-9584: CakePHP 5 enableAutoFields()
+            ->innerJoin([$Institutions->getAlias() => $Institutions->getTable()], //POCOR-9584: join institutions
+                [$Institutions->aliasField('id = ') . $this->aliasField('institution_id')]
+            )
+            ->enableAutoFields(true);
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
+        //POCOR-9584: start - reset auto-fields so raw ID columns (staff_profile_template_id,
+        //            institution_id, academic_period_id, staff_id) do not appear;
+        //            viewBeforeQuery joins provide meaningful names; staff is hidden (shown in page header)
+        $this->fields = [];
+        //POCOR-9584: end
         $this->field('academic_period');
         $this->field('profile_name');
+        $this->field('institution_name'); //POCOR-9584: show institution name instead of institution_id
         $this->field('file_name');
-		$this->field('status', ['visible' => false]);
-		$this->field('file_content', ['visible' => false]);
-		$this->field('file_content_pdf', ['visible' => false]);
-		$this->field('started_on', ['visible' => false]);
-		$this->field('completed_on', ['visible' => false]);
+        $this->field('status');
+        $this->setFieldOrder([
+            'academic_period',
+            'profile_name',
+            'institution_name',
+            'file_name',
+            'status'
+        ]);
     }
 
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -354,7 +364,11 @@ class ProfilesTable extends ControllerActionTable
     {
         if ($field == 'academic_period') {
             return __('Academic Period');
-        } elseif ($field == 'status') { //POCOR-9584: status label
+        } elseif ($field == 'profile_name') {
+            return __('Staff Profile Template');
+        } elseif ($field == 'institution_name') { //POCOR-9584: institution name label
+            return __('Institution');
+        } elseif ($field == 'status') {
             return __('Status');
         } elseif ($field == 'file_name') {
             return __('File Name');
