@@ -697,7 +697,12 @@ class StaffController extends AppController
             if($model->alias == 'StaffAppraisals'){ //POCOR-9584: fix assignment operator causing alias corruption for all models
                 return true;
             }
-            if ($subaction != 'index') {
+            //POCOR-9584: start - only run record-ownership check for view/edit/delete; non-record sub-actions
+            //            (excel, download, template, results, etc.) carry context params at pass[1], not a record ID,
+            //            so decoding them as a record ID produces null which CakePHP 5 rejects with InvalidArgumentException
+            $recordActions = ['view', 'edit', 'delete', 'remove'];
+            if (in_array($subaction, $recordActions)) {
+            //POCOR-9584: end
                 if ($model->hasField('security_user_id')) {
                     $model->fields['security_user_id']['type'] = 'hidden';
                     $model->fields['security_user_id']['value'] = $userId;
@@ -1100,19 +1105,11 @@ class StaffController extends AppController
             'Qualifications',
             'EmploymentStatuses',
             'Payslips',
-            'Healths'
+            'Healths',
+            'Courses'
         ];
 
-        $addActions = [ //POCOR-9584: renamed from $templateActions; used for add/results/download pass-through
-            'StaffAppraisals',
-            'StaffLeaves',
-            'Qualifications', //POCOR-9584
-            'Salaries', //POCOR-9584
-            'ImportStaffLeave',
-            'ImportStaffQualifications', //POCOR-9584: no staff_id in URL on results/download pages
-            'ImportStaffQualifications', //POCOR-9584: no staff_id in URL on results/download pages
-            'ImportSalaries',            //POCOR-9584: no staff_id in URL on results/download pages
-        ];
+        $
 
         $ajaxActions = [
             'image',
