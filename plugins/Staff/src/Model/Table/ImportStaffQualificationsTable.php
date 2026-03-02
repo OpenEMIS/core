@@ -39,18 +39,20 @@ class ImportStaffQualificationsTable extends AppTable
 
     public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
-        //POCOR-9584: start - null guard; skip back-URL override on results (ImportBehavior already sets it to index)
+        //POCOR-9584: start - null guard; always redirect back to Qualifications/index for Staff and Student contexts
         if (empty($toolbarButtons['back']['url'])) {
             return;
         }
         $plugin = $toolbarButtons['back']['url']['plugin'] ?? null;
-        if (($plugin == 'Staff' || $plugin == 'Student') && $action !== 'results') { //POCOR-9584: handle both Staff and Student contexts
-            //POCOR-9584: use separate action + [0] keys so [1] (encoded institution_id) stays sequential
+        // Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons action=' . json_encode($action) . ' plugin=' . json_encode($plugin) . ' backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
+        if ($plugin == 'Staff' || $plugin == 'Student') { //POCOR-9584: handle both Staff and Student contexts (add and results)
+            //POCOR-9584: use separate action + [0] keys so [1] (encoded params) stays sequential
             //            'Qualifications/index' as a single action key caused CakePHP Router to drop [1]
             $toolbarButtons['back']['url']['action'] = 'Qualifications';
             $toolbarButtons['back']['url'][0] = 'index';
         }
         //POCOR-9584: end
+        // Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons result backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
     }
 
     public function beforeAction($event)

@@ -206,6 +206,7 @@ class ImportBehavior extends Behavior
 
     private function setupDownloadUrlIfAddAction($action, &$toolbarButtons, $buttons)
     {
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction action=' . json_encode($action) . ' institutionId=' . json_encode($this->institutionId) . ' downloadUrl base=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
         if ($action !== 'add') {
             return;
         }
@@ -235,6 +236,7 @@ class ImportBehavior extends Behavior
 
     private function setupBackButtonUrl(&$toolbarButtons)
     {
+        // Log::debug('@ImportBehavior::setupBackButtonUrl start backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null) . ' institutionId=' . json_encode($this->institutionId) . ' pass=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
             //POCOR-9584: start - only add encoded [1] when institutionId is set; otherwise clear stale pass params
@@ -271,6 +273,7 @@ class ImportBehavior extends Behavior
             }
             //POCOR-9584: end
         }
+        // Log::debug('@ImportBehavior::setupBackButtonUrl end backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
     }
 
     private function generateDirectoryBackUrl(array $url, $firstParam): array
@@ -761,7 +764,15 @@ class ImportBehavior extends Behavior
                 $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
                 $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
             }
-            $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            //POCOR-9584: start - carry full encoded params (student_id, user_id, etc.) to results redirect
+            //   instead of only institution_id, so back button from results page can recover the full context
+            $fullEncodedParam = $request->getParam('pass')[1] ?? null;
+            if ($fullEncodedParam) {
+                $url[1] = $fullEncodedParam;
+            } else {
+                $url[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            }
+            //POCOR-9584: end
 
             return $model->controller->redirect($url);
         };
