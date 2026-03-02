@@ -44,7 +44,7 @@ class ImportStaffQualificationsTable extends AppTable
             return;
         }
         $plugin = $toolbarButtons['back']['url']['plugin'] ?? null;
-        if ($plugin == 'Staff' && $action !== 'results') {
+        if (($plugin == 'Staff' || $plugin == 'Student') && $action !== 'results') { //POCOR-9584: handle both Staff and Student contexts
             //POCOR-9584: use separate action + [0] keys so [1] (encoded institution_id) stays sequential
             //            'Qualifications/index' as a single action key caused CakePHP Router to drop [1]
             $toolbarButtons['back']['url']['action'] = 'Qualifications';
@@ -61,6 +61,18 @@ class ImportStaffQualificationsTable extends AppTable
         if ($this->controller->getName() == 'Profiles') {
             $this->staffId = $session->read('Auth.User.id');
             // Log::debug('@ImportStaffQualifications::beforeAction from Profiles, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
+        } else if ($this->controller->getName() == 'Students') {
+            //POCOR-9584: start - In Students context, student_id is in encoded params (pass[1])
+            $pass = $this->request->getParam('pass');
+            if (!empty($pass[1])) {
+                $paramsQuery = base64_decode($pass[1]);
+                $jsonEndPosition = strpos($paramsQuery, '}') + 1;
+                $jsonData = substr($paramsQuery, 0, $jsonEndPosition);
+                $decoded = json_decode($jsonData, true);
+                $this->staffId = $decoded['student_id'] ?? null;
+            }
+            //POCOR-9584: end
+            // Log::debug('@ImportStaffQualifications::beforeAction from Students, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
         } else if ($session->check('Staff.Staff.id')) {
             $this->staffId = $session->read('Staff.Staff.id');
             // Log::debug('@ImportStaffQualifications::beforeAction from Staff session, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
