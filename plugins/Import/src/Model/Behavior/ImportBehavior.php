@@ -240,8 +240,20 @@ class ImportBehavior extends Behavior
         } elseif ($plugin === 'Institution' && $this->institutionId) {
             $toolbarButtons['back']['url'] = $this->generateInstitutionBackUrl($toolbarButtons['back']['url'], $firstParam);
         } else {
-            $toolbarButtons['back']['url']['action'] = 'index';
-            unset($toolbarButtons['back']['url'][0]);
+            //POCOR-9584: start - Staff context
+            //   - For 'results': flip [0] from 'results' to 'index'; keep action (model alias) unchanged
+            //   - For other sub-actions (add/index): do NOT touch action or [0] here —
+            //     ImportStaffQualificationsTable::onUpdateToolbarButtons owns those (fires before this)
+            //     and unsetting [0] here would undo its work regardless of firing order
+            //   - Always carry the full encoded param from pass[1] so staff_id/user_id are preserved
+            $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+            if ($firstParam === 'results') {
+                $toolbarButtons['back']['url'][0] = 'index';
+            }
+            if ($fullEncodedParam) {
+                $toolbarButtons['back']['url'][1] = $fullEncodedParam;
+            }
+            //POCOR-9584: end
         }
     }
 
@@ -414,11 +426,14 @@ class ImportBehavior extends Behavior
             // $objReader = PHPExcel_IOFactory::createReader($inputFileType);
             $uploadedName = $fileObj->getClientFilename();
             $uploaded = $fileObj->getStream()->getMetadata('uri');
+            // Log::debug('@ImportBehavior::processImport uploaded_name=' . json_encode($uploadedName) . ', path=' . json_encode($uploaded)); //[TEMP-LOG]
 
             try {
                 $inputFileType = IOFactory::identify($uploaded);
+                // Log::debug('@ImportBehavior::processImport inputFileType=' . json_encode($inputFileType)); //[TEMP-LOG]
                 $objReader = IOFactory::createReader($inputFileType);
                 $objPHPExcel = $objReader->load($uploaded);
+                // Log::debug('@ImportBehavior::processImport file loaded successfully'); //[TEMP-LOG]
             } catch (\Exception $e) {
                 throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
             }
@@ -431,20 +446,23 @@ class ImportBehavior extends Behavior
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
             $activeModel = TableRegistry::getTableLocator()->get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
+            // Log::debug('@ImportBehavior::processImport activeModel_alias=' . json_encode($activeModel->getAlias()) . ', plugin=' . json_encode($this->getConfig('plugin')) . ', model=' . json_encode($this->getConfig('model'))); //[TEMP-LOG]
             $activeModel->addBehavior('DefaultValidation');
 
             $maxRows = $this->getConfig('max_rows');
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
+            ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
+            // Log::debug('@ImportBehavior::processImport highestRow=' . $highestRow . ', maxRows=' . $maxRows . ', recordHeader=' . $this->recordHeader . ', isCustomText=' . json_encode($this->isCustomText())); //[TEMP-LOG]
             if ($highestRow > $maxRows) {
+                // Log::debug('@ImportBehavior::processImport EXIT: over_max_rows'); //[TEMP-LOG]
                 $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
                 return false;
             }
 
-            ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
-
             if ($highestRow == $this->recordHeader) {
+                // Log::debug('@ImportBehavior::processImport EXIT: no_answers (file is empty/header only)'); //[TEMP-LOG]
                 $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
@@ -453,14 +471,39 @@ class ImportBehavior extends Behavior
 
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
                 if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
-                    if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-                        $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
+                    // Log::debug('@ImportBehavior::processImport checking template on row=' . $row . ', header=' . json_encode($header) . ', totalColumns=' . $totalColumns); //[TEMP-LOG]
+                    $templateOk = $this->isCorrectTemplate($header, $sheet, $totalColumns, $row);
+                    // Log::debug('@ImportBehavior::processImport isCorrectTemplate=' . json_encode($templateOk)); //[TEMP-LOG]
+                    if (!$templateOk) {
+                        //POCOR-9584: start - compute column mismatches for meaningful error
+                        $cellsValue = [];
+                        for ($col = 1; $col <= $totalColumns; $col++) {
+                            $cellsValue[] = $sheet->getCellByColumnAndRow($col, $row)->getValue();
+                        }
+                        $mismatches = [];
+                        foreach ($header as $i => $expected) {
+                            $actual = isset($cellsValue[$i]) ? $cellsValue[$i] : '(missing)';
+                            if ($expected !== $actual) {
+                                $mismatches[] = 'col ' . ($i + 1) . ': expected "' . $expected . '", got "' . $actual . '"';
+                            }
+                        }
+                        if (count($cellsValue) > count($header)) {
+                            for ($i = count($header); $i < count($cellsValue); $i++) {
+                                $mismatches[] = 'col ' . ($i + 1) . ': unexpected column "' . $cellsValue[$i] . '"';
+                            }
+                        }
+                        $mismatchDetail = implode('; ', $mismatches);
+                        Log::error('@ImportBehavior::processImport wrong_template - ' . $mismatchDetail);
+                        // Log::debug('@ImportBehavior::processImport EXIT: wrong_template - ' . $mismatchDetail); //[TEMP-LOG]
+                        $this->_table->Alert->error(__('Wrong template: please re-download the template. Column mismatch: ') . $mismatchDetail, ['type' => 'string', 'reset' => true]); //POCOR-9584
+                        //POCOR-9584: end
                         return false; //POCOR-8343
                     }
                     continue;
                 }
 //                if ($row == $highestRow) { // check if the row cells are really empty, if yes then end the loop
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
+                        // Log::debug('@ImportBehavior::processImport row=' . $row . ' SKIPPED by checkRowCells (appears empty)'); //[TEMP-LOG]
                         continue;
                     }
 //                }
@@ -495,6 +538,7 @@ class ImportBehavior extends Behavior
                     $activeModel->setImportValidationPassed();
                 }
 
+                // Log::debug('@ImportBehavior::processImport row=' . json_encode($row) . ', tempRow=' . json_encode($tempRow->getArrayCopy())); //[TEMP-LOG]
                 $tempRow = $tempRow->getArrayCopy();
 
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
@@ -549,11 +593,13 @@ class ImportBehavior extends Behavior
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                     $tempRow['action_type'] = 'imported';
                     $tempRow['student_id'] = (int) $tempRow['student_id'];
+                    // Log::debug('@ImportBehavior::processImport patchEntity with tempRow=' . json_encode($tempRow)); //[TEMP-LOG]
                     //$activeModel->patchEntity($tableEntity, $tempRow);
                     $tableEntity = $activeModel->patchEntity($tableEntity, $tempRow);
                 }
 
                 $errors = $tableEntity->getErrors();
+                // Log::debug('@ImportBehavior::processImport errors_after_patchEntity=' . json_encode($errors)); //[TEMP-LOG]
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
                 // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
@@ -582,13 +628,17 @@ class ImportBehavior extends Behavior
                         //     $newEntity = $activeModel->save($tableEntity); // Initial code
                         // }
                         //POCOR-9294[END]
+                        // Log::debug('@ImportBehavior::processImport attempting save with entity=' . json_encode($tableEntity->toArray())); //[TEMP-LOG]
                         //$model->log('@ImportBehavior pre-save errors=' . json_encode($errors), 'debug');
                         $newEntity = $activeModel->save($tableEntity);
+                        // Log::debug('@ImportBehavior::processImport save result newEntity=' . json_encode($newEntity ? 'saved' : 'failed')); //[TEMP-LOG]
                         //POCOR-9584: merge errors set during beforeSave (not captured before save() runs)
                         if (!$newEntity) {
                             $afterSaveErrors = $tableEntity->getErrors();
+                            // Log::debug('@ImportBehavior::processImport afterSaveErrors=' . json_encode($afterSaveErrors)); //[TEMP-LOG]
                             //$model->log('@ImportBehavior post-save errors=' . json_encode($afterSaveErrors), 'debug');
                             $errors = array_merge($errors, $afterSaveErrors);
+                            // Log::debug('@ImportBehavior::processImport merged_errors=' . json_encode($errors)); //[TEMP-LOG]
                             //$model->log('@ImportBehavior merged errors=' . json_encode($errors), 'debug');
                         }
                     } catch (Exception $e) {
