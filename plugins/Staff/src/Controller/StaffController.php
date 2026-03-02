@@ -742,8 +742,9 @@ class StaffController extends AppController
                 }
             }
         } else {
-            //POCOR-9584: ImportStaffLeave results page has no staff_id in URL (ImportBehavior only encodes institution_id)
-            if ($model->getAlias() == 'ImportStaff' || $model->getAlias() == 'ImportStaffLeave') {
+            //POCOR-9584: all import models have no staff_id in URL on results/template/download pages
+            $importAliases = ['ImportStaff', 'ImportStaffLeave', 'ImportStaffQualifications', 'ImportSalaries'];
+            if (in_array($model->getAlias(), $importAliases)) {
                 $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
                 $header = __('Staff') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
@@ -1105,7 +1106,9 @@ class StaffController extends AppController
         $templateActions = [
             'StaffAppraisals',
             'StaffLeaves',
-            'ImportStaffLeave'
+            'ImportStaffLeave',
+            'ImportStaffQualifications', //POCOR-9584: no staff_id in URL on results/download pages
+            'ImportSalaries',            //POCOR-9584: no staff_id in URL on results/download pages
         ];
 
         $ajaxActions = [
