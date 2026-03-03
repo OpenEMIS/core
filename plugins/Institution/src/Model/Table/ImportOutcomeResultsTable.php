@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -16,6 +17,10 @@ class ImportOutcomeResultsTable extends AppTable
 {
     public function initialize(array $config): void
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::initialize START config=' . json_encode($config)); //[TEMP-LOG]
+        //POCOR-9584: end
+
         $this->setTable('import_mapping');
         parent::initialize($config);
 
@@ -24,6 +29,7 @@ class ImportOutcomeResultsTable extends AppTable
             'model' => 'InstitutionOutcomeResults',
             'backUrl' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentOutcomes']
         ]);
+        $this->addBehavior('Institution.InstitutionTab'); //POCOR-9584: provides getInstitutionID() (mirrors ImportCompetencyResultsTable)
 
         // register table once
         $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -36,6 +42,10 @@ class ImportOutcomeResultsTable extends AppTable
         $this->OutcomePeriods = TableRegistry::getTableLocator()->get('Outcome.OutcomePeriods');
         $this->OutcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
         $this->OutcomeGradingTypes = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingTypes');
+
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::initialize END tables registered OK'); //[TEMP-LOG]
+        //POCOR-9584: end
     }
 
     public function implementedEvents(): array
@@ -63,6 +73,13 @@ class ImportOutcomeResultsTable extends AppTable
 
    public function addOnInitialize(EventInterface $event, Entity $entity)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::addOnInitialize START entity=' . json_encode($entity->toArray())); //[TEMP-LOG]
+        Log::debug('@ImportOutcomeResultsTable::addOnInitialize queryBefore=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
+        Log::debug('@ImportOutcomeResultsTable::addOnInitialize postData=' . json_encode($this->request->getData())); //[TEMP-LOG]
+        Log::debug('@ImportOutcomeResultsTable::addOnInitialize routeParams=' . json_encode($this->request->getAttribute('params'))); //[TEMP-LOG]
+        //POCOR-9584: end
+
         $request = $this->request;
         $query = $request->getQuery(); // Get the query parameters
 
@@ -76,11 +93,22 @@ class ImportOutcomeResultsTable extends AppTable
         // Set the modified query parameters back to the request
         $request = $request->withQueryParams($query);
         $this->request = $request;
+
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::addOnInitialize END queryAfter=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
+        //POCOR-9584: end
     }
 
 
     public function addAfterAction(EventInterface $event, Entity $entity)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::addAfterAction START entity_submit=' . json_encode($entity->submit)); //[TEMP-LOG]
+        Log::debug('@ImportOutcomeResultsTable::addAfterAction postData=' . json_encode($this->request->getData())); //[TEMP-LOG]
+        Log::debug('@ImportOutcomeResultsTable::addAfterAction queryParams=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
+        Log::debug('@ImportOutcomeResultsTable::addAfterAction alias=' . $this->getAlias()); //[TEMP-LOG]
+        //POCOR-9584: end
+
         $this->dependency = [];
         $this->dependency["academic_period"] = ["class"];
         $this->dependency["class"] = ["outcome_template"];
@@ -99,38 +127,75 @@ class ImportOutcomeResultsTable extends AppTable
         //Assumptiopn - onChangeReload must be named in this format: change<field_name>. E.g changeClass
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
 
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::addAfterAction currentFieldName=' . json_encode($currentFieldName)); //[TEMP-LOG]
+        //POCOR-9584: end
+
         if (isset($this->request->getData()[$this->getAlias()])) {
             $unsetFlag = false;
             $aryRequestData = $this->request->getData()[$this->getAlias()];
-            foreach ($aryRequestData as $requestData => $value) {
-                if ($unsetFlag) {
-                    unset($this->request->getQuery[$requestData]);
-                    $this->request->getData()[$this->getAlias()][$requestData] = 0;
-                }
 
-                if ($currentFieldName == str_replace("_", "", $requestData)) {
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::addAfterAction aryRequestData=' . json_encode($aryRequestData)); //[TEMP-LOG]
+            //POCOR-9584: end
+
+            //POCOR-9584: start - CakePHP5 immutable request pattern (was mutating getQuery property — invalid in CakePHP5)
+            foreach ($aryRequestData as $requestData => $value) {
+                $query = $this->request->getQuery();
+                $data  = $this->request->getData();
+                if ($unsetFlag) {
+                    unset($query[$requestData]);
+                    $data[$this->getAlias()][$requestData] = 0;
+                }
+                if ($currentFieldName == str_replace('_', '', $requestData)) {
                     $unsetFlag = true;
                 }
+                $this->request = $this->request->withQueryParams($query);
+                $this->request = $this->request->withParsedBody($data);
             }
+            //POCOR-9584: end
+
             $aryRequestData = $this->request->getData()[$this->getAlias()];
             foreach ($aryRequestData as $requestData => $value) {
                 if (isset($this->dependency[$requestData]) && $value) {
                     $aryDependencies = $this->dependency[$requestData];
                     foreach ($aryDependencies as $dependency) {
-                        $this->request->getQuery = $this->request->getData()[$this->getAlias()];
+                        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+                        Log::debug('@ImportOutcomeResultsTable::addAfterAction making visible dependency=' . $dependency . ' because requestData=' . $requestData . ' value=' . json_encode($value)); //[TEMP-LOG]
+                        //POCOR-9584: end
+                        //POCOR-9584: start - was $this->request->getQuery = ... (invalid property mutation); use withQueryParams instead
+                        $requestDataArray = $this->request->getData()[$this->getAlias()];
+                        $this->request = $this->request->withQueryParams($requestDataArray);
+                        //POCOR-9584: end
                         $this->ControllerAction->field($dependency, ['visible' => true]);
                     }
                 }
             }
+        } else {
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::addAfterAction no postData for alias ' . $this->getAlias() . ' - skipping dependency loop'); //[TEMP-LOG]
+            //POCOR-9584: end
         }
+
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::addAfterAction END'); //[TEMP-LOG]
+        //POCOR-9584: end
     }
 
     public function onUpdateFieldEducationSubject(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onUpdateFieldEducationSubject action=' . $action); //[TEMP-LOG]
+        //POCOR-9584: end
         if ($action == 'add') {
             $data = $request->getData('ImportOutcomeResults');
             $academicPeriodId = $data['academic_period'] ?? $this->AcademicPeriods->getCurrent();
             $outcomeTemplate = $data['outcome_template'] ?? null;
+
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldEducationSubject academicPeriodId=' . json_encode($academicPeriodId) . ' outcomeTemplate=' . json_encode($outcomeTemplate)); //[TEMP-LOG]
+            //POCOR-9584: end
+
             $conditions = [];
             if (!empty($academicPeriodId) && !empty($outcomeTemplate)) {
                 $conditions[] =
@@ -141,7 +206,15 @@ class ImportOutcomeResultsTable extends AppTable
             }
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
-            $classId = $this->request->getQuery('class') !== null ? $this->request->getQuery('class') : 'default_value';
+            //POCOR-9584: start - was falling back to 'default_value' (no DB match); use POST data as fallback instead
+            $classId = $this->request->getQuery('class') ?? ($data['class'] ?? null);
+            //POCOR-9584: end
+            //POCOR-9584: start - guard: no class selected yet → return empty options (avoids null IS error in CakePHP5)
+            if (empty($classId)) {
+                $attr['options'] = [];
+                return $attr;
+            }
+            //POCOR-9584: end
             $OutcomeCriterias = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
             $allowedEducationSubjectList = $InstitutionSubjects
@@ -164,6 +237,9 @@ class ImportOutcomeResultsTable extends AppTable
                 ->group([
                     'EducationSubjects.id',
                 ])->toArray();
+                //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+                Log::debug('@ImportOutcomeResultsTable::onUpdateFieldEducationSubject allowedEducationSubjectList count=' . count($allowedEducationSubjectList)); //[TEMP-LOG]
+                //POCOR-9584: end
                 $attr['options'] = $allowedEducationSubjectList;
                 // useing onChangeReload to do visible
                 $attr['onChangeReload'] = 'changeEducationGrade';
@@ -173,25 +249,33 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onUpdateFieldAcademicPeriod action=' . $action); //[TEMP-LOG]
+        //POCOR-9584: end
         if ($action == 'add') {
             $attr['select'] = false;
             $attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $attr['default'] = $this->AcademicPeriods->getCurrent();
             // useing onChangeReload to do visible
             $attr['onChangeReload'] = 'changeAcademicPeriod';
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldAcademicPeriod default=' . json_encode($attr['default']) . ' optionsCount=' . count($attr['options'])); //[TEMP-LOG]
+            //POCOR-9584: end
         }
         return $attr;
     }
 
     public function onUpdateFieldClass(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onUpdateFieldClass action=' . $action); //[TEMP-LOG]
+        //POCOR-9584: end
         if ($action == 'add') {
             $data = $request->getData('ImportOutcomeResults');
             $academicPeriodId = $data['academic_period'] ?? $this->AcademicPeriods->getCurrent();
 //            $outcomeTemplate = $data['outcome_template'] ?? null;
 //            $classId = $data['class'] ?? 'default_value';
-            $institutionId = $this->getQueryString('institution_id');
-            $this->institutionId = $institutionId;
+            $institutionId = $this->getInstitutionID(); //POCOR-9584: canonical — reads pass[1], avoids session multi-tab risk
 //            $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
 //            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
 //// POCOR-7977 start
@@ -289,9 +373,10 @@ class ImportOutcomeResultsTable extends AppTable
 //                $attr['onChangeReload'] = 'changeClass';
 //            }
 
-            if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
-                $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['institution_id'];
-            }
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldClass institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId)); //[TEMP-LOG]
+            //POCOR-9584: end
+
             $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
             $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
@@ -315,6 +400,9 @@ class ImportOutcomeResultsTable extends AppTable
                 ])
                 ->toArray();
 
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldClass classNameOption count=' . count($classNameOption)); //[TEMP-LOG]
+            //POCOR-9584: end
 
             $attr['options'] = $classNameOption;
             $attr['onChangeReload'] = 'changeClass';
@@ -329,7 +417,7 @@ class ImportOutcomeResultsTable extends AppTable
     {
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
-            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+            $institutionId = $this->getInstitutionID(); //POCOR-9584: canonical — reads pass[1], avoids session multi-tab risk
 
             $userId = $this->Auth->user('id');
             $AccessControl = $this->AccessControl;
@@ -408,13 +496,18 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onUpdateFieldOutcomeTemplate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onUpdateFieldOutcomeTemplate action=' . $action); //[TEMP-LOG]
+        //POCOR-9584: end
         if ($action == 'add') {
             $academicPeriodId = !is_null($request->getData('ImportOutcomeResults')['academic_period']) ? $request->getData('ImportOutcomeResults')['academic_period'] : $this->AcademicPeriods->getCurrent();
-            $classId = $request->getQuery('class');
-            $institutionId = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
-            if(empty($institutionId) && isset($this->request->getParam('pass')[1])) {
-                $institutionId = $this->paramsDecode($this->request->getParam('pass')[1])['institution_id'];
-            }
+            //POCOR-9584: start - $request arg is the original controller request; fall back to $this->request (updated by addAfterAction withQueryParams)
+            $classId = $request->getQuery('class') ?? $this->request->getQuery('class');
+            //POCOR-9584: end
+            $institutionId = $this->getInstitutionID(); //POCOR-9584: canonical — reads pass[1], avoids session multi-tab risk
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldOutcomeTemplate academicPeriodId=' . json_encode($academicPeriodId) . ' classId=' . json_encode($classId) . ' institutionId=' . json_encode($institutionId)); //[TEMP-LOG]
+            //POCOR-9584: end
             // if class id is not null, then filter Outcome Template by class_grades of the class else by institution_grades of the school
             if (!is_null($classId) && !empty($classId)) {
                 $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
@@ -425,7 +518,7 @@ class ImportOutcomeResultsTable extends AppTable
             } else {
                 $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
                 $educationGrades = $InstitutionGrades->find()
-                    ->where([$InstitutionGrades->aliasField('institution_id IS') => $institutionId])
+                    ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId]) //POCOR-9584: IS → = for non-null
                     ->extract('education_grade_id')
                     ->toArray();
             }
@@ -442,6 +535,9 @@ class ImportOutcomeResultsTable extends AppTable
                     ->toArray();
             }
 
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldOutcomeTemplate templateOptions count=' . count($templateOptions)); //[TEMP-LOG]
+            //POCOR-9584: end
             $attr['options'] = $templateOptions;
             // useing onChangeReload to do visible
             $attr['onChangeReload'] = 'changeOutcomeTemplate';
@@ -451,10 +547,18 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onUpdateFieldOutcomePeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onUpdateFieldOutcomePeriod action=' . $action); //[TEMP-LOG]
+        //POCOR-9584: end
         if ($action == 'add') {
             $data = $request->getData('ImportOutcomeResults');
             $academicPeriodId = $data['academic_period'] ?? $this->AcademicPeriods->getCurrent();
             $outcomeTemplate = $data['outcome_template'] ?? null;
+
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldOutcomePeriod academicPeriodId=' . json_encode($academicPeriodId) . ' outcomeTemplate=' . json_encode($outcomeTemplate)); //[TEMP-LOG]
+            //POCOR-9584: end
+
             $outcomePeriodOptions = [];
             if (!is_null($request->getData('ImportOutcomeResults')['outcome_template'])) {
                 $outcomePeriodOptions = $this->OutcomePeriods
@@ -466,6 +570,9 @@ class ImportOutcomeResultsTable extends AppTable
                     ->toArray();
             }
 
+            //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+            Log::debug('@ImportOutcomeResultsTable::onUpdateFieldOutcomePeriod outcomePeriodOptions count=' . count($outcomePeriodOptions)); //[TEMP-LOG]
+            //POCOR-9584: end
             $attr['options'] = $outcomePeriodOptions;
             // useing onChangeReload to do visible
             $attr['onChangeReload'] = 'changeOutcomePeriod';
@@ -475,6 +582,9 @@ class ImportOutcomeResultsTable extends AppTable
 
     public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onImportModelSpecificValidation START tempRow=' . json_encode($tempRow->getArrayCopy())); //[TEMP-LOG]
+        //POCOR-9584: end
 
         $requestData = $this->request->getData()[$this->getAlias()];
         $tempRow['academic_period_id'] = $requestData['academic_period'];
@@ -482,7 +592,12 @@ class ImportOutcomeResultsTable extends AppTable
         $tempRow['outcome_period_id'] = $requestData['outcome_period'];
         $tempRow['institution_class_id'] = $requestData['class'];
         $tempRow['education_subject_id'] = $requestData['education_subject'];
-        $tempRow['institution_id'] = !empty($this->request->getParam('institutionId')) ? $this->paramsDecode($this->request->getParam('institutionId'))['id'] : $this->request->getSession()->read('Institution.Institutions.id');
+        $tempRow['institution_id'] = $this->getInstitutionID(); //POCOR-9584: canonical — reads pass[1], avoids session multi-tab risk
+
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onImportModelSpecificValidation requestData=' . json_encode($requestData)); //[TEMP-LOG]
+        Log::debug('@ImportOutcomeResultsTable::onImportModelSpecificValidation institution_id=' . json_encode($tempRow['institution_id']) . ' outcome_criteria_id=' . json_encode($tempRow['outcome_criteria_id'] ?? 'not_set')); //[TEMP-LOG]
+        //POCOR-9584: end
 
         $outcomeCriteriaEntity = $this->OutcomeCriterias->find()
             ->matching('Templates')
@@ -494,8 +609,16 @@ class ImportOutcomeResultsTable extends AppTable
             ])
             ->first();
 
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onImportModelSpecificValidation outcomeCriteriaEntity=' . json_encode($outcomeCriteriaEntity ? $outcomeCriteriaEntity->toArray() : null)); //[TEMP-LOG]
+        //POCOR-9584: end
+
             $tempRow['education_subject_id'] = $outcomeCriteriaEntity->education_subject_id;
             $tempRow['education_grade_id'] = $outcomeCriteriaEntity->_matchingData['Templates']->education_grade_id;
+
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        Log::debug('@ImportOutcomeResultsTable::onImportModelSpecificValidation END education_subject_id=' . json_encode($tempRow['education_subject_id']) . ' education_grade_id=' . json_encode($tempRow['education_grade_id'])); //[TEMP-LOG]
+        //POCOR-9584: end
 
         return true;
     }
