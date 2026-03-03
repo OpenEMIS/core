@@ -273,7 +273,7 @@ class InstitutionClassesTable extends ControllerActionTable
             ]
         ];
         return $buttons;
-    } //POCOR-8323 ends
+    } //POCOR-8323 ends 
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
