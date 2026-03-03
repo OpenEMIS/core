@@ -61,8 +61,10 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $systemDateFormat = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('date_format');
 
             $fileObj = $entity->select_file;
-            $uploadedName = $fileObj['name'];
-            $uploaded = $fileObj['tmp_name'];
+            //POCOR-9584: start - CakePHP5 UploadedFile object (Laminas\Diactoros) — ['name']/['tmp_name'] array access removed
+            $uploadedName = $fileObj->getClientFilename();
+            $uploaded = $fileObj->getStream()->getMetadata('uri');
+            //POCOR-9584: end
             // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName)); //[TEMP-LOG]
             $inputFileType = IOFactory::identify($uploaded); //POCOR-9584: PHPExcel_IOFactory → IOFactory
             $objReader = IOFactory::createReader($inputFileType); //POCOR-9584: PHPExcel_IOFactory → IOFactory
