@@ -3,7 +3,7 @@ namespace Import\Model\Behavior;
 
 use ArrayObject;
 use Cake\Event\EventInterface;
-use Cake\Http\Session; //POCOR-9584: Cake\Network\Session was moved to Cake\Http\Session in CakePHP4+
+use Cake\Http\Session; //POCOR-9584: Cake\Network\Session → Cake\Http\Session in CakePHP4+
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -42,14 +42,16 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
          */
 
         return function ($model, $entity) {
-            $errors = $entity->getErrors(); //POCOR-9584: errors() removed in CakePHP5, use getErrors()
+            $errors = $entity->getErrors(); //POCOR-9584: errors() → getErrors()
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave entity_errors=' . json_encode($errors)); //[TEMP-LOG]
             if (!empty($errors)) {
                 // set error message for php file upload errors
                 $fileError = Hash::get($entity->getInvalid(), 'select_file.error'); //POCOR-9584: invalid() → getInvalid()
+                Log::debug('@ImportCompetencyResultBehavior::addBeforeSave fileError=' . json_encode($fileError)); //[TEMP-LOG]
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
-                        $entity->setError('select_file', [$errorMessage]); //POCOR-9584: errors(field,msg,true) → setError()
+                        $entity->setError('select_file', [$errorMessage]); //POCOR-9584: errors(f,m,true) → setError()
                     }
                 }
 
@@ -61,6 +63,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $fileObj = $entity->select_file;
             $uploadedName = $fileObj['name'];
             $uploaded = $fileObj['tmp_name'];
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName)); //[TEMP-LOG]
             $inputFileType = IOFactory::identify($uploaded); //POCOR-9584: PHPExcel_IOFactory → IOFactory
             $objReader = IOFactory::createReader($inputFileType); //POCOR-9584: PHPExcel_IOFactory → IOFactory
             $objPHPExcel = $objReader->load($uploaded);
@@ -79,14 +82,16 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave highestRow=' . $highestRow . ' maxRows=' . $maxRows); //[TEMP-LOG]
             if ($highestRow > $maxRows) {
                 $entity->setError('select_file', [$this->getExcelLabel('Import', 'over_max_rows')]); //POCOR-9584: errors() → setError()
                 return false;
             }
 
             $competencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
-            $competency_item_id = $this->_table->request->getQuery('competency_item'); //POCOR-9584: request->query[] → getQuery()
-            //POCOR-9584: guard against null $competency_item_id — CakePHP5 requires IS operator for null
+            //POCOR-9584: start - request->query[] → getQuery(); guard against null (CakePHP5 null WHERE)
+            $competency_item_id = $this->_table->request->getQuery('competency_item');
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave competency_item_id=' . json_encode($competency_item_id)); //[TEMP-LOG]
             $competencyItemsName = null;
             if (!empty($competency_item_id)) {
                 $competencyItemsName = $competencyItemsTable
@@ -95,57 +100,66 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                     ->extract('name')
                     ->first();
             }
+            //POCOR-9584: end
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave competencyItemsName=' . json_encode($competencyItemsName)); //[TEMP-LOG]
 
             // check correct template
             $header = array($competencyItemsName, 'Competency -->');
 
             //calculate number of student
             $arrayStudent = $this->_table->getStudentArray();
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave studentCount=' . count($arrayStudent)); //[TEMP-LOG]
 
             // calculate competency criterias
             $arrayCompetencyCriterias = $this->_table->getCompetencyCriteriasArray();
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave criteriaCount=' . count($arrayCompetencyCriterias) . ' criteriaIds=' . json_encode(array_column((array)$arrayCompetencyCriterias, 'id'))); //[TEMP-LOG]
 
             $totalCriteria = count($arrayCompetencyCriterias);
             $totalColumns = $totalCriteria + 1;
 
-            //comment will be last after outcomecriterias
             //POCOR-9584: start - PhpSpreadsheet getCellByColumnAndRow is 1-indexed; $commentColumn must
-            //   match the actual 1-indexed column where "Overall Comment" was written in setImportDataTemplate.
-            //   setImportDataTemplate uses getExcelColumnAlpha((N*2)+2) which calls stringFromColumnIndex((N*2)+3),
-            //   so the PhpSpreadsheet column index for "Overall Comment" is (N*2)+3 not (N*2)+2.
+            //   match the 1-indexed column where "Overall Comment" is written in setImportDataTemplate.
+            //   setImportDataTemplate uses getExcelColumnAlpha((N*2)+2) = stringFromColumnIndex((N*2)+3),
+            //   so PhpSpreadsheet column index for "Overall Comment" is (N*2)+3, not (N*2)+2.
             $commentColumn = (count($arrayCompetencyCriterias)*2)+3;
             //POCOR-9584: end
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave totalCriteria=' . $totalCriteria . ' totalColumns=' . $totalColumns . ' commentColumn=' . $commentColumn); //[TEMP-LOG]
 
             foreach ($arrayCompetencyCriterias as $key => $value) {
                 $headerCriteriaId[] = $value->id;
             }
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave headerCriteriaId=' . json_encode($headerCriteriaId ?? [])); //[TEMP-LOG]
 
             $InstitutionCompetencyItemCommentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionCompetencyItemComments');
 
-            //POCOR-9584: start - criteria IDs start at PhpSpreadsheet column 3 ("C") not 2 ("B");
-            //   totalColumns must also shift +1 to cover the last criteria column (1-indexed)
-            if (!$this->checkCorrectIdTemplate(3, $headerCriteriaId, $sheet, $totalColumns + 1, 1)) {
+            //POCOR-9584: start - criteria IDs in row 1 start at PhpSpreadsheet column 3 ("C") not 2 ("B");
+            //   totalColumns shifts +1 so the loop in checkCorrectIdTemplate covers the last criteria column
+            $checkIdResult = $this->checkCorrectIdTemplate(3, $headerCriteriaId ?? [], $sheet, $totalColumns + 1, 1);
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave checkCorrectIdTemplate result=' . json_encode($checkIdResult) . ' startCol=3 endCol=' . ($totalColumns + 1)); //[TEMP-LOG]
+            if (!$checkIdResult) {
                 $entity->setError('select_file', [$this->getExcelLabel('Import', 'wrong_template')]); //POCOR-9584: errors() → setError()
-
                 return false;
             }
 
             //POCOR-9584: start - competency name is at A2 (col 1) and "Competency -->" is at B2 (col 2);
-            //   old code passed col=0 (invalid in PhpSpreadsheet 1-indexed); start at 1, end at 2
-            if (!$this->checkCorrectTemplate(1, $header, $sheet, 2, 2)) {
+            //   old code passed col=0 which is invalid in PhpSpreadsheet 1-indexed
+            $checkTemplateResult = $this->checkCorrectTemplate(1, $header, $sheet, 2, 2);
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave checkCorrectTemplate result=' . json_encode($checkTemplateResult) . ' header=' . json_encode($header)); //[TEMP-LOG]
+            if (!$checkTemplateResult) {
                 $entity->setError('select_file', [$this->getExcelLabel('Import', 'wrong_template')]); //POCOR-9584: errors() → setError()
-
                 return false;
             }
             //POCOR-9584: end
 
             $numberOfStudents = count($arrayStudent);
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave starting row loop numberOfStudents=' . $numberOfStudents . ' rows=4..' . ($numberOfStudents + 3)); //[TEMP-LOG]
             for ($row = 4; $row < $numberOfStudents + 4; $row++) {
 
                 // do the save for the comment
                 //POCOR-9584: getCellByColumnAndRow is 1-indexed in PhpSpreadsheet; column A = 1 (not 0)
                 $student = $sheet->getCellByColumnAndRow(1, $row);
                 $studentOpenEmisId = $student->getValue();
+                Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' studentOpenEmisId=' . json_encode($studentOpenEmisId)); //[TEMP-LOG]
                 $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
 
                 $User = $UsersTable->find()
@@ -154,20 +168,23 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                         $UsersTable->aliasField('openemis_no') => $studentOpenEmisId
                     ])
                     ->first();
+                Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' userId=' . json_encode($User ? $User->id : null)); //[TEMP-LOG]
 
                 $comment = $sheet->getCellByColumnAndRow($commentColumn, $row)->getValue();
+                Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' overallComment(col' . $commentColumn . ')=' . json_encode($comment)); //[TEMP-LOG]
 
                 if (!empty($comment)) {
-                    //POCOR-9584: start - CakePHP3 request->data[], ->alias(), session institution_id replaced with CakePHP5 equivalents
-                    $alias = $this->_table->getAlias();
-                    $reqData = $this->_table->request->getData()[$alias] ?? [];
+                    //POCOR-9584: start - CakePHP3 request->data[], ->alias(), session institution_id → CakePHP5 equivalents
+                    $alias = $this->_table->getAlias(); //POCOR-9584: alias() → getAlias()
+                    $reqData = $this->_table->request->getData()[$alias] ?? []; //POCOR-9584: request->data[] → getData()
+                    Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' reqData=' . json_encode($reqData)); //[TEMP-LOG]
                     $InstitutionCompetencyItemCommentsData = $InstitutionCompetencyItemCommentsTable->newEntity([
                         'comments' => $comment,
                         'student_id' => $User->id,
                         'competency_template_id' => $reqData['competency_template'] ?? null,
                         'competency_period_id' => $reqData['competency_period'] ?? null,
                         'competency_item_id' => $reqData['competency_item'] ?? null,
-                        'institution_id' => $this->_table->getInstitutionID(), //POCOR-9584: use getInstitutionID() (reads from encoded queryString) instead of session
+                        'institution_id' => $this->_table->getInstitutionID(), //POCOR-9584: session read → getInstitutionID()
                         'academic_period_id' => $reqData['academic_period'] ?? null
                     ]);
                     //POCOR-9584: end
@@ -178,7 +195,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
                 $i = 0;
                 //POCOR-9584: start - Grade columns start at PhpSpreadsheet col 3 ("C") not 2 ("B");
-                //   upper bound shifts by +1 so loop still runs N times (one per criterion)
+                //   upper bound shifts +1 so loop runs N times (one per criterion)
                 for ($column = 3; $column <= $totalColumns + 1; $column++) {
                 //POCOR-9584: end
                     $gradeColumn = $column + $i;
@@ -187,6 +204,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                     $gradeValue = $cell->getValue();
                     $comment = $sheet->getCellByColumnAndRow($gradeColumn+1, $row);
                     $commentValue = $comment->getValue();
+                    Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' column=' . $column . ' gradeCol=' . $gradeColumn . ' gradeValue=' . json_encode($gradeValue) . ' commentValue=' . json_encode($commentValue)); //[TEMP-LOG]
 
                     // if there is no any data, just skip
                     if (empty($gradeValue) && empty($commentValue)) {
@@ -223,6 +241,9 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
                     $errors = $tableEntity->getErrors(); //POCOR-9584: errors() → getErrors()
                     $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
+                    //POCOR-9584: define $columns before error-reporting block (was only defined in else branch at line ~315, causing undefined var warning on line ~281)
+                    $columns = ['competency_criteria_id', 'student_id', 'competency_grading_option_id', 'comments'];
+                    Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' col=' . $column . ' tableEntityErrors=' . json_encode($errors) . ' rowInvalidCodeCols=' . json_encode($rowInvalidCodeCols)); //[TEMP-LOG]
 
                     // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
                     $isNew = $tableEntity->isNew();
@@ -251,6 +272,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                                 $totalUpdated++;
                             }
                         }
+                        Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' col=' . $column . ' saveResult=' . json_encode((bool)($newEntity ?? false)) . ' isNew=' . json_encode($isNew) . ' totalImported=' . $totalImported . ' totalUpdated=' . $totalUpdated); //[TEMP-LOG]
                     }
 
                     if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
@@ -305,6 +327,8 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 }
             }
 
+            Log::debug('@ImportCompetencyResultBehavior::addBeforeSave DONE totalImported=' . $totalImported . ' totalUpdated=' . $totalUpdated . ' failedRows=' . count($dataFailed)); //[TEMP-LOG]
+
             $resultHeader = array('Outcome Criteria Id', 'OpenEMIS ID', 'Competency Grading Option', 'Competency Comment');
 
             $session = $this->_table->Session;
@@ -339,6 +363,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         // Do not lcalize file name as certain non-latin characters might cause issue
         $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
         $excelPath = $folder . DS . $excelFile;
+        Log::debug('@ImportCompetencyResultBehavior::template modelName=' . $modelName . ' excelPath=' . $excelPath); //[TEMP-LOG]
 
         $dataSheetName = $this->getExcelLabel('general', 'data');
 
@@ -353,6 +378,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         $objPHPExcel->setActiveSheetIndex(0);
         $objWriter = new Xlsx($objPHPExcel); //POCOR-9584: PHPExcel_Writer_Excel2007 → Xlsx
         $objWriter->save($excelPath);
+        Log::debug('@ImportCompetencyResultBehavior::template saved to excelPath=' . $excelPath); //[TEMP-LOG]
 
         $this->performDownload($excelFile);
         die;
@@ -371,9 +397,10 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
         $this->beginExcelHeaderStyling($objPHPExcel, $dataSheetName, __(Inflector::humanize(Inflector::tableize($this->_table->getAlias()))) .' '. $dataSheetName); //POCOR-9584: alias() → getAlias()
         $competencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
-        $competency_item_id = $this->_table->request->getQuery('competency_item'); //POCOR-9584: request->query[] → getQuery()
+        //POCOR-9584: start - request->query[] → getQuery(); guard null for CakePHP5 null WHERE
+        $competency_item_id = $this->_table->request->getQuery('competency_item');
+        Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate competency_item_id=' . json_encode($competency_item_id)); //[TEMP-LOG]
 
-        //POCOR-9584: CakePHP5 requires 'id IS' operator when value is null; guard with empty check to avoid InvalidArgumentException
         $name = null;
         if (!empty($competency_item_id)) {
             $name = $competencyItemsTable
@@ -382,35 +409,45 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 ->extract('name')
                 ->first();
         }
- 
+        //POCOR-9584: end
+        Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate competencyItemName=' . json_encode($name)); //[TEMP-LOG]
+
         $activeSheet->setCellValue("A2", $name);
         $activeSheet->setCellValue("B2", "Competency -->");
 
         //headerRow3
+        Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate headerRow3 count=' . count($header)); //[TEMP-LOG]
         foreach ($header as $key => $value) {
-            $alpha = $this->getExcelColumnAlpha($key);
+            //POCOR-9584: getExcelColumnAlpha is 1-indexed at runtime (pass 1 for "A"); key starts at 0 → pass key+1
+            $alpha = $this->getExcelColumnAlpha($key + 1);
+            Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate headerRow3 key=' . $key . ' alpha=' . $alpha . ' value=' . json_encode($value)); //[TEMP-LOG]
             $activeSheet->setCellValue($alpha . 3, $value);
         }
 
         $arrayCompetencyCriterias = $this->_table->getCompetencyCriteriasArray();
+        Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate criteriaCount=' . count($arrayCompetencyCriterias)); //[TEMP-LOG]
 
         $suggestedRowHeight = 0;
         $i = 0;
         foreach ($arrayCompetencyCriterias as $key => $value) {
-            $key = $key + 2 + $i ;
+            //POCOR-9584: criteria start at col "C" (1-indexed 3); offset is key+3+i (not key+2+i)
+            $key = $key + 3 + $i;
             $alpha = $this->getExcelColumnAlpha($key);
+            $commentKey = $key + 1;
+            $commentAlpha = $this->getExcelColumnAlpha($commentKey);
+            Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate criteria id=' . $value->id . ' gradeAlpha=' . $alpha . '(key=' . $key . ') commentAlpha=' . $commentAlpha); //[TEMP-LOG]
             $activeSheet->setCellValue($alpha . 1, $value->id);
+            //POCOR-9584: hide criteria ID in row 1 (white text) — it's only for template validation, not user-visible
+            $activeSheet->getStyle($alpha . '1')->getFont()->getColor()->setARGB('FFFFFFFF');
             $activeSheet->setCellValue($alpha . 2, $value->name);
             $activeSheet->setCellValue($alpha . 3, 'Grade');
-            $commentKey = $key + 1;           
-            $commentAlpha = $this->getExcelColumnAlpha($commentKey);
             $activeSheet->setCellValue($commentAlpha . 3, 'Comment');
-            $i++;          
+            $i++;
             if ($this->suggestRowHeight(strlen($value->name), 15) > $suggestedRowHeight) {
                 $suggestedRowHeight = $this->suggestRowHeight(strlen($value->name), 15);
             }
             $activeSheet->getColumnDimension( $alpha )->setWidth(20);
-            $activeSheet->getColumnDimension( $commentAlpha )->setWidth(20);          
+            $activeSheet->getColumnDimension( $commentAlpha )->setWidth(20);
             $activeSheet->mergeCells($alpha.'1:'. $commentAlpha.'1');
             $activeSheet->mergeCells($alpha.'2:'. $commentAlpha.'2');
         }
@@ -419,18 +456,23 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
 
         $arrayStudent = $this->_table->getStudentArray();
+        Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate studentCount=' . count($arrayStudent)); //[TEMP-LOG]
 
         $i = 4;
         foreach ($arrayStudent as $key => $value) {
+            Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate student row=' . $i . ' openemis_no=' . json_encode($value->_matchingData['Users']->openemis_no) . ' name=' . json_encode($value->_matchingData['Users']->name)); //[TEMP-LOG]
             $activeSheet->setCellValue('A' . $i, $value->_matchingData['Users']->openemis_no);
             $activeSheet->setCellValue('B' . $i, $value->_matchingData['Users']->name);
             $i++;
             $activeSheet->getColumnDimension('A')->setAutoSize(true);
             $activeSheet->getColumnDimension('B')->setAutoSize(true);
-
         }
 
-        $arrayLastAlpha = $this->getExcelColumnAlpha((count($arrayCompetencyCriterias)*2)+2);
+        //POCOR-9584: overall comment column = after N criteria pairs (grade+comment = 2 cols each) starting at col 3
+        //   → col = 2 + 2*N + 1 = 2N+3; getExcelColumnAlpha is 1-indexed so pass 2N+3
+        $overallCommentKey = (count($arrayCompetencyCriterias)*2)+3;
+        $arrayLastAlpha = $this->getExcelColumnAlpha($overallCommentKey);
+        Log::debug('@ImportCompetencyResultBehavior::setImportDataTemplate overallCommentKey(1-based)=' . $overallCommentKey . ' overallCommentAlpha=' . $arrayLastAlpha); //[TEMP-LOG]
         $activeSheet->setCellValue($arrayLastAlpha . '3', "Overall Comment");
         $activeSheet->getColumnDimension($arrayLastAlpha)->setAutoSize(true);
     }
@@ -442,9 +484,10 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         $arrayCompetencyCriterias = $this->_table->getCompetencyCriteriasArray();
 
         $arrayStudent = $this->_table->getStudentArray();
+        Log::debug('@ImportCompetencyResultBehavior::setCodesDataTemplate criteriaCount=' . count($arrayCompetencyCriterias) . ' studentCount=' . count($arrayStudent)); //[TEMP-LOG]
 
-        // $dropdownColumn is 0-indexed (getExcelColumnAlpha adds +1 internally);
-        // but getCellByColumnAndRow is raw PhpSpreadsheet (1-indexed), so pass $dropdownColumn+1
+        // $dropdownColumn is 0-indexed (matches getExcelColumnAlpha which adds +1 internally);
+        // getCellByColumnAndRow is raw PhpSpreadsheet (1-indexed), so pass $dropdownColumn+1 to read row 1
         $increase = 0;
         for ($column = 2; $column < count($arrayCompetencyCriterias)+2; ++$column) {
             $dropdownColumn = $column + $increase;
@@ -452,6 +495,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $sheet = $objPHPExcel->getSheet(0);
             $cell = $sheet->getCellByColumnAndRow($dropdownColumn + 1, 1); //POCOR-9584: +1 for PhpSpreadsheet 1-indexed
             $CompetencyId = $cell->getValue();
+            Log::debug('@ImportCompetencyResultBehavior::setCodesDataTemplate column=' . $column . ' dropdownColumn=' . $dropdownColumn . ' reading PhpSS col=' . ($dropdownColumn + 1) . ' CompetencyId=' . json_encode($CompetencyId)); //[TEMP-LOG]
             $outcomeCriteriasTable = TableRegistry::getTableLocator()->get('Outcome.OutcomeCriterias');
             $outcomeGradingTypeId = $outcomeCriteriasTable->find()
             ->where([
@@ -482,13 +526,15 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 }
             }
 
-            $alpha = $this->getExcelColumnAlpha($dropdownColumn);
+            //POCOR-9584: getExcelColumnAlpha is 1-indexed; dropdownColumn starts at 2 → pass +1 to match "C"
+            $alpha = $this->getExcelColumnAlpha($dropdownColumn + 1);
+            Log::debug('@ImportCompetencyResultBehavior::setCodesDataTemplate dropdownColumn=' . $dropdownColumn . ' alpha=' . $alpha . ' gradingTypeId=' . json_encode($competencyGradingTypeId) . ' optionCount=' . count($gradeOptionArray) . ' dropDownList=' . json_encode($dropDownList)); //[TEMP-LOG]
 
             for ($i = 4; $i < count($arrayStudent) + 4; $i++) {
                 $objPHPExcel->setActiveSheetIndex(0);
                 $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
-                $objValidation->setType(DataValidation::TYPE_LIST); //POCOR-9584: PHPExcel_Cell_DataValidation → DataValidation
-                $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION); //POCOR-9584: PHPExcel_Cell_DataValidation → DataValidation
+                $objValidation->setType(DataValidation::TYPE_LIST); //POCOR-9584: \PHPExcel_Cell_DataValidation → DataValidation
+                $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION); //POCOR-9584: \PHPExcel_Cell_DataValidation → DataValidation
                 $objValidation->setAllowBlank(false);
                 $objValidation->setShowInputMessage(true);
                 $objValidation->setShowErrorMessage(true);
@@ -497,7 +543,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             }
             $increase++;
         }
-   
+
     }
 
     private function checkCorrectIdTemplate($col, $header, $sheet, $totalColumns, $row)
@@ -511,6 +557,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $cellsValue[] = $cell->getValue();
             $i++;
         }
+        Log::debug('@ImportCompetencyResultBehavior::checkCorrectIdTemplate header=' . json_encode($header) . ' cellsValue=' . json_encode($cellsValue) . ' match=' . json_encode($header == $cellsValue)); //[TEMP-LOG]
         return $header == $cellsValue;
     }
 
@@ -531,7 +578,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
         $rowPass = true;
 
-        //POCOR-9584: getCellByColumnAndRow is 1-indexed in PhpSpreadsheet; OpenEMIS ID is column A = 1
+        //POCOR-9584: getCellByColumnAndRow is 1-indexed in PhpSpreadsheet; column A = 1 (not 0)
         $student = $sheet->getCellByColumnAndRow(1, $row);
         $studentValue = $student->getValue();
         $competencyId = $sheet->getCellByColumnAndRow($numberColumn, 1);
@@ -540,6 +587,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         $gradeValue = $cell->getValue();
         $Comment = $sheet->getCellByColumnAndRow($numberColumn+1, $row);
         $commentValue = $Comment->getValue();
+        Log::debug('@ImportCompetencyResultBehavior::_extractRecord numberColumn=' . $numberColumn . ' row=' . $row . ' studentValue=' . json_encode($studentValue) . ' competencyIdValue=' . json_encode($competencyIdValue) . ' gradeValue=' . json_encode($gradeValue) . ' commentValue=' . json_encode($commentValue)); //[TEMP-LOG]
         $usersTable = TableRegistry::getTableLocator()->get('User.Users');
 
         $User = $usersTable->find()
@@ -548,6 +596,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 $usersTable->aliasField('openemis_no') => $studentValue
             ])
             ->first();
+        Log::debug('@ImportCompetencyResultBehavior::_extractRecord userId=' . json_encode($User ? $User->id : null)); //[TEMP-LOG]
 
         $competencyCriteriasTable = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
         $competencyGradingTypeId = $competencyCriteriasTable->find()
@@ -556,6 +605,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
           ])
           ->extract('competency_grading_type_id')
           ->first();
+        Log::debug('@ImportCompetencyResultBehavior::_extractRecord competencyGradingTypeId=' . json_encode($competencyGradingTypeId)); //[TEMP-LOG]
 
         $competencyGradingOptionsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyGradingOptions');
 
@@ -567,22 +617,23 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                     $competencyGradingOptionsTable->aliasField('competency_grading_type_id') => $competencyGradingTypeId
                 ])
                 ->first();
+            Log::debug('@ImportCompetencyResultBehavior::_extractRecord Grading=' . json_encode($Grading ? $Grading->id : null)); //[TEMP-LOG]
         }
 
         if (!empty($gradeValue) && !empty($commentValue)) {
-            if (empty($Grading)) {  
+            if (empty($Grading)) {
                 $rowPass = false;
             } else {
                 $tempRow['competency_grading_option_id'] = $Grading->id;
-                $tempRow['comments'] = $commentValue;                
+                $tempRow['comments'] = $commentValue;
             }
         } elseif (empty($commentValue)) {
-            if (empty($Grading)) {  
+            if (empty($Grading)) {
                 $rowPass = false;
             } else {
                 $tempRow['competency_grading_option_id'] = $Grading->id;
-            } 
-        }elseif (empty($gradeValue)) {
+            }
+        } elseif (empty($gradeValue)) {
             $tempRow['comments'] = $commentValue;
         }
 
@@ -597,6 +648,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
         $originalRow[] = $studentValue;
         $originalRow[] = $gradeValue;
         $originalRow[] = $commentValue;
+        Log::debug('@ImportCompetencyResultBehavior::_extractRecord rowPass=' . json_encode($rowPass) . ' tempRow=' . json_encode($tempRow->getArrayCopy())); //[TEMP-LOG]
 
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
