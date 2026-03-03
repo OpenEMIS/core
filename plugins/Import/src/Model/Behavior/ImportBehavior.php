@@ -120,6 +120,9 @@ class ImportBehavior extends Behavior
 
     public function initialize(array $config): void
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        // Log::debug('@ImportBehavior::initialize START table=' . $this->_table->getAlias() . ' config_plugin=' . json_encode($config['plugin'] ?? null) . ' config_model=' . json_encode($config['model'] ?? null)); //[TEMP-LOG]
+        //POCOR-9584: end
         $fileTypes = $this->getConfig('fileTypes');
         $allowableFileTypes = [];
         if ($fileTypes) {
@@ -233,16 +236,16 @@ class ImportBehavior extends Behavior
         //POCOR-9584: start - carry any non-empty query params (set by addAfterAction withQueryParams) to the template URL
         //   so methods like getCompetencyCriteriasArray() can read competency_item, competency_period, etc. on the GET request
         $allQueryParams = $this->_table->request->getQueryParams();
-        Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction allQueryParams before filter=' . json_encode($allQueryParams)); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction allQueryParams before filter=' . json_encode($allQueryParams)); //[TEMP-LOG]
         $queryParams = array_filter($allQueryParams, fn($v) => $v !== null && $v !== '' && $v !== '0');
-        Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction queryParams after filter=' . json_encode($queryParams)); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction queryParams after filter=' . json_encode($queryParams)); //[TEMP-LOG]
         if (!empty($queryParams)) {
             $downloadUrl['?'] = $queryParams;
         }
         //POCOR-9584: end
 
         $url = Router::url($downloadUrl);
-        Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction final url=' . json_encode($url)); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction final url=' . json_encode($url)); //[TEMP-LOG]
         $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='{$url}'");
     }
 
@@ -336,6 +339,12 @@ class ImportBehavior extends Behavior
 
     public function beforeAction($event)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        // Log::debug('@ImportBehavior::beforeAction START table=' . $this->_table->getAlias()); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::beforeAction passParams=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::beforeAction routeAction=' . json_encode($this->_table->request->getParam('action'))); //[TEMP-LOG]
+        //POCOR-9584: end
+
         $session = $this->_table->Session;
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
@@ -348,6 +357,10 @@ class ImportBehavior extends Behavior
             $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
         }
         $this->sessionKey = $this->getConfig('plugin') . '.' . $this->getConfig('model') . '.Import.data';
+
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        // Log::debug('@ImportBehavior::beforeAction institutionId=' . json_encode($this->institutionId) . ' sessionKey=' . $this->sessionKey); //[TEMP-LOG]
+        //POCOR-9584: end
 
         $this->_table->ControllerAction->field('plugin', ['visible' => false]);
         $this->_table->ControllerAction->field('model', ['visible' => false]);

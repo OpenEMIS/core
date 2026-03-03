@@ -3,6 +3,7 @@
 namespace Import\Model\Behavior;
 
 use ArrayObject;
+use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Http\Session;
 use Cake\Event\EventInterface;
@@ -21,6 +22,11 @@ class ImportResultBehavior extends ImportBehavior
 {
     public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' tableAlias=' . $this->_table->getAlias()); //[TEMP-LOG]
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons buttons_add_action=' . json_encode($buttons['add']['url']['action'] ?? 'not_set')); //[TEMP-LOG]
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
+        //POCOR-9584: end
         switch ($action) {
             case 'add':
                 $downloadUrl = $toolbarButtons['back']['url'];
@@ -32,6 +38,9 @@ class ImportResultBehavior extends ImportBehavior
                     unset($data['id']);
                     unset($data['select_file']);
                     $data['institution_id'] = $this->institutionId;
+                    //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+                    Log::debug('@ImportResultBehavior::onUpdateToolbarButtons ImportOutcomeResults downloadData=' . json_encode($data)); //[TEMP-LOG]
+                    //POCOR-9584: end
                     $downloadUrl[1] = $this->_table->paramsEncode($data);
                 } else {
                     $downloadUrl[1] = $buttons['add']['url'][1];
