@@ -206,7 +206,7 @@ class ImportBehavior extends Behavior
 
     private function setupDownloadUrlIfAddAction($action, &$toolbarButtons, $buttons)
     {
-        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction action=' . json_encode($action) . ' institutionId=' . json_encode($this->institutionId) . ' downloadUrl base=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction action=' . json_encode($action) . ' institutionId=' . json_encode($this->institutionId)); //[TEMP-LOG]
         if ($action !== 'add') {
             return;
         }
@@ -232,13 +232,17 @@ class ImportBehavior extends Behavior
 
         //POCOR-9584: start - carry any non-empty query params (set by addAfterAction withQueryParams) to the template URL
         //   so methods like getCompetencyCriteriasArray() can read competency_item, competency_period, etc. on the GET request
-        $queryParams = array_filter($this->_table->request->getQueryParams(), fn($v) => $v !== null && $v !== '' && $v !== '0');
+        $allQueryParams = $this->_table->request->getQueryParams();
+        Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction allQueryParams before filter=' . json_encode($allQueryParams)); //[TEMP-LOG]
+        $queryParams = array_filter($allQueryParams, fn($v) => $v !== null && $v !== '' && $v !== '0');
+        Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction queryParams after filter=' . json_encode($queryParams)); //[TEMP-LOG]
         if (!empty($queryParams)) {
             $downloadUrl['?'] = $queryParams;
         }
         //POCOR-9584: end
 
         $url = Router::url($downloadUrl);
+        Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction final url=' . json_encode($url)); //[TEMP-LOG]
         $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='{$url}'");
     }
 

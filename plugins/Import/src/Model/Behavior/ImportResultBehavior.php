@@ -34,8 +34,17 @@ class ImportResultBehavior extends ImportBehavior
                     $data['institution_id'] = $this->institutionId;
                     $downloadUrl[1] = $this->_table->paramsEncode($data);
                 } else {
-
                     $downloadUrl[1] = $buttons['add']['url'][1];
+                    //POCOR-9584: start - carry query params set by addAfterAction (class, competency_item, academic_period, etc.)
+                    //   to the template download URL so getStudentArray() and getCompetencyCriteriasArray() can read them
+                    $queryParams = array_filter(
+                        $this->_table->request->getQueryParams(),
+                        fn($v) => $v !== null && $v !== '' && $v !== '0'
+                    );
+                    if (!empty($queryParams)) {
+                        $downloadUrl['?'] = $queryParams;
+                    }
+                    //POCOR-9584: end
                 }
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
