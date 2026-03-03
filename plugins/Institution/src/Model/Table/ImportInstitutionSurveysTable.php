@@ -15,7 +15,6 @@ use Cake\Network\Request;
 //use PHPExcel_Worksheet;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use Cake\Event\EventInterface;
 use Cake\Datasource\EntityInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
