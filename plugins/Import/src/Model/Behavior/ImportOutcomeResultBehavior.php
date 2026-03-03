@@ -435,15 +435,23 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
 
         $objPHPExcel->setActiveSheetIndex(0);
         $activeSheet = $objPHPExcel->getActiveSheet();
-        //POCOR-9584: start - read params from getQueryParams() (populated by withQueryParams in addAfterAction) instead of paramsDecode
+        //POCOR-9584: start - params come from three different sources depending on context:
+        //   template download (GET): encoded in pass[1]
+        //   add-page GET: in getQueryParams() (populated by withQueryParams in addAfterAction)
+        //   upload POST: in getData()[$alias] (pass[1] only has institution_id on POST)
+        $pass        = $this->_table->request->getParam('pass');
+        $qs          = (!empty($pass[1])) ? ($this->_table->paramsDecode($pass[1]) ?? []) : [];
         $queryParams = $this->_table->request->getQueryParams();
+        $alias       = $this->_table->getAlias();
+        $postData    = $this->_table->request->getData()[$alias] ?? [];
         $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-        $template          = $queryParams['outcome_template_id']  ?? null;
-        $classId           = $queryParams['institution_class_id'] ?? null;
-        $outcome_period_id = $queryParams['outcome_period_id']    ?? null;
-        $academic_period_id = $queryParams['academic_period_id'] ?? null;
-        $education_subject_id = $queryParams['education_subject_id'] ?? null;
-        $institution_id    = $this->_table->getInstitutionID();
+        $template             = $qs['outcome_template_id']   ?? ($queryParams['outcome_template_id']   ?? ($postData['outcome_template_id']   ?? null));
+        $classId              = $qs['institution_class_id']  ?? ($queryParams['institution_class_id']  ?? ($postData['institution_class_id']  ?? null));
+        $outcome_period_id    = $qs['outcome_period_id']     ?? ($queryParams['outcome_period_id']     ?? ($postData['outcome_period_id']     ?? null));
+        $academic_period_id   = $qs['academic_period_id']   ?? ($queryParams['academic_period_id']    ?? ($postData['academic_period_id']    ?? null));
+        $education_subject_id = $qs['education_subject_id'] ?? ($queryParams['education_subject_id']  ?? ($postData['education_subject_id']  ?? null));
+        $institution_id       = $this->_table->getInstitutionID();
+        // Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate pass1_keys=' . json_encode(array_keys($qs)) . ' queryParams_keys=' . json_encode(array_keys($queryParams)) . ' postData_keys=' . json_encode(array_keys($postData)) . ' education_subject_id=' . json_encode($education_subject_id) . ' template=' . json_encode($template)); //[TEMP-LOG]
         //POCOR-9584: end
 
         $name = $educationSubjectsTable->get($education_subject_id)->name;
@@ -510,6 +518,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $alpha = $this->getExcelColumnAlpha($column);
 
             $activeSheet->setCellValue($alpha . 1, $value->id);
+            $activeSheet->getStyle($alpha . '1')->getFont()->getColor()->setARGB('FFFFFFFF'); //POCOR-9584: hide criteria ID in row 1 (white font)
 
             // Clean up line breaks in $value->name
             $cleanedName = str_replace(["\r\n", "\r"], "\n", $value->name);
