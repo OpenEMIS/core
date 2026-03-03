@@ -4297,13 +4297,13 @@ class NavigationComponent extends Component
             'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',
-                'params' => ['plugin' => 'System'], // POCOR-9583
+                'params' => ['plugin' => 'System'], // POCOR-9584
                 'link' => true,
             ],
             'Systems.StaffEntitlements' => [
                 'title' => 'Entitlements',
                 'parent' => 'Administration.Staff',
-                'params' => ['plugin' => 'System'], // POCOR-9583
+                'params' => ['plugin' => 'System'], // POCOR-9584
                 'link' => true,
             ],
 
