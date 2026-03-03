@@ -1358,7 +1358,7 @@ class AssessmentItemResultsTable extends AppTable
     }
 
     //POCOR-9477
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $oldMarks = $entity->get('_old_marks');
         $oldOption = $entity->get('_old_grade_option');

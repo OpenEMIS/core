@@ -117,6 +117,7 @@ class PerformanceTable extends AppTable
         $this->ControllerAction->field('academic_term', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('outcome_period', ['type' => 'hidden', 'attr' => ['required' => true]]);
         $this->ControllerAction->field('education_subject_id', ['type' => 'hidden', 'attr' => ['required' => false]]); //POCOR-9484
+        $this->ControllerAction->field('Competencies_period', ['type' => 'hidden', 'attr' => ['required' => false]]); //POCOR-9077
     }
 
     public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -253,7 +254,7 @@ class PerformanceTable extends AppTable
     /**
      * Fetching Institution Type's options list.
      *
-     * @param  \Cake\Network\Request  $request
+     * @param  \Cake\Http\ServerRequest  $request
      * @return attr
      */
     public function onUpdateFieldInstitutionTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -840,6 +841,67 @@ class PerformanceTable extends AppTable
             $attr['attr']['multiple'] = true;
             $attr['options'] = $allowedSubjects;
         }
+        return $attr;
+    }
+
+    //POCOR-9077
+    public function onUpdateFieldCompetenciesPeriod(EventInterface $event, array $attr,$action,ServerRequest $request) 
+    {
+        $requestData = $request->getData();
+
+        if (
+            isset($requestData['Performance']['feature']) &&
+            $requestData['Performance']['feature'] === 'Report.PerformanceCompetencies'
+        ) {
+            $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
+            $institutionId    = $request->getData($this->aliasField('institution_id'));
+            $educationGradeId = $request->getData($this->aliasField('education_grade_id'));
+
+            $CompetencyPeriods = TableRegistry::getTableLocator()
+                ->get('Competency.CompetencyPeriods');
+
+            $query = $CompetencyPeriods->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->innerJoin(
+                ['InstitutionCompetencyResults' => 'institution_competency_results'],
+                [
+                    'InstitutionCompetencyResults.competency_period_id = CompetencyPeriods.id'
+                ]
+            )
+            ->where([
+                'InstitutionCompetencyResults.academic_period_id' => $academicPeriodId
+            ])
+            ->distinct(['CompetencyPeriods.id']);
+
+            if (!empty($institutionId) && $institutionId != -1) {
+                $query->where([
+                    'InstitutionCompetencyResults.institution_id' => $institutionId
+                ]);
+            }
+
+            if (!empty($educationGradeId) && $educationGradeId != -1) {
+                $query
+                    ->innerJoin(
+                        ['InstitutionClassStudents' => 'institution_class_students'],
+                        [
+                            'InstitutionClassStudents.student_id = InstitutionCompetencyResults.student_id',
+                            'InstitutionClassStudents.institution_id = InstitutionCompetencyResults.institution_id',
+                            'InstitutionClassStudents.academic_period_id = InstitutionCompetencyResults.academic_period_id'
+                        ]
+                    )
+                    ->where([
+                        'InstitutionClassStudents.education_grade_id' => $educationGradeId
+                    ]);
+            }
+
+            $attr['options'] = [-1 => __('All Competencies Period')] + $query->toArray();
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['onChangeReload'] = true;
+        }
+
         return $attr;
     }
 

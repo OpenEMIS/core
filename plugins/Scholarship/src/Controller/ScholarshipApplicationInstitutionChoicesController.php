@@ -9,7 +9,7 @@ use Scholarship\Controller\InstitutionChoicesController as BaseController;
 
 class ScholarshipApplicationInstitutionChoicesController extends BaseController
 {
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
 

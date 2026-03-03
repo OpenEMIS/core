@@ -16,7 +16,7 @@ class CounsellingsController extends PageController
         $this->Page->enable(['download']);
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $session = $this->request->getSession();
         $institutionId = $this->getInstitutionID(); // POCOR-7911
