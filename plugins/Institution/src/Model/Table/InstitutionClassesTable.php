@@ -275,7 +275,7 @@ class InstitutionClassesTable extends ControllerActionTable
         return $buttons;
     } //POCOR-8323 ends
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         $LabelTable = TableRegistry::get('Labels');
         if ($field == 'classes_secondary_staff') {
