@@ -183,11 +183,11 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                     $InstitutionCompetencyItemCommentsData = $InstitutionCompetencyItemCommentsTable->newEntity([
                         'comments' => $comment,
                         'student_id' => $User->id,
-                        'competency_template_id' => $reqData['competency_template'] ?? null,
-                        'competency_period_id' => $reqData['competency_period'] ?? null,
-                        'competency_item_id' => $reqData['competency_item'] ?? null,
+                        'competency_template_id' => $reqData['competency_template_id'] ?? null, //POCOR-9584: old key competency_template → competency_template_id
+                        'competency_period_id' => $reqData['competency_period_id'] ?? null,     //POCOR-9584: old key competency_period → competency_period_id
+                        'competency_item_id' => $reqData['competency_item_id'] ?? null,         //POCOR-9584: old key competency_item → competency_item_id
                         'institution_id' => $this->_table->getInstitutionID(), //POCOR-9584: session read → getInstitutionID()
-                        'academic_period_id' => $reqData['academic_period'] ?? null
+                        'academic_period_id' => $reqData['academic_period_id'] ?? null          //POCOR-9584: old key academic_period → academic_period_id
                     ]);
                     //POCOR-9584: end
 

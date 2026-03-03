@@ -466,8 +466,14 @@ class ImportCompetencyResultsTable extends AppTable
     public function getStudentArray()
     {
         //POCOR-9584: start - renamed class → institution_class_id; kept class_id fallback for pass[1] encoded
+        //   On POST (file upload), addOnInitialize clears query params before addBeforeSave runs,
+        //   so getQuery() returns null; fall back to POST data as second priority.
         $qs = $this->getQueryString();
-        $classId = $this->request->getQuery('institution_class_id') ?? ($qs['class_id'] ?? null);
+        $alias = $this->getAlias();
+        $postData = $this->request->getData()[$alias] ?? [];
+        $classId = $this->request->getQuery('institution_class_id')
+            ?? ($postData['institution_class_id'] ?? null)
+            ?? ($qs['class_id'] ?? null);
         //POCOR-9584: end
 
         if (empty($classId)) {
@@ -506,10 +512,20 @@ class ImportCompetencyResultsTable extends AppTable
     public function getCompetencyCriteriasArray()
     {
         //POCOR-9584: start - renamed all query param keys to DB column names with _id suffix
+        //   On POST (file upload), addOnInitialize clears query params before addBeforeSave runs,
+        //   so getQuery() returns null; fall back to POST data as second priority.
         $qs = $this->getQueryString();
-        $academicPeriod    = $this->request->getQuery('academic_period_id')    ?? ($qs['academic_period_id']    ?? null);
-        $competencyItem    = $this->request->getQuery('competency_item_id')    ?? ($qs['competency_item_id']    ?? null);
-        $competencyTemplate = $this->request->getQuery('competency_template_id') ?? ($qs['competency_template_id'] ?? null);
+        $alias = $this->getAlias();
+        $postData = $this->request->getData()[$alias] ?? [];
+        $academicPeriod    = $this->request->getQuery('academic_period_id')
+            ?? ($postData['academic_period_id'] ?? null)
+            ?? ($qs['academic_period_id'] ?? null);
+        $competencyItem    = $this->request->getQuery('competency_item_id')
+            ?? ($postData['competency_item_id'] ?? null)
+            ?? ($qs['competency_item_id'] ?? null);
+        $competencyTemplate = $this->request->getQuery('competency_template_id')
+            ?? ($postData['competency_template_id'] ?? null)
+            ?? ($qs['competency_template_id'] ?? null);
         //POCOR-9584: end
 
         if (empty($academicPeriod) || empty($competencyTemplate)) {
