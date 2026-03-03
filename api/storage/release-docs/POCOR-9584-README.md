@@ -310,3 +310,127 @@ Not required — no schema changes.
 
 - **Database Migrations**: Not required
   - No schema changes needed; all fixes address data handling and URL routing logic
+
+---
+
+## Issue 8 – Academic > Competencies > Import CompetencyResults (CakePHP5 + PhpSpreadsheet migration)
+
+### What is the Task?
+
+Fix the `ImportCompetencyResults/add` import page which had multiple CakePHP3→CakePHP5 migration issues and a PHPExcel→PhpSpreadsheet 3.x migration issue, causing: no competency period dropdown options, template download errors, and wrong Excel template structure (columns off by 1).
+
+### Situation Before
+
+- **CakePHP 5 API Issues** (`ImportCompetencyResultBehavior.php`):
+  - Used deprecated `$entity->errors()` instead of `$entity->getErrors()`
+  - Used deprecated `$entity->invalid()` instead of `$entity->getInvalid()`
+  - Used deprecated `$this->config()` instead of `$this->getConfig()`
+  - Used deprecated `request->query[]` and `request->data[]` array access instead of method calls
+  - Used deprecated `request->session()` instead of `$this->request->getSession()`
+  - Used deprecated `$table->alias()` instead of `$table->getAlias()`
+
+- **PHPExcel → PhpSpreadsheet 3.x Migration**:
+  - Used `PHPExcel_IOFactory`, `new \PHPExcel()`, `PHPExcel_Writer_Excel2007`, `PHPExcel_Cell_DataValidation` — all removed
+  - `getCellByColumnAndRow()` calls used 0-indexed columns (PHPExcel style) but PhpSpreadsheet 3.x is 1-indexed
+  - `$commentColumn = (N*2)+2` was off by 1 when read back via `getCellByColumnAndRow()` because PhpSpreadsheet's `getExcelColumnAlpha()` returns 1-indexed column letters
+  - `checkCorrectIdTemplate(2, ...)` / `checkCorrectTemplate(0, ...)` started at wrong column indices
+  - `setCodesDataTemplate()` passed `$dropdownColumn` to `getCellByColumnAndRow()` instead of `$dropdownColumn+1`
+
+- **URL Parameter Loss**:
+  - `setupDownloadUrlIfAddAction()` in `ImportBehavior.php` re-encoded only `institution_id`, losing `class_id`, `academic_period_id`, `competency_template_id` from the template download URL
+  - `isInstitutionIDSkipped()` in `InstitutionsController.php` did not skip institution check for `template` action, breaking template downloads
+
+- **Query Parameter Reading**:
+  - `getCompetencyCriteriasArray()` / `getStudentArray()` in `ImportCompetencyResultsTable.php` used `getQuery()` (URL query string) when params are in encoded `pass[1]` during the template GET action, returning empty results
+  - `onUpdateFieldCompetencyPeriod()` read `academic_period` key from `request->query` when params are in `pass[1]`, and had a trailing space in the column name
+
+### What Was Implemented
+
+1. **All CakePHP 5 API replacements** (`ImportCompetencyResultBehavior.php`)
+   - `$entity->errors()` → `$entity->getErrors()`
+   - `$entity->invalid()` → `$entity->getInvalid()`
+   - `$this->config()` → `$this->getConfig()`
+   - `request->query['key']` → `$this->request->getQuery('key')`
+   - `request->data['key']` → `$this->request->getData('key')`
+   - `request->session()` → `$this->request->getSession()`
+   - `$table->alias()` → `$table->getAlias()`
+
+2. **All PHPExcel → PhpSpreadsheet 3.x class replacements** (`ImportCompetencyResultBehavior.php`)
+   - `PHPExcel_IOFactory` → `\PhpOffice\PhpSpreadsheet\IOFactory`
+   - `new \PHPExcel()` → `new \PhpOffice\PhpSpreadsheet\Spreadsheet()`
+   - `PHPExcel_Writer_Excel2007` → `\PhpOffice\PhpSpreadsheet\Writer\Xlsx`
+   - `PHPExcel_Cell_DataValidation` → `\PhpOffice\PhpSpreadsheet\Worksheet\DataValidation`
+
+3. **Fixed `getCellByColumnAndRow()` column indexing** (PhpSpreadsheet is 1-indexed vs PHPExcel's 0-indexed):
+   - Student column: `0` → `1`
+   - Grade loop start: `2` → `3`, end: `totalColumns` → `totalColumns+1`
+   - `$commentColumn = (N*2)+2` → `(N*2)+3` (to match PhpSpreadsheet's `getExcelColumnAlpha()` output)
+   - `checkCorrectIdTemplate(2, ...)` → `checkCorrectIdTemplate(3, ..., totalColumns+1, ...)`
+   - `checkCorrectTemplate(0, ...)` → `checkCorrectTemplate(1, ..., 2, ...)`
+   - `setCodesDataTemplate()`: `getCellByColumnAndRow($dropdownColumn)` → `getCellByColumnAndRow($dropdownColumn+1)`
+
+4. **Fixed template URL to carry full context** (`setupDownloadUrlIfAddAction()` in `ImportBehavior.php`):
+   - Changed to preserve full `pass[1]` from the request, carrying all encoded context params (`class_id`, `academic_period_id`, `competency_template_id`)
+   - No longer loses context when re-building the download URL
+
+5. **Fixed institution skip check** (`InstitutionsController.php`)
+   - Added `'template'` to `$furtherActions` in `isInstitutionIDSkipped()` to skip institution validation for template downloads
+
+6. **Fixed query parameter reading** (`ImportCompetencyResultsTable.php`):
+   - `getCompetencyCriteriasArray()` and `getStudentArray()`: Changed to decode `pass[1]` via `getQueryString()` as fallback when URL query params are absent (template GET action)
+   - `onUpdateFieldCompetencyPeriod()`: Use `$this->request` instead of `request`, read `academic_period` key correctly, removed trailing space from column name
+
+### Files Changed Summary
+
+- **Modified files**: 4
+  - `plugins/Institution/src/Model/Behavior/ImportCompetencyResultBehavior.php` — Fixed all CakePHP 5 API calls and PhpSpreadsheet 3.x class usage
+  - `plugins/Import/src/Model/Behavior/ImportBehavior.php` — Fixed setupDownloadUrlIfAddAction() to carry full pass[1]
+  - `plugins/Institution/src/Controller/InstitutionsController.php` — Added 'template' action to isInstitutionIDSkipped()
+  - `plugins/Institution/src/Model/Table/ImportCompetencyResultsTable.php` — Fixed getCompetencyCriteriasArray(), getStudentArray(), onUpdateFieldCompetencyPeriod()
+
+- **Database Migrations**: Not required
+  - No schema changes needed
+
+### Deployment Instructions (User Experience)
+
+1. **Git Deployment**
+   ```bash
+   git pull origin POCOR-9584
+   ```
+
+2. **Testing**
+   - Navigate to **Academic > Competencies > Import**
+   - Verify competency period dropdown shows options when class is selected
+   - Click **Download Template** — file should download with correct structure
+   - Verify template columns are correctly aligned (student names start at column B, grades follow sequentially)
+   - Upload the completed template — import should process correctly without column offset errors
+
+3. **Cache Clear**
+   ```bash
+   # No cache clear necessary for CakePHP import/template handling
+   ```
+
+### System Administrator Guide
+
+### Monitoring
+
+Check `logs/hin-error.log` filtered by `@ImportCompetencyResult` if:
+- Template download fails
+- Import page shows no dropdown options
+- Column mismatch errors appear during import
+
+### Troubleshooting
+
+- If dropdown still empty: Verify `pass[1]` contains `class_id` and `academic_period_id` in the URL
+- If template download 404: Ensure `pass[1]` is preserved with all context params
+- If column alignment errors: Check `getCellByColumnAndRow()` calls are using 1-indexed columns (3, 4, 5... not 0, 1, 2...)
+- Check logs at: `/var/www/html/emis/core/logs/hin-error.log` for specific API errors
+
+### Rollback Procedure
+
+If needed, rollback to the previous commit:
+```bash
+git revert [commit-hash]
+```
+
+---
