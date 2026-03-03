@@ -92,7 +92,11 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
             $competencyItemsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyItems');
             //POCOR-9584: start - request->query[] → getQuery(); guard against null (CakePHP5 null WHERE)
-            $competency_item_id = $this->_table->request->getQuery('competency_item_id'); //POCOR-9584: renamed competency_item → competency_item_id
+            //   addOnInitialize clears query params before addBeforeSave runs on POST — fall back to POST data
+            $postDataAlias = $this->_table->request->getData()[$this->_table->getAlias()] ?? [];
+            $competency_item_id = $this->_table->request->getQuery('competency_item_id') //POCOR-9584: renamed competency_item → competency_item_id
+                ?? ($postDataAlias['competency_item_id'] ?? null); //POCOR-9584: POST fallback for addOnInitialize clear
+            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave allQueryParams=' . json_encode($this->_table->request->getQueryParams()) . ' allPostKeys=' . json_encode(array_keys($postDataAlias))); //[TEMP-LOG]
             // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave competency_item_id=' . json_encode($competency_item_id)); //[TEMP-LOG]
             $competencyItemsName = null;
             if (!empty($competency_item_id)) {
@@ -229,7 +233,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
                     $tempRow = $tempRow->getArrayCopy();
                     if (!isset($tempRow['entity'])) {
-                        $tableEntity = $activeModel->newEntity();
+                        $tableEntity = $activeModel->newEntity([]); //POCOR-9584: CakePHP5 — newEntity() requires array argument
                     } else {
                         $tableEntity = $tempRow['entity'];
                         unset($tempRow['entity']);
@@ -314,7 +318,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                         continue;
                     } else {
                         $clonedEntity = clone $tableEntity;
-                        $clonedEntity->virtualProperties([]);
+                        $clonedEntity->setVirtual([]); //POCOR-9584: CakePHP5 — virtualProperties() removed; use setVirtual()
 
                         $columns = array("outcome_criteria_id", "student_id", "competency_grading_option_id", "comment");
                         $tempPassedRecord = [
@@ -347,7 +351,19 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             ];
             $session->write($this->sessionKey, $completedData);
 
-            return $model->controller->redirect($this->_table->ControllerAction->url('results'));
+            //POCOR-9584: start - carry encoded pass[1] (institution_id) to results redirect URL;
+            //   bare url('results') loses pass[1] and carries stale ?period query param
+            $resultsUrl = $this->_table->ControllerAction->url('results');
+            $encodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+            if ($encodedParam) {
+                $resultsUrl[1] = $encodedParam;
+            } else {
+                $resultsUrl[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            }
+            unset($resultsUrl['?']); // strip stale query params (e.g. period=34) from add page URL
+            //POCOR-9584: end
+
+            return $model->controller->redirect($resultsUrl);
         };
     }
 
@@ -654,7 +670,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
-            $rowPass = $rowPassEvent->result;
+            $rowPass = $rowPassEvent->getResult(); //POCOR-9584: CakePHP5 — $event->result protected; use getResult()
         }
 
         return $rowPass;
