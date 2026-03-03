@@ -434,3 +434,91 @@ git revert [commit-hash]
 ```
 
 ---
+
+## Issue 9 – Import consistency: Competency / Outcome / Assessment Item results use clean DB column names
+
+### What is the Task?
+
+Make all three result-import pages consistent with each other:
+- `ImportCompetencyResults/add`
+- `ImportOutcomeResults/add`
+- `ImportAssessmentItemResults/add`
+
+All three now show `academic_period_id` and `institution_class_id` as visible selects from the start, use DB column names as form-field/query-param keys, and follow the same sequential dependency pattern (each field reveals the next).
+
+### Situation Before
+
+- **Field-naming zoo**: Each file used different aliases (`period`, `class`, `class_name`, `education_subject`, `academic_period`, `competency_template`, `outcome_template`, etc.) instead of the actual DB column names.
+- **`withQueryParams` replaced instead of merged**: The second loop in `addAfterAction` called `$this->request->withQueryParams($requestDataArray)` which discarded existing URL params, so the template download URL was incomplete.
+- **IS operator bug**: `institution_class_id IS` / `academic_period_id IS` used for non-null values — broken in CakePHP5.
+- **Dead `addEditOnChange` handlers**: Used CakePHP3 mutable request mutation which does nothing in CakePHP5.
+- **Deprecated `->query[]` array access** in both behaviors (CakePHP3 style).
+- **Old `paramsDecode(pass[1])`** in `ImportOutcomeResultBehavior::setImportDataTemplate` — replaced by `getQueryParams()`.
+- **Active `[TEMP-LOG]` lines** in all five files.
+
+### What Was Implemented
+
+1. **`ImportCompetencyResultsTable.php`** — full consistency rewrite:
+   - Renamed all field keys to DB column names (`academic_period` → `academic_period_id`, `class` → `institution_class_id`, etc.)
+   - Added missing `academic_period_id → [institution_class_id]` dependency
+   - Both `academic_period_id` and `institution_class_id` visible from the start
+   - Fixed `withQueryParams` to merge rather than replace
+   - Added five clean `addEditOnChange*Id` handlers; renamed all `onUpdateField*` methods
+   - Fixed IS operator; commented out dead backup methods
+
+2. **`ImportOutcomeResultsTable.php`** — same consistency rewrite:
+   - Same field renames, merge fix, IS operator fix, handler renames, new `addEditOnChange*Id` handlers
+   - Removed `use PHPExcel_Worksheet;`
+
+3. **`ImportCompetencyResultBehavior.php`**:
+   - `getQuery('competency_item')` → `getQuery('competency_item_id')` in two places
+   - All TEMP-LOG lines commented out
+
+4. **`ImportOutcomeResultBehavior.php`**:
+   - `addBeforeSave` closure: all field reads renamed to `_id` keys
+   - `setImportDataTemplate`: switched from `paramsDecode(pass[1])` to `getQueryParams()`, all field keys renamed
+   - Deprecated `->query['field']` → `getQuery('field_id')` in backup method
+   - All TEMP-LOG lines commented out
+
+5. **`ImportResultBehavior.php`**: One remaining active TEMP-LOG line commented out
+
+### Files Changed Summary
+
+- **Modified files**: 5
+  - `plugins/Import/src/Model/Behavior/ImportCompetencyResultBehavior.php`
+  - `plugins/Import/src/Model/Behavior/ImportOutcomeResultBehavior.php`
+  - `plugins/Import/src/Model/Behavior/ImportResultBehavior.php`
+  - `plugins/Institution/src/Model/Table/ImportCompetencyResultsTable.php`
+  - `plugins/Institution/src/Model/Table/ImportOutcomeResultsTable.php`
+
+- **Database Migrations**: Not required
+
+### Deployment Instructions (User Experience)
+
+1. **Git Deployment**
+   ```bash
+   git pull origin POCOR-9584
+   ```
+
+2. **Testing**
+   - Navigate to **Academic > Competencies > Import** — `academic_period_id` and `institution_class_id` visible from start; selecting class reveals template dropdown
+   - Navigate to **Academic > Outcomes > Import** — same sequential field reveal
+   - Click **Download Template** on each page — should download with correct column structure
+   - Upload a filled template — import should save records
+
+3. **Cache Clear**
+   ```bash
+   # No cache clear necessary for CakePHP import/template handling
+   ```
+
+### System Administrator Guide
+
+Check `logs/hin-error.log` filtered by `@Import` if any import page shows a black screen or empty dropdown.
+
+### Rollback Procedure
+
+```bash
+git revert [commit-hash]
+```
+
+---

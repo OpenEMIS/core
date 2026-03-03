@@ -37,8 +37,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::addBeforeSave START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
-        Log::debug('@ImportOutcomeResultBehavior::addBeforeSave entity_fields=' . json_encode(array_keys($entity->toArray()))); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave entity_fields=' . json_encode(array_keys($entity->toArray()))); //[TEMP-LOG]
         //POCOR-9584: end
 
         ini_set('max_execution_time', 180);
@@ -46,7 +46,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         return function ($model, $entity) {
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave closure START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave closure START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
             //POCOR-9584: end
 
             /* ===========================
@@ -63,7 +63,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
              * =========================== */
             if (!empty($entity->getErrors())) {
                 //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-                Log::debug('@ImportOutcomeResultBehavior::addBeforeSave returning false due to entity errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
+                // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave returning false due to entity errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
                 //POCOR-9584: end
                 return false;
             }
@@ -76,7 +76,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $uploaded     = $fileObj->getStream()->getMetadata('uri');
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName) . ' uploaded=' . json_encode($uploaded)); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName) . ' uploaded=' . json_encode($uploaded)); //[TEMP-LOG]
             //POCOR-9584: end
 
             $inputFileType = IOFactory::identify($uploaded);
@@ -91,24 +91,26 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $queryString = $this->_table->getQueryString();
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave requestData=' . json_encode($requestData)); //[TEMP-LOG]
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave queryString=' . json_encode($queryString)); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave requestData=' . json_encode($requestData)); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave queryString=' . json_encode($queryString)); //[TEMP-LOG]
             //POCOR-9584: end
 
-            $template             = $requestData['outcome_template'];
-            $education_subject_id = $requestData['education_subject'];
-            $outcome_period_id    = $requestData['outcome_period'];
-            $academic_period_id   = $requestData['academic_period'];
-            $institution_id       = $queryString['institution_id'];
+            //POCOR-9584: start - renamed field keys to DB column names
+            $template             = $requestData['outcome_template_id'];
+            $education_subject_id = $requestData['education_subject_id'];
+            $outcome_period_id    = $requestData['outcome_period_id'];
+            $academic_period_id   = $requestData['academic_period_id'];
+            $institution_id       = $this->_table->getInstitutionID();
+            //POCOR-9584: end
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave template=' . json_encode($template) . ' education_subject_id=' . json_encode($education_subject_id) . ' outcome_period_id=' . json_encode($outcome_period_id) . ' academic_period_id=' . json_encode($academic_period_id) . ' institution_id=' . json_encode($institution_id)); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave template=' . json_encode($template) . ' education_subject_id=' . json_encode($education_subject_id) . ' outcome_period_id=' . json_encode($outcome_period_id) . ' academic_period_id=' . json_encode($academic_period_id) . ' institution_id=' . json_encode($institution_id)); //[TEMP-LOG]
             //POCOR-9584: end
             /* ===========================
              *  LOAD TABLES
              * =========================== */
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave loading activeModel plugin=' . $this->getConfig('plugin') . ' model=' . $this->getConfig('model')); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave loading activeModel plugin=' . $this->getConfig('plugin') . ' model=' . $this->getConfig('model')); //[TEMP-LOG]
             //POCOR-9584: end
             $activeModel = TableRegistry::get(
                 $this->getConfig('plugin') . '.' . $this->getConfig('model')
@@ -128,7 +130,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 ->first();
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave educationGradeId=' . json_encode($educationGradeId)); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave educationGradeId=' . json_encode($educationGradeId)); //[TEMP-LOG]
             //POCOR-9584: end
 
             /* ===========================
@@ -144,7 +146,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $totalCriteria = count($criteriaList);
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::addBeforeSave totalCriteria=' . $totalCriteria . ' highestRow=' . $sheet->getHighestRow()); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave totalCriteria=' . $totalCriteria . ' highestRow=' . $sheet->getHighestRow()); //[TEMP-LOG]
             //POCOR-9584: end
 
             /* ===========================
@@ -375,10 +377,10 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
     public function template()
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::template START'); //[TEMP-LOG]
-        Log::debug('@ImportOutcomeResultBehavior::template passParams=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
-        Log::debug('@ImportOutcomeResultBehavior::template postData=' . json_encode($this->_table->request->getData('ImportOutcomeResults'))); //[TEMP-LOG]
-        Log::debug('@ImportOutcomeResultBehavior::template queryParams=' . json_encode($this->_table->request->getQueryParams())); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::template START'); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::template passParams=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::template postData=' . json_encode($this->_table->request->getData('ImportOutcomeResults'))); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::template queryParams=' . json_encode($this->_table->request->getQueryParams())); //[TEMP-LOG]
         //POCOR-9584: end
 
         $folder = $this->prepareDownload();
@@ -428,29 +430,20 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
     public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate START dataSheetName=' . json_encode($dataSheetName) . ' type=' . json_encode($type)); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate START dataSheetName=' . json_encode($dataSheetName) . ' type=' . json_encode($type)); //[TEMP-LOG]
         //POCOR-9584: end
 
         $objPHPExcel->setActiveSheetIndex(0);
         $activeSheet = $objPHPExcel->getActiveSheet();
-        $passParams = $this->_table->request->getParam('pass');
-        $encodedQueryString = $passParams[1] ?? null;
-        $data = $this->_table->paramsDecode($encodedQueryString);
-        $requestData = $this->_table->request->getData('ImportOutcomeResults');
-        $education_subject_id = $requestData['education_subject'];
+        //POCOR-9584: start - read params from getQueryParams() (populated by withQueryParams in addAfterAction) instead of paramsDecode
+        $queryParams = $this->_table->request->getQueryParams();
         $educationSubjectsTable = TableRegistry::get('Education.EducationSubjects');
-        $template = $data['outcome_template'];
-        $classId = $data['class'];
-        $outcome_period_id = $data['outcome_period'];
-        $institution_id = $data['institution_id'];
-        $academic_period_id = $data['academic_period'];
-        $education_subject_id = $data['education_subject']?? $requestData['education_subject'] ?? null;
-
-        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate encodedQueryString=' . json_encode($encodedQueryString)); //[TEMP-LOG]
-        Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate decodedData=' . json_encode($data)); //[TEMP-LOG]
-        Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate requestData=' . json_encode($requestData)); //[TEMP-LOG]
-        Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate template=' . json_encode($template) . ' classId=' . json_encode($classId) . ' education_subject_id=' . json_encode($education_subject_id) . ' institution_id=' . json_encode($institution_id) . ' academic_period_id=' . json_encode($academic_period_id)); //[TEMP-LOG]
+        $template          = $queryParams['outcome_template_id']  ?? null;
+        $classId           = $queryParams['institution_class_id'] ?? null;
+        $outcome_period_id = $queryParams['outcome_period_id']    ?? null;
+        $academic_period_id = $queryParams['academic_period_id'] ?? null;
+        $education_subject_id = $queryParams['education_subject_id'] ?? null;
+        $institution_id    = $this->_table->getInstitutionID();
         //POCOR-9584: end
 
         $name = $educationSubjectsTable->get($education_subject_id)->name;
@@ -835,7 +828,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $rowPass          = true;
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::_extractRecord START row=' . $row . ' numberColumn=' . $numberColumn); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::_extractRecord START row=' . $row . ' numberColumn=' . $numberColumn); //[TEMP-LOG]
         //POCOR-9584: end
 
         /**
@@ -849,12 +842,12 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         );
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::_extractRecord studentValue=' . json_encode($studentValue)); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::_extractRecord studentValue=' . json_encode($studentValue)); //[TEMP-LOG]
         //POCOR-9584: end
 
         if ($studentValue === '') {
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL studentValue is empty at row=' . $row); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL studentValue is empty at row=' . $row); //[TEMP-LOG]
             //POCOR-9584: end
             $rowInvalidCodeCols['student_id'] = __('Student OpenEMIS ID missing');
             $extra['entityValidate'] = false;
@@ -872,12 +865,12 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         );
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::_extractRecord outcomeIdValue=' . json_encode($outcomeIdValue)); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::_extractRecord outcomeIdValue=' . json_encode($outcomeIdValue)); //[TEMP-LOG]
         //POCOR-9584: end
 
         if ($outcomeIdValue <= 0) {
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL outcomeIdValue<=0 at row=' . $row . ' col=' . $numberColumn); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL outcomeIdValue<=0 at row=' . $row . ' col=' . $numberColumn); //[TEMP-LOG]
             //POCOR-9584: end
             $rowInvalidCodeCols['outcome_criteria_id'] = __('Invalid Outcome Criteria');
             $extra['entityValidate'] = false;
@@ -909,12 +902,12 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ->first();
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::_extractRecord user lookup result=' . json_encode($User ? $User->id : null)); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::_extractRecord user lookup result=' . json_encode($User ? $User->id : null)); //[TEMP-LOG]
         //POCOR-9584: end
 
         if (empty($User)) {
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL user not found studentValue=' . $studentValue . ' row=' . $row); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL user not found studentValue=' . $studentValue . ' row=' . $row); //[TEMP-LOG]
             //POCOR-9584: end
             $rowInvalidCodeCols['student_id'] = __('Student not found');
             $extra['entityValidate'] = false;
@@ -952,12 +945,12 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             ->first();
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::_extractRecord gradingTypeId=' . json_encode($outcomeGradingTypeId ?? null) . ' gradeValue=' . json_encode($gradeValue)); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::_extractRecord gradingTypeId=' . json_encode($outcomeGradingTypeId ?? null) . ' gradeValue=' . json_encode($gradeValue)); //[TEMP-LOG]
         //POCOR-9584: end
 
         if (empty($Grading)) {
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL grading not found gradeValue=' . $gradeValue . ' gradingTypeId=' . json_encode($outcomeGradingTypeId ?? null)); //[TEMP-LOG]
+            // Log::debug('@ImportOutcomeResultBehavior::_extractRecord FAIL grading not found gradeValue=' . $gradeValue . ' gradingTypeId=' . json_encode($outcomeGradingTypeId ?? null)); //[TEMP-LOG]
             //POCOR-9584: end
             $rowInvalidCodeCols['outcome_grading_option_id'] = __('Wrong Grade Option');
             $extra['entityValidate'] = false;
@@ -978,7 +971,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $originalRow[] = $gradeValue;
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        Log::debug('@ImportOutcomeResultBehavior::_extractRecord SUCCESS tempRow=' . json_encode($tempRow->getArrayCopy())); //[TEMP-LOG]
+        // Log::debug('@ImportOutcomeResultBehavior::_extractRecord SUCCESS tempRow=' . json_encode($tempRow->getArrayCopy())); //[TEMP-LOG]
         //POCOR-9584: end
 
         return $rowPass;
@@ -1041,7 +1034,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             }
 
             $educationSubjectsTable = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
-            $education_subject_id = $this->_table->request->query['education_subject'];
+            $education_subject_id = $this->_table->request->getQuery('education_subject_id'); //POCOR-9584: deprecated ->query[] → getQuery(), renamed education_subject → education_subject_id
             $subjectName = $educationSubjectsTable->get($education_subject_id)->name;
 
             // check correct template
@@ -1059,7 +1052,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 ->first();
 
             //calculate number of student
-            $classId = $this->_table->request->query['class'];
+            $classId = $this->_table->request->getQuery('institution_class_id'); //POCOR-9584: deprecated ->query[] → getQuery(), renamed class → institution_class_id
             $institutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
             $studentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
             $arrayStudent = $institutionClassStudentsTable->find()

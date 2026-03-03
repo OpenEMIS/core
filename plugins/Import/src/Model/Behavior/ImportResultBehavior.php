@@ -39,7 +39,7 @@ class ImportResultBehavior extends ImportBehavior
                     unset($data['select_file']);
                     $data['institution_id'] = $this->institutionId;
                     //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-                    Log::debug('@ImportResultBehavior::onUpdateToolbarButtons ImportOutcomeResults downloadData=' . json_encode($data)); //[TEMP-LOG]
+                    // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons ImportOutcomeResults downloadData=' . json_encode($data)); //[TEMP-LOG]
                     //POCOR-9584: end
                     $downloadUrl[1] = $this->_table->paramsEncode($data);
                 } else {
