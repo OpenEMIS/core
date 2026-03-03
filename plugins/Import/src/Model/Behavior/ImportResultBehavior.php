@@ -60,6 +60,10 @@ class ImportResultBehavior extends ImportBehavior
         }
 
         //back button
+        //POCOR-9584: start - log back button construction for debugging
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' pass=' . json_encode($this->_table->request->getParam('pass')) . ' institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_initial=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
+        //POCOR-9584: end
         if (!empty($this->getConfig('backUrl'))) {
             //POCOR-9158 start
             if($buttons['add']['url']['action'] == 'ImportOutcomeResults'){
@@ -74,26 +78,65 @@ class ImportResultBehavior extends ImportBehavior
                     ]
                 );
             } //POCOR-9158 end
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
+            //POCOR-9584: start - carry encoded pass[1] (institution_id) to back URL;
+            //   results page → back to ImportCompetencyResults/add; add page → back to StudentCompetencies
+            //   Use direct key assignment after merge — array_merge renumbers integer keys
+            else if ($buttons['add']['url']['action'] == 'ImportCompetencyResults') {
+                $pass = $this->_table->request->getParam('pass');
+                $currentPassAction = $pass[0] ?? null;
+                $encodedParams = $pass[1] ?? null;
+                //POCOR-9584: both add and results pages back → StudentCompetencies index with encoded params
+                $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
+                $toolbarButtons['back']['url'][0] = 'index';
+                if ($encodedParams) { $toolbarButtons['back']['url'][1] = $encodedParams; }
+            }
+            //POCOR-9584: end
+            else {
+                $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
+            }
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
+            //POCOR-9584: start - carry encoded pass[1] (institution_id) to back URL;
+            //   ControllerAction does not include it in the initial toolbarButtons back URL
+            $currentPass = $this->_table->request->getParam('pass');
+            $currentPassAction = $currentPass[0] ?? null;
+            $encodedParams = $currentPass[1] ?? null;
+            //POCOR-9584: end
 
-            if ($this->_table->request->getAttribute('params')['pass'][0] == 'add') {
+            if ($currentPassAction == 'add') {
                 $back['action'] = str_replace('Import', '', $this->_table->getAlias());
-            } elseif ($this->_table->request->getAttribute('params')['pass'][0] == 'results') {
+            } elseif ($currentPassAction == 'results') {
                 $back['action'] = $this->_table->getAlias();
                 $back[0] = 'add';
             };
+
+            //POCOR-9584: start - inject encoded params into back URL so institution_id reaches InstitutionsController::beforeFilter
+            if ($encodedParams) {
+                $back[1] = $encodedParams;
+            }
+            //POCOR-9584: end
 
             $models = $this->_table->ControllerAction->models;
             if (!isset($models[$back['action']])) {
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
+            //POCOR-9584: start - log back array before merge
+            // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons back=' . json_encode($back) . ' toolbarBackUrl_before_merge=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
+            //POCOR-9584: end
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
         } else {
             $toolbarButtons['back']['url']['action'] = 'index';
         }
-        unset($toolbarButtons['back']['url'][0]);
+        //POCOR-9584: start - strip stale query params; only unset [0] if it is not 'index'
+        if (($toolbarButtons['back']['url'][0] ?? null) !== 'index') {
+            unset($toolbarButtons['back']['url'][0]);
+        }
+        unset($toolbarButtons['back']['url']['?']);
+        unset($toolbarButtons['back']['url']['period']); //POCOR-9584: legacy period param from old query string
+        //POCOR-9584: end
+        //POCOR-9584: start - log final back URL
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_final=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
+        //POCOR-9584: end
     }
 
     /******************************************************************************************************************

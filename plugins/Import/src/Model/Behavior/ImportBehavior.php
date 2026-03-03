@@ -789,14 +789,18 @@ class ImportBehavior extends Behavior
                 $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
                 $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
             }
-            //POCOR-9584: start - carry full encoded params (student_id, user_id, etc.) to results redirect
-            //   instead of only institution_id, so back button from results page can recover the full context
+            //POCOR-9584: start - carry full encoded params to results redirect; use direct key assignment
+            //   (array_merge renumbers integer keys, breaking pass param order)
             $fullEncodedParam = $request->getParam('pass')[1] ?? null;
+            // Log::debug('@ImportBehavior::processImport url_before=' . json_encode($url) . ' pass=' . json_encode($request->getParam('pass')) . ' fullEncodedParam=' . json_encode($fullEncodedParam)); //[TEMP-LOG]
             if ($fullEncodedParam) {
                 $url[1] = $fullEncodedParam;
             } else {
                 $url[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
             }
+            // Strip stale query params from results redirect URL (e.g. period=34 carried from add page)
+            unset($url['?']);
+            // Log::debug('@ImportBehavior::processImport url_after=' . json_encode($url)); //[TEMP-LOG]
             //POCOR-9584: end
 
             return $model->controller->redirect($url);

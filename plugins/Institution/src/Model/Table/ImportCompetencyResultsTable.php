@@ -475,6 +475,7 @@ class ImportCompetencyResultsTable extends AppTable
             ?? ($postData['institution_class_id'] ?? null)
             ?? ($qs['class_id'] ?? null);
         //POCOR-9584: end
+        // Log::debug('@ImportCompetencyResultsTable::getStudentArray getQuery=' . json_encode($this->request->getQuery('institution_class_id')) . ' postData=' . json_encode($postData) . ' classId=' . json_encode($classId)); //[TEMP-LOG]
 
         if (empty($classId)) {
             return [];
@@ -527,6 +528,9 @@ class ImportCompetencyResultsTable extends AppTable
             ?? ($postData['competency_template_id'] ?? null)
             ?? ($qs['competency_template_id'] ?? null);
         //POCOR-9584: end
+        // Log::debug('@ImportCompetencyResultsTable::getCompetencyCriteriasArray getQuery_academic=' . json_encode($this->request->getQuery('academic_period_id')) . ' post_academic=' . json_encode($postData['academic_period_id'] ?? null) . ' resolved=' . json_encode($academicPeriod)); //[TEMP-LOG]
+        // Log::debug('@ImportCompetencyResultsTable::getCompetencyCriteriasArray getQuery_template=' . json_encode($this->request->getQuery('competency_template_id')) . ' post_template=' . json_encode($postData['competency_template_id'] ?? null) . ' resolved=' . json_encode($competencyTemplate)); //[TEMP-LOG]
+        // Log::debug('@ImportCompetencyResultsTable::getCompetencyCriteriasArray getQuery_item=' . json_encode($this->request->getQuery('competency_item_id')) . ' post_item=' . json_encode($postData['competency_item_id'] ?? null) . ' resolved=' . json_encode($competencyItem)); //[TEMP-LOG]
 
         if (empty($academicPeriod) || empty($competencyTemplate)) {
             return [];
@@ -547,6 +551,8 @@ class ImportCompetencyResultsTable extends AppTable
             );
             $arrayCompetencyCriterias = array_values($arrayCompetencyCriterias);
         }
+
+        // Log::debug('@ImportCompetencyResultsTable::getCompetencyCriteriasArray criteriaCount=' . count($arrayCompetencyCriterias) . ' criteriaIds=' . json_encode(array_column($arrayCompetencyCriterias, 'id'))); //[TEMP-LOG]
 
         return $arrayCompetencyCriterias;
     }
