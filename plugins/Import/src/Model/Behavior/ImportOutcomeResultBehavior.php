@@ -227,6 +227,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                  * --------------------------- */
                 $rowHasNew    = false;
                 $rowHasUpdate = false;
+                $gradeAttempted = false; //POCOR-9584: track if any non-blank grade cell was seen
 
                 for ($i = 0; $i < $totalCriteria; $i++) {
 
@@ -239,6 +240,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                     if ($gradeValue === '') {
                         continue;
                     }
+
+                    $gradeAttempted = true; //POCOR-9584: at least one grade cell is non-blank
 
                     $tempRow            = new ArrayObject;
                     $originalRow        = new ArrayObject;
@@ -315,6 +318,11 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 /* ---------------------------
                  * FINAL ROW RESULT
                  * --------------------------- */
+                //POCOR-9584: start - skip rows where no grade cells were filled (blank rows are not failures)
+                if (!$gradeAttempted) {
+                    continue;
+                }
+                //POCOR-9584: end
                 if ($rowTracker[$row]['success']) {
                     $dataPassed[] = [
                         'row_number' => (int)$row,
@@ -323,23 +331,28 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                         ]
                     ];
                 } else {
+                    //POCOR-9584: start - show actual per-row errors; fix undefined $rowCodeErrorForExcel
+                    $rowErrors = $rowTracker[$row]['errors'];
+                    $errorMsg  = empty($rowErrors)
+                        ? __('Outcome grade ID could not be assigned. Please verify the OpenEMIS ID and grading value in the Excel file.')
+                        : implode('; ', $rowErrors);
                     $dataFailed[] = [
                         'row_number'    => (int)$row,
-                        'error'         => '<ul>' . 'Outcome grade ID could not be assigned. Please verify the OpenEMIS ID and grading value in the Excel file.' . '</ul>',
-                        'errorForExcel' => is_array($rowCodeErrorForExcel)
-                            ? implode("\n", $rowCodeErrorForExcel)
-                            : (string)$rowCodeErrorForExcel,
+                        'error'         => '<ul><li>' . $errorMsg . '</li></ul>',
+                        'errorForExcel' => $errorMsg,
                         'data' => new ArrayObject([
                             $studentOpenEmisId
                         ])
                     ];
+                    //POCOR-9584: end
                 }
             }
 
             /* ===========================
              *  STORE RESULT & REDIRECT
              * =========================== */
-            $resultHeader = ['Row Number','OpenEMIS ID'];
+            //POCOR-9584: criterias_results.php element auto-prepends "Row Number" column — do not include it in header
+            $resultHeader = ['OpenEMIS ID'];
             $systemDateFormat = TableRegistry::get('Configuration.ConfigItems')
                 ->value('date_format');
             $session = $this->_table->Session;
