@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -354,17 +355,32 @@ class ImportCompetencyResultsTable extends AppTable
     public function onUpdateFieldCompetencyPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $academicPeriodId = !is_null($request->getQuery('period')) ? $request->getQuery('period') : $this->AcademicPeriods->getCurrent();
+            Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod action=' . json_encode($action)); //[TEMP-LOG]
+            Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod $request->getQuery(period)=' . json_encode($request->getQuery('period'))); //[TEMP-LOG]
+            Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod $this->request->getQuery(period)=' . json_encode($this->request->getQuery('period'))); //[TEMP-LOG]
+            Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod $this->request->getQuery(academic_period)=' . json_encode($this->request->getQuery('academic_period'))); //[TEMP-LOG]
+            Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod $this->request->getQuery(competency_template)=' . json_encode($this->request->getQuery('competency_template'))); //[TEMP-LOG]
+
+            //POCOR-9584: start - use $this->request (updated by addAfterAction via withQueryParams),
+            //   check academic_period key first (set from POST data), period as fallback (URL query string on initial load)
+            $academicPeriodId = $this->request->getQuery('academic_period')
+                ?? $this->request->getQuery('period')
+                ?? $this->AcademicPeriods->getCurrent();
+            $competencyTemplateId = $this->request->getQuery('competency_template');
+            //POCOR-9584: end
+            Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod $academicPeriodId=' . json_encode($academicPeriodId)); //[TEMP-LOG]
+            Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod competency_template is null=' . json_encode(is_null($competencyTemplateId))); //[TEMP-LOG]
 
             $competencyPeriodOptions = [];
-            if (!is_null($request->getQuery('competency_template'))) {
+            if (!is_null($competencyTemplateId)) { //POCOR-9584: use $competencyTemplateId from $this->request
                 $competencyPeriodOptions = $this->CompetencyPeriods
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                     ->where([
                         $this->CompetencyPeriods->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->CompetencyPeriods->aliasField('competency_template_id ') => $request->getQuery('competency_template')
+                        $this->CompetencyPeriods->aliasField('competency_template_id') => $competencyTemplateId //POCOR-9584: fix trailing space in column name
                     ])
                     ->toArray();
+                Log::debug('@ImportCompetencyResults::onUpdateFieldCompetencyPeriod $competencyPeriodOptions count=' . json_encode(count($competencyPeriodOptions))); //[TEMP-LOG]
             }
 
             $attr['options'] = $competencyPeriodOptions;
@@ -426,7 +442,16 @@ class ImportCompetencyResultsTable extends AppTable
 
     public function getStudentArray()
     {
-        $classId = $this->request->getQuery('class');
+        //POCOR-9584: start - for template action (GET) class is in encoded pass[1] as class_id;
+        //   getQueryString() decodes pass[1], getQuery('class') is used on POST (addAfterAction withQueryParams)
+        $qs = $this->getQueryString();
+        $classId = $this->request->getQuery('class') ?? ($qs['class_id'] ?? null);
+        //POCOR-9584: end
+
+        if (empty($classId)) { //POCOR-9584: guard — CakePHP5 throws on null WHERE value
+            return [];
+        }
+
         $institutionClassStudentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
         $studentStatusesTable = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $arrayStudent = $institutionClassStudentsTable->find()
@@ -458,20 +483,34 @@ class ImportCompetencyResultsTable extends AppTable
 
     public function getCompetencyCriteriasArray()
     {
-        $competencyGradingOptionsTable = TableRegistry::getTableLocator()->get('Competency.CompetencyGradingOptions');
-        $template = $this->request->getQuery('competency_template');
-        $academicPeriod = $this->request->getQuery('academic_period');
-        $competencyItem = $this->request->getQuery('competency_item');
-        $competencyTemplate = $this->request->getQuery('competency_template');
+        //POCOR-9584: start - for template action (GET) values come from encoded pass[1] via getQueryString();
+        //   for add POST they come from addAfterAction withQueryParams (short keys: academic_period, competency_template)
+        $qs = $this->getQueryString();
+        $academicPeriod    = $this->request->getQuery('academic_period')    ?? ($qs['academic_period_id']    ?? null);
+        $competencyItem    = $this->request->getQuery('competency_item')    ?? ($qs['competency_item_id']    ?? null);
+        $competencyTemplate = $this->request->getQuery('competency_template') ?? ($qs['competency_template_id'] ?? null);
+        //POCOR-9584: end
+
+        if (empty($academicPeriod) || empty($competencyTemplate)) { //POCOR-9584: guard — CakePHP5 throws on null WHERE value
+            return [];
+        }
 
         $competencyCriteriasTable = TableRegistry::getTableLocator()->get('Competency.CompetencyCriterias');
         $arrayCompetencyCriterias = $competencyCriteriasTable->find()
         ->where([
             $competencyCriteriasTable->aliasField('academic_period_id') => $academicPeriod,
-            $competencyCriteriasTable->aliasField('competency_item_id') => $competencyItem,
             $competencyCriteriasTable->aliasField('competency_template_id') => $competencyTemplate
         ])
         ->toArray();
+
+        //POCOR-9584: filter by competency_item_id if provided (may be absent on initial template load)
+        if (!empty($competencyItem)) {
+            $arrayCompetencyCriterias = array_filter(
+                $arrayCompetencyCriterias,
+                fn($row) => $row->competency_item_id == $competencyItem
+            );
+            $arrayCompetencyCriterias = array_values($arrayCompetencyCriterias);
+        }
 
         return $arrayCompetencyCriterias;
     }

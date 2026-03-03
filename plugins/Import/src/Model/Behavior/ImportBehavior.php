@@ -218,17 +218,25 @@ class ImportBehavior extends Behavior
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
             $downloadUrl[1] = $buttons['add']['url'][1];
         } else {
-            //POCOR-9584: start - only add [1] when institutionId is set; for non-institution contexts carry pass[1] if present
-            if ($this->institutionId) {
+            //POCOR-9584: start - always carry full pass[1] from current request so all context params
+            //   (class_id, academic_period_id, competency_template_id, etc.) survive to the template URL.
+            //   Fall back to encoding only institution_id if pass[1] is absent.
+            $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+            if ($fullEncodedParam) {
+                $downloadUrl[1] = $fullEncodedParam;
+            } elseif ($this->institutionId) {
                 $downloadUrl[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
-            } else {
-                $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
-                if ($fullEncodedParam) {
-                    $downloadUrl[1] = $fullEncodedParam;
-                }
             }
             //POCOR-9584: end
         }
+
+        //POCOR-9584: start - carry any non-empty query params (set by addAfterAction withQueryParams) to the template URL
+        //   so methods like getCompetencyCriteriasArray() can read competency_item, competency_period, etc. on the GET request
+        $queryParams = array_filter($this->_table->request->getQueryParams(), fn($v) => $v !== null && $v !== '' && $v !== '0');
+        if (!empty($queryParams)) {
+            $downloadUrl['?'] = $queryParams;
+        }
+        //POCOR-9584: end
 
         $url = Router::url($downloadUrl);
         $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='{$url}'");
