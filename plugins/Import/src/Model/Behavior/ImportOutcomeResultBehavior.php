@@ -229,6 +229,18 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 $rowHasUpdate = false;
                 $gradeAttempted = false; //POCOR-9584: track if any non-blank grade cell was seen
 
+                //POCOR-9584: start - collect student name + all grades for passed/failed result files
+                $studentName = trim((string)
+                    $sheet->getCellByColumnAndRow(2, $row)->getCalculatedValue()
+                );
+                $rowGrades = [];
+                for ($j = 0; $j < $totalCriteria; $j++) {
+                    $rowGrades[] = trim((string)
+                        $sheet->getCellByColumnAndRow($firstGradeCol + $j, $row)->getCalculatedValue()
+                    );
+                }
+                //POCOR-9584: end
+
                 for ($i = 0; $i < $totalCriteria; $i++) {
 
                     $column = $firstGradeCol + $i;
@@ -324,14 +336,13 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 }
                 //POCOR-9584: end
                 if ($rowTracker[$row]['success']) {
+                    //POCOR-9584: include student name + all grades so passed Excel mirrors the uploaded file
                     $dataPassed[] = [
                         'row_number' => (int)$row,
-                        'data' => [
-                            $studentOpenEmisId
-                        ]
+                        'data' => array_merge([$studentOpenEmisId, $studentName], $rowGrades)
                     ];
                 } else {
-                    //POCOR-9584: start - show actual per-row errors; fix undefined $rowCodeErrorForExcel
+                    //POCOR-9584: start - show actual per-row errors; include full row data in failed Excel
                     $rowErrors = $rowTracker[$row]['errors'];
                     $errorMsg  = empty($rowErrors)
                         ? __('Outcome grade ID could not be assigned. Please verify the OpenEMIS ID and grading value in the Excel file.')
@@ -340,9 +351,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                         'row_number'    => (int)$row,
                         'error'         => '<ul><li>' . $errorMsg . '</li></ul>',
                         'errorForExcel' => $errorMsg,
-                        'data' => new ArrayObject([
-                            $studentOpenEmisId
-                        ])
+                        'data' => new ArrayObject(array_merge([$studentOpenEmisId, $studentName], $rowGrades))
                     ];
                     //POCOR-9584: end
                 }
@@ -440,7 +449,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
      **
      ******************************************************************************************************************/
 
-    public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type)
+    public function setImportDataTemplate($objPHPExcel, $dataSheetName, $header, $type, $skipStudentData = false) //POCOR-9584: $skipStudentData skips student rows + dropdowns (used when generating result files)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
         // Log::debug('@ImportOutcomeResultBehavior::setImportDataTemplate START dataSheetName=' . json_encode($dataSheetName) . ' type=' . json_encode($type)); //[TEMP-LOG]
@@ -580,6 +589,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
        $activeSheet->getRowDimension(1)->setRowHeight(80);
        $activeSheet->getRowDimension(2)->setRowHeight($suggestedRowHeight);
 
+       //POCOR-9584: start - skip student rows and dropdowns when generating passed/failed result files
+       if (!$skipStudentData) {
        $institutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
        $studentStatusesTable = TableRegistry::get('Student.StudentStatuses');
        $arrayStudent = $institutionClassStudentsTable->find()
@@ -666,6 +677,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 );
             }
         }        //POCOR-9158 end
+       } //POCOR-9584: end if (!$skipStudentData)
 
         //  -1 to start from A, +2 is for education subject and outcome-->, -1+2=+1
         $arrayLastAlpha = $this->getExcelColumnAlpha(count($arrayOutcomeCriterias) + 1);
@@ -690,6 +702,63 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         $activeSheet->getColumnDimension($Comment)->setAutoSize(true);
 
     }
+
+    //POCOR-9584: start - override _generateDownloadableFile for Outcome results:
+    //   - skips all-class student rows (only write passed/failed rows)
+    //   - uses $rowData=4 (3-row header: logo/IDs, criteria names, column labels)
+    //   - passes full row data (openemis_no, student_name, grade1, ...) from dataPassed/dataFailed
+    protected function _generateDownloadableFile($data, $type, $header, $systemDateFormat)
+    {
+        if (empty($data)) {
+            return null;
+        }
+
+        $downloadFolder = $this->prepareDownload();
+        $excelFile = sprintf('OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->getConfig('model'), ucwords($type), time());
+        $excelPath = $downloadFolder . DS . $excelFile;
+
+        $dataSheetName = $this->getExcelLabel('general', 'data');
+        $objPHPExcel   = new Spreadsheet();
+
+        // Use the same 3-column header as template() for consistent layout
+        $templateHeader = [__('OpenEMIS ID'), __('Student Name'), __('Outcome Grading Option Id')];
+        if ($type == 'failed') {
+            $templateHeader[] = $this->getExcelLabel('general', 'errors');
+        }
+
+        // Write template structure (logo, criteria rows, column labels) WITHOUT student rows or dropdowns
+        $this->setImportDataTemplate($objPHPExcel, $dataSheetName, $templateHeader, $type, true);
+        $activeSheet = $objPHPExcel->getActiveSheet();
+
+        // Data starts at row 4 (rows 1-3 are header: logo/IDs, criteria names, column labels)
+        foreach ($data as $index => $record) {
+            if ($type == 'failed') {
+                $values = array_values($record['data']->getArrayCopy());
+                $values[] = $record['errorForExcel'];
+            } else {
+                $values = $record['data'];
+            }
+            $rowNum = $index + 4;
+            $activeSheet->getRowDimension($rowNum)->setRowHeight(15);
+            foreach ($values as $key => $value) {
+                $alpha = $this->getExcelColumnAlpha($key + 1);
+                $activeSheet->setCellValue($alpha . $rowNum, $value);
+                $activeSheet->getColumnDimension($alpha)->setAutoSize(true);
+            }
+        }
+
+        $objPHPExcel->setActiveSheetIndex(0);
+        $objWriter = new Xlsx($objPHPExcel);
+        $objWriter->save($excelPath);
+
+        $downloadUrl   = $this->_table->ControllerAction->url('downloadPassed');
+        if ($type == 'failed') {
+            $downloadUrl = $this->_table->ControllerAction->url('downloadFailed');
+        }
+        $downloadUrl[] = $excelFile;
+        return $downloadUrl;
+    }
+    //POCOR-9584: end
 
     public function setCodesDataTemplate($objPHPExcel)
     {
