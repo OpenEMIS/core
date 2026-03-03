@@ -522,3 +522,105 @@ git revert [commit-hash]
 ```
 
 ---
+
+## Issue 10 – ImportCompetencyResults CakePHP5 compatibility & back-button fix
+
+### What is the Task?
+
+Complete the CakePHP 5 migration of the `ImportCompetencyResults` behavior and fix the back button URL navigation after import results, ensuring all query parameters are correctly preserved and results page redirects carry proper context.
+
+### Situation Before
+
+- **CakePHP 5 API Issues** (`ImportCompetencyResultBehavior.php`):
+  - `$event->result` accessed as property instead of via `getResult()` method (protected in CakePHP 5)
+  - `$activeModel->newEntity()` called without required array argument in CakePHP 5
+  - `$clonedEntity->virtualProperties([])` used — method removed in CakePHP 5, replaced by `setVirtual([])`
+  - Overall comment field save used old field key aliases instead of DB column names with `_id` suffix
+  - Results redirect URL missing `pass[1]` (bare `url('results')`) so context params were lost
+
+- **Query Parameter Loss in Dynamic-Column Imports** (`ImportCompetencyResultsTable.php`):
+  - `getStudentArray()` and `getCompetencyCriteriasArray()` read only from `getQuery()` (URL query string)
+  - After `addOnInitialize` clears query params (same issue as CompetencyPeriod), these methods returned empty results during template build
+  - `onUpdateToolbarButtons` back button URL always lost context params for both add and results pages
+
+### What Was Implemented
+
+1. **Fixed CakePHP 5 event API** (`ImportCompetencyResultBehavior.php`):
+   - `$event->result` → `$event->getResult()` (method call for protected property)
+   - Line 186–190: Overall comment field save changed old key aliases (`competency_template`, `competency_period`, `competency_item`, `academic_period`) to DB column names (`competency_template_id`, `competency_period_id`, `competency_item_id`, `academic_period_id`)
+
+2. **Fixed CakePHP 5 entity creation** (`ImportCompetencyResultBehavior.php`):
+   - `$activeModel->newEntity()` → `$activeModel->newEntity([])` (requires array argument in CakePHP 5)
+   - `$clonedEntity->virtualProperties([])` → `$clonedEntity->setVirtual([])` (method call syntax for CakePHP 5)
+
+3. **Fixed query parameter reading with POST fallback** (`ImportCompetencyResultBehavior.php` and `ImportCompetencyResultsTable.php`):
+   - Added `getData()[$alias]` fallback in `getStudentArray()` and `getCompetencyCriteriasArray()` so methods read from POST data if query params are cleared
+   - Matches the same pattern used by `ImportResultBehavior::onUpdateToolbarButtons` for dynamic-column imports
+   - `competency_item_id` read: added POST data fallback via `getData('competency_item_id')`
+
+4. **Fixed results redirect URL** (`ImportBehavior.php` processImport):
+   - Bare `url('results')` → now carries `pass[1]` with encoded context params
+   - Added `unset($url['?'])` to strip stale `?` query params from the redirect URL (important for clean URLs after `addOnInitialize` clears them)
+
+5. **Fixed back button URL for ImportCompetencyResults** (`ImportResultBehavior.php` onUpdateToolbarButtons):
+   - Changed back button for `ImportCompetencyResults` to use `backUrl` config (StudentCompetencies context) instead of default import back pattern
+   - Now carries `pass[1]` (encoded institution_id) on both add and results pages
+   - Strips stale `?` and `period` query params to preserve clean URL state
+   - Preserves `index` at `pass[0]` instead of unsetting it (correct CakePHP navigation)
+
+### Files Changed Summary
+
+- **Modified files**: 4
+  - `plugins/Import/src/Model/Behavior/ImportCompetencyResultBehavior.php` — Fixed CakePHP 5 event/entity APIs, added POST fallback for query params, updated field key aliases to _id suffix
+  - `plugins/Institution/src/Model/Table/ImportCompetencyResultsTable.php` — Added POST fallback in getStudentArray() and getCompetencyCriteriasArray()
+  - `plugins/Import/src/Model/Behavior/ImportResultBehavior.php` — Fixed back button URL to carry pass[1], strip stale params, use backUrl config for CompetencyResults
+  - `plugins/Import/src/Model/Behavior/ImportBehavior.php` — Added unset($url['?']) to results redirect URL
+
+- **Database Migrations**: Not required
+  - No schema changes
+
+### Deployment Instructions (User Experience)
+
+1. **Git Deployment**
+   ```bash
+   git pull origin POCOR-9584
+   ```
+
+2. **Testing**
+   - Navigate to **Academic > Competencies > Import**
+   - Select class and competency period — verify dropdowns work without errors
+   - Download template — should have correct column structure with student names and criteria columns
+   - Upload completed template — import should process without API errors
+   - Click back button on results page — should return to full StudentCompetencies context (not dead import index page)
+   - Verify back button URL includes all context parameters (institution_id, class_id, academic_period_id, etc.)
+
+3. **Cache Clear**
+   ```bash
+   # No cache clear necessary for CakePHP import behavior changes
+   ```
+
+### System Administrator Guide
+
+### Monitoring
+
+Check `logs/hin-error.log` filtered by `@ImportCompetencyResult` if:
+- Template download fails with API error
+- Import page shows blank dropdowns
+- Results redirect shows 404 or wrong page
+- Back button points to dead import index instead of StudentCompetencies context
+
+### Troubleshooting
+
+- If dropdowns still blank: Verify `addOnInitialize` is clearing params correctly and `addAfterAction` is restoring them via `withQueryParams`
+- If results redirect 404: Check `pass[1]` contains encoded context params and `url['?']` is unset
+- If back button wrong: Verify `onUpdateToolbarButtons` reads `backUrl` config for `ImportCompetencyResults` and uses `getQueryString()` to build encoded `pass[1]`
+- Check logs at: `/var/www/html/emis/core/logs/hin-error.log` for specific CakePHP 5 API errors
+
+### Rollback Procedure
+
+If needed, rollback to the previous commit:
+```bash
+git revert [commit-hash]
+```
+
+---
