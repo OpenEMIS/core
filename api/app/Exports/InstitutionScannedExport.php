@@ -3,35 +3,25 @@
 namespace App\Exports;
 
 use App\Models\ScannedAttendance;
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Illuminate\Support\Facades\DB;
 
-class InstitutionScannedExport implements FromArray, WithHeadings, WithEvents
+class InstitutionScannedExport
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
+    private array $params;
+
     public function __construct($params)
     {
         $this->params = $params;
     }
 
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function array(): array
+    public function build(): Spreadsheet
     {
-        return $this->params;
-    }
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-
-    public function headings(): array
-    {
-        return [
-            'OpenEMIS ID',//POCOR-8900
+        $headings = [
+            'OpenEMIS ID',
             'DateTime',
             'Latitude',
             'Longitude',
@@ -40,22 +30,20 @@ class InstitutionScannedExport implements FromArray, WithHeadings, WithEvents
             'Modified User',
             'Modified',
             'Created User',
-            'Created'
+            'Created',
         ];
+
+        $sheet->fromArray([$headings], null, 'A1');
+
+        $row = 2;
+        foreach ($this->params as $record) {
+            $sheet->fromArray(array_values((array) $record), null, 'A' . $row);
+            $row++;
+        }
+
+        $customText = 'Institution Scanned Report: ' . date('Y-m-d H:i:s');
+        $sheet->setCellValue('A' . ($row + 1), $customText);
+
+        return $spreadsheet;
     }
-
-    public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function(AfterSheet $event) {
-                // Get the total number of rows
-                $rowCount = $event->sheet->getHighestRow();
-
-                // Add custom text after the last row
-                $customText = 'Institution Scanned Report: '.Date('Y-m-d H:i:s');
-                $event->sheet->setCellValue('A' . ($rowCount + 2), $customText);
-            },
-        ];
-    }
-
 }
