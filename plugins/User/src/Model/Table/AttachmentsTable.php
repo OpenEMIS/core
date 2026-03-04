@@ -489,10 +489,19 @@ class AttachmentsTable extends ControllerActionTable
 
             $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
             $buttons['download']['attr'] = $indexAttr;
-            $buttons['download']['url']['action'] = $this->getAlias();
-            $buttons['download']['url'][0] = 'download';
-            // $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id, 'security_user_id' => $entity->security_user_id]);
-            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+            //POCOR-9584: start - Build a fully-qualified URL (plugin + controller + action + numeric pass params).
+            // Without plugin/controller, CakePHP Router inherits them from the current request and can also
+            // carry over the current page's pass params (e.g. the navigation context on the view page),
+            // which causes the download URL to grow an extra segment with staff_id/institution_id/etc.
+            // A fully-specified URL is self-contained and produces a clean /download/{id} path.
+            $buttons['download']['url'] = [
+                'plugin'     => $this->controller->getPlugin(),
+                'controller' => $this->controller->getName(),
+                'action'     => $this->getAlias(),
+                0            => 'download',
+                1            => $this->paramsEncode(['id' => $entity->id]),
+            ];
+            //POCOR-9584: end
         }
 
         return $buttons;
