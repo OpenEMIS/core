@@ -299,7 +299,7 @@ class InstitutionClassesTable extends ControllerActionTable
             }
             return  __((string)$Courses);
         } else if ($field == 'staff_id') {
-            $teacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Home Room Teacher'])->first();
+            $teacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'staff_id'])->first();
             $teacherName = !empty($teacher->name)
                             ? (string)$teacher->name
                             : (string)$teacher->field_name;
