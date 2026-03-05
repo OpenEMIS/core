@@ -7,8 +7,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\EventInterface;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\Collection\Collection;
@@ -67,8 +65,8 @@ class StaffExcelReportBehavior extends Behavior
             $this->getConfig('filename', $model->getAlias());
         }
 
-        new Folder($folder, true, 0777);
-        new Folder($subfolder, true, 0777);
+        @mkdir($folder, 0777, true);
+        @mkdir($subfolder, 0777, true);
     }
 
     public function implementedEvents(): array
@@ -161,10 +159,8 @@ class StaffExcelReportBehavior extends Behavior
         }
 
 		if ($this->getConfig('download')) {
-            $tempfile = new File($temppath);
-            $tempinfo = $tempfile->info();
-            $tempcontent = $tempfile->read();
-            $tempfile->close();
+            $tempcontent = file_get_contents($temppath);
+            $tempinfo = ['filesize' => strlen($tempcontent)];
 
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
         }
@@ -202,9 +198,9 @@ class StaffExcelReportBehavior extends Behavior
                 $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
 
-                $excelTemplate = new File($filepath, true, 0777);
-                $excelTemplate->write($file);
-                $excelTemplate->close();
+                file_put_contents($filepath, $file);
+                // Bake image transparency into the template via Laravel artisan
+                exec(PHP_BINARY . ' ' . escapeshellarg(ROOT . DS . 'api' . DS . 'artisan') . ' reportcards:fix-transparency ' . escapeshellarg($filepath) . ' 2>&1');
                 // End create a temporary file
                 try {
                     // Read back from same temporary file
@@ -454,8 +450,9 @@ class StaffExcelReportBehavior extends Behavior
 
     public function deleteFile($filepath)
     {
-        $file = new File($filepath);
-        $file->delete();
+        if (file_exists($filepath)) {
+            unlink($filepath);
+        }
     }
 
     public function getParams($controller)

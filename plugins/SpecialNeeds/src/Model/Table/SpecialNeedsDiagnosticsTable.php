@@ -57,11 +57,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
                 ])
-                ->add('date',
-                 'ruleCheckInputWithinRange',
-                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
-                )
-                ;
+                ; //POCOR-9584: Removed academic period range validation
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -85,18 +81,33 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     public function onUpdateFieldSpecialNeedsDiagnosticsDegreeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            if($action == 'add'){
-                $degreeId = $this->request->getData()['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
-                $SpecialNeedsDiagnosticsDegree = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsDiagnosticsDegree');
-                $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($degreeId);
-                        
-                $attr['type'] = 'select';
+            $SpecialNeedsDiagnosticsDegree = TableRegistry::getTableLocator()->get('SpecialNeeds.SpecialNeedsDiagnosticsDegree');
 
-                $attr['placeholder'] = __('--Select--');
+            if (!isset($attr['attr'])) {
+                $attr['attr'] = [];
+            }
+
+            $attr['type'] = 'select';
+            $attr['placeholder'] = __('--Select--');
+            $attr['onChangeReload'] = true;
+
+            if($action == 'add'){
+                //POCOR-9584: start - Get degree type from posted data
+                $degreeId = $this->request->getData()['SpecialNeedsDiagnostics']['special_needs_diagnostics_type_id'];
+                $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($degreeId);
                 $attr['attr']['options'] = $degreeListOptions;
-                $attr['onChangeReload'] = true;
+                //POCOR-9584: end
             }else{
+                //POCOR-9584: start - Get degree type from entity for edit mode
+                $typeId = $attr['entity']->special_needs_diagnostics_type_id;
+                if (!empty($typeId)) {
+                    $degreeListOptions = $SpecialNeedsDiagnosticsDegree->getDegreeList($typeId);
+                    if (!empty($degreeListOptions)) {
+                        $attr['attr']['options'] = $degreeListOptions;
+                    }
+                }
                 $attr['value'] = $attr['entity']->special_needs_diagnostics_degree_id;
+                //POCOR-9584: end
             }
             return $attr;
         }
@@ -109,6 +120,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->field('name', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $this->field('security_user_id', ['visible' => false]); //POCOR-9584: Hide security_user_id in index
         $this->field('special_needs_diagnostics_type_id', ['type' => 'pg_select(connection, table_name, assoc_array)']);
         $this->field('special_needs_diagnostics_degree_id', ['type' => 'pg_select(connection, table_name, assoc_array)']);
         $this->setFieldOrder(['special_needs_diagnostics_type_id','special_needs_diagnostics_level_id']);
@@ -156,6 +168,7 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => true, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //Modify for POCOR-7147
+        $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['date', 'special_needs_diagnostics_type_id','special_needs_diagnostics_degree_id', 'file_name', 'file_content', 'comment']);
     }
@@ -289,4 +302,18 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     }
 
     // End POCOR-7467
+
+    //POCOR-9584: start - Automatically set security_user_id from getUserID()
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Decoded from query string: handles staff_id, student_id, or security_user_id depending on calling controller
+        $entity->security_user_id = $this->getUserID();
+    }
+
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Ensures security_user_id cannot be changed by users
+        $entity->security_user_id = $this->getUserID();
+    }
+    //POCOR-9584: end
 }
