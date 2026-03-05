@@ -108,6 +108,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->field('description', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('organization', ['visible' => false]);
+        $this->field('security_user_id', ['visible' => false]); //POCOR-9584: Hide security_user_id in index
         $this->field('special_needs_service_type_id', ['type' => 'pg_select(connection, table_name, assoc_array)']);
         $this->setFieldOrder(['special_needs_service_type_id']);
 
@@ -268,6 +269,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
+        $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['academic_period_id', 'special_needs_service_type_id', 'description', 'special_needs_service_classification_id', 'organization', 'file_name', 'file_content', 'comment']);
     }
@@ -293,5 +295,19 @@ class SpecialNeedsServicesTable extends ControllerActionTable
                 ]);
         }
     }
+
+    //POCOR-9584: start - Automatically set security_user_id from getUserID()
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Decoded from query string: handles staff_id, student_id, or security_user_id depending on calling controller
+        $entity->security_user_id = $this->getUserID();
+    }
+
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Ensures security_user_id cannot be changed by users
+        $entity->security_user_id = $this->getUserID();
+    }
+    //POCOR-9584: end
 
 }
