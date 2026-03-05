@@ -68,6 +68,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('comment', ['visible' => false]);
+        $this->field('security_user_id', ['visible' => false]); //POCOR-9584: Hide security_user_id in index
         $this->setFieldOrder(['special_needs_device_type_id']);
 
 
@@ -170,6 +171,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
     {
         $this->field('special_needs_device_type_id', ['type' => 'select']);
         $this->field('comment', ['type' => 'text']);
+        $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['special_needs_device_type_id', 'comment']);
     }
@@ -222,4 +224,19 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
     }
 
     // End POCOR-7467
+
+    //POCOR-9584: start - Automatically set security_user_id from getUserID()
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Decoded from query string: handles staff_id, student_id, or security_user_id depending on calling controller
+        $entity->security_user_id = $this->getUserID();
+    }
+
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Ensures security_user_id cannot be changed by users
+        $entity->security_user_id = $this->getUserID();
+    }
+    //POCOR-9584: end
+
 }

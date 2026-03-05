@@ -174,7 +174,7 @@ class StaffLeaveReportTable extends AppTable
         return $this->formatDateCell($entity->get('date_to'));
     }
 
-    public function onExcelRenderStartTime(Event $e, Entity $entity, $attr)
+    public function onExcelRenderStartTime(EventInterface $e, Entity $entity, $attr)
     {
         $time = $entity->get('start_time');
         if ($time instanceof \DateTimeInterface) return $time->format('h:i:s a');
@@ -182,7 +182,7 @@ class StaffLeaveReportTable extends AppTable
         return '';
     }
 
-    public function onExcelRenderEndTime(Event $e, Entity $entity, $attr)
+    public function onExcelRenderEndTime(EventInterface $e, Entity $entity, $attr)
     {
         $time = $entity->get('end_time');
         if ($time instanceof \DateTimeInterface) return $time->format('h:i:s a');

@@ -15,7 +15,7 @@ class AngularController extends AppController
         parent::initialize();
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
 
@@ -30,7 +30,7 @@ class AngularController extends AppController
     public function inputs()
     {
         $this->viewBuilder()->layout(false);
-        $requestAttr = json_decode($this->request->query['attributes'], true);
+        $requestAttr = json_decode($this->request->getQuery()['attributes'], true);
         if (is_array($requestAttr)) {
             $table = TableRegistry::getTableLocator()->get($requestAttr['className']);
             $fields = array_fill_keys(array_keys($table->fields), '');

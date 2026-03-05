@@ -19,7 +19,6 @@ use App\Http\Requests\StudentAttendancesNoScheduledClassRequest;
 use Illuminate\Support\Facades\Log;
 use App\Exports\StudentAttendancesExport;
 use App\Exports\StudentAttendanceArchiveExport;
-use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -1295,7 +1294,13 @@ class AttendanceController extends Controller
             
             $str = time();
             $fileName = 'StudentAttendances_'.$str.'.xlsx';
-            return Excel::download(new StudentAttendancesExport($data), $fileName);
+            $spreadsheet = (new StudentAttendancesExport($data))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_');
+            $writer->save($tempFile);
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
             
         } catch (\Exception $e) {
             Log::error(
@@ -2209,7 +2214,13 @@ class AttendanceController extends Controller
             
             $str = time();
             $fileName = 'StudentAbsencesPeriodDetailsArchive_'.$str.'.xlsx';
-            return Excel::download(new StudentAttendanceArchiveExport($data), $fileName);
+            $spreadsheet = (new StudentAttendanceArchiveExport($data))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_');
+            $writer->save($tempFile);
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
             
         } catch (\Exception $e) {
             Log::error(

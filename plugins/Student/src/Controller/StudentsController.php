@@ -71,6 +71,7 @@ class StudentsController extends AppController
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
 //            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']], //POCOR-7485 cakephp4 use as a function
             'ImportStudents' => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
+            'ImportStaffQualifications' => ['className' => 'Staff.ImportStaffQualifications', 'actions' => ['add']], //POCOR-9584: register so Import button from Students > Qualifications works
         ];
 
         $this->loadComponent('User.Image');
@@ -544,7 +545,7 @@ class StudentsController extends AppController
         }
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $StudentUser = TableRegistry::getTableLocator()->get('Institution.StudentUser');
         parent::beforeFilter($event);
@@ -639,6 +640,12 @@ class StudentsController extends AppController
         if ($furtherAction == 'image' || $furtherAction == 'download' || $furtherAction == 'ajaxReferrerAutocomplete') {
             return true;
         }
+        //POCOR-9584: start - skip student ID guard for import sub-actions (ImportStaffQualifications)
+        $importAliases = ['ImportStaffQualifications'];
+        if (in_array($action, $importAliases)) {
+            return true;
+        }
+        //POCOR-9584: end
 //        $this->log(print_r($request,true), debug);
         return false;
     }
