@@ -3,9 +3,9 @@ namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
-use Cake\Network\Session;
+use Cake\Http\Session;
 use Cake\ORM\Entity;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
