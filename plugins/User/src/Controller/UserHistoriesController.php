@@ -19,7 +19,7 @@ class UserHistoriesController extends PageController
         $this->Page->disable(['add', 'edit', 'view', 'delete']);
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $session = $this->request->getSession();
         //$institutionId = $this->getInstitutionID();

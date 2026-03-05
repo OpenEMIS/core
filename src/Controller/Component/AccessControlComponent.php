@@ -65,7 +65,7 @@ class AccessControlComponent extends Component
     }
 
     // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         if ($this->controller instanceof \Page\Controller\PageController) {
             $page = $this->Page;
