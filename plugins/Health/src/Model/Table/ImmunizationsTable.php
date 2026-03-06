@@ -131,14 +131,15 @@ class ImmunizationsTable extends ControllerActionTable
 
      // POCOR-6131
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
-        $session = $this->request->getSession();
         // $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $studentUserId = $session->read('Student.Students.id');
+        //POCOR-9584: use getUserID() (reads user_id from encoded query string) like all other Health tables;
+        //            the previous session-based read returned null in Staff context causing CakePHP 5
+        //            InvalidArgumentException: Expression missing IS/IS NOT operator with null value
+        $userId = $this->getUserID();
 
         $query
         ->where([
-            // $this->aliasField('security_user_id = ').$staffUserId
-            $this->aliasField('security_user_id') => $studentUserId
+            $this->aliasField('security_user_id') => $userId
         ]);
     }
 

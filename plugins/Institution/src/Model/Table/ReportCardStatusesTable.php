@@ -252,7 +252,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-        $this->field('email_status');
+        //$this->field('email_status');
+        $this->field('pdf_file_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
@@ -1250,7 +1251,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-        $this->field('email_status');
+        //$this->field('email_status');
+        $this->field('pdf_file_size'); //POCOR-9521
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
         $this->setFieldOrder(['academic_period_id', 'institution_class', 'openemis_no', 'student_name', 'report_card', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
@@ -1504,20 +1506,64 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetEmailStatus(EventInterface $event, Entity $entity)
+    //POCOR-9521
+    public function onGetPdfFileSize(EventInterface $event, Entity $entity)
     {
-        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
-        $value = '<i class="fa fa-minus"></i>';
+        $institutionId = $this->getInstitutionID();
+        $query = $this->getQueryString();
+        $reportCardId = !empty($entity->report_card_id)
+            ? $entity->report_card_id
+            : ($query['report_card_id'] ?? null);
 
-        if ($entity->has('email_status_id')) {
-            $value = $emailStatuses[$entity->email_status_id];
+        $studentId = !empty($entity->student_id)
+            ? $entity->student_id
+            : ($query['student_id'] ?? null);
 
-            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
-                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
-            }
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+
+        $gradeId = !empty($entity->education_grade_id)
+            ? $entity->education_grade_id
+            : ($query['education_grade_id'] ?? null);
+
+        $classId = !empty($entity->institution_class_id)
+            ? $entity->institution_class_id
+            : ($query['institution_class_id'] ?? null);
+
+        $conditions = [
+            'student_id' => $studentId,
+            'academic_period_id' => $academicPeriodId,
+            'institution_id' => $institutionId,
+        ];
+        if (!empty($reportCardId)) {
+            $conditions['report_card_id'] = $reportCardId;
         }
 
-        return $value;
+        if (!empty($gradeId)) {
+            $conditions['education_grade_id'] = $gradeId;
+        }
+
+        if (!empty($classId)) {
+            $conditions['institution_class_id'] = $classId;
+        }
+        $table = TableRegistry::getTableLocator()
+            ->get('Institution.InstitutionStudentsReportCards');
+
+        $record = $table->find()
+            ->select([
+                'pdf_size' => 'LENGTH(file_content_pdf)'
+            ])
+            ->where($conditions)
+            ->enableHydration(false)
+            ->first();
+        if (!$record || empty($record['pdf_size'])) {
+            return '';
+        }
+        $bytes = (int) $record['pdf_size'];
+
+        if ($bytes >= 1048576) { // 1 MB
+            return round($bytes / 1048576, 2) . ' MB';
+        }
+        return round($bytes / 1024, 2) . ' KB';
     }
 
     public function generate(EventInterface $event, ArrayObject $extra)
@@ -2713,6 +2759,21 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
         return $buttons;
-    }
-//POCOR-7998:end
+    }//POCOR-7998:end
+
+    /*public function onGetEmailStatus(EventInterface $event, Entity $entity)
+    {
+        $emailStatuses = $this->ReportCardEmailProcesses->getEmailStatus();
+        $value = '<i class="fa fa-minus"></i>';
+
+        if ($entity->has('email_status_id')) {
+            $value = $emailStatuses[$entity->email_status_id];
+
+            if ($entity->email_status_id == $this->ReportCardEmailProcesses::ERROR && $entity->has('email_error_message')) {
+                $value .= '&nbsp&nbsp;<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $entity->email_error_message . '"></i>';
+            }
+        }
+
+        return $value;
+    }*/
 }
