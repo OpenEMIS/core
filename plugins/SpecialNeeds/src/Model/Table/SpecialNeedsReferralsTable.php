@@ -122,7 +122,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             $this->aliasField('security_user_id') => $userID
         ]);
         $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
+        $encodedQueryString = $this->paramsEncode($queryString); //POCOR-9584
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $extra['elements']['controls'] = ['name' => 'SpecialNeeds.Referrals/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 1];
        // echo "<pre>"; print_r($extra);die;
@@ -142,11 +142,12 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->field('file_content', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
+        $this->field('security_user_id', ['visible' => false]); //POCOR-9584: Hide security_user_id in index
         $this->setFieldOrder(['referrer_id', 'referrer_type_id', 'date', 'reason_type_id']);
 
         // Start POCOR-5188
          if($this->request->getParam('controller') == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Referrals','Staff - Special Needs');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Referrals','Staff - Special Needs');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -155,7 +156,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -164,7 +165,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
         }elseif($this->request->getParam('controller') == 'Students'){
-            $is_manual_exist = $this->getManualUrl('Institutions','Referrals','Students - Special Needs');       
+            $is_manual_exist = $this->getManualUrl('Institutions','Referrals','Students - Special Needs');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -173,7 +174,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -182,8 +183,8 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Referrals','Special Needs');       
+        }elseif($this->request->getParam('controller') == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Referrals','Special Needs');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -192,7 +193,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -201,9 +202,9 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
 
-        }elseif($this->request->getParam('controller') == 'Profiles'){ 
-            $is_manual_exist = $this->getManualUrl('Personal','Referrals','Special Needs');       
-            if(!empty($is_manual_exist)){ 
+        }elseif($this->request->getParam('controller') == 'Profiles'){
+            $is_manual_exist = $this->getManualUrl('Personal','Referrals','Special Needs');
+            if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
                     'data-toggle' => 'tooltip',
@@ -211,7 +212,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -380,6 +381,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
@@ -460,5 +462,19 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         ];
         $fields->exchangeArray($extraField);
     }
+
+    //POCOR-9584: start - Automatically set security_user_id from getUserID()
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Decoded from query string: handles staff_id, student_id, or security_user_id depending on calling controller
+        $entity->security_user_id = $this->getUserID();
+    }
+
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Ensures security_user_id cannot be changed by users
+        $entity->security_user_id = $this->getUserID();
+    }
+    //POCOR-9584: end
 
 }

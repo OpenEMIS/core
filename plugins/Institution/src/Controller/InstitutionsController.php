@@ -3303,6 +3303,7 @@ class InstitutionsController extends AppController
             'classCustomFields', //POCOR-8538,
             'ImportInstitutions', // POCOR-8683
             'importInstitutions', // POCOR-8683
+
             'checkConfigurationForExternalSearch',
             'studentCustomFields',
             'staffCustomFields'
@@ -3311,7 +3312,8 @@ class InstitutionsController extends AppController
         $furtherActions = [
             'removeReport',
             'downloadFailed',
-            'downloadPassed'
+            'downloadPassed',
+            'template', //POCOR-9584: template is a file-download action; skip institution ID check (same as downloadFailed/downloadPassed)
         ];
 
         if (in_array($action, $primaryActions) || in_array($furtherAction, $furtherActions)) {
