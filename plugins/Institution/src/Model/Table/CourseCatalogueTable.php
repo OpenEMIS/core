@@ -96,6 +96,11 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
 
         // back button direct to staff application index
+        //POCOR-9584: start - preserve encoded query string so staff/institution context survives the back navigation
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        //POCOR-9584: end
+
         $backBtn['type'] = 'button';
         $backBtn['label'] = '<i class="fa kd-back"></i>';
         $backBtn['attr'] = [
@@ -109,7 +114,8 @@ class CourseCatalogueTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'StaffTrainingApplications',
-            '0' => 'index'
+            '0' => 'index',
+            '1' => $encodedQueryString //POCOR-9584: encoded params (institution_id, staff_id, user_id) required for staff context
         ];
         $extra['toolbarButtons']['back'] = $backBtn;
     }

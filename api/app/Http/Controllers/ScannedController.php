@@ -7,7 +7,6 @@ use App\Services\ScannedService;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\ScannedAttendanceRequest;
 use App\Exports\InstitutionScannedExport;
-use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -255,7 +254,13 @@ class ScannedController extends Controller
             $data = $this->scannedService->institutionScannedDataExport($params);
             $str = time();
             $fileName = 'InstitutionScanned'.$str.'.xlsx';
-            return Excel::download(new InstitutionScannedExport($data), $fileName);
+            $spreadsheet = (new InstitutionScannedExport($data))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_');
+            $writer->save($tempFile);
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
 
         } catch (\Exception $e) {
             Log::error(
