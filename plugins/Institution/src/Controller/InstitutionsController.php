@@ -2441,7 +2441,7 @@ class InstitutionsController extends AppController
             ];
             //POCOR-9526 start
             $LabelTable = TableRegistry::get('Labels');
-            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Secondary Teacher'])->first();
+            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'secondary_staff_id'])->first();
             if (!empty($secondarystaff)) {
                 $secondarystaffName = !empty($secondarystaff->name)
                     ? (string)$secondarystaff->name
@@ -2450,7 +2450,7 @@ class InstitutionsController extends AppController
                 $secondarystaffName = 'Secondary Teacher';
             }
 
-            $homeRoomTeacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Home Room Teacher'])->first();
+            $homeRoomTeacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'staff_id'])->first();
             if (!empty($homeRoomTeacher)) {
                 if (!empty($homeRoomTeacher->code) && !empty($homeRoomTeacher->name)) {
                     $homeRoomTeacherName = $homeRoomTeacher->code . ' ' . $homeRoomTeacher->name;

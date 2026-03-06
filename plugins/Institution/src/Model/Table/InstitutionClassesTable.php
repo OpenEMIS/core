@@ -281,19 +281,19 @@ class InstitutionClassesTable extends ControllerActionTable
         if ($field == 'classes_secondary_staff') {
            // return $this->getMessage($this->aliasField($field));
             //POCOR-9524
-            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Secondary Teacher'])->first();
+            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'secondary_staff_id'])->first();
             $secondarystaffName = !empty($secondarystaff->name)
                             ? (string)$secondarystaff->name
                             : (string)$secondarystaff->field_name;
             return  __((string)$secondarystaffName);
         } else if ($field == 'institution_unit_id') {
-            $unitname = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Unit'])->first();
+            $unitname = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'unit'])->first();
             if ($unitname != null) {
                 $unit =  $unitname->name; //add this name from Adminsitration > System Setup > Labels
             }
             return  __((string)$unit);
         } else if ($field == 'institution_course_id') {
-            $CourseName = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Course'])->first();
+            $CourseName = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'course'])->first();
             if ($CourseName != null) {
                 $Courses =  $CourseName->name; //add this name from Adminsitration > System Setup > Labels
             }
