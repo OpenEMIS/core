@@ -174,16 +174,11 @@ class TextbooksTable extends ControllerActionTable {
         //POCOR-8414 start
         $plugin = __($this->controller->getPlugin());
         if($plugin != 'Profile' && $plugin != 'GuardianNav'){
-            $id = $this->request->getAttribute('params')['pass'][1];
-            //POCOR-8489 --Start
-			if(isset($id)) {
-				$DecodedQueryString = $this->paramsDecode($id);
-				$userId = $DecodedQueryString['user_id'] ?? $DecodedQueryString['student_id'];
-			}else {
-				$queryString = $this->getQueryString();
-				$userId = $queryString['student_id'];
-			}
-            //POCOR-8489 --End
+            //POCOR-9584: start - for view action pass[1] is the encoded record ID (only has 'id'),
+            //   not the query string; always read student_id via getQueryString() which decodes pass[1] safely
+            $queryString = $this->getQueryString();
+            $userId = $queryString['user_id'] ?? $queryString['student_id'] ?? null;
+            //POCOR-9584: end
             $Users = TableRegistry::getTableLocator()->get('User.Users');
             $result = $Users
                 ->find()
@@ -191,6 +186,9 @@ class TextbooksTable extends ControllerActionTable {
                 ->where(['id' =>  $userId])
                 ->first();
 
+            if ($result === null) { //POCOR-9584: guard against null result when userId is missing
+                return;
+            }
             $fullName = $result->first_name.' '.$result->last_name;
             try {
                 
