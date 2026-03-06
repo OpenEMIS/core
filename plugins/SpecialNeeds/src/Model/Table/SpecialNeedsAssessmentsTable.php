@@ -117,6 +117,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('date', ['visible' => true]);
         $this->field('comment', ['visible' => false]);
         $this->field('assessor_id', ['visible' => false]); //POCOR-9122
+        $this->field('security_user_id', ['visible' => false]); //POCOR-9584: Hide security_user_id in index
         $this->setFieldOrder(['date','special_need_type_id', "special_need_difficulty_id"]); //POCOR-9122
 
 
@@ -270,6 +271,7 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('comment', ['type' => 'text']);
+        $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['date', 'assessor_id', 'special_need_type_id', 'special_need_difficulty_id','file_name', 'file_content', 'comment']); //POCOR-6873
     }
@@ -490,5 +492,19 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     }
 
     // End POCOR-7467
+
+    //POCOR-9584: start - Automatically set security_user_id from getUserID()
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Decoded from query string: handles staff_id, student_id, or security_user_id depending on calling controller
+        $entity->security_user_id = $this->getUserID();
+    }
+
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Ensures security_user_id cannot be changed by users
+        $entity->security_user_id = $this->getUserID();
+    }
+    //POCOR-9584: end
 
 }
