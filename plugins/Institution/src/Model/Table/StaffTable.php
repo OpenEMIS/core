@@ -1385,16 +1385,23 @@ class StaffTable extends ControllerActionTable
 
     private function setupTabElements($entity)
     {
-        $options = [
-            'userRole' => 'Staff',
-            'action' => $this->action,
-            'id' => $entity->id,
-            'user_id' => $entity->staff_id
-        ];
-        $tabElements = $this->getCareerTabElements($options);
+        if($this->action == 'view'){
+            $url = $this->url('view');
+        }
+        else{
+            $options = [
+                'userRole' => 'Staff',
+                'action' => $this->action,
+                'id' => $entity->id,
+                'user_id' => $entity->staff_id,
+                'staff_id' => $entity->staff_id,
+                'institution_id' => $entity->institution_id
+            ];
+            $tabElements = $this->getCareerTabElements($options);
 
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Positions');
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', 'Positions');
+        }
     }
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
