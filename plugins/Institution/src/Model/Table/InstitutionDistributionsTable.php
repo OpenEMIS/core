@@ -72,7 +72,12 @@ class InstitutionDistributionsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         //START: POCOR-6681
-        $validator->requirePresence('date_received', 'create')->notEmpty('date_received');
+        $validator
+        ->requirePresence('academic_period_id')
+        ->requirePresence('meal_programmes_id')
+        ->requirePresence('quantity_received')
+        ->requirePresence('delivery_status_id')
+        ->requirePresence('date_received', 'create')->notEmpty('date_received');
         return $validator;
         //END: POCOR-6681
     }
