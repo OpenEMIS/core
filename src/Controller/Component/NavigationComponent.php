@@ -196,7 +196,10 @@ class NavigationComponent extends Component
                 'StaffBehaviourAttachments',
                 'Guardians',
                 'GuardianComments',
-                'InstitutionStandards'
+                'InstitutionStandards',
+                'InfrastructureElectricitiesHistory',
+                'InfrastructureInternetHistory',
+                'InfrastructureTelephonesHistory',
             ];
 
             $profileControllers = [
@@ -1109,7 +1112,8 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureUtilityElectricities.view',
                     'Institutions.InfrastructureUtilityElectricities.add',
                     'Institutions.InfrastructureUtilityElectricities.edit',
-                    'Institutions.InfrastructureUtilityElectricities.delete'
+                    'Institutions.InfrastructureUtilityElectricities.delete',
+                    'Institutions.InfrastructureElectricitiesHistory.index'
                 ]
             ],
 
@@ -1121,7 +1125,8 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureUtilityInternets.view',
                     'Institutions.InfrastructureUtilityInternets.add',
                     'Institutions.InfrastructureUtilityInternets.edit',
-                    'Institutions.InfrastructureUtilityInternets.delete'
+                    'Institutions.InfrastructureUtilityInternets.delete',
+                    'Institutions.InfrastructureInternetHistory.index'
                 ]
             ],
 
@@ -1132,7 +1137,8 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureUtilityTelephones.view',
                     'Institutions.InfrastructureUtilityTelephones.add',
                     'Institutions.InfrastructureUtilityTelephones.edit',
-                    'Institutions.InfrastructureUtilityTelephones.delete'
+                    'Institutions.InfrastructureUtilityTelephones.delete',
+                    'Institutions.InfrastructureTelephonesHistory.index'
                 ]
             ],
             // POCOR-6152

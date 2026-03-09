@@ -9972,6 +9972,24 @@ class InstitutionsController extends AppController
         return $this->response;
     }
 
+    //POCOR-9475
+    public function InfrastructureElectricitiesHistory()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureElectricitiesHistory']);
+    }
+
+    //POCOR-9475
+    public function InfrastructureInternetHistory()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureInternetHistory']);
+    }
+
+    //POCOR-9475
+    public function InfrastructureTelephonesHistory()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureTelephonesHistory']);
+    }
+
 }
 
 
