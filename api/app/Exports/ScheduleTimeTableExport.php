@@ -4,75 +4,57 @@ namespace App\Exports;
 
 use App\Models\InstitutionScheduleTimetables;
 use App\Models\InstitutionScheduleLessons;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Concerns\WithHeadings;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
-class ScheduleTimeTableExport implements FromCollection, WithHeadings
+class ScheduleTimeTableExport
 {
+    private array $params;
+
     public function __construct($params)
     {
         $this->params = $params;
     }
-    
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function array(): array
-    {
-        return $this->params;
-    }
 
-
-    public function headings(): array
+    public function build(): Spreadsheet
     {
-        return [
-            'Timetable Name',
-            
-        ];
-    }
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-    public function collection()
-    {
-        $options = $this->params;
+        $options     = $this->params;
         $timeTableId = $options['timetable_id'];
-        
-        // Retrieve lessons with related models
+
         $lessons = InstitutionScheduleLessons::with([
-                'timetables.scheduleInterval.shift.shiftOption',
-                'timetables.institutionClass.grades.educationGrades',
-                'timeslots',
-                'scheduleLessonDetails',
-                'scheduleLessonDetails.schedule_curriculum_lesson',
-                'scheduleLessonDetails.schedule_non_curriculum_lesson',
-                'scheduleLessonDetails.schedule_curriculum_lesson.institution_subject.educationSubjects',
-                'scheduleLessonDetails.schedule_lesson_room.institution_room'
-            ])
+            'timetables.scheduleInterval.shift.shiftOption',
+            'timetables.institutionClass.grades.educationGrades',
+            'timeslots',
+            'scheduleLessonDetails',
+            'scheduleLessonDetails.schedule_curriculum_lesson',
+            'scheduleLessonDetails.schedule_non_curriculum_lesson',
+            'scheduleLessonDetails.schedule_curriculum_lesson.institution_subject.educationSubjects',
+            'scheduleLessonDetails.schedule_lesson_room.institution_room',
+        ])
             ->where('institution_schedule_lessons.institution_schedule_timetable_id', $timeTableId)
             ->get()
             ->toArray();
-        // Initialize arrays
-        $formattedSchedule = [];
-        $classInfo = [];
 
-        // Initialize variable to hold previous institution timeslot ID
+        $formattedSchedule        = [];
+        $classInfo                = [];
         $previousInstitutionTimeslot = null;
 
         foreach ($lessons as $key => $item) {
-           // echo "<pre>"; print_r($item);die;
-            $className = $item['timetables']['institution_class']['name'];
-            $gradeName = $item['timetables']['institution_class']['grades'][0]['education_grades']['name'];
+            $className      = $item['timetables']['institution_class']['name'];
+            $gradeName      = $item['timetables']['institution_class']['grades'][0]['education_grades']['name'];
             $timetablesName = $item['timetables']['name'];
 
             if (empty($classInfo)) {
                 $classInfo = [
-                    'grade' => $gradeName,
-                    'class' => $className,
+                    'grade'    => $gradeName,
+                    'class'    => $className,
                     'schedule' => $timetablesName,
                 ];
             }
 
-            // Determine the day of the week
             $day = '';
             switch ($item['day_of_week']) {
                 case 1: $day = 'Mon'; break;
@@ -83,97 +65,79 @@ class ScheduleTimeTableExport implements FromCollection, WithHeadings
                 case 6: $day = 'Sat'; break;
                 case 7: $day = 'Sun'; break;
             }
-            
-            if($key == 0){ 
+
+            if ($key == 0) {
                 $prevDay = $day;
             }
 
-            // Initialize the start time using DateTime
-            if($key == 0 || $prevDay != $day){
+            if ($key == 0 || $prevDay != $day) {
                 $shiftStartTime = new \DateTime($item['timetables']['schedule_interval']['shift']['start_time']);
             }
-            $prevDay = $day; 
-            // Loop through schedule lesson details
+            $prevDay = $day;
 
-            if(empty($item['schedule_lesson_details']) && $prevDay == $day) 
-            {
-                $intervalMinutes = $item['timeslots']['interval'];
+            if (empty($item['schedule_lesson_details']) && $prevDay == $day) {
+                $intervalMinutes     = $item['timeslots']['interval'];
                 $institutionTimeslot = $item['institution_schedule_timeslot_id'];
-                //dump(($institutionTimeslot . '  '. $previousInstitutionTimeslot));
-                // Compare with previous timeslot ID
                 if ($institutionTimeslot !== $previousInstitutionTimeslot) {
-                    // Only calculate start and end times if the timeslot has changed
-                    $endTime = clone $shiftStartTime;
+                    $endTime            = clone $shiftStartTime;
                     $endTime->add(new \DateInterval('PT' . $intervalMinutes . 'M'));
                     $formattedStartTime = $shiftStartTime->format('h:i A');
-                    $formattedEndTime = $endTime->format('h:i A');
-                    $timeslot = "$formattedStartTime - $formattedEndTime";
-
-                    // Update the current start time for the next lesson
-                    $shiftStartTime = $endTime; // Set current start time to end time for the next iteration
-
-                    // Reset the previous institution timeslot to the current one
+                    $formattedEndTime   = $endTime->format('h:i A');
+                    $timeslot           = "$formattedStartTime - $formattedEndTime";
+                    $shiftStartTime     = $endTime;
                     $previousInstitutionTimeslot = $institutionTimeslot;
                 }
             }
+
             foreach ($item['schedule_lesson_details'] as $lessonDetail) {
-                $intervalMinutes = $item['timeslots']['interval'];
+                $intervalMinutes     = $item['timeslots']['interval'];
                 $institutionTimeslot = $item['institution_schedule_timeslot_id'];
-                // Compare with previous timeslot ID
                 if ($institutionTimeslot !== $previousInstitutionTimeslot) {
-                    // Only calculate start and end times if the timeslot has changed
-                    $endTime = clone $shiftStartTime;
+                    $endTime            = clone $shiftStartTime;
                     $endTime->add(new \DateInterval('PT' . $intervalMinutes . 'M'));
                     $formattedStartTime = $shiftStartTime->format('h:i A');
-                    $formattedEndTime = $endTime->format('h:i A');
-                    $timeslot = "$formattedStartTime - $formattedEndTime";
-
-                    // Update the current start time for the next lesson
-                    $shiftStartTime = $endTime; // Set current start time to end time for the next iteration
-
-                    // Reset the previous institution timeslot to the current one
+                    $formattedEndTime   = $endTime->format('h:i A');
+                    $timeslot           = "$formattedStartTime - $formattedEndTime";
+                    $shiftStartTime     = $endTime;
                     $previousInstitutionTimeslot = $institutionTimeslot;
                 }
-                // Prepare subject and room info
-                $subject = isset($lessonDetail['schedule_curriculum_lesson']) ? 
-                    $lessonDetail['schedule_curriculum_lesson']['institution_subject']['name'] : 
-                    $lessonDetail['schedule_non_curriculum_lesson']['name'];
-                    
 
-                $room = isset($lessonDetail['schedule_lesson_room']['institution_room']['name']) ? $lessonDetail['schedule_lesson_room']['institution_room']['name'] :'';
+                $subject = isset($lessonDetail['schedule_curriculum_lesson'])
+                    ? $lessonDetail['schedule_curriculum_lesson']['institution_subject']['name']
+                    : $lessonDetail['schedule_non_curriculum_lesson']['name'];
 
-                // Initialize if it doesn't exist
+                $room = isset($lessonDetail['schedule_lesson_room']['institution_room']['name'])
+                    ? $lessonDetail['schedule_lesson_room']['institution_room']['name']
+                    : '';
+
                 if (!isset($formattedSchedule[$timeslot][$day])) {
                     $formattedSchedule[$timeslot][$day] = [];
                 }
-
-                // Append the subject and room
                 $formattedSchedule[$timeslot][$day][] = "$subject, Room: $room";
             }
-            
         }
-        // Prepare final array for export
-        $finalArray = [];
 
-        // Add class and grade information
-        $finalArray[] = ['Grade: ' . $classInfo['grade'] . ' | Class: ' . $classInfo['class'] . ' | Schedule: ' . $classInfo['schedule']];
-        $finalArray[] = []; // Add an empty row
-
-        // Add header row
+        // Build the data array
+        $finalArray   = [];
+        $finalArray[] = ['Grade: ' . ($classInfo['grade'] ?? '') . ' | Class: ' . ($classInfo['class'] ?? '') . ' | Schedule: ' . ($classInfo['schedule'] ?? '')];
+        $finalArray[] = [];
         $finalArray[] = ['Time', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
         foreach ($formattedSchedule as $time => $days) {
             $row = [$time];
-            foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $day) {
-                // Join subjects with line breaks, if they exist
-                $row[] = isset($days[$day]) ? implode('||', $days[$day]) : '';
+            foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $dayName) {
+                $row[] = isset($days[$dayName]) ? implode('||', $days[$dayName]) : '';
             }
             $finalArray[] = $row;
-            $finalArray[] = []; // Add an empty row for spacing
+            $finalArray[] = [];
         }
 
-        return collect($finalArray); // Return as a Collection
+        $sheetRow = 1;
+        foreach ($finalArray as $rowData) {
+            $sheet->fromArray($rowData, null, 'A' . $sheetRow);
+            $sheetRow++;
+        }
+
+        return $spreadsheet;
     }
-
-
 }

@@ -263,6 +263,11 @@ class QualificationsTable extends ControllerActionTable
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+        $this->field('qualification_institution_id', [
+            'type' => 'element',
+            'element' => 'qualification_institution',
+            'visible' => ['add'=>true, 'edit'=>true],
+        ]);
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -530,6 +535,12 @@ class QualificationsTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
+        $this->field('qualification_institution', [
+            'type' => 'chosenSelect',
+            'placeholder' => __('Select Institution'),
+            'entity' => $entity
+        ]); //POCOR-9531
+
         $this->field('education_subjects', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select some subjects'),
@@ -550,6 +561,10 @@ class QualificationsTable extends ControllerActionTable
         $this->field('file_content', [
             'type' => 'binary',
             'visible' => $visible
+        ]);
+        $this->field('qualification_institution_id', [
+            'type' => 'hidden',
+            'visible' => false
         ]);
         
         $this->setFieldOrder([
@@ -653,4 +668,84 @@ class QualificationsTable extends ControllerActionTable
             'qualification_title_id', 'qualification_level', 'education_field_of_study_id', 'qualification_specialisations', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
         ]);
     }
+
+    //POCOR-9531
+    public function onUpdateFieldQualificationInstitution(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $institutionOptions = $this->find('list', [
+                'keyField' => 'qualification_institution',
+                'valueField' => 'qualification_institution'
+            ])
+            ->where([
+                'qualification_institution IS NOT' => null
+            ])
+            ->group(['qualification_institution'])
+            ->order(['qualification_institution' => 'DESC'])
+            ->toArray();
+
+            if (!empty($institutionOptions)) {
+                $attr['options'] = $institutionOptions;
+            } else {
+                $attr['placeholder'] = $this->getMessage('general.select.noOptions');
+            }
+        }
+        if ($action === 'edit') {
+            $requestId = $this->request->getParam('pass')[1]; 
+            $qualificationId = $this->paramsDecode($requestId);
+            $qualificationId = $qualificationId['id'] ?? null;
+
+            if(empty($qualificationId)){
+                $queryString  = $this->getQueryString();
+                $qualificationId = $queryString['id'] ?? null;
+            }
+
+            $qualification = $this->find()
+                ->select(['qualification_institution'])
+                ->where(['id' => $qualificationId])
+                ->first();
+
+            $getName = $qualification ? $qualification->qualification_institution : null;
+            $institutionOptions = $this->find('list', [
+                'keyField'   => 'id',
+                'valueField' => 'qualification_institution'
+            ])
+            ->where([
+                'qualification_institution IS NOT' => null
+            ])
+            ->group(['qualification_institution'])
+            ->order(['qualification_institution' => 'DESC'])
+            ->toArray();
+            $selectedValues = $qualification && $qualification->qualification_institution
+                            ? [$qualification->qualification_institution]
+                            : [];
+            if (!empty($institutionOptions)) {
+                $attr['options'] = $institutionOptions;
+                $attr['value'] = $qualificationId;
+                $attr['attr']['value'] = $qualificationId;
+            } else {
+                $attr['placeholder'] = $this->getMessage('general.select.noOptions');
+            }
+        }
+        return $attr;
+    }
+
+    //POCOR-9531
+    public function beforeSave(EventInterface  $event, Entity $entity, ArrayObject $data){
+        $qualificationInstitution = $this->request->getData()['Qualifications']['qualification_institution']['_ids'][0];
+        if (is_numeric($qualificationInstitution)) {
+            $record = $this->find()
+                ->select(['qualification_institution'])
+                ->where(['id' => (int)$qualificationInstitution])
+                ->first();
+
+            if ($record) {
+                $qualificationInstitution = $record->qualification_institution;
+            }
+        }
+        $entity->qualification_institution = $qualificationInstitution;
+
+    }
+
+
 }
