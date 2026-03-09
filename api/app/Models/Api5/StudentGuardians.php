@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\UuidId;
 
+use App\Models\Concerns\WebhookQueueTrait;
 class StudentGuardians extends Model
 {
     use HasFactory;
-    use UuidId;
+    use WebhookQueueTrait;
+
+    // POCOR-9257: Configure webhook events
+    protected $webhookEvents = ['created', 'updated', 'deleted'];    use UuidId;
 
     // ✅ Allow mass assignment
     public $timestamps = false;

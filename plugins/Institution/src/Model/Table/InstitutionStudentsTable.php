@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable; // POCOR-9509
 use ArrayObject;
 
 use Cake\Event\EventInterface;
@@ -21,12 +22,18 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionStudentsTable extends ControllerActionTable
 {
+
+
 	public function initialize(array $config): void
-    { 
+    {
         parent::initialize($config);
 
         // Associations
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
     }
+
+
+
+
 
 }

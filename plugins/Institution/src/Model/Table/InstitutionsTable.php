@@ -2550,8 +2550,20 @@ class InstitutionsTable extends ControllerActionTable
                 ?? $user['username']
                 ?? 'system';
         }
-        // --- 3. Trigger webhook ---
-        $Webhooks->triggerCommand($eventKey, $body);
+
+        // --- 3. Queue webhook for async processing (POCOR-9257) ---
+        try {
+            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
+            $result = $WebhooksQueue->queueWebhook($eventKey, $body, $user);
+            if ($result) {
+                // Log::debug("[InstitutionsTable] ✓ Queued webhook for event: {$eventKey}, institution ID: {$entity->id}");
+            } else {
+                Log::warning("[InstitutionsTable] Failed to queue webhook for event: {$eventKey}, institution ID: {$entity->id}");
+            }
+        } catch (\Throwable $e) {
+            // POCOR-9257: Graceful degradation - queueing failures don't break parent process
+            Log::error("[InstitutionsTable] Exception while queueing webhook: " . $e->getMessage());
+        }
 
     }
 

@@ -588,7 +588,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable
      * as a dropdown (select) input. The options available in the dropdown are
      * defined as "Compulsory" and "Elective".
      *
-     * @param Event $event The event object that triggered this method.
+     * @param $event The event object that triggered this method.
      * @param array $attr An array containing the attributes of the field being modified.
      * @param string $action The action being performed (e.g., add, edit).
      * @param ServerRequest $request The HTTP request object containing context for the action.

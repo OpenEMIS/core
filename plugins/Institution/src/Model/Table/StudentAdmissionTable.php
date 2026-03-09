@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -20,7 +21,6 @@ use Cake\Log\Log;
 use Cake\Utility\Text;
 use Cake\Routing\Router;
 use Cake\I18n\FrozenTime;
-use App\Controller\DashboardController;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\Table;
 use Cake\Datasource\ConnectionManager; // POCOR-9323
@@ -485,14 +485,14 @@ class StudentAdmissionTable extends ControllerActionTable
 //        Log::debug(print_r([__FUNCTION__ => $entity], true));
 //        Log::debug(print_r([__FUNCTION__ => $studentEntity], true));
         if ($studentEntity) {
-            Log::info("InstitutionStudent created for student_id {$entity->student_id}");
+            // Log::info("InstitutionStudent created for student_id {$entity->student_id}");
 
         } else {
-            Log::warning("Failed to create InstitutionStudent for student_id {$entity->student_id}");
+            // Log::warning("Failed to create InstitutionStudent for student_id {$entity->student_id}");
             if (!empty($entity->previous('status_id'))) {
                 $entity->status_id = $entity->previous('status_id');
                 $this->save($entity);
-                Log::info("Reverted status_id for admission ID {$entity->id} to previous value.");
+                // Log::info("Reverted status_id for admission ID {$entity->id} to previous value.");
             }
         }
     }
@@ -670,15 +670,15 @@ class StudentAdmissionTable extends ControllerActionTable
                         $saved = false;
                         try {
                             $this->autoAssignAssignee($entity);
-                            $this->save($entity);
-                            $saved = true;
-                        } catch (\Exception $exception) {
-                            try {
-                                $this->save($entity);
-                                $saved = true;
-                            } catch (\Exception $exception) {
-                                $entity->assignee_id = $entity->created_user_id;
-                                $this->save($entity);
+                                                        $this->save($entity, ['atomic' => false]);
+                                                        $saved = true;
+                                                    } catch (\Exception $exception) {
+                                                        try {
+                                                            $this->save($entity, ['atomic' => false]);
+                                                            $saved = true;
+                                                        } catch (\Exception $exception) {
+                                                            $entity->assignee_id = $entity->created_user_id;
+                                                            $this->save($entity, ['atomic' => false]);
                                 $saved = true;
                             }
                         }
@@ -1632,37 +1632,8 @@ class StudentAdmissionTable extends ControllerActionTable
             $userId = $entity->created_user_id;
         }
 
-        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
-        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
-        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
-
-
-        $alert = $alertsTable
-            ->find()
-            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAdmission',
-                $alertsTable->aliasField('frequency') => 'Once'])
-            ->first();
-        if (!$alert) {
-            Log::error('No Alerts for AlertStudentAdmission'); // POCOR-9323
-            return;
-        }
-        if (!is_array($alert)) {
-            $alert = $alert->toArray();
-        }
-        $activeRules = $alertRulesTable->find()
-            ->where([
-                $alertRulesTable->aliasField('feature') => $alert['name'],
-                $alertRulesTable->aliasField('enabled') => 1
-            ])
-            ->toArray();
-
-//        return;
-        foreach ($activeRules as $rule) {
-            if (!is_array($rule)) {
-                $rule = $rule->toArray();
-            }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
-        }
+        // POCOR-9509: Delegate alert triggering logic to AlertLogsTable helper
+        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentAdmission', $entity, $userId);
     }
 
     public function findWorkbench(Query $query, array $options)

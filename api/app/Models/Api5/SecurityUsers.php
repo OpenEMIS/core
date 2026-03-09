@@ -3,7 +3,8 @@
 namespace App\Models\Api5;
 
 //use Illuminate\Database\Eloquent\Factories\HasFactory;
-//use Illuminate\Database\Eloquent\Model;
+
+use App\Models\Concerns\WebhookQueueTrait;//use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -14,6 +15,9 @@ use App\Traits\NumericId;
 class SecurityUsers extends Authenticatable implements JWTSubject
 {
     use HasFactory;
+
+    // POCOR-9257: Configure webhook events
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
     use Notifiable;
     use NumericId;
 

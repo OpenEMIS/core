@@ -1,0 +1,456 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Console\Commands\Alerts;
+
+use App\Services\AlertProcessor\PlaceholderReplacer;
+use App\Services\AlertProcessor\RecipientResolver;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * POCOR-9509: Base class for all Laravel alert commands
+ *
+ * Mirrors the architecture of CakePHP's AlertCommandBase with the same pattern:
+ * - Template method: runFeatureAlert()
+ * - Abstract methods: getPendingItems(), fillPlaceholders()
+ * - Common functionality: recipient resolution, placeholder replacement
+ *
+ * Subclasses must implement:
+ * - getPendingItems(): Query database for items to alert on
+ * - fillPlaceholders(): Map item data to ${placeholder} => value array
+ *
+ * @package App\Console\Commands\Alerts
+ */
+abstract class AlertCommandBase extends Command
+{
+    // Security role constants (matches CakePHP)
+    const ROLE_STUDENT = 8;
+    const ROLE_GUARDIAN = 9;
+
+    /**
+     * @var string Process name (e.g., 'StudentAbsence')
+     */
+    protected string $processName = '';
+
+    /**
+     * @var string Feature name (e.g., 'StudentAttendance')
+     */
+    protected string $featureName = '';
+
+    /**
+     * @var int User ID triggering the alert
+     */
+    protected int $userId = 0;
+
+    /**
+     * @var int Alert rule ID
+     */
+    protected int $ruleId = 0;
+
+    /**
+     * @var int System process ID
+     */
+    protected int $processId = 0;
+    protected int $statusId = 0;
+
+    /**
+     * @var object Alert rule entity
+     */
+    protected object $rule;
+
+    /**
+     * @var array Contact list [email => [...], phone => [...]]
+     */
+    protected array $contacts = [];
+
+    /**
+     * @var PlaceholderReplacer
+     */
+    protected PlaceholderReplacer $placeholderReplacer;
+
+    /**
+     * @var RecipientResolver
+     */
+    protected RecipientResolver $recipientResolver;
+
+    /**
+     * POCOR-9509: Initialize services
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Extract process/feature names from class name
+        $className = class_basename(static::class);
+        $this->processName = str_replace('Command', '', $className);
+        $this->featureName = str_replace('Alert', '', $this->processName);
+
+        // Initialize services
+        $this->placeholderReplacer = new PlaceholderReplacer();
+        $this->recipientResolver = new RecipientResolver();
+    }
+
+    /**
+     * POCOR-9509: Prepare command context (load rule, validate options)
+     *
+     * @return bool True if context is valid
+     */
+    protected function prepareContext(): bool
+    {
+        $this->userId = (int) $this->option('user_id');
+        $this->ruleId = (int) $this->option('rule_id');
+        $this->processId = (int) $this->option('process_id');
+
+        if (!$this->userId || !$this->ruleId) {
+            $this->error("Missing required --user_id or --rule_id.");
+            return false;
+        }
+
+        // Load alert rule with roles
+        $this->rule = DB::table('alert_rules')
+            ->where('id', $this->ruleId)
+            ->first();
+
+        if (!$this->rule) {
+            $this->error("Alert rule with ID {$this->ruleId} not found.");
+            return false;
+        }
+
+        // Load security roles for this rule
+        $roles = DB::table('alerts_roles')
+            ->join('security_roles', 'security_roles.id', '=', 'alerts_roles.security_role_id')
+            ->where('alerts_roles.alert_rule_id', $this->ruleId)
+            ->select('security_roles.*')
+            ->get();
+
+        if ($roles->isEmpty()) {
+            $this->info("No roles assigned to alert rule ID {$this->ruleId}. Skipping.");
+            return false;
+        }
+
+        $this->rule->security_roles = $roles->toArray();
+
+        return true;
+    }
+
+    /**
+     * POCOR-9509: Main template method to execute feature-based alerts
+     *
+     * This method orchestrates the entire alert process:
+     * 1. Get pending items (database query)
+     * 2. For each item:
+     *    - Build recipient list
+     *    - Fill placeholders
+     *    - Replace placeholders in subject/message
+     *    - Queue alerts
+     *
+     * @param string $featureKey Feature identifier (e.g., 'StudentAttendance')
+     * @return int Exit code
+     */
+    protected function runFeatureAlert(string $featureKey): int
+    {
+        try {
+            $pendingItems = $this->getPendingItems($featureKey);
+
+            if (empty($pendingItems)) {
+                $this->info("✅ Alert {$featureKey} has no pending items");
+                return Command::SUCCESS;
+            }
+
+            $this->info("Processing " . count($pendingItems) . " pending items for {$featureKey}");
+
+            foreach ($pendingItems as $item) {
+                // Get recipients for this item
+                $this->contacts = $this->resolveRecipients($item);
+
+                if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
+                    $this->warn("No contacts found for item " . print_r($item, true) . ", skipping");
+                    continue;
+                }
+
+                // Fill placeholders with item data
+                $placeholders = $this->fillPlaceholders($item);
+
+                // Process contact list and queue alerts
+                $this->processContactList($placeholders);
+            }
+        } catch (\Throwable $e) {
+            $this->failProcess($e);
+            $this->error("[Process Error] " . $e->getMessage());
+            Log::error("[POCOR-9509] Alert command failed", [
+                'feature' => $featureKey,
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return Command::FAILURE;
+        }
+
+        if (!empty($this->processId)) {
+            $this->completeProcess();
+        }
+
+        return Command::SUCCESS;
+    }
+
+    /**
+     * POCOR-9509: Resolve recipients for an item
+     *
+     * Override this method in subclasses for custom recipient logic
+     *
+     * @param array $item Pending item data
+     * @return array Contact list [email => [...], phone => [...]]
+     */
+    protected function resolveRecipients(array $item): array
+    {
+        $institutionId = $item['institution_id'] ?? null;
+
+        if ($institutionId) {
+            return $this->recipientResolver->getRoleAssociatedContactList(
+                $this->rule->security_roles,
+                $institutionId
+            );
+        }
+
+        return $this->recipientResolver->getRoleAssociatedContactList(
+            $this->rule->security_roles
+        );
+    }
+
+    /**
+     * POCOR-9509: Process contact list and queue alerts
+     *
+     * @param array $placeholders Placeholder => value mapping
+     */
+    protected function processContactList(array $placeholders): void
+    {
+        // Replace placeholders in subject and message
+        $subject = $this->placeholderReplacer->replace(
+            $this->rule->subject,
+            $placeholders
+        );
+
+        $message = $this->placeholderReplacer->replace(
+            $this->rule->message,
+            $placeholders
+        );
+
+        // Parse methods (e.g., "Email, SMS" => ['email', 'sms'])
+        $methods = array_map(
+            'trim',
+            explode(',', strtolower($this->rule->method))
+        );
+
+        // Queue email alerts
+        if (in_array('email', $methods, true)) {
+            foreach ($this->contacts['email'] ?? [] as $email) {
+                $this->queueAlert('email', $email, $subject, $message);
+                usleep(500000); // 0.5 second delay between alerts
+            }
+        }
+
+        // Queue SMS alerts
+        if (in_array('sms', $methods, true)) {
+            foreach ($this->contacts['phone'] ?? [] as $phone) {
+                $this->queueAlert('sms', $phone, $subject, $message);
+                usleep(500000); // 0.5 second delay between alerts
+            }
+        }
+    }
+
+    /**
+     * POCOR-9509: Queue a single alert
+     *
+     * @param string $method 'email' or 'sms'
+     * @param string $recipient Email address or phone number
+     * @param string $subject Alert subject
+     * @param string $message Alert message body
+     */
+    protected function queueAlert(string $method, string $recipient, string $subject, string $message): void
+    {
+        try {
+            // Queue via alerts_queue table
+            $queued = DB::table('alerts_queue')->insert([
+                'alert_type' => $this->featureName,
+                'channel' => $method,
+                'recipient' => $recipient,
+                'subject' => $subject,
+                'message_body' => $message,
+                'payload' => json_encode([
+                    'feature' => $this->featureName,
+                    'rule_id' => $this->ruleId,
+                    'user_id' => $this->userId,
+                ]),
+                'status' => 0, // pending
+                'retry_count' => 0,
+                'available_at' => now(),
+                'created' => now(),
+                'modified' => now(),
+            ]);
+
+            if ($queued) {
+                $shortSubject = mb_strimwidth($subject, 0, 100, '...');
+                $shortMessage = mb_strimwidth($message, 0, 100, '...');
+                $this->info("✅ Alert {$this->featureName} queued via {$method} to {$recipient}");
+                // Log::debug("[POCOR-9509] Alert queued", [
+                //     'feature' => $this->featureName,
+                //     'method' => $method,
+                //     'recipient' => $recipient,
+                //     'subject' => $shortSubject,
+                // ]);
+            }
+        } catch (\Throwable $e) {
+            $this->error("Failed to queue alert: " . $e->getMessage());
+            Log::error("[POCOR-9509] Failed to queue alert", [
+                'feature' => $this->featureName,
+                'method' => $method,
+                'recipient' => $recipient,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * POCOR-9509: Mark system process as failed and log to system_errors table
+     *
+     * Updates system_processes.status to -2 (Error) and creates a detailed error
+     * record in system_errors table for debugging and monitoring.
+     *
+     * Status codes (from schema_reference.sql):
+     * - 1 = New (Starting)
+     * - 2 = Running (In Progress)
+     * - 3 = Completed
+     * - -1 = Abort
+     * - -2 = Error
+     *
+     * @param \Throwable $exception The exception that caused the failure
+     */
+    protected function failProcess(\Throwable $exception): void
+    {
+        if (empty($this->processId)) {
+            return;
+        }
+
+        // POCOR-9509: Update system_processes status to -2 (Error)
+        DB::table('system_processes')
+            ->where('id', $this->processId)
+            ->update([
+                'status' => -2, // POCOR-9509: Use -2 (Error) instead of 2 (Running)
+                'end_date' => now(),
+                'modified' => now(),
+                'modified_user_id' => $this->userId,
+            ]);
+
+        // POCOR-9509: Log error details to system_errors table
+        try {
+            $errorId = \Illuminate\Support\Str::uuid()->toString();
+
+            // Build server info JSON with process context
+            $serverInfo = json_encode([
+                'process_id' => $this->processId,
+                'feature' => $this->featureName,
+                'rule_id' => $this->ruleId,
+                'user_id' => $this->userId,
+                'php_version' => PHP_VERSION,
+                'laravel_version' => app()->version(),
+            ]);
+
+            DB::table('system_errors')->insert([
+                'id' => $errorId,
+                'code' => 'ALERT_FAIL', // POCOR-9509: Alert command failure
+                'error_message' => $exception->getMessage(),
+                'request_method' => 'CLI', // Console command
+                'request_url' => $this->signature, // Command signature
+                'referrer_url' => '', // N/A for CLI
+                'client_ip' => '127.0.0.1', // Local execution
+                'client_browser' => 'artisan', // CLI tool
+                'triggered_from' => $exception->getFile() . ':' . $exception->getLine(),
+                'stack_trace' => $exception->getTraceAsString(),
+                'server_info' => $serverInfo,
+                'created_user_id' => $this->userId,
+                'created' => now(),
+            ]);
+
+            Log::error("[POCOR-9509] System process failed - logged to system_errors", [
+                'process_id' => $this->processId,
+                'error_id' => $errorId,
+                'feature' => $this->featureName,
+                'exception' => $exception->getMessage(),
+            ]);
+        } catch (\Exception $e) {
+            // POCOR-9509: Fallback if system_errors insert fails
+            Log::error("[POCOR-9509] Failed to log to system_errors table", [
+                'process_id' => $this->processId,
+                'original_error' => $exception->getMessage(),
+                'logging_error' => $e->getMessage(),
+            ]);
+        }
+
+        // POCOR-9509: Always log to file for immediate debugging
+        Log::error("[POCOR-9509] Alert command exception", [
+            'process_id' => $this->processId,
+            'feature' => $this->featureName,
+            'exception' => $exception->getMessage(),
+            'trace' => $exception->getTraceAsString(),
+        ]);
+    }
+
+    /**
+     * POCOR-9509: Mark system process as completed
+     */
+    protected function completeProcess(): void
+    {
+        if (empty($this->processId)) {
+            return;
+        }
+
+        DB::table('system_processes')
+            ->where('id', $this->processId)
+            ->update([
+                'status' => 3, // completed
+                'end_date' => now(),
+                'modified' => now(),
+                'modified_user_id' => $this->userId,
+            ]);
+
+        DB::table('alerts')
+            ->where('name', $this->featureName)
+            ->update([
+                'process_id' => getmypid(),
+                'modified' => now(),
+            ]);
+
+        // Log::debug("[POCOR-9509] System process completed", [
+        //     'process_id' => $this->processId,
+        // ]);
+    }
+
+    /**
+     * POCOR-9509: Abstract method - Get pending items to alert on
+     *
+     * Subclasses must implement this to query the database for items
+     * that need alerts sent (e.g., absent students, expiring staff contracts)
+     *
+     * @param string $featureKey Feature identifier
+     * @return array List of data items (arrays or objects)
+     */
+    abstract protected function getPendingItems(string $featureKey): array;
+
+    /**
+     * POCOR-9509: Abstract method - Fill placeholders for an item
+     *
+     * Subclasses must implement this to map item data to placeholder values.
+     *
+     * Example return:
+     * [
+     *     '${student.name}' => 'John Doe',
+     *     '${institution.name}' => 'ABC School',
+     *     '${total_days}' => 5,
+     * ]
+     *
+     * @param array $item The item from getPendingItems()
+     * @return array Placeholder => value mapping
+     */
+    abstract protected function fillPlaceholders(array $item): array;
+}
