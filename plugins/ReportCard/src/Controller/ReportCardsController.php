@@ -79,7 +79,7 @@ class ReportCardsController extends AppController
         return $this->TabPermission->checkTabPermission($tabElements);
     }
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

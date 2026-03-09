@@ -26,7 +26,6 @@ use App\Models\AcademicPeriod;
 use Carbon\Carbon;
 use JWTAuth;
 use File;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentMealImport;
 use App\Exports\StudentMealExport;
 use \PhpOffice\PhpSpreadsheet\Shared\Date;
@@ -570,7 +569,7 @@ class MealRepository extends Controller
             }
 
             $headers = ['Date ( DD/MM/YYYY )', 'OpenEMIS ID', 'Meal Programme Code', 'Meal Received Code', 'Meal Benefit Name', 'Comment'];
-            $results = Excel::toArray(new StudentMealImport(), $params['file']);
+            $results = StudentMealImport::toArray($params['file']);
             
             if (empty($results[0][1])) {
                 return 2; //Header is not present...

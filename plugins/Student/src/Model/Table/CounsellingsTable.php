@@ -5,11 +5,11 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
+use Cake\Event\EventInterface;
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -112,7 +112,7 @@ class CounsellingsTable extends ControllerActionTable
         return $counselorOptions;
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(EventInterface $event) {
         
         $this->field('date');
         $this->field('description');
@@ -162,7 +162,7 @@ class CounsellingsTable extends ControllerActionTable
 
      
    //POCOR-9523
-   public function onUpdateFieldRequesterId(Event $event,array $attr,$action,ServerRequest $request)
+   public function onUpdateFieldRequesterId(EventInterface $event,array $attr,$action,ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit'])) {
 

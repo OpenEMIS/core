@@ -17,7 +17,7 @@ class FieldOptionsController extends AppController
         $this->loadComponent('FieldOption.FieldOption');
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'FieldOption') {
             $this->Security->setConfig('validatePost', false);
@@ -802,7 +802,7 @@ class FieldOptionsController extends AppController
     }
     //POCOR-7363 end
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

@@ -31,7 +31,7 @@ class InsurancesController extends PageController
         parent::index();
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
         parent::beforeFilter($event);
@@ -171,7 +171,7 @@ class InsurancesController extends PageController
 
 
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
 
         $this->set('_serialize', true);

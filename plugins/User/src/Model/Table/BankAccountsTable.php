@@ -132,9 +132,9 @@ class BankAccountsTable extends ControllerActionTable
         $jsonEndPosition = strpos($paramsQuery, '}') + 1;
         $jsonData = substr($paramsQuery, 0, $jsonEndPosition);
         $paramsQuery = json_decode($jsonData, true);
-        $staff_id = $paramsQuery['staff_id'];
-        $this->request = $this->request->withData('BankAccounts.security_user_id', $staff_id);
-        $entity->security_user_id = $staff_id;
+        $userId = $paramsQuery['staff_id'] ?? $paramsQuery['student_id'] ?? null; //POCOR-9584: support both Staff and Student contexts
+        $this->request = $this->request->withData('BankAccounts.security_user_id', $userId);
+        $entity->security_user_id = $userId;
     }
     //POCOR-9300[END]
 
@@ -148,14 +148,15 @@ class BankAccountsTable extends ControllerActionTable
 
     public function addOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        //to clear the bank option when toolbar button (back or list) clicked
-        $this->request->getQuery['bank_option'] = '';
+        //POCOR-9584: $request is immutable in CakePHP5; bank_option will simply be absent on fresh add load
+        // original CakePHP3 code: $this->request->getQuery['bank_option'] = '';
     }
 
     public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $bankId = $this->BankBranches->get($entity->bank_branch_id)->bank_id;
-        $this->request->getQuery['bank_option'] = $bankId;
+        //POCOR-9584: $request is immutable in CakePHP5; bank_option pre-population handled via query param on redirect
+        // original CakePHP3 code: $this->request->getQuery['bank_option'] = $bankId;
     }
 
 
@@ -232,7 +233,7 @@ class BankAccountsTable extends ControllerActionTable
 
     public function onUpdateFieldBankName(EventInterface $event, array $attr, $action, ServerRequest $request){
         if ($action == 'add' || $action == 'edit') {
-            $bankId = $request->getQuery['bank_option'];
+            $bankId = $request->getQuery('bank_option'); //POCOR-9584: was $request->getQuery['bank_option'] (CakePHP3 syntax)
 
             $bankOptions = TableRegistry::getTableLocator()->get('FieldOption.Banks')
             ->find('list')
@@ -253,8 +254,9 @@ class BankAccountsTable extends ControllerActionTable
     public function onUpdateFieldBankBranchId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            if (array_key_exists('bank_option', $request->getQuery)) {
-                $bankId = $request->getQuery['bank_option'];
+            //POCOR-9584: was array_key_exists('bank_option', $request->getQuery) + $request->getQuery['key'] (CakePHP3 syntax)
+            $bankId = $request->getQuery('bank_option');
+            if ($bankId !== null) {
                 $bankBranches = $this->BankBranches
                     ->find('list')
                     ->find('order')
@@ -271,12 +273,16 @@ class BankAccountsTable extends ControllerActionTable
     public function addEditOnChangeBank(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
-        unset($request->getQuery['bank_option']);
-
+        //POCOR-9584: CakePHP5 request is immutable; bank_option query param is set via the reloadOnChange URL, not via property mutation
+        // original CakePHP3 code used: unset($request->getQuery['bank_option']) and $request->getQuery['bank_option'] = ...
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->getAlias(), $request->getData())) {
                 if (array_key_exists('bank_name', $request->getData()[$this->getAlias()])) {
-                    $request->getQuery['bank_option'] = $request->getData()[$this->getAlias()]['bank_name'];
+                    $bankOption = $request->getData()[$this->getAlias()]['bank_name'];
+                    $this->request = $request->withQueryParams(array_merge(
+                        $request->getQueryParams(),
+                        ['bank_option' => $bankOption]
+                    )); //POCOR-9584: replace mutable CakePHP3 pattern with immutable withQueryParams
                 }
             }
         }
