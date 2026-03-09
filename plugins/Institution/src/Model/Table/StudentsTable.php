@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable;
 use ArrayObject;
 
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -144,12 +145,12 @@ class StudentsTable extends ControllerActionTable
             'Institution.InstitutionTab',
             ['appliedAction' => [
                 'Students' =>
-                ['student_status_id', 'academic_period_id',],
+                    ['student_status_id', 'academic_period_id',],
                 'StudentUser' =>
-                [
-                    'student_status_id',
-                    'academic_period_id',
-                ]
+                    [
+                        'student_status_id',
+                        'academic_period_id',
+                    ]
             ]]
         );
 
@@ -210,12 +211,12 @@ class StudentsTable extends ControllerActionTable
             'Institution.InstitutionTab',
             ['appliedAction' => [
                 'Students' =>
-                ['student_status_id', 'academic_period_id',],
+                    ['student_status_id', 'academic_period_id',],
                 'StudentUser' =>
-                [
-                    'student_status_id',
-                    'academic_period_id',
-                ]
+                    [
+                        'student_status_id',
+                        'academic_period_id',
+                    ]
             ]]
         );
 
@@ -889,6 +890,7 @@ class StudentsTable extends ControllerActionTable
         // End POCOR-5188
 
     }
+
     /**
      * @param Entity $entity
      * POCOR-8333 -- Initialize for delete.
@@ -1848,6 +1850,9 @@ class StudentsTable extends ControllerActionTable
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
 
+        if ($entity->isNew() || $entity->isDirty('student_status_id')) {
+            $this->sendStudentStatusAlert($entity);
+        }
         //if new record has no previous_institution_student_id value yet, then try to update it.
         if (!$entity->has('previous_institution_student_id')) {
             $prevInstitutionStudent = $this
@@ -1868,6 +1873,55 @@ class StudentsTable extends ControllerActionTable
                     ['id' => $entity->id]
                 );
             }
+        }
+    }
+
+    /**
+     * POCOR-9509: Sends an alert for student status changes.
+     *
+     * @param \Cake\ORM\Entity $institutionStudent The InstitutionStudent entity.
+     * @return void
+     */
+    public function sendStudentStatusAlert(Entity $institutionStudent): void
+    {
+        if (empty($institutionStudent->student_id)
+            && empty($institutionStudent->institution_id)
+            && empty($institutionStudent->id)
+            && empty($institutionStudent->created_user_id)) {
+            // Log::warning('[POCOR-9509] Skipping student status alert - missing required fields', [
+            //     'id' => $institutionStudent->id,
+            //     'student_id' => $institutionStudent->student_id,
+            //     'institution_id' => $institutionStudent->institution_id,
+            // ]);
+            return;
+        }
+
+        try {
+                // Determine the user ID for the alert
+                $userId = null;
+                if (is_numeric($institutionStudent->modified_user_id)) {
+                    $userId = $institutionStudent->modified_user_id;
+                } else if (is_numeric($institutionStudent->created_user_id)) {
+                    $userId = $institutionStudent->created_user_id;
+                }
+
+                if ($userId) {
+                    AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $institutionStudent, $userId);
+                    $alertTriggered = true;
+                    // Log::info('[POCOR-9509] Student status alert triggered via AlertLogsTable' . print_r([
+                    //
+                    //     'institution_student_id' => $institutionStudent->id,
+                    // ], true));
+                } else {
+                    // Log::warning('[POCOR-9509] Skipping alert trigger - no user ID found for entity' . print_r([
+                    //     'institution_student_id' => $institutionStudent->id,
+                    // ], true));
+                }
+        } catch (\Throwable $e) {
+            Log::error('[POCOR-9509] Failed to process student status alert in CakePHP' . print_r( [
+                'institution_student_id' => $institutionStudent->id,
+                'exception' => $e->getMessage(),
+            ], true));
         }
     }
 
@@ -3424,11 +3478,11 @@ class StudentsTable extends ControllerActionTable
             ])
             ->leftJoin([$contact_types->getAlias() => $contact_types->getTable()], [
                 $contact_types->aliasField('id = ')
-                    . $student_contacts->aliasField('contact_type_id'),
+                . $student_contacts->aliasField('contact_type_id'),
             ])
             ->leftJoin([$contact_options->getAlias() => $contact_options->getTable()], [
                 $contact_options->aliasField('id = ')
-                    . $contact_types->aliasField('contact_option_id'),
+                . $contact_types->aliasField('contact_option_id'),
             ])
             ->orderDesc($student_contacts->aliasField('preferred'));
         $contact_type = $contact_types->aliasField('name');
@@ -3441,6 +3495,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // POCOR-8131 -- START
+
     /**
      * Get custom field options grouped by field ID
      *
@@ -3478,6 +3533,7 @@ class StudentsTable extends ControllerActionTable
             return [];
         }
     }
+
     // POCOR-8131 -- END
 
     private function addStudentCustomFields(Query $query)
@@ -3646,7 +3702,7 @@ class StudentsTable extends ControllerActionTable
         } catch (\Exception $e) {
             Log::error( // POCOR-8683
                 print_r(['Failed to fetch remove from table' =>
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
+                    ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
             );
         }
         return $affected;
@@ -3741,7 +3797,7 @@ class StudentsTable extends ControllerActionTable
                 [$this->getAlias() => $this->getTable()],
                 [
                     $InstitutionStudents->aliasField('id = ')
-                        . $this->aliasField('previous_institution_student_id')
+                    . $this->aliasField('previous_institution_student_id')
                 ]
             )
             ->where([

@@ -978,7 +978,7 @@ class ConfigWebhooksTable extends ControllerActionTable
     /**
      * Helper to fill placeholders and build URL
      */
-    protected function buildWebhookUrl(string $baseUrl, ?string $queryTemplate, array $body): string
+    public function buildWebhookUrl(string $baseUrl, ?string $queryTemplate, array $body): string
     {
         if (empty($queryTemplate)) {
             return $baseUrl;
@@ -1001,7 +1001,7 @@ class ConfigWebhooksTable extends ControllerActionTable
     /**
      * Helper to build the request body
      */
-    protected function prepareFinalWebhookBody(?string $template, array $body)
+    public function prepareFinalWebhookBody(?string $template, array $body)
     {
         if (empty($template)) {
             return $body;
@@ -1203,13 +1203,20 @@ class ConfigWebhooksTable extends ControllerActionTable
         $body['deleted_at'] = date('Y-m-d H:i:s');
         $body['deleted_by'] = !empty($openemisNo) ? $openemisNo : 'system';
 
-        // --- Trigger the command ---
+        // --- POCOR-9257: Queue webhook for async processing ---
         try {
-            $this->triggerCommand($commandName, $body);
-            Log::debug("[Webhook] {$commandName} triggered for entity ID: " . ($entity->id ?? 'unknown'));
-            return true;
+            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
+            $user = $this->resolveCurrentUser();
+            $result = $WebhooksQueue->queueWebhook($commandName, $body, $user);
+            if ($result) {
+                // Log::debug("[Webhook] {$commandName} queued for entity ID: " . ($entity->id ?? 'unknown'));
+                return true;
+            } else {
+                Log::warning("[Webhook] Failed to queue {$commandName} for entity ID: " . ($entity->id ?? 'unknown'));
+                return false;
+            }
         } catch (\Throwable $e) {
-            Log::error("[Webhook] {$commandName} failed: " . $e->getMessage());
+            Log::error("[Webhook] {$commandName} queueing failed: " . $e->getMessage());
             return false;
         }
     }

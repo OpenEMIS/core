@@ -1,6 +1,7 @@
 <?php
 namespace Alert\Model\Table;
 
+use App\Controller\DashboardController;
 use ArrayObject;
 
 use Cake\I18n\Date;
@@ -30,6 +31,325 @@ class AlertLogsTable extends ControllerActionTable
     ];
 
     private $featureGrouping = [];
+
+    // POCOR-9509: Updated to trigger Laravel artisan commands instead of CakePHP shells
+    public static function triggerAlertCommand(string $processName, int $userId, int $ruleId, int $processId, array $extraOptions = []): void
+    {
+        // POCOR-9509: Map CakePHP process names to Laravel artisan commands
+        // Log::debug("Triggering alert command for process: {$processName} with extra options: " . json_encode($extraOptions));
+        $commandMap = [
+            'AlertStudentAbsence' => 'alerts:student-absence',
+            'AlertRetirementWarning' => 'alerts:retirement-warning',
+            'AlertStaffEmployment' => 'alerts:staff-employment',
+            'AlertStaffLeave' => 'alerts:staff-leave',
+            'AlertStudentAdmission' => 'alerts:student-admission',
+            'AlertStudentEnrolment' => 'alerts:student-enrolment',
+            'AlertSystemUpdates' => 'alerts:system-updates',
+            'StudentStatus' => 'alerts:student-status-change', // POCOR-9509
+            'AlertStudentStatus' => 'alerts:student-status-change', // POCOR-9509
+        ];
+
+        $commandName = $commandMap[$processName] ?? null;
+
+        if (!$commandName) {
+            // Fallback to old CakePHP shell command for unmapped processes
+            $command = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $processName));
+            $argsArray = [
+                '--user_id=' . $userId,
+                '--rule_id=' . $ruleId,
+                '--process_id=' . $processId
+            ];
+
+            foreach ($extraOptions as $key => $value) {
+                $argsArray[] = '--' . $key . '=' . escapeshellarg($value);
+            }
+
+            $args = implode(' ', $argsArray);
+            $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $command . ' ' . $args;
+            $logPath = ROOT . DS . 'logs' . DS . $command . '.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logPath;
+
+            exec($shellCmd);
+            Log::write('debug', '[AlertCommand] CakePHP Shell: ' . $shellCmd);
+            return;
+        }
+
+        // POCOR-9509: Build Laravel artisan command
+        $argsArray = [
+            '--user_id=' . $userId,
+            '--rule_id=' . $ruleId,
+            '--process_id=' . $processId
+        ];
+
+        foreach ($extraOptions as $key => $value) {
+            $argsArray[] = '--' . $key . '=' . escapeshellarg($value);
+        }
+
+        $args = implode(' ', $argsArray);
+
+        // POCOR-9509: Execute Laravel artisan command in background
+        $artisanPath = ROOT . DS . 'api' . DS . 'artisan';
+        $cmd = 'php ' . $artisanPath . ' ' . $commandName . ' ' . $args;
+        $logPath = ROOT . DS . 'logs' . DS . 'alert_' . str_replace(':', '_', $commandName) . '.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logPath;
+
+        exec($shellCmd);
+        Log::write('debug', '[POCOR-9509] Laravel Artisan: ' . $shellCmd);
+    }
+
+    /**
+     * POCOR-9509: Trigger alert system process with enhanced params structure
+     *
+     * Enhanced params structure (Phase 2):
+     * {
+     *   "rule_id": 5,
+     *   "entity_id": 123,
+     *   "entity_type": "Student",
+     *   "trigger_type": "status_change",
+     *   "context": {
+     *     "old_value": "Transferred",
+     *     "new_value": "Withdrawn",
+     *     "old_value_id": 6,
+     *     "new_value_id": 7,
+     *     "change_date": "2026-02-12 14:30:00",
+     *     "field_name": "student_status_id"
+     *   },
+     *   "checksum": "sha256_hash",
+     *   "triggered_at": "2026-02-12 14:30:00"
+     * }
+     *
+     * Deduplication strategy:
+     * - Uses checksum (hash of context) for efficient duplicate detection
+     * - Same entity + same context = duplicate (skip)
+     * - Same entity + different context = new alert (allow)
+     *
+     * @param mixed $systemProcessesTable SystemProcesses table instance
+     * @param array $rule Alert rule data
+     * @param string $processName Process name (e.g., 'AlertStudentAdmission')
+     * @param int $userId User ID triggering the alert
+     * @param array $extraOptions Additional options with optional 'context' key
+     */
+    public static function triggerAlertSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
+    {
+        $now = FrozenTime::now();
+
+        // POCOR-9509: Build enhanced params structure (Phase 2)
+        $context = $extraOptions['context'] ?? [];
+        $entityType = $extraOptions['entity_type'] ?? 'Unknown';
+        $triggerType = $extraOptions['trigger_type'] ?? 'manual';
+
+        // POCOR-9509: Generate checksum for deduplication
+        // Hash the context to detect true duplicates vs. different changes to same entity
+        $checksumData = [
+            'entity_id' => $extraOptions['entity_id'] ?? null,
+            'context' => $context,
+            'trigger_type' => $triggerType,
+        ];
+        $checksum = hash('sha256', json_encode($checksumData));
+
+        // POCOR-9509: Build params JSON with enhanced structure
+        $params = [
+            'rule_id' => $rule['id'],
+            'entity_id' => $extraOptions['entity_id'] ?? null,
+            'entity_type' => $entityType,
+            'trigger_type' => $triggerType,
+            'context' => $context,
+            'checksum' => $checksum,
+            'triggered_at' => $now->toDateTimeString(),
+        ];
+
+        // POCOR-9509: Add backward compatibility for old-style params
+        // If no context provided, include raw extraOptions for compatibility
+        if (empty($context)) {
+            $params['legacy_options'] = $extraOptions;
+        }
+
+        $paramsJson = json_encode($params);
+        $feature = $rule['feature'];
+
+        // POCOR-9509: Deduplication check using checksum (Phase 2)
+        // Check for existing process with same checksum (prevents true duplicates)
+        $existing = $systemProcessesTable->find()
+            ->where([
+                'model' => $processName,
+                'name' => $feature,
+                'created_user_id' => $userId,
+            ])
+            ->where(function ($exp, $q) use ($checksum) {
+                // POCOR-9509: Check if params contains this checksum
+                return $exp->like('params', '%"checksum":"' . $checksum . '"%');
+            })
+            ->first();
+
+        if ($existing) {
+            // POCOR-9509: Skip creating duplicate process (same entity + same context)
+            // Log::debug('[POCOR-9509] Duplicate alert skipped (checksum match)',
+            return;
+        }
+
+        // POCOR-9509: Create system_processes record
+        $processValues = [
+            'name' => $feature,
+            'status' => 1, // Starting
+            'start_date' => $now,
+            'model' => $processName,
+            'created_user_id' => $userId,
+            'params' => $paramsJson
+        ];
+
+        // POCOR-9509: Prepare extraOptions for Laravel command (remove context, keep IDs)
+        $commandOptions = $extraOptions;
+        unset($commandOptions['context']); // Context already in params, don't pass to command
+        unset($commandOptions['entity_type']);
+        unset($commandOptions['trigger_type']);
+        unset($commandOptions['status_id']); // Remove to avoid confusion with student_status_id
+        unset($commandOptions['student_status_id']); // Remove, already in context
+
+        $process = $systemProcessesTable->newEntity($processValues);
+        if ($systemProcessesTable->save($process)) {
+            // Log::debug('[POCOR-9509] Alert process created',
+            self::triggerAlertCommand($processName, $userId, $rule['id'], $process->id, $commandOptions);
+        } else {
+            Log::error('[POCOR-9509] Failed to create alert process', [
+                'feature' => $feature,
+                'errors' => $process->getErrors(),
+            ]);
+        }
+    }
+
+    /**
+     * POCOR-9509: Helper to trigger Laravel-based alerts from CakePHP models.
+     * This centralizes the logic for finding alert rules and dispatching to the Laravel queue.
+     *
+     * Enhanced in Phase 2 to support context parameter for better deduplication.
+     *
+     * USAGE EXAMPLES:
+     *
+     * Basic (backward compatible):
+     *   AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentAdmission', $entity, $userId);
+     *
+     * Enhanced with context (recommended for status changes):
+     *   AlertLogsTable::triggerLaravelAlertFromCakePHP(
+     *       'AlertStudentStatus',
+     *       $entity,
+     *       $userId,
+     *       [
+     *           'old_value' => 'Transferred',
+     *           'new_value' => 'Withdrawn',
+     *           'old_value_id' => 6,
+     *           'new_value_id' => 7,
+     *           'field_name' => 'student_status_id'
+     *       ]
+     *   );
+     *
+     * @param string $alertProcessName The process name as defined in Alert.Alerts (e.g., 'AlertStudentAdmission').
+     * @param \Cake\ORM\Entity $entity The CakePHP entity that triggered the alert (e.g., StudentAdmission entity).
+     * @param int $userId The ID of the user who triggered the action.
+     * @param array $context Optional context for deduplication (old_value, new_value, etc.)
+     * @return void
+     */
+    public static function triggerLaravelAlertFromCakePHP(
+        string $alertProcessName,
+        Entity $entity,
+        int $userId,
+        array $context = []
+    ): void {
+        $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
+        $systemProcessesTable = TableRegistry::getTableLocator()->get('SystemProcesses');
+
+        $alert = $alertsTable
+            ->find()
+            ->where([
+                $alertsTable->aliasField('process_name') => $alertProcessName,
+                $alertsTable->aliasField('frequency') => 'once' // Specific frequency for these types of alerts
+            ])
+            ->first();
+
+        if (!$alert) {
+            Log::error("[POCOR-9509] No Alerts configured for process: {$alertProcessName}");
+            return;
+        }
+
+        $activeRules = $alertRulesTable->find()
+            ->where([
+                $alertRulesTable->aliasField('feature') => $alert->name,
+                $alertRulesTable->aliasField('enabled') => 1
+            ])
+            ->toArray();
+
+        if (empty($activeRules)) {
+            // Log::debug("[POCOR-9509] No active alert rules found for feature: {$alert->name}");
+            return;
+        }
+
+        foreach ($activeRules as $rule) {
+            if (!is_array($rule)) {
+                $rule = $rule->toArray();
+            }
+
+            // POCOR-9509: Build enhanced extraOptions with context support (Phase 2)
+            $extraOptions = [
+                'entity_type' => $alertProcessName, // e.g., 'AlertStudentStatus'
+                'trigger_type' => !empty($context) ? 'status_change' : 'event',
+            ];
+
+            // POCOR-9509: Dynamically build extraOptions based on the alert type
+            // Log::debug('[POCOR-9509] Building alert options', [
+
+
+            switch ($alertProcessName) {
+                case 'AlertStudentEnrolment':
+                case 'StudentStatus':
+                case 'AlertStudentStatus':
+                case 'AlertStudentAdmission':
+                    $extraOptions['entity_id'] = $entity->id;
+                    break;
+                // Add other cases for different alert types if needed
+            }
+
+            // POCOR-9509: Add context data if provided (Phase 2)
+            if (!empty($context)) {
+                // Enhanced context with old/new values for proper deduplication
+                $extraOptions['context'] = array_merge($context, [
+                    'change_date' => $entity->modified ?? $entity->created ?? date('Y-m-d H:i:s'),
+                    'entity_id' => $entity->id,
+                ]);
+            } else {
+                // POCOR-9509: Fallback context - build from entity current state
+                // This provides basic deduplication but won't distinguish between
+                // different status changes on the same entity
+                $contextData = [];
+
+                switch ($alertProcessName) {
+                    case 'StudentStatus':
+                    case 'AlertStudentStatus':
+                        if (isset($entity->student_status_id)) {
+                            $contextData['field_name'] = 'student_status_id';
+                            $contextData['new_value_id'] = $entity->student_status_id;
+                            // Old value not available without explicit context
+                        }
+                        break;
+
+                    case 'AlertStudentEnrolment':
+                    case 'AlertStudentAdmission':
+                        if (isset($entity->status_id)) {
+                            $contextData['field_name'] = 'status_id';
+                            $contextData['new_value_id'] = $entity->status_id;
+                        }
+                        break;
+                }
+
+                if (!empty($contextData)) {
+                    $contextData['change_date'] = $entity->modified ?? $entity->created ?? date('Y-m-d H:i:s');
+                    $contextData['entity_id'] = $entity->id;
+                    $extraOptions['context'] = $contextData;
+                }
+            }
+
+            self::triggerAlertSystemProcess($systemProcessesTable, $rule, $alertProcessName, $userId, $extraOptions);
+        }
+    }
 
     public function initialize(array $config): void
     {
@@ -162,7 +482,7 @@ class AlertLogsTable extends ControllerActionTable
         $alertFeatures['Messaging'] = __('Messaging');
 
         if (!array_key_exists($feature, $alertFeatures)) {
-            Log::debug("❌ Unknown feature '{$feature}' passed to insertAlertLog.");
+            // Log::debug("❌ Unknown feature '{$feature}' passed to insertAlertLog.");
             return;
         }
 
@@ -178,10 +498,20 @@ class AlertLogsTable extends ControllerActionTable
         foreach ($existingLogs as $log) {
             $alreadyProcessed[] = $log->destination;
 
-            // Only trigger resend if status is still 0 (unsent)
+            // POCOR-9509: Queue unsent alerts for async processing
             if ($log->status === 0) {
-                $this->triggerSendingAlertCommand('sending_alert', $feature, $log->id, __FUNCTION__, __LINE__);
-                sleep(10);
+                $this->queueAlertForAsyncSending(
+                    $log,
+                    $log->method,
+                    $log->feature,
+                    $log->destination,
+                    $log->subject,
+                    $log->message,
+                    $log->checksum
+                );
+                // Legacy trigger commented out (async queue handles it now)
+                // $this->triggerSendingAlertCommand('sending_alert', $feature, $log->id, __FUNCTION__, __LINE__);
+                // sleep(10); // No longer needed with async queue
             }
         }
 
@@ -202,6 +532,7 @@ class AlertLogsTable extends ControllerActionTable
         return Security::hash("{$subject},{$message}", 'sha256');
     }
 
+    // POCOR-9509: Updated to queue alerts asynchronously
     private function createAndSendAlertLog(
         string $method,
         string $feature,
@@ -227,11 +558,69 @@ class AlertLogsTable extends ControllerActionTable
 
             if ($saved) {
                 $savedIds[] = $saved->id;
+
+                // POCOR-9509: Queue alert for async sending
+                $this->queueAlertForAsyncSending($saved, $method, $feature, $recipient, $subject, $message, $checksum);
             }
         }
 
+        // POCOR-9509: Keep legacy trigger for backward compatibility (can be removed after full migration)
         foreach ($savedIds as $id) {
-            $this->triggerSendingAlertCommand('sending_alert', $feature, $id, __FUNCTION__, __LINE__);
+            // $this->triggerSendingAlertCommand('sending_alert', $feature, $id, __FUNCTION__, __LINE__);
+            // Commented out: Async queue handles sending now
+        }
+    }
+
+    // POCOR-9509: Queue alert to alerts_queue table for async worker processing
+    private function queueAlertForAsyncSending(
+        Entity $alertLogEntity,
+        string $method,
+        string $feature,
+        string $recipient,
+        ?string $subject,
+        ?string $message,
+        string $checksum
+    ): void {
+        try {
+            $AlertsQueue = TableRegistry::getTableLocator()->get('AlertsQueue');
+
+            // Map method to channel (Email/SMS → email/sms)
+            $channel = strtolower($method);
+
+            $queued = $AlertsQueue->queueAlert(
+                $feature,              // alert_type (e.g., 'StudentAttendance', 'StaffLeave')
+                $channel,              // channel ('email' or 'sms')
+                $recipient,            // recipient (email address or phone number)
+                $message ?? '',        // message_body (placeholders already replaced)
+                $subject,              // subject (nullable, for email)
+                [                      // payload (metadata for tracking)
+                    'alert_log_id' => $alertLogEntity->id,
+                    'checksum' => $checksum,
+                    'feature' => $feature
+                ]
+            );
+
+            if ($queued) {
+                // Log::debug("✅ [POCOR-9509] Alert queued for async sending", [
+
+            } else {
+                Log::error("❌ [POCOR-9509] Failed to queue alert", [
+                    'alert_log_id' => $alertLogEntity->id,
+                    'feature' => $feature,
+                    'method' => $method,
+                    'recipient' => $recipient,
+                    'reason' => 'queueAlert returned false'
+                ]);
+            }
+        } catch (\Exception $e) {
+            // POCOR-9509: Don't fail the whole process if queueing fails
+            // Alert is still logged in alert_logs for manual retry
+            Log::error("❌ [POCOR-9509] Exception while queueing alert", [
+                'alert_log_id' => $alertLogEntity->id,
+                'feature' => $feature,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
     // POCOR-8286 end

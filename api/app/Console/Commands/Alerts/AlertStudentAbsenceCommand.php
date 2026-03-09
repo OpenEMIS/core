@@ -1,0 +1,249 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Console\Commands\Alerts;
+
+use Illuminate\Support\Facades\DB;
+
+/**
+ * POCOR-9509: Laravel port of CakePHP's AlertStudentAbsenceCommand
+ *
+ * Sends alerts for students with excessive absences.
+ *
+ * Usage:
+ *   php artisan alerts:student-absence
+ *       --user_id=1
+ *       --rule_id=5
+ *       --process_id=123
+ *       --student_id=456
+ *       --institution_id=789
+ *       --academic_period_id=10
+ *       --institution_class_id=20
+ *       --period=1
+ *       --subject_id=30
+ *
+ * @package App\Console\Commands\Alerts
+ */
+class AlertStudentAbsenceCommand extends AlertCommandBase
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'alerts:student-absence
+                            {--user_id= : User ID triggering the alert}
+                            {--rule_id= : Alert rule ID}
+                            {--process_id= : System process ID}
+                            {--student_id= : Student security_user_id}
+                            {--institution_id= : Institution ID}
+                            {--academic_period_id= : Academic period ID}
+                            {--institution_class_id= : Institution class ID}
+                            {--period= : Period ID}
+                            {--subject_id= : Subject ID}
+                            {--date= : Optional date filter}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'POCOR-9509: Send alerts for student absences (Laravel port)';
+
+    /**
+     * POCOR-9509: Execute the console command
+     *
+     * @return int
+     */
+    public function handle(): int
+    {
+        if (!$this->prepareContext()) {
+            return Command::FAILURE;
+        }
+
+        // Validate student-specific parameters
+        $studentId = (int) $this->option('student_id');
+        $academicPeriodId = (int) $this->option('academic_period_id');
+
+        if (!$studentId || !$academicPeriodId) {
+            $this->error("Missing required options: student_id, academic_period_id");
+            return Command::FAILURE;
+        }
+
+        return $this->runFeatureAlert('StudentAttendance');
+    }
+
+    /**
+     * POCOR-9509: Get pending absence records to alert on
+     *
+     * Queries student_absences_period_details for absences that exceed the threshold.
+     *
+     * @param string $featureKey Feature identifier
+     * @return array List of absence data items
+     */
+    protected function getPendingItems(string $featureKey): array
+    {
+        $studentId = (int) $this->option('student_id');
+        $academicPeriodId = (int) $this->option('academic_period_id');
+        $threshold = (int) ($this->rule->threshold ?? 1);
+
+        // Query absences for this student
+        $absences = DB::table('student_absences_period_details as absences')
+            ->join('security_users as users', 'users.id', '=', 'absences.student_id')
+            ->join('institutions', 'institutions.id', '=', 'absences.institution_id')
+            ->leftJoin('genders', 'genders.id', '=', 'users.gender_id')
+            ->leftJoin('nationalities as main_nat', 'main_nat.id', '=', 'users.nationality_id')
+            ->leftJoin('identity_types as main_id_type', 'main_id_type.id', '=', 'users.identity_type_id')
+            ->where('absences.student_id', $studentId)
+            ->where('absences.academic_period_id', $academicPeriodId)
+            ->whereIn('absences.absence_type_id', [1, 2]) // Absent types
+            ->orderBy('absences.date', 'ASC')
+            ->select([
+                'absences.date',
+                'absences.student_id',
+                'absences.institution_id',
+                'absences.institution_class_id',
+                'users.openemis_no as student_openemis_no',
+                'users.first_name as student_first_name',
+                'users.middle_name as student_middle_name',
+                'users.third_name as student_third_name',
+                'users.last_name as student_last_name',
+                'users.preferred_name as student_preferred_name',
+                'users.email as student_email',
+                'users.address as student_address',
+                'users.postal_code as student_postal_code',
+                'users.date_of_birth as student_date_of_birth',
+                'users.identity_number as student_identity_number',
+                'institutions.name as institution_name',
+                'institutions.code as institution_code',
+                'institutions.address as institution_address',
+                'institutions.postal_code as institution_postal_code',
+                'institutions.contact_person as institution_contact_person',
+                'institutions.telephone as institution_telephone',
+                'institutions.email as institution_email',
+                'institutions.website as institution_website',
+                'genders.name as gender_name',
+                'main_nat.name as nationality_name',
+                'main_id_type.name as identity_type_name',
+            ])
+            ->get()
+            ->toArray();
+
+        if (empty($absences)) {
+            return [];
+        }
+
+        // Count unique absence dates
+        $uniqueDates = [];
+        foreach ($absences as $absence) {
+            if (!empty($absence->date)) {
+                $uniqueDates[$absence->date] = true;
+            }
+        }
+
+        $totalDays = count($uniqueDates);
+
+        // Check against threshold
+        if ($totalDays < $threshold) {
+            $this->info("Student has {$totalDays} absence days, below threshold of {$threshold}");
+            return [];
+        }
+
+        // Build result from first absence record (all have same student/institution data)
+        $first = $absences[0];
+
+        return [[
+            'student_id' => $first->student_id,
+            'institution_id' => $first->institution_id,
+            'institution_class_id' => $first->institution_class_id,
+            'student_name' => trim($first->student_first_name . ' ' . $first->student_last_name),
+            'student_openemis_no' => $first->student_openemis_no,
+            'student_first_name' => $first->student_first_name,
+            'student_middle_name' => $first->student_middle_name,
+            'student_third_name' => $first->student_third_name,
+            'student_last_name' => $first->student_last_name,
+            'student_preferred_name' => $first->student_preferred_name,
+            'student_email' => $first->student_email,
+            'student_address' => $first->student_address,
+            'student_postal_code' => $first->student_postal_code,
+            'student_date_of_birth' => $first->student_date_of_birth,
+            'student_identity_number' => $first->student_identity_number,
+            'student_gender' => $first->gender_name ?? '',
+            'student_nationality' => $first->nationality_name ?? '',
+            'student_identity_type' => $first->identity_type_name ?? '',
+            'institution_name' => $first->institution_name,
+            'institution_code' => $first->institution_code,
+            'institution_address' => $first->institution_address,
+            'institution_postal_code' => $first->institution_postal_code,
+            'institution_contact_person' => $first->institution_contact_person,
+            'institution_telephone' => $first->institution_telephone,
+            'institution_email' => $first->institution_email,
+            'institution_website' => $first->institution_website,
+            'total_days' => $totalDays,
+            'total_times' => count($absences),
+        ]];
+    }
+
+    /**
+     * POCOR-9509: Resolve recipients for student absence alert
+     *
+     * Overrides parent to use student-associated contacts (guardians, student)
+     *
+     * @param array $item Pending item data
+     * @return array Contact list
+     */
+    protected function resolveRecipients(array $item): array
+    {
+        $institutionId = $item['institution_id'] ?? null;
+        $institutionClassId = $item['institution_class_id'] ?? null;
+
+        return $this->recipientResolver->getRoleAssociatedContactList(
+            $this->rule->security_roles,
+            $institutionId,
+            $institutionClassId
+        );
+    }
+
+    /**
+     * POCOR-9509: Fill placeholders for student absence alert
+     *
+     * Maps absence data to ${placeholder} => value array.
+     * Placeholders match CakePHP's AlertStudentAbsenceCommand.
+     *
+     * @param array $item Absence data from getPendingItems()
+     * @return array Placeholder => value mapping
+     */
+    protected function fillPlaceholders(array $item): array
+    {
+        $threshold = (int) ($this->rule->threshold ?? 1);
+
+        return [
+            '${student.name}' => $item['student_name'] ?? '',
+            '${student.openemis_no}' => $item['student_openemis_no'] ?? '',
+            '${student.first_name}' => $item['student_first_name'] ?? '',
+            '${student.middle_name}' => $item['student_middle_name'] ?? '',
+            '${student.third_name}' => $item['student_third_name'] ?? '',
+            '${student.last_name}' => $item['student_last_name'] ?? '',
+            '${student.preferred_name}' => $item['student_preferred_name'] ?? '',
+            '${student.email}' => $item['student_email'] ?? '',
+            '${student.address}' => $item['student_address'] ?? '',
+            '${student.postal_code}' => $item['student_postal_code'] ?? '',
+            '${student.date_of_birth}' => $item['student_date_of_birth'] ?? '',
+            '${student.gender}' => $item['student_gender'] ?? '',
+            '${student.identity_number}' => $item['student_identity_number'] ?? '',
+            '${student.main_nationality}' => $item['student_nationality'] ?? '',
+            '${student.identity_type}' => $item['student_identity_type'] ?? '',
+            '${institution.name}' => $item['institution_name'] ?? '',
+            '${institution.code}' => $item['institution_code'] ?? '',
+            '${institution.address}' => $item['institution_address'] ?? '',
+            '${institution.postal_code}' => $item['institution_postal_code'] ?? '',
+            '${institution.contact_person}' => $item['institution_contact_person'] ?? '',
+            '${institution.telephone}' => $item['institution_telephone'] ?? '',
+            '${institution.email}' => $item['institution_email'] ?? '',
+            '${institution.website}' => $item['institution_website'] ?? '',
+            '${total_days}' => (string) ($item['total_days'] ?? 0),
+            '${total_times}' => (string) ($item['total_times'] ?? 0),
+            '${threshold}' => (string) $threshold,
+        ];
+    }
+}

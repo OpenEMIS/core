@@ -58,21 +58,19 @@ class RenderCheckboxBehavior extends RenderBehavior
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             foreach ($checkboxOptions as $key => $value) {
-                $html .= '<div class="input" style="display:flex;">';//POCOR-7950
+                $html .= '<div class="input" style="display:flex;">';
                 $option = ['kd-checkbox-radio' => ''];
-                if (!empty($checkedValues)) {
-                    if (in_array($key, $checkedValues)) {
-                        $option['checked'] = true;
-                    }
+                if (!empty($checkedValues) && in_array($key, $checkedValues)) {
+                    $option['checked'] = true;
                 }
                 $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
                 $unlockFields[] = "$fieldPrefix.number_value.$key";
-                $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">'. $value .'</label>';//POCOR-7950
-
+                $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">' . $value . '</label>';
                 $html .= '</div>';
             }
-            $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
-            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
+
+            $html .= $form->hidden($fieldPrefix . '.' . $attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix . '.' . $attr['attr']['fieldKey'];
 
             $attr['output'] = $html;
             $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);
