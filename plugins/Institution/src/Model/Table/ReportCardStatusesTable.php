@@ -418,9 +418,19 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
-        $where[$this->aliasField('institution_class_id')] = $selectedClass;
+        // When "All Classes" is selected, filter by IN (class ids); do not use institution_class_id = 'all' (invalid for integer column, can cause redirect/error)
+        if ($selectedClass === 'all') {
+            $allClassIds = array_keys(array_diff_key($classOptions, ['-1' => 1, 'all' => 1]));
+            $allClassIds = array_filter($allClassIds, 'is_numeric');
+            if (!empty($allClassIds)) {
+                $where[$this->aliasField('institution_class_id') . ' IN'] = $allClassIds;
+            } else {
+                $where[$this->aliasField('institution_class_id')] = -1; // no classes, show nothing
+            }
+        } else {
+            $where[$this->aliasField('institution_class_id')] = $selectedClass;
+        }
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
-
         //POCOR-7212 starts
         if (!empty($educationGradeByReportCardId)) {
             $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId;
@@ -2013,7 +2023,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards ' . $args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-             //print_r($shellCmd);die();
+            //  print_r($shellCmd);die();
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
