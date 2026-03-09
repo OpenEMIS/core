@@ -151,7 +151,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 
-    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
 //        Log::debug('[editOnInitialize] Entity ID: ' . $entity->id);
 
@@ -623,7 +623,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
 	}
 
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();
@@ -670,7 +670,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
     }
 
 
-    public function beforeDelete(Event $event, Entity $entity)
+    public function beforeDelete(EventInterface $event, Entity $entity)
     {
         $connection = $this->getConnection();
         $connection->getDriver()->enableAutoQuoting();

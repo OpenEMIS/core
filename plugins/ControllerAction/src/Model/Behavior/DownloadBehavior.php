@@ -80,16 +80,22 @@ class DownloadBehavior extends Behavior
         exit();
     }
 	
-	 public function download(EventInterface $mainEvent, ArrayObject $extra)
+    public function download(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
         $controllerName = $model->controller->getName();
-        $ids = $model->paramsDecode($model->paramsPass(0));
-        if( $model->controller->getName() == 'Directories' || $model->controller->getName() == 'Profiles') { 
-            $ids =[];
-            $params = $model->paramsDecode($model->paramsPass(0));
-            $ids['id'] = $params['id'];
-        } 
+        //POCOR-9584: start - Always use only the primary key (id) from the decoded pass param.
+        // When navigating from a view page, ControllerAction inserts navigation context at paramsPass(0)
+        // (containing staff_id, institution_id, etc.), shifting the button's explicit entity ID to paramsPass(1).
+        // From an index page paramsPass(0) holds the entity ID directly (no navigation prefix).
+        // In both cases we only ever need `id`; strip everything else to prevent a "column not found" SQL error
+        // if extra fields (staff_id, institution_id, …) are accidentally passed as WHERE conditions.
+        $passParam1 = $model->paramsPass(1);
+        $rawIds = !empty($passParam1)
+            ? $model->paramsDecode($passParam1)
+            : $model->paramsDecode($model->paramsPass(0));
+        $ids = isset($rawIds['id']) ? ['id' => $rawIds['id']] : $rawIds;
+        //POCOR-9584: end
         if ($model->exists($ids)) {
             $data = $model->get($ids);
             $fileName = $data->{$this->getConfig('name')};

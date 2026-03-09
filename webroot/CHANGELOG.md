@@ -1,4 +1,24 @@
-### [5.1.0] - 2026-01-20
+### [5.3.0] - 2026-03-05
+- Implemented: Develop changes to institutions dropdown on the staff qualifications page
+- Bug Fixed: Institutions > Staff > General > Nationalities > Add: Getting 404 error when saved
+- Bug Fixed: Attendance API is getting null period id and name
+- Bug Fixed: Institutions>Appointments>Positions>Import: System shows 404 error
+- Bug Fixed: Administration>Performance>Report Cards: There is no data nor the background logo showing when generating:
+- Bug Fixed: Institutions>Performance>Report Cards: Replace Email column with PDF File Size
+
+### [5.2.0] - 2026-02-27
+- Implemented: Develop a standard report with filters for Reports > Performance > Competencies
+- Bug Fixed: Administration>System Configuration>Student Settings>Maximum Students Per Class/Subject: Allows user to set to 1000
+- Bug Fixed: Institution>Attendance>Student>Classes: When switching classes, the loader starts and the page doesn't finish loading
+- Bug Fixed: Institutions>Students>Add: The default country name does not figure on top of the Nationality dropdown
+- Bug Fixed: Reports>Institutions>Students: Report is showing wrong status
+- Bug Fixed: Institutions>General>Contacts>People: The Phone number and Email address fields should not be mandatory in the Institution Contact Persons page/form
+- Bug Fixed: Institution > Staff > Finance > Salaries: Create labels for Gross Salary and Net Salary
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting same user when error is occured for one of the users
+- Bug Fixed: Institutions > Students > Timetable > View: Getting 404 error when viewed
+- Bug Fixed: Institutions>Students>General>Overview>Edit: 404 error when viewed
+
+### [5.1.0] - 2026-02-20
 - Implemented: Develop a migration script to convert attendance / absence triggers to a stored procedure 
 - Bug Fixed: Institutions>Performance>Report Cards: When generating report cards, it is including withdrawn students
 - Bug Fixed: Institutions>Attendance>Staff: System checks the Timezone configuration before applying the validation on marking Student/Staff attendance
@@ -9,7 +29,7 @@
 - Bug Fixed: Administration>Data Management>Copy: When copying Institution Programmes for 2026, start date of the programme is showing wrongly
 - Bug Fixed: Administration>Scholarships>Recipients: When adding or editing scholarship, it should redirect to the correct page
 
-### [5.0.0] - 2026-01-06
+### [5.0.0] - 2026-02-06
 - Implemented: Develop changes to existing webhooks in OpenEMIS Core to integrate with OpenEMIS Exams 
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Urgent issues)
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5
