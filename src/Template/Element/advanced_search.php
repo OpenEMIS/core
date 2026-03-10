@@ -167,7 +167,8 @@ use Cake\Utility\Inflector;
     <div class="search-action-btn">
         <input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
         <button class="btn btn-default btn-xs" href="" ng-click="submitSearch()"><?= __('Search') ?></button>
-        <button id="reset" class="btn btn-outline btn-xs" name="reset" ng-click="resetFields()" value="Reset"><?= __('Reset') ?></button>
+        <!-- <button id="reset" class="btn btn-outline btn-xs" name="reset" ng-click="resetFields()" value="Reset"><?= __('Reset') ?></button> -->
+        <button type="button" id="reset" class="btn btn-outline btn-xs" name="reset" ng-click="resetFields()" value="Reset"><?= __('Reset') ?></button>
         <?php
             $this->Form->unlockField('reset');
             $this->Form->unlockField('AdvanceSearch');

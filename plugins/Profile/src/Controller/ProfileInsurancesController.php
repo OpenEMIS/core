@@ -6,7 +6,7 @@ use Profile\Controller\InsurancesController as BaseController;
 
 class ProfileInsurancesController extends BaseController
 {
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
 

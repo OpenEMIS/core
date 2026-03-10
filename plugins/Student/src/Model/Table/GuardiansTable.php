@@ -205,7 +205,8 @@ class GuardiansTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $queryString = $this->getQueryString('security_user_id');
+        $queryString = $this->getQueryString('security_user_id') ?? $this->getQueryString('student_id');
+
         $search = $this->getSearchKey();
 
         // Add your custom WHERE condition here

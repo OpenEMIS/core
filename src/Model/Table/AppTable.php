@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\LogTrait;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -134,7 +134,7 @@ class AppTable extends Table
 
 
     // Event: 'ControllerAction.Model.onPopulateSelectOptions'
-    public function onPopulateSelectOptions(Event $event, Query $query)
+    public function onPopulateSelectOptions(EventInterface $event, Query $query)
     {
         return $this->getList($query);
     }
@@ -169,7 +169,7 @@ class AppTable extends Table
     }
 
 
-    public function onExcelRenderDateTime(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDateTime(EventInterface $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
         if (!empty($field)) {
@@ -185,7 +185,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatDate'
-    public function onFormatDate(Event $event, $dateObject)
+    public function onFormatDate(EventInterface $event, $dateObject)
     {
         return $this->formatDate($dateObject);
     }
@@ -207,7 +207,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatTime'
-    public function onFormatTime(Event $event, $timeObject)
+    public function onFormatTime(EventInterface $event, $timeObject)
     {
         return $this->formatTime($timeObject);
     }
@@ -246,7 +246,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatDateTime'
-    public function onFormatDateTime(Event $event, $timeObject): string
+    public function onFormatDateTime(EventInterface $event, $timeObject): string
     {
         return $this->formatDateTime($timeObject);
     }
@@ -302,28 +302,28 @@ class AppTable extends Table
 
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderDatetime(Event $event, $entity, $property)
+    public function onRestfulRenderDatetime(EventInterface $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatDateTime($dateTimeObj);
     }
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderDate(Event $event, $entity, $property)
+    public function onRestfulRenderDate(EventInterface $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatDate($dateTimeObj);
     }
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderTime(Event $event, $entity, $property)
+    public function onRestfulRenderTime(EventInterface $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatTime($dateTimeObj);
     }
 
     // Event: 'ControllerAction.Model.onGetFieldLabel'
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
 
         $Labels     = TableRegistry::getTableLocator()->get('Labels');
@@ -368,7 +368,7 @@ class AppTable extends Table
     }
 
     // Event: 'Model.excel.onExcelGetLabel'
-    public function onExcelGetLabel(Event $event, $module, $col, $language)
+    public function onExcelGetLabel(EventInterface $event, $module, $col, $language)
     {
        return __($this->getFieldLabel($module, $col, $language));
     }
@@ -384,7 +384,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onInitializeButtons'
-    public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
+    public function onInitializeButtons(EventInterface $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
 
         // echo '<pre>';
@@ -992,8 +992,7 @@ class AppTable extends Table
             $controller->set('reorder', true);
         }
 
-        $event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
-        $this->getEventManager()->dispatch($event);
+        $this->dispatchEvent('Model.custom.onUpdateToolbarButtons', [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
 
         if ($toolbarButtons->offsetExists('back')) {
             $controller->set('backButton', $toolbarButtons['back']);
@@ -1001,7 +1000,7 @@ class AppTable extends Table
         $controller->set(compact('toolbarButtons', 'indexButtons'));
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $id = $this->getEncodedKeys($entity);
 
