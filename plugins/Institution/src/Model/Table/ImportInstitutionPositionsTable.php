@@ -205,105 +205,240 @@ class ImportInstitutionPositionsTable extends AppTable
         $tempPassedRecord['data'][$key] = $clonedEntity->position_no;
     }
 
-    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    //POCOR-9472 code change
+    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow,ArrayObject $rowInvalidCodeCols) 
     {
-//        return true;
-        //POCOR-7417:Start
-        $conn = ConnectionManager::get('default');
-        $status = $tempRow['status_id'];
         $queryString = $this->getQueryString();
-        $institutionId = $queryString['institution_id'];
-        $insId = $institutionId;
-        $this->institutionId = $institutionId;
-        $sqlStr = "SELECT MIN(security_group_users.security_user_id)
-        FROM security_group_users
-        WHERE security_group_users.security_group_id IN
-        (
-            SELECT security_group_institutions.security_group_id
-            FROM security_group_institutions
-            WHERE security_group_institutions.institution_id = $insId
-
-            UNION
-
-            SELECT security_group_areas.security_group_id
-            FROM security_group_areas
-            INNER JOIN institutions
-            ON institutions.area_id = security_group_areas.area_id
-            AND institutions.id = $insId
-
-            UNION
-
-            SELECT institutions.security_group_id
-            FROM institutions
-            WHERE institutions.id = $insId
-        )
-        AND security_group_users.security_role_id IN
-        (
-            SELECT workflow_steps_roles.security_role_id
-            FROM workflow_steps_roles
-            INNER JOIN workflow_steps
-            ON workflow_steps.id = workflow_steps_roles.workflow_step_id
-            INNER JOIN workflows
-            ON workflows.id = workflow_steps.workflow_id
-            INNER JOIN workflow_models
-            ON workflow_models.id = workflows.workflow_model_id
-            WHERE workflow_models.name LIKE 'Institutions > Positions'
-            AND workflow_steps.id = $status -- This values is coming from Template > References > Status
-        )";
-//        dd($sqlStr);
-        $result = $conn->execute($sqlStr);
-        $rows = $result->fetch('assoc');
-        $userRow = $rows['MIN(security_group_users.security_user_id)'];
-        //POCOR-7417:end
-        if (!$this->institutionId) {
+        $institutionId = $queryString['institution_id'] ?? null;
+        if (empty($institutionId)) {
             $rowInvalidCodeCols['institution_id'] = __('No active institution');
             $tempRow['institution_id'] = false;
             return false;
         }
+        $this->institutionId = $institutionId;
+        $tempRow['institution_id'] = $institutionId;
 
+        // POCOR-7417 Auto-assign user
+        $conn = ConnectionManager::get('default');
+        $status = $tempRow['status_id'];
+
+        $sqlStr = "
+            SELECT MIN(sgu.security_user_id) AS user_id
+            FROM security_group_users sgu
+            WHERE sgu.security_group_id IN
+            (
+                SELECT sgi.security_group_id
+                FROM security_group_institutions sgi
+                WHERE sgi.institution_id = $institutionId
+
+                UNION
+
+                SELECT sga.security_group_id
+                FROM security_group_areas sga
+                INNER JOIN institutions i
+                    ON i.area_id = sga.area_id
+                   AND i.id = $institutionId
+
+                UNION
+
+                SELECT i.security_group_id
+                FROM institutions i
+                WHERE i.id = $institutionId
+            )
+            AND sgu.security_role_id IN
+            (
+                SELECT wsr.security_role_id
+                FROM workflow_steps_roles wsr
+                INNER JOIN workflow_steps ws ON ws.id = wsr.workflow_step_id
+                INNER JOIN workflows w ON w.id = ws.workflow_id
+                INNER JOIN workflow_models wm ON wm.id = w.workflow_model_id
+                WHERE wm.name LIKE 'Institutions > Positions'
+                  AND ws.id = $status
+            )
+        ";
+
+        $rows = $conn->execute($sqlStr)->fetch('assoc');
+        $fallbackUserId = $rows['user_id'] ?? null;
+
+        // Default AUTO_ASSIGN
         $tempRow['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
-        //POCOR-7417:Start
-        if($tempRow['assignee_id'] == '-1'){
-            $tempRow['assignee_id'] = $userRow;
-        }
-        //POCOR-7417:end
-        $tempRow['institution_id'] = $this->institutionId;
 
-        //POCOR-7800::Start
-        if(empty($tempRow['assignee_id'])){
-            $WorkflowStepsRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
-            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
-            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        if ($tempRow['assignee_id'] == WorkflowBehavior::AUTO_ASSIGN && !empty($fallbackUserId)) {
+            $tempRow['assignee_id'] = $fallbackUserId;
+        }
+
+        // POCOR-7800 Workflow-based assignment
+
+        if (empty($tempRow['assignee_id'])) {
+            $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+            $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+            $Institutions = TableRegistry::get('Institution.Institutions');
+
             $stepRoles = $WorkflowStepsRoles->getRolesByStep($tempRow['status_id']);
-            $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $tempRow['institution_id']])->contain(['Areas'])->first();
-            $securityGroupId = $institutionObj->security_group_id;
-            $areaObj = $institutionObj->area;
 
+            //REQUIRED CHECK
+            if (empty($stepRoles)) {
+                if (!empty($fallbackUserId)) {
+                    $tempRow['assignee_id'] = $fallbackUserId;
+                } else {
+                    $rowInvalidCodeCols['assignee_id'] = __(
+                        'No assignee found. Workflow roles are not configured for this status.'
+                    );
+                    return false;
+                }
+            } else {
+                $institutionObj = $Institutions
+                    ->find()
+                    ->where([$Institutions->aliasField('id') => $institutionId])
+                    ->contain(['Areas'])
+                    ->first();
 
-            $where = [
-                'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
-                        ['Institutions.id' => $institutionId]],
-                $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
-            ];
-            $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                $securityGroupId = $institutionObj->security_group_id;
+                $areaObj = $institutionObj->area;
+
+                // School-based assignees
+                $where = [
+                    'OR' => [
+                        [$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                        ['Institutions.id' => $institutionId]
+                    ],
+                    $SecurityGroupUsers->aliasField('security_role_id IN') => $stepRoles
+                ];
+
+                $schoolBasedAssigneeOptions = $SecurityGroupUsers
                     ->find('userList', ['where' => $where])
-                    ->leftJoinWith('SecurityGroups.Institutions');
-            $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+                    ->leftJoinWith('SecurityGroups.Institutions')
+                    ->toArray();
 
+                // Region-based assignees
+                $where = [
+                    $SecurityGroupUsers->aliasField('security_role_id IN') => $stepRoles
+                ];
 
-            $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
-            $regionBasedAssigneeQuery = $SecurityGroupUsers
-                                            ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-            $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
-            $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
-            $tempRow['assignee_id'] = array_key_first($assigneeOptions);
+                $regionBasedAssigneeOptions = $SecurityGroupUsers
+                    ->find('userList', ['where' => $where, 'area' => $areaObj])
+                    ->toArray();
+
+                $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+
+                if (!empty($assigneeOptions)) {
+                    $tempRow['assignee_id'] = array_key_first($assigneeOptions);
+                }
+            }
         }
-        //POCOR-7800::End
+
+        // validation
+        if (empty($tempRow['assignee_id'])) {
+            $rowInvalidCodeCols['assignee_id'] = __('Assignee could not found .');
+            return false;
+        }
 
         if (!isset($tempRow['position_no'])) {
-            $tempRow['position_no'] = $this->InstitutionPositions->getUniquePositionNo($this->institutionId);
+            $tempRow['position_no'] = $this->InstitutionPositions
+                ->getUniquePositionNo($this->institutionId);
         }
 
         return true;
+    }
+
+
+    public function onImportModelSpecificValidationbkp(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    {
+            //POCOR-7417:Start
+            $conn = ConnectionManager::get('default');
+            $status = $tempRow['status_id'];
+            $queryString = $this->getQueryString();
+            $institutionId = $queryString['institution_id'];
+            $insId = $institutionId;
+            $this->institutionId = $institutionId;
+            $sqlStr = "SELECT MIN(security_group_users.security_user_id)
+            FROM security_group_users
+            WHERE security_group_users.security_group_id IN
+            (
+                SELECT security_group_institutions.security_group_id
+                FROM security_group_institutions
+                WHERE security_group_institutions.institution_id = $insId
+
+                UNION
+
+                SELECT security_group_areas.security_group_id
+                FROM security_group_areas
+                INNER JOIN institutions
+                ON institutions.area_id = security_group_areas.area_id
+                AND institutions.id = $insId
+
+                UNION
+
+                SELECT institutions.security_group_id
+                FROM institutions
+                WHERE institutions.id = $insId
+            )
+            AND security_group_users.security_role_id IN
+            (
+                SELECT workflow_steps_roles.security_role_id
+                FROM workflow_steps_roles
+                INNER JOIN workflow_steps
+                ON workflow_steps.id = workflow_steps_roles.workflow_step_id
+                INNER JOIN workflows
+                ON workflows.id = workflow_steps.workflow_id
+                INNER JOIN workflow_models
+                ON workflow_models.id = workflows.workflow_model_id
+                WHERE workflow_models.name LIKE 'Institutions > Positions'
+                AND workflow_steps.id = $status -- This values is coming from Template > References > Status
+            )";
+            $result = $conn->execute($sqlStr);
+            $rows = $result->fetch('assoc');
+            $userRow = $rows['MIN(security_group_users.security_user_id)'];
+            //POCOR-7417:end
+            if (!$this->institutionId) {
+                $rowInvalidCodeCols['institution_id'] = __('No active institution');
+                $tempRow['institution_id'] = false;
+                return false;
+            }
+
+            $tempRow['assignee_id'] = WorkflowBehavior::AUTO_ASSIGN;
+            //POCOR-7417:Start
+            if($tempRow['assignee_id'] == '-1'){
+                $tempRow['assignee_id'] = $userRow;
+            }
+            //POCOR-7417:end
+            $tempRow['institution_id'] = $this->institutionId;
+
+            //POCOR-7800::Start
+            if(empty($tempRow['assignee_id'])){
+                $WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
+                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                $Institutions = TableRegistry::get('Institution.Institutions');
+                $stepRoles = $WorkflowStepsRoles->getRolesByStep($tempRow['status_id']);
+                $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $tempRow['institution_id']])->contain(['Areas'])->first();
+                $securityGroupId = $institutionObj->security_group_id;
+                $areaObj = $institutionObj->area;
+
+
+                $where = [
+                    'OR' => [[$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId],
+                            ['Institutions.id' => $institutionId]],
+                    $SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles
+                ];
+                $schoolBasedAssigneeQuery = $SecurityGroupUsers
+                        ->find('userList', ['where' => $where])
+                        ->leftJoinWith('SecurityGroups.Institutions');
+                $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
+
+
+                $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
+                $regionBasedAssigneeQuery = $SecurityGroupUsers
+                                                ->find('UserList', ['where' => $where, 'area' => $areaObj]);
+                $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
+                $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
+                $tempRow['assignee_id'] = array_key_first($assigneeOptions);
+            }
+            //POCOR-7800::End
+
+            if (!isset($tempRow['position_no'])) {
+                $tempRow['position_no'] = $this->InstitutionPositions->getUniquePositionNo($this->institutionId);
+            }
+
+            return true;
     }
 }

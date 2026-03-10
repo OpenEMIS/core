@@ -113,6 +113,7 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->requirePresence('target_populations')
+            ->requirePresence('training_course_category_id')
             ->requirePresence('training_providers')
             ->requirePresence('result_types')
             ->add('duration', [
@@ -208,7 +209,7 @@ class TrainingCoursesTable extends ControllerActionTable
         ]);
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Courses','Trainings');       
+		$is_manual_exist = $this->getManualUrl('Administration','Courses','Trainings');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -273,7 +274,7 @@ class TrainingCoursesTable extends ControllerActionTable
         //Validating the training_course_category_id before assigning
         if (
             array_key_exists($this->getAlias(), $requestDataArray) &&
-            is_array($requestDataArray[$this->getAlias()]) && 
+            is_array($requestDataArray[$this->getAlias()]) &&
             !empty($requestDataArray[$this->getAlias()]['training_course_category_id'])
         ) {
             $categoryId = $requestDataArray[$this->getAlias()]['training_course_category_id'];
@@ -666,7 +667,7 @@ class TrainingCoursesTable extends ControllerActionTable
 
         return $isSelectAll;
     }
-    
+
     //POCOR-6925
     public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
@@ -710,7 +711,7 @@ class TrainingCoursesTable extends ControllerActionTable
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     if ($isSchoolBased) {
-                        if (is_null($institutionId)) {                        
+                        if (is_null($institutionId)) {
                             Log::write('debug', 'Institution Id not found.');
                         } else {
                             $institutionObj = $Institutions->find()->where([$Institutions->aliasField('id') => $institutionId])->contain(['Areas'])->first();
@@ -726,12 +727,12 @@ class TrainingCoursesTable extends ControllerActionTable
                                     ->find('userList', ['where' => $where])
                                     ->leftJoinWith('SecurityGroups.Institutions');
                             $schoolBasedAssigneeOptions = $schoolBasedAssigneeQuery->toArray();
-                            
+
                             // Region based assignee
                             $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
                             $regionBasedAssigneeQuery = $SecurityGroupUsers
                                         ->find('UserList', ['where' => $where, 'area' => $areaObj]);
-                            
+
                             $regionBasedAssigneeOptions = $regionBasedAssigneeQuery->toArray();
                             // End
                             $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
@@ -746,7 +747,7 @@ class TrainingCoursesTable extends ControllerActionTable
                     }
                 }
             }
-            
+
             $attr['type'] = 'chosenSelect';
             $attr['attr']['multiple'] = false;
             $attr['select'] = false;
