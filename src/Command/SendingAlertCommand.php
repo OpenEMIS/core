@@ -92,7 +92,7 @@ class SendingAlertCommand extends \Cake\Command\Command
                 $name = trim($name);
 
                 if (str_ends_with($email, '.comz')) {
-//                    $io->out("🛑 Skipped fake email: $email ($name)");
+                    $io->out("🛑 Skipped fake email: $email ($name)");
                     continue;
                 }
 
@@ -118,7 +118,7 @@ class SendingAlertCommand extends \Cake\Command\Command
 
         foreach ($phones as $phone) {
             if (str_ends_with($phone, 'zz')) {
-//                $io->out("🛑 Skipped fake phone: $phone");
+                $io->out("🛑 Skipped fake phone: $phone");
                 continue;
             }
 
@@ -156,7 +156,7 @@ class SendingAlertCommand extends \Cake\Command\Command
 
         if (!$sid || !$token || !$from) {
             $io->err("Twilio credentials missing for $to");
-            // Log::warning('Missing Twilio config', compact('sid', 'token', 'from'));
+            Log::warning('Missing Twilio config', compact('sid', 'token', 'from'));
             return;
         }
 

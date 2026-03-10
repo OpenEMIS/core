@@ -55,7 +55,6 @@ class AlertRuleBehavior extends Behavior
         $model = $this->_table;
         $thresholdConfig = $this->getConfig('threshold');
         // logic to auto render fields based on setting in config threshold
-//        Log::debug("Setting up fields for alert rule: " . $this->alertRule . " with threshold config: " . print_r($thresholdConfig, true));
         if (!empty($thresholdConfig)) {
             if ($model->action == 'view') {
                 $model->extractThresholdValuesFromEntity($entity);

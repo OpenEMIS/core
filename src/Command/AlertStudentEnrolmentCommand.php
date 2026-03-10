@@ -14,7 +14,6 @@ use Cake\ORM\TableRegistry; // POCOR-9320
  */
 class AlertStudentEnrolmentCommand extends AlertCommandBase
 {
-    protected $entityId = 0;
     /**
      * Log alert (SMS or Email) into alert logs.
      *
@@ -61,7 +60,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         $workflowCategory = $threshold['workflow_steps'];
 
         $where = [
-            'StudentEnrolment.id' => $this->entityId,
+            'StudentEnrolment.id' => $this->enrolmentId,
             'Statuses.id IN' => $workflowCategory,
         ];
         // POCOR-9320 start
@@ -147,23 +146,23 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         $this->userId = (int)$args->getOption('user_id');
         $this->ruleId = (int)$args->getOption('rule_id');
         $this->processId = (int)$args->getOption('process_id');
-        $this->entityId = (int)$args->getOption('entity_id');
+        $this->enrolmentId = (int)$args->getOption('enrolment_id');
         $ruleId = $this->ruleId;
 
 
         if (!$this->userId ||
             !$this->ruleId ||
             !$this->processId ||
-            !$this->entityId
+            !$this->enrolmentId
         ) {
             $io->error("Missing required option");
             return false;
         }
         try {
-            $this->enrolment = $this->StudentEnrolment->get($this->entityId);
+            $this->enrolment = $this->StudentEnrolment->get($this->enrolmentId);
             $this->studentId = $this->enrolment->student_id;
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
-            $io->error("Enrolment with ID {$this->entityId} not found.");
+            $io->error("Enrolment with ID {$this->enrolmentId} not found.");
             return false;
         }
         try {
@@ -227,12 +226,16 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
     {
         $parser = parent::getOptionParser();
 
-        $parser->addOption('entity_id', [
-            'help' => 'Specify the entity ID for targeted alerts.',
+        $parser->addOption('enrolment_id', [
+            'help' => 'Specify the Enrolment ID for targeted alerts.',
             'required' => true,
-            'short' => 'e'
+            'short' => 'a'
         ]);
-
+        $parser->addOption('status_id', [
+            'help' => 'Specify the Status ID for targeted alerts.',
+            'required' => false,
+            'short' => 't'
+        ]);
 
         return $parser;
     }

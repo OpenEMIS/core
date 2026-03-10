@@ -375,11 +375,9 @@ class AlertsTable extends ControllerActionTable
         $entity = $attr['entity'];
         $oneTimeProcesses = [
             'AlertAttendance',
-            'AlertStaffAbsence', // POCOR-9391
             'AlertStudentAbsence', // POCOR-9391
             'AlertStudentAdmission',
-            'AlertStudentEnrolment',
-            'AlertStudentStatus'
+            'AlertStudentEnrolment'
         ];
 
         if (in_array($entity->process_name, $oneTimeProcesses, true)) {
@@ -400,7 +398,7 @@ class AlertsTable extends ControllerActionTable
         // POCOR-8286 end
         $attr['type'] = 'select';
         $attr['attr']['options'] = $freqOptions;
-        $attr['onChangeReload'] = false;
+        $attr['onChangeReload'] = true;
 
         return $attr;
     }
@@ -410,7 +408,7 @@ class AlertsTable extends ControllerActionTable
     {
         $this->field('name',['type' => 'readonly']);
 //        $this->field('frequency',['after' => 'name']);
-        $this->field('last_run_date', ['visible' => false, 'type' => 'hidden' ]);
+        $this->field('last_run_date', ['visible' => false]);
     }
      //POCOR-7558 end
 }
