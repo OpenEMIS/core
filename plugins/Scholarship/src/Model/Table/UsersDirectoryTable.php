@@ -5,7 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
@@ -50,7 +50,7 @@ class UsersDirectoryTable extends ControllerActionTable
         }
         return $query;
     }
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no');
         $this->field('name', ['displayFrom' => 'name']);
@@ -97,7 +97,7 @@ class UsersDirectoryTable extends ControllerActionTable
         ];
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Section header
         $this->field('information_section', [
@@ -206,7 +206,7 @@ class UsersDirectoryTable extends ControllerActionTable
 
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'Genders',
@@ -222,7 +222,7 @@ class UsersDirectoryTable extends ControllerActionTable
         return $query;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'openemis_no':
@@ -246,7 +246,7 @@ class UsersDirectoryTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
