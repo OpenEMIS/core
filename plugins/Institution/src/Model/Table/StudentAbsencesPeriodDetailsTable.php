@@ -2,7 +2,6 @@
 
 namespace Institution\Model\Table;
 
-use Alert\Model\Table\AlertLogsTable;
 use App\Model\Table\AppTable;
 use ArrayObject;
 use Cake\Event\EventInterface;
@@ -231,14 +230,14 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $excused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
 
         if (!$unexcused || !$excused) {
-            // Log::debug('Absence type IDs not found');
+            Log::debug('Absence type IDs not found');
             return;
         }
 
         $validAbsenceTypeIds = [$unexcused->id, $excused->id];
 
         if (!in_array($entity->absence_type_id, $validAbsenceTypeIds, true)) {
-            // Log::debug('No alert sent because absence type is not valid for alert');
+            Log::debug('No alert sent because absence type is not valid for alert');
             return;
         }
 
@@ -256,7 +255,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             ->first();
 
         if (!$alert) {
-            // Log::debug('No Alerts for AlertStudentAbsence');
+            Log::debug('No Alerts for AlertStudentAbsence');
             return;
         }
 
@@ -268,7 +267,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             ->toArray();
 
         if (empty($activeRules)) {
-            // Log::debug('No active alert rules for AlertStudentAbsence');
+            Log::debug('No active alert rules for AlertStudentAbsence');
             return;
         }
 
@@ -278,7 +277,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
         if ($userId === 0) {
             $userId = 1; // fallback default user ID
-            // Log::debug('Fallback user ID used. Entity dump:');
+            Log::debug('Fallback user ID used. Entity dump:');
         }
 
         $extraOptions = [
@@ -298,7 +297,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 //                'alert' => $alert->toArray()
 //            ], true));
 
-            AlertLogsTable::triggerAlertSystemProcess(
+            DashboardController::triggerSystemProcess(
                 $systemProcessesTable,
                 is_array($rule) ? $rule : $rule->toArray(),
                 $alert->process_name,

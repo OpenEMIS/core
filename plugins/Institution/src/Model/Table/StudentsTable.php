@@ -2,7 +2,6 @@
 
 namespace Institution\Model\Table;
 
-use Alert\Model\Table\AlertLogsTable;
 use ArrayObject;
 
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -1850,9 +1849,6 @@ class StudentsTable extends ControllerActionTable
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
 
-        if ($entity->isNew() || $entity->isDirty('student_status_id')) {
-            $this->sendStudentStatusAlert($entity);
-        }
         //if new record has no previous_institution_student_id value yet, then try to update it.
         if (!$entity->has('previous_institution_student_id')) {
             $prevInstitutionStudent = $this
@@ -1873,55 +1869,6 @@ class StudentsTable extends ControllerActionTable
                     ['id' => $entity->id]
                 );
             }
-        }
-    }
-
-    /**
-     * POCOR-9509: Sends an alert for student status changes.
-     *
-     * @param \Cake\ORM\Entity $institutionStudent The InstitutionStudent entity.
-     * @return void
-     */
-    public function sendStudentStatusAlert(Entity $institutionStudent): void
-    {
-        if (empty($institutionStudent->student_id)
-            && empty($institutionStudent->institution_id)
-            && empty($institutionStudent->id)
-            && empty($institutionStudent->created_user_id)) {
-            // Log::warning('[POCOR-9509] Skipping student status alert - missing required fields', [
-            //     'id' => $institutionStudent->id,
-            //     'student_id' => $institutionStudent->student_id,
-            //     'institution_id' => $institutionStudent->institution_id,
-            // ]);
-            return;
-        }
-
-        try {
-                // Determine the user ID for the alert
-                $userId = null;
-                if (is_numeric($institutionStudent->modified_user_id)) {
-                    $userId = $institutionStudent->modified_user_id;
-                } else if (is_numeric($institutionStudent->created_user_id)) {
-                    $userId = $institutionStudent->created_user_id;
-                }
-
-                if ($userId) {
-                    AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $institutionStudent, $userId);
-                    $alertTriggered = true;
-                    // Log::info('[POCOR-9509] Student status alert triggered via AlertLogsTable' . print_r([
-                    //
-                    //     'institution_student_id' => $institutionStudent->id,
-                    // ], true));
-                } else {
-                    // Log::warning('[POCOR-9509] Skipping alert trigger - no user ID found for entity' . print_r([
-                    //     'institution_student_id' => $institutionStudent->id,
-                    // ], true));
-                }
-        } catch (\Throwable $e) {
-            Log::error('[POCOR-9509] Failed to process student status alert in CakePHP' . print_r( [
-                'institution_student_id' => $institutionStudent->id,
-                'exception' => $e->getMessage(),
-            ], true));
         }
     }
 

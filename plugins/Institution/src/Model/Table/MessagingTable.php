@@ -57,10 +57,6 @@ class MessagingTable extends ControllerActionTable
             '4' => __('Class'),
             '5' => __('Subject')
         ];
-//        // POCOR-9509: Add AlertQueue behavior for async message sending
-//        $this->addBehavior('AlertQueue', [
-//            'alertType' => 'Messaging'
-//        ]);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['Messaging' =>['id', 'academic_period_id']
             ]
@@ -185,7 +181,7 @@ class MessagingTable extends ControllerActionTable
                     break;
 
                 default:
-                    // Log::warning("Unknown messaging method: $method");
+                    Log::warning("Unknown messaging method: $method");
             }
         }
         $ids = array_unique($ids); // POCOR-9274
@@ -343,8 +339,7 @@ class MessagingTable extends ControllerActionTable
         if ($sending_sms_result || $sending_email_result) {
             $entity->status = 1;
             $result = $this->save($entity);
-            // POCOR-9509: Updated message to reflect async processing
-            $this->Alert->success(__('Message has been queued for sending'), ['type' => 'string', 'reset' => true]);
+            $this->Alert->success('Messaging.email');
             $event->stopPropagation();
             return $this->controller->redirect($this->url('index'));
         }
@@ -359,7 +354,7 @@ class MessagingTable extends ControllerActionTable
      * POCOR-9274
      * @param EntityInterface $entity
      * @param int[]           $recipientIds
-     * @return bool           True if we queued at least one email
+     * @return bool           True if we sent at least one email
      */
     private function sendEmailMessages(EntityInterface $entity, array $recipientIds): bool
     {
@@ -383,16 +378,17 @@ class MessagingTable extends ControllerActionTable
                 $u['email']
             );
         }
-        $successCount = $this->logAlerts('Email', array_values($emailList), $entity);
 
-        return $successCount > 0;
+        $this->logAlerts('Email', array_values($emailList), $entity);
+
+        return true;
     }
 
     /**
      * POCOR-9274
      * @param EntityInterface $entity
      * @param int[]           $recipientIds
-     * @return bool           True if we queued at least one SMS
+     * @return bool           True if we sent at least one SMS
      */
     private function sendSmsMessages(EntityInterface $entity, array $recipientIds): bool
     {
@@ -409,9 +405,9 @@ class MessagingTable extends ControllerActionTable
         // De-dupe numbers
         $phoneList = array_unique(array_column($users, 'mobile_number'));
 
-        $successCount = $this->logAlerts('SMS', $phoneList, $entity);
+        $this->logAlerts('SMS', $phoneList, $entity);
 
-        return $successCount > 0;
+        return true;
     }
 
     /**
@@ -442,12 +438,11 @@ class MessagingTable extends ControllerActionTable
      * @param string           $type       'Email' or 'SMS'
      * @param string[]         $recipients e.g. [ 'joe@example.com', ... ]
      * @param EntityInterface  $entity     message entity with subject/message
-     * @return integer
+     * @return void
      */
-    private function logAlerts(string $type, array $recipients, EntityInterface $entity): int
+    private function logAlerts(string $type, array $recipients, EntityInterface $entity): void
     {
         $logs = self::getDynamicTableInstance('Alert.AlertLogs');
-        $success_count = 0;
         foreach ($recipients as $to) {
             $logs->insertAlertLog(
                 $type,
@@ -456,9 +451,7 @@ class MessagingTable extends ControllerActionTable
                 $entity->subject,
                 $entity->message
             );
-            $success_count++;
         }
-        return  $success_count;
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -889,7 +882,7 @@ class MessagingTable extends ControllerActionTable
             try {
                 $institution = $institutions->get($institution_id);
             } catch (\Exception $exception) {
-                // Log::debug($exception->getMessage());
+                Log::debug($exception->getMessage());
             }
             $institution_name = $institution->name;
         }

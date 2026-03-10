@@ -16,8 +16,6 @@ use Cake\ORM\Query;
  */
 class AlertStudentAdmissionCommand extends AlertCommandBase
 {
-    protected $entityId = 0;
-
     /**
      * Log alert (SMS or Email) into alert logs.
      *
@@ -38,7 +36,9 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
 
     }
 
-
+    /**
+     * Main execute() entry point.
+     */
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         $this->Students = $this->fetchTable('Institution.Students');
@@ -62,7 +62,7 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         $threshold = json_decode($thresholdValue, true);
         $workflowCategory = $threshold['workflow_steps'];
         $where = [
-            'StudentAdmission.id' => $this->entityId,
+            'StudentAdmission.id' => $this->admissionId,
             'Statuses.id IN' => $workflowCategory,
 
         ];
@@ -148,23 +148,23 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         $this->userId = (int)$args->getOption('user_id');
         $this->ruleId = (int)$args->getOption('rule_id');
         $this->processId = (int)$args->getOption('process_id');
-        $this->entityId = (int)$args->getOption('entity_id');
+        $this->admissionId = (int)$args->getOption('admission_id');
         $ruleId = $this->ruleId;
 
 
         if (!$this->userId ||
             !$this->ruleId ||
             !$this->processId ||
-            $this->entityId
+            !$this->admissionId
         ) {
             $io->error("Missing required option");
             return false;
         }
         try {
-            $this->admission = $this->StudentAdmission->get($this->entityId);
+            $this->admission = $this->StudentAdmission->get($this->admissionId);
             $this->studentId = $this->admission->student_id;
         } catch (\Cake\Datasource\Exception\RecordNotFoundException $e) {
-            $io->error("Admission with ID {$this->entityId} not found.");
+            $io->error("Admission with ID {$this->admissionId} not found.");
             return false;
         }
         try {
@@ -228,12 +228,16 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
     {
         $parser = parent::getOptionParser();
 
-        $parser->addOption('entity_id', [
-            'help' => 'Specify the entity ID for targeted alerts.',
+        $parser->addOption('admission_id', [
+            'help' => 'Specify the admission ID for targeted alerts.',
             'required' => true,
-            'short' => 'e'
+            'short' => 'a'
         ]);
-
+        $parser->addOption('status_id', [
+            'help' => 'Specify the Status ID for targeted alerts.',
+            'required' => false,
+            'short' => 't'
+        ]);
 
         return $parser;
     }

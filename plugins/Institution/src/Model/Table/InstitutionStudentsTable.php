@@ -1,7 +1,6 @@
 <?php
 namespace Institution\Model\Table;
 
-use Alert\Model\Table\AlertLogsTable; // POCOR-9509
 use ArrayObject;
 
 use Cake\Event\EventInterface;

@@ -1,7 +1,6 @@
 <?php
 namespace Institution\Model\Table;
 
-use Alert\Model\Table\AlertLogsTable;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -388,15 +387,13 @@ class StudentEnrolmentTable extends ControllerActionTable
             if (!empty($entity->institution_class_id)) {
                 $incomingStudent['class'] = $entity->institution_class_id;
             }
-            try {
+
                 $newEntity = $Students->newEntity($incomingStudent);
-                $student = $Students->save($newEntity, ['atomic' => false]);
+            $student = $Students->save($newEntity);
 
-
-            } catch (\Exception $e) {
-
+            if (!$student) {
                 // Log or debug errors for troubleshooting
-                Log::error('Failed to save new InstitutionStudent: ' . json_encode($newEntity->getErrors()));
+                \Cake\Log\Log::error('Failed to save new InstitutionStudent: ' . json_encode($newEntity->getErrors()));
                 throw new \RuntimeException(
                     'Could not save InstitutionStudent. Errors: ' . json_encode($newEntity->getErrors())
                 );
@@ -450,9 +447,37 @@ class StudentEnrolmentTable extends ControllerActionTable
         } else {
             $userId = $entity->created_user_id;
         }
+        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
+        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
+        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
 
-        // POCOR-9509: Delegate alert triggering logic to AlertLogsTable helper
-        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentEnrolment', $entity, $userId);
+
+        $alert = $alertsTable
+            ->find()
+            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentEnrolment',
+                $alertsTable->aliasField('frequency') => 'once'])
+            ->first();
+        if(!$alert){
+            Log::debug('No Alerts for AlertStudentEnrolment');
+            return;
+        }
+        if(!is_array($alert)){
+            $alert = $alert->toArray();
+        }
+        $activeRules = $alertRulesTable->find()
+            ->where([
+                $alertRulesTable->aliasField('feature') => $alert['name'],
+                $alertRulesTable->aliasField('enabled') => 1
+            ])
+            ->toArray();
+
+        foreach ($activeRules as $rule) {
+            if(!is_array($rule)){
+                $rule = $rule->toArray();
+            }
+            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['enrolment_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
+        }
+
     }
 
     public function studentsAfterSave(EventInterface $event, $student)
@@ -943,9 +968,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
             $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
-        }
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = self::getDynamicTableInstance('Workflow.WorkflowActions');
@@ -979,7 +1002,8 @@ class StudentEnrolmentTable extends ControllerActionTable
                         $entity->status_id = $approvedStatusEntity->id;
                         $this->autoAssignAssignee($entity);
 
-                        if ($this->save($entity, ['atomic' => false])) {
+                        if ($this->save($entity)) {
+                            // add student into institution_students
                             $this->addInstitutionStudent($entity);
 
                             // add workflow transition

@@ -66,11 +66,7 @@ class NoticesTable extends ControllerActionTable
         $this->field('notice_status', ['entity' => $entity, 'visible' => false]);
         $this->field('subject', ['entity' => $entity, 'visible' => true]);
         $this->field('message', ['entity' => $entity, 'visible' => true]);
-        $this->field('message_editor', [
-            'type' => 'element',
-            'element' => 'message_editor',
-        ]); //POCOR-9558
-         $this->setFieldOrder(['status', 'security_role_id', 'subject', 'message']);
+        $this->setFieldOrder(['status', 'security_role_id', 'subject', 'message']);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -262,5 +258,4 @@ class NoticesTable extends ControllerActionTable
             }
         }
     }
-
 }
