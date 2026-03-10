@@ -3,6 +3,7 @@
 namespace Import\Model\Behavior;
 
 use ArrayObject;
+use Cake\Log\Log;
 use Cake\Routing\Router;
 use Cake\Http\Session;
 use Cake\Event\EventInterface;
@@ -21,6 +22,11 @@ class ImportResultBehavior extends ImportBehavior
 {
     public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' tableAlias=' . $this->_table->getAlias()); //[TEMP-LOG]
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons buttons_add_action=' . json_encode($buttons['add']['url']['action'] ?? 'not_set')); //[TEMP-LOG]
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
+        //POCOR-9584: end
         switch ($action) {
             case 'add':
                 $downloadUrl = $toolbarButtons['back']['url'];
@@ -32,16 +38,32 @@ class ImportResultBehavior extends ImportBehavior
                     unset($data['id']);
                     unset($data['select_file']);
                     $data['institution_id'] = $this->institutionId;
+                    //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+                    // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons ImportOutcomeResults downloadData=' . json_encode($data)); //[TEMP-LOG]
+                    //POCOR-9584: end
                     $downloadUrl[1] = $this->_table->paramsEncode($data);
                 } else {
-
                     $downloadUrl[1] = $buttons['add']['url'][1];
+                    //POCOR-9584: start - carry query params set by addAfterAction (class, competency_item, academic_period, etc.)
+                    //   to the template download URL so getStudentArray() and getCompetencyCriteriasArray() can read them
+                    $queryParams = array_filter(
+                        $this->_table->request->getQueryParams(),
+                        fn($v) => $v !== null && $v !== '' && $v !== '0'
+                    );
+                    if (!empty($queryParams)) {
+                        $downloadUrl['?'] = $queryParams;
+                    }
+                    //POCOR-9584: end
                 }
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='" . Router::url($downloadUrl) . "'");
                 break;
         }
 
         //back button
+        //POCOR-9584: start - log back button construction for debugging
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' pass=' . json_encode($this->_table->request->getParam('pass')) . ' institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_initial=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
+        //POCOR-9584: end
         if (!empty($this->getConfig('backUrl'))) {
             //POCOR-9158 start
             if($buttons['add']['url']['action'] == 'ImportOutcomeResults'){
@@ -56,26 +78,65 @@ class ImportResultBehavior extends ImportBehavior
                     ]
                 );
             } //POCOR-9158 end
-            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
+            //POCOR-9584: start - carry encoded pass[1] (institution_id) to back URL;
+            //   results page → back to ImportCompetencyResults/add; add page → back to StudentCompetencies
+            //   Use direct key assignment after merge — array_merge renumbers integer keys
+            else if ($buttons['add']['url']['action'] == 'ImportCompetencyResults') {
+                $pass = $this->_table->request->getParam('pass');
+                $currentPassAction = $pass[0] ?? null;
+                $encodedParams = $pass[1] ?? null;
+                //POCOR-9584: both add and results pages back → StudentCompetencies index with encoded params
+                $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
+                $toolbarButtons['back']['url'][0] = 'index';
+                if ($encodedParams) { $toolbarButtons['back']['url'][1] = $encodedParams; }
+            }
+            //POCOR-9584: end
+            else {
+                $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
+            }
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin'] == 'Institution') {
             $back = [];
+            //POCOR-9584: start - carry encoded pass[1] (institution_id) to back URL;
+            //   ControllerAction does not include it in the initial toolbarButtons back URL
+            $currentPass = $this->_table->request->getParam('pass');
+            $currentPassAction = $currentPass[0] ?? null;
+            $encodedParams = $currentPass[1] ?? null;
+            //POCOR-9584: end
 
-            if ($this->_table->request->getAttribute('params')['pass'][0] == 'add') {
+            if ($currentPassAction == 'add') {
                 $back['action'] = str_replace('Import', '', $this->_table->getAlias());
-            } elseif ($this->_table->request->getAttribute('params')['pass'][0] == 'results') {
+            } elseif ($currentPassAction == 'results') {
                 $back['action'] = $this->_table->getAlias();
                 $back[0] = 'add';
             };
+
+            //POCOR-9584: start - inject encoded params into back URL so institution_id reaches InstitutionsController::beforeFilter
+            if ($encodedParams) {
+                $back[1] = $encodedParams;
+            }
+            //POCOR-9584: end
 
             $models = $this->_table->ControllerAction->models;
             if (!isset($models[$back['action']])) {
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
+            //POCOR-9584: start - log back array before merge
+            // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons back=' . json_encode($back) . ' toolbarBackUrl_before_merge=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
+            //POCOR-9584: end
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
         } else {
             $toolbarButtons['back']['url']['action'] = 'index';
         }
-        unset($toolbarButtons['back']['url'][0]);
+        //POCOR-9584: start - strip stale query params; only unset [0] if it is not 'index'
+        if (($toolbarButtons['back']['url'][0] ?? null) !== 'index') {
+            unset($toolbarButtons['back']['url'][0]);
+        }
+        unset($toolbarButtons['back']['url']['?']);
+        unset($toolbarButtons['back']['url']['period']); //POCOR-9584: legacy period param from old query string
+        //POCOR-9584: end
+        //POCOR-9584: start - log final back URL
+        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_final=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
+        //POCOR-9584: end
     }
 
     /******************************************************************************************************************
