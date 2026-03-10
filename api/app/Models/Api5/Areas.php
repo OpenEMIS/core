@@ -12,7 +12,8 @@ class Areas extends Model
     use WebhookQueueTrait;
 
     // POCOR-9257: Configure webhook events
-    protected $webhookEvents = ['created', 'updated', 'deleted'];    // ✅ Allow mass assignment
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
+    // ✅ Allow mass assignment
     protected $fillable = ['id', 'code', 'name', 'parent_id', 'lft', 'rght', 'area_level_id', 'order', 'visible', 'modified_user_id', 'modified', 'created_user_id', 'created', 'parent_id', 'area_level_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];

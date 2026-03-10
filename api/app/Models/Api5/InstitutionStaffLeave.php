@@ -5,15 +5,11 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
-use App\Traits\ThresholdAlertTrait;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class InstitutionStaffLeave extends Model
 {
     use HasFactory;
-    use InstitutionScope;
-    use ThresholdAlertTrait;
+use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'date_from', 'date_to', 'start_time', 'end_time', 'full_day', 'comments', 'staff_id', 'staff_leave_type_id', 'institution_id', 'assignee_id', 'academic_period_id', 'status_id', 'number_of_days', 'file_name', 'file_content', 'modified_user_id', 'modified', 'created_user_id', 'created', 'staff_id', 'staff_leave_type_id', 'institution_id', 'assignee_id', 'academic_period_id', 'status_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
@@ -22,168 +18,6 @@ class InstitutionStaffLeave extends Model
     public $timestamps = false;
     protected $table = "institution_staff_leave";
 
-    // POCOR-9509: Alert configuration
-    protected $alertType = 'StaffLeave';
-
-    /**
-     * POCOR-9509: Boot method to register model events
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        // POCOR-9509: Trigger alert processing after save (only for new records)
-        static::saved(function ($leave) {
-            if (!$leave->wasRecentlyCreated) {
-                return;
-            }
-
-            if (!$leave->institution_id || !$leave->staff_id || !$leave->date_to) {
-                // Log::warning('[POCOR-9509] Skipping leave alert - missing required fields', [
-//                    'institution_id' => $leave->institution_id,
-//                    'staff_id' => $leave->staff_id,
-//                    'date_to' => $leave->date_to,
-//                ]);
-                return;
-            }
-
-            try {
-                $leave->processLeaveAlert();
-            } catch (\Throwable $e) {
-                Log::error('[POCOR-9509] Leave alert processing failed in saved event', [
-                    'staff_id' => $leave->staff_id,
-                    'exception' => $e->getMessage(),
-                ]);
-            }
-        });
-    }
-
-    /**
-     * POCOR-9509: Process leave alert after record is saved
-     */
-    protected function processLeaveAlert(): bool
-    {
-        $result = $this->processThresholdAlert((int) $this->institution_id, [
-            'staff_id' => (int) $this->staff_id,
-            'leave_date_to' => $this->date_to,
-        ]);
-
-        // Log::info('[POCOR-9509] Leave alert processed', [
-        //     'staff_id' => $this->staff_id,
-        //     'alert_sent' => $result['sent'],
-        // ]);
-
-        return $result['sent'];
-    }
-
-    /**
-     * POCOR-9509: Implement trait requirement - audit label
-     */
-    protected function getAuditLabel(): string
-    {
-        return 'StaffLeave';
-    }
-
-    /**
-     * POCOR-9509: Implement trait requirement - get days until leave end date
-     */
-    protected function getThresholdData(array $context): array
-    {
-        // Get leave end date
-        $dateToStr = $context['leave_date_to'] ?? null;
-
-        if (!$dateToStr) {
-            return ['current' => 0];
-        }
-
-        try {
-            $dateTo = new \DateTime($dateToStr);
-            $today = new \DateTime();
-            $diff = $today->diff($dateTo);
-
-            $daysDiff = $diff->days;
-            if ($diff->invert) {
-                $daysDiff = -$daysDiff; // negative if in past
-            }
-
-            return [
-                'current' => max(0, $daysDiff), // 0 if already passed
-                'days_until_leave_end' => $daysDiff,
-            ];
-        } catch (\Throwable $e) {
-            Log::error('[POCOR-9509] Failed to calculate leave threshold data', [
-                'date_to' => $dateToStr,
-                'exception' => $e->getMessage(),
-            ]);
-            return ['current' => 0];
-        }
-    }
-
-    /**
-     * POCOR-9509: Implement trait requirement - get placeholder data for alert message
-     */
-    protected function getSubjectPlaceholders(array $context): array
-    {
-        $staffId = $context['staff_id'] ?? 0;
-        $institutionId = $context['institution_id'] ?? 0;
-
-        $staff = DB::table('security_users')
-            ->where('id', $staffId)
-            ->select([
-                'id', 'openemis_no', 'first_name', 'middle_name', 'last_name',
-                'preferred_name', 'email', 'address', 'postal_code', 'date_of_birth'
-            ])
-            ->first();
-
-        $institution = DB::table('institutions')
-            ->where('id', $institutionId)
-            ->select(['id', 'name', 'code', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website'])
-            ->first();
-
-        if (!$staff || !$institution) {
-            return [];
-        }
-
-        // Get latest leave details
-        $leave = DB::table('institution_staff_leave')
-            ->where('staff_id', $staffId)
-            ->where('institution_id', $institutionId)
-            ->orderBy('date_from', 'desc')
-            ->select(['id', 'date_from', 'date_to', 'staff_leave_type_id', 'comments'])
-            ->first();
-
-        $leaveType = '';
-        if ($leave) {
-            $leaveTypeRecord = DB::table('staff_leave_types')
-                ->where('id', $leave->staff_leave_type_id)
-                ->value('name');
-            $leaveType = $leaveTypeRecord ?? '';
-        }
-
-        return [
-            '${user.openemis_no}' => $staff->openemis_no,
-            '${user.first_name}' => $staff->first_name,
-            '${user.middle_name}' => $staff->middle_name ?? '',
-            '${user.last_name}' => $staff->last_name,
-            '${user.preferred_name}' => $staff->preferred_name ?? '',
-            '${user.email}' => $staff->email ?? '',
-            '${user.address}' => $staff->address ?? '',
-            '${user.postal_code}' => $staff->postal_code ?? '',
-            '${user.date_of_birth}' => $staff->date_of_birth ?? '',
-            '${staff_leave_type.name}' => $leaveType,
-            '${date_from}' => ($leave ? $leave->date_from : ''),
-            '${date_to}' => ($leave ? $leave->date_to : ''),
-            '${comments}' => ($leave ? $leave->comments : ''),
-            '${institution.name}' => $institution->name,
-            '${institution.code}' => $institution->code,
-            '${institution.address}' => $institution->address ?? '',
-            '${institution.postal_code}' => $institution->postal_code ?? '',
-            '${institution.contact_person}' => $institution->contact_person ?? '',
-            '${institution.telephone}' => $institution->telephone ?? '',
-            '${institution.email}' => $institution->email ?? '',
-            '${institution.website}' => $institution->website ?? '',
-        ];
-    }
 
 /**
  * @OA\PathItem(

@@ -15,6 +15,7 @@ use App\Traits\NumericId;
 class SecurityUsers extends Authenticatable implements JWTSubject
 {
     use HasFactory;
+    use WebhookQueueTrait;
 
     // POCOR-9257: Configure webhook events
     protected $webhookEvents = ['created', 'updated', 'deleted'];

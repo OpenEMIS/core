@@ -10,10 +10,10 @@ use App\Models\Concerns\WebhookQueueTrait;
 class InstitutionStaff extends Model
 {
     use HasFactory;
-    use WebhookQueueTrait;
-
+    use InstitutionScope;
     // POCOR-9257: Configure webhook events
-    protected $webhookEvents = ['created', 'updated', 'deleted'];    use InstitutionScope;
+    use WebhookQueueTrait;
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
 
     // ✅ Allow mass assignment
     public $timestamps = false;
