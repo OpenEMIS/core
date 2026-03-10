@@ -138,7 +138,7 @@ class CustomFieldValuesTable extends AppTable
 					}
 					return !empty($value);
 				},
-				'message' => __('This field cannot be empty')
+				'message' => __('Please select at least one option for this required field') //POCOR-6233
 			])
 			// DECIMAL validation
 			->allowEmpty('decimal_value', function ($context) {
