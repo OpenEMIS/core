@@ -12,7 +12,8 @@ class EducationGrades extends Model
     use WebhookQueueTrait;
 
     // POCOR-9257: Configure webhook events
-    protected $webhookEvents = ['created', 'updated', 'deleted'];    // ✅ Allow mass assignment
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
+    // ✅ Allow mass assignment
     protected $fillable = ['id', 'code', 'name', 'admission_age', 'order', 'visible', 'education_stage_id', 'education_programme_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'education_stage_id', 'education_programme_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];

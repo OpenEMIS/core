@@ -10,10 +10,12 @@ use App\Models\Concerns\WebhookQueueTrait;
 class InstitutionClasses extends Model
 {
     use HasFactory;
-    use WebhookQueueTrait;
+    use InstitutionScope;
+
 
     // POCOR-9257: Configure webhook events
-    protected $webhookEvents = ['created', 'updated', 'deleted'];    use InstitutionScope;
+    use WebhookQueueTrait;
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'name', 'class_number', 'capacity', 'total_male_students', 'total_female_students', 'staff_id', 'institution_shift_id', 'institution_id', 'institution_unit_id', 'institution_course_id', 'academic_period_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'staff_id', 'institution_shift_id', 'institution_id', 'institution_unit_id', 'institution_course_id', 'academic_period_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
