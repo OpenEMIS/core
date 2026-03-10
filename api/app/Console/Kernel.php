@@ -15,15 +15,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
-
-        // POCOR-9509: Alert checking and processing
-        $schedule->command('alerts:check-and-queue')
-            ->everyMinute()
-            ->withoutOverlapping();
-        $schedule->command('alerts:process')
-            ->everyMinute()
-            ->withoutOverlapping();
 
         // POCOR-9257: Webhook queue processing
         $schedule->command('webhooks:process', ['--once'])
@@ -35,6 +26,7 @@ class Kernel extends ConsoleKernel
             ->onSuccess(function () {
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
+
     }
 
     /**
