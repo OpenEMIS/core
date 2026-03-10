@@ -193,23 +193,31 @@ class StaffExcelReportBehavior extends Behavior
 
             if ($entity->has('excel_template_name')) {
                 $file = $this->getFile($entity->excel_template);
+                //Log::debug('@StaffExcelReportBehavior::loadExcelTemplate template_name=' . $entity->excel_template_name . ' blob_size=' . strlen($file) . ' path=' . $extra['path']); //[TEMP-LOG]
 
                 // Create a temporary file
                 $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_');
                 $extra['tmp_file_path'] = $filepath;
+                //Log::debug('@StaffExcelReportBehavior::loadExcelTemplate tempnam returned: ' . var_export($filepath, true)); //[TEMP-LOG]
 
-                file_put_contents($filepath, $file);
+                $written = file_put_contents($filepath, $file);
+                //Log::debug('@StaffExcelReportBehavior::loadExcelTemplate file_put_contents wrote ' . var_export($written, true) . ' bytes, file_exists=' . (file_exists($filepath) ? 'YES' : 'NO') . ' filesize=' . ($filepath ? filesize($filepath) : 'N/A')); //[TEMP-LOG]
+
                 // Bake image transparency into the template via Laravel artisan
-                exec(PHP_BINARY . ' ' . escapeshellarg(ROOT . DS . 'api' . DS . 'artisan') . ' reportcards:fix-transparency ' . escapeshellarg($filepath) . ' 2>&1');
+                $artisanOutput = [];
+                exec(PHP_BINARY . ' ' . escapeshellarg(ROOT . DS . 'api' . DS . 'artisan') . ' reportcards:fix-transparency ' . escapeshellarg($filepath) . ' 2>&1', $artisanOutput);
+                //Log::debug('@StaffExcelReportBehavior::loadExcelTemplate artisan fix-transparency output: ' . implode(' | ', $artisanOutput)); //[TEMP-LOG]
                 // End create a temporary file
                 try {
                     // Read back from same temporary file
                     $inputFileType = IOFactory::identify($filepath);
+                    //Log::debug('@StaffExcelReportBehavior::loadExcelTemplate identified type=' . $inputFileType); //[TEMP-LOG]
                     $objReader = IOFactory::createReader($inputFileType);
                     $objSpreadsheet = $objReader->load($filepath);
                     // End read back from same temporary file
-                } catch(Exception $e) {
-                    Log::write('debug', $e->getMessage());
+                } catch(\Exception $e) { //POCOR-9598: was missing backslash — unqualified Exception in this namespace never matched
+                    Log::error('@StaffExcelReportBehavior::loadExcelTemplate FAILED: ' . $e->getMessage());
+                    throw $e; //POCOR-9598: re-throw so GenerateProfileCommandBase can mark the record FAILED
                 }
             }
         }
@@ -258,12 +266,28 @@ class StaffExcelReportBehavior extends Behavior
 
             case 'date':
                 if (!is_null($format) && !empty($cellValue)) {
+                    if (is_string($cellValue)) { //POCOR-9598: guard against plain string from Hash::extract
+                        try {
+                            $cellValue = new \DateTime($cellValue);
+                        } catch (\Exception $e) {
+                            $cellValue = '';
+                            break;
+                        }
+                    }
                     $cellValue = $cellValue->format($format);
                 }
                 break;
 
             case 'time':
                 if (!is_null($format) && !empty($cellValue)) {
+                    if (is_string($cellValue)) { //POCOR-9598: guard against plain string from Hash::extract
+                        try {
+                            $cellValue = new \DateTime($cellValue);
+                        } catch (\Exception $e) {
+                            $cellValue = '';
+                            break;
+                        }
+                    }
                     $cellValue = $cellValue->format($format);
                 }
                 break;

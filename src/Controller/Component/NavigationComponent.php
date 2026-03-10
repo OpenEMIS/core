@@ -3516,6 +3516,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Institutions' => [
                         'title' => 'Institutions',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.InstitutionProfiles',
                             'ProfileTemplates.view',
@@ -3527,6 +3528,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Classes' => [
                         'title' => 'Classes',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.ClassesProfiles',
                             'Class.view',
@@ -3538,6 +3540,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Staff' => [
                         'title' => 'Staff',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.StaffProfiles',
                             'Staff.view',
@@ -3549,6 +3552,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Students' => [
                         'title' => 'Students',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.StudentProfiles',
                             'Students.view',
@@ -3569,6 +3573,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Institutions' => [
                     'title' => 'Institutions',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.InstitutionProfiles',
                         'ProfileTemplates.view',
@@ -3580,6 +3585,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Classes' => [
                     'title' => 'Classes',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.ClassesProfiles',
                         'Class.view',
@@ -3591,6 +3597,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Staff' => [
                     'title' => 'Staff',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.StaffProfiles',
                         'Staff.view',
@@ -3602,6 +3609,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Students' => [
                     'title' => 'Students',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.StudentProfiles',
                         'Students.view',
