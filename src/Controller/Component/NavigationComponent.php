@@ -3818,10 +3818,16 @@ class NavigationComponent extends Component
                     ],
 
                     //POCOR-9257: Add Webhooks Queue to Communications menu
-                    'WebhooksQueue.WebhooksQueue' => [
+                    'Webhooks.Webhooks' => [
                         'title' => 'Webhooks Queue',
                         'parent' => 'Administration.Communications',
-                        'selected' => ['WebhooksQueue.WebhooksQueue']
+                        'selected' => ['Webhooks.Webhooks']
+                    ],
+                    //POCOR-9257: Add Webhook Logs to Communications menu
+                    'WebhookLogs.WebhookLogs' => [
+                        'title' => 'Webhook Logs',
+                        'parent' => 'Administration.Communications',
+                        'selected' => ['WebhookLogs.WebhookLogs']
                     ],
                 ];
             }
@@ -3860,10 +3866,16 @@ class NavigationComponent extends Component
                 ],
 
                 //POCOR-9257: Add Webhooks Queue to Communications menu
-                'WebhooksQueue.WebhooksQueue' => [
+                'Webhooks.Webhooks' => [
                     'title' => 'Webhooks Queue',
                     'parent' => 'Administration.Communications',
-                    'selected' => ['WebhooksQueue.WebhooksQueue']
+                    'selected' => ['Webhooks.Webhooks']
+                ],
+                //POCOR-9257: Add Webhook Logs to Communications menu
+                'WebhookLogs.WebhookLogs' => [
+                    'title' => 'Webhook Logs',
+                    'parent' => 'Administration.Communications',
+                    'selected' => ['WebhookLogs.WebhookLogs']
                 ],
             ];
         }
