@@ -4,24 +4,17 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Table;
+use ArrayObject;
+use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
 
-/**
- * WebhooksQueue Model
- *
- * Operational queue for pending webhook requests (purged after sending).
- * Works with ProcessWebhooksQueue Laravel command for async processing.
- *
- * Status values:
- * - 0: pending
- * - 1: processing
- * - 2: sent
- * - -1: failed
- */
-class WebhooksQueueTable extends Table
+use App\Model\Table\ControllerActionTable;
+
+class WebhooksQueueTable extends ControllerActionTable
 {
     // Status constants
     const STATUS_PENDING = 0;
@@ -35,20 +28,14 @@ class WebhooksQueueTable extends Table
 
     public function initialize(array $config): void
     {
-        parent::initialize($config);
-
         $this->setTable('webhooks_queue');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
+        parent::initialize($config);
 
-        $this->addBehavior('Timestamp', [
-            'events' => [
-                'Model.beforeSave' => [
-                    'created' => 'new',
-                    'modified' => 'always'
-                ]
-            ]
-        ]);
+        //POCOR-9257: Disable add and edit actions; this is a read-only operational log
+        $this->toggle('add', false);
+        $this->toggle('edit', false);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -91,6 +78,7 @@ class WebhooksQueueTable extends Table
      */
     public function queueWebhook(string $eventKey, array $body, ?array $user = null): bool
     {
+        // ... existing implementation unchanged ...
         if (empty($eventKey)) {
             Log::error("[WebhooksQueue] Empty event key provided");
             return false;
@@ -100,7 +88,6 @@ class WebhooksQueueTable extends Table
             $ConfigWebhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
             $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
-            // Fetch all active webhooks for this event_key
             $webhooks = $ConfigWebhooks->find()
                 ->select([
                     'webhook_id' => $ConfigWebhooks->aliasField('id'),
@@ -123,34 +110,29 @@ class WebhooksQueueTable extends Table
                 ->all();
 
             if ($webhooks->isEmpty()) {
-                // No active webhooks for this event - not an error
-                return true;
+                return true; // No active webhooks for this event - not an error
             }
 
             $queuedCount = 0;
 
             foreach ($webhooks as $webhookConfig) {
-                // Validate URL
                 $url = trim($webhookConfig->url);
                 if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
                     Log::warning("[WebhooksQueue] Invalid URL for webhook [{$eventKey}]: {$url}");
                     continue;
                 }
 
-                // Build final URL with query parameters (POCOR-9403 placeholder system)
                 $finalUrl = $ConfigWebhooks->buildWebhookUrl(
                     $url,
                     $webhookConfig->query_template ?? '',
                     $body
                 );
 
-                // Build final body (POCOR-9403 template system)
                 $finalBody = $ConfigWebhooks->prepareFinalWebhookBody(
                     $webhookConfig->body_template ?? '',
                     $body
                 );
 
-                // Prepare queue entry
                 $queueData = [
                     'webhook_id' => $webhookConfig->webhook_id,
                     'event_key' => $eventKey,
@@ -161,9 +143,9 @@ class WebhooksQueueTable extends Table
                         'User-Agent' => 'OpenEMIS-Webhook/1.0'
                     ]),
                     'payload' => is_string($finalBody) ? $finalBody : json_encode($finalBody),
-                    'auth_type' => null, // TODO: Fetch from config_items if needed
+                    'auth_type' => null,
                     'auth_credentials' => null,
-                    'signature' => null, // TODO: HMAC signature if needed
+                    'signature' => null,
                     'status' => self::STATUS_PENDING,
                     'retry_count' => 0,
                     'max_retries' => 3,
@@ -177,7 +159,6 @@ class WebhooksQueueTable extends Table
                     'created_user_id' => $user['id'] ?? null,
                 ];
 
-                // Insert into queue
                 $queueEntity = $this->newEntity($queueData);
                 if ($this->save($queueEntity)) {
                     $queuedCount++;
@@ -197,5 +178,43 @@ class WebhooksQueueTable extends Table
             Log::error("[WebhooksQueue] Exception in queueWebhook: " . $e->getMessage());
             return false;
         }
+    }
+
+    // UI configuration methods
+
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
+    {
+        //POCOR-9257: Hide large/technical fields from the index view
+        $this->field('payload', ['visible' => false]);
+        $this->field('headers', ['visible' => false]);
+        $this->field('auth_credentials', ['visible' => false]);
+        $this->field('signature', ['visible' => false]);
+        $this->field('last_error', ['visible' => false]);
+        $this->field('response_body', ['visible' => false]);
+        $this->field('webhook_id', ['visible' => false]);
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('max_retries', ['visible' => false]);
+
+        // Order fields for better readability
+        $this->field('event_key', ['after' => 'id']);
+        $this->field('target_url', ['after' => 'event_key']);
+        $this->field('http_method', ['after' => 'target_url']);
+        $this->field('status', ['after' => 'http_method']);
+        $this->field('retry_count', ['after' => 'status']);
+        $this->field('available_at', ['after' => 'retry_count']);
+        $this->field('next_retry_at', ['after' => 'available_at']);
+        $this->field('sent_at', ['after' => 'next_retry_at']);
+        $this->field('duration_ms', ['after' => 'sent_at']);
+    }
+
+    public function onGetStatus(EventInterface $event, Entity $entity): string
+    {
+        $statuses = [
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_PROCESSING => 'Processing',
+            self::STATUS_SENT => 'Sent',
+            self::STATUS_FAILED => 'Failed',
+        ];
+        return $statuses[$entity->status] ?? (string)$entity->status;
     }
 }

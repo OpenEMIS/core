@@ -3816,6 +3816,13 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Notices']
                     ],
+
+                    //POCOR-9257: Add Webhooks Queue to Communications menu
+                    'WebhooksQueue.WebhooksQueue' => [
+                        'title' => 'Webhooks Queue',
+                        'parent' => 'Administration.Communications',
+                        'selected' => ['WebhooksQueue.WebhooksQueue']
+                    ],
                 ];
             }
         } else {
@@ -3850,6 +3857,13 @@ class NavigationComponent extends Component
                     'parent' => 'Administration.Communications',
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Notices']
+                ],
+
+                //POCOR-9257: Add Webhooks Queue to Communications menu
+                'WebhooksQueue.WebhooksQueue' => [
+                    'title' => 'Webhooks Queue',
+                    'parent' => 'Administration.Communications',
+                    'selected' => ['WebhooksQueue.WebhooksQueue']
                 ],
             ];
         }
