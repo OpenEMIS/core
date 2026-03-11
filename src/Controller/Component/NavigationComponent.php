@@ -2628,6 +2628,7 @@ class NavigationComponent extends Component
         return $navigation;
     }
 
+    //POCOR-9563[START]: Rearrange reports according to the modules that is in Institutions.
     public function getReportNavigation()
     {
         $navigation = [
@@ -2636,18 +2637,22 @@ class NavigationComponent extends Component
             //     'parent' => 'Reports',
             //     'params' => ['plugin' => 'Report'],
             // ],
-
-            'Reports.Directory' => [
-                'title' => 'Directory',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
-
             'Reports.Institutions' => [
                 'title' => 'Institutions',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
                 'selected' => ['Reports.ViewReport']
+            ],
+            'Map.index' => [
+                'title' => 'Map',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Map'],
+            ],
+            /*POCOR-6513 ends*/
+            'Reports.Textbooks' => [
+                'title' => 'Textbooks',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
             ],
             'Reports.Students' => [
                 'title' => 'Students',
@@ -2659,8 +2664,8 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            'Reports.Textbooks' => [
-                'title' => 'Textbooks',
+            'Reports.Trainings' => [
+                'title' => 'Trainings',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
@@ -2670,14 +2675,8 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            /*POCOR-6513 ends*/
             'Reports.Examinations' => [
                 'title' => 'Examinations',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
-            'Reports.Trainings' => [
-                'title' => 'Trainings',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
@@ -2685,7 +2684,12 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ],
+            ],//POCOR-9267 Starts
+            'Reports.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ], //POCOR-9267 Ends
             'Reports.Surveys' => [
                 'title' => 'Surveys',
                 'parent' => 'Reports',
@@ -2716,24 +2720,21 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            'Map.index' => [
-                'title' => 'Map',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Map'],
-            ],
             'Reports.CustomReports' => [
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ], //POCOR-9267 Starts
-            'Reports.Meals' => [
-                'title' => 'Meals',
+            ],
+            'Reports.Directory' => [
+                'title' => 'Directory',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ] //POCOR-9267 Ends
+            ]
         ];
         return $navigation;
     }
+
+    //POCOR-9563[END]
 
     public function getAdministrationNavigation()
     {
