@@ -2439,11 +2439,37 @@ class InstitutionsController extends AppController
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
+            //POCOR-9526 start
+            $LabelTable = TableRegistry::get('Labels');
+            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'secondary_staff_id'])->first();
+            if (!empty($secondarystaff)) {
+                $secondarystaffName = !empty($secondarystaff->name)
+                    ? (string)$secondarystaff->name
+                    : (string)$secondarystaff->field_name;
+            } else {
+                $secondarystaffName = 'Secondary Teacher';
+            }
+
+            $homeRoomTeacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'staff_id'])->first();
+            if (!empty($homeRoomTeacher)) {
+                if (!empty($homeRoomTeacher->code) && !empty($homeRoomTeacher->name)) {
+                    $homeRoomTeacherName = $homeRoomTeacher->code . ' ' . $homeRoomTeacher->name;
+                } elseif (!empty($homeRoomTeacher->name)) {
+                    $homeRoomTeacherName = $homeRoomTeacher->name;
+                } else {
+                    $homeRoomTeacherName = $homeRoomTeacher->field_name;
+                }
+            } else {
+                $homeRoomTeacherName = 'Home Room Teacher';
+            }
+            //POCOR-9526 end
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $classId['id']);
             $this->set('institutionId', $institutionId);
+            $this->set('secondarystaffName', $secondarystaffName); //POCOR-9526
+            $this->set('homeRoomTeacherName', $homeRoomTeacherName); // POCOR-9526
             $this->render('institution_classes_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
