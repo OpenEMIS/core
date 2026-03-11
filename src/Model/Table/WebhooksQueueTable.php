@@ -205,6 +205,21 @@ class WebhooksQueueTable extends ControllerActionTable
         $this->field('next_retry_at', ['after' => 'available_at']);
         $this->field('sent_at', ['after' => 'next_retry_at']);
         $this->field('duration_ms', ['after' => 'sent_at']);
+
+        //POCOR-9257: Add Process Queue toolbar button
+        $processButton = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-play"></i> Process Queue',
+            'class' => 'btn btn-primary',
+            'url' => ['plugin' => false, 'controller' => 'Webhooks', 'action' => 'processQueue'],
+            'attr' => [
+                'title' => 'Manually process pending webhooks',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom'
+            ],
+            'order' => 1
+        ];
+        $extra['toolbarButtons']['process'] = $processButton;
     }
 
     public function onGetStatus(EventInterface $event, Entity $entity): string
