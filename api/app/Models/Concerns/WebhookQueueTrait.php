@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\Log;
  *
  *     // Optional: Custom excluded fields (in addition to $hidden)
  *     protected $webhookExcludedFields = ['password', 'super_admin', 'sensitive_field'];
+ *
+ *     // Optional: Custom prefix for webhook event keys
+ *     protected $webhookEventPrefix = 'area_education_'; // Results in 'area_education_created', etc.
  * }
  *
  * Laravel equivalent of CakePHP WebhookQueueBehavior
@@ -98,10 +101,14 @@ trait WebhookQueueTrait
         // Log::debug("[WebhookQueueTrait] START queueWebhookForModel - Table: {$tableName}, ID: {$modelId}, Action: {$action}");
 
         try {
-            // Build event_key from table name and action
-            // e.g., 'security_users' + 'create' => 'security_user_create'
-            $singularTable = $this->singularizeTableName($tableName);
-            $eventKey = "{$singularTable}_{$action}";
+            // Build event_key from model configuration or table name
+            // POCOR-9257: Support custom prefix for event key matching (e.g., area_education_)
+            if (!empty($this->webhookEventPrefix)) {
+                $eventKey = $this->webhookEventPrefix . $action;
+            } else {
+                $singularTable = $this->singularizeTableName($tableName);
+                $eventKey = "{$singularTable}_{$action}";
+            }
 
             // Log::debug("[WebhookQueueTrait] Generated event_key: {$eventKey}");
 
