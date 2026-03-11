@@ -930,11 +930,29 @@ class InstitutionsController extends AppController
         if (!$institution_id) {
             $session = $this->request->getSession();
             $institution_id = $session->read('Institution.Institutions.id');
-            if (!$institution_id) {
-                if ($debugString != "") {
-                    die($debugString . 'For Developer: You should put institution_id into query string first');
+        }
+        // StaffBehaviours view: if still missing, decode pass[1] or load behaviour by id so view does not redirect to Dashboard
+        if (!$institution_id && $this->request->getParam('action') == 'StaffBehaviours') {
+            $pass = $this->request->getParam('pass');
+            if (!empty($pass[1])) {
+                try {
+                    $decoded = $this->paramsDecode($pass[1]);
+                    if (!empty($decoded['institution_id'])) {
+                        $institution_id = $decoded['institution_id'];
+                    } elseif (!empty($decoded['id'])) {
+                        $StaffBehaviours = TableRegistry::getTableLocator()->get('Institution.StaffBehaviours');
+                        $behaviour = $StaffBehaviours->get($decoded['id'], ['fields' => ['id', 'institution_id']]);
+                        if ($behaviour && !empty($behaviour->institution_id)) {
+                            $institution_id = $behaviour->institution_id;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // ignore
                 }
             }
+        }
+        if (!$institution_id && $debugString != "") {
+            die($debugString . 'For Developer: You should put institution_id into query string first');
         }
         return $institution_id;
     }
@@ -3312,6 +3330,13 @@ class InstitutionsController extends AppController
             && $controller == 'Institutions') {
             return true;
         }
+        // StaffBehaviours view/edit: skip role-based SecurityAuthorize here; checkInstitutionAccess in beforeFilter will enforce institution access (avoids redirect to Dashboard when roles are null or view link came from Staff plugin)
+        if (($furtherAction == 'view' || $furtherAction == 'edit')
+            && $action == 'StaffBehaviours'
+            && $plugin == 'Institution'
+            && $controller == 'Institutions') {
+            return true;
+        }
         if ($furtherAction == 'image' || $furtherAction == 'download') {
             return true;
         }
@@ -3371,6 +3396,43 @@ class InstitutionsController extends AppController
             if (!array_key_exists($id, $institutionIds)) {
 
                 $this->Alert->error('security.noAccess');
+                // If user came from Staff Behaviours view, send back to Staff Behaviours index instead of Institution index (which redirects to Dashboard)
+                $action = $this->request->getParam('action');
+                $pass = $this->request->getParam('pass');
+                if ($action == 'StaffBehaviours' && !empty($pass[1])) {
+                    try {
+                        $decoded = $this->paramsDecode($pass[1]);
+                        $institutionId = $decoded['institution_id'] ?? $id;
+                        $staffId = $decoded['staff_id'] ?? null;
+                        if (empty($staffId) && !empty($decoded['id'])) {
+                            $StaffBehaviours = TableRegistry::getTableLocator()->get('Institution.StaffBehaviours');
+                            $behaviour = $StaffBehaviours->get($decoded['id'], ['fields' => ['staff_id']]);
+                            if ($behaviour) {
+                                $staffId = $behaviour->staff_id;
+                            }
+                        }
+                        if ($institutionId || $staffId) {
+                            $params = array_filter([
+                                'institution_id' => $institutionId,
+                                'staff_id' => $staffId,
+                                'user_id' => $decoded['user_id'] ?? $staffId,
+                            ]);
+                            if (!empty($params)) {
+                                $url = [
+                                    'plugin' => 'Staff',
+                                    'controller' => 'Staff',
+                                    'action' => 'Behaviours',
+                                    '0' => 'index',
+                                    '1' => $this->ControllerAction->paramsEncode($params),
+                                ];
+                                $event->stopPropagation();
+                                return $this->redirect($url);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // fall through to default redirect
+                    }
+                }
                 $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index'];
                 $event->stopPropagation();
 
