@@ -35,13 +35,13 @@ class WebhookLogsTable extends ControllerActionTable
         $this->field('webhook_id', ['visible' => false]);
         $this->field('webhook_queue_id', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
+        $this->field('success',['visible' => false]);
 
         // Order fields for better readability
         $this->field('event_key', ['after' => 'id']);
         $this->field('target_url', ['after' => 'event_key']);
         $this->field('http_method', ['after' => 'target_url']);
-        $this->field('success', ['after' => 'http_method']);
-        $this->field('response_status', ['after' => 'success']);
+        $this->field('response_status', ['after' => 'http_method']);
         $this->field('duration_ms', ['after' => 'response_status']);
         $this->field('retry_attempt', ['after' => 'duration_ms']);
         $this->field('created', ['after' => 'retry_attempt']);

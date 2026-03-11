@@ -284,7 +284,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     }
 
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //        $entity = $this->find()->select(['current'])->where($ids)->first();
         $connection = $this->getConnection();

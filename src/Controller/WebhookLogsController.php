@@ -25,9 +25,9 @@ class WebhookLogsController extends AppController
         $name = $this->name; // WebhookLogs
         $action = $this->request->getParam('action'); // WebhookLogs
         $actionName = __(Inflector::humanize($action));
-        $header = $name . ' - ' . $actionName;
-        $this->Navigation->addCrumb(__($name), ['plugin' => false, 'controller' => $this->getName(), 'action' => $action]);
-        $this->Navigation->addCrumb($actionName);
+        $header = __('Webhooks') . ' - ' . __('Log');
+        $this->Navigation->addCrumb(__('Webhooks'), ['plugin' => false, 'controller' => $this->getName(), 'action' => $action]);
+        $this->Navigation->addCrumb(__('Log'));
         $this->set('contentHeader', $header);
         $this->set('selectedAction', $action);
     }
