@@ -194,17 +194,18 @@ class WebhooksQueueTable extends ControllerActionTable
         $this->field('webhook_id', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('max_retries', ['visible' => false]);
+        $this->field('retry_count', ['visible' => false]);
+        $this->field('available_at', ['visible' => false]);
+        $this->field('next_retry_at', ['visible' => false]);
+        $this->field('duration_ms', ['visible' => false]);
+        $this->field('auth_type', ['visible' => false]);
 
         // Order fields for better readability
         $this->field('event_key', ['after' => 'id']);
         $this->field('target_url', ['after' => 'event_key']);
         $this->field('http_method', ['after' => 'target_url']);
         $this->field('status', ['after' => 'http_method']);
-        $this->field('retry_count', ['after' => 'status']);
-        $this->field('available_at', ['after' => 'retry_count']);
-        $this->field('next_retry_at', ['after' => 'available_at']);
-        $this->field('sent_at', ['after' => 'next_retry_at']);
-        $this->field('duration_ms', ['after' => 'sent_at']);
+        $this->field('sent_at', ['after' => 'status']);
 
         //POCOR-9257: Add Process Queue toolbar button
         $processButton = [
@@ -219,7 +220,10 @@ class WebhooksQueueTable extends ControllerActionTable
             ],
             'order' => 1
         ];
-        $extra['toolbarButtons']['process'] = $processButton;
+        // Properly modify the ArrayObject toolbarButtons
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarButtonsArray['process'] = $processButton;
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function onGetStatus(EventInterface $event, Entity $entity): string
