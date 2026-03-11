@@ -212,7 +212,7 @@ class WebhooksQueueTable extends ControllerActionTable
             'type' => 'button',
             'label' => '<i class="fa fa-play"></i> Process Queue',
             'class' => 'btn btn-primary',
-            'url' => ['plugin' => false, 'controller' => 'Webhooks', 'action' => 'processQueue'],
+            'url' => ['controller' => 'Webhooks', 'action' => 'processQueue'],
             'attr' => [
                 'title' => 'Manually process pending webhooks',
                 'data-toggle' => 'tooltip',
@@ -220,10 +220,32 @@ class WebhooksQueueTable extends ControllerActionTable
             ],
             'order' => 1
         ];
+        $toolbarButton = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-refresh"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Synchronisation')
+            ],
+            'url' => [
+                'plugin' => false,
+                'controller' => $this->controller->getName(),
+//                'action' => $this->getAlias(),
+                'action' => 'processQueue',
+
+            ]
+        ];
         // Properly modify the ArrayObject toolbarButtons
+//        dd($extra['toolbarButtons']);
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarButtonsArray['process'] = $processButton;
+        $toolbarButtonsArray['access'] = $toolbarButton;
+
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
     }
 
     public function onGetStatus(EventInterface $event, Entity $entity): string
