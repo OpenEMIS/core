@@ -715,6 +715,22 @@ class AlertLogsTable extends ControllerActionTable
         ];
         // end element control
 
+        // POCOR-9509: Add status and channel filter options
+        $statusOptions = $this->getStatusOptions();
+        $channelOptions = $this->getChannelOptions();
+        $selectedStatus = $this->queryString('status', $statusOptions);
+        $selectedChannel = $this->queryString('channel', $channelOptions);
+
+        $extra['elements']['control']['data'] = array_merge(
+            $extra['elements']['control']['data'],
+            [
+                'statusOptions' => $statusOptions,
+                'selectedStatus' => $selectedStatus,
+                'channelOptions' => $channelOptions,
+                'selectedChannel' => $selectedChannel
+            ]
+        );
+
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');
 		if(!empty($is_manual_exist)){
@@ -743,6 +759,17 @@ class AlertLogsTable extends ControllerActionTable
         $selectedFeature = $this->request->getQuery('feature');
         if ($selectedFeature != -1 && !empty($selectedFeature)) {
             $query->where(['feature' => $selectedFeature]);
+        }
+
+        // POCOR-9509: Apply status and channel filters
+        $status = $this->request->getQuery('status');
+        $channel = $this->request->getQuery('channel');
+
+        if (!empty($status) && $status !== 'all') {
+            $query->where(['status' => $status]);
+        }
+        if (!empty($channel) && $channel !== 'all') {
+            $query->where(['method' => $channel]);
         }
     }
 
@@ -777,6 +804,31 @@ class AlertLogsTable extends ControllerActionTable
         }
 
         return $featureOptions;
+    }
+
+    /**
+     * POCOR-9509: Get status options for filter dropdown
+     */
+    public function getStatusOptions(): array
+    {
+        return [
+            'all' => __('All Statuses'),
+            0 => __('Pending'),
+            1 => __('Success'),
+            -1 => __('Failed')
+        ];
+    }
+
+    /**
+     * POCOR-9509: Get channel options for filter dropdown
+     */
+    public function getChannelOptions(): array
+    {
+        return [
+            'all' => __('All Channels'),
+            'Email' => __('Email'),
+            'SMS' => __('SMS')
+        ];
     }
 
     public function getWorkflowEmailMessage($recordEntity): ?string
