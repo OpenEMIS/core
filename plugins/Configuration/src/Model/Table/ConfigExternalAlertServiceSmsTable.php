@@ -213,7 +213,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             $error_prefix = __CLASS__ . ':' . __FILE__ . __FUNCTION__ . __LINE__;
             $this->log($error_prefix);
             $this->log($errorMessage);
-            $this->log($errors);
+            $this->log((string) $errors);
             //POCOR-7981:ends
             $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
         } else {//POCOR-6930 Ends
