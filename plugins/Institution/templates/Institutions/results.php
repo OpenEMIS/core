@@ -18,8 +18,10 @@ $this->start('toolbar');
     .ag-grid-dir-ltr {
         direction: ltr !important;
     }
-    .toolbar-wrapper .input {
-        flex-direction: row-reverse; /*POCOR-7785: Align search fields evenly*/
+    .toolbar .search {
+        position: inherit;
+        right: inherit;
+        top: inherit;
     }
 </style>
 
@@ -67,6 +69,21 @@ $this->start('toolbar');
 
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
     <?php endif; ?>
+<div class="search">
+    <div class="input-group">
+        <div class="input text"><input type="text"
+                                       name="SearchSubject"
+                                       class="form-control search-input focus"
+                                       data-input-name="SearchSubject"
+                                       placeholder="<?= __('Search Subject') ?>"
+                                       ng-model="subjectSearchText"
+                                       ng-change="filterSubjects()"
+                                       ng-model-options="{ debounce: 300 }"
+                                       id="search-subjects"
+            ></div>
+        <button class="btn btn-xs btn-reset" type="button" onclick="$('.search-input').val('');jsForm.submit()"><i class="fa fa-close"></i></button>
+    </div>
+</div>
 <?php
 $this->end();
 
@@ -103,36 +120,7 @@ $roles = '[' . implode(",", $_roles) . ']';
                     </select>
                 </div>
             </div>
-            <div class="input text" ng-show="filteredSubjects.length > 0"> <!--POCOR-7785: Subject search field-->
-                <div class="input-text-wrapper">
-                    <input
-                        type="text"
-                        name="SearchSubject"
-                        class="form-control search-input focus"
-                        data-input-name="SearchSubject"
-                        placeholder="<?= __('Search Subjects') ?>"
-                        ng-model="subjectSearchText"
-                        ng-change="filterSubjects()"
-                        ng-model-options="{ debounce: 300 }"
-                        id="search-subjects"
-                        />
-                </div>
-            </div>
-            <div class="input text" ng-show="filteredSubjects.length > 0 && gridOptions" align="left"> <!--POCOR-7785: Student search field-->
-                <div class="input-text-wrapper">
-                    <input
-                        type="text"
-                        name="SearchStudent"
-                        class="form-control search-input focus"
-                        data-input-name="SearchStudent"
-                        placeholder="<?= __('Search Students') ?>"
-                        ng-model="studentSearchText"
-                        ng-change="filterStudents()"
-                        ng-model-options="{ debounce: 300 }"
-                        id="search-students"
-                        />
-                </div>
-            </div>
+
         </div>
     </div>
 
