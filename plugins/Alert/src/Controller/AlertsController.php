@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\EventInterface;
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 
 class AlertsController extends AppController
 {
@@ -50,13 +51,14 @@ class AlertsController extends AppController
             return $this->redirect($this->referer());
         }
 
-        $logsTable = $this->AlertLogs;
+        $logsTable = TableRegistry::getTableLocator()->get('Alert.AlertLogs');
+//        dd($ids);
         $count = $logsTable->deleteAll(['id IN' => $ids]);
 
         if ($count) {
-            $this->Flash->success(__('{0} record(s) deleted.', $count));
+            $this->Alert->success(__('{0} record(s) deleted.', $count),  ['type' => 'string', 'reset' => true]);
         } else {
-            $this->Flash->error(__('Unable to delete selected records.'));
+            $this->Alert->warning(__('Unable to delete selected records.'), ['type' => 'string', 'reset' => true]);
         }
 
         return $this->redirect($this->referer());
@@ -71,17 +73,17 @@ class AlertsController extends AppController
         $ids = $this->request->getData('selected_ids', []);
 
         if (empty($ids)) {
-            $this->Flash->error(__('No records selected.'));
+            $this->Alert->warning(__('No records selected.'), ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
 
-        $queueTable = $this->AlertsQueue;
+        $queueTable = TableRegistry::getTableLocator()->get('Alert.AlertsQueue');;
         $count = $queueTable->deleteAll(['id IN' => $ids]);
 
         if ($count) {
-            $this->Flash->success(__('{0} record(s) deleted.', $count));
+            $this->Alert->success(__('{0} record(s) deleted.', $count), ['type' => 'string', 'reset' => true]);
         } else {
-            $this->Flash->error(__('Unable to delete selected records.'));
+            $this->Alert->warning(__('Unable to delete selected records.'), ['type' => 'string', 'reset' => true]);
         }
 
         return $this->redirect($this->referer());

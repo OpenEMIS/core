@@ -8,10 +8,7 @@ if (empty($entity)) {
     echo '';
 } else {
     $value = $entity->id ?? '';
-    echo $this->Form->checkbox('selected_ids[]', [
-        'value' => $value,
-        'class' => 'no-selection-label',
-        'kd-checkbox-radio' => ''
-    ]);
+    // Output raw HTML checkbox to avoid FormHelper issues
+    echo '<input type="checkbox" name="selected_ids[]" value="' . h($value) . '" class="no-selection-label" kd-checkbox-radio>';
 }
 ?>
