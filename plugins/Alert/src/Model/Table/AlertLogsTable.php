@@ -695,6 +695,15 @@ class AlertLogsTable extends ControllerActionTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
+        // POCOR-9509: Add checkbox column for multiselect
+        $this->field('_select', [
+            'type' => 'element',
+            'element' => 'Alert/select_checkbox',
+            'tableHeaderClass' => 'checkbox-column',
+            'tableColumnClass' => 'checkbox-column',
+            'label' => ''
+        ]);
+
         $this->field('message', ['visible' => false]);
         $this->field('method', ['after' => 'feature', 'sort' => true]);
         $this->field('destination', ['after' => 'method', 'visible' => true]);
@@ -730,6 +739,25 @@ class AlertLogsTable extends ControllerActionTable
                 'selectedChannel' => $selectedChannel
             ]
         );
+
+        // POCOR-9509: Add bulk delete toolbar button and JS
+        $extra['toolbarButtons']['deleteSelected'] = [
+            'label' => __('Delete Selected'),
+            'attr' => [
+                'class' => 'btn btn-danger',
+                'id' => 'delete-selected-btn',
+                'disabled' => 'true'
+            ]
+        ];
+
+        $extra['elements']['bulkActionsJs'] = [
+            'name' => 'Alert/bulk_actions_js',
+            'data' => [
+                'deleteUrl' => $this->Url->build(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'logsDeleteSelected'])
+            ],
+            'options' => [],
+            'order' => 4
+        ];
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');
@@ -907,6 +935,8 @@ class AlertLogsTable extends ControllerActionTable
                 return __('Created By');
             case 'created_user_id':
                 return __('Created On');
+            case '_select':
+                return '';
             default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
