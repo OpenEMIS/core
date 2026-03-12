@@ -93,8 +93,7 @@ class AlertsQueueTable extends ControllerActionTable
             'element' => 'Alert/delete_selected_button',
             'data' => [
                 'id' => 'delete-selected-btn',
-                'label' => __('Delete Selected'),
-                'classes' => 'btn-danger',
+                'classes' => 'btn btn-xs btn-default icon-big',
                 'disabled' => true
             ],
             'options' => []
