@@ -36,4 +36,54 @@ class AlertsController extends AppController
 
 		$this->set('contentHeader', $header);
     }
+
+    /**
+     * POCOR-9509: Bulk delete selected alert logs
+     */
+    public function logsDeleteSelected()
+    {
+        $this->request->allowMethod(['post']);
+        $ids = $this->request->getData('selected_ids', []);
+
+        if (empty($ids)) {
+            $this->Flash->error(__('No records selected.'));
+            return $this->redirect($this->referer());
+        }
+
+        $logsTable = $this->AlertLogs;
+        $count = $logsTable->deleteAll(['id IN' => $ids]);
+
+        if ($count) {
+            $this->Flash->success(__('{0} record(s) deleted.', $count));
+        } else {
+            $this->Flash->error(__('Unable to delete selected records.'));
+        }
+
+        return $this->redirect($this->referer());
+    }
+
+    /**
+     * POCOR-9509: Bulk delete selected queue entries
+     */
+    public function queueDeleteSelected()
+    {
+        $this->request->allowMethod(['post']);
+        $ids = $this->request->getData('selected_ids', []);
+
+        if (empty($ids)) {
+            $this->Flash->error(__('No records selected.'));
+            return $this->redirect($this->referer());
+        }
+
+        $queueTable = $this->AlertsQueue;
+        $count = $queueTable->deleteAll(['id IN' => $ids]);
+
+        if ($count) {
+            $this->Flash->success(__('{0} record(s) deleted.', $count));
+        } else {
+            $this->Flash->error(__('Unable to delete selected records.'));
+        }
+
+        return $this->redirect($this->referer());
+    }
 }
