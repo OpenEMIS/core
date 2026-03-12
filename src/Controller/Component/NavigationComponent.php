@@ -3796,19 +3796,23 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Alerts']
                     ],
-
                     'Alerts.AlertRules' => [
                         'title' => 'Alert Rules',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.AlertRules']
                     ],
-
                     'Alerts.Logs' => [
                         'title' => 'Logs',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
+                    ],
+                    'Alerts.Queue' => [
+                        'title' => 'Queue',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Queue']
                     ],
                     'Alerts.Notices' => [
                         'title' => 'Notices',
@@ -3844,6 +3848,12 @@ class NavigationComponent extends Component
                     'parent' => 'Administration.Communications',
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
+                ],
+                'Alerts.Queue' => [
+                    'title' => 'Queue',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Queue']
                 ],
                 'Alerts.Notices' => [
                     'title' => 'Notices',
