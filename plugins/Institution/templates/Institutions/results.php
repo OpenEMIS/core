@@ -18,6 +18,9 @@ $this->start('toolbar');
     .ag-grid-dir-ltr {
         direction: ltr !important;
     }
+    .toolbar-wrapper .input {
+        flex-direction: row-reverse; /*POCOR-7785: Align search fields evenly*/
+    }
 </style>
 
     <?php
@@ -100,6 +103,36 @@ $roles = '[' . implode(",", $_roles) . ']';
                     </select>
                 </div>
             </div>
+            <div class="input text" ng-show="filteredSubjects.length > 0"> <!--POCOR-7785: Subject search field-->
+                <div class="input-text-wrapper">
+                    <input
+                        type="text"
+                        name="SearchSubject"
+                        class="form-control search-input focus"
+                        data-input-name="SearchSubject"
+                        placeholder="<?= __('Search Subjects') ?>"
+                        ng-model="subjectSearchText"
+                        ng-change="filterSubjects()"
+                        ng-model-options="{ debounce: 300 }"
+                        id="search-subjects"
+                        />
+                </div>
+            </div>
+            <div class="input text" ng-show="filteredSubjects.length > 0 && gridOptions" align="left"> <!--POCOR-7785: Student search field-->
+                <div class="input-text-wrapper">
+                    <input
+                        type="text"
+                        name="SearchStudent"
+                        class="form-control search-input focus"
+                        data-input-name="SearchStudent"
+                        placeholder="<?= __('Search Students') ?>"
+                        ng-model="studentSearchText"
+                        ng-change="filterStudents()"
+                        ng-model-options="{ debounce: 300 }"
+                        id="search-students"
+                        />
+                </div>
+            </div>
         </div>
     </div>
 
@@ -107,7 +140,7 @@ $roles = '[' . implode(",", $_roles) . ']';
         <div class="scrolltabs sticky-content">
       <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject, subject.is_editable)">
+                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in filteredSubjects track by subject.id" ng-click="onChangeSubject(subject, subject.is_editable)"><!--POCOR-7785: Use filteredSubjects for search-->
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>
