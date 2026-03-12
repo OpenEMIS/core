@@ -37,7 +37,8 @@ class ReportsController extends AppController
             'UisStatistics' => ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']],
-            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']]//POCOR-9267 
+            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']],//POCOR-9267 
+            'InstitutionInfrastructures' => ['className' => 'Report.InstitutionInfrastructures', 'actions' => ['index', 'add']]//POCOR-9562 
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -63,7 +64,12 @@ class ReportsController extends AppController
 
     public function onInitialize(EventInterface $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->getAlias());
+        $alias = $table->getAlias();
+        if ($alias == 'InstitutionInfrastructures') {
+            $header = __('Reports') . ' - ' . __('Infrastructures');
+        } else {
+            $header = __('Reports') . ' - ' . __($alias);
+        }
         $this->set('contentHeader', $header);
     }
 
@@ -110,17 +116,11 @@ class ReportsController extends AppController
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
                 // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
-                'Report.WashReports' => __('Wash Report'),
                 'Report.Guardians' => __('Guardians'),
-                'Report.InstitutionInfrastructures' => __('Infrastructure'),
-                'Report.InstitutionAssets' => __('Assets'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
-                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
-                'Report.Income' => __('Income Report'),
-                'Report.Expenditure' => __('Expenditure Report'),
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
                 'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
@@ -274,6 +274,19 @@ class ReportsController extends AppController
                 'Report.MealDetails' => __('Meals Details Report')//POCOR-9268
             ];
         }//POCOR-9267 Ends
+        elseif ($module == 'InstitutionInfrastructures') {
+            $options = [
+                'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
+                'Report.InstitutionAssets' => __('Assets'),
+                'Report.Income' => __('Income Report'),
+                'Report.Expenditure' => __('Expenditure Report'),
+                'Report.WashReports' => __('Wash Report'),
+                'Report.InfrastructureElectricities' => __('Utilities Electricity'),
+                'Report.InfrastructureInternets' => __('Utilities Internet'),
+                'Report.InfrastructureTelephones' => __('Utilities Telephone'),
+            ];
+        }
         return $options;
     }
 
@@ -372,7 +385,6 @@ class ReportsController extends AppController
 
         $moduleTitle = __(Inflector::humanize(Inflector::underscore($dataModule)));
         $this->Navigation->addCrumb($moduleTitle);
-
         $header = __('Reports') . ' - ' . $moduleTitle;
 
         $inputFileName = $replace_data;

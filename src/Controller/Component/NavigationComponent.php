@@ -2675,6 +2675,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.InstitutionInfrastructures' => [
+                'title' => 'Infrastructure',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ], //POCOR-9562 Ends
             'Reports.Scholarships' => [
                 'title' => 'Scholarships',
                 'parent' => 'Reports',
@@ -2724,7 +2729,8 @@ class NavigationComponent extends Component
                 'title' => 'Meals',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ] //POCOR-9267 Ends
+            ]//POCOR-9267 Ends
+            
         ];
         return $navigation;
     }

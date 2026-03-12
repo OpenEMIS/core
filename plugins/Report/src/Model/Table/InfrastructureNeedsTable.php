@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Time;
@@ -235,6 +235,15 @@ class InfrastructureNeedsTable extends AppTable  {
             }
         }
         
-        return implode($projects, ",");
+        $projects = [];
+        if (!empty($data)) {
+            foreach ($data as $value) {
+                if (!empty($value->InfrastructureProjects['name'])) {
+                    $projects[] = $value->InfrastructureProjects['name'];
+                }
+            }
+        }
+
+        return implode(", ", $projects);
     }
 }
