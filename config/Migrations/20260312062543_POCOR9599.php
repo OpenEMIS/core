@@ -5,17 +5,24 @@ use Migrations\AbstractMigration;
 
 class POCOR9599 extends AbstractMigration
 {
-    public function change(): void
+    public function up(): void
     {
-        $table = $this->table('assessment_periods');
+        // Backup table
+        $this->execute('CREATE TABLE `zz_9599_assessment_periods` LIKE `assessment_periods`');
+        $this->execute('INSERT INTO `zz_9599_assessment_periods` SELECT * FROM `assessment_periods`');
 
-        $table->changeColumn('weight', 'decimal', [
-            'precision' => 6,
-            'scale' => 5,
-            'null' => true,
-            'default' => '0.000',
-        ]);
+        // Update column precision to prevent rounding of weight values
+        $this->execute('ALTER TABLE `assessment_periods` 
+                        MODIFY `weight` DECIMAL(6,5) NULL DEFAULT 0.00000');
+    }
 
-        $table->update();
+    public function down(): void
+    {
+        // Revert column precision to original definition
+        $this->execute('ALTER TABLE `assessment_periods` 
+                        MODIFY `weight` DECIMAL(6,2) NULL DEFAULT 0.00');
+
+        // Drop backup table
+        $this->execute('DROP TABLE IF EXISTS `zz_9599_assessment_periods`');
     }
 }
