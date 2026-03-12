@@ -6,6 +6,15 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
+<style type='text/css'>
+    .toolbar .search {
+        position: inherit;
+        right: inherit;
+        top: inherit;
+    }
+</style>
+
+
     <?php
         $backUrl = [
             'plugin' => $this->request->getAttribute('params')['plugin'],
@@ -16,6 +25,7 @@ $this->start('toolbar');
         ];
         echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
     ?>
+
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
         <!-- POCOR-6800: added ng-show="action == 'view' && checkaction == 1" || initial value ng-show="action == 'view'" -->
@@ -30,10 +40,28 @@ $this->start('toolbar');
         </button>
         <!-- End -->
     <?php endif; ?>
+<div class="search">
+    <div class="input-group">
+        <div class="input text"><input type="text"
+                                       name="SearchTeacher"
+                                       class="form-control search-input focus"
+                                       data-input-name="SearchTeacher"
+                            placeholder="<?= __('Search Teachers') ?>"
+                            ng-model="InstitutionCommentsController.teacherSearchText"
+                            ng-change="InstitutionCommentsController.filterTeachers()"
+                            ng-model-options="{ debounce: 300 }"
+                            id="search-teachers"
+            ></div>
+			<button class="btn btn-xs btn-reset" type="button" onclick="$('.search-input').val('');jsForm.submit()"><i class="fa fa-close"></i></button>
+    </div>
+</div>
+
 <?php
 $this->end();
-
 $this->start('panelBody');
+?>
+
+<?php
 
 // $paramsQuery = $this->ControllerAction->getQueryString();
 
@@ -56,7 +84,7 @@ $loginUserId = $_SESSION['Auth']['User']['id'];
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="{{tab.tabName}}" ng-repeat="tab in InstitutionCommentsController.tabs" ng-click="InstitutionCommentsController.onChangeSubject(tab)">
+                    <uib-tab heading="{{tab.tabName}}" ng-repeat="tab in InstitutionCommentsController.filteredTabs" ng-click="InstitutionCommentsController.onChangeSubject(tab)">
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>
@@ -77,7 +105,7 @@ $loginUserId = $_SESSION['Auth']['User']['id'];
         .ag-cell #absence_type_id select.error {
             border-color: #CC5C5C !important;
         }
-        
+
         .ag-cell textarea#comment:focus {
             outline: none;
         }
