@@ -116,13 +116,13 @@ class AlertsQueueTable extends ControllerActionTable
         $channel = $this->request->getQuery('channel');
         $alertType = $this->request->getQuery('alert_type');
 
-        if (!empty($status) && $status !== 'all') {
+        if ($status !== null && $status !== '' && $status !== 'all') {
             $query->where(['status' => $status]);
         }
-        if (!empty($channel) && $channel !== 'all') {
+        if ($channel !== null && $channel !== '' && $channel !== 'all') {
             $query->where(['channel' => $channel]);
         }
-        if (!empty($alertType) && $alertType !== 'all') {
+        if ($alertType !== null && $alertType !== '' && $alertType !== 'all') {
             $query->where(['alert_type' => $alertType]);
         }
     }
