@@ -81,7 +81,6 @@ $this->start('toolbar');
                                        ng-model-options="{ debounce: 300 }"
                                        id="search-subjects"
             ></div>
-        <button class="btn btn-xs btn-reset" type="button" onclick="$('.search-input').val('');jsForm.submit()"><i class="fa fa-close"></i></button>
     </div>
 </div>
 <?php
