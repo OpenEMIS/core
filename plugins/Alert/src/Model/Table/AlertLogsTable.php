@@ -790,7 +790,7 @@ class AlertLogsTable extends ControllerActionTable
         //$selectedFeature = $extra['selectedFeature'];
         $featureOptions = $this->getFeatureOptions();
         $selectedFeature = $this->request->getQuery('feature');
-        if ($selectedFeature != -1 && !empty($selectedFeature)) {
+        if ($selectedFeature !== null && $selectedFeature !== '' && $selectedFeature !== 'all') {
             $query->where(['feature' => $selectedFeature]);
         }
 
@@ -798,10 +798,10 @@ class AlertLogsTable extends ControllerActionTable
         $status = $this->request->getQuery('status');
         $channel = $this->request->getQuery('channel');
 
-        if (!empty($status) && $status !== 'all') {
+        if ($status !== null && $status !== '' && $status !== 'all') {
             $query->where(['status' => $status]);
         }
-        if (!empty($channel) && $channel !== 'all') {
+        if ($channel !== null && $channel !== '' && $channel !== 'all') {
             $query->where(['method' => $channel]);
         }
     }
@@ -827,7 +827,7 @@ class AlertLogsTable extends ControllerActionTable
 
         $features = array_merge($alertFeatures, $workflowFeatures); // combine the alert and workflow feature
         $alertFeatures['Messaging'] = __('Messaging');
-        $featureOptions['AllFeatures'] = __('All Features'); // to show all the records
+        $featureOptions['all'] = __('All Features'); // to show all the records
         foreach ($features as $key => $value) {
             if (array_key_exists($key, $alertFeatures)) {
                 $featureOptions[$this->featureGrouping['general']][$key] = $value;
