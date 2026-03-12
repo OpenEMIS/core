@@ -8,6 +8,7 @@ use ArrayObject;
 use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
+use Cake\Routing\Router;
 
 class AlertsQueueTable extends ControllerActionTable
 {
@@ -29,6 +30,7 @@ class AlertsQueueTable extends ControllerActionTable
         // Disable add/edit/delete - queue entries are managed by the system
         $this->toggle('add', false);
         $this->toggle('edit', false);
+        $this->toggle('view', true);
         $this->toggle('delete', false);
     }
 
@@ -87,19 +89,22 @@ class AlertsQueueTable extends ControllerActionTable
 
         // POCOR-9509: Add bulk delete toolbar button
         $extra['toolbarButtons']['deleteSelected'] = [
-            'label' => __('Delete Selected'),
-            'attr' => [
-                'class' => 'btn btn-danger',
+            'type' => 'element',
+            'element' => 'Alert/delete_selected_button',
+            'data' => [
                 'id' => 'delete-selected-btn',
-                'disabled' => 'true'
-            ]
+                'label' => __('Delete Selected'),
+                'classes' => 'btn-danger',
+                'disabled' => true
+            ],
+            'options' => []
         ];
 
         // Add bulk actions JS
         $extra['elements']['bulkActionsJs'] = [
             'name' => 'Alert/bulk_actions_js',
             'data' => [
-                'deleteUrl' => $this->Url->build(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'queueDeleteSelected'])
+                'deleteUrl' => Router::Url(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'queueDeleteSelected'])
             ],
             'options' => [],
             'order' => 4

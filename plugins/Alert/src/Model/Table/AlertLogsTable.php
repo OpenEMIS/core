@@ -10,6 +10,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
+use Cake\Routing\Router;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
@@ -358,6 +359,7 @@ class AlertLogsTable extends ControllerActionTable
         $this->AlertRules = TableRegistry::getTableLocator()->get('Alert.AlertRules');
         $this->toggle('add', false);
         $this->toggle('edit', false);
+        $this->toggle('view', true);
     }
 
     public function implementedEvents(): array
@@ -742,18 +744,22 @@ class AlertLogsTable extends ControllerActionTable
 
         // POCOR-9509: Add bulk delete toolbar button and JS
         $extra['toolbarButtons']['deleteSelected'] = [
-            'label' => __('Delete Selected'),
-            'attr' => [
-                'class' => 'btn btn-danger',
+            'type' => 'element',
+            'element' => 'Alert/delete_selected_button',
+            'data' => [
                 'id' => 'delete-selected-btn',
-                'disabled' => 'true'
-            ]
+                'label' => __('Delete Selected'),
+                'classes' => 'btn-danger',
+                'disabled' => true
+            ],
+            'options' => []
         ];
+
 
         $extra['elements']['bulkActionsJs'] = [
             'name' => 'Alert/bulk_actions_js',
             'data' => [
-                'deleteUrl' => $this->Url->build(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'logsDeleteSelected'])
+                'deleteUrl' => Router::Url(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'logsDeleteSelected', true])
             ],
             'options' => [],
             'order' => 4
