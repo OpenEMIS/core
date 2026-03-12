@@ -34,6 +34,15 @@ class AlertsQueueTable extends ControllerActionTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
+        // POCOR-9509: Add checkbox column for multiselect
+        $this->field('_select', [
+            'type' => 'element',
+            'element' => 'Alert/select_checkbox',
+            'tableHeaderClass' => 'checkbox-column',
+            'tableColumnClass' => 'checkbox-column',
+            'label' => ''
+        ]);
+
         // Configure which fields to show and their order
         $this->field('alert_type', ['after' => 'id']);
         $this->field('channel', ['after' => 'alert_type']);
@@ -63,7 +72,7 @@ class AlertsQueueTable extends ControllerActionTable
         $extra['selectedAlertType'] = $selectedAlertType;
 
         $extra['elements']['queueControl'] = [
-            'name' => 'Alert/queue_controls',
+            'name' => 'Alert/controls',
             'data' => [
                 'statusOptions' => $statusOptions,
                 'selectedStatus' => $selectedStatus,
@@ -74,6 +83,26 @@ class AlertsQueueTable extends ControllerActionTable
             ],
             'options' => [],
             'order' => 3,
+        ];
+
+        // POCOR-9509: Add bulk delete toolbar button
+        $extra['toolbarButtons']['deleteSelected'] = [
+            'label' => __('Delete Selected'),
+            'attr' => [
+                'class' => 'btn btn-danger',
+                'id' => 'delete-selected-btn',
+                'disabled' => 'true'
+            ]
+        ];
+
+        // Add bulk actions JS
+        $extra['elements']['bulkActionsJs'] = [
+            'name' => 'Alert/bulk_actions_js',
+            'data' => [
+                'deleteUrl' => $this->Url->build(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'queueDeleteSelected'])
+            ],
+            'options' => [],
+            'order' => 4
         ];
     }
 
@@ -216,6 +245,8 @@ class AlertsQueueTable extends ControllerActionTable
                 return __('Created');
             case 'message_body':
                 return __('Message');
+            case '_select':
+                return '';
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

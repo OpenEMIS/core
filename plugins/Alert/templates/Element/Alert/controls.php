@@ -1,4 +1,4 @@
-<?php if (!empty($featureOptions) || !empty($statusOptions) || !empty($channelOptions)) : ?>
+<?php if (!empty($featureOptions) || !empty($statusOptions) || !empty($channelOptions) || !empty($alertTypeOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -12,7 +12,7 @@
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
 
-                // Feature filter
+                // Feature filter (for AlertLogs)
                 if (!empty($featureOptions)) {
                     echo $this->Form->input('feature', [
                         'class' => 'form-control',
@@ -21,6 +21,18 @@
                         'default' => $selectedFeature ?? null,
                         'url' => $baseUrl,
                         'data-named-key' => 'feature'
+                    ]);
+                }
+
+                // Alert Type filter (for AlertsQueue)
+                if (!empty($alertTypeOptions)) {
+                    echo $this->Form->input('alert_type', [
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $alertTypeOptions,
+                        'default' => $selectedAlertType ?? null,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'alert_type'
                     ]);
                 }
 
