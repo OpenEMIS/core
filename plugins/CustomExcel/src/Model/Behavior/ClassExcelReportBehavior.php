@@ -263,12 +263,28 @@ class ClassExcelReportBehavior extends Behavior
 
             case 'date':
                 if (!is_null($format) && !empty($cellValue)) {
+                    if (is_string($cellValue)) { //POCOR-9598: guard against plain string from Hash::extract
+                        try {
+                            $cellValue = new \DateTime($cellValue);
+                        } catch (\Exception $e) {
+                            $cellValue = '';
+                            break;
+                        }
+                    }
                     $cellValue = $cellValue->format($format);
                 }
                 break;
 
             case 'time':
                 if (!is_null($format) && !empty($cellValue)) {
+                    if (is_string($cellValue)) { //POCOR-9598: guard against plain string from Hash::extract
+                        try {
+                            $cellValue = new \DateTime($cellValue);
+                        } catch (\Exception $e) {
+                            $cellValue = '';
+                            break;
+                        }
+                    }
                     $cellValue = $cellValue->format($format);
                 }
                 break;

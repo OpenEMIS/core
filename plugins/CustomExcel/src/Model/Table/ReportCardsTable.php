@@ -158,27 +158,50 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateBeforeGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
+////        Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate START'); //[TEMP-LOG]
+////        Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate params: ' . json_encode($params)); //[TEMP-LOG]
+
         $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards'); // POCOR-9162
-        if (!$StudentsReportCards->exists($params)) {
+////        Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate fetched InstitutionStudentsReportCards class=' . get_class($StudentsReportCards)); //[TEMP-LOG]
+
+        $exists = $StudentsReportCards->exists($params);
+////        Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate exists=' . ($exists ? 'true' : 'false')); //[TEMP-LOG]
+
+        if (!$exists) {
             // insert student report card record if it does not exist
             $params['status'] = $StudentsReportCards::IN_PROGRESS;
             $params['started_on'] = date('Y-m-d H:i:s');
+////            Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate inserting new record with status=IN_PROGRESS started_on=' . $params['started_on']); //[TEMP-LOG]
             $newEntity = $StudentsReportCards->newEntity($params);
-            $StudentsReportCards->save($newEntity);
-
+            $saved = $StudentsReportCards->save($newEntity);
+            if ($saved) {
+////                Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate INSERT SUCCESS id=' . $saved->id); //[TEMP-LOG]
+            } else {
+////                Log::error('@ReportCardsTable::onExcelTemplateBeforeGenerate INSERT FAILED errors=' . json_encode($newEntity->getErrors())); //[TEMP-LOG]
+            }
         } else {
             // update status to in progress if record exists
-            $StudentsReportCards->updateAll([
+////            Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate updating existing record to IN_PROGRESS'); //[TEMP-LOG]
+            $updateResult = $StudentsReportCards->updateAll([
                 'status' => $StudentsReportCards::IN_PROGRESS,
                 'started_on' => date('Y-m-d H:i:s')
             ], $params);
+////            Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate update affected rows=' . $updateResult); //[TEMP-LOG]
         }
 
+////        Log::debug('@ReportCardsTable::onExcelTemplateBeforeGenerate END'); //[TEMP-LOG]
     }
 
     public function onExcelTemplateAfterGenerate(EventInterface $event, array $params, ArrayObject $extra)
     {
+////        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate START'); //[TEMP-LOG]
+////        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate params: ' . json_encode($params)); //[TEMP-LOG]
+////        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate file_path=' . ($extra['file_path'] ?? 'N/A')); //[TEMP-LOG]
+
         $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards'); // POCOR-9162
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate fetched InstitutionStudentsReportCards'); //[TEMP-LOG]
+
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate fetching student report card data with contains'); //[TEMP-LOG]
         $studentReportCardData = $StudentsReportCards
             ->find()
             ->select([
@@ -222,10 +245,18 @@ class ReportCardsTable extends AppTable
             ])
             ->first();
 
+        if (!$studentReportCardData) {
+//            Log::error('@ReportCardsTable::onExcelTemplateAfterGenerate FAILED: No student report card data found for params: ' . json_encode($params)); //[TEMP-LOG]
+            return;
+        }
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate found student report card id=' . $studentReportCardData->id); //[TEMP-LOG]
+
         // set filename
         $fileName = $studentReportCardData->institution->code . '_' . $studentReportCardData->report_card->code . '_' . $studentReportCardData->student->openemis_no . '_' . $studentReportCardData->student->name . '.' . $this->fileType;
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate generated filename: ' . $fileName); //[TEMP-LOG]
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate read file size=' . strlen($fileContent) . ' bytes'); //[TEMP-LOG]
         $status = $StudentsReportCards::GENERATED;
 
         //POCOR-6716[START]
@@ -233,27 +264,33 @@ class ReportCardsTable extends AppTable
         $timeZone = $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);
         $currentTimeZone = date("Y-m-d H:i:s");
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate using timezone=' . $timeZone . ' current=' . $currentTimeZone); //[TEMP-LOG]
         //POCOR-6716[END]
 
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate updating InstitutionStudentsReportCards with file'); //[TEMP-LOG]
         // save file
-        $StudentsReportCards->updateAll([
+        $updateResult = $StudentsReportCards->updateAll([
             'status' => $status,
             'completed_on' => $currentTimeZone, //POCOR-6716
             'file_name' => $fileName,
             'file_content' => $fileContent
         ], $params);
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate update affected rows=' . $updateResult); //[TEMP-LOG]
 
         //POCOR-7319 starts
         //saving generated report card entries in reprt_card_processes_table
         $ReportCardProcesses = self::getDynamicTableInstance('ReportCard.ReportCardProcesses'); // POCOR-9162
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate querying ReportCardProcesses to update status'); //[TEMP-LOG]
         $ReportCardProcessesData = $ReportCardProcesses->find()
             ->where([
                 'report_card_id' => $params['report_card_id'],
                 'institution_class_id' => $params['institution_class_id'],
                 'student_id' => $params['student_id']])->toArray();
 
-        if (!empty($ReportCardProcessesData)) {
+//        Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate found ' . count($ReportCardProcessesData) . ' ReportCardProcesses records'); //[TEMP-LOG]
 
+        if (!empty($ReportCardProcessesData)) {
+            $savedCount = 0;
             foreach ($ReportCardProcessesData as $key => $val) {
                 $todayDate = FrozenTime::parse('now');
                 $_now = $todayDate->i18nFormat('yyyy-MM-dd HH:mm:ss');
@@ -261,8 +298,16 @@ class ReportCardsTable extends AppTable
                 $modified = $_now;
                 $ReportCardProcessesEntity = $this->patchEntity($val, ['status' => $status, 'modified' => $modified], ['validate' => false]);
 
-                $ReportCardProcesses->save($ReportCardProcessesEntity);
+                $saved = $ReportCardProcesses->save($ReportCardProcessesEntity);
+                if ($saved) {
+                    $savedCount++;
+                } else {
+//                    Log::error('@ReportCardsTable::onExcelTemplateAfterGenerate FAILED to update ReportCardProcesses id=' . $val->id); //[TEMP-LOG]
+                }
             }
+//            Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate updated ' . $savedCount . '/' . count($ReportCardProcessesData) . ' ReportCardProcesses to COMPLETED'); //[TEMP-LOG]
+        } else {
+//            Log::debug('@ReportCardsTable::onExcelTemplateAfterGenerate no ReportCardProcesses records found'); //[TEMP-LOG]
         }
         //POCOR-7319 ends
 
@@ -277,7 +322,10 @@ class ReportCardsTable extends AppTable
 
     public function afterRenderExcelTemplate(EventInterface $event, ArrayObject $extra, $controller)
     {
+//        Log::debug('@ReportCardsTable::afterRenderExcelTemplate START'); //[TEMP-LOG]
         $params = $extra['params'];
+//        Log::debug('@ReportCardsTable::afterRenderExcelTemplate params: ' . json_encode($params)); //[TEMP-LOG]
+
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
@@ -287,22 +335,39 @@ class ReportCardsTable extends AppTable
             'report_card_id' => $params['report_card_id'],
             'academic_period_id' => $params['academic_period_id']
         ];
+//        Log::debug('@ReportCardsTable::afterRenderExcelTemplate redirecting to: ' . json_encode($url)); //[TEMP-LOG]
 
         $event->stopPropagation();
+//        Log::debug('@ReportCardsTable::afterRenderExcelTemplate stopping propagation and redirecting'); //[TEMP-LOG]
         return $controller->redirect($url);
     }
 
     public function onExcelTemplateInitialiseReportCards(EventInterface $event, array $params, ArrayObject $extra)
     {
+//        Log::debug('@ReportCardsTable::onExcelTemplateInitialiseReportCards START'); //[TEMP-LOG]
         if (isset($params['report_card_id'])) {
+//            Log::debug('@ReportCardsTable::onExcelTemplateInitialiseReportCards fetching report_card_id=' . $params['report_card_id']); //[TEMP-LOG]
             $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards'); // POCOR-9162
-            $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']]);
+//            Log::debug('@ReportCardsTable::onExcelTemplateInitialiseReportCards fetched ReportCards class=' . get_class($ReportCards)); //[TEMP-LOG]
+            try {
+                $entity = $ReportCards->get($params['report_card_id'], ['contain' => ['AcademicPeriods', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels']]);
+//                Log::debug('@ReportCardsTable::onExcelTemplateInitialiseReportCards loaded report card: code=' . $entity->code . ' name=' . $entity->name); //[TEMP-LOG]
+            } catch (\Exception $e) {
+//                Log::error('@ReportCardsTable::onExcelTemplateInitialiseReportCards FAILED to fetch report_card_id=' . $params['report_card_id'] . ': ' . $e->getMessage()); //[TEMP-LOG]
+                throw $e;
+            }
 
             $extra['report_card_start_date'] = $entity->start_date;
             $extra['report_card_end_date'] = $entity->end_date;
             $extra['report_card_education_grade_id'] = $entity->education_grade_id;
+//            Log::debug('@ReportCardsTable::onExcelTemplateInitialiseReportCards set extra vars: start_date=' . $entity->start_date . ' end_date=' . $entity->end_date . ' education_grade_id=' . $entity->education_grade_id); //[TEMP-LOG]
 
-            return $entity->toArray();
+            $result = $entity->toArray();
+//            Log::debug('@ReportCardsTable::onExcelTemplateInitialiseReportCards returning array with keys=' . implode(',', array_keys($result))); //[TEMP-LOG]
+            return $result;
+        } else {
+//            Log::warning('@ReportCardsTable::onExcelTemplateInitialiseReportCards report_card_id NOT set in params'); //[TEMP-LOG]
+            return null;
         }
     }
 
