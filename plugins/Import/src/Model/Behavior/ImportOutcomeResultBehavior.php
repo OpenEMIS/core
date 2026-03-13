@@ -37,8 +37,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
-        // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave entity_fields=' . json_encode(array_keys($entity->toArray()))); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave entity_fields=' . json_encode(array_keys($entity->toArray()))); //[TEMP-LOG]
         //POCOR-9584: end
 
         ini_set('max_execution_time', 180);
@@ -46,7 +46,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
         return function ($model, $entity) {
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave closure START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave closure START entity_errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
             //POCOR-9584: end
 
             /* ===========================
@@ -63,7 +63,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
              * =========================== */
             if (!empty($entity->getErrors())) {
                 //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-                // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave returning false due to entity errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
+                //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave returning false due to entity errors=' . json_encode($entity->getErrors())); //[TEMP-LOG]
                 //POCOR-9584: end
                 return false;
             }
@@ -76,7 +76,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $uploaded     = $fileObj->getStream()->getMetadata('uri');
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName) . ' uploaded=' . json_encode($uploaded)); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName) . ' uploaded=' . json_encode($uploaded)); //[TEMP-LOG]
             //POCOR-9584: end
 
             $inputFileType = IOFactory::identify($uploaded);
@@ -91,8 +91,8 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $queryString = $this->_table->getQueryString();
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave requestData=' . json_encode($requestData)); //[TEMP-LOG]
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave queryString=' . json_encode($queryString)); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave requestData=' . json_encode($requestData)); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave queryString=' . json_encode($queryString)); //[TEMP-LOG]
             //POCOR-9584: end
 
             //POCOR-9584: start - renamed field keys to DB column names
@@ -104,13 +104,13 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             //POCOR-9584: end
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave template=' . json_encode($template) . ' education_subject_id=' . json_encode($education_subject_id) . ' outcome_period_id=' . json_encode($outcome_period_id) . ' academic_period_id=' . json_encode($academic_period_id) . ' institution_id=' . json_encode($institution_id)); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave template=' . json_encode($template) . ' education_subject_id=' . json_encode($education_subject_id) . ' outcome_period_id=' . json_encode($outcome_period_id) . ' academic_period_id=' . json_encode($academic_period_id) . ' institution_id=' . json_encode($institution_id)); //[TEMP-LOG]
             //POCOR-9584: end
             /* ===========================
              *  LOAD TABLES
              * =========================== */
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave loading activeModel plugin=' . $this->getConfig('plugin') . ' model=' . $this->getConfig('model')); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave loading activeModel plugin=' . $this->getConfig('plugin') . ' model=' . $this->getConfig('model')); //[TEMP-LOG]
             //POCOR-9584: end
             $activeModel = TableRegistry::get(
                 $this->getConfig('plugin') . '.' . $this->getConfig('model')
@@ -130,7 +130,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
                 ->first();
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave educationGradeId=' . json_encode($educationGradeId)); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave educationGradeId=' . json_encode($educationGradeId)); //[TEMP-LOG]
             //POCOR-9584: end
 
             /* ===========================
@@ -146,7 +146,7 @@ class ImportOutcomeResultBehavior extends ImportResultBehavior
             $totalCriteria = count($criteriaList);
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultBehavior::addBeforeSave totalCriteria=' . $totalCriteria . ' highestRow=' . $sheet->getHighestRow()); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultBehavior::addBeforeSave totalCriteria=' . $totalCriteria . ' highestRow=' . $sheet->getHighestRow()); //[TEMP-LOG]
             //POCOR-9584: end
 
             /* ===========================

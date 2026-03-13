@@ -1,3 +1,18 @@
+### [5.4.0] - 2026-03-13
+- Implemented: Develop changes to Infrastructure > Utilities > Internet, electricity and telephone pages
+- Implemented: Develop a search function for the assessment feature
+- Bug Fixed: Administration>Performance>Report Cards: When calculating Cumulative GPA, use the latest GPA for that term
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Institutions) : When logged in as a teacher.
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Administration)
+- Bug Fixed: Institutions > Survey > Form > Export : 404 error
+- Bug Fixed: Institutions>Academic>Classes>Edit: Label for Secondary Teacher is not working properly
+- Bug Fixed: Institutions>Students>List>Select Student>Overview page: The Nationality and the Identity are not visible in the overview page
+- Bug Fixed: Institution>Schedule>Interval>Edit: User getting 404 error when saving
+- Bug Fixed: Institutions>General>Institutions: Profile is stuck in progress
+- Bug Fixed: Report>Performance>Assessment: Change Assessment Period dropdown to a multi select filter page
+- Bug Fixed: Reports : Reports order are inconsistent
+- Bug Fixed: Administration > System Setup > Custom Fields > Institutions > Pages: Checkbox custom field is mandatory but user is still able to save without filling it up
+
 ### [5.3.0] - 2026-03-05
 - Implemented: Develop changes to institutions dropdown on the staff qualifications page
 - Bug Fixed: Institutions > Staff > General > Nationalities > Add: Getting 404 error when saved

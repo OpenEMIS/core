@@ -58,8 +58,15 @@ class InstitutionSurveysTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
             'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
             'recordKey' => 'institution_survey_id',
-            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
+            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers',
+                'foreignKey' => 'institution_survey_id',
+                'dependent' => true,
+                'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells',
+                'foreignKey' => 'institution_survey_id',
+                'dependent' => true,
+                'cascadeCallbacks' => true,]
+
         ]);
         $this->addBehavior('Excel', ['pages' => ['view']]);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -244,6 +251,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
         $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]); // POCOR-9105
     }
+
     //POCOR-7171:Start
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {

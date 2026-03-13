@@ -288,7 +288,7 @@ class UserBehavior extends Behavior
                     $this->_table->ControllerAction->field('mobile_number', ['type' => 'string', 'label' => __('Mobile')]);
                 }
             }
-
+                
             if ($this->_table->getRegistryAlias() != 'Security.Users') {
                 $language = I18n::getLocale();
                 if ($this->isCAv4()) {
@@ -301,6 +301,12 @@ class UserBehavior extends Behavior
                         $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
                         if (count($security_users_id) >= 1) {
                             $security_users_id = $security_users_id['user_id'];
+                            //POCOR-9603[START]
+                            if(empty($security_users_id)){
+                                $security_users_id = $model->paramsDecode($this->_table->controller->getRequest()->getAttribute('params')['pass'][1]);
+                                $security_users_id = $security_users_id['id'];
+                            }
+                            //POCOR-9603[END]
                         }
                     }
                     if ($security_users_id > 0) {
