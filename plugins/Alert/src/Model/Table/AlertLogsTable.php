@@ -48,6 +48,11 @@ class AlertLogsTable extends ControllerActionTable
             'AlertSystemUpdates' => 'alerts:system-updates',
             'StudentStatus' => 'alerts:student-status-change', // POCOR-9509
             'AlertStudentStatus' => 'alerts:student-status-change', // POCOR-9509
+            'AlertCaseEscalation' => 'alerts:case-escalation', // POCOR-9509
+            'AlertLicenseValidity' => 'alerts:license-validity', // POCOR-9509
+            'AlertLicenseRenewal' => 'alerts:license-renewal', // POCOR-9509
+            'AlertScholarshipApplication' => 'alerts:scholarship-application', // POCOR-9509
+            'AlertScholarshipDisbursement' => 'alerts:scholarship-disbursement', // POCOR-9509
         ];
 
         $commandName = $commandMap[$processName] ?? null;
@@ -531,7 +536,9 @@ class AlertLogsTable extends ControllerActionTable
 
     private function generateChecksum(?string $subject, ?string $message): string
     {
-        return Security::hash("{$subject},{$message}", 'sha256');
+        $subject = mb_strtolower($subject);
+        $message = mb_strtolower($message);
+        return hash('sha256', "{$subject},{$message}");
     }
 
     // POCOR-9509: Updated to queue alerts asynchronously

@@ -25,16 +25,6 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping();
 
-        // POCOR-9257: Webhook queue processing
-        $schedule->command('webhooks:process', ['--once'])
-            ->everyMinute()
-            ->withoutOverlapping()
-            ->onFailure(function () {
-                \Illuminate\Support\Facades\Log::error('[WebhookScheduler] Webhook queue processor failed');
-            })
-            ->onSuccess(function () {
-                // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
-            });
     }
 
     /**
