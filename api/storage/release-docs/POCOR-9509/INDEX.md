@@ -1,148 +1,104 @@
-# POCOR-9509 Release Documentation Index
+# OpenEMIS Core — Communications & Alerts: Documentation Index
 
-This release contains **three major features** for asynchronous alert and webhook processing. Each feature is independent but works best when deployed together.
+> **Branch:** POCOR-9509 · **Last updated:** 2026-03-13
 
-## Features in This Release
-
-### 1. POCOR-9509: Alert Queueing System (FOUNDATION)
-**Deploy First** - This is the core async infrastructure that other features depend on.
-
-- Async alert processing via database queue
-- Alert audit trail in permanent table
-- Threshold-based alert conditions
-- Performance: 20-50x faster than synchronous sending
-
-📖 [Read POCOR-9509-README.md](POCOR-9509-README.md)
-
-**Key Metrics:**
-- Files modified: 40+
-- New tables: 2 (alerts_queue, alert_logs)
-- Migrations required: YES
-- Performance gain: 5-10ms async vs 200-500ms sync
+This index covers all documentation for the OpenEMIS Core communications system — automated alerts, manual messaging, and the delivery infrastructure that powers both.
 
 ---
 
-### 2. POCOR-9257: Webhook Async Queueing (RECOMMENDED)
-**Deploy Second** - Converts all webhook firing to async processing.
+## What This Is
 
-- Asynchronous webhook delivery without blocking requests
-- Retry mechanism for failed deliveries
-- Webhook audit trail via webhook_logs
-- Compatible with external systems and webhooks
+OpenEMIS Core has two complementary ways to communicate with staff, students, guardians, and administrators:
 
-📖 [Read POCOR-9257-README.md](POCOR-9257-README.md)
+1. **Automated Alerts** — rules-based notifications that fire automatically when data thresholds are reached or events occur (enrolment, attendance, staff retirement, case escalation, etc.)
+2. **School Messaging** — a manual broadcast tool that lets authorised school staff compose and send free-form messages to targeted groups within their institution
 
-**Key Metrics:**
-- Files modified: 35+
-- Existing tables: Uses webhooks_queue (already exists)
-- Migrations required: NO
-- Benefits: No request blocking, retry support, visibility
+Both systems deliver via **Email** and/or **SMS**, and all sent messages are recorded in the same **Alert Logs** audit trail.
 
 ---
 
-### 3. POCOR-7554: Student Status Change Alerts (OPTIONAL)
-**Deploy Third** - Automatic alerts when student status changes.
+## Core Reference Documents
 
-- Automatic notifications on enrollment status transitions
-- Configurable recipients per school
-- Audit trail of all status changes
-- Integrates with async alert system
-
-📖 [Read POCOR-7554-README.md](POCOR-7554-README.md)
-
-**Key Metrics:**
-- Files modified: 8-10
-- New tables: 1 (student_status_changes)
-- Migrations required: YES
-- Depends on: POCOR-9509
+| Document | Description |
+|----------|-------------|
+| [README.md](README.md) | User-facing overview: alert types at a glance, recipient roles, placeholders, multiple rules concept, troubleshooting |
+| [ALERTS_GUIDE.md](ALERTS_GUIDE.md) | Technical developer reference: architecture, command inventory, dispatch paths, activation checklist, testing |
+| [thresholds.md](thresholds.md) | Complete threshold configuration reference: every field, every format, worked multi-rule strategies |
 
 ---
 
-## Deployment Order
+## Alert Type Help Files
 
-### Option A: Full Deployment (All Features)
-1. Deploy **POCOR-9509** (Alert Queueing) - Run migrations
-2. Deploy **POCOR-9257** (Webhook Queueing) - No migrations
-3. Deploy **POCOR-7554** (Student Status Alerts) - Run migrations
-4. Verify all three systems working together
+Each file covers: what the alert is, when it fires, threshold configuration, available placeholders, and 2–3 worked example rules with subject line + full message body.
 
-**Total deployment time:** ~30 minutes
-**Systems affected:** All alert/webhook functionality
+### Student Alerts
 
-### Option B: Minimal Deployment (Alerts Only)
-1. Deploy **POCOR-9509** only
-2. Skip webhooks and student status alerts for now
-3. Can add other features later
+| File | Feature Key | Trigger |
+|------|------------|---------|
+| [alerts/student-absence.md](alerts/student-absence.md) | `StudentAttendance` | Student exceeds absence day threshold |
+| [alerts/student-admission.md](alerts/student-admission.md) | `StudentAdmission` | New student admission saved |
+| [alerts/student-enrolment.md](alerts/student-enrolment.md) | `StudentEnrolment` | Student enrolment saved |
+| [alerts/student-status-change.md](alerts/student-status-change.md) | `StudentStatus` | Student status transitions (e.g. Enrolled → Withdrawn) |
 
-**Total deployment time:** ~15 minutes
-**Systems affected:** Alert processing
+### Staff Alerts
 
-### Option C: Phased Deployment (One at a Time)
-- Day 1: Deploy POCOR-9509, monitor for 24 hours
-- Day 2: Deploy POCOR-9257, verify webhook queueing
-- Day 3: Deploy POCOR-7554, configure alert rules
+| File | Feature Key | Trigger |
+|------|------------|---------|
+| [alerts/retirement-warning.md](alerts/retirement-warning.md) | `RetirementWarning` | Staff approaching retirement date |
+| [alerts/staff-employment-end.md](alerts/staff-employment-end.md) | `StaffEmployment` | Staff employment contract end approaching |
+| [alerts/staff-leave-end.md](alerts/staff-leave-end.md) | `StaffLeave` | Staff leave end date approaching |
+| [alerts/staff-type.md](alerts/staff-type.md) | `StaffType` | Staff contract type review date approaching |
+| [alerts/license-validity.md](alerts/license-validity.md) | `LicenseValidity` | Professional license expiring or expired |
+| [alerts/license-renewal.md](alerts/license-renewal.md) | `LicenseRenewal` | License renewal CPD hours requirement not met |
 
-**Recommended for production**
+### Institutional / Administrative Alerts
 
----
+| File | Feature Key | Trigger |
+|------|------------|---------|
+| [alerts/case-escalation.md](alerts/case-escalation.md) | `CaseEscalation` | Institution case open longer than threshold |
+| [alerts/system-updates.md](alerts/system-updates.md) | `SystemUpdates` | System update notifications (daily) |
 
-## Quick Reference: What Gets Changed
+### Scholarship Alerts
 
-| Feature | Tables Modified | New Tables | Migrations | Risk Level |
-|---------|-----------------|-----------|-----------|-----------|
-| POCOR-9509 | 40+ | 2 | YES | Medium |
-| POCOR-9257 | 35+ | 0 | NO | Low |
-| POCOR-7554 | 8-10 | 1 | YES | Low |
+| File | Feature Key | Trigger |
+|------|------------|---------|
+| [alerts/scholarship-application.md](alerts/scholarship-application.md) | `ScholarshipApplication` | Scholarship application close date approaching |
+| [alerts/scholarship-disbursement.md](alerts/scholarship-disbursement.md) | `ScholarshipDisbursement` | Scholarship disbursement date approaching or passed |
 
----
+### Not Implemented
 
-## Rollback Procedure
-
-**If any feature causes issues:**
-
-1. Identify the problem feature from logs
-2. Revert the specific commits for that feature
-3. Restart services: `docker restart oe-poe-application-1`
-4. Data is preserved - all audit tables kept intact
-
-**Individual rollback examples:**
-```bash
-# Revert just webhooks (POCOR-9257)
-git revert <commit-hash>
-
-# Revert just alerts (POCOR-9509)
-git revert <commit-hash>
-
-# Revert just student status (POCOR-7554)
-git revert <commit-hash>
-```
+| File | Feature Key | Status |
+|------|------------|--------|
+| [alerts/staff-attendance.md](alerts/staff-attendance.md) | `StaffAttendance` | Locked — no shell ever implemented |
 
 ---
 
-## Monitoring Commands
+## School Messaging
 
-```bash
-# Check alert queue status
-cd /path/to/emis/core/api
-php artisan tinker
->>> DB::table('alerts_queue')->where('status', 0)->count()
-
-# Check webhook queue status
->>> DB::table('webhooks_queue')->where('status', 0)->count()
->>> exit()
-
-# Monitor logs
-tail -f /path/to/emis/core/logs/hin-error.log
-tail -f /path/to/emis/core/api/storage/logs/laravel.log
-```
+| File | Description |
+|------|-------------|
+| [alerts/school-messaging.md](alerts/school-messaging.md) | Manual broadcast messaging tool: recipient levels, compose workflow, Draft → Sent lifecycle, delivery process, failure reasons |
 
 ---
 
-## Support & Questions
+## PDF Manual
 
-- **Alert issues:** Check `logs/alert_*.log` and `api/storage/logs/laravel.log`
-- **Webhook issues:** Check `logs/hin-error.log` and `api/storage/logs/laravel.log`
-- **Student status issues:** Check `logs/hin-error.log` for status change triggers
-- **Database issues:** Check Laravel migrations status with `php artisan migrate:status`
+| File | Description |
+|------|-------------|
+| [OpenEMIS-Core-Alerts-Guide.pdf](OpenEMIS-Core-Alerts-Guide.pdf) | Comprehensive system administrator / developer guide (generated from combined.md) |
 
-For detailed troubleshooting, see the individual feature READMEs above.
+---
+
+## Screenshots
+
+Real screenshots from a live OpenEMIS Core instance, used in the PDF manual.
+
+| File | Content |
+|------|---------|
+| [screenshots/alerts-list.png](screenshots/alerts-list.png) | Administration → Communications → Alerts (all 15 alert types) |
+| [screenshots/alert-rules-list.png](screenshots/alert-rules-list.png) | Communications → Alert Rules list |
+| [screenshots/alert-rule-add.png](screenshots/alert-rule-add.png) | Alert Rules → Add form |
+| [screenshots/alert-logs.png](screenshots/alert-logs.png) | Communications → Logs (delivery audit trail) |
+| [screenshots/alert-queue.png](screenshots/alert-queue.png) | Communications → Queue |
+| [screenshots/messaging-list.png](screenshots/messaging-list.png) | Institution → Messaging index (Avory Primary School) |
+| [screenshots/messaging-compose.png](screenshots/messaging-compose.png) | Institution → Messaging → Add (compose form) |
