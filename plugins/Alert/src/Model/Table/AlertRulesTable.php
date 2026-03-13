@@ -209,13 +209,7 @@ class AlertRulesTable extends ControllerActionTable
     {
         // POCOR-9509: Exclude alerts without Laravel command implementations
         $nonImplemented = [
-            'CaseEscalation',
-            'LicenseRenewal',
-            'LicenseValidity',
-            'ScholarshipApplication',
-            'ScholarshipDisbursement',
             'StaffAttendance',
-            'StudentStatus',
         ];
 
         $featureOptions = [];

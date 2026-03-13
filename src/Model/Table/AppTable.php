@@ -257,44 +257,37 @@ class AppTable extends Table
      * @return [type]             [description]
      * POCOR-9415, POCOR-9510 more error-save
      */
-    public function formatDateTime($dateInput): string
+    private function formatDateTime($dateInput, string $inputFormat = 'Y-m-d H:i:s', string $displayFormat = 'd M Y'): string
     {
-        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-
-        $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
-        $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
-
-        $displayFormat = $dateFormat . ' - ' . $timeFormat;
-        $inputFormat   = $displayFormat;
-
         try {
-            // Case 1: Already a DateTime object
             if ($dateInput instanceof \DateTimeInterface) {
                 return FrozenTime::instance($dateInput)->format($displayFormat);
             }
 
-            // Case 2: String input
             if (is_string($dateInput) && trim($dateInput) !== '') {
-
-                // Try parsing EXACT expected format first
-                $date = FrozenTime::createFromFormat(
-                    $inputFormat,
-                    $dateInput
-                );
-
+                // Try the expected format first
+                $date = FrozenTime::createFromFormat($inputFormat, $dateInput);
                 if ($date !== false) {
                     return $date->format($displayFormat);
                 }
 
-                // Fallback: try ISO / DB formats
+                // Try common alternative formats
+                $formats = ['Y-m-d', 'd/m/Y', 'm/d/Y', 'Ymd', 'd M Y', 'Y-m-d H:i:s', 'Y-m-d H:i'];
+                foreach ($formats as $format) {
+                    $date = FrozenTime::createFromFormat($format, $dateInput);
+                    if ($date !== false) {
+                        return $date->format($displayFormat);
+                    }
+                }
+
+                // Last resort: let PHP guess
                 return (new FrozenTime($dateInput))->format($displayFormat);
             }
-
         } catch (\Throwable $e) {
-            Log::error(
-                'formatDateTime error: ' . $e->getMessage(),
-                ['input' => $dateInput]
-            );
+            Log::error('formatDateTime error: ' . $e->getMessage(), [
+                'input' => $dateInput,
+                'expected_format' => $inputFormat
+            ]);
         }
 
         return '';
