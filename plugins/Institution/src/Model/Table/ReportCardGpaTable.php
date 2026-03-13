@@ -909,7 +909,8 @@ class ReportCardGpaTable extends ControllerActionTable
                     'student_id' => $entity->student_id,
                     'education_grade_id' => $entity->education_grade_id,
                     'institution_id' => $institutionId,
-                    'academic_period_id' => $entity->academic_period_id
+                    'academic_period_id' => $entity->academic_period_id,
+                    'education_grades_gpa_id' => $entity->education_grades_gpa_id
                 ]);
 
             //POCOR-8699

@@ -419,9 +419,21 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
-        $where[$this->aliasField('institution_class_id')] = $selectedClass;
+        //POCOR-9592[START]
+        // When "All Classes" is selected, filter by IN (class ids); do not use institution_class_id = 'all' (invalid for integer column, can cause redirect/error)
+        if ($selectedClass === 'all') {
+            $allClassIds = array_keys(array_diff_key($classOptions, ['-1' => 1, 'all' => 1]));
+            $allClassIds = array_filter($allClassIds, 'is_numeric');
+            if (!empty($allClassIds)) {
+                $where[$this->aliasField('institution_class_id') . ' IN'] = $allClassIds;
+            } else {
+                $where[$this->aliasField('institution_class_id')] = -1; // no classes, show nothing
+            }
+        } else {
+            $where[$this->aliasField('institution_class_id')] = $selectedClass;
+        }
+        //POCOR-9592[END]
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
-
         //POCOR-7212 starts
         if (!empty($educationGradeByReportCardId)) {
             $where[$this->aliasField('education_grade_id')] = $educationGradeByReportCardId;

@@ -17,7 +17,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function initialize(array $config): void
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::initialize START config=' . json_encode($config)); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::initialize START config=' . json_encode($config)); //[TEMP-LOG]
         //POCOR-9584: end
 
         $this->setTable('import_mapping');
@@ -43,7 +43,7 @@ class ImportOutcomeResultsTable extends AppTable
         $this->OutcomeGradingTypes = TableRegistry::getTableLocator()->get('Outcome.OutcomeGradingTypes');
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::initialize END tables registered OK'); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::initialize END tables registered OK'); //[TEMP-LOG]
         //POCOR-9584: end
     }
 
@@ -77,10 +77,10 @@ class ImportOutcomeResultsTable extends AppTable
     public function addOnInitialize(EventInterface $event, Entity $entity)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::addOnInitialize START entity=' . json_encode($entity->toArray())); //[TEMP-LOG]
-        // Log::debug('@ImportOutcomeResultsTable::addOnInitialize queryBefore=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
-        // Log::debug('@ImportOutcomeResultsTable::addOnInitialize postData=' . json_encode($this->request->getData())); //[TEMP-LOG]
-        // Log::debug('@ImportOutcomeResultsTable::addOnInitialize routeParams=' . json_encode($this->request->getAttribute('params'))); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addOnInitialize START entity=' . json_encode($entity->toArray())); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addOnInitialize queryBefore=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addOnInitialize postData=' . json_encode($this->request->getData())); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addOnInitialize routeParams=' . json_encode($this->request->getAttribute('params'))); //[TEMP-LOG]
         //POCOR-9584: end
 
         $request = $this->request;
@@ -98,7 +98,7 @@ class ImportOutcomeResultsTable extends AppTable
         $this->request = $request;
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::addOnInitialize END queryAfter=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addOnInitialize END queryAfter=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
         //POCOR-9584: end
     }
 
@@ -106,10 +106,10 @@ class ImportOutcomeResultsTable extends AppTable
     public function addAfterAction(EventInterface $event, Entity $entity)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::addAfterAction START entity_submit=' . json_encode($entity->submit)); //[TEMP-LOG]
-        // Log::debug('@ImportOutcomeResultsTable::addAfterAction postData=' . json_encode($this->request->getData())); //[TEMP-LOG]
-        // Log::debug('@ImportOutcomeResultsTable::addAfterAction queryParams=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
-        // Log::debug('@ImportOutcomeResultsTable::addAfterAction alias=' . $this->getAlias()); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addAfterAction START entity_submit=' . json_encode($entity->submit)); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addAfterAction postData=' . json_encode($this->request->getData())); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addAfterAction queryParams=' . json_encode($this->request->getQueryParams())); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addAfterAction alias=' . $this->getAlias()); //[TEMP-LOG]
         //POCOR-9584: end
 
         //POCOR-9584: start - renamed dependency map keys to new _id suffixed field names
@@ -135,7 +135,7 @@ class ImportOutcomeResultsTable extends AppTable
         $currentFieldName = strtolower(str_replace("change", "", $entity->submit));
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::addAfterAction currentFieldName=' . json_encode($currentFieldName)); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addAfterAction currentFieldName=' . json_encode($currentFieldName)); //[TEMP-LOG]
         //POCOR-9584: end
 
         if (isset($this->request->getData()[$this->getAlias()])) {
@@ -143,7 +143,7 @@ class ImportOutcomeResultsTable extends AppTable
             $aryRequestData = $this->request->getData()[$this->getAlias()];
 
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultsTable::addAfterAction aryRequestData=' . json_encode($aryRequestData)); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultsTable::addAfterAction aryRequestData=' . json_encode($aryRequestData)); //[TEMP-LOG]
             //POCOR-9584: end
 
             //POCOR-9584: start - CakePHP5 immutable request pattern (was mutating getQuery property — invalid in CakePHP5)
@@ -168,7 +168,7 @@ class ImportOutcomeResultsTable extends AppTable
                     $aryDependencies = $this->dependency[$requestData];
                     foreach ($aryDependencies as $dependency) {
                         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-                        // Log::debug('@ImportOutcomeResultsTable::addAfterAction making visible dependency=' . $dependency . ' because requestData=' . $requestData . ' value=' . json_encode($value)); //[TEMP-LOG]
+                        //// Log::debug('@ImportOutcomeResultsTable::addAfterAction making visible dependency=' . $dependency . ' because requestData=' . $requestData . ' value=' . json_encode($value)); //[TEMP-LOG]
                         //POCOR-9584: end
                         //POCOR-9584: start - merge POST data into existing URL params (preserves academic_period_id etc.)
                         $requestDataArray = $this->request->getData()[$this->getAlias()];
@@ -182,12 +182,12 @@ class ImportOutcomeResultsTable extends AppTable
             }
         } else {
             //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-            // Log::debug('@ImportOutcomeResultsTable::addAfterAction no postData for alias ' . $this->getAlias() . ' - skipping dependency loop'); //[TEMP-LOG]
+            //// Log::debug('@ImportOutcomeResultsTable::addAfterAction no postData for alias ' . $this->getAlias() . ' - skipping dependency loop'); //[TEMP-LOG]
             //POCOR-9584: end
         }
 
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::addAfterAction END'); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::addAfterAction END'); //[TEMP-LOG]
         //POCOR-9584: end
     }
 
@@ -195,7 +195,7 @@ class ImportOutcomeResultsTable extends AppTable
     public function onUpdateFieldEducationSubjectId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportOutcomeResultsTable::onUpdateFieldEducationSubjectId action=' . $action); //[TEMP-LOG]
+        //// Log::debug('@ImportOutcomeResultsTable::onUpdateFieldEducationSubjectId action=' . $action); //[TEMP-LOG]
         //POCOR-9584: end
         if ($action == 'add') {
             $alias = $this->getAlias();
