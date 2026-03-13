@@ -65,7 +65,12 @@ class AlertsQueueTable extends ControllerActionTable
         $channelOptions = $this->getChannelOptions();
         $alertTypeOptions = $this->getAlertTypeOptions();
 
+        // [TEMP-LOG] POCOR-9509: Debug status selection
+        error_log('[POCOR-9509] Queue statusOptions: ' . print_r($statusOptions, true));
+        error_log('[POCOR-9509] Queue getQuery status: ' . $this->request->getQuery('status'));
+
         $selectedStatus = $this->queryString('status', $statusOptions);
+        error_log('[POCOR-9509] Queue selectedStatus: ' . $selectedStatus);
         $selectedChannel = $this->queryString('channel', $channelOptions);
         $selectedAlertType = $this->queryString('alert_type', $alertTypeOptions);
 
@@ -117,13 +122,13 @@ class AlertsQueueTable extends ControllerActionTable
         $alertType = $this->request->getQuery('alert_type');
 
         if ($status !== null && $status !== '' && $status !== 'all') {
-            $query->where(['status' => $status]);
+            $query->where([$this->aliasField('status') => $status]);
         }
         if ($channel !== null && $channel !== '' && $channel !== 'all') {
-            $query->where(['channel' => $channel]);
+            $query->where([$this->aliasField('channel') => $channel]);
         }
         if ($alertType !== null && $alertType !== '' && $alertType !== 'all') {
-            $query->where(['alert_type' => $alertType]);
+            $query->where([$this->aliasField('alert_type') => $alertType]);
         }
     }
 
@@ -195,10 +200,7 @@ class AlertsQueueTable extends ControllerActionTable
 
     public function getStatusOptions(): array
     {
-        return [
-            'all' => __('All Statuses'),
-            $this->statusTypes
-        ];
+        return array_merge(['all' => __('All Statuses')], $this->statusTypes);
     }
 
     public function getChannelOptions(): array

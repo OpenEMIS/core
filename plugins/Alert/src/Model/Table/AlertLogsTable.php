@@ -729,7 +729,11 @@ class AlertLogsTable extends ControllerActionTable
         // POCOR-9509: Add status and channel filter options
         $statusOptions = $this->getStatusOptions();
         $channelOptions = $this->getChannelOptions();
+        // [TEMP-LOG] POCOR-9509: Debug status selection
+        error_log('[POCOR-9509] statusOptions: ' . print_r($statusOptions, true));
+        error_log('[POCOR-9509] getQuery status: ' . $this->request->getQuery('status'));
         $selectedStatus = $this->queryString('status', $statusOptions);
+        error_log('[POCOR-9509] selectedStatus after queryString: ' . $selectedStatus);
         $selectedChannel = $this->queryString('channel', $channelOptions);
 
         $extra['elements']['control']['data'] = array_merge(
@@ -791,7 +795,7 @@ class AlertLogsTable extends ControllerActionTable
         $featureOptions = $this->getFeatureOptions();
         $selectedFeature = $this->request->getQuery('feature');
         if ($selectedFeature !== null && $selectedFeature !== '' && $selectedFeature !== 'all') {
-            $query->where(['feature' => $selectedFeature]);
+            $query->where([$this->aliasField('feature') => $selectedFeature]);
         }
 
         // POCOR-9509: Apply status and channel filters
@@ -799,10 +803,10 @@ class AlertLogsTable extends ControllerActionTable
         $channel = $this->request->getQuery('channel');
 
         if ($status !== null && $status !== '' && $status !== 'all') {
-            $query->where(['status' => $status]);
+            $query->where([$this->aliasField('status') => $status]);
         }
         if ($channel !== null && $channel !== '' && $channel !== 'all') {
-            $query->where(['method' => $channel]);
+            $query->where([$this->aliasField('method') => $channel]);
         }
     }
 
