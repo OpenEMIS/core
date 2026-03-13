@@ -108,6 +108,43 @@ class AlertsQueueTable extends ControllerActionTable
             'options' => [],
             'order' => 4
         ];
+        //POCOR-9257: Add Process Queue toolbar button
+        $processButton = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-play"></i> Process Queue',
+            'class' => 'btn btn-primary',
+            'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'processQueue'],
+            'attr' => [
+                'title' => 'Manually process pending alerts',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom'
+            ],
+            'order' => 1
+        ];
+        $toolbarButton = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-refresh"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Synchronisation')
+            ],
+            'url' => [
+                'plugin' => 'Alert', 'controller' => 'Alerts',
+                'action' => 'processQueue',
+
+            ]
+        ];
+        // Properly modify the ArrayObject toolbarButtons
+//        dd($extra['toolbarButtons']);
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarButtonsArray['process'] = $processButton;
+        $toolbarButtonsArray['access'] = $toolbarButton;
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra): void

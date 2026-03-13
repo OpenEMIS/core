@@ -4,6 +4,7 @@ namespace Alert\Controller;
 use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\EventInterface;
+use Cake\Log\Log;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 
@@ -87,5 +88,26 @@ class AlertsController extends AppController
         }
 
         return $this->redirect($this->referer());
+    }
+
+    public function processQueue()
+    {
+        //POCOR-9509: Execute Laravel artisan command to process webhook queue
+        $apiPath = ROOT . DS . 'api';
+        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:process 2>&1';
+
+        exec($command, $output, $returnVar);
+
+        $outputText = implode("\n", $output);
+
+        if ($returnVar === 0) {
+            $this->Alert->success(__('Alert queue processed successfully.'), ['type' => 'string', 'reset' => true]);
+
+        } else {
+            $this->Alert->error(__('Failed to process alert queue. Command output: ') . $outputText, ['type' => 'string', 'reset' => true]);
+            Log::error('[Alerts] Queue processing failed with exit code ' . $returnVar . '. Output: ' . $outputText);
+        }
+
+        return $this->redirect(['action' => 'Queue']);
     }
 }

@@ -261,6 +261,11 @@ class CheckAndQueueAlerts extends Command
                 'AlertStaffLeave' => 'alerts:staff-leave',
                 'AlertSystemUpdates' => 'alerts:system-updates',
                 'AlertStaffType' => 'alerts:staff-type', // POCOR-9509: New scheduled alert
+                'AlertCaseEscalation' => 'alerts:case-escalation', // POCOR-9509: Scheduled, runs against open cases
+                'AlertLicenseValidity' => 'alerts:license-validity', // POCOR-9509: Scheduled, expiring licenses
+                'AlertLicenseRenewal' => 'alerts:license-renewal', // POCOR-9509: Scheduled, insufficient training hours
+                'AlertScholarshipApplication' => 'alerts:scholarship-application', // POCOR-9509: Scheduled, closing scholarships
+                'AlertScholarshipDisbursement' => 'alerts:scholarship-disbursement', // POCOR-9509: Scheduled, upcoming disbursements
                 // Event-based commands (require specific parameters, not scheduled):
                 // 'AlertStudentAbsence' => 'alerts:student-absence',
                 // 'AlertStudentAdmission' => 'alerts:student-admission',

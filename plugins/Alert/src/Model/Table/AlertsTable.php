@@ -22,15 +22,11 @@ class AlertsTable extends ControllerActionTable
     // POCOR-9509: Alert types without Laravel command implementations
     // These alerts cannot be sent, so they should only have "Never" frequency
     // Values are the 'name' field from alerts table (feature names), NOT process_name
+    //POCOR-9509: start - updated as new Laravel commands are implemented
     public const NON_IMPLEMENTED_ALERTS = [
-        'CaseEscalation',
-        'LicenseRenewal',
-        'LicenseValidity',
-        'ScholarshipApplication',
-        'ScholarshipDisbursement',
-        'StaffAttendance',
-        'StudentStatus',
+        'StaffAttendance', // POCOR-9509: No shell exists, no Laravel command
     ];
+    //POCOR-9509: end
 
     private $statusTypes = [];
 

@@ -50,7 +50,7 @@ class ProcessAlertsQueue extends Command
             $recipient = $alert->recipient;
             $subject = $alert->subject ?? $alert->message_body;
             $message = $alert->message_body;
-            $checksum = self::generateChecksum($subject, $message);
+            $checksum = self::generateChecksum($subject . $recipient . $alertType . $channel, $message);
             $existingRecord = DB::table('alert_logs')
                 ->where('feature', $alertType)
                 ->where('method', $channel)
@@ -148,6 +148,8 @@ class ProcessAlertsQueue extends Command
 
     private static function generateChecksum(?string $subject, ?string $message): string
     {
+        $subject = mb_strtolower($subject);
+        $message = mb_strtolower($message);
         return hash('sha256', "{$subject},{$message}");
     }
 

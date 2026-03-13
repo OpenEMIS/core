@@ -131,7 +131,11 @@ class AlertsQueueTable extends Table
 
         return false;
     }
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
+    {
 
+
+    }
     /**
      * Queue an email alert
      *
