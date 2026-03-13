@@ -245,7 +245,7 @@ class ScholarshipApplicationsTable extends AppTable  {
             'conditions' => [
                 'qualification_titles.id = staff_qualifications.qualification_title_id'
             ]
-        ];
+        ]; //POCOR-8151
 
         $join['qualification_levels'] = [
             'type' => 'left',
@@ -253,7 +253,7 @@ class ScholarshipApplicationsTable extends AppTable  {
             'conditions' => [
                 'qualification_levels.id = qualification_titles.qualification_level_id'
             ]
-        ];
+        ];//POCOR-8151
 
 
         $query->select([
