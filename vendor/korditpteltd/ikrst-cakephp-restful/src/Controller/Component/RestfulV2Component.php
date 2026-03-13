@@ -54,11 +54,12 @@ class RestfulV2Component extends Component implements RestfulInterface
             $request->getAttribute('params')['_ext'] = 'json';
         }
 
-        if (isset($request->getAttribute('params')['model'])) {
-            $tableAlias = $request->getAttribute('params')['model'];
+        $params = $request->getAttribute('params') ?? [];
+        if (isset($params['model'])) {
+            $tableAlias = $params['model'];
             $model = $this->instantiateModel($tableAlias);
-            // echo "<pre>";print_r($model); die;
-            if ($model != false) {
+            // Only set model when we got a Table instance (instantiateModel can return false or Exception)
+            if ($model instanceof Table) {
                 $this->model = $model;
                 // Event to get allowed action and allowed table to be accessible via restful
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
@@ -70,7 +71,12 @@ class RestfulV2Component extends Component implements RestfulInterface
                 $user = $controller->getAuthorizedUser();
                 $this->extra['user'] = $user;
                 $this->initRequestQueries($model);
+            } else {
+                $this->_outputError(__('Requested Plugin-Model does not exist or is not accessible.'));
             }
+        } else {
+            // No model in URL (e.g. wrong route or missing segment); ensure client gets structured error instead of nulls
+            $this->_outputError(__('Model parameter is required.'));
         }
     }
 
@@ -212,6 +218,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     public function index()
     {
         if (is_null($this->model)) {
+            $this->_outputError(__('Requested Plugin-Model does not exist or is not accessible.'));
             return;
         }
         $controller = $this->getController();
@@ -992,20 +999,18 @@ class RestfulV2Component extends Component implements RestfulInterface
                 try {
                     $target = TableRegistry::get($model);
                 } catch (\Exception $e) {
-                    return $e;
+                    return false;
                 }
             }
         } else {
-            try{
-                // $model = str_replace('.', '_', $model);
-                //  echo "<pre>";print_r($model);die;
+            try {
                 $target = TableRegistry::get($model);
-            }catch(Exception $e){
-                return $e;
+            } catch (Exception $e) {
+                return false;
             }
         }
         try {
-            $target->find('all')->limit('1');
+            $target->find('all')->limit(1);
             return $target;
         } catch (Exception $e) {
             $this->_outputError();
@@ -1015,12 +1020,14 @@ class RestfulV2Component extends Component implements RestfulInterface
 
     private function _outputError($message = 'Requested Plugin-Model does not exists')
     {
-        $model = str_replace('-', '.', $this->getController()->getRequest()->getAttribute('params')['model']);
+        $params = $this->getController()->getRequest()->getAttribute('params') ?? [];
+        $modelParam = $params['model'] ?? null;
+        $model = $modelParam !== null ? str_replace('-', '.', $modelParam) : null;
         $this->controller->set([
             'model' => $model,
             'error' => $message,
-            'request_method' => $this->getController()->getRequest()->getMethod(),
-            'action' => $this->getController()->getRequest()->getAttribute('params')['action'],
+            'request_method' => $this->getController()->getRequest()->getMethod() ?? null,
+            'action' => $params['action'] ?? null,
             '_serialize' => ['request_method', 'action', 'model', 'error']
         ]);
     }
