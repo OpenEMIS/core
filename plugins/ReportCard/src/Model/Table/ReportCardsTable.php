@@ -798,12 +798,16 @@ class ReportCardsTable extends ControllerActionTable
          $institutionsPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPosition');//POCOR-8093
          $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-         $where = [
+         //POCOR-9598: start - getPrincipalRoleId() returns an array of IDs; use IN() so CakePHP doesn't try to cast array as string
+         $staffPosnCondition = is_array($staffPosnId)
+             ? ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId]
+             : ['InstitutionPositions.staff_position_title_id' => $staffPosnId];
+         //POCOR-9598: end
+         $where = array_merge([
              $Staff->aliasField('institution_id') => $institutionId,
-             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
              'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
              $Staff->aliasField('staff_status_id') => $assignedStatus
-         ];
+         ], $staffPosnCondition);
 
          $staffQuery = $Staff
              ->find()

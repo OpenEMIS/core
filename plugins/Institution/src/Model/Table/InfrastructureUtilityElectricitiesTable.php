@@ -41,6 +41,10 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         $modelAlias = 'InfrastructureUtilityElectricities';
         $userType = '';
         $this->controller->changeUtilitiesHeader($this, $modelAlias, $userType);
+        //POCOR-9475 
+        $this->field('start_date',['visible' => false]);
+        $this->field('end_date',['visible' => false]);
+        $this->field('is_current',['visible' => false]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -121,7 +125,7 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+        $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'], $this->aliasField('is_current') => 1])
         ->orderDesc($this->aliasField('created'));
     }
 
@@ -238,7 +242,6 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-//print_r($query->sql()); exit;
         $sheetData = $settings['sheet']['sheetData'];
         $infrastructureType = $sheetData['infrastructure_tabs_type'];
         $academicPeriod = $this->request->getQuery('academic_period_id');
@@ -301,4 +304,128 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
 
         }
     }
+
+    //POCOR-9475
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        //Expire old records for same institution + academic year
+        $this->updateAll(
+            ['is_current' => false],
+            [
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id
+            ]
+        );
+
+        //Set dates from academic period
+        $academicPeriods = TableRegistry::getTableLocator()
+            ->get('AcademicPeriod.AcademicPeriods');
+
+        $period = $academicPeriods->find()
+            ->select(['start_date', 'end_date'])
+            ->where(['id' => $entity->academic_period_id])
+            ->first();
+
+        if ($period) {
+            $entity->start_date = $period->start_date;
+            $entity->end_date   = $period->end_date;
+        }
+
+        //Always make new record current
+        $entity->is_current = true;
+
+    }
+
+    //POCOR-9475
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            return;
+        }
+
+        //Store original ID BEFORE unsetting
+        $originalId = $entity->id;
+
+        //Expire previous current record for that institution + academic year
+        $this->updateAll(
+            ['is_current' => false],
+            [
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id
+            ]
+        );
+
+        //Convert EDIT into INSERT
+        $entity->setNew(true);
+        $entity->unset('id');
+
+        //Set academic period dates
+        $academicPeriods = TableRegistry::getTableLocator()
+            ->get('AcademicPeriod.AcademicPeriods');
+
+        $period = $academicPeriods->find()
+            ->select(['start_date', 'end_date'])
+            ->where(['id' => $entity->academic_period_id])
+            ->first();
+
+        if ($period) {
+            $entity->start_date = $period->start_date;
+            $entity->end_date   = $period->end_date;
+        }
+
+        //Always mark new record current
+        $entity->is_current = true;
+    }
+
+    //POCOR-9475
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        // Soft delete: mark record inactive
+        $this->updateAll(
+            ['is_current' => 0],
+            ['id' => $entity->id]
+        );
+
+        // Stop actual DELETE
+        $event->stopPropagation();
+        $event->setResult(false);
+
+        $this->Alert->success(
+            __('Record has been deactivated successfully.'),
+            ['type' => 'string', 'reset' => true]
+        );
+
+        return false;
+    }
+
+    //POCOR-9475
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        if (isset($buttons['view'])) {
+            $queryString = $this->getQueryString();
+            $institutionId  = $queryString['institution_id'];
+            $recordId  = $entity->id;
+            $queryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId, 'record_id' => $recordId]);
+            $icon = '<i class="fa fa-history"></i>';
+            $buttons['history'] = $buttons['view'];
+            $buttons['history']['label'] = $icon . __('History');
+            $buttons['history']['url']['plugin'] = 'Institution';
+            $buttons['history']['url']['controller'] = 'Institutions';
+            $buttons['history']['url']['action'] = 'InfrastructureElectricitiesHistory';
+            $buttons['history']['url'][0] = 'index';
+            $buttons['history']['url'][1] = $queryString;
+        }
+            
+        return $buttons;
+    }
+
+    //POCOR-9475
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+
+        return $this->controller->redirect($this->url('index'));
+        
+    }
+
 }
