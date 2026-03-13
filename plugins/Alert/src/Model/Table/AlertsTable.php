@@ -19,6 +19,19 @@ class AlertsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    // POCOR-9509: Alert types without Laravel command implementations
+    // These alerts cannot be sent, so they should only have "Never" frequency
+    // Values are the 'name' field from alerts table (feature names), NOT process_name
+    public const NON_IMPLEMENTED_ALERTS = [
+        'CaseEscalation',
+        'LicenseRenewal',
+        'LicenseValidity',
+        'ScholarshipApplication',
+        'ScholarshipDisbursement',
+        'StaffAttendance',
+        'StudentStatus',
+    ];
+
     private $statusTypes = [];
 
     public function initialize(array $config): void
@@ -382,7 +395,12 @@ class AlertsTable extends ControllerActionTable
             'AlertStudentStatus'
         ];
 
-        if (in_array($entity->process_name, $oneTimeProcesses, true)) {
+        // POCOR-9509: Non-implemented alerts can only be "Never"
+        if (in_array($entity->process_name, self::NON_IMPLEMENTED_ALERTS, true)) {
+            $freqOptions = [
+                "Never" => __("Never")
+            ];
+        } elseif (in_array($entity->process_name, $oneTimeProcesses, true)) {
             $freqOptions = [
                 "Never" => __("Never"), // POCOR-8286
                 "Once" => __("Once")

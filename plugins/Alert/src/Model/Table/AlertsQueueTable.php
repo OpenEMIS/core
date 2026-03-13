@@ -65,12 +65,7 @@ class AlertsQueueTable extends ControllerActionTable
         $channelOptions = $this->getChannelOptions();
         $alertTypeOptions = $this->getAlertTypeOptions();
 
-        // [TEMP-LOG] POCOR-9509: Debug status selection
-        error_log('[POCOR-9509] Queue statusOptions: ' . print_r($statusOptions, true));
-        error_log('[POCOR-9509] Queue getQuery status: ' . $this->request->getQuery('status'));
-
         $selectedStatus = $this->queryString('status', $statusOptions);
-        error_log('[POCOR-9509] Queue selectedStatus: ' . $selectedStatus);
         $selectedChannel = $this->queryString('channel', $channelOptions);
         $selectedAlertType = $this->queryString('alert_type', $alertTypeOptions);
 

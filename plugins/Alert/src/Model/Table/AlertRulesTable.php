@@ -207,13 +207,26 @@ class AlertRulesTable extends ControllerActionTable
 
     public function getFeatureOptions()
     {
+        // POCOR-9509: Exclude alerts without Laravel command implementations
+        $nonImplemented = [
+            'CaseEscalation',
+            'LicenseRenewal',
+            'LicenseValidity',
+            'ScholarshipApplication',
+            'ScholarshipDisbursement',
+            'StaffAttendance',
+            'StudentStatus',
+        ];
+
         $featureOptions = [];
         foreach ($this->alertTypeFeatures as $key => $obj) {
+            if (in_array($obj['feature'], $nonImplemented, true)) {
+                continue;
+            }
             $featureOptions[$obj['feature']] = __(Inflector::humanize(Inflector::underscore($obj['feature'])));
         }
 
         ksort($featureOptions);
-
         return $featureOptions;
     }
 

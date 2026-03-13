@@ -729,11 +729,7 @@ class AlertLogsTable extends ControllerActionTable
         // POCOR-9509: Add status and channel filter options
         $statusOptions = $this->getStatusOptions();
         $channelOptions = $this->getChannelOptions();
-        // [TEMP-LOG] POCOR-9509: Debug status selection
-        error_log('[POCOR-9509] statusOptions: ' . print_r($statusOptions, true));
-        error_log('[POCOR-9509] getQuery status: ' . $this->request->getQuery('status'));
         $selectedStatus = $this->queryString('status', $statusOptions);
-        error_log('[POCOR-9509] selectedStatus after queryString: ' . $selectedStatus);
         $selectedChannel = $this->queryString('channel', $channelOptions);
 
         $extra['elements']['control']['data'] = array_merge(
