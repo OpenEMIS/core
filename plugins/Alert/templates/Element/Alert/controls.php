@@ -20,7 +20,8 @@
                         'options' => $featureOptions,
                         'default' => $selectedFeature ?? null,
                         'url' => $baseUrl,
-                        'data-named-key' => 'feature'
+                        'data-named-key' => 'feature',
+                        'data-named-group' => 'status,channel'
                     ]);
                 }
 
@@ -32,7 +33,8 @@
                         'options' => $alertTypeOptions,
                         'default' => $selectedAlertType ?? null,
                         'url' => $baseUrl,
-                        'data-named-key' => 'alert_type'
+                        'data-named-key' => 'alert_type',
+                        'data-named-group' => 'status,channel'
                     ]);
                 }
 
@@ -44,7 +46,8 @@
                         'options' => $statusOptions,
                         'default' => $selectedStatus ?? null,
                         'url' => $baseUrl,
-                        'data-named-key' => 'status'
+                        'data-named-key' => 'status',
+                        'data-named-group' => 'feature,channel,alert_type'
                     ]);
                 }
 
@@ -56,7 +59,8 @@
                         'options' => $channelOptions,
                         'default' => $selectedChannel ?? null,
                         'url' => $baseUrl,
-                        'data-named-key' => 'channel'
+                        'data-named-key' => 'channel',
+                        'data-named-group' => 'feature,status,alert_type'
                     ]);
                 }
             ?>
