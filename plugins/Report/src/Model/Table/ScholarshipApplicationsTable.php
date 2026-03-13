@@ -115,13 +115,13 @@ class ScholarshipApplicationsTable extends AppTable  {
                 'scholarship_institution_choice_statuses.id = scholarship_application_institution_choices.scholarship_institution_choice_status_id'
             ]
         ];
-        $join['qualification_levels'] = [
+        /*$join['qualification_levels'] = [
             'type' => 'left',
             'table' => "qualification_levels",
             'conditions' => [
                 'qualification_levels.id = scholarship_application_institution_choices.qualification_level_id'
             ]
-        ];
+        ];*/
         $join['scholarship_institution_choice_types'] = [
             'type' => 'left',
             'table' => "scholarship_institution_choice_types",
@@ -246,6 +246,15 @@ class ScholarshipApplicationsTable extends AppTable  {
                 'qualification_titles.id = staff_qualifications.qualification_title_id'
             ]
         ];
+
+        $join['qualification_levels'] = [
+            'type' => 'left',
+            'table' => 'qualification_levels',
+            'conditions' => [
+                'qualification_levels.id = qualification_titles.qualification_level_id'
+            ]
+        ];
+
 
         $query->select([
                         'academic_period' => 'academic_periods.name',

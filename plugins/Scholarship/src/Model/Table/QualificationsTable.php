@@ -49,6 +49,11 @@ class QualificationsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+         $this->behaviors()->get('ControllerAction')->setConfig(
+            'actions.download.show',
+            true
+        );
+
     }
 
     public function implementedEvents(): array
@@ -83,9 +88,9 @@ class QualificationsTable extends ControllerActionTable
         $this->field('gpa', ['visible' => false]);
         $this->field('qualification_country_id', ['visible' => false]);
         $this->field('qualification_level', ['type' => 'string','sort'=>['field'=>'QualificationLevels.name']]);
-        $this->field('file_type', ['type' => 'string']);
+       // $this->field('file_type', ['type' => 'string']);
         $this->setFieldOrder([
-            'graduate_year', 'qualification_level', 'qualification_title_id', 'document_no', 'qualification_institution', 'file_type'
+            'graduate_year', 'qualification_level', 'qualification_title_id', 'document_no', 'qualification_institution'
         ]);
     }
 
@@ -101,6 +106,7 @@ class QualificationsTable extends ControllerActionTable
 
     public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
+
         $queryString = $this->getQueryString();
         $encodedQueryString = $this->paramsEncode($queryString);
         if (isset($extra['toolbarButtons']['back']['url'])) {
@@ -113,4 +119,90 @@ class QualificationsTable extends ControllerActionTable
             ];
         }
     }
+
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        $applicantId = $this->getQueryString('applicant_id') ?? $entity->staff_id ?? null;
+        $scholarshipId = $this->getQueryString('scholarship_id');
+
+        $encodedQueryString = $this->paramsEncode([
+            'id' => $entity->id,
+            'security_user_id' => $applicantId,
+            'applicant_id' => $applicantId,
+            'scholarship_id' => $scholarshipId
+        ]);
+
+        $url = [
+            'plugin' => 'Scholarship',
+            'controller' => 'Scholarships',
+            'action' => 'Qualifications',
+            'view',
+            $encodedQueryString
+        ];
+
+        $buttons['view']['url'] = $url;
+
+        return $buttons;
+    }
+
+    public function onGetQualificationLevel(EventInterface $event, Entity $entity)
+    {
+        $qualificationLevelsTable = \Cake\ORM\TableRegistry::getTableLocator()->get('FieldOption.QualificationLevels');
+
+        $result = $qualificationLevelsTable
+            ->find()
+            ->select(['qualification_level' => 'QualificationLevels.name'])
+            ->innerJoin(
+                ['QualificationTitles' => 'qualification_titles'],
+                ['QualificationTitles.qualification_level_id = QualificationLevels.id']
+            )
+            ->where([
+                'QualificationTitles.id' => $entity->qualification_title_id
+            ])
+            ->first();
+
+        return $result ? $result->qualification_level : '';
+    }
+
+    
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $showFunc = function () use ($entity) {
+            return !empty($entity->file_content);
+        };
+
+        $this->behaviors()
+            ->get('ControllerAction')
+            ->setConfig('actions.download.show', $showFunc);
+
+        if ($extra['toolbarButtons']->offsetExists('download')) {
+
+            $applicantId = $this->getQueryString('applicant_id');
+            $scholarshipId = $this->getQueryString('scholarship_id');
+
+            $encoded = $this->paramsEncode([
+                'id' => $entity->id,
+                'security_user_id' => $applicantId,
+                'applicant_id' => $applicantId,
+                'scholarship_id' => $scholarshipId
+            ]);
+
+            $extra['toolbarButtons']['download']['url'] = [
+                'plugin' => 'Scholarship',
+                'controller' => 'Scholarships',
+                'action' => 'Qualifications',
+                'download',
+                $encoded
+            ];
+        }
+        if ($extra['toolbarButtons']->offsetExists('download') && empty($entity->file_content)) {
+            $extra['toolbarButtons']['download'] = false;
+        }
+
+         $this->field('file_content', ['visible' => false]);
+    }
+
+
 }
