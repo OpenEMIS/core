@@ -55,7 +55,6 @@ class ScholarshipApplicationsTable extends AppTable  {
         if ($financialAssistanceType != -1) {
             $conditions['scholarships.scholarship_financial_assistance_type_id'] = $financialAssistanceType;
         }
-//POCOR-7959 :: Start
         $join = [];
 
         $join['workflow_steps'] = [
@@ -232,6 +231,21 @@ class ScholarshipApplicationsTable extends AppTable  {
             ]
         ];
 
+        $join['staff_qualifications'] = [
+            'type' => 'left',
+            'table' => 'staff_qualifications',
+            'conditions' => [
+                'staff_qualifications.staff_id = ScholarshipApplications.applicant_id'
+            ]
+        ];
+
+        $join['qualification_titles'] = [
+            'type' => 'left',
+            'table' => 'qualification_titles',
+            'conditions' => [
+                'qualification_titles.id = staff_qualifications.qualification_title_id'
+            ]
+        ];
 
         $query->select([
                         'academic_period' => 'academic_periods.name',
@@ -259,7 +273,9 @@ class ScholarshipApplicationsTable extends AppTable  {
 
                         'institution_status' => "(IFNULL(scholarship_institution_choice_statuses.name, ''))",
                         'award_category' => "(IFNULL(scholarship_financial_assistance_types.name, ''))",
-                        'total_award_amount' => "(IFNULL(scholarships.total_amount, ''))"
+                        'total_award_amount' => "(IFNULL(scholarships.total_amount, ''))",
+                        'qualification_level' => "(IFNULL(qualification_levels.name, ''))", //POCOR-8151
+                        'qualification_name' => "(IFNULL(qualification_titles.name, ''))", //POCOR-8151
 
         ])
         ->join($join)
@@ -388,6 +404,18 @@ class ScholarshipApplicationsTable extends AppTable  {
             'field' => 'award_category',
             'type' => 'string',
             'label' => __('Award Category')
+        ];
+        $newArray[] = [
+            'key' => 'qualification_level',
+            'field' => 'qualification_level',
+            'type' => 'string',
+            'label' => __('Qualification Level')
+        ];
+        $newArray[] = [
+            'key' => 'qualification_name',
+            'field' => 'qualification_name',
+            'type' => 'string',
+            'label' => __('Qualification Name')
         ];
         $newArray[] = [
             'key' => 'total_award_amount',
