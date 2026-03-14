@@ -37,36 +37,28 @@ class CallWebhookBehavior extends Behavior
      */
     private function triggerMyWebhook(Entity $entity, string $eventKey): void
     {
-        if (empty($eventKey)) {
-            return; // Skip if no event key configured
-        }
-
         $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-        $user = $Webhooks->resolveCurrentUser();
 
+        if (empty($user)) {
+            $user = $Webhooks->resolveCurrentUser();
+        }
+//        Log::debug(print_r($entity, true));
         $contain = $this->getConfig('contain');
         if(!is_array($contain)){
             $contain = [];
         }
         $body = $Webhooks->prepareWebhookBody($this->getConfig('table_alias'), $entity, $contain);
+//        Log::debug(print_r(['body' => $body], true));
 
         if ($eventKey === $this->getConfig('entity_delete')) {
             $body['deleted_at'] = date('Y-m-d H:i:s');
             $body['deleted_by'] = $user['openemis_no'] ?? $user['username'] ?? 'system';
         }
 
-        // POCOR-9257: Queue webhook for async processing instead of direct fire
         try {
-            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
-            $result = $WebhooksQueue->queueWebhook($eventKey, $body, $user);
-            if ($result) {
-                // Log::debug("[CallWebhookBehavior] ✓ Queued webhook for event: {$eventKey}, entity ID: {$entity->id}");
-            } else {
-                Log::warning("[CallWebhookBehavior] Failed to queue webhook for event: {$eventKey}");
-            }
+            $Webhooks->triggerCommand($eventKey, $body);
         } catch (\Throwable $e) {
-            // POCOR-9257: Graceful degradation - queueing failures don't break parent process
-            Log::error("[CallWebhookBehavior] Exception while queueing webhook: " . $e->getMessage());
+            Log::warning("Webhook trigger failed in afterSave: " . $e->getMessage());
         }
     }
 

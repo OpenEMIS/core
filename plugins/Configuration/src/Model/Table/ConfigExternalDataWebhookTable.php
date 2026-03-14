@@ -3,7 +3,7 @@
 namespace Configuration\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event; //POCOR-9509: kept for reference; method signatures updated to EventInterface
+use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
@@ -68,7 +68,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
     }
 
-    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
             $this->field('visible', ['visible' => false]);
@@ -127,7 +127,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
     }
 
-    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('value', ['visible' => true]);
         $source = $entity->name;
@@ -145,7 +145,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         }
     }
 
-    public function onGetCustomExternalSourceElement(EventInterface $event, $action, Entity $entity, $attr, $options = [])
+    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
@@ -206,7 +206,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
     }
 
-    public function onUpdateFieldValue(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldValue(Event $event, array $attr, $action, ServerRequest $request)
     {
 
         if (in_array($action, ['edit'])) {
@@ -225,7 +225,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
         return $attr;
     }
-    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $buttons = self::fixActionButtons($buttons);
@@ -269,7 +269,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         }
         return $links;
     }
-    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra): void
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra): void
     {
 
         $alias = $this->getAlias();
@@ -308,7 +308,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 
         $source = $entity->name;
@@ -354,14 +354,14 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
     }
 
 
-    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if (isset($extra['toolbarButtons']['add'])) {
             unset($extra['toolbarButtons']['add']);
         }
     }
 
-    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
             ->select(
@@ -373,7 +373,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
             ]);
     }
 
-    public function onGetValue(EventInterface $event, Entity $entity)
+    public function onGetValue(Event $event, Entity $entity)
     {
         $valueField = 'value';
 //        return 'Disabled';
@@ -385,7 +385,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
         return $value;
     }
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true) //POCOR-9509: fix incompatible type hint (Event → EventInterface)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'value') {
             return __('Status');
@@ -398,7 +398,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
     //POCOR-7981:End
 
-    public function onGetLabel(EventInterface $event, Entity $entity)
+    public function onGetLabel(Event $event, Entity $entity)
     {
         return __($entity->label);
     }
