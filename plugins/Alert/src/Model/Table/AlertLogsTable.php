@@ -907,6 +907,30 @@ class AlertLogsTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
 		// End POCOR-5188
+        $toolbarButton = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-refresh"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Synchronisation')
+            ],
+            'url' => [
+                'plugin' => 'Alert', 'controller' => 'Alerts',
+                'action' => 'processLogs',
+
+            ]
+        ];
+        // Properly modify the ArrayObject toolbarButtons
+//        dd($extra['toolbarButtons']);
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarButtonsArray['access'] = $toolbarButton;
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
+
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
