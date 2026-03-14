@@ -105,7 +105,28 @@ class AlertsController extends AppController
 
         } else {
             $this->Alert->error(__('Failed to process alert queue. Command output: ') . $outputText, ['type' => 'string', 'reset' => true]);
-            Log::error('[Alerts] Queue processing failed with exit code ' . $returnVar . '. Output: ' . $outputText);
+            Log::error('[Alerts] Queue process failed with exit code ' . $returnVar . '. Output: ' . $outputText);
+        }
+
+        return $this->redirect(['action' => 'Logs']);
+    }
+
+    public function processLogs()
+    {
+        //POCOR-9509: Execute Laravel artisan command to process webhook queue
+        $apiPath = ROOT . DS . 'api';
+        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:check-and-queue 2>&1';
+
+        exec($command, $output, $returnVar);
+
+        $outputText = implode("\n", $output);
+
+        if ($returnVar === 0) {
+            $this->Alert->success(__('Alert queue filled successfully.'), ['type' => 'string', 'reset' => true]);
+
+        } else {
+            $this->Alert->error(__('Failed to process alert queue. Command output: ') . $outputText, ['type' => 'string', 'reset' => true]);
+            Log::error('[Alerts] Queue filling failed with exit code ' . $returnVar . '. Output: ' . $outputText);
         }
 
         return $this->redirect(['action' => 'Queue']);

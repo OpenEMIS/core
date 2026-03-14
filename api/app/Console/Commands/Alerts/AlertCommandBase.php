@@ -168,7 +168,7 @@ abstract class AlertCommandBase extends Command
         Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
 
         try {
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling getPendingItems()'); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @' . class_basename($this) . $featureKey . '::runFeatureAlert() Calling getPendingItems()'); //[TEMP-LOG]
             $pendingItems = $this->getPendingItems($featureKey);
 
             Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() getPendingItems returned ' . count($pendingItems) . ' items'); //[TEMP-LOG]

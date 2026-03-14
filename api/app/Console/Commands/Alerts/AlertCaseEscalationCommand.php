@@ -5,6 +5,7 @@ namespace App\Console\Commands\Alerts;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * POCOR-9509: Laravel port of CakePHP's AlertCaseEscalationShell
@@ -52,7 +53,7 @@ class AlertCaseEscalationCommand extends AlertCommandBase
     public function handle(): int
     {
         if (!$this->prepareContext()) {
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         return $this->runFeatureAlert('CaseEscalation');
@@ -141,7 +142,7 @@ class AlertCaseEscalationCommand extends AlertCommandBase
     protected function fillPlaceholders(array $item): array
     {
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
-
+        Log::debug("Placeholders sent at " . json_encode($item));
         return [
             // Case fields
             '${case.case_number}'      => $item['case_number'] ?? '',

@@ -5,6 +5,7 @@ namespace App\Console\Commands\Alerts;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * POCOR-9509: Laravel port of CakePHP's AlertLicenseRenewalShell
@@ -47,7 +48,7 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
     public function handle(): int
     {
         if (!$this->prepareContext()) {
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         return $this->runFeatureAlert('LicenseRenewal');
@@ -67,23 +68,31 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
-        //POCOR-9509: Parse threshold JSON from rule
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
+
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
         $daysBefore       = (int) ($threshold['value']               ?? 0);
         $licenseTypeId    = (int) ($threshold['license_type']        ?? 0);
         $minHour          = (int) ($threshold['hour']                ?? 0);
         $trainingCatIds   = (array) ($threshold['training_categories'] ?? []);
 
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Parsed threshold: daysBefore=' . $daysBefore . ', licenseTypeId=' . $licenseTypeId . ', minHour=' . $minHour . ', trainingCatIds=' . json_encode($trainingCatIds)); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Raw rule threshold: ' . ($this->rule->threshold ?? 'null')); //[TEMP-LOG]
+
         //POCOR-9509: Validate required threshold values
         if (!$daysBefore || !$licenseTypeId) {
             $this->info("Invalid threshold configuration for LicenseRenewal");
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() EXIT [] - Invalid threshold (daysBefore=' . $daysBefore . ', licenseTypeId=' . $licenseTypeId . ')'); //[TEMP-LOG]
             return [];
         }
 
         //POCOR-9509: Condition 1 only — licenses expiring between today and X days from now
         $dateCondition = "DATEDIFF(staff_licenses.expiry_date, NOW()) BETWEEN 0 AND {$daysBefore}";
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() SQL date condition: ' . $dateCondition); //[TEMP-LOG]
 
         //POCOR-9509: Fetch all matching licenses with user details
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Executing license query...'); //[TEMP-LOG]
         $licenses = DB::table('staff_licenses')
             ->join('license_types as LicenseTypes', 'LicenseTypes.id', '=', 'staff_licenses.license_type_id')
             ->join('security_users as Users', 'Users.id', '=', 'staff_licenses.security_user_id')
@@ -112,21 +121,34 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
             ])
             ->get();
 
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() License query returned ' . $licenses->count() . ' rows'); //[TEMP-LOG]
+
         if ($licenses->isEmpty()) {
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() EXIT [] - No licenses found matching criteria'); //[TEMP-LOG]
             return [];
         }
 
         $items = [];
+        $loopCount = 0;
+        $skippedThreshold = 0;
+        $skippedInstitution = 0;
+
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Starting license loop over ' . $licenses->count() . ' licenses'); //[TEMP-LOG]
 
         foreach ($licenses as $license) {
+            $loopCount++;
             $license = (array) $license;
             $staffId      = (int) $license['staff_id'];
             $issueDate    = $license['issue_date'];
             $expiryDate   = $license['expiry_date'];
 
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Loop ' . $loopCount . ': staff_id=' . $staffId . ', license_number=' . ($license['license_number'] ?? 'N/A') . ', expiry=' . $expiryDate); //[TEMP-LOG]
+
             //POCOR-9509: Sum credit_hours from staff_trainings within license validity period
             //            filtered by the configured training categories
             $totalCreditHours = 0;
+
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Querying staff_trainings for staff_id=' . $staffId . ' between ' . $issueDate . ' and ' . $expiryDate . ' with categories=' . json_encode($trainingCatIds)); //[TEMP-LOG]
 
             $trainingQuery = DB::table('staff_trainings')
                 ->where('staff_trainings.staff_id', $staffId)
@@ -139,13 +161,20 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
             $trainingSum = $trainingQuery->sum('staff_trainings.credit_hours');
             $totalCreditHours = (int) ($trainingSum ?? 0);
 
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() staff_id=' . $staffId . ' total_credit_hours=' . $totalCreditHours . ' (threshold=' . $minHour . ')'); //[TEMP-LOG]
+
             //POCOR-9509: Only alert if staff has fewer hours than the threshold
             if ($totalCreditHours >= $minHour) {
+                // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() SKIPPING staff_id=' . $staffId . ' - meets threshold (total=' . $totalCreditHours . ' >= ' . $minHour . ')'); //[TEMP-LOG]
+                $skippedThreshold++;
                 continue;
             }
 
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Staff meets alert criteria (below threshold), looking up institutions...'); //[TEMP-LOG]
+
             //POCOR-9509: Licenses don't carry institution_id — look up assigned institutions
             //            via institution_staff (same logic as CakePHP shell)
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Querying institution_staff for staff_id=' . $staffId); //[TEMP-LOG]
             $institutionStaffRecords = DB::table('institution_staff as InstitutionStaff')
                 ->join('institutions as Institutions', 'Institutions.id', '=', 'InstitutionStaff.institution_id')
                 ->join('staff_statuses as StaffStatuses', 'StaffStatuses.id', '=', 'InstitutionStaff.staff_status_id')
@@ -164,9 +193,15 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
                 ])
                 ->get();
 
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Institution query returned ' . $institutionStaffRecords->count() . ' records'); //[TEMP-LOG]
+
             if ($institutionStaffRecords->isEmpty()) {
+                // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() SKIPPING staff_id=' . $staffId . ' - no assigned institutions found'); //[TEMP-LOG]
+                $skippedInstitution++;
                 continue;
             }
+
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Found ' . $institutionStaffRecords->count() . ' institution(s) for staff_id=' . $staffId . ' - generating alert items'); //[TEMP-LOG]
 
             //POCOR-9509: Emit one alert item per assigned institution (mirrors CakePHP foreach)
             foreach ($institutionStaffRecords as $institutionRow) {
@@ -176,10 +211,15 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
                     'total_credit_hours' => $totalCreditHours,
                 ]);
 
+                // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Created alert item: institution_id=' . $item['institution_id'] . ', institution_name=' . ($item['institution_name'] ?? 'N/A')); //[TEMP-LOG]
+
                 $items[] = $item;
             }
         }
 
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() Loop complete: processed=' . $loopCount . ', skipped_threshold=' . $skippedThreshold . ', skipped_institution=' . $skippedInstitution . ', total_items=' . count($items)); //[TEMP-LOG]
+
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() EXIT - returning ' . count($items) . ' items'); //[TEMP-LOG]
         return $items;
     }
 
@@ -195,13 +235,23 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
      */
     protected function resolveRecipients(array $item): array
     {
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::resolveRecipients() ENTRY'); //[TEMP-LOG]
+
         //POCOR-9509: institution_id is set by getPendingItems() from institution_staff join
         $institutionId = $item['institution_id'] ?? null;
 
-        return $this->recipientResolver->getRoleAssociatedContactList(
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::resolveRecipients() institution_id=' . ($institutionId ?? 'null') . ', staff_id=' . ($item['staff_id'] ?? 'N/A')); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::resolveRecipients() Resolving contacts for security_roles (count=' . count($this->rule->security_roles ?? []) . ')'); //[TEMP-LOG]
+
+        $contacts = $this->recipientResolver->getRoleAssociatedContactList(
             $this->rule->security_roles,
             $institutionId
         );
+
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::resolveRecipients() Resolved contacts: email_count=' . count($contacts['email'] ?? []) . ', phone_count=' . count($contacts['phone'] ?? [])); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::resolveRecipients() EXIT'); //[TEMP-LOG]
+
+        return $contacts;
     }
 
     /**
@@ -212,17 +262,23 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
      */
     protected function fillPlaceholders(array $item): array
     {
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::fillPlaceholders() ENTRY'); //[TEMP-LOG]
+
         //POCOR-9509: Calculate absolute days between today and expiry date
         $today      = Carbon::now()->startOfDay();
         $expiryDate = $item['expiry_date'] ?? null;
         $dayDiff    = '';
         if ($expiryDate) {
             $dayDiff = (string) abs($today->diffInDays(Carbon::parse($expiryDate)->startOfDay(), false));
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::fillPlaceholders() Day difference calculated: ' . $dayDiff . ' (expiry=' . $expiryDate . ')'); //[TEMP-LOG]
+        } else {
+            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::fillPlaceholders() No expiry date, dayDiff empty'); //[TEMP-LOG]
         }
 
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::fillPlaceholders() Threshold: value=' . ($threshold['value'] ?? 'null') . ', hour=' . ($threshold['hour'] ?? 'null')); //[TEMP-LOG]
 
-        return [
+        $placeholders = [
             //POCOR-9509: License fields
             '${license_type.name}'     => $item['license_type_name']          ?? '',
             '${license_number}'        => $item['license_number']              ?? '',
@@ -256,5 +312,10 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
             '${institution.email}'           => $item['institution_email']           ?? '',
             '${institution.website}'         => $item['institution_website']         ?? '',
         ];
+
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::fillPlaceholders() Placeholders filled: ' . json_encode($placeholders)); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::fillPlaceholders() EXIT'); //[TEMP-LOG]
+
+        return $placeholders;
     }
 }

@@ -1,3 +1,7 @@
+<?php
+
+namespace Tests\Feature;
+
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -5,7 +9,6 @@ use App\Models\Api5\InstitutionStudents;
 use App\Models\Api5\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log; // POCOR-9509
 
 class InstitutionStudentsApiTest extends TestCase
 {
@@ -92,7 +95,7 @@ class InstitutionStudentsApiTest extends TestCase
 
         $newStudentData = InstitutionStudents::factory()->make()->toArray();
         // Ensure student_status_id is present for the alert logic
-        $newStudentData['student_status_id'] = $this->faker->numberBetween(1, 10); 
+        $newStudentData['student_status_id'] = $this->faker->numberBetween(1, 10);
         $newStudentData['institution_id'] = $this->faker->numberBetween(1, 100);
         $newStudentData['student_id'] = $this->faker->uuid(); // Assuming student_id is UUID
 
@@ -101,7 +104,7 @@ class InstitutionStudentsApiTest extends TestCase
         ])->postJson('/api/v5/institution-students', $newStudentData);
 
         $response->assertStatus(201); // Assuming successful creation
-        
+
         Log::shouldHaveReceived('info')
             ->withArgs(function ($message) {
                 return str_contains($message, '[POCOR-9509] Student status alert processed');
