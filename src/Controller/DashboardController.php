@@ -18,7 +18,7 @@ use Cake\Cache\Cache;
 
 class DashboardController extends AppController
 {
-    private bool $useCacheInCallAlerts = false;
+//    private bool $useCacheInCallAlerts = false;
     public function initialize(): void
     {
         parent::initialize();
