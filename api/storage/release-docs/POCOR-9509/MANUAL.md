@@ -344,88 +344,118 @@ Please escalate this case immediately.
 
 **What it does:** Notifies responsible staff immediately when a student admission application is created or updated. In many systems, admissions are processed centrally and the receiving school may not know an application has been submitted. This alert ensures the right people are informed the moment an application enters the pipeline.
 
-**When it fires:** Automatically, immediately after a `StudentAdmission` record is saved (created or updated). There is no threshold check — it fires on every qualifying save event.
+**When it fires:** Automatically, immediately after a `StudentAdmission` record is saved. The command then checks the admission's current `status_id` against the `workflow_steps` list in the threshold. If the status is not in the list, the alert is suppressed.
 
 **Frequency:** `Once` per event (event-based).
 
-**Who receives it:** Security roles resolved globally — no institution filter. Admission decisions are often made at a central, ministry, or district level. Assign the roles appropriate for your deployment.
+**Who receives it:** Student-associated contacts only — the student themselves (if role ID `8` is in the rule's security roles) and/or their guardians (if role ID `9` is in the rule's security roles). Other roles are ignored.
 
-**Threshold format:** None — leave the threshold field blank. This alert has no threshold.
+**Threshold format:** A JSON object with an array of workflow step IDs from the `Student Admission` workflow.
+
+```json
+{"workflow_steps": [82]}
+```
+
+Student Admission workflow step IDs (query your DB to confirm — IDs vary by deployment):
+
+| ID | Step |
+|----|------|
+| 80 | Open |
+| 81 | Pending Approval |
+| 82 | Approved |
+| 83 | Rejected |
+| 84 | Pending Cancellation |
+| 85 | Cancelled |
 
 **Available placeholders:**
 
 | Placeholder | Value |
 |-------------|-------|
+| `${admission_status}` | Current admission workflow step name |
+| `${academic_period.name}` | Academic period name |
+| `${start_date}` | Student study start date |
+| `${end_date}` | Student study end date |
 | `${student.name}` | Student's full name |
 | `${student.openemis_no}` | OpenEMIS ID |
 | `${student.first_name}` | First name |
+| `${student.middle_name}` | Middle name |
+| `${student.third_name}` | Third name |
 | `${student.last_name}` | Last name |
+| `${student.preferred_name}` | Preferred name |
 | `${student.email}` | Email address |
+| `${student.address}` | Address |
+| `${student.postal_code}` | Postal code |
 | `${student.date_of_birth}` | Date of birth |
-| `${student.gender}` | Gender |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
+| `${institution.website}` | Institution website |
+| `${grade.name}` | Education grade name |
+| `${guardian.name}` | Guardian full name |
+| `${guardian.relation}` | Guardian relation type |
+| `${guardian.contact}` | Guardian contact |
 
 **Example rules:**
 
-**Rule 1 — Email to admissions officer**
+**Rule 1 — Approved notification to student and guardian**
 
 | Field | Value |
 |-------|-------|
-| **Name** | New Student Admission Received |
+| **Name** | Student Admission — Approved |
 | **Feature** | StudentAdmission |
 | **Enabled** | Yes |
 | **Method** | Email |
-| **Threshold** | _(leave blank)_ |
-| **Security Roles** | Admissions Officer, Institution Principal |
+| **Threshold** | `{"workflow_steps": [82]}` |
+| **Security Roles** | Student (role 8), Guardian (role 9) |
 
 Subject:
 ```
-New Admission Application: ${student.name}
+Your Admission Application Has Been Approved — ${institution.name}
 ```
 
 Message body:
 ```
-Dear Colleague,
+Dear ${student.name},
 
-A new student admission application has been submitted in OpenEMIS and requires your attention.
+Your admission application to ${institution.name} has been approved.
 
-Student: ${student.name}
 OpenEMIS ID: ${student.openemis_no}
-Date of Birth: ${student.date_of_birth}
-Institution: ${institution.name}
-
-Please log in to OpenEMIS and review the application:
-  Administration → Students → Admissions
-
-Ensure all required documents have been submitted and proceed with the
-verification process according to your institution's admissions policy.
+Academic Period: ${academic_period.name}
+Grade: ${grade.name}
+Start Date: ${start_date}
+Status: ${admission_status}
 
 This is an automated notification from OpenEMIS.
 ```
 
-**Rule 2 — SMS to admissions coordinator**
+**Rule 2 — Rejected notification to student and guardian**
 
 | Field | Value |
 |-------|-------|
-| **Name** | Admission — SMS to Coordinator |
+| **Name** | Student Admission — Rejected |
 | **Feature** | StudentAdmission |
 | **Enabled** | Yes |
-| **Method** | SMS |
-| **Security Roles** | Admissions Coordinator |
+| **Method** | Email |
+| **Threshold** | `{"workflow_steps": [83]}` |
+| **Security Roles** | Student (role 8), Guardian (role 9) |
 
 Subject:
 ```
-OpenEMIS: New admission for ${student.name} at ${institution.name}
+Your Admission Application — ${institution.name}
 ```
 
 Message body:
 ```
-OpenEMIS ALERT: New admission application from ${student.name} (${student.openemis_no})
-at ${institution.name}. Please review in the system.
+Dear ${student.name},
+
+Your admission application to ${institution.name} has not been approved at this time.
+Please contact ${institution.name} directly for further information.
+
+This is an automated notification from OpenEMIS.
 ```
 
 ---
@@ -436,93 +466,116 @@ at ${institution.name}. Please review in the system.
 
 **What it does:** Notifies teachers and administrators at the receiving institution the moment a student is formally enroled into a class or academic period. When enrolment is processed centrally, the school may not know a student has been assigned until they appear in person. This alert gives them advance notice to prepare.
 
-**When it fires:** Automatically, immediately after a `StudentEnrolment` record is saved. No threshold check — fires on every enrolment event.
+**When it fires:** Automatically, immediately after a `StudentEnrolment` record is saved. The command checks the enrolment's current `status_id` against the `workflow_steps` list in the threshold. If the status is not in the list, the alert is suppressed.
 
 **Frequency:** `Once` per event (event-based).
 
-**Who receives it:** Security roles scoped to the receiving institution. Class teachers and institution administrators are the primary audience.
+**Who receives it:** Student-associated contacts only — the student themselves (if role ID `8` is in the rule's security roles) and/or their guardians (if role ID `9` is in the rule's security roles). Other roles are ignored.
 
-**Threshold format:** None — not applicable for this alert.
+**Threshold format:** A JSON object with an array of workflow step IDs from the `Student Enrolment` workflow.
+
+```json
+{"workflow_steps": [136]}
+```
+
+Student Enrolment workflow step IDs (query your DB to confirm — IDs vary by deployment):
+
+| ID | Step |
+|----|------|
+| 134 | Open |
+| 135 | Pending Approval |
+| 136 | Approved |
+| 137 | Rejected |
+| 138 | Pending Cancellation |
+| 139 | Cancelled |
 
 **Available placeholders:**
 
 | Placeholder | Value |
 |-------------|-------|
+| `${enrolment_status}` | Current enrolment workflow step name |
+| `${academic_period.name}` | Academic period name |
+| `${start_date}` | Student study start date |
+| `${end_date}` | Student study end date |
 | `${student.name}` | Student's full name |
 | `${student.openemis_no}` | OpenEMIS ID |
 | `${student.first_name}` | First name |
+| `${student.middle_name}` | Middle name |
+| `${student.third_name}` | Third name |
 | `${student.last_name}` | Last name |
+| `${student.preferred_name}` | Preferred name |
 | `${student.email}` | Email address |
+| `${student.address}` | Address |
+| `${student.postal_code}` | Postal code |
 | `${student.date_of_birth}` | Date of birth |
-| `${student.gender}` | Gender |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
+| `${institution.website}` | Institution website |
+| `${grade.name}` | Education grade name |
+| `${guardian.name}` | Guardian full name |
+| `${guardian.relation}` | Guardian relation type |
+| `${guardian.contact}` | Guardian contact |
 
 **Example rules:**
 
-**Rule 1 — Class teacher notification**
+**Rule 1 — Approved notification to student and guardian**
 
 | Field | Value |
 |-------|-------|
-| **Name** | Student Enrolment — Teacher Notification |
+| **Name** | Student Enrolment — Approved |
 | **Feature** | StudentEnrolment |
 | **Enabled** | Yes |
 | **Method** | Email |
-| **Threshold** | _(not applicable)_ |
-| **Security Roles** | Class Teacher |
+| **Threshold** | `{"workflow_steps": [136]}` |
+| **Security Roles** | Student (role 8), Guardian (role 9) |
 
 Subject:
 ```
-New Student Enrolment: ${student.name} has been added to your class
+Your Enrolment Has Been Approved — ${institution.name}
 ```
 
 Message body:
 ```
-Dear Teacher,
+Dear ${student.name},
 
-A new student has been enroled in your class at ${institution.name}.
+Your enrolment at ${institution.name} has been approved.
 
-Student Details:
-  Name: ${student.name}
-  OpenEMIS ID: ${student.openemis_no}
-  Date of Birth: ${student.date_of_birth}
-  Gender: ${student.gender}
-
-Please log in to OpenEMIS to review the student's complete profile and
-update your class records accordingly.
-
-If you have any questions regarding this enrolment, please contact
-your institution administrator.
+OpenEMIS ID: ${student.openemis_no}
+Academic Period: ${academic_period.name}
+Grade: ${grade.name}
+Start Date: ${start_date}
+Status: ${enrolment_status}
 
 This is an automated notification from OpenEMIS.
 ```
 
-**Rule 2 — Principal awareness**
+**Rule 2 — Rejected notification to student and guardian**
 
 | Field | Value |
 |-------|-------|
-| **Name** | Student Enrolment — Principal Awareness |
+| **Name** | Student Enrolment — Rejected |
 | **Feature** | StudentEnrolment |
 | **Enabled** | Yes |
 | **Method** | Email |
-| **Security Roles** | Institution Principal |
+| **Threshold** | `{"workflow_steps": [137]}` |
+| **Security Roles** | Student (role 8), Guardian (role 9) |
 
 Subject:
 ```
-Enrolment Update: ${student.name} enrolled at ${institution.name}
+Enrolment Application Update — ${institution.name}
 ```
 
 Message body:
 ```
-Dear Principal,
+Dear ${student.name},
 
-For your records: ${student.name} (${student.openemis_no}) has been
-formally enroled at ${institution.name}.
-
-No action is required unless this enrolment is unexpected.
+Your enrolment application to ${institution.name} has not been approved at this time.
+Please contact ${institution.name} directly for further information.
 
 This is an automated notification from OpenEMIS.
 ```
@@ -539,133 +592,136 @@ This is an automated notification from OpenEMIS.
 
 **Frequency:** `Once` per event (event-based).
 
-**Who receives it:** Security roles scoped to the relevant institution. Use separate rules for different transition types to reach the right audience for each.
+**Who receives it:** Student-associated contacts only — the student themselves (if role ID `8` is in the rule's security roles) and/or their guardians (if role ID `9` is in the rule's security roles). Other roles are ignored.
 
-**Threshold format:** A JSON object specifying the status transition to watch.
+**Threshold format:** A JSON object with an array of `student_statuses.id` values that should trigger the alert.
 
 ```json
-{"old_status_id": 1, "new_status_id": 7}
+{"statuses": [4]}
 ```
 
 | Field | Description |
 |-------|-------------|
-| `old_status_id` | The status before the change (from `student_statuses` table) |
-| `new_status_id` | The status after the change |
+| `statuses` | Array of `student_statuses.id` values — the alert fires when the record's `student_status_id` is in this list |
 
 To find status IDs in your database:
 ```sql
-SELECT id, name FROM student_statuses ORDER BY name;
+SELECT id, name FROM student_statuses ORDER BY id;
 ```
 
-Common status values (may vary by deployment):
+Status IDs for this deployment (IDs vary by deployment — always query before configuring):
 
 | ID | Status |
 |----|--------|
-| 1 | Enrolled / Active |
-| 2 | Promoted |
-| 3 | Graduated |
-| 4 | Transferred |
-| 5 | Withdrawn |
-| 6 | Repeated |
+| 1 | Enrolled |
+| 3 | Transferred |
+| 4 | Withdrawn |
+| 6 | Graduated |
+| 7 | Promoted |
+| 8 | Repeated |
 
-Omitting both fields matches any status change. Specifying only one field matches any change to or from that status.
+> **Important:** IDs on older deployments may differ from the above. Alert rules configured with wrong status IDs will silently not fire.
 
 **Available placeholders:**
 
 | Placeholder | Value |
 |-------------|-------|
+| `${student_status}` | Student status name (e.g., "Withdrawn") |
+| `${academic_period.name}` | Academic period name |
+| `${start_date}` | Student study start date |
+| `${end_date}` | Student study end date |
 | `${student.name}` | Student's full name |
 | `${student.openemis_no}` | OpenEMIS ID |
 | `${student.first_name}` | First name |
+| `${student.middle_name}` | Middle name |
+| `${student.third_name}` | Third name |
 | `${student.last_name}` | Last name |
+| `${student.preferred_name}` | Preferred name |
 | `${student.email}` | Email address |
+| `${student.address}` | Address |
+| `${student.postal_code}` | Postal code |
 | `${student.date_of_birth}` | Date of birth |
-| `${student.gender}` | Gender |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
+| `${institution.website}` | Institution website |
+| `${grade.name}` | Education grade name |
+| `${guardian.name}` | Guardian full names (comma-separated if multiple) |
+| `${guardian.relation}` | Guardian relation types (comma-separated) |
+| `${guardian.contact}` | Guardian contacts (comma-separated) |
 
 **Example rules:**
 
-**Rule 1 — Withdrawal alert**
+**Rule 1 — Withdrawal notification to guardian**
 
 | Field | Value |
 |-------|-------|
-| **Name** | Student Withdrawal — Administrator Alert |
+| **Name** | Student Withdrawal — Notify Guardian |
 | **Feature** | StudentStatus |
 | **Enabled** | Yes |
 | **Method** | Email |
-| **Threshold** | `{"old_status_id": 1, "new_status_id": 5}` |
-| **Security Roles** | Institution Administrator, District Coordinator |
+| **Threshold** | `{"statuses": [4]}` |
+| **Security Roles** | Guardian (role 9) |
 
 Subject:
 ```
-Student Withdrawal: ${student.name} has withdrawn from ${institution.name}
+Important: ${student.name} has been marked as Withdrawn
 ```
 
 Message body:
 ```
-Dear Colleague,
+Dear ${guardian.name},
 
-This is to notify you that the following student has been marked as Withdrawn
-in OpenEMIS and requires administrative follow-up.
+${student.name} (${student.openemis_no}) has been marked as ${student_status}
+at ${institution.name}.
 
-Student: ${student.name}
-OpenEMIS ID: ${student.openemis_no}
-Institution: ${institution.name}
-
-Required actions:
-1. Remove the student from active class lists
-2. Ensure all outstanding records are completed and archived
-3. Follow up with the student's guardian to understand the reason for withdrawal
-4. Document the outcome in the student's case record if applicable
-
-Please log in to OpenEMIS to complete the necessary administrative steps.
+If you have questions about this change, please contact the institution directly.
 
 This is an automated notification from OpenEMIS.
 ```
 
-**Rule 2 — Transfer alert**
+**Rule 2 — Transfer notification to student and guardian**
 
 | Field | Value |
 |-------|-------|
-| **Name** | Student Transfer — Coordinator Notification |
+| **Name** | Student Transfer — Notify Student and Guardian |
 | **Feature** | StudentStatus |
 | **Enabled** | Yes |
 | **Method** | Email |
-| **Threshold** | `{"old_status_id": 1, "new_status_id": 4}` |
-| **Security Roles** | District Coordinator, Registry Officer |
+| **Threshold** | `{"statuses": [3]}` |
+| **Security Roles** | Student (role 8), Guardian (role 9) |
 
 Subject:
 ```
-Transfer Notification: ${student.name} transferred from ${institution.name}
+Transfer Confirmation: ${student.name} — ${institution.name}
 ```
 
 Message body:
 ```
-Dear Coordinator,
+Dear ${student.name},
 
-Student ${student.name} (${student.openemis_no}) has been transferred from
-${institution.name}.
+Your transfer from ${institution.name} has been recorded in OpenEMIS.
 
-Please ensure the receiving institution has been notified and that the student's
-academic records have been updated accordingly in OpenEMIS.
+Academic Period: ${academic_period.name}
+Grade: ${grade.name}
 
 This is an automated notification from OpenEMIS.
 ```
 
-**Rule 3 — Graduation alert**
+**Rule 3 — Graduation notification to student**
 
 | Field | Value |
 |-------|-------|
-| **Name** | Student Graduation — Registry |
+| **Name** | Student Graduation — Notify Student |
 | **Feature** | StudentStatus |
 | **Enabled** | Yes |
 | **Method** | Email |
-| **Threshold** | `{"old_status_id": 1, "new_status_id": 3}` |
-| **Security Roles** | Registry Officer |
+| **Threshold** | `{"statuses": [6]}` |
+| **Security Roles** | Student (role 8) |
 
 Subject:
 ```
@@ -674,10 +730,13 @@ Graduation Recorded: ${student.name} — ${institution.name}
 
 Message body:
 ```
-Student ${student.name} (${student.openemis_no}) has been marked as Graduated
-at ${institution.name}.
+Dear ${student.name},
 
-Please process the graduation documentation and update the registry accordingly.
+Your graduation from ${institution.name} has been recorded in OpenEMIS.
+
+OpenEMIS ID: ${student.openemis_no}
+
+This is an automated notification from OpenEMIS.
 ```
 
 ---
@@ -715,17 +774,26 @@ Please process the graduation documentation and update the registry accordingly.
 
 | Placeholder | Value |
 |-------------|-------|
-| `${user.openemis_no}` | Staff OpenEMIS ID |
-| `${user.first_name}` | First name |
-| `${user.last_name}` | Last name |
-| `${user.email}` | Email address |
-| `${user.date_of_birth}` | Date of birth |
+| `${threshold.value}` | Configured day threshold |
+| `${age}` | Staff member's current age (calculated) |
+| `${openemis_no}` | Staff OpenEMIS ID |
+| `${first_name}` | First name |
+| `${middle_name}` | Middle name |
+| `${third_name}` | Third name |
+| `${last_name}` | Last name |
+| `${preferred_name}` | Preferred name |
+| `${email}` | Email address |
+| `${address}` | Address |
+| `${postal_code}` | Postal code |
+| `${date_of_birth}` | Date of birth |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
-| `${threshold.value}` | Configured day threshold |
+| `${institution.website}` | Institution website |
 
 **Example rules:**
 
@@ -831,16 +899,27 @@ This is an automated notification from OpenEMIS.
 
 | Placeholder | Value |
 |-------------|-------|
+| `${threshold.value}` | Configured threshold (days) |
+| `${employment_type.name}` | Employment status type name |
+| `${employment_date}` | Employment status date |
 | `${user.openemis_no}` | Staff OpenEMIS ID |
 | `${user.first_name}` | First name |
+| `${user.middle_name}` | Middle name |
+| `${user.third_name}` | Third name |
 | `${user.last_name}` | Last name |
+| `${user.preferred_name}` | Preferred name |
 | `${user.email}` | Email address |
+| `${user.address}` | Address |
+| `${user.postal_code}` | Postal code |
+| `${user.date_of_birth}` | Date of birth |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
-| `${threshold.value}` | Configured threshold (days) |
+| `${institution.website}` | Institution website |
 
 **Example rules:**
 
@@ -950,16 +1029,30 @@ SELECT id, name FROM staff_leave_types ORDER BY name;
 
 | Placeholder | Value |
 |-------------|-------|
+| `${threshold.value}` | Configured threshold (days) |
+| `${staff_leave_type.name}` | Leave type name |
+| `${date_from}` | Leave start date |
+| `${date_to}` | Leave end date |
+| `${day_difference}` | Days between today and leave end date |
+| `${employment_period}` | Same as day_difference (alias) |
 | `${user.openemis_no}` | Staff OpenEMIS ID |
 | `${user.first_name}` | First name |
+| `${user.middle_name}` | Middle name |
+| `${user.third_name}` | Third name |
 | `${user.last_name}` | Last name |
+| `${user.preferred_name}` | Preferred name |
 | `${user.email}` | Email address |
+| `${user.address}` | Address |
+| `${user.postal_code}` | Postal code |
+| `${user.date_of_birth}` | Date of birth |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
-| `${threshold.value}` | Configured threshold (days) |
+| `${institution.website}` | Institution website |
 
 **Example rules:**
 
@@ -1057,7 +1150,7 @@ This is an automated notification from OpenEMIS.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `value` | Integer | Yes | Days before the relevant date |
-| `staff_type_id` | Integer | Yes | ID from `staff_types` table |
+| `staff_type` | Integer | Yes | ID from `staff_types` table |
 
 To find staff type IDs:
 ```sql
@@ -1068,16 +1161,29 @@ SELECT id, name FROM staff_types ORDER BY name;
 
 | Placeholder | Value |
 |-------------|-------|
+| `${threshold.value}` | Configured threshold (days) |
+| `${staff_type.name}` | Staff type name |
+| `${start_date}` | Staff assignment start date |
+| `${end_date}` | Staff assignment end date |
+| `${day_difference}` | Days between today and end date |
 | `${user.openemis_no}` | Staff OpenEMIS ID |
 | `${user.first_name}` | First name |
+| `${user.middle_name}` | Middle name |
+| `${user.third_name}` | Third name |
 | `${user.last_name}` | Last name |
+| `${user.preferred_name}` | Preferred name |
 | `${user.email}` | Email address |
+| `${user.address}` | Address |
+| `${user.postal_code}` | Postal code |
+| `${user.date_of_birth}` | Date of birth |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
-| `${threshold.value}` | Configured threshold (days) |
+| `${institution.website}` | Institution website |
 
 **Example rules:**
 
@@ -1187,21 +1293,31 @@ SELECT id, name FROM license_types ORDER BY name;
 
 | Placeholder | Value |
 |-------------|-------|
-| `${user.openemis_no}` | Staff OpenEMIS ID |
-| `${user.first_name}` | First name |
-| `${user.last_name}` | Last name |
-| `${user.email}` | Email address |
-| `${institution.name}` | Institution name |
-| `${institution.code}` | Institution code |
-| `${institution.address}` | Institution address |
-| `${institution.telephone}` | Telephone |
-| `${institution.email}` | Institution email |
+| `${threshold.value}` | Configured threshold (days) |
 | `${license_type.name}` | License type name (e.g., "Teaching Certificate") |
 | `${license_number}` | License reference number |
 | `${issue_date}` | Date the license was issued |
 | `${expiry_date}` | License expiry date |
-| `${day_difference}` | Days until expiry (positive) or days since expiry (negative) |
-| `${threshold.value}` | Configured threshold (days) |
+| `${issuer}` | License issuer |
+| `${day_difference}` | Absolute days between today and expiry date |
+| `${user.openemis_no}` | Staff OpenEMIS ID |
+| `${user.first_name}` | First name |
+| `${user.middle_name}` | Middle name |
+| `${user.third_name}` | Third name |
+| `${user.last_name}` | Last name |
+| `${user.preferred_name}` | Preferred name |
+| `${user.email}` | Email address |
+| `${user.address}` | Address |
+| `${user.postal_code}` | Postal code |
+| `${user.date_of_birth}` | Date of birth |
+| `${institution.name}` | Institution name |
+| `${institution.code}` | Institution code |
+| `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
+| `${institution.telephone}` | Telephone |
+| `${institution.email}` | Institution email |
+| `${institution.website}` | Institution website |
 
 **Example rules:**
 
@@ -1368,22 +1484,33 @@ SELECT id, name FROM license_types ORDER BY name;
 
 | Placeholder | Value |
 |-------------|-------|
-| `${user.openemis_no}` | Staff OpenEMIS ID |
-| `${user.first_name}` | First name |
-| `${user.last_name}` | Last name |
-| `${user.email}` | Email address |
-| `${institution.name}` | Institution name |
-| `${institution.code}` | Institution code |
-| `${institution.address}` | Institution address |
-| `${institution.telephone}` | Telephone |
-| `${institution.email}` | Institution email |
+| `${threshold.value}` | Configured day window |
+| `${threshold.hour}` | Required CPD hours as configured in the rule |
 | `${license_type.name}` | License type name |
 | `${license_number}` | License reference number |
 | `${issue_date}` | License issue date |
 | `${expiry_date}` | License expiry date |
-| `${day_difference}` | Days until expiry |
+| `${issuer}` | License issuer |
+| `${day_difference}` | Absolute days between today and expiry date |
 | `${total_credit_hours}` | Total CPD hours accumulated within the license period |
-| `${threshold.hour}` | Required CPD hours as configured in the rule |
+| `${user.openemis_no}` | Staff OpenEMIS ID |
+| `${user.first_name}` | First name |
+| `${user.middle_name}` | Middle name |
+| `${user.third_name}` | Third name |
+| `${user.last_name}` | Last name |
+| `${user.preferred_name}` | Preferred name |
+| `${user.email}` | Email address |
+| `${user.address}` | Address |
+| `${user.postal_code}` | Postal code |
+| `${user.date_of_birth}` | Date of birth |
+| `${institution.name}` | Institution name |
+| `${institution.code}` | Institution code |
+| `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
+| `${institution.telephone}` | Telephone |
+| `${institution.email}` | Institution email |
+| `${institution.website}` | Institution website |
 | `${threshold.value}` | Configured day window |
 
 **Example rules:**
@@ -2519,9 +2646,9 @@ This section summarises every threshold field across all alert types. For worked
 | Alert | Feature Key | Format | Example |
 |-------|-------------|--------|---------|
 | Student Absence | `StudentAttendance` | Integer | `5` |
-| Student Admission | `StudentAdmission` | None | _(not used)_ |
-| Student Enrolment | `StudentEnrolment` | None | _(not used)_ |
-| Student Status Change | `StudentStatus` | JSON — status transition | `{"old_status_id": 1, "new_status_id": 5}` |
+| Student Admission | `StudentAdmission` | JSON — workflow steps array | `{"workflow_steps": [82]}` |
+| Student Enrolment | `StudentEnrolment` | JSON — workflow steps array | `{"workflow_steps": [136]}` |
+| Student Status Change | `StudentStatus` | JSON — student status IDs array | `{"statuses": [4]}` |
 | Retirement Warning | `RetirementWarning` | JSON — days window | `{"value": 90}` |
 | Staff Employment End | `StaffEmployment` | JSON — days window | `{"value": 30}` |
 | Staff Leave End | `StaffLeave` | JSON — days + leave type | `{"value": 3, "staff_leave_type": 2}` |
@@ -2620,22 +2747,57 @@ All placeholders for all alert types, in one table. Tokens use the format `${tok
 | `${student.name}` | Full name | StudentAttendance, StudentAdmission, StudentEnrolment, StudentStatus |
 | `${student.openemis_no}` | OpenEMIS ID | StudentAttendance, StudentAdmission, StudentEnrolment, StudentStatus |
 | `${student.first_name}` | First name | StudentAttendance, StudentAdmission, StudentEnrolment, StudentStatus |
+| `${student.middle_name}` | Middle name | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${student.third_name}` | Third name | StudentAdmission, StudentEnrolment, StudentStatus |
 | `${student.last_name}` | Last name | StudentAttendance, StudentAdmission, StudentEnrolment, StudentStatus |
+| `${student.preferred_name}` | Preferred name | StudentAdmission, StudentEnrolment, StudentStatus |
 | `${student.email}` | Email address | StudentAttendance, StudentAdmission, StudentEnrolment, StudentStatus |
+| `${student.address}` | Address | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${student.postal_code}` | Postal code | StudentAdmission, StudentEnrolment, StudentStatus |
 | `${student.date_of_birth}` | Date of birth | StudentAttendance, StudentAdmission, StudentEnrolment, StudentStatus |
-| `${student.gender}` | Gender | StudentAttendance, StudentAdmission, StudentEnrolment, StudentStatus |
+| `${student.gender}` | Gender | StudentAttendance only |
+| `${student.identity_number}` | Identity number | StudentAttendance only |
+| `${student.main_nationality}` | Nationality | StudentAttendance only |
+| `${student.identity_type}` | Identity type | StudentAttendance only |
+| `${admission_status}` | Admission workflow step name | StudentAdmission only |
+| `${enrolment_status}` | Enrolment workflow step name | StudentEnrolment only |
+| `${student_status}` | Student status name | StudentStatus only |
+| `${academic_period.name}` | Academic period | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${start_date}` | Study start date | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${end_date}` | Study end date | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${grade.name}` | Education grade | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${guardian.name}` | Guardian full name(s) | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${guardian.relation}` | Guardian relation type(s) | StudentAdmission, StudentEnrolment, StudentStatus |
+| `${guardian.contact}` | Guardian contact(s) | StudentAdmission, StudentEnrolment, StudentStatus |
 | `${total_days}` | Total absence days (current period) | StudentAttendance only |
+| `${total_times}` | Total absence records | StudentAttendance only |
 | `${threshold}` | Configured threshold value | StudentAttendance only |
 
 ### Staff / User tokens
 
 | Token | Value | Alert types |
 |-------|-------|-------------|
-| `${user.openemis_no}` | OpenEMIS ID | RetirementWarning, StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
-| `${user.first_name}` | First name | RetirementWarning, StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
-| `${user.last_name}` | Last name | RetirementWarning, StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
-| `${user.email}` | Email address | RetirementWarning, StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
-| `${user.date_of_birth}` | Date of birth | RetirementWarning |
+| `${openemis_no}` | OpenEMIS ID | RetirementWarning only (no `user.` prefix) |
+| `${first_name}` | First name | RetirementWarning only |
+| `${middle_name}` | Middle name | RetirementWarning only |
+| `${third_name}` | Third name | RetirementWarning only |
+| `${last_name}` | Last name | RetirementWarning only |
+| `${preferred_name}` | Preferred name | RetirementWarning only |
+| `${email}` | Email address | RetirementWarning only |
+| `${address}` | Address | RetirementWarning only |
+| `${postal_code}` | Postal code | RetirementWarning only |
+| `${date_of_birth}` | Date of birth | RetirementWarning only |
+| `${age}` | Calculated current age | RetirementWarning only |
+| `${user.openemis_no}` | OpenEMIS ID | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.first_name}` | First name | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.middle_name}` | Middle name | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.third_name}` | Third name | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.last_name}` | Last name | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.preferred_name}` | Preferred name | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.email}` | Email address | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.address}` | Address | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.postal_code}` | Postal code | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
+| `${user.date_of_birth}` | Date of birth | StaffEmployment, StaffLeave, StaffType, LicenseValidity, LicenseRenewal |
 
 ### Institution tokens
 

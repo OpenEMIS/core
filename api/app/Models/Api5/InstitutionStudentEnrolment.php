@@ -5,14 +5,11 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
-use App\Services\AlertTriggerService; // POCOR-9509
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class InstitutionStudentEnrolment extends Model
 {
     use HasFactory;
-    use InstitutionScope;
+use InstitutionScope;
 
     protected $table = 'institution_student_enrolment';
 
@@ -25,94 +22,8 @@ class InstitutionStudentEnrolment extends Model
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
 
-    /**
-     * POCOR-9509: Boot method to register model events
-     */
-    protected static function boot()
-    {
-        parent::boot();
+    // ✅ Define the primary key
 
-        // POCOR-9509: Trigger alert processing after save (create or update)
-        static::saved(function ($enrolment) {
-            if (!$enrolment->student_id || !$enrolment->institution_id || !$enrolment->status_id) {
-                // Log::warning('[POCOR-9509] Skipping enrolment alert - missing required fields', [
-//                    'id' => $enrolment->id,
-//                    'student_id' => $enrolment->student_id,
-//                    'institution_id' => $enrolment->institution_id,
-//                ]);
-                return;
-            }
-
-            try {
-                $enrolment->processEnrolmentAlert();
-            } catch (\Throwable $e) {
-                Log::error('[POCOR-9509] Enrolment alert processing failed in saved event', [
-                    'enrolment_id' => $enrolment->id,
-                    'exception' => $e->getMessage(),
-                ]);
-            }
-        });
-    }
-
-    /**
-     * POCOR-9509: Process enrolment alert after enrolment status changes
-     *
-     * Phase 3: Models just trigger alerts, commands do all the work
-     */
-    protected function processEnrolmentAlert(): bool
-    {
-        if (!$this->student_id || !$this->institution_id || !$this->id) {
-            throw new \Exception('Missing required attributes for alert processing');
-        }
-
-        try {
-            // POCOR-9509: Get active alert rule
-            $alertRule = AlertTriggerService::getActiveAlertRule('StudentEnrolment', $this->institution_id);
-
-            if (!$alertRule) {
-                // Log::debug('[POCOR-9509] No active StudentEnrolment alert rule for institution', [
-                //     'institution_id' => $this->institution_id,
-                // ]);
-                return false;
-            }
-
-            // POCOR-9509: Trigger alert (creates process + dispatches command)
-            // Command will handle everything: threshold checks, placeholders, recipients, sending
-            // entityId is passed as --entity_id to command, context is for params tracking only
-            $triggerResult = AlertTriggerService::triggerAlert(
-                processName: 'AlertStudentEnrolment',
-                featureName: 'StudentEnrolment',
-                userId: $this->created_user_id ?? 1,
-                ruleId: $alertRule->id,
-                entityId: $this->id, // Passed as --entity_id to command
-                context: [
-                    'student_id' => $this->student_id,
-                    'status_id' => $this->status_id,
-                    'academic_period_id' => $this->academic_period_id,
-                    'institution_id' => $this->institution_id,
-                    'change_date' => $this->modified ?? $this->created,
-                ],
-                entityType: 'StudentEnrolment',
-                triggerType: 'status_changed'
-            );
-
-            // Log::info('[POCOR-9509] Enrolment alert triggered', [
-            //     'enrolment_id' => $this->id,
-            //     'success' => $triggerResult['success'],
-            //     'process_id' => $triggerResult['process_id'] ?? null,
-            //     'duplicate' => $triggerResult['duplicate'] ?? false,
-            // ]);
-
-            return true;
-        } catch (\Throwable $e) {
-            Log::error('[POCOR-9509] Failed to trigger enrolment alert', [
-                'enrolment_id' => $this->id,
-                'exception' => $e->getMessage(),
-            ]);
-            // Don't throw - graceful degradation
-            return false;
-        }
-    }
 
      // Override getKeyForSaveQuery to handle composite keys
 

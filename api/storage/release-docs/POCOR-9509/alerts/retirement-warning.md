@@ -74,19 +74,30 @@ The threshold is a JSON object with a single `value` field — the number of day
 
 ## Available Placeholders
 
+> **Note:** RetirementWarning uses bare field names without a `user.` prefix (unlike other staff alerts).
+
 | Placeholder | Value |
 |-------------|-------|
-| `${user.openemis_no}` | Staff OpenEMIS ID |
-| `${user.first_name}` | First name |
-| `${user.last_name}` | Last name |
-| `${user.email}` | Email address |
-| `${user.date_of_birth}` | Date of birth |
+| `${threshold.value}` | Configured day threshold |
+| `${age}` | Staff member's current age (calculated) |
+| `${openemis_no}` | Staff OpenEMIS ID |
+| `${first_name}` | First name |
+| `${middle_name}` | Middle name |
+| `${third_name}` | Third name |
+| `${last_name}` | Last name |
+| `${preferred_name}` | Preferred name |
+| `${email}` | Email address |
+| `${address}` | Address |
+| `${postal_code}` | Postal code |
+| `${date_of_birth}` | Date of birth |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
-| `${threshold.value}` | Configured day threshold |
+| `${institution.website}` | Institution website |
 
 ---
 
@@ -105,7 +116,7 @@ The threshold is a JSON object with a single `value` field — the number of day
 
 **Subject:**
 ```
-Retirement Notice (90 days): ${user.first_name} ${user.last_name} — ${institution.name}
+Retirement Notice (90 days): ${first_name} ${last_name} — ${institution.name}
 ```
 
 **Message body:**
@@ -115,8 +126,8 @@ Dear HR Officer,
 This is an advance notice that the following staff member is approaching their
 retirement date within the next ${threshold.value} days.
 
-Staff Member: ${user.first_name} ${user.last_name}
-OpenEMIS ID: ${user.openemis_no}
+Staff Member: ${first_name} ${last_name}
+OpenEMIS ID: ${openemis_no}
 Institution: ${institution.name}
 
 Recommended actions at this stage:
@@ -143,7 +154,7 @@ This is an automated notification from OpenEMIS.
 
 **Subject:**
 ```
-REMINDER: ${user.first_name} ${user.last_name} retires within ${threshold.value} days — ${institution.name}
+REMINDER: ${first_name} ${last_name} retires within ${threshold.value} days — ${institution.name}
 ```
 
 **Message body:**
@@ -152,7 +163,7 @@ Dear Colleague,
 
 FINAL REMINDER: The following staff member retires within ${threshold.value} days.
 
-Staff Member: ${user.first_name} ${user.last_name} (${user.openemis_no})
+Staff Member: ${first_name} ${last_name} (${openemis_no})
 Institution: ${institution.name}
 
 Immediate actions required:
