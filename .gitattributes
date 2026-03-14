@@ -1,25 +1,3 @@
-# 1. Глобальная нормализация для всех текстовых файлов (принудительный LF)
-* text=auto eol=lf
-
-# 2. Явное указание для PHP и JS (основной стек)
-*.php text eol=lf
-*.js text eol=lf
-*.json text eol=lf
-*.md text eol=lf
-*.sql text eol=lf
-
-# 3. Исключения для файлов Composer (защита от повреждения sed-ом или гитом)
-# Мы помечаем их как -text, чтобы гит не пытался менять в них окончания строк
 vendor/composer/installed.json -text
 vendor/composer/installed.php -text
 vendor/composer/platform_check.php -text
-
-# 4. Защита бинарных файлов (картинки, шрифты)
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.gif binary
-*.ico binary
-*.woff binary
-*.woff2 binary
-*.pdf binary
