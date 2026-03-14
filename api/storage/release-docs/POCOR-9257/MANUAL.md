@@ -4,6 +4,10 @@
 > **Feature:** Async Webhook Queue with Logging and Retry
 > **Scope:** CakePHP (WebhookQueueBehavior) + Laravel API5 (WebhookQueueTrait) + Queue Processor
 
+This manual covers everything you need to connect OpenEMIS to your own systems using webhooks. Whether you want to send a welcome email when a student enrols, sync staff records to an HR platform, or push attendance data to a parent app — webhooks let OpenEMIS notify your system the moment something changes, without any polling.
+
+> **New to webhooks?** Start with [Section 1](#1-what-are-webhooks) for a plain-English explanation, then jump to [Section 4](#4-configuring-webhooks-admin-ui) to set up your first webhook in the admin UI. Developers building a receiver application should also read [Section 14](#14-integration-examples--webhook--api) for working code examples.
+
 ---
 
 ## Table of Contents
@@ -21,22 +25,37 @@
 11. [Troubleshooting](#11-troubleshooting)
 12. [Database Schema Reference](#12-database-schema-reference)
 13. [Deployment Instructions](#13-deployment-instructions)
+14. [Integration Examples — Webhook + API](#14-integration-examples--webhook--api)
 
 ---
 
 ## 1. What Are Webhooks?
 
-A webhook is an HTTP callback — when something changes in OpenEMIS (a student is enrolled, an institution is updated, a staff member is created), OpenEMIS sends an HTTP request to an external system you have configured. The external system receives the data and can react in whatever way it needs to — sync a database, trigger a workflow, send a notification, update a third-party integration.
+Think of a webhook as a tap on the shoulder. Instead of your external system constantly asking "has anything changed?", OpenEMIS taps your system on the shoulder and says "something just happened — here are the details." That tap is an HTTP POST request sent to a URL you control.
 
-**Before POCOR-9257:** Webhooks were fired synchronously as part of the user's request. If the external endpoint was slow or unavailable, the user's browser would wait. There was no retry on failure and no record of what was sent.
+Common things you might want to do when OpenEMIS taps you:
 
-**After POCOR-9257:** Webhooks are queued to a database table and delivered asynchronously by a background worker every minute. Failed deliveries are automatically retried with exponential backoff. Every delivery attempt (success or failure) is permanently recorded in an audit log. Failed webhooks can be manually re-queued for resend.
+- **Send a welcome email** when a student is enrolled at a new school
+- **Notify HR** when a staff member is hired or leaves
+- **Push attendance data** to a parent notification app in real time
+- **Sync institution profiles** to a national data warehouse
+- **Trigger a workflow** in a case management system when a case is opened
+
+Any time a record is created, updated, or deleted in OpenEMIS, you can have OpenEMIS call your URL with the event details.
+
+---
+
+### What changed in POCOR-9257?
+
+**Before:** Webhooks fired synchronously — while the user waited. A slow or down endpoint would stall the admin's browser. There was no retry and no record of what was sent.
+
+**After:** Webhooks are queued and delivered in the background, every minute, by a worker process. If delivery fails, it retries automatically with increasing delays. Every attempt — success or failure — is written to a permanent audit log. Webhooks that exhaust all retries can be manually re-sent.
 
 ---
 
 ## 2. System Architecture
 
-The system has two independent entry points — one from CakePHP, one from the Laravel API — that both write to the same queue table, which is consumed by a single async processor.
+Under the hood, the webhook system has two separate "entry points" — one for the older CakePHP part of OpenEMIS and one for the newer Laravel API. Both write to the same database queue, and a single background worker picks up that queue and makes the HTTP calls. This means the system works whether a change was made through the admin UI, an API call, or an import.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -101,47 +120,41 @@ This allows disabling all webhooks for an external system in one action by toggl
 
 ## 3. How It Works — Step by Step
 
-### CakePHP Path
+Here is the full journey of a webhook, from a change being made in OpenEMIS to the HTTP call landing at your server.
 
-1. An admin saves a record in a CakePHP table that has `WebhookQueueBehavior` attached (e.g., `InstitutionsTable`).
-2. `WebhookQueueBehavior::afterSave()` fires with the entity and its configured `entity_create` or `entity_update` event key.
-3. The behavior calls `WebhooksQueueTable::queueWebhook(eventKey, body, user)`.
-4. `queueWebhook()` queries `webhooks` joined to `config_items` to find active webhook rules for that event key.
-5. For each matching rule, it resolves the final URL (applying `query_template` placeholders) and body (applying `body_template` or sending the full entity JSON).
-6. It inserts a row into `webhooks_queue` with `status = 0` (PENDING).
-7. The user's request returns immediately. Nothing is sent yet.
+### When someone makes a change in OpenEMIS (CakePHP UI)
 
-### Laravel API Path
+1. An admin saves a record — for example, enrolling a student at a school.
+2. CakePHP's `WebhookQueueBehavior` intercepts the save and checks: is there an active webhook configured for this event?
+3. If yes, it builds the payload (filling in any placeholders you configured) and writes a row to `webhooks_queue` with status **PENDING**. That's it — the user's page loads normally.
+4. Nothing has been sent to your server yet.
 
-1. A consumer calls the Laravel API v5 endpoint to create/update/delete a record on a model that uses `WebhookQueueTrait` (e.g., `Institutions`).
-2. Eloquent fires the `created`/`updated`/`deleted` event.
-3. `WebhookQueueTrait::bootWebhookQueueTrait()` has registered listeners for those events.
-4. The listener calls `queueWebhookForModel(action)`, which:
-   - Builds the `event_key` from the table name (singularized + `_action`) or from `$webhookEventPrefix` if configured.
-   - Loads configured relations (`$webhookRelations`).
-   - Serializes the model to array, strips sensitive fields.
-   - Calls `queueWebhook(eventKey, body)`.
-5. `queueWebhook()` queries `webhooks` joined to `config_items` directly via `DB::table()`.
-6. Inserts into `webhooks_queue` with `status = 0`.
-7. API response returns immediately.
+### When something changes via the REST API (Laravel)
 
-### Async Delivery (every minute)
+1. A system calls `POST /api/v5/institutions` to create a new institution.
+2. Laravel's Eloquent model fires a `created` event. `WebhookQueueTrait` picks it up.
+3. It checks for active webhook rules matching the event key (`institution_create`), builds the payload, and inserts into `webhooks_queue` — again, status **PENDING**.
+4. The API response returns immediately without waiting for any delivery.
 
-1. Laravel Kernel scheduler triggers `webhooks:process --once` every minute.
-2. `ProcessWebhooksQueue` fetches up to 100 pending entries (`status=0`, `available_at <= now()`, `next_retry_at IS NULL OR <= now()`), ordered oldest-first.
-3. Each entry is processed in a database transaction:
-   - Status set to `1` (PROCESSING).
-   - `WebhookSender` makes the HTTP request with configured method, headers, payload, and auth.
-   - **Success** (HTTP 2xx or 3xx): status → `2` (SENT), response stored, logged to `webhook_logs`.
-   - **Failure**: retry count incremented, `next_retry_at` = exponential backoff. If max retries reached, status → `-1` (FAILED). Logged to `webhook_logs` regardless.
+### In the background (every minute)
+
+1. The Laravel scheduler triggers `php artisan webhooks:process --once` every minute via cron.
+2. It fetches up to 100 pending entries that are ready to send (ordered oldest-first).
+3. For each entry — wrapped in a database transaction so a crash in one does not affect the others:
+   - Marks it **PROCESSING** (so a parallel run won't pick it up twice).
+   - Calls your URL via HTTP using `WebhookSender` (Guzzle under the hood).
+   - **If your server responds 2xx or 3xx:** marks it **SENT**, stores the response, writes a log entry.
+   - **If delivery fails:** increments the retry count, schedules a retry with exponential backoff (2 min → 4 min → 8 min), writes a log entry. After 3 failures it marks the entry **FAILED** — but you can always re-queue it manually.
 
 ---
 
 ## 4. Configuring Webhooks (Admin UI)
 
-Navigate to: **Configuration → External Data → Webhooks**
+Setting up a webhook takes about two minutes. You tell OpenEMIS: *when this type of event happens, call this URL with this payload*. That's it.
 
-### Creating a Webhook Rule
+Navigate to: **Configuration → External Data → Webhooks** and click **Add**.
+
+### Fields at a Glance
 
 | Field | Description | Required |
 |-------|-------------|----------|
@@ -173,13 +186,13 @@ When a student is created in OpenEMIS, this rule fires and POSTs a JSON payload 
 
 ## 5. Template System — URL and Body Placeholders
 
+Placeholders let you inject entity field values into the webhook URL and payload at queue time — so the URL your receiver gets is already populated with the right IDs, and the payload contains exactly the fields you care about.
+
 ### How Placeholders Work
 
-Placeholders use the format `${field_name}` and are replaced with the corresponding field from the entity at queue time (before the entry is stored in `webhooks_queue`).
+The syntax is `${field_name}`. When OpenEMIS queues a webhook, it scans the URL, query string, and body template and replaces each `${field_name}` with the value of that field from the record that changed.
 
-The replacement matches flat field names from the entity's serialized array (including relations that have been loaded). Nested keys are not supported — relation data is serialized as a sub-array by the JSON column, but the placeholder system only matches top-level keys.
-
-If a placeholder key is not found in the entity data, it is kept as-is (the literal `${field_name}` string is written into the URL or body).
+Placeholder matching works on **flat, top-level field names** from the entity's data. If a placeholder key is not found in the entity, it is left as the literal string `${field_name}` — nothing is silently dropped.
 
 ### Query Template
 
@@ -221,9 +234,9 @@ For delete events, two additional fields are injected into the entity data befor
 
 ## 6. Authentication
 
-`WebhookSender` supports four authentication methods. The `auth_type` and `auth_credentials` fields on the queue entry control which method is applied.
+Your webhook receiver should be able to verify that requests genuinely came from OpenEMIS. OpenEMIS supports four ways to authenticate outbound webhook requests. The delivery code is fully implemented for all four — UI configuration is planned for a follow-up release.
 
-> **Note:** As of POCOR-9257, auth credentials are stored as `null` in queue entries. Authentication configuration via the UI is planned. The delivery code is fully implemented and ready.
+> **Note:** As of POCOR-9257, auth credentials are stored as `null` in queue entries. Authentication configuration via the admin UI is planned. The delivery code is ready and waiting.
 
 ### Bearer Token
 
@@ -263,7 +276,9 @@ Signature is pre-computed at queue time and stored in the `signature` column.
 
 ## 7. Event Keys Reference
 
-Event keys are the identifiers that link an OpenEMIS data event to a configured webhook rule. A webhook rule fires only when an event matching its configured key is queued.
+Every webhook rule needs an event key — a string that tells OpenEMIS "fire this webhook when *this* type of change happens." When you create a webhook in the admin UI, the Event Key dropdown lists all available keys.
+
+The tables below show every supported key, what triggers it, and whether it comes from the CakePHP or Laravel side of OpenEMIS.
 
 ### How Event Keys Are Generated
 
@@ -397,6 +412,8 @@ Event keys are the identifiers that link an OpenEMIS data event to a configured 
 
 ## 8. Queue and Retry Behaviour
 
+OpenEMIS doesn't give up on a webhook just because your server was temporarily down. Failed deliveries are automatically retried with increasing delays, giving your endpoint time to recover. Here is how the lifecycle works.
+
 ### Queue Status Values
 
 | Value | Status | Meaning |
@@ -450,7 +467,7 @@ Response bodies are truncated at **10,000 characters** before storage to prevent
 
 ## 9. Webhook Logs (Audit Trail)
 
-Every delivery attempt is permanently recorded in `webhook_logs`, regardless of success or failure. This table is never purged automatically.
+Every delivery attempt — whether it succeeded or failed — is permanently recorded. This gives you a complete, searchable history of what OpenEMIS sent, when, and what your server responded. The log table is never purged automatically, so you can go back and audit any delivery.
 
 ### What Is Logged
 
@@ -786,3 +803,330 @@ bin/cake migrations rollback
 This restores `webhooks_queue` and `webhook_logs` to their pre-migration state from the backup tables.
 
 Webhook queueing failures are designed to be **non-blocking** — they are caught and logged, and the parent save operation completes normally. The system degrades gracefully; nothing breaks if webhook delivery is disrupted.
+
+---
+
+## 14. Integration Examples — Webhook + API
+
+This section shows how an external system can combine OpenEMIS webhooks with the REST API to build real integrations — for example, sending a rich welcome email when a new student is enrolled.
+
+### Online API Reference
+
+The full v5 API is documented and browsable online:
+
+**https://api.openemis.org/core/v5/**
+
+This Swagger UI shows every available endpoint, request parameters, and response schemas. Use it when building integrations to discover exactly which fields are available on each resource.
+
+---
+
+### The Pattern
+
+Webhooks deliver a **trigger** containing the event key and the entity IDs that changed. The webhook payload alone often does not contain every field needed — for example, `institution_student_create` includes `student_id` and `institution_id` but not the student's name or email.
+
+The recommended pattern for rich integrations:
+
+```
+1. Receive webhook  →  extract IDs from payload
+2. Call OpenEMIS API  →  fetch the full record(s) you need
+3. Act  →  send email, sync database, trigger workflow
+```
+
+This keeps webhook payloads lightweight while giving integrations access to the complete, up-to-date data.
+
+---
+
+### Authentication — Getting a JWT Token
+
+All v5 API calls require a JWT Bearer token. Obtain one with:
+
+```http
+POST https://your-openemis-host/api/v4/login
+Content-Type: application/json
+
+{
+  "username": "api_service_account",
+  "password": "your_password"
+}
+```
+
+Response:
+
+```json
+{
+  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": { "id": 42, "username": "api_service_account" }
+}
+```
+
+Include the token in every subsequent API call:
+
+```
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+```
+
+> **Recommendation:** Create a dedicated read-only service account in OpenEMIS for your integration. Store its credentials in your environment, not in code.
+
+---
+
+### Example 1: New Student Welcome Email (Python)
+
+**Scenario:** When a student is enrolled at an institution, send a welcome email to the student and CC the institution contact.
+
+#### Step 1 — Configure the webhook in OpenEMIS Admin
+
+| Field | Value |
+|-------|-------|
+| Event Key | `institution_student_create` |
+| URL | `https://your-integration.example.com/webhooks/openemis` |
+| Method | `POST` |
+| Auth | Bearer token issued to your integration app |
+| Body Template | *(leave blank — full payload will be sent)* |
+
+The webhook will POST the full `institution_students` record, which includes `student_id` and `institution_id`.
+
+#### Step 2 — Receive the webhook and call back for details
+
+```python
+# webhook_receiver.py
+# Requires: flask, requests
+# pip install flask requests
+
+import os
+import requests
+from flask import Flask, request, jsonify
+from email.mime.text import MIMEText
+import smtplib
+
+app = Flask(__name__)
+
+OPENEMIS_BASE   = "https://your-openemis-host/api/v5"
+OPENEMIS_USER   = os.environ["OPENEMIS_API_USER"]
+OPENEMIS_PASS   = os.environ["OPENEMIS_API_PASS"]
+SMTP_HOST       = os.environ["SMTP_HOST"]
+SMTP_PORT       = int(os.environ.get("SMTP_PORT", 587))
+SMTP_USER       = os.environ["SMTP_USER"]
+SMTP_PASS       = os.environ["SMTP_PASS"]
+FROM_ADDRESS    = "noreply@your-ministry.edu"
+
+
+def get_jwt_token():
+    """Authenticate and return a JWT token."""
+    resp = requests.post(
+        f"{OPENEMIS_BASE.replace('/v5', '/v4')}/login",
+        json={"username": OPENEMIS_USER, "password": OPENEMIS_PASS},
+        timeout=10,
+    )
+    resp.raise_for_status()
+    return resp.json()["token"]
+
+
+def api_get(path, token):
+    """GET a v5 API resource."""
+    resp = requests.get(
+        f"{OPENEMIS_BASE}{path}",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=10,
+    )
+    resp.raise_for_status()
+    return resp.json().get("data", {})
+
+
+def send_email(to, subject, body):
+    msg = MIMEText(body, "plain")
+    msg["Subject"] = subject
+    msg["From"]    = FROM_ADDRESS
+    msg["To"]      = to
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.starttls()
+        server.login(SMTP_USER, SMTP_PASS)
+        server.sendmail(FROM_ADDRESS, [to], msg.as_string())
+
+
+@app.route("/webhooks/openemis", methods=["POST"])
+def handle_webhook():
+    payload = request.get_json(silent=True) or {}
+    event   = payload.get("event_key", "")
+
+    # ── Handle: new student enrolled ─────────────────────────────────────────
+    if event == "institution_student_create":
+        student_id     = payload.get("student_id")
+        institution_id = payload.get("institution_id")
+
+        if not student_id or not institution_id:
+            return jsonify({"status": "ignored", "reason": "missing IDs"}), 200
+
+        token = get_jwt_token()
+
+        # Fetch full student profile from OpenEMIS v5 API
+        student = api_get(f"/security-users/{student_id}", token)
+
+        # Fetch institution details
+        institution = api_get(f"/institutions/{institution_id}", token)
+
+        student_name    = f"{student.get('first_name', '')} {student.get('last_name', '')}".strip()
+        student_email   = student.get("email")
+        institution_name = institution.get("name", "your institution")
+        inst_contact     = institution.get("email")
+
+        if student_email:
+            body = (
+                f"Dear {student_name},\n\n"
+                f"Welcome to {institution_name}!\n\n"
+                f"Your OpenEMIS ID is: {student.get('openemis_no', 'N/A')}\n\n"
+                f"If you have any questions, please contact {institution_name} "
+                f"at {inst_contact or 'the school office'}.\n\n"
+                f"Regards,\nOpenEMIS Administration"
+            )
+            send_email(student_email, f"Welcome to {institution_name}", body)
+
+        return jsonify({"status": "ok"}), 200
+
+    # Acknowledge all other events without processing
+    return jsonify({"status": "ignored"}), 200
+
+
+if __name__ == "__main__":
+    app.run(port=8080)
+```
+
+#### Example email produced
+
+```
+To: jane.doe@example.com
+Subject: Welcome to Westside Primary School
+
+Dear Jane Doe,
+
+Welcome to Westside Primary School!
+
+Your OpenEMIS ID is: 0001-2025-00042
+
+If you have any questions, please contact Westside Primary School
+at principal@westside.edu.
+
+Regards,
+OpenEMIS Administration
+```
+
+---
+
+### Example 2: Staff Assignment Notification (Node.js)
+
+**Scenario:** Notify a department manager by email whenever a new staff member is assigned to an institution.
+
+#### Webhook configuration
+
+| Field | Value |
+|-------|-------|
+| Event Key | `institution_staff_create` |
+| URL | `https://your-integration.example.com/webhooks/openemis` |
+| Method | `POST` |
+| Body Template | `{"staff_id": "${staff_id}", "institution_id": "${institution_id}"}` |
+
+Using a body template here keeps the payload minimal — only the two IDs needed.
+
+#### Receiver
+
+```javascript
+// server.js
+// Requires: express, axios, nodemailer
+// npm install express axios nodemailer
+
+const express  = require('express');
+const axios    = require('axios');
+const nodemailer = require('nodemailer');
+
+const app = express();
+app.use(express.json());
+
+const OPENEMIS_BASE = process.env.OPENEMIS_BASE || 'https://your-openemis-host';
+const API_USER      = process.env.OPENEMIS_API_USER;
+const API_PASS      = process.env.OPENEMIS_API_PASS;
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT || 587,
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+});
+
+async function getToken() {
+  const res = await axios.post(`${OPENEMIS_BASE}/api/v4/login`, {
+    username: API_USER,
+    password: API_PASS,
+  });
+  return res.data.token;
+}
+
+async function apiGet(path, token) {
+  const res = await axios.get(`${OPENEMIS_BASE}/api/v5${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data.data;
+}
+
+app.post('/webhooks/openemis', async (req, res) => {
+  const { event_key, staff_id, institution_id } = req.body;
+
+  if (event_key !== 'institution_staff_create') {
+    return res.json({ status: 'ignored' });
+  }
+
+  try {
+    const token       = await getToken();
+    const staff       = await apiGet(`/security-users/${staff_id}`, token);
+    const institution = await apiGet(`/institutions/${institution_id}`, token);
+
+    const staffName   = [staff.first_name, staff.last_name].filter(Boolean).join(' ');
+    const instName    = institution.name;
+    const instContact = institution.email || 'the institution';
+
+    await transporter.sendMail({
+      from:    'noreply@your-ministry.edu',
+      to:      instContact,
+      subject: `New staff assignment: ${staffName}`,
+      text:    `A new staff member has been assigned to ${instName}.\n\n`
+             + `Name:        ${staffName}\n`
+             + `OpenEMIS ID: ${staff.openemis_no}\n`
+             + `Email:       ${staff.email || 'not set'}\n\n`
+             + `Please review the assignment in OpenEMIS.`,
+    });
+
+    res.json({ status: 'ok' });
+  } catch (err) {
+    console.error('Webhook processing error:', err.message);
+    // Return 200 so OpenEMIS does not retry — log the error internally
+    res.json({ status: 'error', message: err.message });
+  }
+});
+
+app.listen(8080, () => console.log('Webhook receiver listening on :8080'));
+```
+
+---
+
+### API Endpoints Used in These Examples
+
+| Endpoint | Returns |
+|----------|---------|
+| `POST /api/v4/login` | JWT token |
+| `GET /api/v5/security-users/{id}` | Full user profile (name, email, openemis_no, DOB, etc.) |
+| `GET /api/v5/institutions/{id}` | Institution details (name, address, email, telephone, etc.) |
+| `GET /api/v5/institution-students?student_id={id}` | All enrolment records for a student |
+| `GET /api/v5/institution-staff?staff_id={id}` | All staff assignments for a person |
+
+All endpoints accept `?_fields=field1,field2` to limit the returned fields — useful for reducing response size in high-volume integrations.
+
+Browse the full endpoint list at **https://api.openemis.org/core/v5/**
+
+---
+
+### Security Checklist for Integration Receivers
+
+Before going to production, verify your webhook receiver does the following:
+
+- [ ] **Validates the incoming `Authorization` header** — use the bearer token you set in the OpenEMIS webhook configuration to authenticate inbound requests
+- [ ] **Returns HTTP 200 quickly** — do expensive work (API calls, email sending) in a background job, not synchronously in the HTTP handler, to avoid timeouts and unnecessary retries
+- [ ] **Is idempotent** — OpenEMIS may retry a webhook if your server does not respond in time; your handler should check whether it already processed an event before acting again
+- [ ] **Does not expose credentials** — API credentials must be in environment variables, never hardcoded
+- [ ] **Uses HTTPS** — OpenEMIS will deliver webhooks only to HTTPS endpoints in production (set `WEBHOOK_VERIFY_SSL=true` in `.env`)
