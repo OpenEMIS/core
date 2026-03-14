@@ -35,7 +35,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
             '${student.identity_number}' => 'Student identity number.',
             // '${user.photo_name}' => 'Student photo name.',
             // '${user.photo_content}' => 'Student photo content.',
-            '${student.main_identity_type}' => 'Student identity type.',
+            '${student.identity_type}' => 'Student identity type.',
             '${student.main_nationality}' => 'Student nationality.',
             '${student.gender}' => 'Student gender.',
             // POCOR-9391 end

@@ -1,47 +1,82 @@
 # Student Admission — `StudentAdmission`
 
 > **Feature key:** `StudentAdmission` · **Process:** `AlertStudentAdmission`
-> **Trigger:** Event-based · **Default frequency:** `Once`
+> **Trigger:** Event-based (workflow step match) · **Default frequency:** `Once`
 
 ---
 
 ## What It Is
 
-An alert sent when a student admission application is created or changes status in the system. It notifies the relevant staff so they can review documentation, allocate places, and progress the application through the approval workflow without delay.
+An alert sent when a student admission application reaches one of the configured workflow steps. It notifies the student and/or their guardians so they are informed of the admission status as it progresses through the approval workflow.
 
 ---
 
 ## Purpose
 
-In most education systems, student admission is a time-sensitive process. Applications need to be reviewed, documents verified, and decisions communicated. Without a notification mechanism, applications can sit unnoticed in the system. This alert ensures the responsible staff are informed the moment an application enters the pipeline.
+In most education systems, student admission is a time-sensitive process. Applications need to be reviewed, documents verified, and decisions communicated. Without a notification mechanism, applicants may not know their application has moved. This alert ensures the student and their guardians are informed the moment the application advances to a significant step (e.g., Approved, Rejected).
 
 ---
 
 ## When and How It Fires
 
-This is an **event-based** alert. It fires immediately when a `StudentAdmission` record is saved (created or its status updated). The CakePHP `StudentAdmissionTable` calls `AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentAdmission', ...)` in its `afterSave` callback.
+This is an **event-based** alert. The CakePHP `StudentAdmissionTable` calls `AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentAdmission', ...)` in its `afterSave` callback, which dispatches the `alerts:student-admission` artisan command.
 
-There is no threshold check — the alert fires for every qualifying save event.
+The command then checks the admission's current `status_id` against the `workflow_steps` list in the threshold JSON. **If the current status is not in the configured workflow steps, the alert is suppressed.** The threshold is required — if no workflow steps are configured, no alerts will fire.
 
 ---
 
 ## Frequency
 
-**`Once` per event.** Admission is a singular, discrete event. Repeating the notification would create confusion — a record has either been submitted or it hasn't. `Once` ensures the notification goes out exactly when the action happens.
+**`Once` per event.** Each workflow step transition is a discrete event. The `Once` model ensures the notification goes out exactly when the application moves to a qualifying step.
 
 ---
 
 ## Recipients
 
-Security roles resolved **globally** (no institution filter by default). This is because admission decisions are often made at a central, ministry, or district level rather than purely within a single school. The roles assigned to the alert rule define the correct audience for your deployment.
+Recipients are resolved via **student-associated contact lookup** (`getStudentAssociatedContactList`). This method **only** resolves:
+
+- **The student themselves** — when security role ID `8` (Student) is assigned to the rule
+- **The student's guardians** — when security role ID `9` (Guardian) is assigned to the rule
+
+Other security roles added to the rule are ignored. If neither role 8 nor 9 is in the rule's security roles, no recipients will be found and no alert will be sent.
 
 ---
 
 ## Threshold Configuration
 
-There is **no threshold** for this alert — it fires on every admission save event. The threshold field is not used.
+The threshold defines which **workflow steps** should trigger the alert. The format is a JSON object with an array of step IDs:
 
-If you want to limit alerts to specific admission statuses (e.g., only alert when the application is formally submitted, not on every edit), this must be handled in the rule configuration or in the triggering code. Contact your system administrator if selective triggering is required.
+```json
+{"workflow_steps": [82]}
+```
+
+| Field | Description |
+|-------|-------------|
+| `workflow_steps` | Array of `workflow_steps.id` values from the `Student Admission` workflow |
+
+### Student Admission workflow step IDs
+
+These are the IDs configured in the `workflow_steps` table for the `Student Admission` workflow:
+
+| ID | Step name |
+|----|-----------|
+| 80 | Open |
+| 81 | Pending Approval |
+| 82 | Approved |
+| 83 | Rejected |
+| 84 | Pending Cancellation |
+| 85 | Cancelled |
+
+> **Important:** These IDs were seeded during installation. On older deployments the IDs may differ — always query `SELECT id, name FROM workflow_steps WHERE workflow_id = (SELECT id FROM workflows WHERE name = 'Student Admission')` to confirm the correct IDs for your system. Alert rules configured with wrong step IDs will silently not fire.
+
+### Examples
+
+| Threshold | Meaning |
+|-----------|---------|
+| `{"workflow_steps": [82]}` | Alert when admission is Approved |
+| `{"workflow_steps": [83]}` | Alert when admission is Rejected |
+| `{"workflow_steps": [82, 83]}` | Alert on either Approved or Rejected |
+| `{"workflow_steps": [80, 81, 82, 83, 84, 85]}` | Alert on any step |
 
 ---
 
@@ -49,78 +84,96 @@ If you want to limit alerts to specific admission statuses (e.g., only alert whe
 
 | Placeholder | Value |
 |-------------|-------|
+| `${admission_status}` | Current admission workflow step name |
+| `${academic_period.name}` | Academic period name |
+| `${start_date}` | Student study start date |
+| `${end_date}` | Student study end date |
 | `${student.name}` | Student's full name |
 | `${student.openemis_no}` | OpenEMIS ID |
 | `${student.first_name}` | First name |
+| `${student.middle_name}` | Middle name |
+| `${student.third_name}` | Third name |
 | `${student.last_name}` | Last name |
+| `${student.preferred_name}` | Preferred name |
 | `${student.email}` | Email address |
+| `${student.address}` | Address |
+| `${student.postal_code}` | Postal code |
 | `${student.date_of_birth}` | Date of birth |
-| `${student.gender}` | Gender |
 | `${institution.name}` | Institution name |
 | `${institution.code}` | Institution code |
 | `${institution.address}` | Institution address |
+| `${institution.postal_code}` | Institution postal code |
+| `${institution.contact_person}` | Institution contact person |
 | `${institution.telephone}` | Telephone |
 | `${institution.email}` | Institution email |
+| `${institution.website}` | Institution website |
+| `${grade.name}` | Education grade name |
+| `${guardian.name}` | Guardian full name |
+| `${guardian.relation}` | Guardian relation type |
+| `${guardian.contact}` | Guardian contact (from `user_contacts`) |
 
 ---
 
 ## Example Alert Rule
 
-### Admission received notification
+### Admission approved notification to student/guardian
 
 | Field | Value |
 |-------|-------|
-| **Name** | New Student Admission Received |
+| **Name** | Student Admission — Approved |
 | **Feature** | StudentAdmission |
 | **Enabled** | Yes |
 | **Method** | Email |
-| **Threshold** | _(leave blank — not applicable)_ |
-| **Security Roles** | Admissions Officer, Institution Principal |
+| **Threshold** | `{"workflow_steps": [82]}` |
+| **Security Roles** | Student (role 8), Guardian (role 9) |
 
 **Subject:**
 ```
-New Admission Application: ${student.name}
+Your Admission Application Has Been Approved — ${institution.name}
 ```
 
 **Message body:**
 ```
-Dear Colleague,
+Dear ${student.name},
 
-A new student admission application has been submitted in OpenEMIS and requires your attention.
+Your admission application to ${institution.name} has been approved.
 
 Student: ${student.name}
 OpenEMIS ID: ${student.openemis_no}
-Date of Birth: ${student.date_of_birth}
-Institution: ${institution.name}
+Academic Period: ${academic_period.name}
+Grade: ${grade.name}
+Start Date: ${start_date}
 
-Please log in to OpenEMIS and review the application:
-  Administration → Students → Admissions
-
-Ensure all required documents have been submitted and proceed with the
-verification process according to your institution's admissions policy.
+Please log in to OpenEMIS or contact the institution for further instructions.
 
 This is an automated notification from OpenEMIS.
 ```
 
-### Second rule — SMS confirmation to admissions coordinator
+### Rejected notification to student/guardian
 
 | Field | Value |
 |-------|-------|
-| **Name** | Admission — SMS to Coordinator |
+| **Name** | Student Admission — Rejected |
 | **Feature** | StudentAdmission |
 | **Enabled** | Yes |
-| **Method** | SMS |
-| **Security Roles** | Admissions Coordinator |
+| **Method** | Email |
+| **Threshold** | `{"workflow_steps": [83]}` |
+| **Security Roles** | Student (role 8), Guardian (role 9) |
 
 **Subject:**
 ```
-OpenEMIS: New admission for ${student.name} at ${institution.name}
+Your Admission Application — ${institution.name}
 ```
 
 **Message body:**
 ```
-OpenEMIS ALERT: New admission application from ${student.name} (${student.openemis_no})
-at ${institution.name}. Please review in the system.
+Dear ${student.name},
+
+Your admission application to ${institution.name} has not been approved at this time.
+
+Please contact ${institution.name} directly for further information.
+
+This is an automated notification from OpenEMIS.
 ```
 
 ---
@@ -129,9 +182,9 @@ at ${institution.name}. Please review in the system.
 
 You can configure multiple rules for the same `StudentAdmission` feature — for example:
 
-- **Rule 1** — Email to admissions officer with full application details
-- **Rule 2** — SMS to the admissions coordinator as a quick notification
-- **Rule 3** — Email to the school principal for high-level awareness
+- **Rule 1** — Email to student when Approved (threshold: `{"workflow_steps": [82]}`)
+- **Rule 2** — Email to guardian when Approved (same threshold, role 9)
+- **Rule 3** — Email to student when Rejected (threshold: `{"workflow_steps": [83]}`)
 
 Each rule can target different roles, use a different method (Email vs SMS), and carry a completely different message tailored to the audience's needs.
 
@@ -141,10 +194,11 @@ Each rule can target different roles, use a different method (Email vs SMS), and
 
 - Artisan command: `alerts:student-admission`
 - Dispatched from: `StudentAdmissionTable::afterSave()`
-- Required parameters: `--user_id`, `--rule_id`, `--process_id`
+- Required parameters: `--user_id`, `--rule_id`, `--process_id`, `--entity_id`
+- `--entity_id` is the `institution_student_admission.id` of the record that was saved
 - Manual test:
   ```bash
   docker exec poe-application /bin/sh -c \
     "cd /var/www/html/emis/core/api && php artisan alerts:student-admission \
-     --user_id=1 --rule_id=<id> --process_id=0"
+     --user_id=1 --rule_id=<id> --process_id=0 --entity_id=<admission_id>"
   ```

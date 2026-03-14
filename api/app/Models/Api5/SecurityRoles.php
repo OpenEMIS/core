@@ -5,14 +5,10 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-use App\Models\Concerns\WebhookQueueTrait;
 class SecurityRoles extends Model
 {
     use HasFactory;
-    use WebhookQueueTrait;
-
-    // POCOR-9257: Configure webhook events
-    protected $webhookEvents = ['created', 'updated', 'deleted'];    // ✅ Allow mass assignment
+    // ✅ Allow mass assignment
     protected $fillable = ['id', 'name', 'code', 'order', 'visible', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'security_group_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
