@@ -1294,7 +1294,7 @@ class ConfigWebhooksTable extends ControllerActionTable
 
         // --- POCOR-9257: Queue webhook for async processing ---
         try {
-            $WebhookQueue = TableRegistry::getTableLocator()->get('WebhookQueue'); //POCOR-9257: renamed from WebhooksQueue
+            $WebhookQueue = TableRegistry::getTableLocator()->get('Alert.WebhookQueue'); //POCOR-9257: moved to Alert plugin
             $user = $this->resolveCurrentUser();
             $result = $WebhookQueue->queueWebhook($commandName, $body, $user);
             if ($result) {

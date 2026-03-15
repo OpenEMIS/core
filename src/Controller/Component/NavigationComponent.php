@@ -3821,12 +3821,14 @@ class NavigationComponent extends Component
                     'Webhook.WebhookQueue' => [
                         'title' => 'Webhook Queue',
                         'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'], //POCOR-9257: moved to Alert plugin
                         'selected' => ['Webhook.WebhookQueue']
                     ],
                     //POCOR-9257: Add Webhook Logs to Communications menu
                     'Webhook.WebhookLogs' => [
                         'title' => 'Webhook Logs',
                         'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'], //POCOR-9257: moved to Alert plugin
                         'selected' => ['Webhook.WebhookLogs']
                     ],
                 ];
@@ -3869,12 +3871,14 @@ class NavigationComponent extends Component
                 'Webhook.WebhookQueue' => [
                     'title' => 'Webhook Queue',
                     'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'], //POCOR-9257: moved to Alert plugin
                     'selected' => ['Webhook.WebhookQueue']
                 ],
                 //POCOR-9257: Add Webhook Logs to Communications menu
                 'Webhook.WebhookLogs' => [
                     'title' => 'Webhook Logs',
                     'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'], //POCOR-9257: moved to Alert plugin
                     'selected' => ['Webhook.WebhookLogs']
                 ],
             ];
