@@ -12,16 +12,16 @@ use App\Services\AlertSender\EmailSender;
 use App\Services\AlertSender\SmsSender;
 use App\Services\AlertSender\MessageSanitizer;
 
-class ProcessAlertsQueue extends Command
+class ProcessAlertQueue extends Command
 {
     protected $signature = 'alerts:process {--limit=50}';
-    protected $description = 'Process pending alerts from alerts_queue';
+    protected $description = 'Process pending alerts from alert_queue';
 
     public function handle(): int
     {
         $limit = (int)$this->option('limit');
 
-        $alerts = DB::table('alerts_queue')
+        $alerts = DB::table('alert_queue')
             ->where('status', 0)
             ->where('available_at', '<=', now())
             ->orderBy('id')
@@ -71,7 +71,7 @@ class ProcessAlertsQueue extends Command
                 ]);
             }
             // Lock the row using optimistic locking
-            $updated = DB::table('alerts_queue')
+            $updated = DB::table('alert_queue')
                 ->where('id', $alert->id)
                 ->where('status', 0)
                 ->update([
@@ -115,7 +115,7 @@ class ProcessAlertsQueue extends Command
                 }
 
                 // Mark as sent
-                DB::table('alerts_queue')
+                DB::table('alert_queue')
                     ->where('id', $alert->id)
                     ->update([
                         'status' => 2,
@@ -161,7 +161,7 @@ class ProcessAlertsQueue extends Command
         $retryCount = $alert->retry_count + 1;
         $status = $retryCount >= $maxRetries ? -1 : 0;
 
-        DB::table('alerts_queue')
+        DB::table('alert_queue')
             ->where('id', $alert->id)
             ->update([
                 'status' => $status,

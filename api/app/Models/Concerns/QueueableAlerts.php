@@ -58,7 +58,7 @@ trait QueueableAlerts
                 'model_table' => $this->getTable(),
             ]);
 
-            $inserted = DB::table('alerts_queue')->insert([
+            $inserted = DB::table('alert_queue')->insert([
                 'alert_type' => $alertType,
                 'channel' => $channel,
                 'recipient' => $recipient,
@@ -189,17 +189,17 @@ trait QueueableAlerts
         $modelId = $this->getKey();
 
         return [
-            'pending' => DB::table('alerts_queue')
+            'pending' => DB::table('alert_queue')
                 ->where('status', 0)
                 ->where('payload->model_class', $modelClass)
                 ->where('payload->model_id', $modelId)
                 ->count(),
-            'processing' => DB::table('alerts_queue')
+            'processing' => DB::table('alert_queue')
                 ->where('status', 1)
                 ->where('payload->model_class', $modelClass)
                 ->where('payload->model_id', $modelId)
                 ->count(),
-            'failed' => DB::table('alerts_queue')
+            'failed' => DB::table('alert_queue')
                 ->where('status', -1)
                 ->where('payload->model_class', $modelClass)
                 ->where('payload->model_id', $modelId)
@@ -218,7 +218,7 @@ trait QueueableAlerts
         $modelClass = get_class($this);
         $modelId = $this->getKey();
 
-        $query = DB::table('alerts_queue')
+        $query = DB::table('alert_queue')
             ->where('payload->model_class', $modelClass)
             ->where('payload->model_id', $modelId);
 

@@ -188,7 +188,7 @@ trait ThresholdAlertTrait
             }
 
             // Log::info("[POCOR-9509] Threshold alerts queued ($label)", [
-            //     'alerts_queued' => $sentCount,
+            //     'alert_queued' => $sentCount,
             //     'emails' => count($contacts['email'] ?? []),
             //     'sms' => count($contacts['phone'] ?? []),
             // ]);
@@ -331,7 +331,7 @@ trait ThresholdAlertTrait
     }
 
     /**
-     * POCOR-9509: Queue alert directly to alerts_queue table
+     * POCOR-9509: Queue alert directly to alert_queue table
      *
      * @param string $channel 'email' or 'sms'
      * @param string $recipient Email or phone number
@@ -360,7 +360,7 @@ trait ThresholdAlertTrait
                 ->where('checksum', $checksum)
                 ->first();
             if (!$existingRecord) {
-                $queued = DB::table('alerts_queue')->insert([
+                $queued = DB::table('alert_queue')->insert([
                     'alert_type' => $alertType,
                     'channel' => $channel,
                     'recipient' => $recipient,

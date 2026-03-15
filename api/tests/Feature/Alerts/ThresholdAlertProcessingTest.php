@@ -122,7 +122,7 @@ class ThresholdAlertProcessingTest extends TestCase
         }
 
         // Verify alerts were queued
-        $alertCount = DB::table('alerts_queue')
+        $alertCount = DB::table('alert_queue')
             ->where('alert_type', 'StudentAttendance')
             ->count();
 
@@ -145,7 +145,7 @@ class ThresholdAlertProcessingTest extends TestCase
         ]);
 
         // Verify no alerts were queued
-        $alertCount = DB::table('alerts_queue')
+        $alertCount = DB::table('alert_queue')
             ->where('alert_type', 'StudentAttendance')
             ->count();
 
@@ -188,7 +188,7 @@ class ThresholdAlertProcessingTest extends TestCase
         }
 
         // Verify email alert was queued
-        $emailAlert = DB::table('alerts_queue')
+        $emailAlert = DB::table('alert_queue')
             ->where('channel', 'email')
             ->where('alert_type', 'StudentAttendance')
             ->first();
@@ -233,7 +233,7 @@ class ThresholdAlertProcessingTest extends TestCase
         }
 
         // Verify SMS alert was queued
-        $smsAlert = DB::table('alerts_queue')
+        $smsAlert = DB::table('alert_queue')
             ->where('channel', 'sms')
             ->where('alert_type', 'StudentAttendance')
             ->first();
@@ -273,7 +273,7 @@ class ThresholdAlertProcessingTest extends TestCase
         }
 
         // Verify alert payload contains context
-        $alert = DB::table('alerts_queue')
+        $alert = DB::table('alert_queue')
             ->where('alert_type', 'StudentAttendance')
             ->first();
 
@@ -317,7 +317,7 @@ class ThresholdAlertProcessingTest extends TestCase
         }
 
         // Verify placeholders were replaced
-        $alert = DB::table('alerts_queue')
+        $alert = DB::table('alert_queue')
             ->where('alert_type', 'StudentAttendance')
             ->first();
 
@@ -347,7 +347,7 @@ class ThresholdAlertProcessingTest extends TestCase
         ]);
 
         // Verify no alerts queued
-        $alertCount = DB::table('alerts_queue')->count();
+        $alertCount = DB::table('alert_queue')->count();
         $this->assertEquals(0, $alertCount);
     }
 
@@ -408,7 +408,7 @@ class ThresholdAlertProcessingTest extends TestCase
         }
 
         // Verify all alerts have status 0 (pending)
-        $alerts = DB::table('alerts_queue')
+        $alerts = DB::table('alert_queue')
             ->where('alert_type', 'StudentAttendance')
             ->get();
 
@@ -449,7 +449,7 @@ class ThresholdAlertProcessingTest extends TestCase
         }
 
         // Verify retry_count is set
-        $alert = DB::table('alerts_queue')
+        $alert = DB::table('alert_queue')
             ->where('alert_type', 'StudentAttendance')
             ->first();
 

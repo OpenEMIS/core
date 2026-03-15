@@ -17,8 +17,8 @@ class AlertsController extends AppController
 
     public function Alerts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Alerts']); }
     public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
-    //POCOR-9509: Add Queue action to view alerts_queue
-    public function Queue() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertsQueue']); }
+    //POCOR-9509: Add Queue action to view alert_queue
+    public function Queue() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertQueue']); }
     public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
     public function Notices() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Notices']); }
 
@@ -78,7 +78,7 @@ class AlertsController extends AppController
             return $this->redirect($this->referer());
         }
 
-        $queueTable = TableRegistry::getTableLocator()->get('Alert.AlertsQueue');;
+        $queueTable = TableRegistry::getTableLocator()->get('Alert.AlertQueue');;
         $count = $queueTable->deleteAll(['id IN' => $ids]);
 
         if ($count) {
