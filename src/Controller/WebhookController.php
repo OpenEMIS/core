@@ -48,6 +48,52 @@ class WebhookController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'WebhookLogs']);
     }
 
+    //POCOR-9257: Bulk delete selected webhook queue entries
+    public function queueDeleteSelected()
+    {
+        $this->request->allowMethod(['post']);
+        $ids = $this->request->getData('selected_ids', []);
+
+        if (empty($ids)) {
+            $this->Alert->warning(__('No records selected.'), ['type' => 'string', 'reset' => true]);
+            return $this->redirect(['action' => 'WebhookQueue']);
+        }
+
+        $WebhookQueue = \Cake\ORM\TableRegistry::getTableLocator()->get('WebhookQueue');
+        $count = $WebhookQueue->deleteAll(['id IN' => $ids]);
+
+        if ($count > 0) {
+            $this->Alert->success(__('{0} record(s) deleted.', $count), ['type' => 'string', 'reset' => true]);
+        } else {
+            $this->Alert->error(__('No records were deleted.'), ['type' => 'string', 'reset' => true]);
+        }
+
+        return $this->redirect(['action' => 'WebhookQueue']);
+    }
+
+    //POCOR-9257: Bulk delete selected webhook log entries
+    public function logsDeleteSelected()
+    {
+        $this->request->allowMethod(['post']);
+        $ids = $this->request->getData('selected_ids', []);
+
+        if (empty($ids)) {
+            $this->Alert->warning(__('No records selected.'), ['type' => 'string', 'reset' => true]);
+            return $this->redirect(['action' => 'WebhookLogs']);
+        }
+
+        $WebhookLogs = \Cake\ORM\TableRegistry::getTableLocator()->get('WebhookLogs');
+        $count = $WebhookLogs->deleteAll(['id IN' => $ids]);
+
+        if ($count > 0) {
+            $this->Alert->success(__('{0} record(s) deleted.', $count), ['type' => 'string', 'reset' => true]);
+        } else {
+            $this->Alert->error(__('No records were deleted.'), ['type' => 'string', 'reset' => true]);
+        }
+
+        return $this->redirect(['action' => 'WebhookLogs']);
+    }
+
     public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
@@ -61,6 +107,11 @@ class WebhookController extends AppController
             $header = __('Webhook') . ' - ' . __('Queue');
             $this->Navigation->addCrumb(__('Webhook'), ['plugin' => false, 'controller' => $this->getName(), 'action' => $action]);
             $this->Navigation->addCrumb(__('Queue'));
+        }
+
+        //POCOR-9257: Disable Security component POST validation for bulk delete actions
+        if (in_array($action, ['queueDeleteSelected', 'logsDeleteSelected'])) {
+            $this->Security->setConfig('validatePost', false);
         }
 
         $this->set('contentHeader', $header);
