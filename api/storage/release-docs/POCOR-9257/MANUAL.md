@@ -97,15 +97,27 @@ Under the hood, the webhook system has two separate "entry points" — one for t
 
 ### Key Components
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `WebhookQueueBehavior` | `src/Model/Behavior/WebhookQueueBehavior.php` | CakePHP behavior — queues on table save/delete |
-| `WebhookQueueTrait` | `api/app/Models/Concerns/WebhookQueueTrait.php` | Laravel trait — queues on Eloquent events |
-| `WebhookQueueTable` | `src/Model/Table/WebhookQueueTable.php` | CakePHP table class for `webhook_queue` |
-| `ProcessWebhookQueue` | `api/app/Console/Commands/ProcessWebhookQueue.php` | Artisan command that delivers queued webhooks |
-| `WebhookSender` | `api/app/Services/WebhookSender.php` | HTTP delivery via Guzzle |
-| `ConfigWebhooksTable` | `plugins/Configuration/src/Model/Table/ConfigWebhooksTable.php` | Admin UI table — webhook rule configuration |
-| `CallWebhookBehavior` | `plugins/Configuration/src/Model/Behavior/CallWebhookBehavior.php` | Updated to queue instead of firing directly |
+| Component | Purpose |
+|-----------|---------|
+| `WebhookQueueBehavior` | CakePHP behavior — queues on table save/delete |
+| `WebhookQueueTrait` | Laravel trait — queues on Eloquent events |
+| `WebhookQueueTable` | CakePHP table class for `webhook_queue` |
+| `ProcessWebhookQueue` | Artisan command that delivers queued webhooks |
+| `WebhookSender` | HTTP delivery via Guzzle |
+| `ConfigWebhooksTable` | Admin UI table — webhook rule configuration |
+| `CallWebhookBehavior` | Updated to queue instead of firing directly |
+
+File locations:
+
+```
+src/Model/Behavior/WebhookQueueBehavior.php
+src/Model/Table/WebhookQueueTable.php
+api/app/Models/Concerns/WebhookQueueTrait.php
+api/app/Console/Commands/ProcessWebhookQueue.php
+api/app/Services/WebhookSender.php
+plugins/Configuration/src/Model/Table/ConfigWebhooksTable.php
+plugins/Configuration/src/Model/Behavior/CallWebhookBehavior.php
+```
 
 ### Dependency: `config_items`
 
@@ -156,16 +168,16 @@ Navigate to: **Configuration → External Data → Webhooks** and click **Add**.
 
 ### Fields at a Glance
 
-| Field | Description | Required |
-|-------|-------------|----------|
+| Field | Description | Req |
+|-------|-------------|-----|
 | **Name** | Internal label for this webhook | Yes |
-| **External Data Source** | The `config_items` record this webhook belongs to (must be Active) | Yes |
-| **URL** | Target endpoint — supports `${placeholder}` substitution | Yes |
-| **Event Key** | Which OpenEMIS event triggers this webhook (see [Event Keys](#7-event-keys-reference)) | Yes |
-| **Method** | HTTP method: GET, POST, PUT, PATCH, or DELETE | Yes |
+| **External Data Source** | Linked `config_items` record (must be Active) | Yes |
+| **URL** | Target endpoint — supports `${placeholder}` | Yes |
+| **Event Key** | Event that triggers this webhook (§7) | Yes |
+| **Method** | GET, POST, PUT, PATCH, or DELETE | Yes |
 | **Status** | Active (1) or Inactive (0) | Yes |
-| **Query Template** | URL query parameters with placeholders, e.g. `student_id=${id}&school=${institution_id}` | No |
-| **Body Template** | JSON body with placeholders. If empty, sends full entity data | No |
+| **Query Template** | URL query string with placeholders (§5) | No |
+| **Body Template** | JSON body with placeholders; empty = full entity | No |
 | **Description** | Human-readable notes | No |
 
 ### Example Webhook Rule
@@ -178,7 +190,7 @@ Navigate to: **Configuration → External Data → Webhooks** and click **Add**.
 | **Event Key** | `student_create` |
 | **Method** | POST |
 | **Status** | Active |
-| **Body Template** | `{"student_id": "${openemis_no}", "first_name": "${first_name}", "last_name": "${last_name}"}` |
+| **Body Template** | `{"student_id": "${openemis_no}", "first_name": "${first_name}"}` |
 
 When a student is created in OpenEMIS, this rule fires and POSTs a JSON payload to the configured URL with the student's OpenEMIS ID and name.
 
@@ -228,7 +240,7 @@ For delete events, two additional fields are injected into the entity data befor
 | Field | Value |
 |-------|-------|
 | `deleted_at` | Timestamp of the delete operation |
-| `deleted_by` | `openemis_no` or `username` of the user who performed the delete, or `"system"` |
+| `deleted_by` | `openemis_no`/`username` of the user who deleted, or `"system"` |
 
 ---
 
@@ -290,6 +302,8 @@ The tables below show every supported key, what triggers it, and whether it come
 
 ### Full Event Key List
 
+> In the Source column: **CakePHP** = fired via `WebhookQueueBehavior`, **Laravel** = fired via `WebhookQueueTrait` (API5), **Both** = both paths support it.
+
 #### Institution / School
 
 | Event Key | Trigger | Source |
@@ -305,15 +319,15 @@ The tables below show every supported key, what triggers it, and whether it come
 | `student_create` | Student enrolled (institution_students created) | CakePHP |
 | `student_update` | Student record updated | CakePHP |
 | `student_delete` | Student record deleted | CakePHP |
-| `institution_student_create` | Institution student record created | Laravel API5 |
-| `institution_student_update` | Institution student record updated | Laravel API5 |
-| `institution_student_delete` | Institution student record deleted | Laravel API5 |
+| `institution_student_create` | Institution student record created | Laravel |
+| `institution_student_update` | Institution student record updated | Laravel |
+| `institution_student_delete` | Institution student record deleted | Laravel |
 | `attendance_update` | Student attendance updated | CakePHP |
-| `student_attendance_marked_record_create` | Attendance marked record created | Laravel API5 |
-| `student_attendance_marked_record_update` | Attendance marked record updated | Laravel API5 |
-| `student_guardian_create` | Student guardian record created | Laravel API5 |
-| `student_guardian_update` | Student guardian record updated | Laravel API5 |
-| `student_guardian_delete` | Student guardian record deleted | Laravel API5 |
+| `student_attendance_marked_record_create` | Attendance marked record created | Laravel |
+| `student_attendance_marked_record_update` | Attendance marked record updated | Laravel |
+| `student_guardian_create` | Student guardian record created | Laravel |
+| `student_guardian_update` | Student guardian record updated | Laravel |
+| `student_guardian_delete` | Student guardian record deleted | Laravel |
 
 #### Staff
 
@@ -322,9 +336,9 @@ The tables below show every supported key, what triggers it, and whether it come
 | `staff_create` | Staff member created | CakePHP |
 | `staff_update` | Staff member updated | CakePHP |
 | `staff_delete` | Staff member deleted | CakePHP |
-| `institution_staff_create` | Institution staff record created | Laravel API5 |
-| `institution_staff_update` | Institution staff record updated | Laravel API5 |
-| `institution_staff_delete` | Institution staff record deleted | Laravel API5 |
+| `institution_staff_create` | Institution staff record created | Laravel |
+| `institution_staff_update` | Institution staff record updated | Laravel |
+| `institution_staff_delete` | Institution staff record deleted | Laravel |
 
 #### Class / Subject
 
@@ -336,18 +350,18 @@ The tables below show every supported key, what triggers it, and whether it come
 | `subject_create` | Subject created | CakePHP |
 | `subject_update` | Subject updated | CakePHP |
 | `subject_delete` | Subject deleted | CakePHP |
-| `institution_class_create` | Institution class created | Laravel API5 |
-| `institution_class_update` | Institution class updated | Laravel API5 |
-| `institution_class_delete` | Institution class deleted | Laravel API5 |
-| `institution_class_student_create` | Student assigned to class | Laravel API5 |
-| `institution_class_student_update` | Class-student record updated | Laravel API5 |
-| `institution_class_student_delete` | Student removed from class | Laravel API5 |
-| `institution_subject_create` | Institution subject created | Laravel API5 |
-| `institution_subject_update` | Institution subject updated | Laravel API5 |
-| `institution_subject_delete` | Institution subject deleted | Laravel API5 |
-| `institution_grade_create` | Institution grade created | Laravel API5 |
-| `institution_grade_update` | Institution grade updated | Laravel API5 |
-| `institution_grade_delete` | Institution grade deleted | Laravel API5 |
+| `institution_class_create` | Institution class created | Laravel |
+| `institution_class_update` | Institution class updated | Laravel |
+| `institution_class_delete` | Institution class deleted | Laravel |
+| `institution_class_student_create` | Student assigned to class | Laravel |
+| `institution_class_student_update` | Class-student record updated | Laravel |
+| `institution_class_student_delete` | Student removed from class | Laravel |
+| `institution_subject_create` | Institution subject created | Laravel |
+| `institution_subject_update` | Institution subject updated | Laravel |
+| `institution_subject_delete` | Institution subject deleted | Laravel |
+| `institution_grade_create` | Institution grade created | Laravel |
+| `institution_grade_update` | Institution grade updated | Laravel |
+| `institution_grade_delete` | Institution grade deleted | Laravel |
 
 #### Education Structure
 
@@ -358,52 +372,52 @@ The tables below show every supported key, what triggers it, and whether it come
 | `programme_create` | Education programme created | CakePHP |
 | `programme_update` | Education programme updated | CakePHP |
 | `programme_delete` | Education programme deleted | CakePHP |
-| `education_cycle_create` | Education cycle created | CakePHP / Laravel API5 |
-| `education_cycle_update` | Education cycle updated | CakePHP / Laravel API5 |
-| `education_cycle_delete` | Education cycle deleted | CakePHP / Laravel API5 |
-| `education_level_create` | Education level created | CakePHP / Laravel API5 |
-| `education_level_update` | Education level updated | CakePHP / Laravel API5 |
-| `education_level_delete` | Education level deleted | CakePHP / Laravel API5 |
-| `education_programme_create` | Education programme created | CakePHP / Laravel API5 |
-| `education_programme_update` | Education programme updated | CakePHP / Laravel API5 |
-| `education_programme_delete` | Education programme deleted | CakePHP / Laravel API5 |
-| `education_grade_create` | Education grade created | CakePHP / Laravel API5 |
-| `education_grade_update` | Education grade updated | CakePHP / Laravel API5 |
-| `education_grade_delete` | Education grade deleted | CakePHP / Laravel API5 |
-| `education_subject_create` | Education subject created | CakePHP / Laravel API5 |
-| `education_subject_update` | Education subject updated | CakePHP / Laravel API5 |
-| `education_subject_delete` | Education subject deleted | CakePHP / Laravel API5 |
-| `education_grade_subject_create` | Education grade-subject link created | CakePHP / Laravel API5 |
-| `education_grade_subject_update` | Education grade-subject link updated | CakePHP / Laravel API5 |
-| `education_grade_subject_delete` | Education grade-subject link deleted | CakePHP / Laravel API5 |
+| `education_cycle_create` | Education cycle created | Both |
+| `education_cycle_update` | Education cycle updated | Both |
+| `education_cycle_delete` | Education cycle deleted | Both |
+| `education_level_create` | Education level created | Both |
+| `education_level_update` | Education level updated | Both |
+| `education_level_delete` | Education level deleted | Both |
+| `education_programme_create` | Education programme created | Both |
+| `education_programme_update` | Education programme updated | Both |
+| `education_programme_delete` | Education programme deleted | Both |
+| `education_grade_create` | Education grade created | Both |
+| `education_grade_update` | Education grade updated | Both |
+| `education_grade_delete` | Education grade deleted | Both |
+| `education_subject_create` | Education subject created | Both |
+| `education_subject_update` | Education subject updated | Both |
+| `education_subject_delete` | Education subject deleted | Both |
+| `education_grade_subject_create` | Education grade-subject link created | Both |
+| `education_grade_subject_update` | Education grade-subject link updated | Both |
+| `education_grade_subject_delete` | Education grade-subject link deleted | Both |
 
 #### Academic Period
 
 | Event Key | Trigger | Source |
 |-----------|---------|--------|
-| `academic_period_create` | Academic period created | CakePHP / Laravel API5 |
-| `academic_period_update` | Academic period updated | CakePHP / Laravel API5 |
-| `academic_period_delete` | Academic period deleted | CakePHP / Laravel API5 |
+| `academic_period_create` | Academic period created | Both |
+| `academic_period_update` | Academic period updated | Both |
+| `academic_period_delete` | Academic period deleted | Both |
 
 #### Area / Location
 
 | Event Key | Trigger | Source |
 |-----------|---------|--------|
-| `area_education_create` | Education area created | CakePHP / Laravel API5 |
-| `area_education_update` | Education area updated | CakePHP / Laravel API5 |
-| `area_education_delete` | Education area deleted | CakePHP / Laravel API5 |
+| `area_education_create` | Education area created | Both |
+| `area_education_update` | Education area updated | Both |
+| `area_education_delete` | Education area deleted | Both |
 
 #### Security / User
 
 | Event Key | Trigger | Source |
 |-----------|---------|--------|
 | `security_user_delete` | Security user deleted | CakePHP |
-| `security_user_create` | Security user created | Laravel API5 |
-| `security_user_update` | Security user updated | Laravel API5 |
-| `security_user_delete` | Security user deleted | Laravel API5 |
-| `role_create` | Security role created | CakePHP / Laravel API5 |
-| `role_update` | Security role updated | CakePHP / Laravel API5 |
-| `role_delete` | Security role deleted | CakePHP / Laravel API5 |
+| `security_user_create` | Security user created | Laravel |
+| `security_user_update` | Security user updated | Laravel |
+| `security_user_delete` | Security user deleted | Laravel |
+| `role_create` | Security role created | Both |
+| `role_update` | Security role updated | Both |
+| `role_delete` | Security role deleted | Both |
 | `logout` | User logout | CakePHP |
 
 > **Note:** When the same event key appears from both CakePHP and Laravel API5 paths, a single write operation can cause duplicate queue entries if the record is saved through both systems simultaneously. In practice, each path handles different contexts: CakePHP handles UI edits, Laravel API handles API consumers.
