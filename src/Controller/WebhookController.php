@@ -52,7 +52,7 @@ class WebhookController extends AppController
     public function queueDeleteSelected()
     {
         $this->request->allowMethod(['post']);
-        $ids = $this->request->getData('selected_ids', []);
+        $ids = array_filter(array_map('intval', (array)$this->request->getData('selected_ids', [])));
 
         if (empty($ids)) {
             $this->Alert->warning(__('No records selected.'), ['type' => 'string', 'reset' => true]);
@@ -60,7 +60,7 @@ class WebhookController extends AppController
         }
 
         $WebhookQueue = \Cake\ORM\TableRegistry::getTableLocator()->get('WebhookQueue');
-        $count = $WebhookQueue->deleteAll(['id IN' => $ids]);
+        $count = $WebhookQueue->deleteAll(['WebhookQueue.id IN' => $ids]);
 
         if ($count > 0) {
             $this->Alert->success(__('{0} record(s) deleted.', $count), ['type' => 'string', 'reset' => true]);
@@ -75,7 +75,7 @@ class WebhookController extends AppController
     public function logsDeleteSelected()
     {
         $this->request->allowMethod(['post']);
-        $ids = $this->request->getData('selected_ids', []);
+        $ids = array_filter(array_map('intval', (array)$this->request->getData('selected_ids', [])));
 
         if (empty($ids)) {
             $this->Alert->warning(__('No records selected.'), ['type' => 'string', 'reset' => true]);
@@ -83,7 +83,7 @@ class WebhookController extends AppController
         }
 
         $WebhookLogs = \Cake\ORM\TableRegistry::getTableLocator()->get('WebhookLogs');
-        $count = $WebhookLogs->deleteAll(['id IN' => $ids]);
+        $count = $WebhookLogs->deleteAll(['WebhookLogs.id IN' => $ids]);
 
         if ($count > 0) {
             $this->Alert->success(__('{0} record(s) deleted.', $count), ['type' => 'string', 'reset' => true]);
