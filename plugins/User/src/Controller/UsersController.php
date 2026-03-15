@@ -868,7 +868,7 @@ class UsersController extends AppController
             // POCOR-9257: Queue logout webhook for async processing
             try {
                 $Webhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
-                $WebhookQueue = TableRegistry::getTableLocator()->get('WebhookQueue'); //POCOR-9257: renamed from WebhooksQueue
+                $WebhookQueue = TableRegistry::getTableLocator()->get('Alert.WebhookQueue'); //POCOR-9257: moved to Alert plugin
                 $user = $Webhooks->resolveCurrentUser();
                 $result = $WebhookQueue->queueWebhook('logout', $body, $user);
                 if ($result) {

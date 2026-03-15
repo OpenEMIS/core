@@ -224,7 +224,7 @@ class RemoveBehavior extends Behavior
                     $extra['config']['form'] = ['type' => 'DELETE'];
                     $this->recordHasAssociatedRecords = false;
                 }
-                
+
                 /** Start POCOR-7253 */
                 if(!empty($cells)){
                     foreach($cells as $key => $cell_val){
