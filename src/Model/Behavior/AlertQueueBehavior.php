@@ -42,9 +42,9 @@ class AlertQueueBehavior extends Behavior
         $alertType = $alertType ?? $this->getConfig('alertType');
 
         try {
-            $AlertsQueue = $this->_table->fetchTable('AlertsQueue');
+            $AlertQueue = $this->_table->fetchTable('Alert.AlertQueue'); //POCOR-9509: consolidated into Alert plugin
 
-            return $AlertsQueue->queueAlert(
+            return $AlertQueue->queueAlert(
                 $alertType,
                 'email',
                 $recipient,
@@ -83,9 +83,9 @@ class AlertQueueBehavior extends Behavior
         $alertType = $alertType ?? $this->getConfig('alertType');
 
         try {
-            $AlertsQueue = $this->_table->fetchTable('AlertsQueue');
+            $AlertQueue = $this->_table->fetchTable('Alert.AlertQueue'); //POCOR-9509: consolidated into Alert plugin
 
-            return $AlertsQueue->queueAlert(
+            return $AlertQueue->queueAlert(
                 $alertType,
                 'sms',
                 $recipient,

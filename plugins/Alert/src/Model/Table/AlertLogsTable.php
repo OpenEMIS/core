@@ -700,7 +700,7 @@ class AlertLogsTable extends ControllerActionTable
         Log::debug('[TEMP-LOG] @AlertLogsTable::queueAlertForAsyncSending() params: alert_log_id=' . $alertLogEntity->id . ', method=' . $method . ', feature=' . $feature . ', recipient=' . $recipient); //[TEMP-LOG]
 
         try {
-            $AlertsQueue = TableRegistry::getTableLocator()->get('AlertsQueue');
+            $AlertQueue = TableRegistry::getTableLocator()->get('Alert.AlertQueue'); //POCOR-9509: consolidated into Alert plugin
 
             // Map method to channel (Email/SMS → email/sms)
             $channel = strtolower($method);
@@ -710,9 +710,9 @@ class AlertLogsTable extends ControllerActionTable
                 'feature' => $feature
             ];
 
-            Log::debug('[TEMP-LOG] @AlertLogsTable::queueAlertForAsyncSending() Calling AlertsQueue::queueAlert() - channel=' . $channel . ', payload=' . json_encode($payload)); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertLogsTable::queueAlertForAsyncSending() Calling AlertQueue::queueAlert() - channel=' . $channel . ', payload=' . json_encode($payload)); //[TEMP-LOG]
 
-            $queued = $AlertsQueue->queueAlert(
+            $queued = $AlertQueue->queueAlert(
                 $feature,              // alert_type (e.g., 'StudentAttendance', 'StaffLeave')
                 $channel,              // channel ('email' or 'sms')
                 $recipient,            // recipient (email address or phone number)
