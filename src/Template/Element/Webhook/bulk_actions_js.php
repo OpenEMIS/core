@@ -1,5 +1,6 @@
 <?php
 //POCOR-9257: Bulk actions JS for webhook queue/logs — select all + delete selected
+if (empty($deleteUrl)) return;
 ?>
 <script>
 $(document).ready(function () {
