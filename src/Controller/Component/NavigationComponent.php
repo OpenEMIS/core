@@ -3817,17 +3817,17 @@ class NavigationComponent extends Component
                         'selected' => ['Alerts.Notices']
                     ],
 
-                    //POCOR-9257: Add Webhooks Queue to Communications menu
-                    'Webhooks.Webhooks' => [
-                        'title' => 'Webhooks Queue',
+                    //POCOR-9257: Add Webhook Queue to Communications menu
+                    'Webhook.WebhookQueue' => [
+                        'title' => 'Webhook Queue',
                         'parent' => 'Administration.Communications',
-                        'selected' => ['Webhooks.Webhooks']
+                        'selected' => ['Webhook.WebhookQueue']
                     ],
                     //POCOR-9257: Add Webhook Logs to Communications menu
-                    'WebhookLogs.WebhookLogs' => [
+                    'Webhook.WebhookLogs' => [
                         'title' => 'Webhook Logs',
                         'parent' => 'Administration.Communications',
-                        'selected' => ['WebhookLogs.WebhookLogs']
+                        'selected' => ['Webhook.WebhookLogs']
                     ],
                 ];
             }
@@ -3865,17 +3865,17 @@ class NavigationComponent extends Component
                     'selected' => ['Alerts.Notices']
                 ],
 
-                //POCOR-9257: Add Webhooks Queue to Communications menu
-                'Webhooks.Webhooks' => [
-                    'title' => 'Webhooks Queue',
+                //POCOR-9257: Add Webhook Queue to Communications menu
+                'Webhook.WebhookQueue' => [
+                    'title' => 'Webhook Queue',
                     'parent' => 'Administration.Communications',
-                    'selected' => ['Webhooks.Webhooks']
+                    'selected' => ['Webhook.WebhookQueue']
                 ],
                 //POCOR-9257: Add Webhook Logs to Communications menu
-                'WebhookLogs.WebhookLogs' => [
+                'Webhook.WebhookLogs' => [
                     'title' => 'Webhook Logs',
                     'parent' => 'Administration.Communications',
-                    'selected' => ['WebhookLogs.WebhookLogs']
+                    'selected' => ['Webhook.WebhookLogs']
                 ],
             ];
         }

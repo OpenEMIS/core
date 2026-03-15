@@ -15,7 +15,7 @@ use Cake\Event\EventInterface;
  * WebhookQueueBehavior
  *
  * Replaces CallWebhookBehavior (POCOR-9403) with async queue processing.
- * Queues webhook requests to webhooks_queue table instead of blocking exec() calls.
+ * Queues webhook requests to webhook_queue table instead of blocking exec() calls.
  *
  * Usage:
  * $this->addBehavior('WebhookQueue', [
@@ -89,7 +89,7 @@ class WebhookQueueBehavior extends Behavior
     }
 
     /**
-     * Queue webhook request to webhooks_queue table
+     * Queue webhook request to webhook_queue table
      *
      * @param Entity $entity The entity that triggered the webhook
      * @param string $eventKey The webhook event key (e.g., 'student_create')
@@ -101,7 +101,7 @@ class WebhookQueueBehavior extends Behavior
         }
 
         try {
-            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
+            $WebhookQueue = TableRegistry::getTableLocator()->get('WebhookQueue'); //POCOR-9257: renamed from WebhooksQueue
             $ConfigWebhooks = TableRegistry::getTableLocator()->get('Configuration.ConfigWebhooks');
 
             // Resolve current user for audit trail
@@ -125,7 +125,7 @@ class WebhookQueueBehavior extends Behavior
             }
 
             // Queue the webhook (non-blocking)
-            $result = $WebhooksQueue->queueWebhook($eventKey, $body, $user);
+            $result = $WebhookQueue->queueWebhook($eventKey, $body, $user);
 
             if (!$result) {
                 Log::error("[WebhookQueue] Failed to queue webhook for event: $eventKey");

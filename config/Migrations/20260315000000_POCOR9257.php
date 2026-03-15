@@ -3,21 +3,21 @@ declare(strict_types=1);
 
 use Migrations\AbstractMigration;
 
-//POCOR-9257: start - Consolidated migration merging POCOR7554 (alerts insert), POCOR9257 (webhooks_queue + webhook_logs), POCOR9257 (alerts_queue), and Laravel jobs/failed_jobs into a single CakePHP migration
+//POCOR-9257: start - Consolidated migration merging POCOR9257 (webhook_queue + webhook_logs) into a single CakePHP migration
 class POCOR9257 extends AbstractMigration
 {
     private const TICKET = '9257';
 
     // Tables that existed before this migration and need backup/restore
     private const BACKUP_TABLES = [
-        'webhooks_queue',
+        'webhook_queue',
         'webhook_logs',
     ];
 
     public function up(): void
     {
         $this->backupTables();
-        $this->createWebhooksQueue(); //POCOR-9257: POCOR9257 - operational webhook delivery queue
+        $this->createWebhookQueue(); //POCOR-9257: POCOR9257 - operational webhook delivery queue
         $this->createWebhookLogs();   //POCOR-9257: POCOR9257 - permanent webhook audit trail
     }
 
@@ -64,16 +64,16 @@ class POCOR9257 extends AbstractMigration
     }
 
     // -------------------------------------------------------------------------
-    // POCOR9257: webhooks_queue
+    // POCOR9257: webhook_queue
     // -------------------------------------------------------------------------
 
-    private function createWebhooksQueue(): void
+    private function createWebhookQueue(): void
     {
-        if ($this->hasTable('webhooks_queue')) {
+        if ($this->hasTable('webhook_queue')) {
             return;
         }
 
-        $this->table('webhooks_queue', [
+        $this->table('webhook_queue', [
             'id' => false,
             'primary_key' => ['id'],
             'engine' => 'InnoDB',
@@ -211,7 +211,7 @@ class POCOR9257 extends AbstractMigration
             ->addColumn('webhook_queue_id', 'biginteger', [
                 'signed' => false,
                 'null' => true,
-                'comment' => 'References webhooks_queue.id',
+                'comment' => 'References webhook_queue.id',
             ])
             ->addColumn('event_key', 'string', [
                 'limit' => 100,

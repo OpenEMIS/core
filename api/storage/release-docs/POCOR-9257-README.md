@@ -29,12 +29,12 @@ Implement a comprehensive webhook queueing system with three primary objectives:
 - Applied to all Laravel API5 models that need webhook support
 
 **Primary Task 2: Asynchronous Webhook Processing**
-- Converted all CakePHP webhook firing from `$Webhooks->triggerCommand()` to `WebhooksQueueTable->queueWebhook()`
+- Converted all CakePHP webhook firing from `$Webhooks->triggerCommand()` to `WebhookQueueTable->queueWebhook()`
 - Made ConfigWebhooksTable methods public to support async processing:
   - `buildWebhookUrl()` - Constructs final webhook URL with placeholders
   - `prepareFinalWebhookBody()` - Parses JSON templates for request body
 - Updated all webhook trigger points to graceful queue insertion with error logging
-- Laravel `ProcessWebhooksQueue` command processes `webhooks_queue` table asynchronously every minute
+- Laravel `ProcessWebhookQueue` command processes `webhook_queue` table asynchronously every minute
 - Both CakePHP and Laravel API trigger events are queued for async delivery
 - No blocking of user requests during webhook delivery
 
@@ -50,7 +50,7 @@ Implement a comprehensive webhook queueing system with three primary objectives:
 - Failed webhooks (status = -1) can be manually resent:
   ```sql
   -- Mark failed webhooks for retry
-  UPDATE webhooks_queue SET status = 0, retry_count = 0
+  UPDATE webhook_queue SET status = 0, retry_count = 0
   WHERE status = -1 AND id IN (SELECT id FROM ...);
   ```
 - Query `webhook_logs` table to review delivery history and troubleshoot failed deliveries
@@ -65,11 +65,11 @@ Implement a comprehensive webhook queueing system with three primary objectives:
 **Files Added/Modified (Laravel API):**
 - `api/app/Models/Concerns/WebhookQueueTrait.php` - NEW: Trait for webhook queueing in Laravel models
 - `api/app/Services/WebhookSender.php` - Service for sending queued webhooks
-- `api/app/Console/Commands/ProcessWebhooksQueue.php` - Command to process webhook queue
+- `api/app/Console/Commands/ProcessWebhookQueue.php` - Command to process webhook queue
 - 18+ Laravel API5 models updated to use WebhookQueueTrait
 
 **Database Tables:**
-- `webhooks_queue` - Holds pending webhook deliveries (status: 0=pending, 1=processing, 2=sent, -1=failed, with retry_count)
+- `webhook_queue` - Holds pending webhook deliveries (status: 0=pending, 1=processing, 2=sent, -1=failed, with retry_count)
 - `webhook_logs` - Permanent audit trail with full webhook request/response details
 
 ### Files Changed Summary
@@ -80,7 +80,7 @@ Implement a comprehensive webhook queueing system with three primary objectives:
 ### Database Migrations
 - **Required:** YES - Migration `20260215234927_POCOR9257.php` creates/updates webhook tables
 - **Tables created:**
-  - `webhooks_queue` - Operational queue for pending webhook deliveries with retry tracking
+  - `webhook_queue` - Operational queue for pending webhook deliveries with retry tracking
   - `webhook_logs` - Permanent audit trail with full request/response logging
 - **Backward compatible:** YES (queue failures don't break parent processes)
 - **Data backup:** Migration automatically backs up existing tables before modifying them
@@ -99,7 +99,7 @@ Implement a comprehensive webhook queueing system with three primary objectives:
    bin/cake migrations migrate
    ```
    This executes migration `20260215234927_POCOR9257.php` which:
-   - Creates `webhooks_queue` table (operational queue)
+   - Creates `webhook_queue` table (operational queue)
    - Creates `webhook_logs` table (permanent audit trail)
    - Sets up indexes for optimal query performance
    - Backs up existing data if tables already exist
@@ -112,7 +112,7 @@ Implement a comprehensive webhook queueing system with three primary objectives:
 
 4. **Test Webhook Queueing:**
    - Edit an Institution record in the UI
-   - Check `webhooks_queue` table for a new pending entry
+   - Check `webhook_queue` table for a new pending entry
    - Verify queue entry has correct event_key (e.g., 'institution_update')
    - Check logs/webhook_*.log for successful queueing
 
@@ -136,8 +136,8 @@ Implement a comprehensive webhook queueing system with three primary objectives:
 
 **Monitoring:**
 - Log location: `logs/hin-error.log` and `api/storage/logs/laravel.log`
-- Monitor for `[WebhooksQueue]` and `[ProcessWebhooksQueue]` entries
-- Check queue depth: `SELECT COUNT(*) FROM webhooks_queue WHERE status = 0`
+- Monitor for `[WebhookQueue]` and `[ProcessWebhookQueue]` entries
+- Check queue depth: `SELECT COUNT(*) FROM webhook_queue WHERE status = 0`
 
 **Configuration:**
 - Scheduler interval: `api/app/Console/Kernel.php` line 28-37 (every minute)
@@ -196,7 +196,7 @@ php artisan webhooks:process --once
 **Rollback Procedure:**
 If issues occur, revert commits and:
 1. Webhooks will fallback to logging only (no delivery)
-2. `webhooks_queue` table can be manually cleared if needed
+2. `webhook_queue` table can be manually cleared if needed
 3. No data loss (all events logged in webhook_logs)
 
 **Webhook Logging and Troubleshooting:**
@@ -218,27 +218,27 @@ The system provides comprehensive logging for webhook delivery troubleshooting:
    ORDER BY created DESC;
    ```
 
-2. **Check webhooks_queue for pending/failed webhooks:**
+2. **Check webhook_queue for pending/failed webhooks:**
    ```sql
    -- View pending webhooks
-   SELECT COUNT(*) as pending FROM webhooks_queue WHERE status = 0;
+   SELECT COUNT(*) as pending FROM webhook_queue WHERE status = 0;
 
    -- View failed webhooks (ready for manual resend)
    SELECT id, webhook_id, event_key, retry_count, created
-   FROM webhooks_queue
+   FROM webhook_queue
    WHERE status = -1;
    ```
 
 3. **Manually resend failed webhooks:**
    ```sql
    -- Mark failed webhooks for retry (reset status to 0)
-   UPDATE webhooks_queue SET status = 0, retry_count = 0
+   UPDATE webhook_queue SET status = 0, retry_count = 0
    WHERE status = -1 AND id = WEBHOOK_ID;
    ```
 
 4. **Monitor logs:**
-   - Check `api/storage/logs/laravel.log` for ProcessWebhooksQueue errors
-   - Search for `[ProcessWebhooksQueue]` and `[WebhookSender]` entries
+   - Check `api/storage/logs/laravel.log` for ProcessWebhookQueue errors
+   - Search for `[ProcessWebhookQueue]` and `[WebhookSender]` entries
    - Review `webhook_logs` response_body for error details from webhook endpoints
 
 **Troubleshooting:**

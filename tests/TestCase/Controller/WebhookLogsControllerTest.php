@@ -21,7 +21,7 @@ class WebhookLogsControllerTest extends AppTestCase
 
     public function testIndex()
     {
-        $this->get('/WebhookLogs/WebhookLogs');
+        $this->get('/Webhook/WebhookLogs');
         $this->assertResponseOk();
     }
 }
