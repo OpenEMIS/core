@@ -117,9 +117,35 @@ Added bulk operations capability to the Webhook Queue and Webhook Logs index pag
 - Modified: 3 files (WebhookQueueTable, WebhookLogsTable, WebhookController)
 - Removed: 0 files
 
+## Issue 3 — WebhookLogs Delete Button Fix and Debug Cleanup
+
+### What Was Implemented
+
+Fixed the Delete button on the WebhookLogs index page (list view) which was not functioning due to incorrect URL-based approach. Replaced with modal-trigger approach matching the WebhookQueueTable pattern:
+
+**Bug Fix:**
+- The remove button in `WebhookLogsTable::onUpdateActionButtons()` was using a URL-based approach with a legacy action reference
+- This triggered a GET request which was silently redirected by the cascade strategy without actually deleting the record
+- Fixed by replacing with modal-trigger attributes: `data-toggle=modal`, `data-target=#delete-modal`, `field-target=#recordId`, `onclick=ControllerAction.fieldMapping(this)`, `field-value=encodedId`
+- Now uses the same reliable modal-based delete pattern as WebhookQueueTable
+
+**Debug Instrumentation Cleanup:**
+- Removed all [TEMP-LOG] debug instrumentation added during the debugging session
+- Commented out (not deleted) logging statements across 5 files:
+  - `plugins/ControllerAction/src/Model/Behavior/HideButtonBehavior.php`
+  - `plugins/OpenEmis/src/Model/Behavior/OpenEmisBehavior.php`
+  - `plugins/OpenEmis/templates/Element/ControllerAction/index.php`
+  - `plugins/OpenEmis/templates/Element/actions.php`
+  - `src/Model/Table/AppTable.php`
+- CSS regenerated for manual PDF output (`webroot/css/themes/layout.min.css`)
+
+### Files Changed Summary (Issue 3 only)
+- Modified: 6 files (1 table class + 5 debug cleanup locations)
+- Removed: 0 files
+
 **Total Changes (POCOR-9257):**
 - Added: 3 files
-- Modified: 38+ files (35+ from async queueing + 3 from bulk delete)
+- Modified: 44+ files (35+ from async queueing + 3 from bulk delete + 6 from delete button fix)
 - Removed: 0 files
 
 ## 4. Deployment Instructions (User Experience)
