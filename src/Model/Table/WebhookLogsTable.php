@@ -22,6 +22,16 @@ class WebhookLogsTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
     }
+    public function implementedEvents(): array {
+        $events = parent::implementedEvents();
+        $newEvents = [
+            'Model.custom.onUpdateActionButtons' =>  ['callable' => 'onUpdateActionButtons', 'priority' => 10],
+
+        ];
+
+        $events = array_merge($events,$newEvents);
+        return $events;
+    }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
@@ -84,5 +94,35 @@ class WebhookLogsTable extends ControllerActionTable
     public function onGetSuccess(EventInterface $event, Entity $entity): string
     {
         return $entity->success == 1 ? 'Success' : 'Failed';
+    }
+
+    //POCOR-9257: Fix view URL — ensure pass params are [0 => 'view', 1 => token]
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
+    {
+
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $id = $this->getEncodedKeys($entity);
+        if (isset($buttons['view'])) {
+            unset($buttons['view']['url']['_method']);
+            unset($buttons['view']['url']['_ext']);
+            unset($buttons['view']['url']['?']);
+            unset($buttons['view']['url']['plugin']);
+
+            $buttons['view']['url']['2'] = $id;
+            $buttons['view']['url']['1'] = 'view';
+
+        }
+        if (isset($buttons['remove'])) {
+            unset($buttons['remove']['url']['_method']);
+            unset($buttons['remove']['url']['_ext']);
+            unset($buttons['remove']['url']['?']);
+            unset($buttons['remove']['url']['plugin']);
+
+            $buttons['remove']['url']['2'] = $id;
+            $buttons['remove']['url']['1'] = 'view';
+
+        }
+
+        return $buttons;
     }
 }

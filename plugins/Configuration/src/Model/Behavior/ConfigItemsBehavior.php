@@ -95,7 +95,10 @@ class ConfigItemsBehavior extends Behavior
             return $controlElement;
             //POCOR-8951 end
         }elseif($typeValue !== 'Custom Validation'){
-            $this->model->request = $this->model->request->withQueryParams(['type_value' => $typeValue]);
+            //POCOR-9257: merge type_value into existing params instead of replacing, so other filter params (status, method, etc.) survive
+            $queryParams = $this->model->request->getQueryParams();
+            $queryParams['type_value'] = $typeValue;
+            $this->model->request = $this->model->request->withQueryParams($queryParams);
             $this->model->advancedSelectOptions($typeOptions, $selectedType);
             $this->model->controller->set('typeOptions', $typeOptions);
             $controlElement = $toolbarElements[0];
