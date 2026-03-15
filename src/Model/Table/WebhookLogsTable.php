@@ -45,6 +45,40 @@ class WebhookLogsTable extends ControllerActionTable
         $this->field('duration_ms', ['after' => 'response_status']);
         $this->field('retry_attempt', ['after' => 'duration_ms']);
         $this->field('created', ['after' => 'retry_attempt']);
+
+        //POCOR-9257: start - checkbox column and bulk delete for webhook logs
+        $this->field('_select', [
+            'type'             => 'element',
+            'element'          => 'Webhook/select_checkbox',
+            'tableHeaderClass' => 'checkbox-column',
+            'tableColumnClass' => 'checkbox-column',
+            'label'            => '',
+            'order'            => 0,
+        ]);
+
+        $deleteUrl = \Cake\Routing\Router::url([
+            'plugin'     => false,
+            'controller' => 'Webhook',
+            'action'     => 'logsDeleteSelected',
+        ]);
+
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarButtonsArray['deleteSelected'] = [
+            'type'  => 'element',
+            'name'  => 'Webhook/delete_selected_button',
+            'data'  => [],
+            'order' => 2,
+        ];
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
+
+        $extra['elements']['webhookBulkJs'] = [
+            'name'    => 'Webhook/bulk_actions_js',
+            'data'    => ['deleteUrl' => $deleteUrl],
+            'options' => [],
+            'order'   => 10,
+        ];
+        //POCOR-9257: end
     }
 
     public function onGetSuccess(EventInterface $event, Entity $entity): string
