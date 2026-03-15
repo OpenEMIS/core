@@ -312,7 +312,7 @@ abstract class AlertCommandBase extends Command
         Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() message (truncated 100): ' . mb_strimwidth($message, 0, 100, '...')); //[TEMP-LOG]
 
         try {
-            // Queue via alerts_queue table
+            // Queue via alert_queue table
             $insertData = [
                 'alert_type' => $this->featureName,
                 'channel' => $method,
@@ -331,9 +331,9 @@ abstract class AlertCommandBase extends Command
                 'modified' => now(),
             ];
 
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() Inserting into alerts_queue: ' . json_encode($insertData)); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() Inserting into alert_queue: ' . json_encode($insertData)); //[TEMP-LOG]
 
-            $queued = DB::table('alerts_queue')->insert($insertData);
+            $queued = DB::table('alert_queue')->insert($insertData);
 
             if ($queued) {
                 $shortSubject = mb_strimwidth($subject, 0, 100, '...');

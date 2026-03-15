@@ -44,10 +44,10 @@ OpenEMIS alerts follow a five-stage pipeline:
    applies threshold filters, resolves recipient list
          ↓
 4. QUEUE
-   One row inserted into alerts_queue per recipient per channel (email/SMS)
+   One row inserted into alert_queue per recipient per channel (email/SMS)
          ↓
 5. DELIVERY
-   ProcessAlertsQueue worker sends emails / SMS,
+   ProcessAlertQueue worker sends emails / SMS,
    updates queue row status, appends to Alert Logs
 ```
 
@@ -223,7 +223,7 @@ POCOR-9509 added bulk selection to Alert Logs:
 
 ## Alert Queue — Delivery Pipeline
 
-New in POCOR-9509: the **Alert Queue** screen gives real-time visibility into the `alerts_queue` delivery pipeline.
+New in POCOR-9509: the **Alert Queue** screen gives real-time visibility into the `alert_queue` delivery pipeline.
 
 ### Queue columns
 
@@ -256,7 +256,7 @@ New in POCOR-9509: the **Alert Queue** screen gives real-time visibility into th
 ```
 [Queued: status=0]
        ↓
-ProcessAlertsQueue worker picks up the row
+ProcessAlertQueue worker picks up the row
        ↓
    Success → status=1 (Sent) · logged to Alert Logs
    Failure → status=-1 (Failed) · retry_count++
@@ -449,7 +449,7 @@ Configure in **Administration → Security → Roles**.
 ### Alert fired but no email was received
 
 1. Check **Alert Queue** — is there a row with `status = 0` (pending) or `status = -1` (failed)?
-2. **Pending**: the `ProcessAlertsQueue` worker may not be running
+2. **Pending**: the `ProcessAlertQueue` worker may not be running
 3. **Failed**: check `retry_count` — if at max, delivery permanently failed; check mail server config in `api/config/alerts.php`
 4. **No queue row**: the command found no matching records, or the threshold was not met — run the command manually to check:
    ```bash

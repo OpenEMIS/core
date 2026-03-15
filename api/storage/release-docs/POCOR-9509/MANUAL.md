@@ -77,7 +77,7 @@ Unlike alerts, School Messaging is always initiated by a person making a deliber
 
 Both alerts and school messages share the same delivery infrastructure and the same audit trail. Every notification — whether it fired automatically from a license expiry check or was composed manually by a teacher — is recorded in **Alert Logs** under **Administration → Communications → Alert Logs**. This gives you a single, unified view of all outbound communications from your OpenEMIS installation.
 
-Delivery for both systems passes through the same `ProcessAlertsQueue` worker, which means the same troubleshooting steps apply when a delivery fails, and the same queue screen shows you the status of pending and failed items for both types of communication.
+Delivery for both systems passes through the same `ProcessAlertQueue` worker, which means the same troubleshooting steps apply when a delivery fails, and the same queue screen shows you the status of pending and failed items for both types of communication.
 
 ---
 
@@ -2263,7 +2263,7 @@ To delete many records at once (for example, after a misconfigured rule fires th
 
 Navigate to **Administration → Communications → Alert Queue** to see the live delivery pipeline.
 
-The queue is where notifications wait before being picked up by the `ProcessAlertsQueue` delivery worker. When an alert fires, one row is inserted into the queue per recipient per channel. The worker then processes each row, sends the email or SMS, and updates the row status.
+The queue is where notifications wait before being picked up by the `ProcessAlertQueue` delivery worker. When an alert fires, one row is inserted into the queue per recipient per channel. The worker then processes each row, sends the email or SMS, and updates the row status.
 
 ### Queue columns
 
@@ -2283,7 +2283,7 @@ The queue is where notifications wait before being picked up by the `ProcessAler
 ```
 [Queued: status=0]
        ↓
-ProcessAlertsQueue worker picks up the row
+ProcessAlertQueue worker picks up the row
        ↓
    Success → status=1 (Sent) · logged to Alert Logs
    Failure → status=-1 (Failed) · retry_count++
@@ -2303,14 +2303,14 @@ Use this if a misconfigured rule fired and you want to prevent erroneous notific
 1. Select records using the checkbox column
 2. Click **Delete Selected** in the toolbar and confirm
 
-> **Tip:** Act quickly — the `ProcessAlertsQueue` worker runs frequently. If items have already been picked up and are `status=1`, deleting the queue row does not recall the already-sent email or SMS.
+> **Tip:** Act quickly — the `ProcessAlertQueue` worker runs frequently. If items have already been picked up and are `status=1`, deleting the queue row does not recall the already-sent email or SMS.
 
 ## Delivery Troubleshooting
 
 ### Alert fired but no email was received
 
 1. Check **Alert Queue** — is there a row with `status=0` (pending) or `status=-1` (failed)?
-2. **Pending:** the `ProcessAlertsQueue` worker may not be running — check with your server team
+2. **Pending:** the `ProcessAlertQueue` worker may not be running — check with your server team
 3. **Failed:** check `retry_count` — if at maximum, delivery permanently failed; check the mail server configuration in `api/config/alerts.php`
 4. **No queue row at all:** the command found no matching records, or the threshold was not met — run the command manually to check:
    ```bash
@@ -2516,7 +2516,7 @@ The base class `AlertCommandBase` provides a template-method pattern. Every aler
 - `getPendingItems()` — queries the database for records that meet the rule's threshold
 - `fillPlaceholders()` — replaces `${token}` values in subject and message templates with actual data
 
-The `runFeatureAlert()` method in the base class orchestrates the full flow: fetch rule → fetch items → resolve recipients → insert delivery rows into `alerts_queue` → update `system_processes`.
+The `runFeatureAlert()` method in the base class orchestrates the full flow: fetch rule → fetch items → resolve recipients → insert delivery rows into `alert_queue` → update `system_processes`.
 
 ```
 CakePHP afterSave  ──────────►  AlertLogsTable::triggerLaravelAlertFromCakePHP()
@@ -2533,9 +2533,9 @@ CheckAndQueueAlerts (cron) ─────►        ▼
                                  │                │
                                  └───────┬────────┘
                                          │
-                                 alerts_queue rows inserted
+                                 alert_queue rows inserted
                                          │
-                                 ProcessAlertsQueue sends email/SMS
+                                 ProcessAlertQueue sends email/SMS
 ```
 
 ### Two dispatch paths
@@ -2568,7 +2568,7 @@ docker exec poe-application /bin/sh -c \
 Then verify results:
 ```sql
 -- Check what was queued:
-SELECT * FROM alerts_queue ORDER BY created DESC LIMIT 20;
+SELECT * FROM alert_queue ORDER BY created DESC LIMIT 20;
 
 -- Check the process record:
 SELECT * FROM system_processes ORDER BY created DESC LIMIT 5;
@@ -2720,7 +2720,7 @@ To activate any scheduled alert from scratch:
 
 4. **Check the results**:
    ```sql
-   SELECT * FROM alerts_queue ORDER BY created DESC LIMIT 20;
+   SELECT * FROM alert_queue ORDER BY created DESC LIMIT 20;
    SELECT * FROM system_processes ORDER BY created DESC LIMIT 5;
    ```
 
@@ -2924,12 +2924,12 @@ SELECT id, name, feature, enabled FROM alert_rules ORDER BY feature, name;
 
 ### Recent alert queue items
 ```sql
-SELECT * FROM alerts_queue ORDER BY created DESC LIMIT 20;
+SELECT * FROM alert_queue ORDER BY created DESC LIMIT 20;
 ```
 
 ### Failed queue items
 ```sql
-SELECT * FROM alerts_queue WHERE status = -1 ORDER BY created DESC;
+SELECT * FROM alert_queue WHERE status = -1 ORDER BY created DESC;
 ```
 
 ### Recent alert logs

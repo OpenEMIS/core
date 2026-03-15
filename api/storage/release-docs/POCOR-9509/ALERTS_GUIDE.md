@@ -42,9 +42,9 @@ CheckAndQueueAlerts (cron) ──────►        ▼
                                   │                │
                                   └───────┬────────┘
                                           │
-                                  alerts_queue rows inserted
+                                  alert_queue rows inserted
                                           │
-                                  ProcessAlertsQueue sends email/SMS
+                                  ProcessAlertQueue sends email/SMS
 ```
 
 ---
@@ -342,7 +342,7 @@ docker exec poe-application /bin/sh -c \
 Then check the results:
 ```sql
 -- Check what was queued:
-SELECT * FROM alerts_queue ORDER BY created DESC LIMIT 20;
+SELECT * FROM alert_queue ORDER BY created DESC LIMIT 20;
 
 -- Check process record:
 SELECT * FROM system_processes ORDER BY created DESC LIMIT 5;

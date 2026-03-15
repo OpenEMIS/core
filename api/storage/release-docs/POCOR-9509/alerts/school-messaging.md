@@ -136,7 +136,7 @@ Message status set to Sent
 Success: "Message has been queued for sending"
 ```
 
-Delivery is handled by the same `ProcessAlertsQueue` worker used by the Alerts module. You can verify delivery in **Administration → Communications → Alert Logs** — filter by module "Messaging".
+Delivery is handled by the same `ProcessAlertQueue` worker used by the Alerts module. You can verify delivery in **Administration → Communications → Alert Logs** — filter by module "Messaging".
 
 ---
 
