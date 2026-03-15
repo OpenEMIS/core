@@ -119,6 +119,8 @@ class ConfigWebhooksTable extends ControllerActionTable
             ->notEmptyString('url', __('This field cannot be left empty'))
             ->notEmptyString('event_key', __('This field cannot be left empty'))
             ->notEmptyString('name', __('This field cannot be left empty'))
+            ->requirePresence('external_data_source_id') //POCOR-9257: external server is required
+            ->notEmptyString('external_data_source_id', __('This field cannot be left empty'))
             ;
         return $validator;
     }
@@ -128,6 +130,28 @@ class ConfigWebhooksTable extends ControllerActionTable
         $query
 //            ->contain(['WebhookEvents'])
         ;
+
+        //POCOR-9257: start - apply index filter conditions
+        $eventKey = $this->request->getQuery('event_key');
+        if (!empty($eventKey) && $eventKey !== 'all') {
+            $query->where([$this->aliasField('event_key') => $eventKey]);
+        }
+
+        $status = $this->request->getQuery('status');
+        if (isset($status) && $status !== '' && $status !== 'all') {
+            $query->where([$this->aliasField('status') => $status]);
+        }
+
+        $method = $this->request->getQuery('method');
+        if (!empty($method) && $method !== 'all') {
+            $query->where([$this->aliasField('method') => $method]);
+        }
+
+        $externalSourceId = $this->request->getQuery('external_data_source_id');
+        if (!empty($externalSourceId) && $externalSourceId !== 'all') {
+            $query->where([$this->aliasField('external_data_source_id') => $externalSourceId]);
+        }
+        //POCOR-9257: end
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Webhooks','System Configurations');
@@ -409,6 +433,71 @@ class ConfigWebhooksTable extends ControllerActionTable
             'url',
             'status',
             'method']);
+
+        //POCOR-9257: start - register filter controls element for index
+        // Only show event keys that have at least one webhook (intersect defined labels with DB values)
+        $usedEventKeys = $this->find()
+            ->select(['event_key'])
+            ->distinct(['event_key'])
+            ->all()
+            ->extract('event_key')
+            ->toArray();
+        $usedEventKeyOptions = array_intersect_key($this->eventKeyOptions, array_flip($usedEventKeys));
+        $eventKeyOptions = ['all' => __('All Events')] + $usedEventKeyOptions; //POCOR-9257: + preserves string keys
+        $selectedEventKey = $this->queryString('event_key', $eventKeyOptions);
+
+        // + operator preserves integer keys (array_merge would renumber 1=>'Active' to 0=>'Active')
+        $statusOptions = ['all' => __('All Statuses')] + $this->getSelectOptions('general.active');
+        $selectedStatus = $this->queryString('status', $statusOptions);
+
+        $methodOptions = ['all' => __('All Methods')] + self::SUPPORTED_METHOD;
+        $selectedMethod = $this->queryString('method', $methodOptions);
+
+        $externalSourceOptions = $this->getUsedExternalSourceOptions();
+        $selectedExternalSource = $this->queryString('external_data_source_id', $externalSourceOptions);
+
+        //POCOR-9257: override the type-filter element set by ConfigItemsBehavior to use a combined template
+        // that renders the type dropdown AND all webhook filters in one toolbar-wrapper line.
+        // + preserves the behavior's typeOptions/productThemes data alongside our new filter data.
+        $behaviorData = $extra['elements']['controls']['data'] ?? [];
+        $extra['elements']['controls'] = [
+            'name'    => 'Configuration.webhook_controls',
+            'data'    => $behaviorData + [
+                'eventKeyOptions'        => $eventKeyOptions,
+                'selectedEventKey'       => $selectedEventKey,
+                'statusOptions'          => $statusOptions,
+                'selectedStatus'         => $selectedStatus,
+                'methodOptions'          => $methodOptions,
+                'selectedMethod'         => $selectedMethod,
+                'externalSourceOptions'  => $externalSourceOptions,
+                'selectedExternalSource' => $selectedExternalSource,
+            ],
+            'options' => [],
+            'order'   => 1,
+        ];
+        //POCOR-9257: end
+    }
+
+    //POCOR-9257: returns external source options used by at least one webhook
+    private function getUsedExternalSourceOptions(): array
+    {
+        $usedIds = $this->find()
+            ->select(['external_data_source_id'])
+            ->where(['external_data_source_id >' => 0])
+            ->distinct(['external_data_source_id'])
+            ->all()
+            ->extract('external_data_source_id')
+            ->toArray();
+
+        $options = ['all' => __('All Sources')];
+        if (!empty($usedIds)) {
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $sources = $ConfigItems->find('list')
+                ->where(['id IN' => $usedIds])
+                ->toArray();
+            $options = $options + $sources; //POCOR-9257: + preserves integer keys (config_item IDs)
+        }
+        return $options;
     }
 
 //    public function onGetTriggeredEvent(Event $event, Entity $entity)

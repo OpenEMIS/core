@@ -289,4 +289,13 @@ class WebhookQueueTable extends ControllerActionTable
         ];
         return $statuses[$entity->status] ?? (string)$entity->status;
     }
+
+    //POCOR-9257: Fix view URL — ensure pass params are [0 => 'view', 1 => token]
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
+        parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        unset($buttons['remove']);
+        dd($buttons);
+        return $buttons;
+    }
 }
