@@ -85,6 +85,43 @@ Implement a comprehensive webhook queueing system with three primary objectives:
 - **Backward compatible:** YES (queue failures don't break parent processes)
 - **Data backup:** Migration automatically backs up existing tables before modifying them
 
+## Issue 2 — Checkbox Selection and Mass Delete for Webhook Queue and Logs
+
+### What Was Implemented
+
+Added bulk operations capability to the Webhook Queue and Webhook Logs index pages, allowing users to select multiple records and delete them in a single action:
+
+**New Template Elements (CakePHP):**
+- `src/Template/Element/Webhook/select_checkbox.php` - Checkbox column rendering for rows
+- `src/Template/Element/Webhook/bulk_actions_js.php` - JavaScript for checkbox state management (select all, select individual)
+- `src/Template/Element/Webhook/delete_selected_button.php` - "Delete Selected" button with confirmation dialog
+
+**Modified Table Classes:**
+- `src/Model/Table/WebhookQueueTable.php` - Registered checkbox column and bulk operations integration
+- `src/Model/Table/WebhookLogsTable.php` - Registered checkbox column and bulk operations integration
+
+**New Controller Actions:**
+- `src/Controller/WebhookController.php::queueDeleteSelected()` - POST handler for bulk deleting webhook queue entries
+- `src/Controller/WebhookController.php::logsDeleteSelected()` - POST handler for bulk deleting webhook log entries
+
+**User Experience:**
+- Checkboxes appear in the first column of Webhook Queue and Logs index pages
+- "Select All" checkbox to toggle all visible records
+- Individual row checkboxes for targeted selection
+- "Delete Selected" button appears when any records are selected
+- JavaScript confirmation dialog prevents accidental deletions
+- Immediate UI feedback upon successful deletion
+
+### Files Changed Summary (Issue 2 only)
+- Added: 3 files (template elements)
+- Modified: 3 files (WebhookQueueTable, WebhookLogsTable, WebhookController)
+- Removed: 0 files
+
+**Total Changes (POCOR-9257):**
+- Added: 3 files
+- Modified: 38+ files (35+ from async queueing + 3 from bulk delete)
+- Removed: 0 files
+
 ## 4. Deployment Instructions (User Experience)
 
 1. **Pull and Deploy:**

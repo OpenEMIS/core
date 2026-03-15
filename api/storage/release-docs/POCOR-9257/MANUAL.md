@@ -492,6 +492,17 @@ Every delivery attempt — whether it succeeded or failed — is permanently rec
 
 Navigate to: **Configuration → External Data → Webhook Logs** (read-only view)
 
+### Bulk Deleting Log Records
+
+To clean up old log entries via the UI:
+
+1. Navigate to **Configuration → External Data → Webhook Logs**
+2. Check the boxes next to the rows you want to remove (or tick the header checkbox to select all visible rows)
+3. Click **Delete Selected** — a confirmation dialog will appear
+4. Confirm to permanently delete the selected records
+
+> **Note:** `deleteAll` bypasses CakePHP's `beforeDelete`/`afterDelete` callbacks. There are no cascade dependencies on `webhook_logs`, so this is safe.
+
 Or query directly:
 
 ```sql
@@ -534,6 +545,21 @@ Verify the cron is registered:
 ```bash
 crontab -l
 ```
+
+### Manually Processing the Queue
+
+Navigate to **Configuration → External Data → Webhook Queue** and click the **Process Queue** button to immediately run pending items without waiting for the cron.
+
+### Bulk Deleting Queue Records
+
+To purge stuck or unwanted queue entries via the UI:
+
+1. Navigate to **Configuration → External Data → Webhook Queue**
+2. Check the boxes next to the rows you want to remove (or tick the header checkbox to select all visible rows)
+3. Click **Delete Selected** — a confirmation dialog will appear
+4. Confirm to permanently delete the selected records
+
+Use this to clean up permanently-failed entries after investigating them, or to clear the queue during testing.
 
 ### Checking Queue Depth
 
