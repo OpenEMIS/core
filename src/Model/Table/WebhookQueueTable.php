@@ -261,10 +261,10 @@ class WebhookQueueTable extends ControllerActionTable
         ]);
 
         $toolbarButtonsArray['deleteSelected'] = [
-            'type'  => 'element',
-            'name'  => 'Webhook/delete_selected_button',
-            'data'  => [],
-            'order' => 2,
+            'type'    => 'element',
+            'element' => 'Webhook/delete_selected_button', //POCOR-9257: 'element' key required by ControllerAction template.php:10
+            'data'    => [],
+            'options' => [],
         ];
 
         $extra['elements']['webhookBulkJs'] = [
