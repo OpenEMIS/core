@@ -71,14 +71,14 @@ Under the hood, the webhook system has two separate "entry points" — one for t
           └──────────────────┬─────────────────┘
                              ▼
               ┌──────────────────────────┐
-              │   webhooks_queue table   │
+              │   webhook_queue table   │
               │   status = 0 (PENDING)   │
               └──────────────────────────┘
                              │
                   (every minute, cron)
                              ▼
               ┌──────────────────────────┐
-              │  ProcessWebhooksQueue    │
+              │  ProcessWebhookQueue    │
               │  php artisan             │
               │  webhooks:process --once │
               └──────────────────────────┘
@@ -101,8 +101,8 @@ Under the hood, the webhook system has two separate "entry points" — one for t
 |-----------|----------|---------|
 | `WebhookQueueBehavior` | `src/Model/Behavior/WebhookQueueBehavior.php` | CakePHP behavior — queues on table save/delete |
 | `WebhookQueueTrait` | `api/app/Models/Concerns/WebhookQueueTrait.php` | Laravel trait — queues on Eloquent events |
-| `WebhooksQueueTable` | `src/Model/Table/WebhooksQueueTable.php` | CakePHP table class for `webhooks_queue` |
-| `ProcessWebhooksQueue` | `api/app/Console/Commands/ProcessWebhooksQueue.php` | Artisan command that delivers queued webhooks |
+| `WebhookQueueTable` | `src/Model/Table/WebhookQueueTable.php` | CakePHP table class for `webhook_queue` |
+| `ProcessWebhookQueue` | `api/app/Console/Commands/ProcessWebhookQueue.php` | Artisan command that delivers queued webhooks |
 | `WebhookSender` | `api/app/Services/WebhookSender.php` | HTTP delivery via Guzzle |
 | `ConfigWebhooksTable` | `plugins/Configuration/src/Model/Table/ConfigWebhooksTable.php` | Admin UI table — webhook rule configuration |
 | `CallWebhookBehavior` | `plugins/Configuration/src/Model/Behavior/CallWebhookBehavior.php` | Updated to queue instead of firing directly |
@@ -126,14 +126,14 @@ Here is the full journey of a webhook, from a change being made in OpenEMIS to t
 
 1. An admin saves a record — for example, enrolling a student at a school.
 2. CakePHP's `WebhookQueueBehavior` intercepts the save and checks: is there an active webhook configured for this event?
-3. If yes, it builds the payload (filling in any placeholders you configured) and writes a row to `webhooks_queue` with status **PENDING**. That's it — the user's page loads normally.
+3. If yes, it builds the payload (filling in any placeholders you configured) and writes a row to `webhook_queue` with status **PENDING**. That's it — the user's page loads normally.
 4. Nothing has been sent to your server yet.
 
 ### When something changes via the REST API (Laravel)
 
 1. A system calls `POST /api/v5/institutions` to create a new institution.
 2. Laravel's Eloquent model fires a `created` event. `WebhookQueueTrait` picks it up.
-3. It checks for active webhook rules matching the event key (`institution_create`), builds the payload, and inserts into `webhooks_queue` — again, status **PENDING**.
+3. It checks for active webhook rules matching the event key (`institution_create`), builds the payload, and inserts into `webhook_queue` — again, status **PENDING**.
 4. The API response returns immediately without waiting for any delivery.
 
 ### In the background (every minute)
@@ -539,10 +539,10 @@ crontab -l
 
 ```sql
 -- Pending (not yet sent)
-SELECT COUNT(*) AS pending FROM webhooks_queue WHERE status = 0;
+SELECT COUNT(*) AS pending FROM webhook_queue WHERE status = 0;
 
 -- Failed (all retries exhausted)
-SELECT COUNT(*) AS failed FROM webhooks_queue WHERE status = -1;
+SELECT COUNT(*) AS failed FROM webhook_queue WHERE status = -1;
 
 -- By status summary
 SELECT
@@ -553,7 +553,7 @@ SELECT
     WHEN -1 THEN 'Failed'
   END AS status_label,
   COUNT(*) AS count
-FROM webhooks_queue
+FROM webhook_queue
 GROUP BY status;
 ```
 
@@ -569,9 +569,9 @@ tail -f /var/www/html/emis/core/logs/hin-error.log | grep -i webhook
 
 Key log prefixes:
 - `[WebhookQueueTrait]` — Laravel model queuing
-- `[WebhooksQueue]` — CakePHP queuing
+- `[WebhookQueue]` — CakePHP queuing
 - `[WebhookQueue]` — CakePHP behavior queuing
-- `[ProcessWebhooksQueue]` — delivery processor
+- `[ProcessWebhookQueue]` — delivery processor
 - `[WebhookSender]` — HTTP request level
 
 ### Manually Processing the Queue
@@ -592,17 +592,17 @@ Failed webhooks (`status = -1`) can be re-queued by resetting their status:
 
 ```sql
 -- Resend a specific failed webhook
-UPDATE webhooks_queue
+UPDATE webhook_queue
 SET status = 0, retry_count = 0, next_retry_at = NULL, last_error = NULL
 WHERE id = <queue_id>;
 
 -- Resend all failed webhooks for a specific event
-UPDATE webhooks_queue
+UPDATE webhook_queue
 SET status = 0, retry_count = 0, next_retry_at = NULL, last_error = NULL
 WHERE status = -1 AND event_key = 'institution_update';
 
 -- Resend all failed webhooks
-UPDATE webhooks_queue
+UPDATE webhook_queue
 SET status = 0, retry_count = 0, next_retry_at = NULL, last_error = NULL
 WHERE status = -1;
 ```
@@ -620,17 +620,17 @@ After resetting, the next scheduler run will pick them up.
 3. Verify the webhook rule's **Status** is **Active**.
 4. Check that the event key on the rule matches what is being generated. Query the queue:
    ```sql
-   SELECT event_key, COUNT(*) FROM webhooks_queue
+   SELECT event_key, COUNT(*) FROM webhook_queue
    WHERE created >= NOW() - INTERVAL 1 HOUR
    GROUP BY event_key;
    ```
-5. If nothing appears in `webhooks_queue`, the entry points are not firing — check CakePHP error log for `[WebhooksQueue]` errors.
+5. If nothing appears in `webhook_queue`, the entry points are not firing — check CakePHP error log for `[WebhookQueue]` errors.
 
-### Webhooks Queued but Not Delivered
+### Webhook Queued but Not Delivered
 
 1. Verify the cron is running: `ps aux | grep "schedule:run"`
 2. Manually trigger: `php artisan webhooks:process --once`
-3. Check Laravel log for `[ProcessWebhooksQueue]` errors.
+3. Check Laravel log for `[ProcessWebhookQueue]` errors.
 4. Verify `available_at <= NOW()` on pending entries.
 
 ### Webhooks Failing with HTTP Errors
@@ -653,10 +653,10 @@ After resetting, the next scheduler run will pick them up.
 
 Placeholders are only substituted if the field exists as a **top-level key** in the entity data at queue time. Nested relation data is available in the JSON payload but not via placeholder substitution.
 
-Check what fields are available by inspecting a `webhooks_queue.payload` value:
+Check what fields are available by inspecting a `webhook_queue.payload` value:
 
 ```sql
-SELECT payload FROM webhooks_queue
+SELECT payload FROM webhook_queue
 WHERE event_key = 'institution_update'
 ORDER BY created DESC LIMIT 1;
 ```
@@ -667,7 +667,7 @@ If the processor crashes mid-batch, entries may remain in `status = 1` indefinit
 
 ```sql
 -- Reset stalled processing entries older than 5 minutes
-UPDATE webhooks_queue
+UPDATE webhook_queue
 SET status = 0
 WHERE status = 1
   AND modified < NOW() - INTERVAL 5 MINUTE;
@@ -677,7 +677,7 @@ WHERE status = 1
 
 ## 12. Database Schema Reference
 
-### `webhooks_queue`
+### `webhook_queue`
 
 Operational queue — holds pending, in-progress, and recently completed webhook deliveries.
 
@@ -717,7 +717,7 @@ Permanent audit trail — every delivery attempt (including retries) is recorded
 |--------|------|-------------|
 | `id` | bigint (unsigned) | Primary key |
 | `webhook_id` | int | References `webhooks.id` |
-| `webhook_queue_id` | bigint | References `webhooks_queue.id` |
+| `webhook_queue_id` | bigint | References `webhook_queue.id` |
 | `event_key` | varchar(100) | Event identifier |
 | `target_url` | varchar(512) | URL that was called |
 | `http_method` | varchar(10) | HTTP method used |
@@ -754,7 +754,7 @@ cd /var/www/html/emis/core
 bin/cake migrations migrate
 ```
 
-This creates `webhooks_queue` and `webhook_logs` tables (backing up existing data if present).
+This creates `webhook_queue` and `webhook_logs` tables (backing up existing data if present).
 
 ### 3. Clear Caches
 
@@ -788,7 +788,7 @@ docker exec poe-application /bin/sh -c \
 # Test a webhook fires
 # Edit any Institution in the UI, then:
 mysql -h 127.0.0.1 -P 8136 -u root -prootpassword openemis_core_v5 \
-  -e "SELECT id, event_key, status, created FROM webhooks_queue ORDER BY created DESC LIMIT 5;"
+  -e "SELECT id, event_key, status, created FROM webhook_queue ORDER BY created DESC LIMIT 5;"
 ```
 
 ### 6. Rollback
@@ -800,7 +800,7 @@ cd /var/www/html/emis/core
 bin/cake migrations rollback
 ```
 
-This restores `webhooks_queue` and `webhook_logs` to their pre-migration state from the backup tables.
+This restores `webhook_queue` and `webhook_logs` to their pre-migration state from the backup tables.
 
 Webhook queueing failures are designed to be **non-blocking** — they are caught and logged, and the parent save operation completes normally. The system degrades gracefully; nothing breaks if webhook delivery is disrupted.
 

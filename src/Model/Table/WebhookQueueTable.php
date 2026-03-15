@@ -14,7 +14,7 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
-class WebhooksQueueTable extends ControllerActionTable
+class WebhookQueueTable extends ControllerActionTable
 {
     // Status constants
     const STATUS_PENDING = 0;
@@ -28,7 +28,7 @@ class WebhooksQueueTable extends ControllerActionTable
 
     public function initialize(array $config): void
     {
-        $this->setTable('webhooks_queue');
+        $this->setTable('webhook_queue');
         $this->setDisplayField('id');
         $this->setPrimaryKey('id');
         parent::initialize($config);
@@ -80,7 +80,7 @@ class WebhooksQueueTable extends ControllerActionTable
     {
         // ... existing implementation unchanged ...
         if (empty($eventKey)) {
-            Log::error("[WebhooksQueue] Empty event key provided");
+            Log::error("[WebhookQueue] Empty event key provided");
             return false;
         }
 
@@ -118,7 +118,7 @@ class WebhooksQueueTable extends ControllerActionTable
             foreach ($webhooks as $webhookConfig) {
                 $url = trim($webhookConfig->url);
                 if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
-                    Log::warning("[WebhooksQueue] Invalid URL for webhook [{$eventKey}]: {$url}");
+                    Log::warning("[WebhookQueue] Invalid URL for webhook [{$eventKey}]: {$url}");
                     continue;
                 }
 
@@ -164,7 +164,7 @@ class WebhooksQueueTable extends ControllerActionTable
                     $queuedCount++;
                 } else {
                     $errors = $queueEntity->getErrors();
-                    Log::error("[WebhooksQueue] Failed to save queue entry for [{$eventKey}]: " . json_encode($errors));
+                    Log::error("[WebhookQueue] Failed to save queue entry for [{$eventKey}]: " . json_encode($errors));
                 }
             }
 
@@ -175,7 +175,7 @@ class WebhooksQueueTable extends ControllerActionTable
             return false;
 
         } catch (\Throwable $e) {
-            Log::error("[WebhooksQueue] Exception in queueWebhook: " . $e->getMessage());
+            Log::error("[WebhookQueue] Exception in queueWebhook: " . $e->getMessage());
             return false;
         }
     }
@@ -212,7 +212,7 @@ class WebhooksQueueTable extends ControllerActionTable
             'type' => 'button',
             'label' => '<i class="fa fa-play"></i> Process Queue',
             'class' => 'btn btn-primary',
-            'url' => ['controller' => 'Webhooks', 'action' => 'processQueue'],
+            'url' => ['controller' => 'Webhook', 'action' => 'processQueue'],
             'attr' => [
                 'title' => 'Manually process pending webhooks',
                 'data-toggle' => 'tooltip',

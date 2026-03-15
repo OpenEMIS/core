@@ -57,8 +57,8 @@ class CallWebhookBehavior extends Behavior
 
         // POCOR-9257: Queue webhook for async processing instead of direct fire
         try {
-            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
-            $result = $WebhooksQueue->queueWebhook($eventKey, $body, $user);
+            $WebhookQueue = TableRegistry::getTableLocator()->get('WebhookQueue'); //POCOR-9257: renamed from WebhooksQueue
+            $result = $WebhookQueue->queueWebhook($eventKey, $body, $user);
             if ($result) {
                 // Log::debug("[CallWebhookBehavior] ✓ Queued webhook for event: {$eventKey}, entity ID: {$entity->id}");
             } else {

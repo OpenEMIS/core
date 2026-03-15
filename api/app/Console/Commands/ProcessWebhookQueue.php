@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
- * ProcessWebhooksQueue
+ * ProcessWebhookQueue
  *
- * POCOR-9257: Process pending webhooks from webhooks_queue table
+ * POCOR-9257: Process pending webhooks from webhook_queue table
  *
  * Usage:
  *   php artisan webhooks:process
@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Log;
  * Cron schedule (every minute):
  *   * * * * * php artisan webhooks:process --once
  */
-class ProcessWebhooksQueue extends Command
+class ProcessWebhookQueue extends Command
 {
     protected $signature = 'webhooks:process
                             {--limit=100 : Maximum webhooks to process per batch}
@@ -31,7 +31,7 @@ class ProcessWebhooksQueue extends Command
 
     private WebhookSender $sender;
 
-    // Status constants (match CakePHP WebhooksQueueTable)
+    // Status constants (match CakePHP WebhookQueueTable)
     const STATUS_PENDING = 0;
     const STATUS_PROCESSING = 1;
     const STATUS_SENT = 2;
@@ -86,11 +86,11 @@ class ProcessWebhooksQueue extends Command
      */
     private function processBatch(int $limit, int $maxRetries): int
     {
-        // Log::debug("[ProcessWebhooksQueue] START processBatch - Limit: {$limit}, MaxRetries: {$maxRetries}");
+        // Log::debug("[ProcessWebhookQueue] START processBatch - Limit: {$limit}, MaxRetries: {$maxRetries}");
 
         // Fetch pending webhooks (with retry logic)
-        // Log::debug("[ProcessWebhooksQueue] Querying webhooks_queue for pending webhooks...");
-        $webhooks = DB::table('webhooks_queue')
+        // Log::debug("[ProcessWebhookQueue] Querying webhook_queue for pending webhooks...");
+        $webhooks = DB::table('webhook_queue')
             ->where('status', self::STATUS_PENDING)
             ->where('retry_count', '<', $maxRetries)
             ->where('available_at', '<=', now())
@@ -101,29 +101,29 @@ class ProcessWebhooksQueue extends Command
             ->get();
 
         $count = $webhooks->count();
-        // Log::debug("[ProcessWebhooksQueue] Found {$count} pending webhook(s) to process");
+        // Log::debug("[ProcessWebhookQueue] Found {$count} pending webhook(s) to process");
 
         if ($webhooks->isEmpty()) {
-            // Log::debug("[ProcessWebhooksQueue] No pending webhooks found");
+            // Log::debug("[ProcessWebhookQueue] No pending webhooks found");
             return 0;
         }
 
         $processed = 0;
 
         foreach ($webhooks as $webhook) {
-            // Log::debug("[ProcessWebhooksQueue] Processing webhook #{$webhook->id}, event_key: {$webhook->event_key}, URL: {$webhook->target_url}");
+            // Log::debug("[ProcessWebhookQueue] Processing webhook #{$webhook->id}, event_key: {$webhook->event_key}, URL: {$webhook->target_url}");
 
             try {
                 $this->processSingleWebhook($webhook);
                 $processed++;
-                // Log::info("[ProcessWebhooksQueue] ✓ Successfully processed webhook #{$webhook->id}");
+                // Log::info("[ProcessWebhookQueue] ✓ Successfully processed webhook #{$webhook->id}");
             } catch (\Throwable $e) {
-                Log::error("[ProcessWebhooksQueue] ✗ Failed to process webhook #{$webhook->id}: " . $e->getMessage());
-                Log::error("[ProcessWebhooksQueue] Stack trace: " . $e->getTraceAsString());
+                Log::error("[ProcessWebhookQueue] ✗ Failed to process webhook #{$webhook->id}: " . $e->getMessage());
+                Log::error("[ProcessWebhookQueue] Stack trace: " . $e->getTraceAsString());
             }
         }
 
-        // Log::info("[ProcessWebhooksQueue] Batch complete - Processed: {$processed}/{$count}");
+        // Log::info("[ProcessWebhookQueue] Batch complete - Processed: {$processed}/{$count}");
         return $processed;
     }
 
@@ -134,31 +134,31 @@ class ProcessWebhooksQueue extends Command
      */
     private function processSingleWebhook(object $webhook): void
     {
-        // Log::debug("[ProcessWebhooksQueue] START processSingleWebhook for webhook #{$webhook->id}");
-        // Log::debug("[ProcessWebhooksQueue] Event: {$webhook->event_key}, Method: {$webhook->http_method}, URL: {$webhook->target_url}");
+        // Log::debug("[ProcessWebhookQueue] START processSingleWebhook for webhook #{$webhook->id}");
+        // Log::debug("[ProcessWebhookQueue] Event: {$webhook->event_key}, Method: {$webhook->http_method}, URL: {$webhook->target_url}");
 
         // POCOR-9257: Transaction safety - send + status update wrapped together
         DB::transaction(function () use ($webhook) {
             // Mark as processing
-            // Log::debug("[ProcessWebhooksQueue] Marking webhook #{$webhook->id} as PROCESSING");
-            DB::table('webhooks_queue')
+            // Log::debug("[ProcessWebhookQueue] Marking webhook #{$webhook->id} as PROCESSING");
+            DB::table('webhook_queue')
                 ->where('id', $webhook->id)
                 ->update(['status' => self::STATUS_PROCESSING]);
 
             // Send webhook
-            // Log::debug("[ProcessWebhooksQueue] Calling WebhookSender->send() for webhook #{$webhook->id}");
+            // Log::debug("[ProcessWebhookQueue] Calling WebhookSender->send() for webhook #{$webhook->id}");
             $startTime = microtime(true);
             $result = $this->sender->send((array) $webhook);
             $elapsedMs = round((microtime(true) - $startTime) * 1000, 2);
 
-            // Log::debug("[ProcessWebhooksQueue] WebhookSender returned - Success: " . ($result['success'] ? 'YES' : 'NO') . ", Status: {$result['status_code']}, Duration: {$elapsedMs}ms");
+            // Log::debug("[ProcessWebhookQueue] WebhookSender returned - Success: " . ($result['success'] ? 'YES' : 'NO') . ", Status: {$result['status_code']}, Duration: {$elapsedMs}ms");
 
             // Determine final status
             if ($result['success']) {
                 // Success - mark as sent
-                // Log::info("[ProcessWebhooksQueue] ✓ Webhook #{$webhook->id} sent successfully - HTTP {$result['status_code']} in {$result['duration_ms']}ms");
+                // Log::info("[ProcessWebhookQueue] ✓ Webhook #{$webhook->id} sent successfully - HTTP {$result['status_code']} in {$result['duration_ms']}ms");
 
-                DB::table('webhooks_queue')
+                DB::table('webhook_queue')
                     ->where('id', $webhook->id)
                     ->update([
                         'status' => self::STATUS_SENT,
@@ -170,22 +170,22 @@ class ProcessWebhooksQueue extends Command
                     ]);
 
                 // Log to webhook_logs
-                // Log::debug("[ProcessWebhooksQueue] Logging successful webhook attempt to webhook_logs");
+                // Log::debug("[ProcessWebhookQueue] Logging successful webhook attempt to webhook_logs");
                 $this->logWebhook($webhook, $result, true, $webhook->retry_count);
 
             } else {
                 // Failed - check if should retry
                 $retryCount = $webhook->retry_count + 1;
 
-                Log::warning("[ProcessWebhooksQueue] ✗ Webhook #{$webhook->id} failed - Error: {$result['error']}");
+                Log::warning("[ProcessWebhookQueue] ✗ Webhook #{$webhook->id} failed - Error: {$result['error']}");
 
                 if ($retryCount < $webhook->max_retries) {
                     // Schedule retry with exponential backoff
                     $nextRetryAt = $this->calculateNextRetry($retryCount);
 
-                    // Log::info("[ProcessWebhooksQueue] Scheduling retry #{$retryCount} for webhook #{$webhook->id} at {$nextRetryAt}");
+                    // Log::info("[ProcessWebhookQueue] Scheduling retry #{$retryCount} for webhook #{$webhook->id} at {$nextRetryAt}");
 
-                    DB::table('webhooks_queue')
+                    DB::table('webhook_queue')
                         ->where('id', $webhook->id)
                         ->update([
                             'status' => self::STATUS_PENDING,
@@ -201,10 +201,10 @@ class ProcessWebhooksQueue extends Command
                     $this->warn("⚠ Webhook #{$webhook->id} failed, retry #{$retryCount} scheduled for {$nextRetryAt}");
                 } else {
                     // Max retries reached - mark as failed
-                    Log::error("[ProcessWebhooksQueue] ✗✗✗ Webhook #{$webhook->id} PERMANENTLY FAILED after {$retryCount} attempts");
-                    Log::error("[ProcessWebhooksQueue] Final error: {$result['error']}");
+                    Log::error("[ProcessWebhookQueue] ✗✗✗ Webhook #{$webhook->id} PERMANENTLY FAILED after {$retryCount} attempts");
+                    Log::error("[ProcessWebhookQueue] Final error: {$result['error']}");
 
-                    DB::table('webhooks_queue')
+                    DB::table('webhook_queue')
                         ->where('id', $webhook->id)
                         ->update([
                             'status' => self::STATUS_FAILED,
@@ -216,16 +216,16 @@ class ProcessWebhooksQueue extends Command
                             'modified' => now(),
                         ]);
 
-                    Log::error("[ProcessWebhooksQueue] Webhook #{$webhook->id} failed permanently after {$retryCount} attempts: " . $result['error']);
+                    Log::error("[ProcessWebhookQueue] Webhook #{$webhook->id} failed permanently after {$retryCount} attempts: " . $result['error']);
                 }
 
                 // Log to webhook_logs
-                // Log::debug("[ProcessWebhooksQueue] Logging failed webhook attempt to webhook_logs");
+                // Log::debug("[ProcessWebhookQueue] Logging failed webhook attempt to webhook_logs");
                 $this->logWebhook($webhook, $result, false, $retryCount);
             }
         });
 
-        // Log::debug("[ProcessWebhooksQueue] END processSingleWebhook for webhook #{$webhook->id}");
+        // Log::debug("[ProcessWebhookQueue] END processSingleWebhook for webhook #{$webhook->id}");
     }
 
     /**
@@ -278,7 +278,7 @@ class ProcessWebhooksQueue extends Command
             ]);
 
         } catch (\Throwable $e) {
-            Log::error("[ProcessWebhooksQueue] Failed to log webhook attempt: " . $e->getMessage());
+            Log::error("[ProcessWebhookQueue] Failed to log webhook attempt: " . $e->getMessage());
         }
     }
 

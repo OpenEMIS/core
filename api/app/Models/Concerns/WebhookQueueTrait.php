@@ -152,7 +152,7 @@ trait WebhookQueueTrait
     }
 
     /**
-     * Queue webhook request to webhooks_queue table
+     * Queue webhook request to webhook_queue table
      *
      * @param string $eventKey Webhook event key
      * @param array $body Entity data
@@ -213,7 +213,7 @@ trait WebhookQueueTrait
                 $payloadSize = strlen(is_string($finalBody) ? $finalBody : json_encode($finalBody));
                 Log::debug("[WebhookQueueTrait] Built payload, size: {$payloadSize} bytes");
 
-                // Insert into webhooks_queue
+                // Insert into webhook_queue
                 $queueData = [
                     'webhook_id' => $webhookConfig->webhook_id,
                     'event_key' => $eventKey,
@@ -235,8 +235,8 @@ trait WebhookQueueTrait
                     'created_user_id' => auth()->id(),
                 ];
 
-                Log::debug("[WebhookQueueTrait] Inserting into webhooks_queue table...");
-                $queueId = DB::table('webhooks_queue')->insertGetId($queueData);
+                Log::debug("[WebhookQueueTrait] Inserting into webhook_queue table...");
+                $queueId = DB::table('webhook_queue')->insertGetId($queueData);
                 $queuedCount++;
 
                 Log::info("[WebhookQueueTrait] ✓ Queued webhook #{$queueId} for event_key: {$eventKey}, webhook_id: {$webhookConfig->webhook_id}");

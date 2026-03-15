@@ -10,7 +10,7 @@
 "My webhook is not working"
           │
           ▼
-Is there a row in webhooks_queue after the triggering action?
+Is there a row in webhook_queue after the triggering action?
           │
     No ───┴─── Yes
     │               │
@@ -26,7 +26,7 @@ Is there a row in webhooks_queue after the triggering action?
 
 ---
 
-## [A] Not Queuing — Nothing Appears in `webhooks_queue`
+## [A] Not Queuing — Nothing Appears in `webhook_queue`
 
 Check each of these in order:
 
@@ -52,7 +52,7 @@ Laravel: check `$webhookEventPrefix` or the auto-generated key (table name singu
 ```sql
 -- See what event keys are being generated:
 SELECT event_key, COUNT(*) AS count
-FROM webhooks_queue
+FROM webhook_queue
 WHERE created >= NOW() - INTERVAL 1 HOUR
 GROUP BY event_key;
 ```
@@ -102,7 +102,7 @@ Watch for errors in the output.
 
 ```sql
 SELECT id, event_key, available_at, next_retry_at, status, retry_count
-FROM webhooks_queue
+FROM webhook_queue
 WHERE status = 0
 ORDER BY created DESC LIMIT 10;
 ```
@@ -116,11 +116,11 @@ If the processor crashed, entries may be stuck in PROCESSING:
 ```sql
 -- Check for stalled entries
 SELECT id, event_key, status, modified
-FROM webhooks_queue
+FROM webhook_queue
 WHERE status = 1;
 
 -- Reset stalled entries
-UPDATE webhooks_queue
+UPDATE webhook_queue
 SET status = 0
 WHERE status = 1
   AND modified < NOW() - INTERVAL 5 MINUTE;
@@ -143,7 +143,7 @@ Must be `true` or absent. If set to `false`, change it and run `php artisan conf
 ```sql
 -- Check last error on the failed queue entry
 SELECT id, event_key, target_url, retry_count, last_error, modified
-FROM webhooks_queue
+FROM webhook_queue
 WHERE status = -1
 ORDER BY modified DESC LIMIT 10;
 
@@ -169,7 +169,7 @@ ORDER BY l.retry_attempt ASC;
 ### 3. Resend a failed webhook
 
 ```sql
-UPDATE webhooks_queue
+UPDATE webhook_queue
 SET status = 0, retry_count = 0, next_retry_at = NULL, last_error = NULL
 WHERE id = <queue_id>;
 ```
@@ -183,7 +183,7 @@ docker exec poe-application /bin/sh -c \
 ### 4. Bulk resend all failures for an event
 
 ```sql
-UPDATE webhooks_queue
+UPDATE webhook_queue
 SET status = 0, retry_count = 0, next_retry_at = NULL, last_error = NULL
 WHERE status = -1 AND event_key = 'institution_update';
 ```
@@ -197,7 +197,7 @@ WHERE status = -1 AND event_key = 'institution_update';
 1. The field name must exist as a **top-level key** in the entity data at queue time.
 2. Inspect an actual queued payload:
    ```sql
-   SELECT payload FROM webhooks_queue
+   SELECT payload FROM webhook_queue
    WHERE event_key = 'your_event_key'
    ORDER BY created DESC LIMIT 1;
    ```
@@ -216,7 +216,7 @@ CakePHP: add the association alias to the `'contain' => [...]` parameter in `add
 
 ```sql
 -- Check current backlog
-SELECT COUNT(*) FROM webhooks_queue WHERE status = 0;
+SELECT COUNT(*) FROM webhook_queue WHERE status = 0;
 
 -- Check processing rate over last hour
 SELECT DATE_FORMAT(created, '%Y-%m-%d %H:%i') AS minute,
@@ -244,9 +244,9 @@ If `body_template` is empty, the full entity JSON is sent. For large entities wi
 | Log prefix | Source |
 |------------|--------|
 | `[WebhookQueueTrait]` | Laravel model — queuing events |
-| `[WebhooksQueue]` | CakePHP — `WebhooksQueueTable::queueWebhook()` |
+| `[WebhookQueue]` | CakePHP — `WebhookQueueTable::queueWebhook()` |
 | `[WebhookQueue]` | CakePHP — `WebhookQueueBehavior` |
-| `[ProcessWebhooksQueue]` | Delivery processor (batch level) |
+| `[ProcessWebhookQueue]` | Delivery processor (batch level) |
 | `[WebhookSender]` | HTTP request/response details |
 | `[WebhookScheduler]` | Laravel Kernel scheduler failures |
 
@@ -257,7 +257,7 @@ If `body_template` is empty, the full entity JSON is sent. For large entities wi
 grep -i webhook /var/www/html/emis/core/api/storage/logs/laravel.log | tail -50
 
 # Only errors
-grep -E "\[WebhookSender\]|\[ProcessWebhooksQueue\].*✗" \
+grep -E "\[WebhookSender\]|\[ProcessWebhookQueue\].*✗" \
   /var/www/html/emis/core/api/storage/logs/laravel.log | tail -20
 
 # CakePHP webhook errors

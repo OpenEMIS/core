@@ -147,7 +147,7 @@ private $eventKeyOptions = [
 1. **Trigger the event** (create/edit/delete a record in the affected model)
 2. **Check the queue:**
    ```sql
-   SELECT event_key, status, created FROM webhooks_queue
+   SELECT event_key, status, created FROM webhook_queue
    WHERE created >= NOW() - INTERVAL 5 MINUTE
    ORDER BY created DESC;
    ```

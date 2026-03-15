@@ -8,7 +8,7 @@
 
 The webhook system bridges OpenEMIS data events to external HTTP endpoints. It is built in two layers:
 
-1. **Queuing layer** — intercepts data changes in CakePHP and Laravel and writes them to `webhooks_queue`
+1. **Queuing layer** — intercepts data changes in CakePHP and Laravel and writes them to `webhook_queue`
 2. **Delivery layer** — a background processor reads the queue and sends the HTTP requests
 
 The two layers are completely decoupled. The queuing layer never makes network calls. The delivery layer never touches business logic.
@@ -87,7 +87,7 @@ If no rows match, nothing is queued. No error is raised — absence of a configu
 
 ## Template Resolution
 
-At queue time (before writing to `webhooks_queue`), placeholders in `query_template` and `body_template` are replaced:
+At queue time (before writing to `webhook_queue`), placeholders in `query_template` and `body_template` are replaced:
 
 ```
 Template:  {"id": "${id}", "school": "${institution_id}"}
@@ -105,7 +105,7 @@ If no `body_template` is set, the full entity array (with relations loaded) is s
 
 ## Delivery Layer
 
-### `ProcessWebhooksQueue` (Artisan command)
+### `ProcessWebhookQueue` (Artisan command)
 
 **Signature:** `webhooks:process [--limit=100] [--once] [--max-retries=3]`
 
@@ -154,7 +154,7 @@ User action (UI or API)
 │  Resolve URL + body template placeholders            │
 │        │                                             │
 │        ▼                                             │
-│  INSERT INTO webhooks_queue (status=0, PENDING)      │
+│  INSERT INTO webhook_queue (status=0, PENDING)      │
 └──────────────────────────────────────────────────────┘
         │
         │  (async, every minute)
@@ -162,10 +162,10 @@ User action (UI or API)
 ┌──────────────────────────────────────────────────────┐
 │              DELIVERY LAYER                          │
 │                                                      │
-│  ProcessWebhooksQueue                                │
+│  ProcessWebhookQueue                                │
 │        │                                             │
 │        ▼                                             │
-│  SELECT pending webhooks_queue entries               │
+│  SELECT pending webhook_queue entries               │
 │  (status=0, available_at<=now)                       │
 │        │                                             │
 │        ▼                                             │

@@ -2553,8 +2553,8 @@ class InstitutionsTable extends ControllerActionTable
 
         // --- 3. Queue webhook for async processing (POCOR-9257) ---
         try {
-            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
-            $result = $WebhooksQueue->queueWebhook($eventKey, $body, $user);
+            $WebhookQueue = TableRegistry::getTableLocator()->get('WebhookQueue'); //POCOR-9257: renamed from WebhooksQueue
+            $result = $WebhookQueue->queueWebhook($eventKey, $body, $user);
             if ($result) {
                 // Log::debug("[InstitutionsTable] ✓ Queued webhook for event: {$eventKey}, institution ID: {$entity->id}");
             } else {

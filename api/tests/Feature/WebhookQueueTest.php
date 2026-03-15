@@ -37,8 +37,8 @@ class WebhookQueueTest extends TestCase
         $nationality = DB::table('nationalities')->first();
         $this->testNationalityId = $nationality ? $nationality->id : 1;
 
-        // Clear webhooks_queue table before each test
-        DB::table('webhooks_queue')->truncate();
+        // Clear webhook_queue table before each test
+        DB::table('webhook_queue')->truncate();
 
         // Ensure we have at least one active webhook configured for testing
         $this->ensureTestWebhookExists();
@@ -82,8 +82,8 @@ class WebhookQueueTest extends TestCase
             Log::info('[WebhookQueueTest] Cleaned up ' . count($this->createdConfigItemIds) . ' test config items');
         }
 
-        // Clear webhooks_queue
-        DB::table('webhooks_queue')->truncate();
+        // Clear webhook_queue
+        DB::table('webhook_queue')->truncate();
 
         parent::tearDown();
     }
@@ -181,9 +181,9 @@ class WebhookQueueTest extends TestCase
         Log::info('[WebhookQueueTest] ========== START test_webhook_queued_on_user_create ==========');
 
         // Verify queue is empty before test
-        $beforeCount = DB::table('webhooks_queue')->count();
-        $this->assertEquals(0, $beforeCount, 'webhooks_queue should be empty before test');
-        Log::info('[WebhookQueueTest] Verified webhooks_queue is empty (count: 0)');
+        $beforeCount = DB::table('webhook_queue')->count();
+        $this->assertEquals(0, $beforeCount, 'webhook_queue should be empty before test');
+        Log::info('[WebhookQueueTest] Verified webhook_queue is empty (count: 0)');
 
         // Create a new user
         Log::info('[WebhookQueueTest] Creating new SecurityUser...');
@@ -206,8 +206,8 @@ class WebhookQueueTest extends TestCase
         Log::info("[WebhookQueueTest] Created user ID: {$user->id}, username: {$user->username}");
 
         // Check if webhook was queued
-        $afterCount = DB::table('webhooks_queue')->count();
-        Log::info("[WebhookQueueTest] webhooks_queue count after user creation: {$afterCount}");
+        $afterCount = DB::table('webhook_queue')->count();
+        Log::info("[WebhookQueueTest] webhook_queue count after user creation: {$afterCount}");
 
         $this->assertGreaterThan(
             $beforeCount,
@@ -216,7 +216,7 @@ class WebhookQueueTest extends TestCase
         );
 
         // Verify the queued webhook details
-        $queuedWebhook = DB::table('webhooks_queue')
+        $queuedWebhook = DB::table('webhook_queue')
             ->where('event_key', 'security_user_create')
             ->latest('created')
             ->first();
@@ -278,8 +278,8 @@ class WebhookQueueTest extends TestCase
         Log::info("[WebhookQueueTest] Created user ID: {$user->id} for update test");
 
         // Clear the queue from creation
-        DB::table('webhooks_queue')->truncate();
-        Log::info('[WebhookQueueTest] Cleared webhooks_queue after user creation');
+        DB::table('webhook_queue')->truncate();
+        Log::info('[WebhookQueueTest] Cleared webhook_queue after user creation');
 
         // Update the user
         Log::info('[WebhookQueueTest] Updating user first_name...');
@@ -289,7 +289,7 @@ class WebhookQueueTest extends TestCase
         Log::info("[WebhookQueueTest] Updated user ID: {$user->id}, new first_name: {$user->first_name}");
 
         // Check if webhook was queued
-        $queuedWebhook = DB::table('webhooks_queue')
+        $queuedWebhook = DB::table('webhook_queue')
             ->where('event_key', 'security_user_update')
             ->latest('created')
             ->first();
@@ -340,8 +340,8 @@ class WebhookQueueTest extends TestCase
         Log::info("[WebhookQueueTest] Created user ID: {$userId} for delete test");
 
         // Clear the queue from creation
-        DB::table('webhooks_queue')->truncate();
-        Log::info('[WebhookQueueTest] Cleared webhooks_queue after user creation');
+        DB::table('webhook_queue')->truncate();
+        Log::info('[WebhookQueueTest] Cleared webhook_queue after user creation');
 
         // Delete the user
         Log::info("[WebhookQueueTest] Deleting user ID: {$userId}...");
@@ -349,7 +349,7 @@ class WebhookQueueTest extends TestCase
         Log::info("[WebhookQueueTest] User deleted");
 
         // Check if webhook was queued
-        $queuedWebhook = DB::table('webhooks_queue')
+        $queuedWebhook = DB::table('webhook_queue')
             ->where('event_key', 'security_user_delete')
             ->latest('created')
             ->first();
@@ -406,8 +406,8 @@ class WebhookQueueTest extends TestCase
         Log::info("[WebhookQueueTest] Created user ID: {$user->id}");
 
         // Verify no webhook was queued
-        $queueCount = DB::table('webhooks_queue')->count();
-        Log::info("[WebhookQueueTest] webhooks_queue count: {$queueCount}");
+        $queueCount = DB::table('webhook_queue')->count();
+        Log::info("[WebhookQueueTest] webhook_queue count: {$queueCount}");
 
         $this->assertEquals(0, $queueCount, 'No webhook should be queued when no active webhooks are configured');
 
@@ -438,7 +438,7 @@ class WebhookQueueTest extends TestCase
         }
 
         // Check if webhook was queued (if Areas has webhooks configured)
-        $queuedWebhook = DB::table('webhooks_queue')
+        $queuedWebhook = DB::table('webhook_queue')
             ->where('event_key', 'area_create')
             ->orWhere('event_key', 'area_update')
             ->latest('created')

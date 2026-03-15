@@ -1205,9 +1205,9 @@ class ConfigWebhooksTable extends ControllerActionTable
 
         // --- POCOR-9257: Queue webhook for async processing ---
         try {
-            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
+            $WebhookQueue = TableRegistry::getTableLocator()->get('WebhookQueue'); //POCOR-9257: renamed from WebhooksQueue
             $user = $this->resolveCurrentUser();
-            $result = $WebhooksQueue->queueWebhook($commandName, $body, $user);
+            $result = $WebhookQueue->queueWebhook($commandName, $body, $user);
             if ($result) {
                 // Log::debug("[Webhook] {$commandName} queued for entity ID: " . ($entity->id ?? 'unknown'));
                 return true;
