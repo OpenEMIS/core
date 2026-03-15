@@ -244,6 +244,37 @@ class WebhookQueueTable extends ControllerActionTable
         $toolbarButtonsArray['process'] = $processButton;
         $toolbarButtonsArray['access'] = $toolbarButton;
 
+        //POCOR-9257: start - checkbox column and bulk delete for webhook queue
+        $this->field('_select', [
+            'type'             => 'element',
+            'element'          => 'Webhook/select_checkbox',
+            'tableHeaderClass' => 'checkbox-column',
+            'tableColumnClass' => 'checkbox-column',
+            'label'            => '',
+            'order'            => 0,
+        ]);
+
+        $deleteUrl = \Cake\Routing\Router::url([
+            'plugin'     => false,
+            'controller' => 'Webhook',
+            'action'     => 'queueDeleteSelected',
+        ]);
+
+        $toolbarButtonsArray['deleteSelected'] = [
+            'type'  => 'element',
+            'name'  => 'Webhook/delete_selected_button',
+            'data'  => [],
+            'order' => 2,
+        ];
+
+        $extra['elements']['webhookBulkJs'] = [
+            'name'    => 'Webhook/bulk_actions_js',
+            'data'    => ['deleteUrl' => $deleteUrl],
+            'options' => [],
+            'order'   => 10,
+        ];
+        //POCOR-9257: end
+
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
     }
