@@ -31,20 +31,20 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     }
     //POCOR-8866 start
 
-    // public function beforeAction(EventInterface $event, ArrayObject $extra)
-    // {
-    //    $this->field('behaviour_classification_id', ['after' => 'editable', 'type' => 'select']);
-    // }
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+       $this->field('behaviour_classification_id', ['after' => 'editable', 'type' => 'select']);
+    }
 
-    // public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
-    // {
-    //     $this->field('behaviour_classification_id', ['after' => 'name']);
-    // }
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('behaviour_classification_id', ['after' => 'name']);
+    }
 
-    // public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
-    // {
-    //     $this->field('behaviour_classification_id', ['after' => 'name']);
-    // }
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('behaviour_classification_id', ['after' => 'name']);
+    }
 
     //POCOR-8866 end
     public function getUnusedStudentBehaviourCategories($id)
@@ -70,6 +70,23 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
         return $unusedList;
     }
 
+    public function onUpdateFieldBehaviourClassificationId(EventInterface $event, array $attr, $action)
+    {
+        $BehaviourClassifications = TableRegistry::getTableLocator()->get('Student.BehaviourClassifications');
+        $BehaviourClassificationsOptions = $BehaviourClassifications
+                                                ->find( 'list', 
+                                                ['keyField' => 'id',
+                                                'valueField' => 'name'])
+                                                ->all()
+                                                ->toArray();
+        $attr['type'] = 'select';
+
+        $attr['placeholder'] = __('-- Select -- ');
+        $attr['options'] = $BehaviourClassificationsOptions;
+        
+        return $attr;
+    }
+
     /**
      * POCOR-7196
     **/ 
@@ -89,7 +106,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     public function checkStudentRecords($entity)
     {
         $categoryId = $entity->id ?? 0;
-        $behaviorCategory = TableRegistry::getTableLocator()->get('Student.StudentBehaviours');
+        $behaviorCategory = TableRegistry::getTableLocator()->get('student_behaviours');
 
         $data = $behaviorCategory->find()->where(['student_behaviour_category_id'=>$categoryId])->count(); 
         if($data > 0)
