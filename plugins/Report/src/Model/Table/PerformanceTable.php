@@ -452,17 +452,18 @@ class PerformanceTable extends AppTable
                             ])
                             ->where([$condition])
                             ->toArray();
-
-            $attr['type'] = 'select';
-            $attr['select'] = false;
-            if (count($assessmentPeriodList) > 1) {
-                $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $assessmentPeriodList;
+           
+            if (count($assessmentPeriodList) >= 1) {
+                $assessmentPeriodOption = $assessmentPeriodList;
             } else {
                 $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
             }
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['type'] = 'chosenSelect';
+            $attr['onChangeReload'] = false;
+            $attr['attr']['multiple'] = true;
             $attr['options'] = $assessmentPeriodOption;
-            $attr['onChangeReload'] = true;
-
             return $attr;
         }
     }
@@ -488,7 +489,7 @@ class PerformanceTable extends AppTable
 
             if ($assessmentPeriodId > 0) {
                 $query->where([
-                    $this->AssessmentPeriods->aliasField('id') => $assessmentPeriodId
+                    $this->AssessmentPeriods->aliasField('id IN') => $assessmentPeriodId['_ids']
                 ]);
             }
 
@@ -530,7 +531,6 @@ class PerformanceTable extends AppTable
         $institutionId = $requestData->institution_id;
         $gradeId = $requestData->education_grade_id;
         $assessmentPeriodId = $requestData->assessment_period_id;
-        $assessmentPeriodId = $requestData->assessment_period_id;
         $academicPeriodId = $requestData->academic_period_id;
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
@@ -558,7 +558,7 @@ class PerformanceTable extends AppTable
         }
         
         if ($assessmentPeriodId > 0) {
-            $conditions[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+            $conditions[$this->aliasField('assessment_period_id IN')] = $assessmentPeriodId['_ids']; //POCOR-9575
         }
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -778,9 +778,14 @@ class PerformanceTable extends AppTable
             if (!empty($academicPeriodId)) {
                 $conditions[$Assessments->aliasField('academic_period_id')] = $academicPeriodId;
             }
-            if (!empty($assessmentPeriodId) && $assessmentPeriodId > 0) {
-                $conditions[$AssessmentPeriods->aliasField('id')] = $assessmentPeriodId;
+            if (!empty($assessmentPeriodId)) {
+                if (is_array($assessmentPeriodId) && isset($assessmentPeriodId['_ids'])) {
+                    $conditions[$AssessmentPeriods->aliasField('id IN')] = $assessmentPeriodId['_ids']; //POCOR-9575
+                } else {
+                    $conditions[$AssessmentPeriods->aliasField('id')] = $assessmentPeriodId;
+                }
             }
+
             if (!empty($academicTerm) && $academicTerm > 0) {
                 $conditions[$AssessmentPeriods->aliasField('academic_term')] = $academicTerm;
             }
@@ -817,6 +822,8 @@ class PerformanceTable extends AppTable
             foreach ($subjects as $val) {
                 $allowedSubjects[$val['id']] = $val['name'];
             }
+            $attr['type'] = 'select';
+            $attr['select'] = false;
             $attr['type'] = 'chosenSelect';
             $attr['onChangeReload'] = false;
             $attr['attr']['multiple'] = true;

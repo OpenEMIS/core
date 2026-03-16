@@ -576,29 +576,60 @@ class ScheduleIntervalsTable extends ControllerActionTable
     }
 
     //POCOR-8254
-    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    //POCOR-9579[START]
+    // public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    // {
+    //     $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
+    //     // $institutionSchedule = TableRegistry::getTableLocator()->get('institution_schedule_timeslots');
+    //     $tableLocator = new TableLocator();
+    //     $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
+    //     $findRecord = $institutionSchedule->find()
+    //         ->where(['institution_schedule_interval_id' => $entity->id])
+    //         ->toArray();
+    //     // Check if the number of records matches the number of timeslots
+    //     if (count($findRecord) === count($timeslotList)) {
+    //         foreach ($findRecord as $key => $value) {
+    //             $val = $timeslotList[$key]; // Get the corresponding timeslot
+    //             $institutionScheduledata = $institutionSchedule->updateAll(
+    //                 ['interval' => $val['interval']], // Field
+    //                 ['id' => $value['id']] // Condition
+    //             );
+    //         }
+    //     } else {
+    //         //return false;
+    //     }
+
+    // }
+
+    public function editAfterSave(EventInterface $event,Entity $entity,ArrayObject $requestData,ArrayObject $options) 
     {
-        $timeslotList = $this->request->getData()['ScheduleIntervals']['timeslots'];
-        // $institutionSchedule = TableRegistry::getTableLocator()->get('institution_schedule_timeslots');
+        $timeslotList = $requestData['ScheduleIntervals']['timeslots'] ?? [];
+
+        if (empty($timeslotList)) {
+            return;
+        }
+
         $tableLocator = new TableLocator();
         $institutionSchedule = $tableLocator->get('institution_schedule_timeslots');
+
         $findRecord = $institutionSchedule->find()
             ->where(['institution_schedule_interval_id' => $entity->id])
             ->toArray();
-        // Check if the number of records matches the number of timeslots
+
         if (count($findRecord) === count($timeslotList)) {
             foreach ($findRecord as $key => $value) {
-                $val = $timeslotList[$key]; // Get the corresponding timeslot
-                $institutionScheduledata = $institutionSchedule->updateAll(
-                    ['interval' => $val['interval']], // Field
-                    ['id' => $value['id']] // Condition
+                if (!isset($timeslotList[$key])) {
+                    continue;
+                }
+
+                $institutionSchedule->updateAll(
+                    ['interval' => $timeslotList[$key]['interval'] ?? null],
+                    ['id' => $value['id']]
                 );
             }
-        } else {
-            //return false;
         }
-
     }
+    //POCOR-9579[END]
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {

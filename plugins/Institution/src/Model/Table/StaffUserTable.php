@@ -737,7 +737,7 @@ class StaffUserTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $userNationalities = TableRegistry::getTableLocator()->get('User.userNationalities');
+        $userNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
         $userContacts = TableRegistry::getTableLocator()->get('UserContacts');
         $contactTypes = TableRegistry::getTableLocator()->get('User.ContactTypes');
         $contactOptions = TableRegistry::getTableLocator()->get('User.ContactOptions');
