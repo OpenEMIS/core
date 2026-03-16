@@ -4,6 +4,7 @@ namespace ReportCard\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
+use Cake\Log\Log;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
@@ -74,6 +75,8 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
+////        Log::debug('@ReportCardProcessesTable::indexBeforeQuery START'); //[TEMP-LOG]
+////        Log::debug('@ReportCardProcessesTable::indexBeforeQuery WHERE conditions: ' . json_encode($query->clause('where'))); //[TEMP-LOG]
 
         //POCOR_7319 starts
         $where = [];
@@ -215,6 +218,7 @@ class ReportCardProcessesTable extends ControllerActionTable
 
         //End
         $query->where($where);
+////        Log::debug('@ReportCardProcessesTable::indexBeforeQuery final WHERE: ' . json_encode($where)); //[TEMP-LOG]
         //POCOR-7319 ends
 
         // POCOR-7067 Starts
@@ -407,11 +411,13 @@ class ReportCardProcessesTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
+////        Log::debug('@ReportCardProcessesTable::afterSave status=' . $entity->status . ' report_card_id=' . $entity->report_card_id . ' student_id=' . $entity->student_id . ' institution_id=' . $entity->institution_id); //[TEMP-LOG]
         if ($entity->status == 3)//Status is complete
         {
+////            Log::debug('@ReportCardProcessesTable::afterSave status is COMPLETED (3), cascading to InstitutionStudentsReportCards'); //[TEMP-LOG]
             $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
             # Update the status of student process
-            $StudentsReportCards->query()->update()
+            $updateQuery = $StudentsReportCards->query()->update()
                 ->set([
                     'status' => self::NEW_PROCESS,  // POCOR-7443
                     // 'started_on' => null,    // POCOR-7443
@@ -424,7 +430,19 @@ class ReportCardProcessesTable extends ControllerActionTable
                     'academic_period_id' => $entity->academic_period_id,
                     'education_grade_id' => $entity->education_grade_id,
                     'institution_class_id' => $entity->institution_class_id
-                ])->execute();
+                ]);
+            //// Log::debug('@ReportCardProcessesTable::afterSave cascading update to InstitutionStudentsReportCards with conditions: ' . json_encode([
+            ////     'report_card_id' => $entity->report_card_id,
+            ////     'student_id' => $entity->student_id,
+            ////     'institution_id' => $entity->institution_id,
+            ////     'academic_period_id' => $entity->academic_period_id,
+            ////     'education_grade_id' => $entity->education_grade_id,
+            ////     'institution_class_id' => $entity->institution_class_id
+            //// ])); //[TEMP-LOG]
+            $result = $updateQuery->execute();
+////            Log::debug('@ReportCardProcessesTable::afterSave cascade affected rows=' . $result->rowCount()); //[TEMP-LOG]
+        } else {
+////            Log::debug('@ReportCardProcessesTable::afterSave status=' . $entity->status . ' - no cascade action'); //[TEMP-LOG]
         }
     }
 

@@ -121,7 +121,7 @@ class ImportBehavior extends Behavior
     public function initialize(array $config): void
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportBehavior::initialize START table=' . $this->_table->getAlias() . ' config_plugin=' . json_encode($config['plugin'] ?? null) . ' config_model=' . json_encode($config['model'] ?? null)); //[TEMP-LOG]
+        //// Log::debug('@ImportBehavior::initialize START table=' . $this->_table->getAlias() . ' config_plugin=' . json_encode($config['plugin'] ?? null) . ' config_model=' . json_encode($config['model'] ?? null)); //[TEMP-LOG]
         //POCOR-9584: end
         $fileTypes = $this->getConfig('fileTypes');
         $allowableFileTypes = [];
