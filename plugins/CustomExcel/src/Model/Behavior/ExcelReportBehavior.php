@@ -88,42 +88,56 @@ class ExcelReportBehavior extends Behavior
 
     public function getVars($params, ArrayObject $extra)
     {
+//        Log::debug('@ExcelReportBehavior::getVars START variableSource=' . $this->getConfig('variableSource')); //[TEMP-LOG]
         $model = $this->_table;
 
         $variableValues = new ArrayObject([]);
         if ($this->getConfig('variableSource') == 'database') {
+//            Log::debug('@ExcelReportBehavior::getVars dispatching onExcelTemplateInitialiseQueryVariables'); //[TEMP-LOG]
             $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialiseQueryVariables', [$params, $extra], $this);
             if ($event->isStopped()) {
+//                Log::debug('@ExcelReportBehavior::getVars event stopped, returning result'); //[TEMP-LOG];
                 return $event->getResult();
             }
             if ($event->getResult()) {
                 $variableValues = $event->getResult();
+//                Log::debug('@ExcelReportBehavior::getVars got result from event, keys=' . implode(',', array_keys($variableValues->getArrayCopy()))); //[TEMP-LOG];
             }
 
         } else if ($this->getConfig('variableSource') == 'file') {
             $variables = $this->getConfig('variables');
-
+//            Log::debug('@ExcelReportBehavior::getVars file source, processing ' . count($variables) . ' variables'); //[TEMP-LOG];
             foreach ($variables as $var) {
+//                Log::debug('@ExcelReportBehavior::getVars dispatching onExcelTemplateInitialise' . $var); //[TEMP-LOG];
                 $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise' . $var, [$params, $extra], $this);
                 if ($event->isStopped()) {
+//                    Log::debug('@ExcelReportBehavior::getVars event stopped for ' . $var . ', returning'); //[TEMP-LOG];
                     return $event->getResult();
                 }
                 if ($event->getResult()) {
                     $variableValues[$var] = $event->getResult();
+//                    Log::debug('@ExcelReportBehavior::getVars got result for ' . $var); //[TEMP-LOG];
+                } else {
+//                    Log::debug('@ExcelReportBehavior::getVars no result for ' . $var); //[TEMP-LOG];
                 }
             }
+        } else {
+//            Log::warning('@ExcelReportBehavior::getVars unknown variableSource=' . $this->getConfig('variableSource')); //[TEMP-LOG];
         }
 
         $variableValues = $variableValues->getArrayCopy();
+//        Log::debug('@ExcelReportBehavior::getVars final count=' . count($variableValues) . ' keys=' . implode(',', array_keys($variableValues))); //[TEMP-LOG]
         return $variableValues;
     }
 
     //POCOR-8568[Here added  Event $event]
 
-    public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
+    public function onRenderExcelTemplate(EventInterface $event, ArrayObject $extra)
     {
+//        Log::debug('@ExcelReportBehavior::onRenderExcelTemplate START'); //[TEMP-LOG]
         ini_set('max_execution_time', 360);
         $this->renderExcelTemplate($extra, $event);
+//        Log::debug('@ExcelReportBehavior::onRenderExcelTemplate END'); //[TEMP-LOG]
     }
 
     //POCOR-8568[Here added  EventInterface $event]
@@ -133,142 +147,194 @@ class ExcelReportBehavior extends Behavior
      */
     public function renderExcelTemplate(ArrayObject $extra, EventInterface $event = null) //POCOR-8588
     {
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate ENTRY className=' . ($extra['className'] ?? 'N/A')); //[TEMP-LOG]
         $model = $this->_table;
         $format = $this->getConfig('format');
         $paramVal = '';
         if (isset($extra['requestQuery'])) {
             $params = $extra['requestQuery'];
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: ' . $paramVal);
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate using requestQuery params: ' . json_encode($params)); //[TEMP-LOG]
         } else {
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath2: ');
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate using model->getQueryString()'); //[TEMP-LOG]
             $params = $model->getQueryString();
             if (empty($params)) {
+                //Log::debug('@ExcelReportBehavior::renderExcelTemplate getQueryString empty, decoding from query string'); //[TEMP-LOG]
                 $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
             }
-            $paramVal = $params['assessment_id']; //POCOR-6908
+            $paramVal = isset($params['assessment_id']) ? $params['assessment_id'] : 'N/A'; //POCOR-6908
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate assessment_id=' . $paramVal); //[TEMP-LOG]
         }
 
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate final params: ' . json_encode($params)); //[TEMP-LOG]
         $extra['params'] = $params;
-        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
-        $extra['vars'] = $this->getVars($params, $extra);
 
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate dispatching onExcelTemplateBeforeGenerate'); //[TEMP-LOG]
+        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this); // POCOR-7443
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate back from onExcelTemplateBeforeGenerate'); //[TEMP-LOG]
+
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate calling getVars'); //[TEMP-LOG]
+        $extra['vars'] = $this->getVars($params, $extra);
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate getVars completed, vars count=' . count($extra['vars'])); //[TEMP-LOG]
 
         $extra['file'] = $this->getConfig('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $format;
         $extra['path'] = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS;
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate file=' . $extra['file'] . ' path=' . $extra['path']); //[TEMP-LOG]
 
         $temppath = tempnam($extra['path'], $this->getConfig('filename') . '_');
         $extra['file_path'] = $temppath;
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate temp file created: ' . $temppath); //[TEMP-LOG]
 
-
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate calling loadExcelTemplate'); //[TEMP-LOG]
         $objSpreadsheet = $this->loadExcelTemplate($extra, $event);
-        $this->generateExcel($objSpreadsheet, $extra);
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate back from loadExcelTemplate'); //[TEMP-LOG]
 
-        Log::write('debug', 'ExcelReportBehavior >>> renderExcelTemplate');
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate calling generateExcel'); //[TEMP-LOG]
+        $this->generateExcel($objSpreadsheet, $extra);
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate back from generateExcel'); //[TEMP-LOG]
+
         if (!empty($paramVal)) { // POCOR-6908
-            Log::write('debug', 'ExcelReportBehavior2 >>> filepath1: ' . $paramVal);
-            $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'] ?? null, $paramVal);
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate calling saveFileAssessment with assessment_id=' . $paramVal); //[TEMP-LOG]
+            $this->saveFileAssessment($objSpreadsheet, $temppath, $format, $params['student_id'], $paramVal);
         } else {
-            Log::write('debug', 'ExcelReportBehavior1 >>> filepath2: ');
-            // Custom Reports use requestQuery and do not have student_id/report_card_id
-            $studentId = $params['student_id'] ?? null;
-            $reportCardId = $params['report_card_id'] ?? null;
-            $this->saveFile($objSpreadsheet, $temppath, $format, $studentId, $reportCardId);
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate calling saveFile with report_card_id=' . ($params['report_card_id'] ?? 'N/A')); //[TEMP-LOG]
+            $this->saveFile($objSpreadsheet, $temppath, $format, $params['student_id'], $params['report_card_id']);
         }
 
         if ($extra->offsetExists('temp_logo')) {
             // delete temporary logo
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate deleting temp_logo'); //[TEMP-LOG]
             $this->deleteFile($extra['temp_logo']);
         }
 
         if ($extra->offsetExists('image_resource')) {
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate destroying image_resource'); //[TEMP-LOG]
             imagedestroy($extra['image_resource']);
         }
 
         if ($extra->offsetExists('tmp_file_path')) {
             // delete temporary excel template file after save
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate deleting tmp_file_path=' . $extra['tmp_file_path']); //[TEMP-LOG]
             $this->deleteFile($extra['tmp_file_path']);
         }
 
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate dispatching onExcelTemplateAfterGenerate'); //[TEMP-LOG]
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateAfterGenerate', [$params, $extra], $this);
+        //Log::debug('@ExcelReportBehavior::renderExcelTemplate back from onExcelTemplateAfterGenerate'); //[TEMP-LOG]
 
         if (!empty($params['student_id'])) {
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate handling PDF for student_id=' . $params['student_id']); //[TEMP-LOG]
             $pdfFilePath = WWW_ROOT . $this->getConfig('folder') . DS . $this->getConfig('subfolder') . DS . $this->getConfig('filename') . '_' . $params['student_id'] . '.txt';
             $pdfFileContent = file_get_contents($pdfFilePath);
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate PDF content size=' . strlen($pdfFileContent) . ' bytes'); //[TEMP-LOG]
 
             $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
             // save Pdf file
-            $StudentsReportCards->updateAll([
+            $updateResult = $StudentsReportCards->updateAll([
                 'file_content_pdf' => $pdfFileContent,
                 'status' => 3//POCOR-7530
             ], $params);
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate updated InstitutionStudentsReportCards with PDF, affected rows=' . $updateResult); //[TEMP-LOG]
 
             $this->deleteFile($pdfFilePath);
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate deleted PDF temp file'); //[TEMP-LOG]
+        } else {
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate no student_id, skipping PDF'); //[TEMP-LOG]
         }
 
         if ($this->getConfig('download')) {
-            $tempfile = new File($temppath);
-            $tempinfo = $tempfile->info();
-            $tempcontent = $tempfile->read();
-            $tempfile->close();
-
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate download=true, reading temp file'); //[TEMP-LOG]
+            $tempcontent = file_get_contents($temppath);
+            $tempinfo = ['filesize' => strlen($tempcontent)];
+            //Log::debug('@ExcelReportBehavior::renderExcelTemplate calling downloadFile, size=' . $tempinfo['filesize']); //[TEMP-LOG]
             $this->downloadFile($tempcontent, $extra['file'], $tempinfo['filesize']);
+//            Log::debug('@ExcelReportBehavior::renderExcelTemplate back from downloadFile'); //[TEMP-LOG]
+        } else {
+//            Log::debug('@ExcelReportBehavior::renderExcelTemplate download=false, skipping download'); //[TEMP-LOG]
         }
 
         if ($this->getConfig('purge')) {
+//            Log::debug('@ExcelReportBehavior::renderExcelTemplate purge=true, deleting temp file'); //[TEMP-LOG];
             // delete excel file after download
             $this->deleteFile($temppath);
+//            Log::debug('@ExcelReportBehavior::renderExcelTemplate temp file deleted'); //[TEMP-LOG]
+        } else {
+//            Log::debug('@ExcelReportBehavior::renderExcelTemplate purge=false, keeping temp file'); //[TEMP-LOG];
         }
 
         gc_collect_cycles();
+//        Log::debug('@ExcelReportBehavior::renderExcelTemplate EXIT'); //[TEMP-LOG]
     }
 
 
     public function loadExcelTemplate(ArrayObject $extra, ?EventInterface $event = null) //POCOR-8588
    {
+//        Log::debug('@ExcelReportBehavior::loadExcelTemplate START'); //[TEMP-LOG]
         $model = $this->_table;
         if (isset($extra['requestQuery']) && isset($extra['requestQuery'][$this->getConfig('templateTableKey')])) {
             $recordId = $extra['requestQuery'][$this->getConfig('templateTableKey')];
+//            Log::debug('@ExcelReportBehavior::loadExcelTemplate got recordId from requestQuery: ' . $recordId); //[TEMP-LOG]
         } else {
             //$recordId = $model->getQueryString($this->getConfig('templateTableKey'));
             $params = $model->getQueryString();
             if (empty($params)) {
+//                Log::debug('@ExcelReportBehavior::loadExcelTemplate getQueryString empty, decoding from request'); //[TEMP-LOG];
                 $params = $model->paramsDecode($event->getSubject()->getRequest()->getQuery('queryString'));
             }
             $recordId = $params[$this->getConfig('templateTableKey')];
+//            Log::debug('@ExcelReportBehavior::loadExcelTemplate got recordId from params: ' . $recordId); //[TEMP-LOG]
         }
 
         $Table = TableRegistry::getTableLocator()->get($this->getConfig('templateTable'));
+//        Log::debug('@ExcelReportBehavior::loadExcelTemplate fetched template table: ' . $this->getConfig('templateTable')); //[TEMP-LOG]
 
         if (empty($recordId)) {
+//            Log::debug('@ExcelReportBehavior::loadExcelTemplate no recordId, creating blank Spreadsheet'); //[TEMP-LOG]
             $objSpreadsheet = new Spreadsheet();
         } else {
+//            Log::debug('@ExcelReportBehavior::loadExcelTemplate fetching template entity id=' . $recordId); //[TEMP-LOG]
             // Read from excel template attachment then create as temporary file in server so that can read back the same file and read as Spreadsheet object
-            $entity = $Table->get($recordId);
+            try {
+                $entity = $Table->get($recordId);
+//                Log::debug('@ExcelReportBehavior::loadExcelTemplate loaded template entity, has excel_template=' . ($entity->has('excel_template') ? 'yes' : 'no')); //[TEMP-LOG]
+            } catch (\Exception $e) {
+//                Log::error('@ExcelReportBehavior::loadExcelTemplate FAILED to fetch template record id=' . $recordId . ': ' . $e->getMessage()); //[TEMP-LOG];
+                throw $e;
+            }
 
             if ($entity->has('excel_template_name')) {
+//                Log::debug('@ExcelReportBehavior::loadExcelTemplate template name=' . $entity->excel_template_name); //[TEMP-LOG]
                 $file = $this->getFile($entity->excel_template);
                 if ($file === false || empty($file)) {
                     throw new \Exception('Invalid file content.');
                 }
+//                Log::debug('@ExcelReportBehavior::loadExcelTemplate template content size=' . strlen($file) . ' bytes'); //[TEMP-LOG]
 
                 // Create a temporary file with the correct extension
                 $filepath = tempnam($extra['path'], $this->getConfig('filename') . '_Template_') . '.xls';
                 $extra['tmp_file_path'] = $filepath;
+//                Log::debug('@ExcelReportBehavior::loadExcelTemplate wrote temp file: ' . $filepath); //[TEMP-LOG]
 
-                $excelTemplate = new File($filepath, true, 0777);
-                $excelTemplate->write($file);
-                $excelTemplate->close();
+                file_put_contents($filepath, $file);
+                // Bake image transparency into the template via Laravel artisan
+                exec(PHP_BINARY . ' ' . escapeshellarg(ROOT . DS . 'api' . DS . 'artisan') . ' reportcards:fix-transparency ' . escapeshellarg($filepath) . ' 2>&1');
+//                Log::debug('@ExcelReportBehavior::loadExcelTemplate ran fix-transparency command'); //[TEMP-LOG]
 
                 try {
                     // Read back from the same temporary file
                     $inputFileType = IOFactory::identify($filepath);
                     $objReader = IOFactory::createReader($inputFileType);
                     $objSpreadsheet = $objReader->load($filepath);
+//                    Log::debug('@ExcelReportBehavior::loadExcelTemplate loaded spreadsheet from temp file, type=' . $inputFileType); //[TEMP-LOG]
                 } catch (\Exception $e) {
-                    Log::write('debug', $e->getMessage());
+//                    Log::error('@ExcelReportBehavior::loadExcelTemplate FAILED to load spreadsheet: ' . $e->getMessage()); //[TEMP-LOG];
+                    throw $e;
                 }
+            } else {
+//                Log::debug('@ExcelReportBehavior::loadExcelTemplate entity has no excel_template_name, returning empty Spreadsheet'); //[TEMP-LOG]
+                $objSpreadsheet = new Spreadsheet();
             }
         }
+//        Log::debug('@ExcelReportBehavior::loadExcelTemplate END'); //[TEMP-LOG]
         return $objSpreadsheet;
     }
 
@@ -285,21 +351,30 @@ class ExcelReportBehavior extends Behavior
 
     public function generateExcel($objSpreadsheet, ArrayObject $extra)
     {
+//        Log::debug('@ExcelReportBehavior::generateExcel START'); //[TEMP-LOG]
+        $worksheetCount = 0;
         foreach ($objSpreadsheet->getWorksheetIterator() as $objWorksheet) {
+            $worksheetCount++;
+//            Log::debug('@ExcelReportBehavior::generateExcel processing worksheet ' . $worksheetCount . ': ' . $objWorksheet->getTitle()); //[TEMP-LOG]
             $this->processWorksheet($objSpreadsheet, $objWorksheet, $extra);
 
             // lock all sheets
             if ($this->getConfig('lockSheets')) {
                 $objWorksheet->getProtection()->setSheet(true);
+//                Log::debug('@ExcelReportBehavior::generateExcel locked sheet ' . $objWorksheet->getTitle()); //[TEMP-LOG]
             }
         }
+//        Log::debug('@ExcelReportBehavior::generateExcel processed ' . $worksheetCount . ' worksheets'); //[TEMP-LOG]
 
         // to force the first sheet active
         $objSpreadsheet->setActiveSheetIndex(0);
+//        Log::debug('@ExcelReportBehavior::generateExcel set active sheet index to 0'); //[TEMP-LOG]
+//        Log::debug('@ExcelReportBehavior::generateExcel END'); //[TEMP-LOG]
     }
 
     private function processWorksheet($objSpreadsheet, $objWorksheet, $extra)
     {
+//        Log::debug('@ExcelReportBehavior::processWorksheet START sheet=' . $objWorksheet->getTitle() . ' dimension=' . $objWorksheet->getHighestRow() . 'x' . $objWorksheet->getHighestColumn()); //[TEMP-LOG]
         if ($this->currentWorksheet !== $objWorksheet) {
             $this->currentWorksheetIndex++;
             $this->currentWorksheet = $objWorksheet;
@@ -307,10 +382,15 @@ class ExcelReportBehavior extends Behavior
 
         $extra['placeholders'] = [];
         $this->processBasicPlaceholder($objSpreadsheet, $objWorksheet, $extra);
+//        Log::debug('@ExcelReportBehavior::processWorksheet after processBasicPlaceholder, placeholders count=' . count($extra['placeholders'])); //[TEMP-LOG]
 
         if (!empty($extra['placeholders'])) {
             $this->processAdvancedPlaceholder($objSpreadsheet, $objWorksheet, $extra);
+//            Log::debug('@ExcelReportBehavior::processWorksheet after processAdvancedPlaceholder'); //[TEMP-LOG]
+        } else {
+//            Log::debug('@ExcelReportBehavior::processWorksheet no advanced placeholders'); //[TEMP-LOG]
         }
+//        Log::debug('@ExcelReportBehavior::processWorksheet END'); //[TEMP-LOG]
     }
 
 //    public function renderImage($objSpreadsheet, $objWorksheet, $objCell, $cellCoordinate, $imagePath, $attr, $extra)
@@ -380,7 +460,7 @@ class ExcelReportBehavior extends Behavior
                 if ($pos !== false) {
                     // if is basic placeholder then replace first, else added into $placeholder to process later
                     if ($this->isBasicType($cellValue)) {
-                        Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
+                        //Log::debug('@ExcelReportBehavior::processBasicPlaceholder cell=' . $cellCoordinate . ' data=' . $cellValue); //[TEMP-LOG]
                         $this->string($objSpreadsheet, $objWorksheet, $objCell, $cellValue, $extra);
                     } else {
                         $columnValue = $objCell->getColumn();
@@ -602,13 +682,13 @@ class ExcelReportBehavior extends Behavior
                             $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
                             $attr = array_merge($placeHolderAttr, $cellAttr);
 
-                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
+                            //Log::debug('@ExcelReportBehavior::processAdvancedPlaceholder cell=' . $cellCoordinate . ' data=' . $cellValue); //[TEMP-LOG]
                             $this->$function($objSpreadsheet, $objWorksheet, $objCell, $attr, $extra);
                         } else {
-                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue . ' is not a valid json format');
+                            //Log::debug('@ExcelReportBehavior::processAdvancedPlaceholder cell=' . $cellCoordinate . ' data=' . $cellValue . ' is not a valid json format'); //[TEMP-LOG]
                         }
                     } else {
-                        Log::write('debug', 'Function ' . $function . ' is not exists');
+                        //Log::debug('@ExcelReportBehavior::processAdvancedPlaceholder function=' . $function . ' is not exists'); //[TEMP-LOG]
                     }
                 }
             }
@@ -773,7 +853,7 @@ class ExcelReportBehavior extends Behavior
 
     public function saveFile($objSpreadsheet, $filepath, $format, $student_id, $report_card_id)
     {
-        Log::debug('ExcelReportBehavior >>> saveFile: ' . $format);
+        ////Log::debug('ExcelReportBehavior >>> saveFile: ' . $format); //[TEMP-LOG]
 
         // Write XLSX FIRST (before any LibreOffice modifies it)
         $writer = IOFactory::createWriter($objSpreadsheet, 'Xlsx');

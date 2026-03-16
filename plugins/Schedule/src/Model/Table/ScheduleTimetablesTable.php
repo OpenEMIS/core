@@ -623,11 +623,9 @@ class ScheduleTimetablesTable extends ControllerActionTable
 
         $patchOptions['validate'] = true;
         $entity = $this->patchEntity($entity,
-            $data->getArrayCopy(),
-            $patchOptions->getArrayCopy());
+                  $data->getArrayCopy(),
+                  $patchOptions->getArrayCopy());
         $result = $this->save($entity);
-//        echo "<pre>"; print_r($result); die('gjhghg');
-
 
         if ($result) {
             $params = $this->getQueryString();
@@ -639,13 +637,12 @@ class ScheduleTimetablesTable extends ControllerActionTable
             $timetableEditUrl = [
                 'plugin' => $this->controller->getPlugin(),
                 'controller' => $this->controller->getName(),
-                'action' => 'ScheduleTimetable',
-                '0' => 'edit',
+                'action' => 'ScheduleTimetableOverview', // POCOR-9592 intially ScheduleTimetable
+                '0' => 'index',                          // POCOR-9592 intially edit
                 '1' => $encodedQueryString
             ];
             return $this->controller->redirect($timetableEditUrl);
         } else {
-//            die('<pre>' . print_r($errors, true));
             $this->controller->Alert->error('general.add.failed');
         }
     }

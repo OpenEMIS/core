@@ -118,6 +118,28 @@ class CustomFieldValuesTable extends AppTable
 					}
 			    }
 			])
+			->add('number_value', 'ruleCheckboxMandatory', [
+				'rule' => function ($value, $context) {
+					if (empty($context['data']['mandatory'])) {
+						return true;
+					}
+					if (!isset($context['data']['field_type'])
+						|| strtoupper($context['data']['field_type']) !== 'CHECKBOX') {
+						return true;
+					}
+					// At least one option must be checked (consent-style: unchecked = not acceptable)
+					if (is_array($value)) {
+						foreach ($value as $checked) {
+							if (!empty($checked)) {
+								return true;
+							}
+						}
+						return false;
+					}
+					return !empty($value);
+				},
+				'message' => __('Please select at least one option for this required field') //POCOR-6233
+			])
 			// DECIMAL validation
 			->allowEmpty('decimal_value', function ($context) {
 				if (array_key_exists('mandatory', $context['data'])) {

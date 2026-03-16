@@ -548,6 +548,7 @@ trait StaffPdfReportTrait
             throw new \Exception("PDF not ready after timeout.");
         } catch (\Exception $e) {
             Log::error("PDF conversion API error: " . $e->getMessage());
+            throw $e;
 
         } finally {
             // Cleanup
@@ -623,7 +624,7 @@ trait StaffPdfReportTrait
 
         } catch (\Exception $e) {
             Log::error("LibreOffice PDF conversion error: " . $e->getMessage());
-            return null;
+            throw $e;
         } finally {
             // 3. Cleanup
             if (file_exists($xlsxPath)) {
