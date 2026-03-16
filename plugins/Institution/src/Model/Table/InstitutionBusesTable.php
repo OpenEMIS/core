@@ -6,7 +6,7 @@ use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use ArrayObject;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use Transport\Model\Table\TransportStatusesTable as TransportStatuses;

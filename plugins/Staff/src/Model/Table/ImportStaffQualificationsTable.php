@@ -44,7 +44,7 @@ class ImportStaffQualificationsTable extends AppTable
             return;
         }
         $plugin = $toolbarButtons['back']['url']['plugin'] ?? null;
-        // Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons action=' . json_encode($action) . ' plugin=' . json_encode($plugin) . ' backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
+        //// Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons action=' . json_encode($action) . ' plugin=' . json_encode($plugin) . ' backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
         if ($plugin == 'Staff' || $plugin == 'Student') { //POCOR-9584: handle both Staff and Student contexts (add and results)
             //POCOR-9584: use separate action + [0] keys so [1] (encoded params) stays sequential
             //            'Qualifications/index' as a single action key caused CakePHP Router to drop [1]
@@ -52,17 +52,17 @@ class ImportStaffQualificationsTable extends AppTable
             $toolbarButtons['back']['url'][0] = 'index';
         }
         //POCOR-9584: end
-        // Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons result backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
+        //// Log::debug('@ImportStaffQualifications::onUpdateToolbarButtons result backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
     }
 
     public function beforeAction($event)
     {
         $session = $this->request->getSession();
-        // Log::debug('@ImportStaffQualifications::beforeAction controller=' . $this->controller->getName()); //[TEMP-LOG]
+        //// Log::debug('@ImportStaffQualifications::beforeAction controller=' . $this->controller->getName()); //[TEMP-LOG]
 
         if ($this->controller->getName() == 'Profiles') {
             $this->staffId = $session->read('Auth.User.id');
-            // Log::debug('@ImportStaffQualifications::beforeAction from Profiles, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
+            //// Log::debug('@ImportStaffQualifications::beforeAction from Profiles, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
         } else if ($this->controller->getName() == 'Students') {
             //POCOR-9584: start - In Students context, student_id is in encoded params (pass[1])
             $pass = $this->request->getParam('pass');
@@ -74,12 +74,12 @@ class ImportStaffQualificationsTable extends AppTable
                 $this->staffId = $decoded['student_id'] ?? null;
             }
             //POCOR-9584: end
-            // Log::debug('@ImportStaffQualifications::beforeAction from Students, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
+            //// Log::debug('@ImportStaffQualifications::beforeAction from Students, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
         } else if ($session->check('Staff.Staff.id')) {
             $this->staffId = $session->read('Staff.Staff.id');
-            // Log::debug('@ImportStaffQualifications::beforeAction from Staff session, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
+            //// Log::debug('@ImportStaffQualifications::beforeAction from Staff session, staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
         }
-        // Log::debug('@ImportStaffQualifications::beforeAction result staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
+        //// Log::debug('@ImportStaffQualifications::beforeAction result staffId=' . json_encode($this->staffId)); //[TEMP-LOG]
     }
 
     public function onImportPopulateQualificationTitlesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)

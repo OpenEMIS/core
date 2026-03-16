@@ -64,6 +64,14 @@ class LeaveTable extends ControllerActionTable
         $this->addBehavior('Staff.StaffTab');
     }
 
+    /**
+     * Enable identifier quoting so the alias "Leave" (MySQL reserved word) is quoted in SQL.
+     */
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
+    {
+        $this->getConnection()->getDriver()->enableAutoQuoting();
+    }
+
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();

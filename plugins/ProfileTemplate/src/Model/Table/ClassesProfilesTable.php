@@ -30,6 +30,7 @@ class ClassesProfilesTable extends ControllerActionTable
     CONST IN_PROGRESS = 2;
     CONST GENERATED = 3;
     CONST PUBLISHED = 4;
+    CONST FAILED = 5; //POCOR-9598: Failed status for stuck-in-progress profiles
 
     CONST MAX_PROCESSES = 2;
 
@@ -71,7 +72,8 @@ class ClassesProfilesTable extends ControllerActionTable
             self::NEW_REPORT => __('New'),
             self::IN_PROGRESS => __('In Progress'),
             self::GENERATED => __('Generated'),
-            self::PUBLISHED => __('Published')
+            self::PUBLISHED => __('Published'),
+            self::FAILED => __('Failed') //POCOR-9598: Failed status
         ];
     }
 

@@ -7,6 +7,7 @@ use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 use Cake\Http\Session;
 use Cake\ORM\Entity;
+use Cake\Routing\Router;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use ArrayObject;
@@ -117,8 +118,10 @@ class ConfigProductListsTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $session = new Session();
-        $session->delete('ConfigProductLists.list');
+        $request = Router::getRequest();
+        if ($request !== null) {
+            $request->getSession()->delete('ConfigProductLists.list');
+        }
     }
 
     public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
@@ -129,7 +132,9 @@ class ConfigProductListsTable extends ControllerActionTable
             $image->delete();
         }
 
-        $session = new Session();
-        $session->delete('ConfigProductLists.list');
+        $request = Router::getRequest();
+        if ($request !== null) {
+            $request->getSession()->delete('ConfigProductLists.list');
+        }
     }
 }
