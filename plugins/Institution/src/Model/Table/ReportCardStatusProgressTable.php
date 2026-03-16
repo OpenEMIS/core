@@ -188,10 +188,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
 
         $reportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
         $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
-        $classIds = 0;
-        if(!empty($classLists)){
-            $classIds = array_keys($classLists);
-        }
+        // IN clause requires an array; use [0] when no classes so query returns no rows instead of invalid SQL (avoids redirect/error for non-super-admin)
+        $classIds = !empty($classLists) ? array_keys($classLists) : [0];
         $query
                 ->select([
                     'id','name','institution_id',
@@ -272,9 +270,20 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : 'all';
         $classOptions = [];
         $classLists = [];
+        $classPermission = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
+            ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+                'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+            ])
+            ->where([
+                'SecurityFunctions.controller' => 'Institutions',
+                'SecurityRoleFunctions.security_role_id' => $roleId,
+                'SecurityRoleFunctions._view' => 1,
+                'SecurityFunctions.name' => 'All Classes',
+            ])
+            ->first();
         if ($selectedReportCard != -1) {
             $reportCardEntity = $reportCardTable->find()->where(['id' => $selectedReportCard])->first();
-           if (($isSuperAdmin) || $userRole['security_role']['name'] == 'Superrole') { //POCOR-8773
+            if (($isSuperAdmin) || $userRole['security_role']['name'] == 'Superrole') { //POCOR-8773
                 if (!empty($reportCardEntity)) {
                     $classLists = $Classes->find('list')
                         ->matching('ClassGrades')
@@ -286,10 +295,23 @@ class ReportCardStatusProgressTable extends ControllerActionTable
                         ->order([$Classes->aliasField('name')])
                         ->toArray();
                 } else {
-                    // if selected report card is not valid, do not show any students
                     $selectedClass = 'all';
                 }
-            }else{
+            } elseif (!empty($classPermission)) {
+                if (!empty($reportCardEntity)) {
+                    $classLists = $Classes->find('list')
+                        ->matching('ClassGrades')
+                        ->where([
+                            $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                            $Classes->aliasField('institution_id') => $institutionId,
+                            'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
+                        ])
+                        ->order([$Classes->aliasField('name')])
+                        ->toArray();
+                } else {
+                    $selectedClass = 'all';
+                }
+            } else {
                 $classLists = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses')->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'name',
@@ -317,10 +339,8 @@ class ReportCardStatusProgressTable extends ControllerActionTable
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $reportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
         $institutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
-        $classIds = 0;
-        if(!empty($classLists)){
-            $classIds = array_keys($classLists);
-        }
+        // IN clause requires an array; use [0] when no classes so query returns no rows instead of invalid SQL (avoids redirect/error for non-super-admin)
+        $classIds = !empty($classLists) ? array_keys($classLists) : [0];
         $query
                 ->select([
                     'id','name','institution_id',

@@ -369,7 +369,6 @@ class StaffPositionTitlesTable extends ControllerActionTable
 		    $titleId = $entity->id;
 		    $this->startUpdateRoles($newRoleId, $titleId);
 		}
-
 	}
 
     private function setAllPositionGrades(Entity $entity): void

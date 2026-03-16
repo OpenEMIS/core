@@ -556,7 +556,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
                         ])
                         ->order([$Students->aliasField('created') => "DESC"])
                         ->first();
-                    $obj['institution_id'] = $result->institution_id;
+                    $obj['institution_id'] = $result !== null ? $result->institution_id : null;
                 }
                 //POCOR-7393 ends (4th case)
                 // subject students logic
@@ -580,11 +580,11 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable
 
                 $success = $this->getConnection()->transactional(function () use ($obj, $entity, $patchOptions) {
                     $examCentreStudentEntity = $this->newEntity($obj, $patchOptions);
-                    if ($examCentreStudentEntity->getErrors('student_id')) {
-                        $entity->getErrors('student_id', $examCentreStudentEntity->getErrors('student_id'));
+                    if ($examCentreStudentEntity->getError('student_id')) {
+                        $entity->setError('student_id', $examCentreStudentEntity->getError('student_id'));
                     }
-                    if ($examCentreStudentEntity->getErrors('registration_number')) {
-                        $entity->getErrors('registration_number', $examCentreStudentEntity->getErrors('registration_number'));
+                    if ($examCentreStudentEntity->getError('registration_number')) {
+                        $entity->setError('registration_number', $examCentreStudentEntity->getError('registration_number'));
                     }
                     if (!$this->save($examCentreStudentEntity)) {
                         return false;
