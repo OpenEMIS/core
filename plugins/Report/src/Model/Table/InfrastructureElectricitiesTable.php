@@ -16,7 +16,7 @@ use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
 
 /**
- * Data processing for generating 
+ * Data processing for generating Report Infrastructure Electricities
  * POCOR-9562
  */
 
@@ -60,16 +60,111 @@ class InfrastructureElectricitiesTable extends AppTable
         return $attr;
     }
 
-     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
 
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $institutionId = $requestData->institution_id;
+        $institutionTypeId = $requestData->institution_type_id;
         $areaId = $requestData->area_education_id;
-        $areaLevelId = $requestData->area_level_id; //POCOR-7794
+        $selectedArea = $requestData->area_education_id;
+
+        $conditions = [];
+        if (!empty($academicPeriodId)) {
+            $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
+        }
+        if ($institutionId != 0) {
+            $conditions['Institutions.id'] = $institutionId;
+        }
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+        }
+
+         $query
+        ->select([
+            'academic_period' => 'AcademicPeriods.name',
+            'institution_code' => 'Institutions.code',
+            'institution_name' => 'Institutions.name',
+            'electricity_type' => 'UtilityElectricityTypes.name',
+            'electricity_condition' => 'UtilityElectricityConditions.name',
+            'comment' => $this->aliasField('comment')
+        ])
+        ->contain([
+            'AcademicPeriods',
+            'Institutions',
+            'UtilityElectricityTypes',
+            'UtilityElectricityConditions'
+        ])
+        ->where($conditions);
+    }
+
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, $fields)
+    {
+        $requestData = json_decode($settings['process']['params']);
+        $newFields = [];
+
+         $newFields[] = [
+            'key' => 'academic_period',
+            'field' => 'academic_period',
+            'type' => 'string',
+            'label' => __('Academic Period')
+        ];
+        $newFields[] = [
+            'key' => 'institution_name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+        $newFields[] = [
+            'key' => 'institution_code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+        $newFields[] = [
+            'key' => 'electricity_type',
+            'field' => 'electricity_type',
+            'type' => 'string',
+            'label' => __('Electricity Type')
+        ];
+        $newFields[] = [
+            'key' => 'electricity_condition',
+            'field' => 'electricity_condition',
+            'type' => 'string',
+            'label' => __('Electricity Condition')
+        ];
+        $newFields[] = [
+            'key' => 'comment',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => __('Comment')
+        ];
+      
+        $fields->exchangeArray($newFields);
+    }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ])
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
        
-    
 
 }

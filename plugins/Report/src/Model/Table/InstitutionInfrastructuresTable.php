@@ -98,7 +98,7 @@ class InstitutionInfrastructuresTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
-            if (in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities'])) {
+            if (in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones'])) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', (array)$request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['institution_type_id'])) {
                     $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
@@ -236,7 +236,7 @@ class InstitutionInfrastructuresTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
-            if ((in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InfrastructureElectricities'])
+            if ((in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones'])
             )) {
                 $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
@@ -264,7 +264,7 @@ class InstitutionInfrastructuresTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
 
-            if ((in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities']))) {
+            if ((in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones']))) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
@@ -293,7 +293,7 @@ class InstitutionInfrastructuresTable extends AppTable
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
             $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
-            if (in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities'])) {
+            if (in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones'])) {
                     $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $entity = $attr['entity'];
 
