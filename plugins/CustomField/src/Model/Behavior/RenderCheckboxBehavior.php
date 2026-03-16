@@ -58,21 +58,32 @@ class RenderCheckboxBehavior extends RenderBehavior
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
             foreach ($checkboxOptions as $key => $value) {
-                $html .= '<div class="input" style="display:flex;">';//POCOR-7950
+                $html .= '<div class="input" style="display:flex;">';
                 $option = ['kd-checkbox-radio' => ''];
-                if (!empty($checkedValues)) {
-                    if (in_array($key, $checkedValues)) {
-                        $option['checked'] = true;
-                    }
+                if (!empty($checkedValues) && in_array($key, $checkedValues)) {
+                    $option['checked'] = true;
                 }
                 $html .= $form->checkbox("$fieldPrefix.number_value.$key", $option);
                 $unlockFields[] = "$fieldPrefix.number_value.$key";
-                $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">'. $value .'</label>';//POCOR-7950
-
+                $html .= '<label class="selection-label" style="padding:0 20px 0 0!important;">' . $value . '</label>';
                 $html .= '</div>';
             }
-            $html .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
-            $unlockFields[] = $fieldPrefix.".".$attr['attr']['fieldKey'];
+
+            $html .= $form->hidden($fieldPrefix . '.' . $attr['attr']['fieldKey'], ['value' => $fieldId]);
+            $unlockFields[] = $fieldPrefix . '.' . $attr['attr']['fieldKey'];
+
+            //POCOR-6233: start - detect validation error on this checkbox field so the template can show inline error
+            $seq = $attr['attr']['seq'];
+            $fieldError = null;
+            if (method_exists($entity, 'getErrors')) {
+                $entityErrors = $entity->getErrors();
+                if (isset($entityErrors['custom_field_values'][$seq]['number_value'])) {
+                    $errs = $entityErrors['custom_field_values'][$seq]['number_value'];
+                    $fieldError = is_array($errs) ? reset($errs) : $errs;
+                }
+            }
+            $attr['error'] = $fieldError;
+            //POCOR-6233: end
 
             $attr['output'] = $html;
             $value = $event->getSubject()->renderElement('CustomField.Render/'.$fieldType, ['attr' => $attr]);

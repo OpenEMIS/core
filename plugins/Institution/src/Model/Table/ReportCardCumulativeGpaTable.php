@@ -50,6 +50,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->toggle('remove', false);
         $this->ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
         $this->ReportCardProcesses = self::getDynamicTableInstance('ReportCard.ReportCardProcesses');
+        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['ReportCardCumulativeGpa' =>['id','student_id','academic_period_id','education_grade_id','institution_class_id']
             ]
@@ -1022,7 +1023,9 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     $checkgpaStudent, // POCOR-9162
     $selectedAcademicPeriodId,
     $institutionId,
-    $educationGradeId
+    $educationGradeId,
+    $reportStartDate = null,
+    $reportEndDate = null
 ): array {
 
     // ---- keep original parameter mapping ----
@@ -1083,10 +1086,31 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     //     }
     // }
 
+    // foreach ($gpaResults as $gpa) {
+    //     // Allow all GPA terms that have already started
+    //     if ($gpa->start_date <= $today) {
+    //         $gpaIds[] = $gpa->id;
+    //     }
+    // }
+
     foreach ($gpaResults as $gpa) {
-        // Allow all GPA terms that have already started
-        if ($gpa->start_date <= $today) {
-            $gpaIds[] = $gpa->id;
+
+        if ($reportStartDate && $reportEndDate) {
+
+            // Report card context → only matching GPA term
+            if (
+                $gpa->start_date <= $reportEndDate &&
+                $gpa->end_date   >= $reportStartDate
+            ) {
+                $gpaIds[] = $gpa->id;
+            }
+
+        } else {
+
+            // Original behaviour (GPA/CGPA processes)
+            if ($gpa->start_date <= FrozenDate::today()) {
+                $gpaIds[] = $gpa->id;
+            }
         }
     }
     $gpaIds = array_values(array_unique($gpaIds));
@@ -2329,6 +2353,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 INNER JOIN education_grades_gpa egpa
                     ON egpa.id = institution_students_gpa.education_grades_gpa_id
                 WHERE institution_students_gpa.student_id = $studentId
+                AND institution_students_gpa.institution_id = $institutionId
                 AND egpa.start_date <= CURRENT_DATE
                 GROUP BY institution_students_gpa.institution_id
                     ,institution_students_gpa.academic_period_id
