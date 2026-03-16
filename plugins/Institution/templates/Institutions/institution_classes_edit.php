@@ -94,7 +94,7 @@ $this->start('panelBody');
     </div> -->
     <?php } ?>
     <div class="input select">
-        <label><?= __('Home Room Teacher') ?></label>
+        <label><?= __($homeRoomTeacherName) ?></label>
         <div class="input-select-wrapper">
             <select name="InstitutionClasses[staff_id]" id="institutionclasses-staff-id"
                 ng-options="option.id as option.name for option in InstitutionClassStudentsController.teacherOptions"
@@ -110,7 +110,7 @@ $this->start('panelBody');
         </div>
     </div>
     <div class="input select">
-        <label><?= __('Secondary Teachers') ?></label>
+        <label><?= __($secondarystaffName) ?></label>
         <select chosen
             data-placeholder="-- <?=__('Select Teacher or Leave Blank') ?> --"
             name="InstitutionClasses[secondary_staff_id]"

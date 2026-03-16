@@ -83,10 +83,16 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+        if ($this->examCentreId === null) {
+            $event->stopPropagation();
+            $this->Alert->warning('general.notExists');
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
+
+            return;
+        }
         // Set the header of the page
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
-        $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Rooms'));
-
+        $this->controller->set('contentHeader', $examCentreName . ' - ' . __('Rooms'));
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Rooms','Examinations');       
@@ -132,8 +138,9 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->field('name');
         $this->field('size');
         $this->field('number_of_seats');
-        $examinationCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['AcademicPeriods']]);
-        $this->field('academic_period_id', ['type' => 'readonly', 'value' => $examinationCentre->academic_period_id, 'attr' => ['value' => $examinationCentre->academic_period->name]]);
+        $examinationCentre = $this->ExaminationCentres->get($this->examCentreId);
+        $academicPeriodName = $this->_getAcademicPeriodNameForCentre($this->examCentreId);
+        $this->field('academic_period_id', ['type' => 'readonly', 'value' => null, 'attr' => ['value' => $academicPeriodName]]);
         $this->field('examination_centre_id', ['type' => 'readonly', 'value' => $examinationCentre->id, 'attr' => ['value' => $examinationCentre->code_name]]);
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'name', 'size', 'number_of_seats']);
     }
@@ -149,14 +156,15 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->field('name');
         $this->field('size');
         $this->field('number_of_seats');
-        $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->examination_centre->academic_period_id, 'attr' => ['value' => $entity->examination_centre->academic_period->name]]);
+        $academicPeriodName = $this->_getAcademicPeriodNameForRoomEntity($entity);
+        $this->field('academic_period_id', ['type' => 'readonly', 'value' => null, 'attr' => ['value' => $academicPeriodName]]);
         $this->field('examination_centre_id', ['type' => 'readonly', 'value' => $entity->examination_centre_id, 'attr' => ['value' => $entity->examination_centre->code_name]]);
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'name', 'size', 'number_of_seats']);
     }
 
     public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['ExaminationCentres.AcademicPeriods']);
+        $query->contain(['ExaminationCentres', 'Examinations' => ['AcademicPeriods']]);
     }
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
@@ -183,6 +191,33 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
             ->where([$ExamRoomInvigilators->aliasField('examination_centre_room_id') => $entity->id])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'Invigilators', 'count' => $associatedInvigilatorsCount];
+    }
+
+    /**
+     * Get academic period name for an examination centre (from a linked examination).
+     * ExaminationCentres has no AcademicPeriods association; period comes from Examinations.
+     */
+    protected function _getAcademicPeriodNameForCentre($examinationCentreId)
+    {
+        $ExaminationCentresExaminations = TableRegistry::getTableLocator()->get('Examination.ExaminationCentresExaminations');
+        $link = $ExaminationCentresExaminations->find()
+            ->where([$ExaminationCentresExaminations->aliasField('examination_centre_id') => $examinationCentreId])
+            ->contain(['Examinations.AcademicPeriods'])
+            ->first();
+        return $link && $link->examination && $link->examination->academic_period
+            ? $link->examination->academic_period->name
+            : '';
+    }
+
+    /**
+     * Get academic period name for a room entity (from its linked examinations or centre).
+     */
+    protected function _getAcademicPeriodNameForRoomEntity(Entity $entity)
+    {
+        if (!empty($entity->examinations) && isset($entity->examinations[0]->academic_period)) {
+            return $entity->examinations[0]->academic_period->name;
+        }
+        return $this->_getAcademicPeriodNameForCentre($entity->examination_centre_id);
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)

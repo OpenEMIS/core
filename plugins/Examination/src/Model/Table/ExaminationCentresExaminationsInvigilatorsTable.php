@@ -259,9 +259,25 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
     public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $examCentreEntity = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['AcademicPeriods']]);
-        $academicPeriod = $examCentreEntity->academic_period->name;
-        $attr['attr']['value'] = $academicPeriod;
+        $examinationId = null;
+        if ($action == 'edit' && !empty($attr['entity']->examination_id)) {
+            $examinationId = $attr['entity']->examination_id;
+        } elseif ($action == 'add') {
+            $data = $request->getData($this->getAlias());
+            $examinationId = is_array($data) && isset($data['examination_id']) ? $data['examination_id'] : null;
+        }
+        if ($examinationId) {
+            $examination = $this->Examinations->get($examinationId, ['contain' => ['AcademicPeriods']]);
+            $attr['attr']['value'] = $examination->academic_period->name ?? '';
+        } else {
+            $link = $this->ExaminationCentresExaminations->find()
+                ->where([$this->ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
+                ->contain(['Examinations.AcademicPeriods'])
+                ->first();
+            $attr['attr']['value'] = $link && $link->examination && $link->examination->academic_period
+                ? $link->examination->academic_period->name
+                : '';
+        }
         return $attr;
     }
 
