@@ -70,7 +70,7 @@ class RubricSectionsTable extends ControllerActionTable
         $this->fields['rubric_template_id']['type'] = 'select';
         $this->fields['rubric_template_id']['options'] = $templateOptions;
 
-        $this->ControllerAction->setFieldOrder('rubric_template_id', 1);
+        $this->setFieldOrder('rubric_template_id', 1);
     }
 
     public function addOnInitialize(EventInterface $event, Entity $entity)
