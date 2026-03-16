@@ -8,6 +8,7 @@ use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 
 class ContactTypesTable extends ControllerActionTable
 {

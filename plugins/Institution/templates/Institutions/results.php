@@ -18,6 +18,11 @@ $this->start('toolbar');
     .ag-grid-dir-ltr {
         direction: ltr !important;
     }
+    .toolbar .search {
+        position: inherit;
+        right: inherit;
+        top: inherit;
+    }
 </style>
 
     <?php
@@ -64,6 +69,20 @@ $this->start('toolbar');
 
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
     <?php endif; ?>
+<div class="search">
+    <div class="input-group">
+        <div class="input text"><input type="text"
+                                       name="SearchSubject"
+                                       class="form-control search-input focus"
+                                       data-input-name="SearchSubject"
+                                       placeholder="<?= __('Search Subject') ?>"
+                                       ng-model="subjectSearchText"
+                                       ng-change="filterSubjects()"
+                                       ng-model-options="{ debounce: 300 }"
+                                       id="search-subjects"
+            ></div>
+    </div>
+</div>
 <?php
 $this->end();
 
@@ -100,6 +119,7 @@ $roles = '[' . implode(",", $_roles) . ']';
                     </select>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -107,7 +127,7 @@ $roles = '[' . implode(",", $_roles) . ']';
         <div class="scrolltabs sticky-content">
       <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject, subject.is_editable)">
+                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in filteredSubjects track by subject.id" ng-click="onChangeSubject(subject, subject.is_editable)"><!--POCOR-7785: Use filteredSubjects for search-->
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>
