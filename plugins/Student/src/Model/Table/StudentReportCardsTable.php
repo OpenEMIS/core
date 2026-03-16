@@ -104,7 +104,6 @@ class StudentReportCardsTable extends ControllerActionTable
 
         $InstitutionStudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
         $StudentGuardians = TableRegistry::getTableLocator()->get('Student.StudentGuardians');
-
         //Start POCOR-7055
         if ($user['is_student'] == 1 && $user['is_guardian'] == 1 && $user['is_staff'] == 1) {
             if ($this->controller->getName() == 'Profiles') {
@@ -130,7 +129,7 @@ class StudentReportCardsTable extends ControllerActionTable
             $query
             ->contain('AcademicPeriods', 'Institutions', 'EducationGrades')
             ->where([$this->aliasField('student_id') => $user['id']])   //  POCOR-5910
-            //->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED])
+            ->where([$this->aliasField('status') => $InstitutionStudentsReportCards::PUBLISHED]) //POCOR-9592
             ->order(['AcademicPeriods.order', 'Institutions.name', 'EducationGrades.order']);
         }else if($user['is_guardian'] == 1){ //POCOR-6202 starts
             $session = $this->request->getSession();//POCOR-6267

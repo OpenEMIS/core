@@ -380,8 +380,23 @@ class AssessmentsTable extends AppTable
         //POCOR-9484
         $checkCondition = [];
 
-        if($assessmentPeriodId > 0){
-            $checkCondition[$AssessmentPeriodsTable->aliasField('id')] = $assessmentPeriodId;
+        if (!empty($assessmentPeriodId)) {
+            //POCOR-9575 start
+            if (is_object($assessmentPeriodId) && isset($assessmentPeriodId->_ids)) {
+                $ids = $assessmentPeriodId->_ids;
+
+            } elseif (is_array($assessmentPeriodId) && isset($assessmentPeriodId['_ids'])) {
+                $ids = $assessmentPeriodId['_ids'];
+
+            } else {
+                $ids = $assessmentPeriodId;
+            }
+
+            if (is_array($ids)) {
+                $checkCondition[$AssessmentPeriodsTable->aliasField('id') . ' IN'] = $ids;
+            } else {
+                $checkCondition[$AssessmentPeriodsTable->aliasField('id')] = $ids;
+            } //POCOR-9575 end
         }
         if($academicTerm > 0){
             $checkCondition[$AssessmentPeriodsTable->aliasField('academic_term')] = $academicTerm;
