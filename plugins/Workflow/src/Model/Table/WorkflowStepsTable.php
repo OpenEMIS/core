@@ -40,7 +40,10 @@ class WorkflowStepsTable extends AppTable {
 		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionStaffTransfers', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionStaffReleases', ['className' => 'Institution.InstitutionStaffTransfers', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		//POCOR-9551[START]
+		// $this->hasMany('ScholarshipApplications', ['className' => 'Scholarship.ScholarshipApplications', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ScholarshipApplications', ['className' => 'Profile.ScholarshipApplications', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		//POCOR-9551[END]
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',

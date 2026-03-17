@@ -120,6 +120,9 @@ class ImportBehavior extends Behavior
 
     public function initialize(array $config): void
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        //// Log::debug('@ImportBehavior::initialize START table=' . $this->_table->getAlias() . ' config_plugin=' . json_encode($config['plugin'] ?? null) . ' config_model=' . json_encode($config['model'] ?? null)); //[TEMP-LOG]
+        //POCOR-9584: end
         $fileTypes = $this->getConfig('fileTypes');
         $allowableFileTypes = [];
         if ($fileTypes) {
@@ -206,28 +209,59 @@ class ImportBehavior extends Behavior
 
     private function setupDownloadUrlIfAddAction($action, &$toolbarButtons, $buttons)
     {
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction action=' . json_encode($action) . ' institutionId=' . json_encode($this->institutionId)); //[TEMP-LOG]
         if ($action !== 'add') {
             return;
         }
 
         $downloadUrl = $toolbarButtons['back']['url'];
+
         $downloadUrl[0] = 'template';
 
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
             $downloadUrl[1] = $buttons['add']['url'][1];
         } else {
-            $downloadUrl[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            //POCOR-9584: start - always carry full pass[1] from current request so all context params
+            //   (class_id, academic_period_id, competency_template_id, etc.) survive to the template URL.
+            //   Fall back to encoding only institution_id if pass[1] is absent.
+            $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+            if ($fullEncodedParam) {
+                $downloadUrl[1] = $fullEncodedParam;
+            } elseif ($this->institutionId) {
+                $downloadUrl[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            }
+            //POCOR-9584: end
         }
 
+        //POCOR-9584: start - carry any non-empty query params (set by addAfterAction withQueryParams) to the template URL
+        //   so methods like getCompetencyCriteriasArray() can read competency_item, competency_period, etc. on the GET request
+        $allQueryParams = $this->_table->request->getQueryParams();
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction allQueryParams before filter=' . json_encode($allQueryParams)); //[TEMP-LOG]
+        $queryParams = array_filter($allQueryParams, fn($v) => $v !== null && $v !== '' && $v !== '0');
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction queryParams after filter=' . json_encode($queryParams)); //[TEMP-LOG]
+        if (!empty($queryParams)) {
+            $downloadUrl['?'] = $queryParams;
+        }
+        //POCOR-9584: end
+
         $url = Router::url($downloadUrl);
+        // Log::debug('@ImportBehavior::setupDownloadUrlIfAddAction final url=' . json_encode($url)); //[TEMP-LOG]
         $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='{$url}'");
     }
 
     private function setupBackButtonUrl(&$toolbarButtons)
     {
+        // Log::debug('@ImportBehavior::setupBackButtonUrl start backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null) . ' institutionId=' . json_encode($this->institutionId) . ' pass=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
-            $toolbarButtons['back']['url'][1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            //POCOR-9584: start - only add encoded [1] when institutionId is set; otherwise clear stale pass params
+            if ($this->institutionId) {
+                $toolbarButtons['back']['url'][1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            } else {
+                unset($toolbarButtons['back']['url'][0]);
+                unset($toolbarButtons['back']['url'][1]);
+            }
+            //POCOR-9584: end
             return;
         }
 
@@ -239,9 +273,22 @@ class ImportBehavior extends Behavior
         } elseif ($plugin === 'Institution' && $this->institutionId) {
             $toolbarButtons['back']['url'] = $this->generateInstitutionBackUrl($toolbarButtons['back']['url'], $firstParam);
         } else {
-            $toolbarButtons['back']['url']['action'] = 'index';
-            unset($toolbarButtons['back']['url'][0]);
+            //POCOR-9584: start - Staff context
+            //   - For 'results': flip [0] from 'results' to 'index'; keep action (model alias) unchanged
+            //   - For other sub-actions (add/index): do NOT touch action or [0] here —
+            //     ImportStaffQualificationsTable::onUpdateToolbarButtons owns those (fires before this)
+            //     and unsetting [0] here would undo its work regardless of firing order
+            //   - Always carry the full encoded param from pass[1] so staff_id/user_id are preserved
+            $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+            if ($firstParam === 'results') {
+                $toolbarButtons['back']['url'][0] = 'index';
+            }
+            if ($fullEncodedParam) {
+                $toolbarButtons['back']['url'][1] = $fullEncodedParam;
+            }
+            //POCOR-9584: end
         }
+        // Log::debug('@ImportBehavior::setupBackButtonUrl end backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
     }
 
     private function generateDirectoryBackUrl(array $url, $firstParam): array
@@ -292,6 +339,12 @@ class ImportBehavior extends Behavior
 
     public function beforeAction($event)
     {
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        // Log::debug('@ImportBehavior::beforeAction START table=' . $this->_table->getAlias()); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::beforeAction passParams=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
+        // Log::debug('@ImportBehavior::beforeAction routeAction=' . json_encode($this->_table->request->getParam('action'))); //[TEMP-LOG]
+        //POCOR-9584: end
+
         $session = $this->_table->Session;
         if ($session->check('Institution.Institutions.id')) {
             $this->institutionId = $session->read('Institution.Institutions.id');
@@ -304,6 +357,10 @@ class ImportBehavior extends Behavior
             $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
         }
         $this->sessionKey = $this->getConfig('plugin') . '.' . $this->getConfig('model') . '.Import.data';
+
+        //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
+        // Log::debug('@ImportBehavior::beforeAction institutionId=' . json_encode($this->institutionId) . ' sessionKey=' . $this->sessionKey); //[TEMP-LOG]
+        //POCOR-9584: end
 
         $this->_table->ControllerAction->field('plugin', ['visible' => false]);
         $this->_table->ControllerAction->field('model', ['visible' => false]);
@@ -413,11 +470,14 @@ class ImportBehavior extends Behavior
             // $objReader = PHPExcel_IOFactory::createReader($inputFileType);
             $uploadedName = $fileObj->getClientFilename();
             $uploaded = $fileObj->getStream()->getMetadata('uri');
+            // Log::debug('@ImportBehavior::processImport uploaded_name=' . json_encode($uploadedName) . ', path=' . json_encode($uploaded)); //[TEMP-LOG]
 
             try {
                 $inputFileType = IOFactory::identify($uploaded);
+                // Log::debug('@ImportBehavior::processImport inputFileType=' . json_encode($inputFileType)); //[TEMP-LOG]
                 $objReader = IOFactory::createReader($inputFileType);
                 $objPHPExcel = $objReader->load($uploaded);
+                // Log::debug('@ImportBehavior::processImport file loaded successfully'); //[TEMP-LOG]
             } catch (\Exception $e) {
                 throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
             }
@@ -430,20 +490,23 @@ class ImportBehavior extends Behavior
             $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
             $activeModel = TableRegistry::getTableLocator()->get($this->getConfig('plugin') . '.' . $this->getConfig('model'));
+            // Log::debug('@ImportBehavior::processImport activeModel_alias=' . json_encode($activeModel->getAlias()) . ', plugin=' . json_encode($this->getConfig('plugin')) . ', model=' . json_encode($this->getConfig('model'))); //[TEMP-LOG]
             $activeModel->addBehavior('DefaultValidation');
 
             $maxRows = $this->getConfig('max_rows');
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
+            ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
+            // Log::debug('@ImportBehavior::processImport highestRow=' . $highestRow . ', maxRows=' . $maxRows . ', recordHeader=' . $this->recordHeader . ', isCustomText=' . json_encode($this->isCustomText())); //[TEMP-LOG]
             if ($highestRow > $maxRows) {
+                // Log::debug('@ImportBehavior::processImport EXIT: over_max_rows'); //[TEMP-LOG]
                 $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'over_max_rows')], true);
                 return false;
             }
 
-            ($this->isCustomText()) ? $this->recordHeader = 3 : $this->recordHeader = 2;
-
             if ($highestRow == $this->recordHeader) {
+                // Log::debug('@ImportBehavior::processImport EXIT: no_answers (file is empty/header only)'); //[TEMP-LOG]
                 $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'no_answers')], true);
                 return false;
             }
@@ -452,14 +515,39 @@ class ImportBehavior extends Behavior
 
             for ($row = $startCheck; $row <= $highestRow; ++$row) {
                 if ($row == $this->recordHeader) { // skip header but check if the uploaded template is correct
-                    if (!$this->isCorrectTemplate($header, $sheet, $totalColumns, $row)) {
-                        $entity->getErrors('select_file', [$this->getExcelLabel('Import', 'wrong_template')], true);
+                    // Log::debug('@ImportBehavior::processImport checking template on row=' . $row . ', header=' . json_encode($header) . ', totalColumns=' . $totalColumns); //[TEMP-LOG]
+                    $templateOk = $this->isCorrectTemplate($header, $sheet, $totalColumns, $row);
+                    // Log::debug('@ImportBehavior::processImport isCorrectTemplate=' . json_encode($templateOk)); //[TEMP-LOG]
+                    if (!$templateOk) {
+                        //POCOR-9584: start - compute column mismatches for meaningful error
+                        $cellsValue = [];
+                        for ($col = 1; $col <= $totalColumns; $col++) {
+                            $cellsValue[] = $sheet->getCellByColumnAndRow($col, $row)->getValue();
+                        }
+                        $mismatches = [];
+                        foreach ($header as $i => $expected) {
+                            $actual = isset($cellsValue[$i]) ? $cellsValue[$i] : '(missing)';
+                            if ($expected !== $actual) {
+                                $mismatches[] = 'col ' . ($i + 1) . ': expected "' . $expected . '", got "' . $actual . '"';
+                            }
+                        }
+                        if (count($cellsValue) > count($header)) {
+                            for ($i = count($header); $i < count($cellsValue); $i++) {
+                                $mismatches[] = 'col ' . ($i + 1) . ': unexpected column "' . $cellsValue[$i] . '"';
+                            }
+                        }
+                        $mismatchDetail = implode('; ', $mismatches);
+                        Log::error('@ImportBehavior::processImport wrong_template - ' . $mismatchDetail);
+                        // Log::debug('@ImportBehavior::processImport EXIT: wrong_template - ' . $mismatchDetail); //[TEMP-LOG]
+                        $this->_table->Alert->error(__('Wrong template: please re-download the template. Column mismatch: ') . $mismatchDetail, ['type' => 'string', 'reset' => true]); //POCOR-9584
+                        //POCOR-9584: end
                         return false; //POCOR-8343
                     }
                     continue;
                 }
 //                if ($row == $highestRow) { // check if the row cells are really empty, if yes then end the loop
                     if ($this->checkRowCells($sheet, $totalColumns, $row) === false) {
+                        // Log::debug('@ImportBehavior::processImport row=' . $row . ' SKIPPED by checkRowCells (appears empty)'); //[TEMP-LOG]
                         continue;
                     }
 //                }
@@ -494,6 +582,7 @@ class ImportBehavior extends Behavior
                     $activeModel->setImportValidationPassed();
                 }
 
+                // Log::debug('@ImportBehavior::processImport row=' . json_encode($row) . ', tempRow=' . json_encode($tempRow->getArrayCopy())); //[TEMP-LOG]
                 $tempRow = $tempRow->getArrayCopy();
 
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
@@ -548,11 +637,13 @@ class ImportBehavior extends Behavior
                     // added for POCOR-4577 import staff leave for workflow related record to save the transition record
                     $tempRow['action_type'] = 'imported';
                     $tempRow['student_id'] = (int) $tempRow['student_id'];
+                    // Log::debug('@ImportBehavior::processImport patchEntity with tempRow=' . json_encode($tempRow)); //[TEMP-LOG]
                     //$activeModel->patchEntity($tableEntity, $tempRow);
                     $tableEntity = $activeModel->patchEntity($tableEntity, $tempRow);
                 }
 
                 $errors = $tableEntity->getErrors();
+                // Log::debug('@ImportBehavior::processImport errors_after_patchEntity=' . json_encode($errors)); //[TEMP-LOG]
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
                 // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
@@ -581,7 +672,19 @@ class ImportBehavior extends Behavior
                         //     $newEntity = $activeModel->save($tableEntity); // Initial code
                         // }
                         //POCOR-9294[END]
+                        // Log::debug('@ImportBehavior::processImport attempting save with entity=' . json_encode($tableEntity->toArray())); //[TEMP-LOG]
+                        //$model->log('@ImportBehavior pre-save errors=' . json_encode($errors), 'debug');
                         $newEntity = $activeModel->save($tableEntity);
+                        // Log::debug('@ImportBehavior::processImport save result newEntity=' . json_encode($newEntity ? 'saved' : 'failed')); //[TEMP-LOG]
+                        //POCOR-9584: merge errors set during beforeSave (not captured before save() runs)
+                        if (!$newEntity) {
+                            $afterSaveErrors = $tableEntity->getErrors();
+                            // Log::debug('@ImportBehavior::processImport afterSaveErrors=' . json_encode($afterSaveErrors)); //[TEMP-LOG]
+                            //$model->log('@ImportBehavior post-save errors=' . json_encode($afterSaveErrors), 'debug');
+                            $errors = array_merge($errors, $afterSaveErrors);
+                            // Log::debug('@ImportBehavior::processImport merged_errors=' . json_encode($errors)); //[TEMP-LOG]
+                            //$model->log('@ImportBehavior merged errors=' . json_encode($errors), 'debug');
+                        }
                     } catch (Exception $e) {
                         $newEntity = false;
                         $message = $e->getMessage();
@@ -686,7 +789,19 @@ class ImportBehavior extends Behavior
                 $queryString = $this->_table->paramsDecode($request->getParam('pass')[1]);
                 $this->institutionId = isset($queryString['institution_id']) ? $queryString['institution_id'] : $this->institutionId ;
             }
-            $url[1] =  $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            //POCOR-9584: start - carry full encoded params to results redirect; use direct key assignment
+            //   (array_merge renumbers integer keys, breaking pass param order)
+            $fullEncodedParam = $request->getParam('pass')[1] ?? null;
+            // Log::debug('@ImportBehavior::processImport url_before=' . json_encode($url) . ' pass=' . json_encode($request->getParam('pass')) . ' fullEncodedParam=' . json_encode($fullEncodedParam)); //[TEMP-LOG]
+            if ($fullEncodedParam) {
+                $url[1] = $fullEncodedParam;
+            } else {
+                $url[1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
+            }
+            // Strip stale query params from results redirect URL (e.g. period=34 carried from add page)
+            unset($url['?']);
+            // Log::debug('@ImportBehavior::processImport url_after=' . json_encode($url)); //[TEMP-LOG]
+            //POCOR-9584: end
 
             return $model->controller->redirect($url);
         };

@@ -4,7 +4,6 @@ namespace Report\Controller;
 
 use ArrayObject;
 use App\Controller\AppController;
-use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -62,7 +61,7 @@ class ReportsController extends AppController
         // POCOR-8034: end
     }
 
-    public function onInitialize(Event $event, Table $table, ArrayObject $extra)
+    public function onInitialize(EventInterface $event, Table $table, ArrayObject $extra)
     {
         $header = __('Reports') . ' - ' . __($table->getAlias());
         $this->set('contentHeader', $header);
@@ -77,6 +76,7 @@ class ReportsController extends AppController
         return $options;
     }
 
+    //POCOR-9563[START]: Reports are arranged in alphabetical order 
     public function getFeatureOptions($module)
     {
         $options = [];
@@ -87,120 +87,117 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'Institutions') {
             $options = [
-                'Report.Institutions' => __('Institutions'),
-                'Report.InstitutionAssociations' => __('Houses'), //POCOR-7938
-                'Report.InstitutionPositions' => __('Institution Positions'),
-                'Report.InstitutionProgrammes' => __('Programmes'),
-                'Report.InstitutionClasses' => __('Classes'),
-                'Report.InstitutionSubjects' => __('Subjects'),
-                'Report.InstitutionStudents' => __('Students'),
-                // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
-                'Report.InstitutionStaff' => __('Staff'),
-                'Report.StudentAbsences' => __('Student Absence'),
-                'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
-                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
-                'Report.InstitutionSummaryReport' => __('Institution Summary Report'),
-                'Report.BodyMasses' => __('Student Body Masses'),
-                'Report.InstitutionPositionsSummaries' => __('Institution Positions Summaries'),
-                // 'Report.StaffAbsences' => __('Staff Absence'), Institution Positions Summaries
-                'Report.StaffAttendances' => __('Staff Attendance'),
-                'Report.StaffLeave' => __('Staff Leave'),
-                'Report.StaffTransfers' => __('Staff Transfer'),
-                'Report.StaffBehaviours' => __('Staff Behaviours'),
+                'Report.InstitutionAssets' => __('Assets'),
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
-                //'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
-                // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
-                'Report.WashReports' => __('Wash Report'),
-                'Report.Guardians' => __('Guardians'),
-                'Report.InstitutionInfrastructures' => __('Infrastructure'),
-                'Report.InstitutionAssets' => __('Assets'),
-                'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
-                'Report.InstitutionCommittees' => __('Committees'),
-                //'Report.InstitutionSubjectsClasses' => __('Subjects/Classes'),//POCOR-5852
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
-                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
-                'Report.Income' => __('Income Report'),
-                'Report.Expenditure' => __('Expenditure Report'),
-                'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
+                'Report.InstitutionClasses' => __('Classes'),
+                'Report.InstitutionCommittees' => __('Committees'),
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
+                'Report.Expenditure' => __('Expenditure Report'),
+                'Report.Guardians' => __('Guardians'),
+                'Report.InstitutionAssociations' => __('Houses'), //POCOR-7938
+                'Report.Income' => __('Income Report'),
+                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
+                'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
+                'Report.Institutions' => __('Institutions'),
+                'Report.InstitutionPositions' => __('Institution Positions'),
+                'Report.InstitutionPositionsSummaries' => __('Institution Positions Summaries'),
+                'Report.InstitutionProgrammes' => __('Programmes'),
+                'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
+                // 'Report.StaffAbsences' => __('Staff Absence'), Institution Positions Summaries
+                'Report.StaffAttendances' => __('Staff Attendance'),
+                'Report.StaffBehaviours' => __('Staff Behaviours'),
+                'Report.StaffLeave' => __('Staff Leave'),
+                'Report.StaffTransfers' => __('Staff Transfer'),
+                'Report.InstitutionStaff' => __('Staff'),
+                'Report.BodyMasses' => __('Student Body Masses'),
+                'Report.StudentAbsences' => __('Student Absence'),
+                'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
+                'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
                 'Report.StudentBehaviours' => __('Student Behaviours'),
+                'Report.InstitutionStudents' => __('Students'),
+                // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
+                // 'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
+                // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
+                'Report.InstitutionSubjects' => __('Subjects'),
+                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
+                'Report.WashReports' => __('Wash Report'),
             ];
         } elseif ($module == 'Students') {
             $options = [
+                'Report.BodyMassStatusReports' => __('BMI Status Report'),
+                'Report.Competencies' => __('Competencies'), //POCOR-5791
+                'Report.StudentContacts' => __('Contacts'),
+                'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
+                'Report.StudentsGraduationSummary' => __('Graduation Summary'),//POCOR-8868
+                'Report.StudentIdentities' => __('Identities'),
+                'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
+                'Report.Outcomes' => __('Outcomes'), //POCOR-5791
+                'Report.StudentsRiskAssessment' => __('Risk Assessment Report'),
+                'Report.SpecialNeeds' => __('Special Needs'),
                 'Report.Students' => __('Students'),
                 'Report.StudentsPhoto' => __('Students Photo'),
-                'Report.StudentIdentities' => __('Identities'),
-                'Report.StudentContacts' => __('Contacts'),
                 'Report.InstitutionStudentsOutOfSchool' => __('Students Out of School'),
                 //'Report.StudentGuardians' => __('Guardians'), //POCOR-5393
                 'Report.HealthReports' => __('Student Health Report'),
-                'Report.BodyMassStatusReports' => __('BMI Status Report'),
-                'Report.StudentsRiskAssessment' => __('Risk Assessment Report'),
                 'Report.SubjectsBookLists' => __('Subject and Book List'),
-                'Report.StudentNotAssignedClass' => __('Not Assigned to Class'),
-                'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
-                'Report.SpecialNeeds' => __('Special Needs'),
-                'Report.Outcomes' => __('Outcomes'), //POCOR-5791
-                'Report.Competencies' => __('Competencies'), //POCOR-5791
-                'Report.StudentsGraduationSummary' => __('Graduation Summary'),//POCOR-8868
-
             ];
         } elseif ($module == 'Staff') {
             $options = [
-                'Report.Staff' => __('Staff'),
-                'Report.StaffPhoto' => __('Staff Photo'),
-                'Report.StaffIdentities' => __('Identities'),
                 'Report.StaffContacts' => __('Contacts'),
-                'Report.StaffQualifications' => __('Qualifications'),
-                'Report.StaffLicenses' => __('Licenses'),
+                'Report.InstitutionStaffDetailed' => __('Detailed Staff Data'), //POCOR-6662
+                'Report.StaffDuties' => __('Duties Report'),
                 'Report.StaffEmploymentStatuses' => __('Employment Statuses'),
-                'Report.StaffHealthReports' => __('Staff Health Report'),
+                'Report.StaffIdentities' => __('Identities'),
+                'Report.StaffLicenses' => __('Licenses'),
+                'Report.PositionSummary' => __('Position Summary Report'),
+                'Report.StaffQualifications' => __('Qualifications'),
                 'Report.StaffSalaries' => __('Salaries'),
+                'Report.Staff' => __('Staff'),
+                'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
+                'Report.StaffHealthReports' => __('Staff Health Report'),
+                'Report.StaffLeaveReport' => __('Staff Leave'),
+                'Report.StaffOutOfSchool' => __('Staff Out of School'), //POCOR-4827
+                'Report.StaffPhoto' => __('Staff Photo'),
+                'Report.StaffPositions' => __('Staff Positions Report'),
+                'Report.StaffRequirements' => __('Staff Requirements'), // POCOR-5185
+                'Report.StaffSubjects' => __('Staff Subjects'), //POCOR-6688
                 'Report.StaffSystemUsage' => __('System Usage'),
                 'Report.StaffTrainingReports' => __('Training Courses Report'),
-                'Report.StaffLeaveReport' => __('Staff Leave'),
-                'Report.StaffPositions' => __('Staff Positions Report'),
-                'Report.PositionSummary' => __('Position Summary Report'),
-                'Report.StaffDuties' => __('Duties Report'),
-                'Report.StaffExtracurriculars' => __('Staff Extracurricular'),
-                'Report.InstitutionStaffDetailed' => __('Detailed Staff Data'), //POCOR-6662
-                'Report.StaffSubjects' => __('Staff Subjects'), //POCOR-6688
-                'Report.StaffRequirements' => __('Staff Requirements'), // POCOR-5185
-                'Report.StaffOutOfSchool' => __('Staff Out of School') //POCOR-4827
             ];
         } elseif ($module == 'Textbooks') {
             $options = [
-                'Report.Textbooks' => __('Textbooks'),
-                'Report.InstitutionTextbooks' => __('Institution Textbooks')
+                'Report.InstitutionTextbooks' => __('Institution Textbooks'),
+                'Report.Textbooks' => __('Textbooks')
             ];
         } elseif ($module == 'Trainings') {
             $options = [
-                'Report.TrainingNeeds' => __('Needs'),
-                'Report.TrainingCourses' => __('Courses'),
-                'Report.TrainingSessions' => __('Sessions'),
-                'Report.TrainingResults' => __('Results'),
                 'Report.StaffTrainingApplications' => __('Applications'),
-                'Report.TrainingTrainers' => __('Trainers'),
+                'Report.TrainingCourses' => __('Courses'),
+                'Report.TrainingEmployeeQualification' => __('Detailed employee qualifications'), //POCOR-6598
+                'Report.EmployeeTrainingCard' => __('Employee Training Card'),
+                'Report.TrainingNeeds' => __('Needs'),
+                'Report.TrainingResults' => __('Results'),
+                'Report.TrainingSessions' => __('Sessions'),
                 'Report.TrainingSessionParticipants' => __('Session Participants'),
                 // Starts POCOR-6592
-                'Report.EmployeeTrainingCard' => __('Employee Training Card'),
                 // Ends POCOR-6592
-                'Report.ReportTrainingNeedStatistics' => __('Training Needs Statistics'),
                 'Report.TrainersSessions' => __('Trainers Sessions'), // POCOR-6569
-                'Report.TrainingEmployeeQualification' => __('Detailed employee qualifications') //POCOR-6598
+                'Report.TrainingTrainers' => __('Trainers'),
+                'Report.ReportTrainingNeedStatistics' => __('Training Needs Statistics'),
             ];
         } elseif ($module == 'Scholarships') {
             $options = [
-                'Report.Scholarships' => __('Scholarships'),
-                'Report.ScholarshipApplications' => __('Scholarship Applications'),
-                'Report.RecipientPaymentStructures' => __('Recipient Payment Structures'),
                 'Report.RecipientAcademicStandings' => __('Recipient Academic Standings'),
-                'Report.ScholarshipRecipients' => __('Scholarship Recipients'),
-                'Report.ScholarshipDisbursements' => __('Scholarship Disbursements (Overview)'),
+                'Report.RecipientPaymentStructures' => __('Recipient Payment Structures'),
+                'Report.ScholarshipApplications' => __('Scholarship Applications'),
                 'Report.ScholarshipDisbursementsAmounts' => __('Scholarship Disbursements (Detailed)'),
-                'Report.ScholarshipEnrollments' => __('Scholarship Enrollments')
+                'Report.ScholarshipDisbursements' => __('Scholarship Disbursements (Overview)'),
+                'Report.ScholarshipEnrollments' => __('Scholarship Enrollments'),
+                'Report.ScholarshipRecipients' => __('Scholarship Recipients'),
+                'Report.Scholarships' => __('Scholarships'),
             ];
         } elseif ($module == 'Surveys') {
             $options = [
@@ -213,33 +210,32 @@ class ReportsController extends AppController
             ];
         } elseif ($module == 'DataQuality') {
             $options = [
-                'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
-                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
-                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
-                'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
                 'Report.AgeOutliers' => __('Age Outliers'),//POCOR-7211
-                'Report.ValidationReport' => __('Validation Report'),//POCOR-8144
+                'Report.EnrollmentOutliers' => __('Enrollment Outliers'),//POCOR-7211
+                'Report.PotentialStaffDuplicates' => __('Potential Staff Duplicates'),
+                'Report.PotentialStudentDuplicates' => __('Potential Student Duplicates'),
+                'Report.PotentialWrongBirthdates' => __('Potential Wrong Birthdates'),
                 'Report.StaffWithMissingQualificationReport' => __('Staff with Missing Qualification Report'),//POCOR-9262
+                'Report.ValidationReport' => __('Validation Report'),//POCOR-8144
             ];
         } elseif ($module == 'Audits') {
             $options = [
-                'Report.AuditLogins' => __('Logins'),
-                'Report.AuditLastLogins' => __('Last Login'), //POCOR-7970
-                'Report.AuditInstitutions' => __('Institutions'),
-                'Report.AuditUsers' => __('Users'),
-                'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions'), // POCOR-499
-                'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles'), // POCOR-499
                 'Report.AuditDeletedRecords' => __('Deleted Records'), // POCOR-9381
-                'Report.AuditInstitutionStudents' => __('Institution Students'), // POCOR-9382
                 'Report.AuditInstitutionStaff' => __('Institution Staff'), // POCOR-9383
-                'Report.AuditStudentMarks' => __('Student Marks') // POCOR-9444
+                'Report.AuditInstitutionStudents' => __('Institution Students'), // POCOR-9382
+                'Report.AuditInstitutions' => __('Institutions'),
+                'Report.AuditLastLogins' => __('Last Login'), //POCOR-7970
+                'Report.AuditLogins' => __('Logins'),
+                'Report.AuditSecuritiesGroupUserRoles' => __('Security Group User Roles'), // POCOR-499
+                'Report.AuditSecuritiesRolesPermissions' => __('Security Roles and Permissions'), // POCOR-499
+                'Report.AuditStudentMarks' => __('Student Marks'), // POCOR-9444
+                'Report.AuditUsers' => __('Users'),
             ];
         } elseif ($module == 'Examinations') {
             $options = [
-
+                'Report.ExaminationResults' => __('Examination Results'),
                 'Report.NotRegisteredStudents' => __('Not Registered Students'),
                 'Report.RegisteredStudentsExaminationCentre' => __('Registered Students by Examination Centre'),
-                'Report.ExaminationResults' => __('Examination Results'),
             ];
         } elseif ($module == 'UisStatistics') {
             $options = [
@@ -265,17 +261,19 @@ class ReportsController extends AppController
             $options = [
                 'Report.Performance' => __('Assessment Missing Mark Entry'),
                 'Report.Assessments' => __('Assessment'),
-                'Report.OutcomesResult' => __('Outcomes')
+                'Report.PerformanceCompetencies' => __('Competencies'),//POCOR-9077
+                'Report.OutcomesResult' => __('Outcomes'),
             ];
         }/*POCOR-6513 ends*/
         elseif ($module == 'Meals') {//POCOR-9267 Starts
             $options = [
+                'Report.MealDetails' => __('Meals Details Report'),//POCOR-9268
                 'Report.MealSummary' => __('Meals Summary Report'),
-                'Report.MealDetails' => __('Meals Details Report')//POCOR-9268
             ];
         }//POCOR-9267 Ends
         return $options;
     }
+    //POCOR-9563[END]
 
     public function index()
     {

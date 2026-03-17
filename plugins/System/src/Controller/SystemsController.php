@@ -15,7 +15,7 @@ class SystemsController extends AppController
 		parent::initialize();
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+    public function beforeFilter(EventInterface $event) {
 		$request = $this->request;
     	parent::beforeFilter($event);
 

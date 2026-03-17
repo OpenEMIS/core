@@ -737,7 +737,7 @@ class StaffUserTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $userNationalities = TableRegistry::getTableLocator()->get('User.userNationalities');
+        $userNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
         $userContacts = TableRegistry::getTableLocator()->get('UserContacts');
         $contactTypes = TableRegistry::getTableLocator()->get('User.ContactTypes');
         $contactOptions = TableRegistry::getTableLocator()->get('User.ContactOptions');
@@ -767,7 +767,9 @@ class StaffUserTable extends ControllerActionTable
                 $userContactsData = $userContacts
                     ->find()
                     ->select([
-                        'contact_number' => 'userContacts.value', 'userContacts.preferred', 'userContacts.contact_type_id',
+                        'contact_number' => $userContacts->aliasField('value'),
+                        $userContacts->aliasField('preferred'),
+                        $userContacts->aliasField('contact_type_id'),
                     ])
                     ->leftjoin(
                         [$contactTypes->getAlias() => $contactTypes->getTable()],
@@ -778,7 +780,8 @@ class StaffUserTable extends ControllerActionTable
                         [$contactOptions->aliasField('id=') . $contactTypes->aliasField('contact_option_id')]
                     )
                     ->where([
-                        $userContacts->aliasField('security_user_id') => $row->staff_id, 'userContacts.preferred' => 1
+                        $userContacts->aliasField('security_user_id') => $row->staff_id,
+                        $userContacts->aliasField('preferred') => 1
                     ]);
 
                 $arr = $userContactsData->toArray();

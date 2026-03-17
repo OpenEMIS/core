@@ -54,7 +54,7 @@ class ManualsController extends AppController
     }
 
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+    public function beforeFilter(EventInterface $event) {
         parent::beforeFilter($event);
         $selectedAction = $this->request->getParam('action');
         if ($selectedAction == 'Institutions') {
