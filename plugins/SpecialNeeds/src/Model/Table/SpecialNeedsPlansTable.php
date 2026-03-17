@@ -70,6 +70,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->field('comment', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
+        $this->field('security_user_id', ['visible' => false]); //POCOR-9584: Hide security_user_id in index
         $this->setFieldOrder(['special_needs_device_type_id']);
 
         // Start POCOR-5188
@@ -216,6 +217,7 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => false, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['academic_period_id', 'special_needs_plan_types_id', 'plan_name', 'file_name', 'file_content', 'comment']);
     }
@@ -269,4 +271,19 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         // Academic Periods Filter - END
     }
     // End POCOR-7467
+
+    //POCOR-9584: start - Automatically set security_user_id from getUserID()
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Decoded from query string: handles staff_id, student_id, or security_user_id depending on calling controller
+        $entity->security_user_id = $this->getUserID();
+    }
+
+    public function editBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        // Ensures security_user_id cannot be changed by users
+        $entity->security_user_id = $this->getUserID();
+    }
+    //POCOR-9584: end
+
 }

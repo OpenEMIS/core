@@ -416,7 +416,7 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetCustomLinkedRecordsElement(Event $mainEvent, $action, $entity, $attr, $options = [])
+    public function onGetCustomLinkedRecordsElement(EventInterface $mainEvent, $action, $entity, $attr, $options = [])
     {
         if ($action == 'index') {
             if ($entity->has('linked_records')) {

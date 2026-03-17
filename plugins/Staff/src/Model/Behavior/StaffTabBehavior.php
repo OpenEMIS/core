@@ -67,7 +67,6 @@ class StaffTabBehavior extends Behavior
 
     public function getCareerTabElements($options = [], $modelName = null)
     {
-
         $model = $this->_table;
         $type = (isset($options['type'])) ? $options['type'] : null;//POCOR-8401
         //POCOR-8359 starts
@@ -86,12 +85,25 @@ class StaffTabBehavior extends Behavior
             $pluginName = $controller->getPlugin();
             $controllerName = $controller->getName();
             $institutionID = $this->getInstitutionID();
-            //$staffID = $this->getStaffID();
-            //
-            // if(!$staffID){
-            //     $staffID = $this->getUserID();
-            // }
             $queryString = $model->getQueryString();
+            // Position view (e.g. Staff/view) may have only id in URL; ensure institution_id and staff_id from options so all tabs get correct URLs and permission checks
+            if (!is_array($queryString)) {
+                $queryString = [];
+            }
+            if (!empty($options['institution_id'])) {
+                $queryString['institution_id'] = $options['institution_id'];
+                if (empty($institutionID)) {
+                    $institutionID = $options['institution_id'];
+                }
+            }
+            $staffIdFromOptions = !empty($options['staff_id']) ? $options['staff_id'] : (!empty($options['user_id']) ? $options['user_id'] : null);
+            if ($staffIdFromOptions !== null) {
+                $queryString['staff_id'] = $staffIdFromOptions;
+            }
+            // Use entity id (institution_staff id) so tab URLs match Staff view context
+            if (!empty($options['id'])) {
+                $queryString['id'] = $options['id'];
+            }
             $encodedQueryString = $model->paramsEncode($queryString);
         }
 

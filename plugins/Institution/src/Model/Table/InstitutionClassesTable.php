@@ -273,37 +273,37 @@ class InstitutionClassesTable extends ControllerActionTable
             ]
         ];
         return $buttons;
-    } //POCOR-8323 ends
+    } //POCOR-8323 ends 
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
-        $LabelTable = TableRegistry::getTableLocator()->get('Labels');
+        $LabelTable = TableRegistry::get('Labels');
         if ($field == 'classes_secondary_staff') {
            // return $this->getMessage($this->aliasField($field));
             //POCOR-9524
-            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Secondary Teacher'])->first();
-            if ($secondarystaff != null) {
-                $secondarystaffName =  $secondarystaff->name; //add this name from Adminsitration > System Setup > Labels
-            }
+            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'secondary_staff_id'])->first();
+            $secondarystaffName = !empty($secondarystaff->name)
+                            ? (string)$secondarystaff->name
+                            : (string)$secondarystaff->field_name;
             return  __((string)$secondarystaffName);
         } else if ($field == 'institution_unit_id') {
-            $unitname = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Unit'])->first();
+            $unitname = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'unit'])->first();
             if ($unitname != null) {
                 $unit =  $unitname->name; //add this name from Adminsitration > System Setup > Labels
             }
             return  __((string)$unit);
         } else if ($field == 'institution_course_id') {
-            $CourseName = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field_name' => 'Course'])->first();
+            $CourseName = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'course'])->first();
             if ($CourseName != null) {
                 $Courses =  $CourseName->name; //add this name from Adminsitration > System Setup > Labels
             }
             return  __((string)$Courses);
         } else if ($field == 'staff_id') {
             $teacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'staff_id'])->first();
-            if ($teacher != null) {
-                $teacher =  $teacher->field_name; //add this name from Adminsitration > System Setup > Labels
-            }
-            return  __((string)$teacher);
+            $teacherName = !empty($teacher->name)
+                            ? (string)$teacher->name
+                            : (string)$teacher->field_name;
+            return  __((string)$teacherName);
         } else if ($field == 'name') {
             return __('Class Name');
         }else if ($field == 'total_male_students') {
@@ -560,9 +560,7 @@ class InstitutionClassesTable extends ControllerActionTable
         // POCOR-9403 cleancoded
         $this->handleClassCustomFields($entity);
         $this->syncClassStudents($entity, $options);
-        $this->getEventManager()->dispatch(
-            new Event('Model.afterFullSave', $this, compact('entity', 'options'))
-        );
+        $this->dispatchEvent('Model.afterFullSave', compact('entity', 'options'));
         if ($entity->isNew()) {
             $this->InstitutionSubjects->autoInsertSubjectsByClass($entity);
         }

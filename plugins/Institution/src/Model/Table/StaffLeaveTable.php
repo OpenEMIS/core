@@ -132,6 +132,12 @@ class StaffLeaveTable extends ControllerActionTable
         $dateTo = $entity['date_to']->format('Y-m-d');
         $entity = $this->getNumberOfDays($entity);
 
+        //POCOR-9584: log entity values entering beforeSave for import tracing
+        //Log::debug('@StaffLeaveTable::beforeSave staffId=' . var_export($staffId, true)
+        //    . ' institutionId=' . var_export($institutionId, true)
+        //    . ' dateFrom=' . $dateFrom . ' dateTo=' . $dateTo
+        //    . ' hasAlert=' . var_export(isset($this->Alert), true));
+
         $InstitutionStaff = self::getDynamicTableInstance('Institution.Staff');
         $StaffStatuses = self::getDynamicTableInstance('Staff.StaffStatuses');
         $staffData = $InstitutionStaff
@@ -152,29 +158,66 @@ class StaffLeaveTable extends ControllerActionTable
                 $StaffStatuses->aliasField('code') => 'ASC'
             ])
             ->first();
+
+        //POCOR-9584: log staffData result; null means no Institution.Staff record for this staff+institution
+        //Log::debug('@StaffLeaveTable::beforeSave staffData=' . ($staffData ? json_encode([
+        //    'start_date' => $staffData->start_date ? $staffData->start_date->format('Y-m-d') : null,
+        //    'end_date'   => $staffData->end_date   ? $staffData->end_date->format('Y-m-d')   : null,
+        //]) : 'NULL'));
+
+        if (!$staffData) {
+            //Log::debug('@StaffLeaveTable::beforeSave ABORT: no staffData found');
+            return false;
+        }
+
         $startDate = $staffData->start_date->format('Y-m-d');
         if ($startDate > $dateFrom) {
-            $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
+            //Log::debug('@StaffLeaveTable::beforeSave REJECT noLeave startDate=' . $startDate . ' > dateFrom=' . $dateFrom);
+            //POCOR-9584: set entity error so ImportBehavior shows it as a row error; guard Alert for import context
+            $entity->setError('date_from', ['noLeave' => __('Staff employment at this institution starts on {0}, which is after the requested leave start date', $startDate)]);
+            if (isset($this->Alert)) {
+                $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
+            }
             return false;
         }
 
         if (!empty($staffData->end_date)) {
             $endDate = $staffData->end_date->format('Y-m-d');
             if ($startDate > $dateFrom) {
-                $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
+                //Log::debug('@StaffLeaveTable::beforeSave REJECT noLeave(2) startDate=' . $startDate . ' > dateFrom=' . $dateFrom);
+                //POCOR-9584: set entity error so ImportBehavior shows it as a row error; guard Alert for import context
+                $entity->setError('date_from', ['noLeave' => __('Staff employment at this institution starts on {0}, which is after the requested leave start date', $startDate)]);
+                if (isset($this->Alert)) {
+                    $this->Alert->error('AlertRules.StaffLeave.noLeave', ['reset' => true]);
+                }
                 return false;
             }
             if ($dateFrom > $endDate) {
-                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
+                //Log::debug('@StaffLeaveTable::beforeSave REJECT noLeaveEndDate dateFrom=' . $dateFrom . ' > endDate=' . $endDate);
+                //POCOR-9584: set entity error so ImportBehavior shows it as a row error; guard Alert for import context
+                $entity->setError('date_from', ['noLeaveEndDate' => __('Leave start date is after the staff\'s employment end date ({0})', $endDate)]);
+                if (isset($this->Alert)) {
+                    $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDate', ['reset' => true]);
+                }
                 return false;
             } else if ($dateTo > $endDate) {
-                $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
+                //Log::debug('@StaffLeaveTable::beforeSave REJECT noLeaveEndDateTo dateTo=' . $dateTo . ' > endDate=' . $endDate);
+                //POCOR-9584: set entity error so ImportBehavior shows it as a row error; guard Alert for import context
+                $entity->setError('date_to', ['noLeaveEndDateTo' => __('Leave end date is after the staff\'s employment end date ({0})', $endDate)]);
+                if (isset($this->Alert)) {
+                    $this->Alert->error('AlertRules.StaffLeave.noLeaveEndDateTo', ['reset' => true]);
+                }
                 return false;
             }
         }
         if (!$entity) {
             // Error message to tell that leave period applied has overlapped exisiting leave records.
-            $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
+            //Log::debug('@StaffLeaveTable::beforeSave REJECT leavePeriodOverlap');
+            //POCOR-9584: set entity error so ImportBehavior shows it as a row error; guard Alert for import context
+            $entity->setError('date_from', ['leavePeriodOverlap' => __('The leave period overlaps with an existing leave record')]);
+            if (isset($this->Alert)) {
+                $this->Alert->error('AlertRules.StaffLeave.leavePeriodOverlap', ['reset' => true]);
+            }
             return false;
         }
     }
