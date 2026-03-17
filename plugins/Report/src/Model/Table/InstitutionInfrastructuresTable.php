@@ -1144,11 +1144,11 @@ class InstitutionInfrastructuresTable extends AppTable
             if (in_array($feature, ['Report.WashReports'])) {
                 $options = [
                     'All' => __('All'),   //POCOR-6732
-                    'Water' => __('Water'),
-                    'Sanitation' => __('Sanitation'),
                     'Hygiene' => __('Hygiene'),
-                    'Waste' => __('Waste'),
+                    'Sanitation' => __('Sanitation'),
                     'Sewage' => __('Sewage'),
+                    'Waste' => __('Waste'),
+                    'Water' => __('Water'),
                 ];
                 $attr['type'] = 'select';
                 $attr['select'] = false;
