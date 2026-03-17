@@ -173,7 +173,7 @@ class StaffTrainingsTable extends ControllerActionTable
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');//POCOR-9151
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];

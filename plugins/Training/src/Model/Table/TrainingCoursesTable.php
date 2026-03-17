@@ -112,8 +112,17 @@ class TrainingCoursesTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
+            //POCOR-9151 start
+            ->requirePresence('credit_hours')
+            ->requirePresence('special_education_needs')
             ->requirePresence('target_populations')
+            ->requirePresence('training_requirement_id')
+            ->requirePresence('training_level_id')
+            ->requirePresence('training_course_type_id')
+            ->requirePresence('training_mode_of_delivery_id')
+            ->requirePresence('training_field_of_study_id')
             ->requirePresence('training_course_category_id')
+            //POCOR-9151 end
             ->requirePresence('training_providers')
             ->requirePresence('result_types')
             ->add('duration', [
@@ -143,7 +152,7 @@ class TrainingCoursesTable extends ControllerActionTable
     {
         //POCOR-9023
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');//POCOR-9151
         // Type / Visible
         $visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
         $this->field('description', ['visible' => $visible]);
