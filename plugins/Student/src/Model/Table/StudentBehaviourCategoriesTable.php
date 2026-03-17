@@ -8,6 +8,7 @@ use Cake\Network\Request;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -30,6 +31,14 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
     //POCOR-8866 start
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator->setProvider('custom', $this);
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->requirePresence('behaviour_classification_id');
+    }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
