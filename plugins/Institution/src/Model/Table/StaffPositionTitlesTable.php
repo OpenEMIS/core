@@ -648,7 +648,7 @@ class StaffPositionTitlesTable extends ControllerActionTable
         $StaffPositionTitlesGrades = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitlesGrades');
 
         // Remove -1 if some real grades are selected
-        if ($hasSomeRealGrades) {
+        if ($hasSomeRealGrades  && !empty($entity->id)){
 //            Log::debug('[beforeSave] Real grades selected — removing -1 if it exists');
             $StaffPositionTitlesGrades->deleteAll([
                 'staff_position_title_id' => $entity->id,
