@@ -474,7 +474,7 @@ class ScholarshipsTable extends ControllerActionTable
     {
         /** Start POCOR-7158 */
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');//POCOR-9151
         /** End POCOR-7158 */
 
         if ($entity->has('field_of_study_selection') && $entity->field_of_study_selection == self::SELECT_ALL_FIELD_OF_STUDIES) {
