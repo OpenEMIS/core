@@ -115,7 +115,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
     public function checkStudentRecords($entity)
     {
         $categoryId = $entity->id ?? 0;
-        $behaviorCategory = TableRegistry::getTableLocator()->get('student_behaviours');
+        $behaviorCategory = TableRegistry::getTableLocator()->get('Student.StudentBehaviours');
 
         $data = $behaviorCategory->find()->where(['student_behaviour_category_id'=>$categoryId])->count(); 
         if($data > 0)
