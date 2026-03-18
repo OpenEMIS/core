@@ -6,6 +6,8 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
 use Cake\Log\Log;
@@ -60,8 +62,8 @@ class ExcelReportBehavior extends Behavior
             $this->setConfig('filename', $model->getAlias());
         }
 
-        @mkdir($folder, 0777, true);
-        @mkdir($subfolder, 0777, true);
+        new Folder($folder, true, 0777);
+        new Folder($subfolder, true, 0777);
     }
 
     public function implementedEvents(): array
@@ -873,9 +875,8 @@ class ExcelReportBehavior extends Behavior
 
     public function deleteFile($filepath)
     {
-        if (file_exists($filepath)) {
-            unlink($filepath);
-        }
+        $file = new File($filepath);
+        $file->delete();
     }
 
     public function downloadFile($filecontent, $filename, $filesize)
