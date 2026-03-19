@@ -110,9 +110,9 @@ class StaffPhotoDownloadShell extends Shell
 
 
             $userQuery = $userTable->find()
-                ->innerJoin([$Institutions->alias() => $Institutions->table()],
+                ->innerJoin([$Institutions->getAlias() => $Institutions->getTable()],
                     [$Institutions->aliasField('id') . ' = ' . $userTable->aliasField('institution_id')]
-                )->innerJoin([$Users->alias() => $Users->table()],
+                )->innerJoin([$Users->getAlias() => $Users->getTable()],
                     [$Users->aliasField('id') . ' = ' . $userTable->aliasField($model_field)])->
                 group([
                     $Users->aliasField('id')])

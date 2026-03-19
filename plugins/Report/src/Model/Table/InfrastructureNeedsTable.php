@@ -235,6 +235,6 @@ class InfrastructureNeedsTable extends AppTable  {
             }
         }
         
-        return implode($projects, ",");
+        return implode(",", $projects);
     }
 }

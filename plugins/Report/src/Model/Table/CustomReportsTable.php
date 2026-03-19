@@ -71,18 +71,16 @@ class CustomReportsTable extends AppTable
         $this->fields = [];
         $this->ControllerAction->field('feature', ['type' => 'select', 'select' => false]);
        // $this->ControllerAction->field('format');
-
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $id = $this->request->getData($this->getAlias())['feature'];
             $customReportData = $this->find()
                 ->where([$this->aliasField('id') => $id])
                 ->first();
-
             // filters
-            if (!empty($customReportData) && !empty($customReportData->filter)) {
+            // if (!empty($customReportData) && !empty($customReportData->filter)) {
+            if (!empty($customReportData)) {
                 $validator = $this->getValidator();
                 $filters = json_decode($customReportData->filter, true);
-
                 // academic period filter
                 if (isset($filters['academic_period_id'])) {
                     // add validation
@@ -113,7 +111,6 @@ class CustomReportsTable extends AppTable
                     $this->ControllerAction->field('education_grade_id');
                     unset($filters['education_grade_id']);
                 }
-
                 // education subject filter
                 if (isset($filters['education_subject_id'])) {
                     // add validation
@@ -124,19 +121,18 @@ class CustomReportsTable extends AppTable
                 //END: POCOR-7069
 
                 $this->ControllerAction->field('format');
-
-                if (isset($this->request->data["submit"]) && $this->request->data["submit"] == "academic_period_id") {
+                // if (isset($this->request->data["submit"]) && $this->request->data["submit"] == "academic_period_id") {
+                if (isset($this->request->getData()['submit']) && $this->request->getData()['CustomReports']['academic_period_id']) {
                     $toReset = true;
                 } else {
                     $toReset = false;
                 }
-
                 // other filters
                 foreach ($filters as $field => $filterData) {
                     if ($toReset) {
                         unset($this->request->getData($this->getAlias())[$field]);
                     }
-                    if (isset($this->request->data["submit"]) && $field == $this->request->data["submit"]) {
+                    if (isset($this->request->getData()['submit']) && $field == $this->request->getData()['submit']) {
                         $toReset = true;
                     }
 
@@ -293,7 +289,6 @@ class CustomReportsTable extends AppTable
         // get json query from reports database table
         $customReportData = $this->get($params['feature']);
         $jsonQuery = json_decode($customReportData->query, true);
-
         $variables = new ArrayObject([]);
         foreach($jsonQuery as $key => $obj) {
             $entity = $this->buildQuery($obj, $params, false);
@@ -475,4 +470,24 @@ class CustomReportsTable extends AppTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    //POCOR-9600 Start
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $Area = TableRegistry::getTableLocator()->get('Area.Areas');
+            $areaOptions = $Area->find('list', ['keyField' => 'id',
+                                'valueField' => 'name'])
+                            ->find('visible')
+                            
+                            ->order([$Area->aliasField('id')])
+                            ->toArray();
+
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $areaOptions;
+            $attr['type'] = 'select';
+            $attr['required'] = true;
+            return $attr;
+        }
+    }
+    //POCOR-9600 End
 }
