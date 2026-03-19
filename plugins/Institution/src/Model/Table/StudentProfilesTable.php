@@ -152,8 +152,22 @@ class StudentProfilesTable extends ControllerActionTable
 
 
             // Download button, status must be generated or published
-            if ($this->hasProfileFunctionPermission(self::DOWNLOAD_FUNCTION_NAME, self::FUNCTION_CONTROLLER) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) { //POCOR-9598: replaced AccessControl->check with security_role_functions execute check
-                //START:POCOR-6667
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'downloadExcel']) 
+                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
+            {
+                //POCOR-9585
+                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+                 $buttons['download'] = [
+                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
+                     'attr' => $indexAttr,
+                     'url' => $downloadUrl
+                 ];
+            }
+            
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'download']) 
+                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
+            {
+                 //POCOR-9585
                 $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
                 $buttons['viewPdf'] = [
                     'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
@@ -168,17 +182,10 @@ class StudentProfilesTable extends ControllerActionTable
                     'attr' => $indexAttr,
                     'url' => $downloadPdfUrl
                 ];
-                // POCOR-9292
-                 $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
-                 $buttons['download'] = [
-                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
-                     'attr' => $indexAttr,
-                     'url' => $downloadUrl
-                 ];
             }
 
             // Generate button, all statuses
-            if ($this->hasProfileFunctionPermission(self::GENERATE_FUNCTION_NAME, self::FUNCTION_CONTROLLER)) { //POCOR-9598: replaced AccessControl->check with security_role_functions execute check
+            if ($this->AccessControl->check(['Institutions', 'StudentProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->StudentTemplates
@@ -204,15 +211,57 @@ class StudentProfilesTable extends ControllerActionTable
                             'url' => $generateUrl,
                             0 => $encodedQueryString
                             ];
+                } else {
+                    $generateAttr['title'] = $this->getMessage('StudentProfiles.date_closed');
+                    $buttons['generate'] = [
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                            'attr' => $generateAttr,
+                            'url' => 'javascript:void(0)',
+                            0 => $encodedQueryString
+                            ];
                 }
-                //POCOR-9598: window closed — Generate button not shown
             }
         }
-        //POCOR-9598: POCOR-5191 template-to-role filter removed — superseded by ProfilePermissionTrait
-        //           which checks security_role_functions._execute for the current user's roles (union across all roles)
+        //POCOR-5191::Start
+        $student_profile_security_roles_table = TableRegistry::getTableLocator()->get('Student.StudentProfileSecurityRoles');
+        $instituttionnTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $securitygroupusersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $institutionId = $this->getInstitutionID();
+        $insData = $instituttionnTable->get($institutionId);
+       // $security_group_id = $insData->security_group_id;
+        $user_id = $this->Session->read('Auth.User.id');
+        $ProfileTemplatesId = $this->request->getQuery('student_profile_template_id');
+        if($ProfileTemplatesId != null){
+            $roles = $student_profile_security_roles_table->find()->where(['student_profile_template_id'=> $this->request->getQuery('student_profile_template_id')])->toArray();
+        }
+        //print_r($this->request->getQuery('student_profile_template_id'));die;
+
+        $curr_u_roles = $securitygroupusersTable->find()->where(['security_user_id'=>$user_id])->toArray();
+        $rolArr = [];
+        $rolArrrr = [];
+        foreach($roles as $rol){
+            $rolArr[] = $rol->security_role_id;
+        }
+
+        foreach($curr_u_roles as $curr_uu_roles){
+            $rolArrrr[] = $curr_uu_roles->security_role_id;
+        }
+        $result = array_intersect($rolArrrr, $rolArr);
+        $nResult = reset($result);
+
+        if($this->Session->read('Auth.User.super_admin') != 1){
+            if(!empty($nResult)){
+                if(!in_array($nResult, $rolArr)){
+                    $buttons = [];
+                }
+            }else{
+                $buttons = [];
+            }
+        }
+        //POCOR-5191::End
         return $buttons;
     }
-
+    
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
