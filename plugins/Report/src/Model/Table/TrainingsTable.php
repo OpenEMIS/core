@@ -33,7 +33,7 @@ class TrainingsTable extends AppTable
         $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
         // Starts POCOR-6592
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'is_guardian']);
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
@@ -99,8 +99,8 @@ class TrainingsTable extends AppTable
         //End:POCOR-6829
         // Starts POCOR-6592
         if ($this->request->getData()[$this->getAlias()]['feature'] ==  'Report.EmployeeTrainingCard') {
-            $this->ControllerAction->field('guardian_id');
-            $this->ControllerAction->field('format'); 
+            $this->ControllerAction->field('is_guardian');
+            // $this->ControllerAction->field('format'); 
         }else if ($feature == 'Report.TrainingSessionParticipants'){//POCOR-6828 starts add condition for report TrainingSessionParticipants
             $this->ControllerAction->field('status'); 
             $this->ControllerAction->field('institution_status');
@@ -296,13 +296,11 @@ class TrainingsTable extends AppTable
     * @ticket POCOR-6592
     */
     // Starts POCOR-6592
-    public function onUpdateFieldGuardianId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldIsGuardian(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            
             if (isset($this->request->getData($this->getAlias())['feature'])) {
                 $feature = $this->request->getData($this->getAlias())['feature'];
-
                 if (in_array($feature, ['Report.EmployeeTrainingCard'])) {
                     $attr['type'] = 'autocomplete';
                     $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
@@ -313,10 +311,9 @@ class TrainingsTable extends AppTable
                         $action = 'Trainings';
                     }
                     //POCOR-8249 change ajax file 
-                    $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
-                   
+                    $attr['url'] = ['controller' => $this->controller->getName(), 'action' => $action, 'ajaxUserAutocomplete'];
                     $requestData = $this->request->getData();
-                    if (isset($requestData) && !empty($requestData[$this->getAlias()]['guardian_id'])) {
+                    if (isset($requestData) && !empty($requestData[$this->getAlias()]['is_guardian'])) {
                         $guardianId = $requestData[$this->getAlias()]['guardian_id'];
                         $guardianName = $this->Users->get($guardianId)->name_with_id;
 
@@ -360,7 +357,7 @@ class TrainingsTable extends AppTable
                 return __('Status');
             case 'training_session_id':
                 return __('Training Session');
-            case 'guardian_id':
+            case 'is_guardian':
                 return __('Staff');
             case 'session_start_date':
                 return __('Session Start Date');
@@ -642,7 +639,7 @@ class TrainingsTable extends AppTable
         $this->ControllerAction->autoRender = false;
         $Users = TableRegistry::getTableLocator()->get('Security.Users');
         if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
+            $term = $this->request->getQuery['term'];
 
             $UserIdentitiesTable = TableRegistry::getTableLocator()->get('User.Identities');
 
@@ -658,7 +655,7 @@ class TrainingsTable extends AppTable
                     $Users->aliasField('id')
                 ])
                 ->leftJoin(
-                    [$UserIdentitiesTable->alias() => $UserIdentitiesTable->table()],
+                    [$UserIdentitiesTable->getAlias() => $UserIdentitiesTable->getTable()],
                     [
                         $UserIdentitiesTable->aliasField('security_user_id') . ' = ' . $Users->aliasField('id')
                     ]

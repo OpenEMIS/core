@@ -40,7 +40,8 @@ class StaffDutiesTable extends AppTable  {
         }
         
 		$staffDuties = TableRegistry::getTableLocator()->get('Institution.StaffDuties');
-	
+		$staffDutiesAlias = 'StaffDutyTypes'; // unique alias to avoid "Not unique table/alias: StaffDuties" (main table is already StaffDuties)
+
          $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -54,7 +55,7 @@ class StaffDutiesTable extends AppTable  {
                 ]),
 				'contact_value' => 'Contacts.value',
 				'contact_type' => 'ContactTypes.name',
-				'staff_duties_name' => $staffDuties->getAlias().'.name',
+				'staff_duties_name' => $staffDutiesAlias . '.name',
              ])
              ->leftJoin(['Users' => 'security_users'], [
                             $this->aliasfield('staff_id') . ' = '.'Users.id'
@@ -65,8 +66,8 @@ class StaffDutiesTable extends AppTable  {
             ->leftJoin(['AcademicPeriods' => 'academic_periods'], [
                            $this->aliasfield('academic_period_id') . ' = AcademicPeriods.id'
                         ])
-			->leftJoin([$staffDuties->getAlias() => $staffDuties->getTable()], [
-						   $this->aliasField('staff_duties_id = ') . $staffDuties->aliasField('id')
+			->leftJoin([$staffDutiesAlias => $staffDuties->getTable()], [
+						   $this->aliasField('staff_duties_id = ') . $staffDutiesAlias . '.id'
                         ])
 			->leftJoin(['Contacts' => 'user_contacts'], [
                            'Users.id = Contacts.security_user_id',
