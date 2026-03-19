@@ -207,12 +207,12 @@ class StaffHealthReportsTable extends AppTable
                         'UserHealths.security_user_id = ' . $this->aliasField('staff_id')
                     ]
                 )
-                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->table()], [
+                ->leftJoin([$ClassStudents->getAlias() => $ClassStudents->getTable()], [
                     $ClassStudents->aliasField('student_id = ') . $this->aliasField('staff_id'),
                     $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
                     $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus,                  
                 ])
-                ->leftJoin([$Class->getAlias() => $Class->table()], [
+                ->leftJoin([$Class->getAlias() => $Class->getTable()], [
                     $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id')
                 ])
                  ->where($conditions);

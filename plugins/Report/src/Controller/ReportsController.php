@@ -359,6 +359,19 @@ class ReportsController extends AppController
             $dataModule = $data['module'];
         }
 
+        // ZIP files (e.g. Students Photo, Staff Photo) cannot be viewed as spreadsheet — send as download
+        $pathInfo = pathinfo($replace_data);
+        $ext = isset($pathInfo['extension']) ? strtolower($pathInfo['extension']) : '';
+        if ($ext === 'zip') {
+            if (file_exists($replace_data) && is_readable($replace_data)) {
+                return $this->response->withFile($replace_data, [
+                    'download' => true,
+                    'name' => isset($pathInfo['basename']) ? $pathInfo['basename'] : 'report.zip'
+                ]);
+            }
+            throw new NotFoundException(__('File not found or not readable.'));
+        }
+
         $this->Navigation->addCrumb(__('Reports'), [
             'plugin' => $this->getPlugin(),
             'controller' => $this->getName(),

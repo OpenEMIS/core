@@ -11,8 +11,8 @@ use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 
 class InstitutionRubricAnswersTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('institution_quality_rubric_answers');
+	public function initialize(array $config): void {
+		$this->setTable('institution_quality_rubric_answers');
 		parent::initialize($config);
 
 		$this->belongsTo('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics']);
@@ -21,7 +21,7 @@ class InstitutionRubricAnswersTable extends AppTable {
 		$this->belongsTo('RubricCriteriaOptions', ['className' => 'Rubric.RubricCriteriaOptions']);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
 
 		$validator
@@ -31,13 +31,13 @@ class InstitutionRubricAnswersTable extends AppTable {
 		return $validator;
 	}
 
-	public function validationSkipCheck(Validator $validator) {
+	public function validationSkipCheck(Validator $validator): Validator {
         $validator = $this->validationDefault($validator);
         $validator->remove('rubric_criteria_option_id');
         return $validator;
     }
 
-	public function implementedEvents() {
+	public function implementedEvents(): array {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
