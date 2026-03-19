@@ -1,3 +1,12 @@
+### [5.4.1] - 2026-03-19
+- Bug Fixed: Reports > Customs: Area Filters is not showing the proper data for country area
+- Bug Fixed: Institution>Academic>Feeders>Incoming: View is getting 404 error
+- Bug Fixed: CakePHP v5 Report Bugs.
+- Bug Fixed: Administration>System Setup>Field Options>Staff Positions Titles: Security roles is not updated even though field option security role is changed
+- Bug Fixed: Reports > Scholarship > Scholarship Applications Report: Add qualification level and qualification name columns
+- Bug Fixed: Administration>Performance>Assessment>Assessment Periods tab:The system rounds up the Period Weight 0.025 to 0.03.
+- Bug Fixed: Administration>Security>Roles: Download Institution Profile is divided into download institution pdf and download institution excel
+
 ### [5.4.0] - 2026-03-13
 - Implemented: Develop changes to Infrastructure > Utilities > Internet, electricity and telephone pages
 - Implemented: Develop a search function for the assessment feature
