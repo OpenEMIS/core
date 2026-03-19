@@ -280,6 +280,27 @@ class ValidationBehavior extends Behavior
     }
 
     /**
+     * Returns true if the value is empty or not a valid date string (e.g. "0", empty string).
+     * Used to skip date comparison validation when the field is not yet filled.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    protected static function _isEmptyOrInvalidDate($value): bool
+    {
+        if ($value === null || $value === '') {
+            return true;
+        }
+        if (is_scalar($value) && (string)$value === '0') {
+            return true;
+        }
+        if (is_string($value) && trim($value) === '') {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * To check end date is later than start date from end date field
      * @param  mixed   $field        current field value
      * @param  string  $compareField name of the field to compare
@@ -294,8 +315,15 @@ class ValidationBehavior extends Behavior
      */
     public static function compareDateReverse($field, $compareField, $equals, array $globalData)
     {
+        if (self::_isEmptyOrInvalidDate($field)) {
+            return true;
+        }
         $type = self::_getFieldType($compareField);
-        $endDate = new DateTime($field);
+        try {
+            $endDate = new DateTime($field);
+        } catch (\Exception $e) {
+            return true;
+        }
         if ($compareField) {
             $options = ['equals' => $equals, 'reverse' => true, 'type' => $type];
             $result = self::doCompareDates($endDate, $compareField, $options, $globalData);
@@ -320,9 +348,15 @@ class ValidationBehavior extends Behavior
      */
     public static function compareAbsenceTimeReverse($field, $compareField, $absenceTypeId, array $globalData)
     {
+        if (self::_isEmptyOrInvalidDate($field)) {
+            return true;
+        }
         $type = self::_getFieldType($compareField);
-
-        $endTime = new DateTime($field);
+        try {
+            $endTime = new DateTime($field);
+        } catch (\Exception $e) {
+            return true;
+        }
         if ($compareField && $globalData['data']['absence_type_id'] == $absenceTypeId) {
             $options = ['equals' => true, 'reverse' => true, 'type' => $type];
             $result = self::doCompareDates($endTime, $compareField, $options, $globalData);
@@ -347,9 +381,15 @@ class ValidationBehavior extends Behavior
      */
     public static function compareDate($field, $compareField, $equals, array $globalData)
     {
-
+        if (self::_isEmptyOrInvalidDate($field)) {
+            return true;
+        }
         $type = self::_getFieldType($compareField);
-        $startDate = new DateTime($field);
+        try {
+            $startDate = new DateTime($field);
+        } catch (\Exception $e) {
+            return true;
+        }
         if ($compareField) {
             $options = ['equals' => $equals, 'reverse' => false, 'type' => $type];
             $result = self::doCompareDates($startDate, $compareField, $options, $globalData);
@@ -385,8 +425,15 @@ class ValidationBehavior extends Behavior
         $type = $options['type'];
         $equals = $options['equals'];
         $reverse = $options['reverse'];
-        $dateTwo = $globalData['data'][$compareField];
-        $dateTwo = new DateTime($dateTwo);
+        $dateTwoRaw = $globalData['data'][$compareField] ?? null;
+        if (self::_isEmptyOrInvalidDate($dateTwoRaw)) {
+            return true;
+        }
+        try {
+            $dateTwo = new DateTime($dateTwoRaw);
+        } catch (\Exception $e) {
+            return true;
+        }
 
         if ($equals) {
             if ($reverse) {
