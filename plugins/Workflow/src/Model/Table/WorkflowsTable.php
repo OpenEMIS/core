@@ -58,7 +58,9 @@ class WorkflowsTable extends AppTable {
                 'rule' => ['validateUnique', ['scope' => 'workflow_model_id']],
                 'provider' => 'table'
             ]
-        ]);
+        ])
+        ->requirePresence('workflow_model_id')
+        ->requirePresence('name');
 
         return $validator;
     }

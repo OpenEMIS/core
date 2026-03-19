@@ -115,6 +115,7 @@ class ScholarshipsTable extends ControllerActionTable
                 ]
             ])
             ->requirePresence('field_of_studies')
+            ->requirePresence('scholarship_financial_assistance_type_id')
             ->requirePresence('bond')
             ->requirePresence('duration')
             ->add('field_of_studies', 'notEmpty', [

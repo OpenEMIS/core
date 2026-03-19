@@ -349,6 +349,7 @@ trait ClassPdfReportTrait
             Log::write('debug', "Saved PDF to: $outputPath");
         } else {
             Log::error("PDF content  is empty");
+            throw new \Exception("PDF content is empty"); // POCOR-9598
         }
         // Convert spreadsheet object into html
 
@@ -547,6 +548,7 @@ trait ClassPdfReportTrait
             throw new \Exception("PDF not ready after timeout.");
         } catch (\Exception $e) {
             Log::error("PDF conversion API error: " . $e->getMessage());
+            throw $e; // POCOR-9598
 
         } finally {
             // Cleanup
@@ -622,7 +624,7 @@ trait ClassPdfReportTrait
 
         } catch (\Exception $e) {
             Log::error("LibreOffice PDF conversion error: " . $e->getMessage());
-            return null;
+            throw $e; // POCOR-9598
         } finally {
             // 3. Cleanup
             if (file_exists($xlsxPath)) {

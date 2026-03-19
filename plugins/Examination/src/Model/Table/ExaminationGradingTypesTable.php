@@ -118,6 +118,9 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         if (!is_null($entity->grading_options)) {
             foreach ($entity->grading_options as $key => $gradingOption) {
                 $gradingOptionId = $gradingOption->id;
+                if ($gradingOptionId === null || $gradingOptionId === '') {
+                    continue;
+                }
                 $gradingOptions[$gradingOptionId] = 0;
                 if ($this->hasAssociatedRecords($ExaminationGradingOptions, $gradingOption, $extra)) {
                     $gradingOptions[$gradingOptionId] = 1;

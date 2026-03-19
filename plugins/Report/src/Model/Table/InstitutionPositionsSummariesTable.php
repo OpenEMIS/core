@@ -43,7 +43,6 @@ class InstitutionPositionsSummariesTable extends AppTable
         $academicperiodid = $requestData->academic_period_id;
         $area_level_id = $requestData->area_level_id;
         $statusFilter = $requestData->position_status;  //POCOR-7445
-        $AcademicPeriodsTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
@@ -59,7 +58,8 @@ class InstitutionPositionsSummariesTable extends AppTable
            $statusFilters = "AND institution_positions.status_id = ".$statusFilter;
         }
         if ($academicperiodid != -1) {
-            $where[$AcademicPeriodsTable->aliasField('id')] = $academicperiodid; 
+            // Join uses table name 'academic_periods' as alias, not the model alias AcademicPeriods
+            $where['academic_periods.id'] = $academicperiodid;
         }
         if ($institutionId == 0) { 
            $condition = NULL;
