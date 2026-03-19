@@ -470,4 +470,24 @@ class CustomReportsTable extends AppTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    //POCOR-9600 Start
+    public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $Area = TableRegistry::getTableLocator()->get('Area.Areas');
+            $areaOptions = $Area->find('list', ['keyField' => 'id',
+                                'valueField' => 'name'])
+                            ->find('visible')
+                            
+                            ->order([$Area->aliasField('id')])
+                            ->toArray();
+
+            $attr['onChangeReload'] = true;
+            $attr['options'] = $areaOptions;
+            $attr['type'] = 'select';
+            $attr['required'] = true;
+            return $attr;
+        }
+    }
+    //POCOR-9600 End
 }
