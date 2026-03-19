@@ -1007,7 +1007,7 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Failed to store student data.');
         }
     }
-    
+
     public function getUsersGender($request)
     {
         try {
@@ -1041,8 +1041,6 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Users Gender Data Not Found');
         }
     }
-
-
 
     public function saveStaffData($request)
     {
@@ -1709,7 +1707,6 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Failed to store staff data.');
         }
     }
-
 
     public function saveGuardianData($request)
     {
