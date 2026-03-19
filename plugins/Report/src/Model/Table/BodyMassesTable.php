@@ -47,7 +47,7 @@ class BodyMassesTable extends AppTable
 
     public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
 
@@ -225,14 +225,14 @@ class BodyMassesTable extends AppTable
                 $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                 $areasData = $areas1
                             ->find()
-                            ->where([$areas1->alias('code')=>$row->area_code])
+                            ->where([$areas1->aliasField('code') => $row->area_code])
                             ->first();
                 $row['region_code'] = '';
                 $row['region_name'] = '';
                 if($areasData->parent_id){ // POCOR-9070
                     $areas = TableRegistry::getTableLocator()->get('Area.Areas');
                     $areaLevels = TableRegistry::getTableLocator()->get('Area.AreaLevels');
-                    $institutions = TableRegistry::getTableLocator()->get('Instituion.Institutions');
+                    $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
                     $val = $areas
                                 ->find()
                                 ->select([

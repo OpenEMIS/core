@@ -23,9 +23,9 @@ class ImportResultBehavior extends ImportBehavior
     public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' tableAlias=' . $this->_table->getAlias()); //[TEMP-LOG]
-        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons buttons_add_action=' . json_encode($buttons['add']['url']['action'] ?? 'not_set')); //[TEMP-LOG]
-        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
+        //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' tableAlias=' . $this->_table->getAlias()); //[TEMP-LOG]
+        //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons buttons_add_action=' . json_encode($buttons['add']['url']['action'] ?? 'not_set')); //[TEMP-LOG]
+        //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
         //POCOR-9584: end
         switch ($action) {
             case 'add':
@@ -39,7 +39,7 @@ class ImportResultBehavior extends ImportBehavior
                     unset($data['select_file']);
                     $data['institution_id'] = $this->institutionId;
                     //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-                    // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons ImportOutcomeResults downloadData=' . json_encode($data)); //[TEMP-LOG]
+                    //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons ImportOutcomeResults downloadData=' . json_encode($data)); //[TEMP-LOG]
                     //POCOR-9584: end
                     $downloadUrl[1] = $this->_table->paramsEncode($data);
                 } else {
@@ -61,8 +61,8 @@ class ImportResultBehavior extends ImportBehavior
 
         //back button
         //POCOR-9584: start - log back button construction for debugging
-        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' pass=' . json_encode($this->_table->request->getParam('pass')) . ' institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
-        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_initial=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
+        //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons action=' . $action . ' pass=' . json_encode($this->_table->request->getParam('pass')) . ' institutionId=' . json_encode($this->institutionId ?? null)); //[TEMP-LOG]
+        //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_initial=' . json_encode($toolbarButtons['back']['url'] ?? null)); //[TEMP-LOG]
         //POCOR-9584: end
         if (!empty($this->getConfig('backUrl'))) {
             //POCOR-9158 start
@@ -121,7 +121,7 @@ class ImportResultBehavior extends ImportBehavior
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
             //POCOR-9584: start - log back array before merge
-            // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons back=' . json_encode($back) . ' toolbarBackUrl_before_merge=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
+            //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons back=' . json_encode($back) . ' toolbarBackUrl_before_merge=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
             //POCOR-9584: end
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
         } else {
@@ -135,7 +135,7 @@ class ImportResultBehavior extends ImportBehavior
         unset($toolbarButtons['back']['url']['period']); //POCOR-9584: legacy period param from old query string
         //POCOR-9584: end
         //POCOR-9584: start - log final back URL
-        // Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_final=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
+        //// Log::debug('@ImportResultBehavior::onUpdateToolbarButtons toolbarBackUrl_final=' . json_encode($toolbarButtons['back']['url'])); //[TEMP-LOG]
         //POCOR-9584: end
     }
 

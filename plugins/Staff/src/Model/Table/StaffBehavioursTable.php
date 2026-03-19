@@ -31,6 +31,68 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->addBehavior('Staff.StaffTab');
     }
 
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
+        return $events;
+    }
+
+    /**
+     * Set Overview and Attachments tabs on view (same as Institution.StaffBehaviours view).
+     */
+    public function viewBeforeAction(EventInterface $event)
+    {
+        $tabElements = $this->getStaffBehaviourTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->getAlias());
+    }
+
+    /**
+     * Tab elements for Staff Behaviour view: Overview (current) and Attachments.
+     */
+    public function getStaffBehaviourTabElements($options = [])
+    {
+        $tabElements = [];
+        $paramPass = $this->request->getParam('pass');
+        $ids = isset($paramPass[1]) ? $this->paramsDecode($paramPass[1]) : [];
+        if (empty($ids['id'])) {
+            return $this->controller->TabPermission->checkTabPermission($tabElements);
+        }
+        $staffBehaviourId = $ids['id'];
+        $institutionId = $ids['institution_id'] ?? $this->getInstitutionID();
+        if (!$institutionId) {
+            return $this->controller->TabPermission->checkTabPermission($tabElements);
+        }
+        $queryString = $this->paramsEncode([
+            'staff_behaviour_id' => $staffBehaviourId,
+            'institution_id' => $institutionId,
+        ]);
+        $tabElements = [
+            'StaffBehaviours' => [
+                'url' => [
+                    'plugin' => 'Staff',
+                    'controller' => 'Staff',
+                    'action' => 'Behaviours',
+                    '0' => 'view',
+                    '1' => $paramPass[1],
+                ],
+                'text' => __('Overview'),
+            ],
+            'StaffBehaviourAttachments' => [
+                'url' => [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'StaffBehaviourAttachments',
+                    '0' => 'index',
+                    '1' => $queryString,
+                ],
+                'text' => __('Attachments'),
+            ],
+        ];
+        return $this->controller->TabPermission->checkTabPermission($tabElements);
+    }
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('staff_id', ['visible' => false]);
@@ -98,19 +160,28 @@ class StaffBehavioursTable extends ControllerActionTable
         parent::onUpdateActionButtons($event, $entity, $buttons);
 
         if (isset($buttons['view'])) {
-            $url = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'StaffBehaviours',
-                'view',
-                $this->paramsEncode(['id' => $entity->id]),
-                'institution_id' => $entity->institution->id,
-            ];
-            $buttons['view']['url'] = $url;
-
             // POCOR-1893 unset the view button on profiles controller
             if ($this->controller->getName() == 'Profiles') {
                 unset($buttons['view']);
+            } else {
+                // Stay in Staff plugin for view so we never hit Institution controller (avoids redirect to Dashboard for non-admin roles)
+                $params = [
+                    'id' => $entity->id,
+                    'institution_id' => $entity->institution_id ?? (isset($entity->institution->id) ? $entity->institution->id : null),
+                    'staff_id' => $entity->staff_id ?? null,
+                    'user_id' => $entity->staff_id ?? null,
+                ];
+                $params = array_filter($params);
+                if (empty($params['institution_id']) && !empty($entity->institution)) {
+                    $params['institution_id'] = $entity->institution->id;
+                }
+                $buttons['view']['url'] = [
+                    'plugin' => 'Staff',
+                    'controller' => 'Staff',
+                    'action' => 'Behaviours',
+                    '0' => 'view',
+                    '1' => $this->paramsEncode($params),
+                ];
             }
         }
 

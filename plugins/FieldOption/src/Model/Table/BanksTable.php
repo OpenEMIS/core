@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
+use Cake\ORM\Entity;
 
 class BanksTable extends ControllerActionTable {
 	public function initialize(array $config): void
