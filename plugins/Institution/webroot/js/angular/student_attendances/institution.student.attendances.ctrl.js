@@ -675,6 +675,13 @@ function InstitutionStudentAttendancesController(
             // single day
             vm.totalStudents = vm.classStudentList.length;
             if (vm.isMarked) {
+                //POCOR-9609: no_scheduled_class day — counts are not meaningful
+                if (vm.totalStudents > 0 && vm.classStudentList[0].no_scheduled_class == 1) {
+                    vm.presentCount = "-";
+                    vm.absenceCount = "-";
+                    vm.lateCount = "-";
+                    return;
+                }
                 var presentCount = 0;
                 var absenceCount = 0;
                 var lateCount = 0;
