@@ -32,6 +32,67 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
         ]);
     }
 
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.view.beforeAction'] = 'viewBeforeAction';
+        return $events;
+    }
+
+    /**
+     * When view is requested with id=null but composite keys present (old/wrong URL),
+     * look up the record by composite key and redirect to the same view with correct id.
+     * Prevents "Expression `FeederIncomingInstitutions.id` is missing operator (IS, IS NOT) with `null` value".
+     */
+    public function viewBeforeAction(EventInterface $event)
+    {
+        $encodedPass = $this->paramsPass(0);
+        if (empty($encodedPass)) {
+            return null;
+        }
+        try {
+            $ids = $this->paramsDecode($encodedPass);
+        } catch (\Cake\Controller\Exception\SecurityException $e) {
+            return null;
+        }
+        if (!isset($ids['id']) || $ids['id'] !== null) {
+            return null;
+        }
+        $institutionId = $ids['institution_id'] ?? null;
+        $academicPeriodId = $ids['academic_period_id'] ?? null;
+        $educationGradeId = $ids['education_grade_id'] ?? null;
+        $feederInstitutionId = $ids['feeder_institution_id'] ?? null;
+        if ($institutionId === null || $academicPeriodId === null || $educationGradeId === null || $feederInstitutionId === null) {
+            return null;
+        }
+        $entity = $this->find()
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('feeder_institution_id') => $feederInstitutionId,
+            ])
+            ->first();
+        if (!$entity || !$entity->get('id')) {
+            return null;
+        }
+        $correctIds = [
+            'id' => $entity->get('id'),
+            'institution_id' => $institutionId,
+            'academic_period_id' => $academicPeriodId,
+            'education_grade_id' => $educationGradeId,
+            'feeder_institution_id' => $feederInstitutionId,
+        ];
+        $query = $this->request->getQueryParams();
+        $url = array_merge(
+            ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'FeederIncomingInstitutions', 'view', $this->paramsEncode($correctIds)],
+            ['?' => $query]
+        );
+        $event->setResult($this->controller->redirect($url));
+        $event->stopPropagation();
+        return $event->getResult();
+    }
+
     public function onGetCode(EventInterface $event, Entity $entity)
     {
         $value = '';
@@ -153,6 +214,7 @@ class FeederIncomingInstitutionsTable  extends ControllerActionTable
 
         $query
             ->select([
+                $this->aliasField('id'),
                 'institution_id',
                 'feeder_institution_id',
                 'academic_period_id',

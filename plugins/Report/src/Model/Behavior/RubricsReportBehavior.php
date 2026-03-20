@@ -62,7 +62,12 @@ class RubricsReportBehavior extends Behavior {
             }
         }
         if ($institutionId == 0) {
-            $newCondition['Institutions.id IN'] = $institutionIds;
+            if (!empty($institutionIds)) {
+                $newCondition['Institutions.id IN'] = $institutionIds;
+            } else {
+                // User has no institution access - return no rows (avoid empty IN list)
+                $newCondition[$this->_table->aliasField('institution_id')] = -1;
+            }
         }
         /*POCOR-6296 ends*/
 		$condition = [
