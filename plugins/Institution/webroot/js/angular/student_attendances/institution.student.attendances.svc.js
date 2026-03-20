@@ -984,8 +984,8 @@ function InstitutionStudentAttendancesSvc(
             menuTabs: [],
             suppressSorting: true,
             cellRenderer: function (params) {
-                if (angular.isDefined(params.data) && params.data.no_scheduled_class == 1) { //POCOR-9609: always show kd-null for no_scheduled_class, even if student_absence_reason_id is undefined
-                    return '<i class="kd-null btn btn-xs btn-default"></i>';
+                if (angular.isDefined(params.data) && params.data.no_scheduled_class == 1) { //POCOR-9609: show dash for no_scheduled_class rows, consistent for all students
+                    return '<i class="fa fa-minus"></i>';
                 }
                 if (angular.isDefined(params.value)) {
                     var data = params.data;
