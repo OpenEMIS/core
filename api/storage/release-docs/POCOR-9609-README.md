@@ -32,11 +32,19 @@ Now when `changeDay()` reloads the grid, the `no_scheduled_class: 1` value alrea
 
 Reduced the default width of the right filter panel from 20% → 15% (`min-size-p` and `size-p` attributes on the filter `bg-pane`).
 
+### Reason/Comment column fix (JS)
+
+**File:** `plugins/Institution/webroot/js/angular/student_attendances/institution.student.attendances.svc.js`
+
+The Reason/Comment column `cellRenderer` was inconsistent on "No Scheduled Classes" days: some students showed a `-` icon while others showed an empty cell. Root cause: the renderer checked `student_absence_reason_id` via `angular.isDefined(params.value)` before any other logic — students whose `student_absence_reason_id` was undefined in the row data returned an empty cell before reaching the `no_scheduled_class` check.
+
+Fix: added an early return at the very top of the `cellRenderer` — if `data.no_scheduled_class == 1`, return `<i class="fa fa-minus"></i>` immediately, regardless of `student_absence_reason_id`. All students on a no-lessons day now consistently show the minus icon in the Reason/Comment column.
+
 ### Files Changed Summary
 
 | File | Change |
 |------|--------|
-| `plugins/Institution/webroot/js/angular/student_attendances/institution.student.attendances.svc.js` | Fix field name `is_NoClassScheduled` → `no_scheduled_class` (2 places) |
+| `plugins/Institution/webroot/js/angular/student_attendances/institution.student.attendances.svc.js` | Fix field name `is_NoClassScheduled` → `no_scheduled_class` (2 places); fix Reason/Comment column inconsistency with early return for `no_scheduled_class == 1` |
 | `plugins/Institution/templates/Institutions/student_attendances.php` | Filter panel width: 20% → 15% |
 
 ### Database Migrations
