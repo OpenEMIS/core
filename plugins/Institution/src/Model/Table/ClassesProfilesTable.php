@@ -107,7 +107,6 @@ class ClassesProfilesTable extends ControllerActionTable
 
     public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
-        ////Log::debug('@ClassesProfilesTable::onUpdateActionButtons ENTRY entity=' . json_encode($entity->toArray())); //[TEMP-LOG]
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         // check if report card request is valid
         $reportCardId = $this->request->getQuery('class_profile_template_id');
@@ -131,30 +130,41 @@ class ClassesProfilesTable extends ControllerActionTable
             ];
 
             // Download button, status must be generated or published
-            if ($this->hasProfileFunctionPermission(self::DOWNLOAD_FUNCTION_NAME, self::FUNCTION_CONTROLLER) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) { //POCOR-9598: replaced AccessControl->check with security_role_functions execute check
-                //START:POCOR-6667
-                $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
-                $buttons['viewPdf'] = [
-                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
-                    'attr' => $indexAttr,
-                    'url' => $viewPdfUrl
-                ];
-                //END:POCOR-6667
-                $downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
-                $buttons['downloadPdf'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
-                    'attr' => $indexAttr,
-                    'url' => $downloadPdfUrl
-                ];
-                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+            if ($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'downloadExcel'])
+                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
+            {
+                $downloadUrl = $this->url('downloadExcel');
+                $downloadUrl['1'] = $queryString;
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
                     'attr' => $indexAttr,
                     'url' => $downloadUrl
                 ];
             }
+
+            //POCOR-9585 start
+            if($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'download']) &&
+             $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED]))
+            {
+                $viewPdfUrl = $this->url('viewPDF');
+                $viewPdfUrl['1'] = $queryString;
+                $buttons['viewPdf'] = [
+                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
+                    'attr' => $indexAttr,
+                    'url' => $viewPdfUrl
+                ];
+
+                $downloadPdfUrl =$this->url('downloadPDF');
+                $downloadPdfUrl['1'] = $queryString;
+                $buttons['downloadPdf'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadPdfUrl
+                ];
+            } //POCOR-9585 end
+
             // Generate button, all statuses
-            if ($this->hasProfileFunctionPermission(self::GENERATE_FUNCTION_NAME, self::FUNCTION_CONTROLLER)) { //POCOR-9598: replaced AccessControl->check with security_role_functions execute check
+            if ($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'generate'])) {
                 $generateUrl = $this->setQueryString($this->url('generate'), $params);
 
                 $reportCard = $this->ReportCards
@@ -172,18 +182,20 @@ class ClassesProfilesTable extends ControllerActionTable
                 }
                 $date = FrozenTime::now()->format('Y-m-d');
 
-                ////Log::debug('@ClassesProfilesTable::onUpdateActionButtons dateCheck generateStartDate=' . ($generateStartDate ?? 'NULL') . ' generateEndDate=' . ($generateEndDate ?? 'NULL') . ' today=' . $date . ' reportCardId=' . $reportCardId . ' entityId=' . ($entity->id ?? 'NULL')); //[TEMP-LOG]
-
-                //POCOR-9598: start - hide Generate button when window is closed instead of showing broken javascript:void(0)
                 if ((!empty($generateStartDate) && !empty($generateEndDate)) && ($date >= $generateStartDate && $date <= $generateEndDate)) {
                     $buttons['generate'] = [
                             'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
                             'attr' => $generateAttr,
                             'url' => $generateUrl
                             ];
+                } else {
+                    $generateAttr['title'] = $this->getMessage('ClassesProfiles.date_closed');
+                    $buttons['generate'] = [
+                            'label' => '<i class="fa fa-refresh"></i>'. __('Generate'),
+                            'attr' => $generateAttr,
+                            'url' => 'javascript:void(0)'
+                            ];
                 }
-                // Window closed — Generate button not shown (was: javascript:void(0) with broken tooltip)
-                //POCOR-9598: end
             }
             // Publish button, status must be generated
             if ($this->AccessControl->check(['Institutions', 'ClassesProfiles', 'publish']) && $entity->has('report_card_status')

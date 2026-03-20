@@ -28,17 +28,20 @@ class StaffOutOfSchoolTable extends AppTable  {
         $conditions=[];
 
         $join['areas'] = [
+            'table' => 'areas',
             'type' => 'left',
-            'conditions'=>[ 'areas.id = StaffOutOfSchool.address_area_id']
-            ]; 
+            'conditions' => ['areas.id = StaffOutOfSchool.address_area_id']
+        ];
         $join['area_administratives'] = [
+            'table' => 'area_administratives',
             'type' => 'left',
-            'conditions'=>[ 'area_administratives.id = StaffOutOfSchool.birthplace_area_id']
-            ]; 
+            'conditions' => ['area_administratives.id = StaffOutOfSchool.birthplace_area_id']
+        ];
         $join['genders'] = [
+            'table' => 'genders',
             'type' => 'inner',
-            'conditions'=>[ 'genders.id = StaffOutOfSchool.gender_id']
-            ]; 
+            'conditions' => ['genders.id = StaffOutOfSchool.gender_id']
+        ]; 
     
         $join['school_staff'] = [
         'type' => 'left',
