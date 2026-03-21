@@ -67,20 +67,24 @@ class TimetableOverviewService extends Controller
 
                     // Calculate time slots
                     $startTime = $value['schedule_interval']['shift']['shift_option']['start_time'];
-                    $checkRecord = InstitutionScheduleTimeslots::where('institution_schedule_interval_id', $value['institution_schedule_interval_id'])->get()->toArray();
+                    //POCOR-9594: order timeslots by 'order' field so cumulative time calc is correct
+                    $checkRecord = InstitutionScheduleTimeslots::where('institution_schedule_interval_id', $value['institution_schedule_interval_id'])
+                        ->orderBy('order', 'asc')
+                        ->get()->toArray();
 
                     $results = [];
                     $currentStartTime = new \DateTime($startTime); // Initial start time
 
                     foreach ($checkRecord as $val) {
-                        $intervalMinutes = $val['interval']; 
-                        $interval = new \DateInterval('PT' . $intervalMinutes . 'M');
+                        $intervalMinutes = $val['interval'];
+                        $interval = new \DateInterval('PT' . max(1, $intervalMinutes) . 'M');
                         // Clone the current start time for the end time calculation
                         $endTime = clone $currentStartTime;
                         $endTime->add($interval);
                         $formattedStartTime = $currentStartTime->format('H:i:s');
                         $formattedEndTime = $endTime->format('H:i:s');
                         $results[] = [
+                            'id' => $val['id'], //POCOR-9594: include timeslot ID for Angular component mapping
                             'start_time' => $formattedStartTime,
                             'end_time' => $formattedEndTime,
                             'interval' => $intervalMinutes
