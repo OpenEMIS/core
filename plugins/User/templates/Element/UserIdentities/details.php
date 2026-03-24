@@ -20,6 +20,7 @@
 							<th><?= __('Identity Number'); ?></th>
 							<th><?= __('Nationality'); ?></th>
 							<th><?= __('Preferred'); ?></th>
+							<th><?= __('Synced'); ?></th>
 						</tr>
 					</thead>
 					
@@ -29,7 +30,8 @@
 							<td class="vertical-align-top"><?php if(isset($index['identity_types']) && !empty($index['identity_types']['name'])) { echo $index['identity_types']['name']; } else { echo ''; } ?></td>
 							<td class="vertical-align-top"><?php echo !empty($index['number']) ? $index['number'] : ''; ?></td>
 							<td class="vertical-align-top"><?php if(isset($index['nationalities']) && !empty($index['nationalities']['name'])) { echo $index['nationalities']['name']; } else { echo ''; } ?></td>
-							<td class="vertical-align-top"><?php if($index['user_nationalities']['preferred'] == 1){ echo 'Yes'; } else{ echo 'No'; } ?></td>
+							<td class="vertical-align-top"><?php if($index['preferred'] == 1){ echo 'Yes'; } else{ echo 'No'; } ?></td>
+							<td class="vertical-align-top"><?php if($index['preferred'] == 1){ echo 'Yes'; } else{ echo 'No'; } ?></td>
 						</tr>
 						<?php } ?>
 					</tbody>				

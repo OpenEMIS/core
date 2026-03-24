@@ -380,7 +380,7 @@ class UserBehavior extends Behavior
                 $UserIdentities->aliasField('number'),
                 $UserIdentities->aliasField('nationality_id'),
                 $Nationalities->aliasField('name'),
-                $UserNationalities->aliasField('preferred')
+                $UserIdentities->aliasField('preferred')
             ])
             ->leftJoin(
                 [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],

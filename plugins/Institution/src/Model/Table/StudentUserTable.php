@@ -1518,6 +1518,32 @@ class StudentUserTable extends ControllerActionTable
 
     }
 
+    private
+    function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        //if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
+            $toolbarButtons = $extra['toolbarButtons'];
+            //$institutionStudentId = $extra['institutionStudentId'];
+            $institutionStudentId = $this->getQueryString('institution_student_id');
+            $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
+            $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'userSync', 'add'], $params);
+            // Show Promote button only if the Student Status is Current and academic period is editable
+            // Promote button
+            $promoteButton = $toolbarButtons['back'];
+            $promoteButton['type'] = 'button';
+            $promoteButton['label'] = '<i class="fa kd-graduate"></i>';
+            $promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+            $promoteButton['attr']['title'] = __('Promotion / Repeat');
+            $promoteButton['url'] = $action;
+            $promoteButton['url'][1] = $encodedQueryString;
+
+            $toolbarButtons['promote'] = $promoteButton;
+            //End
+        //}
+    }
+
     /**
      * POCOR-8003
      * @param ArrayObject $extra
