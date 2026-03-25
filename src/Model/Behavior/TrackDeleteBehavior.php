@@ -3,7 +3,7 @@ namespace App\Model\Behavior;
 
 use Exception;
 
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\Event\EventInterface;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
@@ -89,9 +89,9 @@ class TrackDeleteBehavior extends Behavior
                     'reference_table' => $source,
                     'reference_key' => $referenceKey,
                     'data' => json_encode($entityData),
-                    'deleted_date' => Time::now()->format('Ymd'),
+                    'deleted_date' => FrozenTime::now()->format('Ymd'),
                     'created_user_id' => $userId,
-                    'created' => Time::now()
+                    'created' => FrozenTime::now()
                 ]);
             $statement = $query->execute();
             $statement->closeCursor();
