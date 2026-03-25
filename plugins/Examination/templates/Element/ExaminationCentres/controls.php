@@ -2,6 +2,8 @@
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
+                $encodedQueryString = !empty($queryString) ? $queryString : $this->request->getQuery('queryString');
+
                 $url = [
                     'plugin' => $this->request->getParam('plugin'),
                     'controller' => $this->request->getParam('controller'),
@@ -9,8 +11,8 @@
                     'index'
                 ];
 
-                if (!empty($queryString)) {
-                    $url['queryString'] = $queryString;
+                if (!empty($encodedQueryString)) {
+                    $url['queryString'] = $encodedQueryString;
                 }
 
                 $baseUrl = $this->Url->build($url);
