@@ -80,7 +80,10 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
     {
-        $this->queryString = $this->request->getQuery['queryString'];
+        $this->queryString = $request->getQuery('queryString');
+        if (empty($this->queryString) && !empty($this->examCentreId)) {
+            $this->queryString = $this->ControllerAction->paramsEncode(['examination_centre_id' => $this->examCentreId]);
+        }
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
@@ -91,11 +94,17 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
-        if($this->examCentreId == null){
+        if ($this->examCentreId == null) {
             $this->examCentreId = 1;
         }
+
+        $this->queryString = $this->request->getQuery('queryString');
+        if (empty($this->queryString) && $this->examCentreId !== null) {
+            $this->queryString = $this->ControllerAction->paramsEncode(['examination_centre_id' => $this->examCentreId]);
+        }
+
+        $this->controller->getExamCentresTab();
         // Set the header of the page
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Students'));
