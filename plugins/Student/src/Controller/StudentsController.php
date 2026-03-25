@@ -11,6 +11,7 @@ use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Cake\Http\Client;
 
 class StudentsController extends AppController
 {
@@ -1174,5 +1175,95 @@ class StudentsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
     }
+
+    public function syncUser()
+    {
+        $userId = $this->request->getQuery('user_id');
+
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+
+        // Get user
+        $user = $SecurityUsers->get($userId);
+
+        if (empty($user->external_reference)) {
+            $this->Flash->error('User is not linked to external source');
+            return $this->redirect($this->referer());
+        }
+
+        // Get external config
+        $configs = $ExternalAttrs->find()
+            ->where(['external_data_source_type' => 'OpenEMIS Identity'])
+            ->all()
+            ->combine('attribute_field', 'value')
+            ->toArray();
+
+        $tokenUrl     = $configs['token_uri'];
+        $userEndpoint = $configs['user_endpoint_uri'];
+        $clientId     = $configs['client_id'];
+        $privateKey   = $configs['private_key'];
+
+        $http = new Client();
+
+        // Step 1: Get OAuth Token
+        $tokenResponse = $http->post($tokenUrl, [
+            'grant_type' => 'client_credentials',
+            'client_id' => $clientId,
+            'client_secret' => $privateKey
+        ]);
+
+        if (!$tokenResponse->isOk()) {
+            $this->Flash->error('Failed to get token');
+            return $this->redirect($this->referer());
+        }
+
+        $tokenData = $tokenResponse->getJson();
+        $accessToken = $tokenData['access_token'];
+
+        // Step 2: Call External API
+        $apiUrl = str_replace('{external_reference}', $user->external_reference, $userEndpoint);
+
+        $apiResponse = $http->get($apiUrl, [], [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $accessToken
+            ]
+        ]);
+
+        if (!$apiResponse->isOk()) {
+            $this->Flash->error('Failed to fetch user from external system');
+            return $this->redirect($this->referer());
+        }
+
+        $apiData = $apiResponse->getJson();
+
+        // Step 3: Map Fields
+        $user->first_name     = $apiData['first_name'] ?? $user->first_name;
+        $user->middle_name    = $apiData['middle_name'] ?? $user->middle_name;
+        $user->third_name     = $apiData['third_name'] ?? $user->third_name;
+        $user->last_name      = $apiData['last_name'] ?? $user->last_name;
+        $user->gender         = $apiData['gender']['name'] ?? $user->gender;
+        $user->date_of_birth  = $apiData['date_of_birth'] ?? $user->date_of_birth;
+
+        if ($SecurityUsers->save($user)) {
+
+            // Step 4: Update Sync Status
+            $student = $InstitutionStudents->find()
+                ->where(['security_user_id' => $userId])
+                ->first();
+
+            if ($student) {
+                $student->sync_status = 'synced';
+                $InstitutionStudents->save($student);
+            }
+
+            $this->Flash->success('User synced successfully');
+        } else {
+            $this->Flash->error('Failed to save user');
+        }
+
+        return $this->redirect($this->referer());
+    }
+        
 
 }
