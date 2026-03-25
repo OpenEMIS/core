@@ -590,6 +590,7 @@ class StudentUserTable extends ControllerActionTable
     private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
+        $this->addSyncButton($entity, $extra);
         $toolbarButtons['back']['url']['action'] = 'Students';
 
         // Export execute permission.
@@ -599,6 +600,7 @@ class StudentUserTable extends ControllerActionTable
             }
         }
         $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
+        
         if ($status_can_be_changed) {
             $this->addPromoteButton($entity, $extra);
             $this->addTransferButton($entity, $extra);
@@ -1414,6 +1416,7 @@ class StudentUserTable extends ControllerActionTable
             $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'IndividualPromotion', 'add'], $params);
             // Show Promote button only if the Student Status is Current and academic period is editable
             // Promote button
+           // $this->addSyncButton($entity, $extra);
             $promoteButton = $toolbarButtons['back'];
             $promoteButton['type'] = 'button';
             $promoteButton['label'] = '<i class="fa kd-graduate"></i>';
@@ -1425,6 +1428,33 @@ class StudentUserTable extends ControllerActionTable
             $toolbarButtons['promote'] = $promoteButton;
             //End
         }
+    }
+
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+            $toolbarButtons = $extra['toolbarButtons'];
+            //$institutionStudentId = $extra['institutionStudentId'];
+            $institutionStudentId = $this->getQueryString('institution_student_id');
+            $params = [
+                'student_id' => $institutionStudentId,
+                'user_id' => $entity->id
+            ];
+
+            $action = $this->setUrlParams([
+                'plugin' => 'Student',
+                'controller' => 'Students',
+                'action' => 'SyncUser'
+            ], $params);
+            $syncButton = $toolbarButtons['back'];
+            $syncButton['type'] = 'button';
+            $syncButton['label'] = '<i class="fa fa-refresh"></i>';
+            $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+            $syncButton['attr']['title'] = __('Sync');
+            $syncButton['url'] = $action;
+            $syncButton['url'][1] = $encodedQueryString;
+            $toolbarButtons['sync'] = $syncButton;
     }
 
     // needs to migrate
@@ -1516,32 +1546,6 @@ class StudentUserTable extends ControllerActionTable
             }
         }
 
-    }
-
-    private
-    function addSyncButton(Entity $entity, ArrayObject $extra)
-    {
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-        //if ($this->AccessControl->check([$this->controller->getName(), 'Promotion', 'add'])) {
-            $toolbarButtons = $extra['toolbarButtons'];
-            //$institutionStudentId = $extra['institutionStudentId'];
-            $institutionStudentId = $this->getQueryString('institution_student_id');
-            $params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-            $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'userSync', 'add'], $params);
-            // Show Promote button only if the Student Status is Current and academic period is editable
-            // Promote button
-            $promoteButton = $toolbarButtons['back'];
-            $promoteButton['type'] = 'button';
-            $promoteButton['label'] = '<i class="fa kd-graduate"></i>';
-            $promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-            $promoteButton['attr']['title'] = __('Promotion / Repeat');
-            $promoteButton['url'] = $action;
-            $promoteButton['url'][1] = $encodedQueryString;
-
-            $toolbarButtons['promote'] = $promoteButton;
-            //End
-        //}
     }
 
     /**
