@@ -2608,18 +2608,12 @@ SQL;
                         $row->week_attendance = $WeekDaysAbsenceArray[$studentId];
                         $row->current = date("d/m/Y", strtotime($weekStartDay)) . ' - ' . date("d/m/Y", strtotime($weekEndDay));
                             foreach ($WeekDaysAbsenceArray[$studentId] as $key => $value) {
-
-                                $day_value = "";
-                                if (sizeof($value) == 1) {
-                                    $day_value = $value[1];
-                                } else {
                                     foreach ($value as $period_key => $period_value) {
                                         if($period_value == 'NOTMARKED'){$period_value = '';}else{
 
                                         }
                                         $row->{'week_attendance_status_' . $key . '-' . $period_key} = $period_value;
                                     }
-//                                    $day_value = trim($day_value, '; ');
                                 }
                             }
                         }
