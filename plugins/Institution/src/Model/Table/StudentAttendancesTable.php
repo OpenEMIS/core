@@ -1172,7 +1172,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
                             $newArray[] = [
                                 'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
-                                'field' => 'week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
+                                'field' => 'week_attendance_status_' . $options[$value] . '-' . $PeriodData['id'],
                                 'type' => 'string',
                                 'label' => $options[$value] . '-' . $PeriodData['name']
                             ];
@@ -1181,7 +1181,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     } else {
                         $newArray[] = [
                             'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] . '-' . $getSubject->name,
-                            'field' => 'week_attendance_status_' . $options[$value] . '-' . $getSubject->name,
+                            'field' => 'week_attendance_status_' . $options[$value] . '-' . $getSubject->id,
                             'type' => 'string',
                             'label' => $options[$value] . '-' . $getSubject->name
                         ];
@@ -1265,6 +1265,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
         if ($query) {
             $results = $query->all();
+
             foreach ($results as $row) {
                 $studentId = $row->student_id;
                 $date = $row->date ?? '';
@@ -1443,7 +1444,7 @@ class StudentAttendancesTable extends ControllerActionTable
 //                $date = Chronos::createFromFormat($systemDateFormat, $rawDate);
                 $normalizedDate = $date->format('Y-m-d');
             } catch (\Exception $e) {
-                Log::warning("Invalid date format in Attendance params: '$rawDate' using format '$systemDateFormat'");
+//                Log::warning("Invalid date format in Attendance params: '$rawDate' using format '$systemDateFormat'");
                 $normalizedDate = $rawDate; // fallback — still use raw string, but might fail later
             }
         }
@@ -2455,7 +2456,6 @@ SQL;
                     },
                 ])
                     ->toArray();
-                //                    $this->log($wideQueryResult,'debug');
                 foreach ($wideQueryResult as $student => $markday) {
                     if (isset($WeekDaysAbsenceArray[$student])) {
                         $WeekDaysAbsenceArray[$student][$weekday][$periodId] = $markday[$date][$periodId];
@@ -2466,6 +2466,8 @@ SQL;
                 }
             }
         }
+        $sampleKeys = array_slice(array_keys($WeekDaysAbsenceArray), 0, 2);
+        $sample = array_intersect_key($WeekDaysAbsenceArray, array_flip($sampleKeys));
         return $WeekDaysAbsenceArray;
     }
 
@@ -2605,22 +2607,22 @@ SQL;
                     if (isset($WeekDaysAbsenceArray[$studentId])) {
                         $row->week_attendance = $WeekDaysAbsenceArray[$studentId];
                         $row->current = date("d/m/Y", strtotime($weekStartDay)) . ' - ' . date("d/m/Y", strtotime($weekEndDay));
-
-                        if (isset($this->request) && ('excel' === $this->request->pass[0])) {
                             foreach ($WeekDaysAbsenceArray[$studentId] as $key => $value) {
+
                                 $day_value = "";
                                 if (sizeof($value) == 1) {
                                     $day_value = $value[1];
                                 } else {
                                     foreach ($value as $period_key => $period_value) {
-                                        $day_value = $day_value . "; $period_key: " . $period_value;
+                                        if($period_value == 'NOTMARKED'){$period_value = '';}else{
+
+                                        }
+                                        $row->{'week_attendance_status_' . $key . '-' . $period_key} = $period_value;
                                     }
-                                    $day_value = trim($day_value, '; ');
+//                                    $day_value = trim($day_value, '; ');
                                 }
-                                $row->{'week_attendance_status_' . $key} = $day_value;
                             }
                         }
-                    }
                     return $row;
                 });
             });
