@@ -1631,13 +1631,14 @@ class InstitutionsController extends AppController
             //POCOR-8148:End
 
             // issue
+            //POCOR-9615: Fixed URL - removed redundant second encoding
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'excel',
-                $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
+                0 => 'excel',
+                1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId]), //POCOR-8886
+
             ];
 
             $importUrl = [
