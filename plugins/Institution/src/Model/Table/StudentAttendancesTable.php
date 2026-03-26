@@ -19,9 +19,7 @@ use Cake\Chronos\Date;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Core\Configure;
 use Cake\Log\Log;
-use Cake\Datasource\ConnectionManager;
-
-//POCOR-6658
+use Cake\Datasource\ConnectionManager; //POCOR-6658
 use Cake\ORM\Locator\TableLocator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Table;
@@ -70,12 +68,12 @@ class StudentAttendancesTable extends ControllerActionTable
             'Institution.InstitutionTab',
             ['appliedAction' => [
                 'Students' =>
-                    ['student_status_id', 'academic_period_id',],
+                ['student_status_id', 'academic_period_id',],
                 'StudentUser' =>
-                    [
-                        'student_status_id',
-                        'academic_period_id',
-                    ]
+                [
+                    'student_status_id',
+                    'academic_period_id',
+                ]
             ]]
         );
 
@@ -1395,14 +1393,13 @@ class StudentAttendancesTable extends ControllerActionTable
     }
 
     // POCOR-9406
-
     /**
      * Finder: ensures a marker row exists and resets no_scheduled_class for the slice,
      * then returns the original query filtered by class/grade/period.
      */
     public function findEditSavePeriodMarked(Query $query, array $options)
     {
-        $p = $this->normalizeAttendanceParams($options);
+        $p       = $this->normalizeAttendanceParams($options);
         $MarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
 //        Log::debug(print_r(['p' => $p], true));
         // 1) Reset only rows that actually need it (to avoid wide locks)
@@ -1430,7 +1427,7 @@ class StudentAttendancesTable extends ControllerActionTable
     private function normalizeAttendanceParams(array $options): array
     {
         $subjectRaw = $options['subject_id'] ?? null;
-        $subjectId = ($subjectRaw === null || $subjectRaw === '' || $subjectRaw === '0' || $subjectRaw === 0 || $subjectRaw === 'undefined')
+        $subjectId  = ($subjectRaw === null || $subjectRaw === '' || $subjectRaw === '0' || $subjectRaw === 0 || $subjectRaw === 'undefined')
             ? 0 : (int)$subjectRaw;
 
         // Normalize the date
@@ -1459,13 +1456,13 @@ class StudentAttendancesTable extends ControllerActionTable
         $period = ($attendanceBy === 'subject') ? 0 : (int)$options['attendance_period_id'];
 
         $p = [
-            'institution_id' => (int)$options['institution_id'],
+            'institution_id'       => (int)$options['institution_id'],
             'institution_class_id' => (int)$options['institution_class_id'],
-            'education_grade_id' => (int)$options['education_grade_id'],
-            'academic_period_id' => (int)$options['academic_period_id'],
-            'period' => $period,
-            'date' => $normalizedDate, // now normalized
-            'subject_id' => $subjectId,
+            'education_grade_id'   => (int)$options['education_grade_id'],
+            'academic_period_id'   => (int)$options['academic_period_id'],
+            'period'               => $period,
+            'date'                 => $normalizedDate, // now normalized
+            'subject_id'           => $subjectId,
         ];
 
         return $p;
@@ -1478,12 +1475,12 @@ class StudentAttendancesTable extends ControllerActionTable
     private function markedDayConditions(array $p, bool $includeSubject): array
     {
         $conds = [
-            'institution_id' => $p['institution_id'],
-            'academic_period_id' => $p['academic_period_id'],
+            'institution_id'       => $p['institution_id'],
+            'academic_period_id'   => $p['academic_period_id'],
             'institution_class_id' => $p['institution_class_id'],
-            'education_grade_id' => $p['education_grade_id'],
-            'date' => $p['date'],
-            'period' => $p['period'],
+            'education_grade_id'   => $p['education_grade_id'],
+            'date'                 => $p['date'],
+            'period'               => $p['period'],
         ];
         if ($includeSubject) {
             $conds['subject_id'] = $p['subject_id']; // 0 for subjectless
@@ -1518,7 +1515,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
         foreach (array_chunk($rows, 100) as $chunk) {
             $whereParts = [];
-            $params = [];
+            $params     = [];
 
             foreach ($chunk as $i => $pk) {
                 $whereParts[] = sprintf(
@@ -1527,13 +1524,13 @@ class StudentAttendancesTable extends ControllerActionTable
                 );
 
                 // Make sure date is valid format before adding it to query
-                $params["i{$i}"] = (int)$pk['institution_id'];
+                $params["i{$i}"]  = (int)$pk['institution_id'];
                 $params["ap{$i}"] = (int)$pk['academic_period_id'];
                 $params["ic{$i}"] = (int)$pk['institution_class_id'];
                 $params["eg{$i}"] = (int)$pk['education_grade_id'];
-                $params["d{$i}"] = (string)$pk['date'];
-                $params["p{$i}"] = (int)$pk['period'];
-                $params["s{$i}"] = (int)$pk['subject_id'];
+                $params["d{$i}"]  = (string)$pk['date'];
+                $params["p{$i}"]  = (int)$pk['period'];
+                $params["s{$i}"]  = (int)$pk['subject_id'];
             }
 
             $sql = 'UPDATE student_attendance_marked_records
@@ -1574,13 +1571,13 @@ SQL;
 
         $this->retryOnLock(function () use ($conn, $sql, $p) {
             $conn->execute($sql, [
-                'institution_id' => $p['institution_id'],
-                'academic_period_id' => $p['academic_period_id'],
+                'institution_id'       => $p['institution_id'],
+                'academic_period_id'   => $p['academic_period_id'],
                 'institution_class_id' => $p['institution_class_id'],
-                'education_grade_id' => $p['education_grade_id'],
-                'date' => $p['date'],
-                'period' => $p['period'],
-                'subject_id' => $p['subject_id'], // 0 allowed by schema/PK
+                'education_grade_id'   => $p['education_grade_id'],
+                'date'                 => $p['date'],
+                'period'               => $p['period'],
+                'subject_id'           => $p['subject_id'], // 0 allowed by schema/PK
             ]);
         });
     }
@@ -1591,10 +1588,10 @@ SQL;
     private function applyReturnFilter(Query $query, array $p): Query
     {
         return $query->find('list')->where([
-            'institution_id' => $p['institution_id'],
-            'academic_period_id' => $p['academic_period_id'],
+            'institution_id'       => $p['institution_id'],
+            'academic_period_id'   => $p['academic_period_id'],
             'institution_class_id' => $p['institution_class_id'],
-            'education_grade_id' => $p['education_grade_id'],
+            'education_grade_id'   => $p['education_grade_id'],
         ]);
     }
 
@@ -1618,11 +1615,11 @@ SQL;
     }
 
 
-    /*
-     * PCOOR-6658 STARTS
-     * Create function for save attendance for multigrade class also.
-     * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
-     */
+/*
+ * PCOOR-6658 STARTS
+ * Create function for save attendance for multigrade class also.
+ * author : Anubhav Jain <anubhav.jain@mail.vinove.com>
+ */
 //    public function findClassStudentsWithAbsenceSave(Query $query, array $options)
 //    {
 //        $institutionId = $options['institution_id'];
@@ -1685,8 +1682,7 @@ SQL;
               $institutionClassId,
               $educationGradeId,
               $institutionId
-    )
-    {
+    ) {
         $InstitutionStudents = self::getDynamicTableInstance('institution_students');
         $Users = self::getDynamicTableInstance('security_users');
         $Statuses = self::getDynamicTableInstance('student_statuses');
@@ -1732,7 +1728,7 @@ SQL;
                 $InstitutionStudents->aliasField('institution_id') => $institutionId,
                 $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
-                $Statuses->aliasField('code in ') => ['REPEATED', 'CURRENT', 'TRANSFERRED', 'WITHDRAWN', 'GRADUATED', 'PROMOTED'],
+                $Statuses->aliasField('code in ') => ['REPEATED', 'CURRENT', 'TRANSFERRED','WITHDRAWN','GRADUATED','PROMOTED'],
             ])->group([
                 $Users->aliasField('id')
             ])
@@ -1744,7 +1740,6 @@ SQL;
             );
         return $query;
     }
-
     /**
      * @param Query $query
      * @param $academicPeriodId
@@ -1756,12 +1751,11 @@ SQL;
 
     private function getAttendanceBasicQuery(
         Query $query,
-              $academicPeriodId,
-              $institutionClassId,
-              $educationGradeId,
-              $institutionId
-    )
-    {
+        $academicPeriodId,
+        $institutionClassId,
+        $educationGradeId,
+        $institutionId
+    ) {
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $Users = TableRegistry::getTableLocator()->get('Security.Users');
         $Classes = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
@@ -2076,17 +2070,17 @@ SQL;
         //        $this->log($subjectId, 'debug');
         $options = [
             $Details->aliasField('academic_period_id = ')
-            . $this->aliasField('academic_period_id'),
+                . $this->aliasField('academic_period_id'),
             $Details->aliasField('institution_class_id = ')
-            . $this->aliasField('institution_class_id'),
+                . $this->aliasField('institution_class_id'),
             //            $Details->aliasField('education_grade_id = ')
             //            . $this->aliasField('education_grade_id'),
             $Details->aliasField('student_id = ')
-            . $this->aliasField('student_id'),
+                . $this->aliasField('student_id'),
             $Details->aliasField('institution_id = ')
-            . $this->aliasField('institution_id'),
+                . $this->aliasField('institution_id'),
             $Details->aliasField('date = "')
-            . $day . '"'
+                . $day . '"'
         ];
 
         // POCOR-9572: Use attendance_by parameter to determine mode
@@ -2130,7 +2124,7 @@ SQL;
 
         $options = [
             $Types->aliasField('id = ')
-            . $Details->aliasField('absence_type_id'),
+                . $Details->aliasField('absence_type_id'),
         ];
 
         $query->leftJoin(
@@ -2302,16 +2296,15 @@ SQL;
         $query->select($selectFields);
         return $query;
     }
-
-    private function getAttendanceDailySelectFieldsNew(Query $query, $day, $archive = false)
+    private function getAttendanceDailySelectFieldsNew(Query $query, $day, $archive=false)
     {
         $Statuses = self::getDynamicTableInstance('student_statuses');
         $Users = self::getDynamicTableInstance('security_users');
         $Types = self::getDynamicTableInstance('absence_types');
         $Classes = self::getDynamicTableInstance('institution_classes');
         $Reasons = self::getDynamicTableInstance('student_absence_reasons');
-        $Details = self::getDynamicTableInstance('institution_student_absence_details');
-        $Records = self::getDynamicTableInstance('student_attendance_marked_records');
+        $Details =  self::getDynamicTableInstance('institution_student_absence_details');
+            $Records =  self::getDynamicTableInstance('student_attendance_marked_records');
 
         if ($archive) {
             $table_name = 'institution_student_absence_details';
@@ -2398,20 +2391,19 @@ SQL;
      */
     private function getWeekDaysAbsenceArray(
         Query $query,
-              $academicPeriodId,
-              $weekId,
-              $institutionId,
-              $institutionClassId,
-              $day,
-              $educationGradeId,
-              $weekStartDay,
-              $weekEndDay,
-              $attendancePeriodId,
-              $subjectId,
-              $attendanceBy = 'period', // POCOR-9572
-              $archive = false
-    )
-    {
+        $academicPeriodId,
+        $weekId,
+        $institutionId,
+        $institutionClassId,
+        $day,
+        $educationGradeId,
+        $weekStartDay,
+        $weekEndDay,
+        $attendancePeriodId,
+        $subjectId,
+        $attendanceBy = 'period', // POCOR-9572
+        $archive = false
+    ) {
         $dayList = $this->getWeekDaysList(
             $academicPeriodId,
             $weekId,
@@ -2564,8 +2556,7 @@ SQL;
         $subjectId,
         $day,
         $archive = false
-    )
-    {
+    ) {
         $table_name = 'student_attendance_marked_records';
         $tableLocator = new TableLocator();
         if (!$archive) {
@@ -2627,6 +2618,7 @@ SQL;
                             }
                         }
                     }
+
                     return $row;
                 });
             });
