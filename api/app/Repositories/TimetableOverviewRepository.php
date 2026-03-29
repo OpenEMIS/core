@@ -30,6 +30,10 @@ class TimetableOverviewRepository extends Controller
           if(isset($params['academic_period_id'])){
                 $timeSystem = $timeSystem->where('academic_period_id', $params['academic_period_id'])->where('institution_id', $params['institution_id'])->where('institution_class_id', $params['institution_class_id'])->where('institution_schedule_term_id', $params['institution_schedule_term_id']);
             }
+            //POCOR-9594: allow filtering by specific timetable ID to avoid returning a sibling timetable
+            if (isset($params['timetable_id']) && $params['timetable_id']) {
+                $timeSystem = $timeSystem->where('id', $params['timetable_id']);
+            }
            
             if(isset($params['order'])){
                 $orderBy = $params['order_by']??"ASC";

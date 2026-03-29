@@ -1671,6 +1671,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function findWorkingDayOfWeek(Query $query, array $options)
     {
         $workingDayOfWeek = $this->getWorkingDaysOfWeek();
+        \Cake\Log\Log::debug('@AcademicPeriodsTable::findWorkingDayOfWeek rawDays=' . json_encode($workingDayOfWeek)); //[TEMP-LOG]
 
         $dayOfWeek = [];
         foreach ($workingDayOfWeek as $index => $day) {
@@ -1680,6 +1681,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             ];
         }
 
+        \Cake\Log\Log::debug('@AcademicPeriodsTable::findWorkingDayOfWeek output=' . json_encode($dayOfWeek)); //[TEMP-LOG]
         return $query->formatResults(function (ResultSetInterface $results) use ($dayOfWeek) {
             return $dayOfWeek;
         });
