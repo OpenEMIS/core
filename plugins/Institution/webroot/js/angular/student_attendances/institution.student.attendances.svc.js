@@ -984,6 +984,9 @@ function InstitutionStudentAttendancesSvc(
             menuTabs: [],
             suppressSorting: true,
             cellRenderer: function (params) {
+                if (angular.isDefined(params.data) && params.data.no_scheduled_class == 1) { //POCOR-9609: show dash for no_scheduled_class rows, consistent for all students
+                    return '<i class="fa fa-minus"></i>';
+                }
                 if (angular.isDefined(params.value)) {
                     var data = params.data;
                     var context = params.context;
@@ -1435,7 +1438,7 @@ function InstitutionStudentAttendancesSvc(
                     data.absence_type_id === null
                         ? 0
                         : data.absence_type_id;
-                if (noScheduledClicked || data.is_NoClassScheduled == 1)
+                if (noScheduledClicked || data.no_scheduled_class == 1) //POCOR-9609: use no_scheduled_class (PHP field) instead of is_NoClassScheduled (old unused field)
                     //POCOR-8333
                     //if(noScheduledClicked)
                     var absenceTypeObj = {
@@ -1508,7 +1511,7 @@ function InstitutionStudentAttendancesSvc(
                         '<i style="color: #999999;" class="fa fa-minus"></i>';
                 } else {
                     // console.log('out')
-                    if (data.is_NoClassScheduled == 1) {
+                    if (data.no_scheduled_class == 1) { //POCOR-9609: use no_scheduled_class (PHP field) instead of is_NoClassScheduled (old unused field)
                         html =
                             '<i style="color: #000000;"><span>No Lessons</span></i>';
                     } else {
