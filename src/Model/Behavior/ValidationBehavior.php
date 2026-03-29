@@ -1107,6 +1107,79 @@ class ValidationBehavior extends Behavior
         return ($ageOfStudent<=$enrolmentMaximumAge) && ($ageOfStudent>=$enrolmentMinimumAge)? true: $validationErrorMsg;
     }
 
+    //POCOR-9607
+    public static function checkAdmissionAge($field, array $globalData)
+    {
+        // this function is ONLY catered for 'on' => 'create'
+        $model = $globalData['providers']['table'];
+        $data = $globalData['data'];
+        $validationErrorMsg = $model->getMessage('Institution.Students.student_name.ruleCheckAdmissionAgeWithEducationCycleGrade');
+
+        if (isset($data['openemis_no'])) {
+            // saving for existing students
+            $Students = TableRegistry::getTableLocator()->get('Institution.StudentUser');
+            $studentQuery = $Students->find()
+                ->select([$Students->aliasField('date_of_birth')])
+                ->where([$Students->aliasField('openemis_no') => $data['openemis_no']])
+                ->first();
+            ;
+            if ($studentQuery) {
+                $dateOfBirth = ($studentQuery->has('date_of_birth'))? $studentQuery->date_of_birth: null;
+            } else {
+                return $model->getMessage('Institution.Students.student_name.studentNotExists');
+            }
+        } else {
+            $dateOfBirth = new DateTime($field);
+        }
+
+        // for cases where date of birth is null, probably only in cases of data error
+        if (is_null($dateOfBirth)) {
+            return $validationErrorMsg;
+        }
+
+        // if (isset($_REQUEST['academic_period_id']) && !empty($_REQUEST['academic_period_id'])) {
+        //     $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        //     $academicPeriodData = $AcademicPeriods->get($_REQUEST['academic_period_id']);
+        //     if (!empty($academicPeriodData)) {
+        //         $academicStartDate = $academicPeriodData->start_date;
+        //         $academicStartYear = $academicStartDate->format('Y');
+        //     }
+        // }
+        // // academic period not set in form, return false because there is no way to validate
+        // if (!isset($academicStartYear)) {
+        //     return $validationErrorMsg;
+        // }
+        $data_date_of_birth = $data['date_of_birth'];
+        $data_date_of_birth = DateTime::createFromFormat('Y-m-d', $data_date_of_birth);
+        $data_date_of_birth = $data_date_of_birth->format('Y');
+        $current_year =  date("Y");
+        $birthYear = $dateOfBirth->format('Y');
+        // $ageOfStudent = $data_date_of_birth - $birthYear;
+        $ageOfStudent = $current_year - $data_date_of_birth;
+
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $enrolmentMinimumAge = $ConfigItems->value('report_outlier_min_age');
+        $enrolmentMaximumAge = $ConfigItems->value('report_outlier_max_age');
+
+        // if ($enrolmentMinimumAge == $enrolmentMaximumAge) {
+        //     $validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageHint', ['sprintf' => [$enrolmentMinimumAge]]);
+        // } else {
+        //     $validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageRangeHint', ['sprintf' => [$enrolmentMinimumAge, $enrolmentMaximumAge]]);
+        // }
+        $flag = 1;
+        if($ageOfStudent <= $enrolmentMinimumAge){
+             $flag = 0;
+             $validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageHint', ['sprintf' => [$enrolmentMinimumAge]]);
+        }
+        if($ageOfStudent >= $enrolmentMaximumAge){
+             $flag = 0;
+             $validationErrorMsg = $model->getMessage('Institution.Students.student_name.ageRangeHint', ['sprintf' => [$enrolmentMinimumAge, $enrolmentMaximumAge]]);
+        }
+        return $flag == 1 ? true: $validationErrorMsg;
+
+    }
+    //POCOR-9607
+
     public static function inAcademicPeriod($field, $academicFieldName, $options = [], $globalData)
     {
         if (array_key_exists($academicFieldName, $globalData['data'])) {
@@ -3459,72 +3532,143 @@ class ValidationBehavior extends Behavior
         }
     }
 
+    //POCOR-9707
+    // public static function forLatitudeLength($field, array $globalData)
+    // {
+    //     if(!empty($field)){
+    //         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+
+    //         $latitudeData = $ConfigItems->find()
+    //             ->select([
+    //                 $ConfigItems->aliasField('value'),
+    //                 $ConfigItems->aliasField('default_value'),
+    //             ])
+    //             ->where([
+    //                 $ConfigItems->aliasField('code') => 'latitude_length',
+    //             ])
+    //             ->first();
+
+    //         $default_length = 0;
+    //         if (!empty($latitudeData->value)) {
+    //             $default_length = $latitudeData->value;
+    //         } else {
+    //             $default_length = $latitudeData->default_value;
+    //         }
+
+    //         $latitude = explode(".",$globalData['data']['latitude']);
+    //         $latitude_length = strlen($latitude[1]);
+
+    //         if($latitude_length < $default_length) {
+    //             return false;
+    //         } else {
+    //             return true;
+    //         }
+    //     }
+
+    // }
+
+    ////POCOR-9707
     public static function forLatitudeLength($field, array $globalData)
     {
-        if(!empty($field)){
-            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-
-            $latitudeData = $ConfigItems->find()
-                ->select([
-                    $ConfigItems->aliasField('value'),
-                    $ConfigItems->aliasField('default_value'),
-                ])
-                ->where([
-                    $ConfigItems->aliasField('code') => 'latitude_length',
-                ])
-                ->first();
-
-            $default_length = 0;
-            if (!empty($latitudeData->value)) {
-                $default_length = $latitudeData->value;
-            } else {
-                $default_length = $latitudeData->default_value;
-            }
-
-            $latitude = explode(".",$globalData['data']['latitude']);
-            $latitude_length = strlen($latitude[1]);
-
-            if($latitude_length < $default_length) {
-                return false;
-            } else {
-                return true;
-            }
+        if (empty($field)) {
+            return true; // skip validation if empty
         }
 
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+
+        $latitudeData = $ConfigItems->find()
+            ->select([
+                'value',
+                'default_value'
+            ])
+            ->where([
+                'code' => 'latitude_length',
+            ])
+            ->first();
+
+        $default_length = !empty($latitudeData->value)
+            ? (int)$latitudeData->value
+            : (int)$latitudeData->default_value;
+
+        $latitudeValue = $globalData['data']['latitude'];
+
+        // Split decimal safely
+        $parts = explode('.', $latitudeValue);
+
+        // If no decimal part
+        if (count($parts) < 2) {
+            return false; // or true depending on requirement
+        }
+
+        $decimalLength = strlen($parts[1]);
+
+        // Enforce MAX decimal length (e.g., 2 digits only)
+        if ($decimalLength > $default_length) {
+            return false;
+        }
+
+        return true;
     }
 
+    //POCOR-9607
+    // public static function forLongitudeLength($field, array $globalData)
+    // {
+    //     if(!empty($field)){
+    //         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+
+    //         $longitudeData = $ConfigItems->find()
+    //             ->select([
+    //                 $ConfigItems->aliasField('value'),
+    //                 $ConfigItems->aliasField('default_value'),
+    //             ])
+    //             ->where([
+    //                 $ConfigItems->aliasField('code') => 'longitude_length',
+    //             ])
+    //             ->first();
+
+    //         $longitude = explode(".",$globalData['data']['longitude']);
+    //         $longitude_length = strlen($longitude[1]);
+
+    //         $default_length = 0;
+    //         if (!empty($longitudeData->value)) {
+    //             $default_length = $longitudeData->value;
+    //         } else {
+    //             $default_length = $longitudeData->default_value;
+    //         }
+
+    //         if($longitude_length < $default_length) {
+    //             return false;
+    //         } else {
+    //             return true;
+    //         }
+    //     }
+
+    // }
+
+    //POCOR-9607
     public static function forLongitudeLength($field, array $globalData)
     {
-        if(!empty($field)){
-            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-
-            $longitudeData = $ConfigItems->find()
-                ->select([
-                    $ConfigItems->aliasField('value'),
-                    $ConfigItems->aliasField('default_value'),
-                ])
-                ->where([
-                    $ConfigItems->aliasField('code') => 'longitude_length',
-                ])
-                ->first();
-
-            $longitude = explode(".",$globalData['data']['longitude']);
-            $longitude_length = strlen($longitude[1]);
-
-            $default_length = 0;
-            if (!empty($longitudeData->value)) {
-                $default_length = $longitudeData->value;
-            } else {
-                $default_length = $longitudeData->default_value;
-            }
-
-            if($longitude_length < $default_length) {
-                return false;
-            } else {
-                return true;
-            }
+        if (empty($field)) {
+            return true;
         }
 
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+
+        $longitudeData = $ConfigItems->find()
+            ->select(['value', 'default_value'])
+            ->where(['code' => 'longitude_length'])
+            ->first();
+
+        $default_length = !empty($longitudeData->value)
+            ? (int)$longitudeData->value
+            : (int)$longitudeData->default_value;
+
+        $longitudeValue = $globalData['data']['longitude'];
+
+        // Allow up to N decimal places
+        $pattern = '/^-?\d+(\.\d{1,' . $default_length . '})?$/';
+
+        return preg_match($pattern, $longitudeValue) === 1;
     }
 
     //POCOR-5975 starts
