@@ -980,8 +980,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                 $endDate = $period->end_date;
             }
             $weeks[$weekIndex++] = [$startDate, $endDate];
-            $startDate = $endDate->copy();
-            $startDate->addDay();
+            $startDate = $endDate->copy()->addDay(); //POCOR-9544: FrozenDate is immutable — capture addDay() return value to prevent week overlap
         } while ($endDate->lessThan($period->end_date));
 
         return $weeks;
