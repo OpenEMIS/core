@@ -6,6 +6,7 @@ use App\Http\Requests\AssessmentItemResultRequest;
 use Illuminate\Http\Request;
 use App\Services\InstitutionService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB; //POCOR-9594
 use App\Http\Requests\ReportCardCommentAdd;
 use App\Http\Requests\ReportCardCommentHomeroomAdd;
 use App\Http\Requests\CompetencyResultsAddRequest;
@@ -7579,6 +7580,42 @@ class InstitutionController extends Controller
             return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
         }
     }
+
+    //POCOR-9594: start - rooms with building+floor context for timetable lesson picker
+    public function roomsForTimetable($institutionId, Request $request)
+    {
+        try {
+            // institution_rooms has no academic_period_id; year-copies are linked via
+            // previous_institution_room_id. Group by (room, floor, building) + MAX(id)
+            // to deduplicate, keeping only the most recent record per physical location.
+            // INNER JOINs exclude orphaned rooms that have no floor or building.
+            $rooms = DB::table('institution_rooms as r')
+                ->join('institution_floors as f', 'r.institution_floor_id', '=', 'f.id')
+                ->join('institution_buildings as b', 'f.institution_building_id', '=', 'b.id')
+                ->where('r.institution_id', $institutionId)
+                ->groupBy('r.name', 'f.name', 'b.name')
+                ->orderBy('b.name')
+                ->orderBy('f.name')
+                ->orderBy('r.name')
+                ->select(
+                    DB::raw('MAX(r.id) as id'),
+                    'r.name',
+                    'f.name as floor_name',
+                    'b.name as building_name'
+                )
+                ->get()
+                ->map(function ($row) {
+                    $row->display_name = $row->name . ' (' . $row->building_name . ' — ' . $row->floor_name . ')';
+                    return $row;
+                });
+
+            return $this->sendSuccessResponse('Successful', $rooms);
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch rooms for timetable', ['message' => $e->getMessage()]);
+            return $this->sendErrorResponse('Unsuccessful', $e->getMessage());
+        }
+    }
+    //POCOR-9594: end
 
     public function subjectClasses($institutionId, $educationGradeId, $institutionSubjectId)
     {
