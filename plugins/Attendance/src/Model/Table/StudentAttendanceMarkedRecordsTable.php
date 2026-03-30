@@ -36,9 +36,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $path_uri = '/restful/v2/Attendance-StudentAttendanceMarkedRecords.json';
-        $requestMethod = isset($_SERVER['REQUEST_METHOD']) ? strtoupper($_SERVER['REQUEST_METHOD']) : '';
-        //POCOR-9617: guard against running this block during internal saves triggered by findNoScheduledClass (GET request)
-        if (is_int(strpos($_SERVER['REQUEST_URI'], $path_uri)) && in_array($requestMethod, ['POST', 'PUT', 'PATCH'])) {
+        $requestMethod = isset($_SERVER['REQUEST_METHOD']) ? strtoupper($_SERVER['REQUEST_METHOD']) : ''; //POCOR-9617
+        if (is_int(strpos($_SERVER['REQUEST_URI'], $path_uri)) && in_array($requestMethod, ['POST', 'PUT', 'PATCH'])) { //POCOR-9617: skip on GET (internal saves from findNoScheduledClass)
             $institution_id = $entity['institution_id'];
             $academic_period_id = $entity['academic_period_id'];
             $institution_class_id = $entity['institution_class_id'];
@@ -360,9 +359,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $period = $options['attendance_period_id']; //POCOR-8383
         $subjectId = isset($options['subject_id']) ? (int)$options['subject_id'] : 0; //POCOR-9617
 
-        //POCOR-9617: start - run logic directly instead of inside formatResults->map
-        // formatResults only fires for existing rows — if attendance was never marked
-        // the outer query returns nothing and the callback never runs, so nothing was saved.
+        //POCOR-9617: start
         $getRecord = $this->find('all')
             ->where([
                 $this->aliasField('institution_class_id') => $institutionClassId,
@@ -374,7 +371,6 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             ])->toArray();
 
         if (!empty($getRecord)) {
-            //POCOR-9617: existing record — update it to no_scheduled_class = 1
             $updateQuery = $this->query();
             $updateQuery->update()
                 ->set(['period' => $period, 'subject_id' => 0, 'no_scheduled_class' => 1])
@@ -388,7 +384,6 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 ])
                 ->execute();
         } else {
-            //POCOR-9617: no prior attendance marked — insert a new no_scheduled_class record
             $newRecord = $this->newEntity([
                 'institution_class_id' => $institutionClassId,
                 'education_grade_id' => $educationGradeId,
@@ -402,9 +397,6 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             $this->save($newRecord);
         }
 
-        //POCOR-9617: start - clear all student absence records for this day/period/subject
-        // Setting no_scheduled_class means no lessons occurred — any previously saved absences
-        // (and their comments) must be removed to avoid data inconsistency
         $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
         $absenceConditions = [
             $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $institutionId,
