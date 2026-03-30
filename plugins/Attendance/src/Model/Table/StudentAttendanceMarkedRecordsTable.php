@@ -36,7 +36,9 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $path_uri = '/restful/v2/Attendance-StudentAttendanceMarkedRecords.json';
-        if (is_int(strpos($_SERVER['REQUEST_URI'], $path_uri))) {
+        $requestMethod = isset($_SERVER['REQUEST_METHOD']) ? strtoupper($_SERVER['REQUEST_METHOD']) : '';
+        //POCOR-9617: guard against running this block during internal saves triggered by findNoScheduledClass (GET request)
+        if (is_int(strpos($_SERVER['REQUEST_URI'], $path_uri)) && in_array($requestMethod, ['POST', 'PUT', 'PATCH'])) {
             $institution_id = $entity['institution_id'];
             $academic_period_id = $entity['academic_period_id'];
             $institution_class_id = $entity['institution_class_id'];
