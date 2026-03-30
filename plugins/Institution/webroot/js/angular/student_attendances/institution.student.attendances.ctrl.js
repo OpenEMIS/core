@@ -1466,8 +1466,7 @@ function InstitutionStudentAttendancesController(
         vm.gridOptions.context.mode = vm.action;
         UtilsSvc.isAppendLoader(true);
 
-        //POCOR-9617: start - after saving no_scheduled_class, reload student list so grid reflects
-        // the change (previously only isMarked/columnDef were updated, student rows were stale)
+        //POCOR-9617: start
         InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(
             vm.getIsMarkedParams()
         )
@@ -1480,7 +1479,7 @@ function InstitutionStudentAttendancesController(
             .then(function (classStudents) {
                 vm.updateClassStudentList(classStudents);
                 vm.setGridData();
-                vm.setColumnDef(true); //POCOR-9617: pass noScheduledClicked=true so columns render as No Lessons
+                vm.setColumnDef(true);
                 vm.countStudentData();
                 AlertSvc.reset($scope);
             }, vm.error)
