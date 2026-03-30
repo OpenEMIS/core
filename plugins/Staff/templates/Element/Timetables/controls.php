@@ -12,12 +12,12 @@
         $this->Form->templates($template);
 
         
-        echo $this->Form->input('intitution_id', array(
+        echo $this->Form->input('institution_id', array(
             'class' => 'form-control',
             'label' => false,
             'options' => $selectedInstitutionOptions,
             'url' => $baseUrl,
-            'data-named-key' => 'intitution_id',
+            'data-named-key' => 'institution_id',
             //'default' => $selectedInstitutionOptions,
         ));
         
@@ -26,7 +26,7 @@
             'label' => false,
             'options' => $shiftOptions,
             'url' => $baseUrl,
-            'data-named-group' => 'intitution_id',
+            'data-named-group' => 'institution_id',
             'data-named-key' => 'shift',
             'default' => $shiftDefaultId
         ));

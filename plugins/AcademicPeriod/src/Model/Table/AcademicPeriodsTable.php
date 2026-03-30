@@ -284,7 +284,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     }
 
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         //        $entity = $this->find()->select(['current'])->where($ids)->first();
         $connection = $this->getConnection();
@@ -980,8 +980,7 @@ class AcademicPeriodsTable extends ControllerActionTable
                 $endDate = $period->end_date;
             }
             $weeks[$weekIndex++] = [$startDate, $endDate];
-            $startDate = $endDate->copy();
-            $startDate->addDay();
+            $startDate = $endDate->copy()->addDay(); //POCOR-9544: FrozenDate is immutable — capture addDay() return value to prevent week overlap
         } while ($endDate->lessThan($period->end_date));
 
         return $weeks;
@@ -1672,6 +1671,7 @@ class AcademicPeriodsTable extends ControllerActionTable
     public function findWorkingDayOfWeek(Query $query, array $options)
     {
         $workingDayOfWeek = $this->getWorkingDaysOfWeek();
+        \Cake\Log\Log::debug('@AcademicPeriodsTable::findWorkingDayOfWeek rawDays=' . json_encode($workingDayOfWeek)); //[TEMP-LOG]
 
         $dayOfWeek = [];
         foreach ($workingDayOfWeek as $index => $day) {
@@ -1681,6 +1681,7 @@ class AcademicPeriodsTable extends ControllerActionTable
             ];
         }
 
+        \Cake\Log\Log::debug('@AcademicPeriodsTable::findWorkingDayOfWeek output=' . json_encode($dayOfWeek)); //[TEMP-LOG]
         return $query->formatResults(function (ResultSetInterface $results) use ($dayOfWeek) {
             return $dayOfWeek;
         });

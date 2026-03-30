@@ -83,6 +83,12 @@ class ScholarshipsController extends AppController
     
     }
 
+    public function Qualifications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Qualifications']);
+    }
+
+
     // end
 
     public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)

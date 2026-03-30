@@ -76,6 +76,7 @@ export class StudentMealImportComponent implements OnInit {
   institution_id: any;
   academic_Period: any;
   selectedClassId: any;
+  meal_programme_id: any; //POCOR-9594: pre-selected meal programme from student-meals page
   meal_import_data: any;
   institution_name: string;
 
@@ -88,16 +89,19 @@ export class StudentMealImportComponent implements OnInit {
 
   ngOnInit(): void {
     this.institution_id = JSON.parse(localStorage.getItem("institution_id"));
-    // this.institution_id = 6;
     this.academic_Period = JSON.parse(localStorage.getItem("academic_Period"));
-    // this.academic_Period = 33;
+    //POCOR-9594: start - read pre-selected class and meal programme stored by student-meals page
+    this.selectedClassId = JSON.parse(localStorage.getItem("institution_class_id") || 'null');
+    this.meal_programme_id = JSON.parse(localStorage.getItem("meal_programme_id") || 'null');
+    //POCOR-9594: end
     this.institution_name = localStorage.getItem("institutionName");
     this.pageheader.pageheaderText = `${this.institution_name} - Import Student Attendances`
+    // console.log('@StudentMealImportComponent::ngOnInit', { institution_id: this.institution_id, academic_Period: this.academic_Period, selectedClassId: this.selectedClassId, meal_programme_id: this.meal_programme_id }); //[TEMP-LOG]
     this.loginData();
   }
 
   loginData() {
-    this.Rest.setSession();
+    // this.Rest.setSession(); //POCOR-9594: CakePHP template injects real credentials via sessionStorage
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('username');
@@ -154,7 +158,6 @@ export class StudentMealImportComponent implements OnInit {
   setTheme() {
     this.Rest.getWithToken('themes').subscribe({
       next: (response: any) => {
-        console.log(response?.data[3].default_value, "response");
         let selectedThemeData = '';
         if (response?.data[3].value) {
           selectedThemeData = response?.data[3].value;
@@ -244,15 +247,18 @@ export class StudentMealImportComponent implements OnInit {
     this.meal_import_data.data.References["Meal Programmes"].data = temp3;
     this.meal_import_data.data.References["OpenEMIS ID"].data = temp5;
     let referenceData = this.meal_import_data.data.References;
-    console.log(referenceData, "referenceData");
+    // console.log('@StudentMealImportComponent::exportToExcel', { referenceData }); //[TEMP-LOG]
 
     this.excelSvc.init('OpenEMIS_Core_Import_Institution_Meal_Students_Template', 'Import Student Meals Data', dataColumnHeadings, referenceNames, referenceData, dataValidationHeadings);
   }
 
   public generateImportTemplate() {
 
-    this.Rest.getItemExport(`institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}`).subscribe((res: any) => {
-      console.log(res, "res");
+    //POCOR-9594: pass meal_programme_id so the References sheet only shows the selected programme
+    const mealprogParam = this.meal_programme_id ? `&meal_programme_id=${this.meal_programme_id}` : '';
+    const templateUrl = `institutions/students/meals/import/template?institution_id=${this.institution_id}&institution_class_id=${this.selectedClassId}${mealprogParam}`;
+    // console.log('@StudentMealImportComponent::generateImportTemplate', { templateUrl, institution_id: this.institution_id, selectedClassId: this.selectedClassId, meal_programme_id: this.meal_programme_id }); //[TEMP-LOG]
+    this.Rest.getItemExport(templateUrl).subscribe((res: any) => {
       // this.meal_import_data = res;
       let url = window.URL.createObjectURL(res);
       let a = document.createElement('a');
@@ -270,6 +276,7 @@ export class StudentMealImportComponent implements OnInit {
   }
 
   getAPIData() {
+    // console.log('@StudentMealImportComponent::getAPIData', { institution_id: this.institution_id, academic_Period: this.academic_Period, selectedClassId: this.selectedClassId }); //[TEMP-LOG]
     this.Rest.getWithToken(`institutions/${this.institution_id}/classes?order=id&academic_period_id=${this.academic_Period}`).subscribe({
       next: (response: any) => {
         if (response) {
@@ -287,6 +294,14 @@ export class StudentMealImportComponent implements OnInit {
           classData[0].options = this.academic_class;
           this._confirmationData = [...classData];
           this.displayLoading = false;
+          //POCOR-9594: start - auto-select class if pre-set from student-meals page, showing file upload immediately
+          // console.log('@StudentMealImportComponent::getAPIData classes loaded', { count: this.academic_class.length, selectedClassId: this.selectedClassId, willAutoSelect: !!this.selectedClassId }); //[TEMP-LOG]
+          if (this.selectedClassId) {
+            classData[0].value = this.selectedClassId;
+            this._confirmationData = [...classData];
+            this.detectValue({ controlType: 'dropdown', value: this.selectedClassId });
+          }
+          //POCOR-9594: end
         }
       },
       error: (error: any) => {
@@ -301,7 +316,7 @@ export class StudentMealImportComponent implements OnInit {
   }
 
   detectValue(event: any) {
-    console.log(event, "event");
+    // console.log('@StudentMealImportComponent::detectValue', { controlType: event.controlType, value: event.value }); //[TEMP-LOG]
 
     if (event.controlType == "dropdown" && event.value != '') {
       this.selectedClassId = event.value;
@@ -357,9 +372,7 @@ export class StudentMealImportComponent implements OnInit {
         }
       ]
       this._formButtons = [...formButton]
-      console.log(this._formButtons, "_formButtons");
-
-      console.log(this._confirmationData, "_confirmationData");
+      // console.log('@StudentMealImportComponent::detectValue selectedClassId set', { selectedClassId: this.selectedClassId, formButtons: this._formButtons }); //[TEMP-LOG]
       // this._confirmationData[this._confirmationData.length - 1]['config']['leftButton'][0].callback = this.generateImportTemplate.bind(this);
     } else if (event.controlType == "dropdown" && event.value == '') {
       let confirmation = this._confirmationData;
@@ -380,7 +393,7 @@ export class StudentMealImportComponent implements OnInit {
   }
 
   _submitEvent(event: any) {
-    console.log(event, "event--");
+    // console.log('@StudentMealImportComponent::_submitEvent', { class: event.class, hasFile: !!event.select_file_to_import, institution_id: this.institution_id, academic_Period: this.academic_Period }); //[TEMP-LOG]
     if (event.class && event.select_file_to_import) {
       const formData = new FormData();
       formData.append('file', event.select_file_to_import);
@@ -389,15 +402,13 @@ export class StudentMealImportComponent implements OnInit {
       formData.append('academic_period_id', this.academic_Period);
       this.Rest.postImportTemplete('institutions/students/meals/import', formData).subscribe({
         next: (response: any) => {
-          console.log(response, "response");
+          // console.log('@StudentMealImportComponent::_submitEvent import success', { data: response.data }); //[TEMP-LOG]
           let toasterConfig: any = {
             title: 'Student meal imported successfully!!',
             showCloseButton: true,
             tapToDismiss: true,
           };
-          // localStorage.setItem("meal_imported",JSON.stringify(response.data));
           this._kdAlertEvent.info(toasterConfig);
-          console.log(response.data, "response.data");
           let meal_data = response.data;
           this.router.navigateByUrl('Institution/Institutions/ImportStudentMeals/results', {
             state: {
@@ -406,7 +417,7 @@ export class StudentMealImportComponent implements OnInit {
           });
         },
         error: (error) => {
-          console.log(error, "error");
+          // console.log('@StudentMealImportComponent::_submitEvent import error', { error }); //[TEMP-LOG]
           let toasterConfig: any = {
             title: 'Something went wrong, Please try again',
             showCloseButton: true,
@@ -429,7 +440,6 @@ export class StudentMealImportComponent implements OnInit {
   }
 
   _buttonEvent(event: any) {
-    console.log(event, "event");
     let tokenData = localStorage.getItem('encoded_url');
     if (tokenData) {
       this.router.navigateByUrl(`Institution/Institutions/StudentMeals/index/${tokenData}`);

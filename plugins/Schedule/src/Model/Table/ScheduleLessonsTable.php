@@ -70,6 +70,7 @@ class ScheduleLessonsTable extends ControllerActionTable
     public function findAllLessons(Query $query, array $options)
     {
         $timetableId = $options['institution_schedule_timetable_id'];
+        \Cake\Log\Log::debug('@ScheduleLessonsTable::findAllLessons timetableId=' . json_encode($timetableId) . ' options=' . json_encode($options)); //[TEMP-LOG]
 
         $query
             ->contain([
@@ -84,7 +85,12 @@ class ScheduleLessonsTable extends ControllerActionTable
             ])
             ->where([
                 $this->aliasField('institution_schedule_timetable_id') => $timetableId
-            ]);
+            ])
+            ->formatResults(function ($results) use ($timetableId) { //[TEMP-LOG]
+                $arr = $results->toArray(); //[TEMP-LOG]
+                \Cake\Log\Log::debug('@ScheduleLessonsTable::findAllLessons OUTPUT timetableId=' . json_encode($timetableId) . ' rowCount=' . count($arr)); //[TEMP-LOG]
+                return $arr; //[TEMP-LOG]
+            }); //[TEMP-LOG]
 
         return $query;
     }

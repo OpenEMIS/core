@@ -206,7 +206,7 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     loginData() {
-        // this.Rest.setSession();
+        // // this.Rest.setSession(); //POCOR-9594: CakePHP template injects real credentials via sessionStorage
         let token = localStorage.getItem("loginToken");
         if (!token) {
             let userName = sessionStorage.getItem('nbn');
@@ -367,7 +367,7 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     timeSlotById() {
-        this.Rest.getWithToken(`schedule/timetable-overview?limit=1&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.schedule_term_id}`).subscribe({
+        this.Rest.getWithToken(`schedule/timetable-overview?limit=1&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.schedule_term_id}&timetable_id=${this.timetable_id}`).subscribe({ //POCOR-9594: filter by timetable_id to avoid loading a sibling timetable's data
             next: (res:any)=>{
                 // console.log(res.data.data[0].time_slots) //array
                 const time_slots = res.data.data[0].time_slots;
@@ -432,6 +432,7 @@ export class StudentTimetableComponent implements OnInit {
                 // })
                 time_slots.forEach((element: any) => {
                     let obj = {
+                        timeslot_id: element?.id, //POCOR-9594: store actual DB timeslot ID for correct lesson mapping
                         time: `${element?.start_time} - ${element?.end_time}`,
                         data: [
                             {
@@ -529,7 +530,12 @@ export class StudentTimetableComponent implements OnInit {
         this.Rest.getWithToken(`schedules/timetables/${this.timetable_id}/lessons`).subscribe({
             next: (response: any) => {
                 response?.data.forEach((element: any, index: any) => {
-                    this.timetableData[element.institution_schedule_timeslot_id - 1].data[element.day_of_week - 1].subject = element?.schedule_lesson_details;
+                    //POCOR-9594: start - find row by actual timeslot ID instead of (id - 1) which only works for interval_id=1
+                    const rowIndex = this.timetableData.findIndex((row: any) => row.timeslot_id === element.institution_schedule_timeslot_id);
+                    if (rowIndex !== -1) {
+                        this.timetableData[rowIndex].data[element.day_of_week - 1].subject = element?.schedule_lesson_details;
+                    }
+                    //POCOR-9594: end
                 });
 
                 this.displayTable = true;
@@ -553,7 +559,7 @@ export class StudentTimetableComponent implements OnInit {
         this._kdSplitterEvent.toggleSubPane(true);
         this.showFullWidth = false;
         this.displayLessons = false;
-        this.Rest.getWithToken(`schedule/timetable-overview?limit=10&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.schedule_term_id}`).subscribe({
+        this.Rest.getWithToken(`schedule/timetable-overview?limit=10&page=1&academic_period_id=${this.academic_period_id}&institution_id=${this.institution_id}&institution_class_id=${this.institution_class_id}&institution_schedule_term_id=${this.schedule_term_id}&timetable_id=${this.timetable_id}`).subscribe({ //POCOR-9594: filter by timetable_id to avoid loading a sibling timetable's data
             next: (response: any) => {
                 console.log(response.data.data[0], "response");
                 if (response.data.data[0]) {
@@ -681,50 +687,48 @@ export class StudentTimetableComponent implements OnInit {
     }
 
     getInstitutionRooms() {
-        this.Rest.getWithToken(`institution-rooms?institution_id=${this.institution_id}&limit=100`, true).subscribe({
+        //POCOR-9594: start - rooms are institution-scoped and don't change within a session; fetch once and cache
+        if (this.institutionRoomData.length > 0) {
+            this.getInstitutionSubject();
+            return;
+        }
+        //POCOR-9594: end
+        this.Rest.getWithToken(`institutions/${this.institution_id}/rooms/for-timetable`).subscribe({ //POCOR-9594: use dedicated endpoint that includes building+floor in display name, sorted by building/floor/room
             next: (response: any) => {
                 if (response) {
-                    this.institutionRoomData = [];
-                    response?.data?.data.forEach((element: any) => {
-                        let obj = {
-                            id: element.id,
-                            name: element.name
-                        }
-                        this.institutionRoomData.push(obj);
+                    response?.data.forEach((element: any) => {
+                        this.institutionRoomData.push({ id: element.id, name: element.display_name });
                     });
                     this.institutionRoomData.unshift({ id: '', name: 'Select room' });
                     this.getInstitutionSubject();
                 }
             },
             error: (error: any) => {
-                if (error) {
-                    if (error.message == "Token Expired") {
-                        localStorage.removeItem("loginToken");
-                    }
+                if (error?.message == "Token Expired") {
+                    localStorage.removeItem("loginToken");
                 }
             }
         })
     }
 
     getInstitutionSubject() {
+        //POCOR-9594: start - subjects are class-scoped and don't change within a session; fetch once and cache
+        if (this.institutionSubject.length > 0) {
+            return;
+        }
+        //POCOR-9594: end
         this.Rest.getWithToken(`institutions/classes/${this.institution_class_id}/subjects`).subscribe({
             next: (response: any) => {
                 if (response) {
                     response?.data.forEach((element: any) => {
-                        let obj = {
-                            id: element?.institution_subject?.id,
-                            name: element?.institution_subject?.name
-                        }
-                        this.institutionSubject.push(obj);
+                        this.institutionSubject.push({ id: element?.institution_subject?.id, name: element?.institution_subject?.name });
                     });
                     this.institutionSubject.unshift({ id: '', name: 'Select Subject' });
                 }
             },
             error: (error: any) => {
-                if (error) {
-                    if (error.message == "Token Expired") {
-                        localStorage.removeItem("loginToken");
-                    }
+                if (error?.message == "Token Expired") {
+                    localStorage.removeItem("loginToken");
                 }
             }
         })
@@ -765,7 +769,7 @@ export class StudentTimetableComponent implements OnInit {
             if (this.addNewLesson[index].type == "curriculum") {
                 obj = {
                     "day_of_week": this.indexOfDay + 1,
-                    "institution_schedule_timeslot_id": this.indexOfRow + 1,
+                    "institution_schedule_timeslot_id": this.timetableData[this.indexOfRow]?.timeslot_id, //POCOR-9594: use actual timeslot ID
                     "institution_schedule_timetable_id": this.timetable_id,
                     "lesson_type": 1,
                     "schedule_curriculum_lesson": {
@@ -782,7 +786,7 @@ export class StudentTimetableComponent implements OnInit {
             } else {
                 obj = {
                     "day_of_week": this.indexOfDay + 1,
-                    "institution_schedule_timeslot_id": this.indexOfRow + 1,
+                    "institution_schedule_timeslot_id": this.timetableData[this.indexOfRow]?.timeslot_id, //POCOR-9594: use actual timeslot ID
                     "institution_schedule_timetable_id": this.timetable_id,
                     "lesson_type": 2,
                     "schedule_non_curriculum_lesson": {

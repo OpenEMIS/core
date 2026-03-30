@@ -1,3 +1,39 @@
+### [5.5.0] - 2026-03-30
+- Implemented: Develop a migration script to prevent duplicates in the summary_area_institution_grade_attendances database table
+- Implemented: Develop Infrastructure Utilities report
+- Implemented: Develop changes to the OpenEMIS Core API page to include the version number
+- Bug Fixed: Attendance>Students>Edit>Mark attendance>Click No Scheduled Classes: No schedule class is not working properly
+- Bug Fixed: Save Student API(Add/Update): API is not saving the Profile Photo correctly.
+- Bug Fixed: Instituitons>Students>Attendance: Last date of each week is overlapping the first day of the following week
+- Bug Fixed: Administration>System Setup>System Configurations>Products List (Dropdown): Error 404 seen on clicking Save on the Products List dropdown.
+- Bug Fixed: Institutions > Students > Timetable > View: Timetable is empty even though there is data for the class
+- Bug Fixed: Core>Institutions>Performance>Assessments>Edit: When entering grades in the Gradebook, selecting a grade cell and then clicking outside of the cell without entering a value triggers an error message.
+- Bug Fixed: Institutions > Performances > Report Cards : Investigate why placeholder for Male/Female students counts does not match Institution > Classes
+
+### [5.4.1] - 2026-03-19
+- Bug Fixed: Reports > Customs: Area Filters is not showing the proper data for country area
+- Bug Fixed: Institution>Academic>Feeders>Incoming: View is getting 404 error
+- Bug Fixed: CakePHP v5 Report Bugs.
+- Bug Fixed: Administration>System Setup>Field Options>Staff Positions Titles: Security roles is not updated even though field option security role is changed
+- Bug Fixed: Reports > Scholarship > Scholarship Applications Report: Add qualification level and qualification name columns
+- Bug Fixed: Administration>Performance>Assessment>Assessment Periods tab:The system rounds up the Period Weight 0.025 to 0.03.
+- Bug Fixed: Administration>Security>Roles: Download Institution Profile is divided into download institution pdf and download institution excel
+
+### [5.4.0] - 2026-03-13
+- Implemented: Develop changes to Infrastructure > Utilities > Internet, electricity and telephone pages
+- Implemented: Develop a search function for the assessment feature
+- Bug Fixed: Administration>Performance>Report Cards: When calculating Cumulative GPA, use the latest GPA for that term
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Institutions) : When logged in as a teacher.
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Administration)
+- Bug Fixed: Institutions > Survey > Form > Export : 404 error
+- Bug Fixed: Institutions>Academic>Classes>Edit: Label for Secondary Teacher is not working properly
+- Bug Fixed: Institutions>Students>List>Select Student>Overview page: The Nationality and the Identity are not visible in the overview page
+- Bug Fixed: Institution>Schedule>Interval>Edit: User getting 404 error when saving
+- Bug Fixed: Institutions>General>Institutions: Profile is stuck in progress
+- Bug Fixed: Report>Performance>Assessment: Change Assessment Period dropdown to a multi select filter page
+- Bug Fixed: Reports : Reports order are inconsistent
+- Bug Fixed: Administration > System Setup > Custom Fields > Institutions > Pages: Checkbox custom field is mandatory but user is still able to save without filling it up
+
 ### [5.3.0] - 2026-03-05
 - Implemented: Develop changes to institutions dropdown on the staff qualifications page
 - Bug Fixed: Institutions > Staff > General > Nationalities > Add: Getting 404 error when saved
