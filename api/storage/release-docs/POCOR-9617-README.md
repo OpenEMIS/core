@@ -21,12 +21,13 @@ Under Attendance > Students, clicking "No Scheduled Lessons" for a day where no 
 ### Files Changed Summary
 
 - **Added:** 0 files
-- **Modified:** 1 file
+- **Modified:** 2 files
 - **Removed:** 0 files
 
 | File | Change |
 |------|--------|
 | `plugins/Attendance/src/Model/Table/StudentAttendanceMarkedRecordsTable.php` | Refactored `findNoScheduledClass()` — removed `formatResults` wrapper, added direct insert/update logic and absence record deletion |
+| `plugins/Institution/webroot/js/angular/student_attendances/institution.student.attendances.ctrl.js` | `onNoScheduledClick()` — after saving, reload student list and refresh grid so UI reflects "No Lessons" state immediately |
 
 ### Database Migrations
 
