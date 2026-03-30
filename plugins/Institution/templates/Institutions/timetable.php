@@ -10,6 +10,7 @@
     localStorage.setItem('institutionName', '<?php echo $institutionName;?>');
     localStorage.setItem('institution_id', '<?php echo $institutionDefaultId;?>');
     localStorage.setItem('timetable_id', '<?php echo $timetable_id;?>');
+    localStorage.setItem('baseCoreUrl', '<?php echo $baseCoreUrl;?>'); //POCOR-9589: base URL for Angular SPA api/v4/ resolution
 </script>
 <div>
 	<?= $this->element('OpenEmis.breadcrumbs') ?>

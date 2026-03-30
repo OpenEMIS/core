@@ -27,6 +27,7 @@
                                     <tr *ngFor="let schedule of timetableData; let indexOfElement=index">
                                         <td style="width: 20%;">{{schedule.time}}</td>
                                         <td class="schedule-data"
+                                            [ngClass]="{'cell-editing': displayLessons && indexOfRow === indexOfElement && indexOfDay === inedxOfData}"
                                             (mouseenter)="setMouseOver(indexOfElement, inedxOfData)"
                                             (click)="showSubContent(indexOfElement, inedxOfData)"
                                             (mouseleave)="resetMouseOver()"
