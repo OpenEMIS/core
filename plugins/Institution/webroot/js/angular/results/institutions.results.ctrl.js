@@ -25,6 +25,10 @@ function InstitutionsResultsController($q,
     $scope.selectedAcademicTerm = undefined;
     $scope.editPermissionForSelectedSubject = false;
     $scope.editPermission = 0;
+    $scope.subjectSearchText = ''; //POCOR-7785: Initialize subject search filter
+    $scope.filteredSubjects = []; //POCOR-7785: Initialize filtered subjects array
+    $scope.studentSearchText = ''; //POCOR-7785: Initialize student search filter
+    $scope.allRowData = []; //POCOR-7785: Store original unfiltered student data
 
     function handleError(error) {
         // No Assessment
@@ -133,6 +137,8 @@ function InstitutionsResultsController($q,
 
              $scope.editPermission = result[0].is_editable;
             $scope.subjects = result;
+            //POCOR-7785: Initialize filtered subjects with all subjects for search functionality
+            $scope.filteredSubjects = angular.copy(result);
 
             promise = InstitutionsResultsSvc.getStudentStatusId("CURRENT");
             return promise.then(function (result) {
@@ -150,6 +156,91 @@ function InstitutionsResultsController($q,
             }
 
         }
+
+        //POCOR-7785: Subject search functionality - filter tabs by subject name
+        $scope.filterSubjects = function() {
+            var searchText = $scope.subjectSearchText.toLowerCase().trim();
+
+            if (searchText === '') {
+                // If search is empty, show all subjects
+                $scope.filteredSubjects = angular.copy($scope.subjects);
+            } else {
+                // Filter subjects based on name match
+                $scope.filteredSubjects = $scope.subjects.filter(function(subject) {
+                    return subject.name.toLowerCase().indexOf(searchText) !== -1;
+                });
+            }
+
+            // If the currently selected subject is not in filtered list, select the first available
+            if ($scope.filteredSubjects.length > 0) {
+                var currentSubjectExists = $scope.filteredSubjects.some(function(subject) {
+                    return $scope.subject && subject.id === $scope.subject.id;
+                });
+
+                if (!currentSubjectExists) {
+                    var firstSubject = $scope.filteredSubjects[0];
+                    $scope.onChangeSubject(firstSubject, firstSubject.is_editable);
+                }
+            } else {
+                // No subjects match search, clear the grid
+                if ($scope.gridOptions) {
+                    $scope.gridOptions.api.setRowData([]);
+                }
+            }
+        };
+
+        $scope.clearSearch = function() {
+            $scope.subjectSearchText = ''; //POCOR-7785: Clear subject search
+            $scope.filterSubjects();
+        };
+
+        //POCOR-7785: Student search functionality - filter grid rows by student name
+        $scope.filterStudents = function() {
+            $scope.applyStudentFilter();
+        };
+
+        $scope.applyStudentFilter = function() {
+            var searchText = $scope.studentSearchText.toLowerCase().trim(); //POCOR-7785
+
+            if (!$scope.allRowData || $scope.allRowData.length === 0) {
+                return;
+            }
+
+            var filteredData;
+
+            if (searchText === '') {
+                // If search is empty, show all students
+                filteredData = angular.copy($scope.allRowData);
+            } else {
+                // Filter students based on name match
+                filteredData = $scope.allRowData.filter(function(student) {
+                    // Check student name (user_name field typically contains student name)
+                    var studentName = (student.user_name || '').toLowerCase();
+                    // Also check other name fields if available
+                    var studentFirstName = (student.first_name || '').toLowerCase();
+                    var studentLastName = (student.last_name || '').toLowerCase();
+                    var combinedName = (student.name || '').toLowerCase();
+
+                    return studentName.indexOf(searchText) !== -1 ||
+                           studentFirstName.indexOf(searchText) !== -1 ||
+                           studentLastName.indexOf(searchText) !== -1 ||
+                           combinedName.indexOf(searchText) !== -1;
+                });
+            }
+
+            //POCOR-7785: Update grid with filtered student data
+            if ($scope.gridOptions) {
+                $scope.gridOptions.api.setRowData(filteredData);
+            }
+        };
+
+        //POCOR-7785: Watch for changes in subjects (e.g., when academic term changes) to reapply search
+        $scope.$watch('subjects', function(newValue, oldValue) {
+            if (newValue) {
+                // Reapply current search filter to new subjects list
+                $scope.filterSubjects();
+            }
+        }, true); // Deep watch for array changes
 
     });
 
@@ -212,53 +303,62 @@ function InstitutionsResultsController($q,
         }
 
         function onAggridCellValueChanged(params) {
-            // console.log('onCellValueChanged')
-            // console.log(JSON.stringify(params));
-            if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
-                var index = params.colDef.field.replace(/period_(\d+)/, '$1');
-
-                if (angular.isUndefined($scope.results[params.data.student_id])) {
-                    $scope.results[params.data.student_id] = {};
-                }
-
-                if (angular.isUndefined($scope.results[params.data.student_id][index])) {
-                    $scope.results[params.data.student_id][index] = {marks: ''};
-                }
-
-                $scope.results[params.data.student_id][index]['marks'] = params.newValue;
-
-                params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
-                // marked as dirty
-                params.data.is_dirty = true;
-
-                var subject = $scope.subject;
-                var gradingTypes = $scope.gradingTypes;
-                var extra = {
-                    subject: subject,
-                    gradingTypes: gradingTypes
-                };
-
-                InstitutionsResultsSvc.saveSingleRecordData(params, extra)
-                    .then(function (response) {
-                        params.data.save_error[params.colDef.field] = false;
-                        AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
-                        // refreshCells function updated parameters
-                        params.api.refreshCells({
-                            rowNodes: [params.node],
-                            columns: [params.colDef.field, 'total_mark'],
-                            force: true
-                        });
-                    }, function (error) {
-                        params.data.save_error[params.colDef.field] = true;
-                        console.error(error);
-                        AlertSvc.error($scope, 'There was an error when saving the result');
-                        params.api.refreshCells({
-                            rowNodes: [params.node],
-                            columns: [params.colDef.field],
-                            force: true
-                        });
-                    });
+            //POCOR-9608 -- Ignore if value didn't actually change 
+            if (params.newValue === params.oldValue) {
+                return;
             }
+
+            //POCOR-9608 -- Ignore empty / undefined values
+            if (
+                params.newValue === null ||
+                params.newValue === undefined ||
+                params.newValue === ''
+            ) {
+                return;
+            }
+
+            // Existing logic unchanged
+            var index = params.colDef.field.replace(/period_(\d+)/, '$1');
+
+            if (angular.isUndefined($scope.results[params.data.student_id])) {
+                $scope.results[params.data.student_id] = {};
+            }
+
+            if (angular.isUndefined($scope.results[params.data.student_id][index])) {
+                $scope.results[params.data.student_id][index] = {marks: ''};
+            }
+
+            $scope.results[params.data.student_id][index]['marks'] = params.newValue;
+
+            params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
+            params.data.is_dirty = true;
+
+            var subject = $scope.subject;
+            var gradingTypes = $scope.gradingTypes;
+            var extra = {
+                subject: subject,
+                gradingTypes: gradingTypes
+            };
+
+            InstitutionsResultsSvc.saveSingleRecordData(params, extra)
+                .then(function (response) {
+                    params.data.save_error[params.colDef.field] = false;
+                    AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field, 'total_mark'],
+                        force: true
+                    });
+                }, function (error) {
+                    params.data.save_error[params.colDef.field] = true;
+                    console.error(error);
+                    AlertSvc.error($scope, 'There was an error when saving the result1');
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field],
+                        force: true
+                    });
+                });
         }
 
         AggridLocaleSvc.getTranslatedGridLocale()
@@ -347,6 +447,10 @@ function InstitutionsResultsController($q,
             $scope.gridOptions.api.setRowData([]);
         }
 
+        //POCOR-7785: Clear student search state when changing subject
+        $scope.allRowData = [];
+        $scope.studentSearchText = '';
+
         // console.log('$scope.gridOptions == null' + $scope.gridOptions);
 
         appendLoader();
@@ -366,7 +470,10 @@ function InstitutionsResultsController($q,
         function handleGetRowData(result) {
             // console.log('handleGetRowData');
             // console.log(JSON.stringify(result));
-            $scope.gridOptions.api.setRowData(result);
+            //POCOR-7785: Store original data for student filtering
+            $scope.allRowData = angular.copy(result);
+            //POCOR-7785: Apply any current student filter
+            $scope.applyStudentFilter();
         }
 
         function handleResetColumnDefs(result) {

@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\I18n\FrozenTime;
 use Report\Model\Table\ReportProgressTable as Process;
 
 class ReportShell extends Shell
@@ -71,6 +72,20 @@ class ReportShell extends Shell
                     $this->printErrorAndSetProcessFault($e, $id);
                     throw $e;
                 }
+                // Mark completed (background shell may not trigger event)
+                if ($excelParams->offsetExists('file_path')) {
+                    $expiryDate = (new FrozenTime())->addDays(5);
+                    $this->ReportProgress->updateAll(
+                        [
+                            'status' => Process::COMPLETED,
+                            'file_path' => $excelParams['file_path'],
+                            'expiry_date' => $expiryDate,
+                            'modified' => new FrozenTime(),
+                        ],
+                        ['id' => $id]
+                    );
+                }
+                echo "$date: End Processing $name\n";
 
             } else {
                 $table = TableRegistry::getTableLocator()->get($feature);
@@ -127,7 +142,7 @@ class ReportShell extends Shell
         pr($error);
         echo $error;
         $this->ReportProgress->updateAll(
-            ['status' => PROCESS::ERROR, 'error_message' => $error],
+            ['status' => Process::ERROR, 'error_message' => $error],
             ['id' => $id]
         );
         throw $e;

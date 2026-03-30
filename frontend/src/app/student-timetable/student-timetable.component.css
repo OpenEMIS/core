@@ -36,3 +36,8 @@ table tbody td {
 .schedule-data:hover {
     background-color: #fff;
 }
+
+/* POCOR-9594: highlight the currently-edited cell */
+.schedule-data.cell-editing {
+    background-color: #ede0f7;
+}

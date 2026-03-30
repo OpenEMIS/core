@@ -1,8 +1,12 @@
 <?php
 namespace Examination\Model\Table;
 
+use Cake\Database\ValueBinder;
+use Cake\Datasource\EntityInterface;
+use Cake\Database\TypeFactory;
 use Examination\Model\Table\ExaminationsAppTable;
 use Cake\Validation\Validator;
+use RuntimeException;
 
 class ExaminationGradingOptionsTable extends ExaminationsAppTable {
 
@@ -83,5 +87,90 @@ class ExaminationGradingOptionsTable extends ExaminationsAppTable {
     public static function checkNotMoreThanGradingTypeMax($maxValue, $ExaminationGradingTypes, array $globalData) {
         $formData = $ExaminationGradingTypes->request->data[$ExaminationGradingTypes->getAlias()];
         return intVal($maxValue) <= intVal($formData['max']);
+    }
+
+    /**
+     * Override to quote the reserved MySQL column name `order` in INSERT statements.
+     */
+    protected function _insert(EntityInterface $entity, array $data)
+    {
+        $primary = (array)$this->getPrimaryKey();
+        if (empty($primary)) {
+            throw new RuntimeException(
+                sprintf(
+                    'Cannot insert row in "%s" table, it has no primary key.',
+                    $this->getTable()
+                )
+            );
+        }
+        $keys = array_fill(0, count($primary), null);
+        $id = (array)$this->_newId($primary) + $keys;
+        $primary = array_combine($primary, $id) ?: [];
+        $primary = array_intersect_key($data, $primary) + $primary;
+        $filteredKeys = array_filter($primary, function ($v) {
+            return $v !== null;
+        });
+        $data += $filteredKeys;
+
+        if (count($primary) > 1) {
+            $schema = $this->getSchema();
+            foreach ($primary as $k => $v) {
+                if (!isset($data[$k]) && empty($schema->getColumn($k)['autoIncrement'])) {
+                    throw new RuntimeException(
+                        'Cannot insert row, some of the primary key values are missing. '
+                        . sprintf(
+                            'Got (%s), expecting (%s)',
+                            implode(', ', $filteredKeys + $entity->extract(array_keys($primary))),
+                            implode(', ', array_keys($primary))
+                        )
+                    );
+                }
+            }
+        }
+
+        if (empty($data)) {
+            return false;
+        }
+
+        $columns = array_keys($data);
+        $conn = $this->getConnection();
+        $driver = $conn->getDriver();
+        $schema = $this->getSchema();
+        $quotedTable = $driver->quoteIdentifier($this->getTable());
+        $quotedColumns = array_map([$driver, 'quoteIdentifier'], $columns);
+
+        $binder = new ValueBinder();
+        $placeholders = [];
+        foreach ($columns as $col) {
+            $placeholders[] = $binder->placeholder('c');
+        }
+        foreach ($columns as $i => $col) {
+            $type = $schema->getColumnType($col);
+            $binder->bind($placeholders[$i], $data[$col], $type ?? 'string');
+        }
+
+        $sql = 'INSERT INTO ' . $quotedTable . ' (' . implode(', ', $quotedColumns) . ') VALUES (' . implode(', ', $placeholders) . ')';
+        $statement = $conn->prepare($sql);
+        $binder->attachTo($statement);
+        $statement->execute();
+
+        $success = false;
+        if ($statement->rowCount() !== 0) {
+            $success = $entity;
+            $entity->set($filteredKeys, ['guard' => false]);
+            $schema = $this->getSchema();
+            $driver = $this->getConnection()->getDriver();
+            foreach ($primary as $key => $v) {
+                if (!isset($data[$key])) {
+                    $id = $statement->lastInsertId($this->getTable(), $key);
+                    $type = $schema->getColumnType($key);
+                    $entity->set($key, TypeFactory::build($type)->toPHP($id, $driver));
+                    break;
+                }
+            }
+        }
+        $statement->closeCursor();
+
+        return $success;
     }
 }
