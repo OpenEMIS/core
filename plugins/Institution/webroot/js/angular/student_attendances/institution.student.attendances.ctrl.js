@@ -85,6 +85,7 @@ function InstitutionStudentAttendancesController(
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
     vm.noScheduledSaving = false; //POCOR-9617: guard flag — blocks changeClass from overwriting grid during No Scheduled save
+    vm.changeClassGeneration = 0; //POCOR-9617: incremented each changeClass call; stale calls skip grid render
 
     vm.superAdmin = 1;
     vm.permissionView = 1;
@@ -1085,6 +1086,9 @@ function InstitutionStudentAttendancesController(
             // console.log(`⏱ [${stepName}] выполнено за ${elapsed} ms`);
         };
 
+        vm.changeClassGeneration++; //POCOR-9617: tag this invocation; stale calls must not render
+        var myGeneration = vm.changeClassGeneration;
+
         // console.log("🚀 Начинаю смену класса...");
         UtilsSvc.isAppendLoader(true);
 
@@ -1154,8 +1158,8 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (classStudents) {
                 logStep("getClassStudent (Data received)"); // Шаг 7
-                //POCOR-9617: skip overwriting grid if No Scheduled save is in progress
-                if (vm.noScheduledSaving) return;
+                //POCOR-9617: discard result if a newer changeClass or No Scheduled save has taken over
+                if (myGeneration !== vm.changeClassGeneration || vm.noScheduledSaving) return;
                 if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
                     classStudents = [];
                 }
@@ -1165,8 +1169,8 @@ function InstitutionStudentAttendancesController(
                 // Замеряем время ДО тяжелых функций рендеринга
                 logStep("Before UI Rendering (setGridData/setColumnDef)");
 
-                //POCOR-9617: skip re-rendering grid if No Scheduled save is in progress
-                if (vm.noScheduledSaving) {
+                //POCOR-9617: skip re-render if stale or No Scheduled save has taken over
+                if (myGeneration !== vm.changeClassGeneration || vm.noScheduledSaving) {
                     UtilsSvc.isAppendLoader(false);
                     return;
                 }
@@ -1485,6 +1489,7 @@ function InstitutionStudentAttendancesController(
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
         vm.noScheduledSaving = true; //POCOR-9617: block changeClass.finally from overwriting grid mid-save
+        vm.changeClassGeneration++; //POCOR-9617: invalidate any in-flight changeClass — its data is now stale
         UtilsSvc.isAppendLoader(true);
 
         InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(vm.getIsMarkedParams())
