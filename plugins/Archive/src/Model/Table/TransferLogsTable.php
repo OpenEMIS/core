@@ -9,7 +9,7 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\EventInterface;
+use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -53,12 +53,17 @@ class TransferLogsTable extends ControllerActionTable
             ],
             'StudentAssessments' => [
                 'assessment_item_results',
+            ], //POCOR-8898
+            'StudentReportCards' => [
+                'institution_students_report_cards'
             ]
         ],
         'Shell' =>
             ['StudentAttendances' => 'ArchiveStudentAttendances',
                 'StaffAttendances' => 'ArchiveStaffAttendances',
-                'StudentAssessments' => 'ArchiveStudentAssessments']
+                'StudentAssessments' => 'ArchiveStudentAssessments',
+                'StudentReportCards' => 'ArchiveStudentReportCards'//POCOR-8898
+]
 
     ];
 
@@ -116,7 +121,7 @@ class TransferLogsTable extends ControllerActionTable
         return $rules;
     }
 
-    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['sort' => true]);
         $this->field('generated_on');
@@ -168,7 +173,7 @@ class TransferLogsTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $condition = [$this->AcademicPeriods->aliasField('current') . ' <> ' => "1"];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -185,7 +190,7 @@ class TransferLogsTable extends ControllerActionTable
 
     }
 
-    public function addOnInitialize(EventInterface $event, Entity $entity)
+    public function addOnInitialize(Event $event, Entity $entity)
     {
         //POCOR-6816
         $this->setFullyArchivedYearInactive();
@@ -195,12 +200,12 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * common proc to show related user name
-     * @param EventInterface $event
+     * @param Event $event
      * @param Entity $entity
      * @return mixed
-     *
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
-    public function onGetGeneratedBy(EventInterface $event, Entity $entity)
+    public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         $generated_by = self::getRelatedRecord('User.Users', $entity->generated_by);
         $name = $generated_by['name'];
@@ -212,12 +217,12 @@ class TransferLogsTable extends ControllerActionTable
     /**
      * common proc to get the setting from Configuration
      * @return bool
-     *
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public static function hideAcademicPeriod()
     {
         $answer = true;
-//        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 //        $question = $ConfigItems->value('archiving_hides_academic_period');
 //        if ($question) {
 //            $answer = ($question == "1") ? true : false;
@@ -228,12 +233,12 @@ class TransferLogsTable extends ControllerActionTable
     /**
      * common proc to get the setting from Configuration
      * @return bool
-     *
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public static function disableAcademicPeriod()
     {
         $answer = true;
-//        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+//        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
 //        $question = $ConfigItems->value('archiving_disables_academic_period');
 //        if ($question) {
 //            $answer = ($question == "1") ? true : false;
@@ -245,14 +250,14 @@ class TransferLogsTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     *
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
         if (!$relatedField) {
             return null;
         }
-        $Table = TableRegistry::getTableLocator()->get($tableName);
+        $Table = TableRegistry::get($tableName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -262,7 +267,7 @@ class TransferLogsTable extends ControllerActionTable
         return '+';
     }
 
-    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
     {
 //        $this->log($entity, 'debug');
         if ($entity->isNew()) {
@@ -307,14 +312,14 @@ class TransferLogsTable extends ControllerActionTable
     }
 
     /**
-     * @param EventInterface $event
+     * @param Event $event
      * @param Entity $entity
      * @param ArrayObject $data
-     * POCOR-7521-KH
-     *
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
 
-    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data)
+    public function afterSave(Event $event, Entity $entity, ArrayObject $data)
     {
 
 //        $superAdmin = $this->checkSuperAdmin();
@@ -333,6 +338,9 @@ class TransferLogsTable extends ControllerActionTable
         }
         if ($entity->features == "Student Assessments") {
             $this->archiveStudentAssessments($entity);
+        }
+        if ($entity->features == "Student Report Cards") { //POCOR-8898
+            $this->archiveStudentReportCards($entity);
         }
     }
 
@@ -385,6 +393,7 @@ class TransferLogsTable extends ControllerActionTable
             'Student Attendances' => __('Student Attendances'),
             'Staff Attendances' => __('Staff Attendances'),
             'Student Assessments' => __('Student Assessments'),
+            'Student Report Cards' => __('Student Report Cards')//POCOR-8898
         ];
         return $options;
     }
@@ -395,7 +404,7 @@ class TransferLogsTable extends ControllerActionTable
    * return data
    * @ticket POCOR-7237
    */
-    public function onGetProcessStatus(EventInterface $event, Entity $entity)
+    public function onGetProcessStatus(Event $event, Entity $entity)
     {
         if ($entity->process_status === self::IN_PROGRESS) {
             $value = $this->statusOptions[self::IN_PROGRESS];
@@ -411,8 +420,8 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KH
-     *
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      * Archive following tables
      * institution_class_attendance_records
@@ -430,8 +439,8 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KH
-     *
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      * Archive following tables
      * institution_staff_attendances
@@ -446,8 +455,8 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KH
-     *
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      * archive following tables
      * assessment_item_results
@@ -462,11 +471,28 @@ class TransferLogsTable extends ControllerActionTable
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
+    //POCOR-8898 start
+    /**
+     * @param Entity $entity
+     * POCOR-8898
+     * Archive following tables
+     * institution_students_report_cards
+     */
+    private function archiveStudentReportCards(Entity $entity)
+    {
+        $tablesToArchive = self::$ArchiveVars['Tables']['StudentReportCards'];
+        $shellName = self::$ArchiveVars['Shell']['StudentReportCards'];
+        $this->log((string) self::$ArchiveVars, 'debug');
+        $this->log((string) $tablesToArchive, 'debug');
+        $this->log((string) $shellName, 'debug');
+        $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
+    }
+    //POCOR-8898 end
 
     /**
      * @param Entity $entity , $tablesToArchive, $shellName
-     * POCOR-7521-KH
-     *
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * Archive table records
      */
     private function archiveTableRecords(Entity $entity, $tablesToArchive, $shellName)
@@ -483,7 +509,7 @@ class TransferLogsTable extends ControllerActionTable
                         $academic_period_id);
                 $recordsToArchive = $recordsToArchive + $tableRecordsCount;
             }
-
+            
             if ($recordsToArchive == 0) {
 //                $this->log($entity, 'debug');
                 $entity['process_status'] = self::DONE;
@@ -530,7 +556,7 @@ class TransferLogsTable extends ControllerActionTable
     public static
     function setTransferLogsFailed($pid)
     {
-        $TransferLogs = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
+        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
 
         $TransferLogs->updateAll(['process_status' => $TransferLogs::ERROR,
             'completed_on' => date("Y-m-d H:i:s")], // POCOR-7957
@@ -546,7 +572,7 @@ class TransferLogsTable extends ControllerActionTable
     public static
     function setSystemProcessFailed($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
     }
 
@@ -556,7 +582,7 @@ class TransferLogsTable extends ControllerActionTable
     public static
     function setSystemProcessCompleted($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
         $processInfo = date('Y-m-d H:i:s');
         return $processInfo;
@@ -566,8 +592,8 @@ class TransferLogsTable extends ControllerActionTable
      * @param $table_name
      * @param $academic_period_id
      * @return int
-     * POCOR-7521-KH
-     *
+     * POCOR-7521-KHINDOL
+     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      */
     private static function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)
@@ -606,7 +632,7 @@ class TransferLogsTable extends ControllerActionTable
                 ->toArray();
             $getFeatureOptionsCount = count($this->getFeatureOptions());
             if ($getFeatureOptionsCount == count($transferLogdata)) {
-                $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $AcademicPeriods->updateAll(
                     ['editable' => 0],    //field
                     ['id' => $key, 'current' => 0] //condition
@@ -629,7 +655,7 @@ class TransferLogsTable extends ControllerActionTable
                     'process_status' => $this::DONE])->toArray();
             $getFeatureOptionsCount = count($this->getFeatureOptions());
             if ($getFeatureOptionsCount == count($transferLogdata)) {
-                $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $AcademicPeriods->updateAll(
                     ['visible' => 0],    //field
                     ['id' => $key, 'current' => 0] //condition
@@ -671,7 +697,7 @@ class TransferLogsTable extends ControllerActionTable
 
     private function clearPendingProcesses()
     {
-        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
         $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias());
         foreach ($runningProcess as $key => $processData) {
             $process_params = (array)json_decode($processData['params']);
@@ -700,7 +726,7 @@ class TransferLogsTable extends ControllerActionTable
         }
     }
 
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'academic_period_id':

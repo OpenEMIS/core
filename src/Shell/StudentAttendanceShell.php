@@ -5,7 +5,7 @@ use Cake\Database\Schema\Table;
 use Exception;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
-use Cake\Event\EventInterface;
+use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\Date;
@@ -18,8 +18,8 @@ class StudentAttendanceShell extends Shell
     {
         parent::initialize();
         
-        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
-        $this->TransferLogs = $this->fetchTable('Archive.TransferLogs');
+        $this->loadModel('SystemProcesses');
+        $this->loadModel('Archive.TransferLogs');
     }
 
     public function main()
@@ -67,7 +67,7 @@ class StudentAttendanceShell extends Shell
         //POCOR-7474-HINDOL get rid of unused connection to backup table and old comments
         $connection = ConnectionManager::get('default');
         $count = 0;
-        $sourceTable = TableRegistry::getTableLocator()->get('institution_class_attendance_records');
+        $sourceTable = TableRegistry::get('institution_class_attendance_records');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
 
         if ($targetTableExists) {
@@ -77,7 +77,7 @@ class StudentAttendanceShell extends Shell
         }
         $sourceTable = null;
 
-        $sourceTable = TableRegistry::getTableLocator()->get('institution_student_absences');
+        $sourceTable = TableRegistry::get('institution_student_absences');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         if ($targetTableExists) {
             $adding = $connection->execute("INSERT IGNORE INTO `institution_student_absences_archived` SELECT * FROM `institution_student_absences` WHERE academic_period_id = $academicPeriodId");
@@ -86,7 +86,7 @@ class StudentAttendanceShell extends Shell
         }
         $sourceTable = null;
 
-        $sourceTable = TableRegistry::getTableLocator()->get('institution_student_absence_details');
+        $sourceTable = TableRegistry::get('institution_student_absence_details');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         if ($targetTableExists) {
             $adding = $connection->execute("INSERT IGNORE INTO `institution_student_absence_details_archived` SELECT * FROM `institution_student_absence_details` WHERE academic_period_id = $academicPeriodId");
@@ -95,7 +95,7 @@ class StudentAttendanceShell extends Shell
         }
         $sourceTable = null;
 
-        $sourceTable = TableRegistry::getTableLocator()->get('student_attendance_marked_records');
+        $sourceTable = TableRegistry::get('student_attendance_marked_records');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         if ($targetTableExists) {
             $adding = $connection->execute("INSERT IGNORE INTO `student_attendance_marked_records_archived` SELECT * FROM `student_attendance_marked_records` WHERE academic_period_id = $academicPeriodId");
@@ -104,7 +104,7 @@ class StudentAttendanceShell extends Shell
         }
         $sourceTable = null;
 
-        $sourceTable = TableRegistry::getTableLocator()->get('student_attendance_mark_types');
+        $sourceTable = TableRegistry::get('student_attendance_mark_types');
         $targetTableExists = $this->hasArchiveTable($sourceTable);
         if ($targetTableExists) {
             $adding = $connection->execute("INSERT IGNORE INTO `student_attendance_mark_types_archived` SELECT * FROM `student_attendance_mark_types` WHERE academic_period_id = $academicPeriodId");
@@ -112,6 +112,7 @@ class StudentAttendanceShell extends Shell
             $count = $count + $adding->rowCount();
         }
         $sourceTable = null;
+
 
         return $count;
     }
@@ -192,11 +193,11 @@ class StudentAttendanceShell extends Shell
 //            'academicPeriodId' => $academicPeriodId,
         ];
         $name = 'Archive Student Attendances';
-        $model = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
+        $model = TableRegistry::get('Archive.TransferLogs');
         $eventName = '';
         $processModel = $model->registryAlias();
         $param = json_encode($param);
-        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
         $systemProcessId = $SystemProcesses->addProcess($name, $mypid, $processModel, $eventName, $param);
         $processInfo = date('d-m-Y H:i:s') . ' : ' . $name;
         $this->out($processInfo . ' - Start System PID:' . $systemProcessId);
@@ -209,7 +210,7 @@ class StudentAttendanceShell extends Shell
     public
     function setSystemProcessRunning($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Running System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::RUNNING, 1);
@@ -221,7 +222,7 @@ class StudentAttendanceShell extends Shell
     public
     function setSystemProcessFailed($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Error in System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
@@ -233,7 +234,7 @@ class StudentAttendanceShell extends Shell
     public
     function setSystemProcessCompleted($systemProcessId)
     {
-        $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $SystemProcesses = TableRegistry::get('SystemProcesses');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - Completed System PID:' . $systemProcessId);
         $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
@@ -245,7 +246,7 @@ class StudentAttendanceShell extends Shell
     public
     function setTransferLogsCompleted($pid)
     {
-        $TransferLogs = TableRegistry::getTableLocator()->get('Archive.TransferLogs');
+        $TransferLogs = TableRegistry::get('Archive.TransferLogs');
         $processInfo = date('d-m-Y H:i:s');
         $this->out($processInfo . ' - set Transfer Logs Completed PID:' . $pid);
         $TransferLogs->updateAll(['process_status' => $TransferLogs::DONE], [
