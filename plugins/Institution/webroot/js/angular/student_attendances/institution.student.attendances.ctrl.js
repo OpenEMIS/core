@@ -1472,15 +1472,15 @@ function InstitutionStudentAttendancesController(
         )
             .then(function (isMarked) {
                 vm.updateIsMarked(isMarked);
-                return InstitutionStudentAttendancesSvc.getClassStudent(
-                    vm.getClassStudentParams()
-                );
-            }, vm.error)
-            .then(function () {
-                //POCOR-9617: reload the day fresh from DB so no_scheduled_class=1
-                //is reflected in classStudents regardless of prior attendance state
+                //POCOR-9617: stamp no_scheduled_class=1 on existing rows immediately —
+                //avoids timing race where changeDay() reload renders before data arrives
+                angular.forEach(vm.classStudentList, function (row) {
+                    row.no_scheduled_class = 1;
+                });
+                vm.setGridData();
+                vm.setColumnDef(true);
+                vm.countStudentData();
                 AlertSvc.reset($scope);
-                vm.changeDay();
             }, vm.error)
             .finally(function () {
                 UtilsSvc.isAppendLoader(false);
