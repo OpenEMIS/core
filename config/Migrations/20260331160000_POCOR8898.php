@@ -88,5 +88,30 @@ class POCOR8898 extends AbstractMigration
         //If archiving was already performed, that table contains live data that cannot be recovered.
         //Dropping it here would cause permanent data loss (records moved out of source are gone).
         //A sysadmin must manually decide what to do with the archived data before removing the table.
+
+        // -----------------------------------------------------------------------
+        // POCOR-8898: SYSADMIN MANUAL RESTORE INSTRUCTIONS
+        // -----------------------------------------------------------------------
+        // If report card archiving was run before this rollback, the archived
+        // records now live ONLY in institution_students_report_cards_archived.
+        // They were removed from institution_students_report_cards during archiving.
+        //
+        // To restore them back to the live table, run the following SQL manually
+        // AFTER this migration has been rolled back:
+        //
+        // Step 1 — Copy archived records back to the live table (safe to re-run):
+        //   INSERT IGNORE INTO `institution_students_report_cards`
+        //   SELECT * FROM `institution_students_report_cards_archived`;
+        //
+        // Step 2 — Verify the count matches before proceeding:
+        //   SELECT COUNT(*) FROM `institution_students_report_cards_archived`;
+        //   SELECT COUNT(*) FROM `institution_students_report_cards`
+        //   WHERE (report_card_id, student_id, institution_id, academic_period_id, education_grade_id)
+        //   IN (SELECT report_card_id, student_id, institution_id, academic_period_id, education_grade_id
+        //       FROM `institution_students_report_cards_archived`);
+        //
+        // Step 3 — Only after confirming records are restored, drop the archive table:
+        //   DROP TABLE `institution_students_report_cards_archived`;
+        // -----------------------------------------------------------------------
     }
 }
