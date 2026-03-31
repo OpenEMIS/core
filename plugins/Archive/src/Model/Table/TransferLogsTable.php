@@ -58,11 +58,11 @@ class TransferLogsTable extends ControllerActionTable
                 'institution_students_report_cards'
             ]
         ],
-        'Shell' =>
-            ['StudentAttendances' => 'ArchiveStudentAttendances',
-                'StaffAttendances' => 'ArchiveStaffAttendances',
-                'StudentAssessments' => 'ArchiveStudentAssessments',
-                'StudentReportCards' => 'ArchiveStudentReportCards'//POCOR-8898
+        'Command' => //POCOR-8898: renamed from 'Shell', values changed to CakePHP command snake_case names
+            ['StudentAttendances' => 'archive_student_attendances', //POCOR-8898
+                'StaffAttendances' => 'archive_staff_attendances', //POCOR-8898
+                'StudentAssessments' => 'archive_student_assessments', //POCOR-8898
+                'StudentReportCards' => 'archive_student_report_cards' //POCOR-8898
 ]
 
     ];
@@ -353,21 +353,22 @@ class TransferLogsTable extends ControllerActionTable
      */
 
 
-    public function triggerArchiveShell($shellName, $academicPeriodId = null, $pid = null, $recordsToArchive = 0, $recordsInArchive = 0)
+    //POCOR-8898: renamed triggerArchiveShell to triggerArchiveCommand; uses bin/cake with snake_case command name
+    public function triggerArchiveCommand($commandName, $academicPeriodId = null, $pid = null, $recordsToArchive = 0, $recordsInArchive = 0)
     {
-        $this->log("=======>Before $shellName", 'debug');
-        $args = '';
-        $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : ' 0';
-        $args .= !is_null($pid) ? ' ' . $pid : ' 0';
-        $args .= !is_null($recordsToArchive) ? ' ' . $recordsToArchive : ' 0';
-        $args .= !is_null($recordsInArchive) ? ' ' . $recordsInArchive : ' 0';
+        $this->log("=======>Before $commandName", 'debug'); //POCOR-8898
+        $args = ''; //POCOR-8898
+        $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : ' 0'; //POCOR-8898
+        $args .= !is_null($pid) ? ' ' . $pid : ' 0'; //POCOR-8898
+        $args .= !is_null($recordsToArchive) ? ' ' . $recordsToArchive : ' 0'; //POCOR-8898
+        $args .= !is_null($recordsInArchive) ? ' ' . $recordsInArchive : ' 0'; //POCOR-8898
 
-        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
-        $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-        exec($shellCmd);
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $commandName . $args; //POCOR-8898
+        $logs = ROOT . DS . 'logs' . DS . $commandName . '.log & echo $!'; //POCOR-8898
+        $shellCmd = $cmd . ' >> ' . $logs; //POCOR-8898
+        exec($shellCmd); //POCOR-8898
         Log::write('debug', $shellCmd);
-        $this->log("<<<<<<<<<<======== After $shellName", 'debug');
+        $this->log("<<<<<<<<<<======== After $commandName", 'debug'); //POCOR-8898
     }
 
 
@@ -433,7 +434,7 @@ class TransferLogsTable extends ControllerActionTable
     private function archiveStudentAttendances(Entity $entity)
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentAttendances'];
-        $shellName = self::$ArchiveVars['Shell']['StudentAttendances'];
+        $shellName = self::$ArchiveVars['Command']['StudentAttendances']; //POCOR-8898: renamed Shell key to Command
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
@@ -449,7 +450,7 @@ class TransferLogsTable extends ControllerActionTable
     private function archiveStaffAttendances(Entity $entity)
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StaffAttendances'];
-        $shellName = self::$ArchiveVars['Shell']['StaffAttendances'];
+        $shellName = self::$ArchiveVars['Command']['StaffAttendances']; //POCOR-8898: renamed Shell key to Command
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
@@ -464,7 +465,7 @@ class TransferLogsTable extends ControllerActionTable
     private function archiveStudentAssessments(Entity $entity)
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentAssessments'];
-        $shellName = self::$ArchiveVars['Shell']['StudentAssessments'];
+        $shellName = self::$ArchiveVars['Command']['StudentAssessments']; //POCOR-8898: renamed Shell key to Command
         $this->log((string) self::$ArchiveVars, 'debug');
         $this->log((string) $tablesToArchive, 'debug');
         $this->log((string) $shellName, 'debug');
@@ -481,7 +482,7 @@ class TransferLogsTable extends ControllerActionTable
     private function archiveStudentReportCards(Entity $entity)
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentReportCards'];
-        $shellName = self::$ArchiveVars['Shell']['StudentReportCards'];
+        $shellName = self::$ArchiveVars['Command']['StudentReportCards']; //POCOR-8898: renamed Shell key to Command
         $this->log((string) self::$ArchiveVars, 'debug');
         $this->log((string) $tablesToArchive, 'debug');
         $this->log((string) $shellName, 'debug');
@@ -542,7 +543,7 @@ class TransferLogsTable extends ControllerActionTable
                 if ($alreadytransferring > 0) {
                     $this->Alert->error('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);
                 }
-                $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id, $recordsToArchive, $recordsInArchive);
+                $this->triggerArchiveCommand($shellName, $academic_period_id, $entity->p_id, $recordsToArchive, $recordsInArchive); //POCOR-8898: renamed triggerArchiveShell to triggerArchiveCommand
                 $entity->features = $todoing;
                 $entity->process_status = self::IN_PROGRESS;
                 $this->save($entity);
