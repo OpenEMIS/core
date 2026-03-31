@@ -368,7 +368,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('date') => $day,
                 $this->aliasField('period IS') => $period //POCOR-8383
-            ])->toArray();
+            ])->limit(1)->toArray(); //POCOR-9617: limit(1) — only existence check, prevents OOM on large datasets
 
         if (!empty($getRecord)) {
             $updateQuery = $this->query();
