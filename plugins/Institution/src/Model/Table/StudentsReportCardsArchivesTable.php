@@ -40,7 +40,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
     /**
      * @var \Cake\ORM\Table|null
      */
-    protected $StudentsReportCards;
+    protected $StudentsReportCardsArchived;
 
     /**
      * @var \Cake\ORM\Table|null
@@ -111,7 +111,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
         $this->toggle('remove', false);
 
         $this->ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
-        $this->StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCardsArchived');
+        $this->StudentsReportCardsArchived = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCardsArchived');
         $this->ReportCardEmailProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmailProcesses');
         $this->ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
 
@@ -205,7 +205,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
     {
         //POCOR-8898: warn if no archived records exist for this institution
         $institutionId = $this->getInstitutionID();
-        $archiveTable = $this->StudentsReportCards->getTable();
+        $archiveTable = $this->StudentsReportCardsArchived->getTable();
         $hasArchived = ConnectionManager::get('default')->execute(
             "SELECT 1 FROM `{$archiveTable}` WHERE institution_id = {$institutionId} LIMIT 1"
         )->fetch('assoc'); //POCOR-8898
@@ -426,7 +426,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
 
         //POCOR-8898: start — filters built from archive table only, so dropdowns show only what was actually archived
-        $archiveTable = $this->StudentsReportCards->getTable();
+        $archiveTable = $this->StudentsReportCardsArchived->getTable();
 
         // Academic Periods filter — only periods present in the archive for this institution
         $archivedPeriodIds = ConnectionManager::get('default')->execute(
@@ -523,7 +523,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
                 'institution_class_id' => $this->aliasField('institution_class_id'),
                 'education_grade_id' => $this->aliasField('education_grade_id'),
                 'academic_period_id' => $this->aliasField('academic_period_id'),
-                'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
+                'report_card_id' => $this->StudentsReportCardsArchived->aliasField('report_card_id'),
                 'student_id' => $UsersTable->aliasField('id'),
                 'student_name' => $UsersTable->find()->func()->concat([
                     $UsersTable->aliasfield('first_name') => 'literal',
@@ -531,9 +531,9 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
                     $UsersTable->aliasfield('last_name') => 'literal'
                 ]),
                 'openemis_no' => $UsersTable->aliasField('openemis_no'),
-                'report_card_status' => $this->ReportCardProcesses->aliasField('status'), //POCOR-9228
-                'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
-                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
+                'report_card_status' =>  $this->StudentsReportCardsArchived->aliasField('status'), //POCOR-8898: use archived status directly — ReportCardProcesses has no records for archived periods
+                'report_card_started_on' => $this->StudentsReportCardsArchived->aliasField('started_on'),
+                'report_card_completed_on' => $this->StudentsReportCardsArchived->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message')
             ])
@@ -544,13 +544,13 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
                 $UsersTable->aliasField('id = ') . $this->aliasField('student_id')
             ])
             ->innerJoin( //POCOR-8898: INNER JOIN — only show students who have an archived record
-                [$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
+                [$this->StudentsReportCardsArchived->getAlias() => $this->StudentsReportCardsArchived->getTable()],
                 [
-                    $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $this->StudentsReportCards->aliasField('report_card_id = ') . (int)$selectedReportCard //POCOR-8898: cast null→0 safely
+                    $this->StudentsReportCardsArchived->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->StudentsReportCardsArchived->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->StudentsReportCardsArchived->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->StudentsReportCardsArchived->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $this->StudentsReportCardsArchived->aliasField('report_card_id = ') . (int)$selectedReportCard //POCOR-8898: cast null→0 safely
                 ]
             )
             ->leftJoin(
@@ -903,16 +903,16 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
 
         $decodeParam = $this->paramsDecode($this->request->getAttribute('params')['pass'][1]);
         $conditions = [];
-        $CheckStudent = $this->StudentsReportCards->find()->where([$this->StudentsReportCards->aliasField('student_id') => $decodeParam['student_id'], $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id']])->first();
+        $CheckStudent = $this->StudentsReportCardsArchived->find()->where([$this->StudentsReportCardsArchived->aliasField('student_id') => $decodeParam['student_id'], $this->StudentsReportCardsArchived->aliasField('report_card_id') => $params['report_card_id']])->first();
         if (!empty($CheckStudent)) {
-            $conditions[$this->StudentsReportCards->aliasField('report_card_id')] = $params['report_card_id'];
+            $conditions[$this->StudentsReportCardsArchived->aliasField('report_card_id')] = $params['report_card_id'];
         }
         $query
             ->select([
-                'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
-                'report_card_status' => $this->StudentsReportCards->aliasField('status'),
-                'report_card_started_on' => $this->StudentsReportCards->aliasField('started_on'),
-                'report_card_completed_on' => $this->StudentsReportCards->aliasField('completed_on'),
+                'report_card_id' => $this->StudentsReportCardsArchived->aliasField('report_card_id'),
+                'report_card_status' => $this->StudentsReportCardsArchived->aliasField('status'),
+                'report_card_started_on' => $this->StudentsReportCardsArchived->aliasField('started_on'),
+                'report_card_completed_on' => $this->StudentsReportCardsArchived->aliasField('completed_on'),
                 'email_status_id' => $this->ReportCardEmailProcesses->aliasField('status'),
                 'email_error_message' => $this->ReportCardEmailProcesses->aliasField('error_message'),
                 'student_id' => $this->aliasField('student_id'),
@@ -927,12 +927,12 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
             ])
             ->contain(['Users', 'AcademicPeriods', 'InstitutionClasses'])
             ->leftJoin(
-                [$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
+                [$this->StudentsReportCardsArchived->getAlias() => $this->StudentsReportCardsArchived->getTable()],
                 [
-                    $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $this->StudentsReportCardsArchived->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->StudentsReportCardsArchived->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->StudentsReportCardsArchived->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->StudentsReportCardsArchived->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
 
                 ]
             )
@@ -1239,15 +1239,15 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
-        $files = $this->StudentsReportCards->find()
+        $files = $this->StudentsReportCardsArchived->find()
             ->contain(['Students', 'ReportCards'])
             ->where([
-                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
-                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
-                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
-                $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
-                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
-                $this->StudentsReportCards->aliasField('file_content IS NOT NULL')
+                $this->StudentsReportCardsArchived->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCardsArchived->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCardsArchived->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCardsArchived->aliasField('status IN ') => $statusArray,
+                $this->StudentsReportCardsArchived->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCardsArchived->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
         ConnectionManager::get('default')->disconnect();
@@ -1299,16 +1299,16 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
-        $files = $this->StudentsReportCards->find()
+        $files = $this->StudentsReportCardsArchived->find()
             ->contain(['Students', 'ReportCards'])
             ->where([
-                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
-                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
-                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
-                $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
-                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
-                $this->StudentsReportCards->aliasField('file_content IS NOT NULL'),
-                $this->StudentsReportCards->aliasField('file_content_pdf IS NOT NULL')
+                $this->StudentsReportCardsArchived->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCardsArchived->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCardsArchived->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCardsArchived->aliasField('status IN ') => $statusArray,
+                $this->StudentsReportCardsArchived->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCardsArchived->aliasField('file_content IS NOT NULL'),
+                $this->StudentsReportCardsArchived->aliasField('file_content_pdf IS NOT NULL')
             ])
             ->toArray();
 
