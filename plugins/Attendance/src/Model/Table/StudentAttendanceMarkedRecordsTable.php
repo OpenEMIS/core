@@ -361,6 +361,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
 
         //POCOR-9617: start
         $getRecord = $this->find('all')
+            ->select([$this->aliasField('id')]) //POCOR-9617: select only id — existence check, no heavy hydration
             ->where([
                 $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
@@ -368,7 +369,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('date') => $day,
                 $this->aliasField('period IS') => $period //POCOR-8383
-            ])->limit(1)->toArray(); //POCOR-9617: limit(1) — only existence check, prevents OOM on large datasets
+            ])->limit(1)->disableHydration()->toArray(); //POCOR-9617: limit(1)+disableHydration — prevents OOM on large datasets
 
         if (!empty($getRecord)) {
             $updateQuery = $this->query();
@@ -415,6 +416,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
         $totalMarkedCount = $StudentAttendanceMarkedRecords
             ->find()
+            ->select([$StudentAttendanceMarkedRecords->aliasField('id')]) //POCOR-9617: existence check only
             ->where([
                 $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
                 $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
@@ -423,6 +425,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $StudentAttendanceMarkedRecords->aliasField('date') => $day,
                 $StudentAttendanceMarkedRecords->aliasField('period IS') => $period,
             ])
+            ->disableHydration() //POCOR-9617: no entity needed, just existence check
             ->first();
         if (!empty($totalMarkedCount)) {
             $explodedData = explode("-", $day);
