@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Service\ArchiveService;
 use Cake\Console\Arguments;
 use Cake\Console\Command;
+use Cake\Console\CommandInterface;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 
@@ -69,11 +70,11 @@ abstract class ArchiveCommandBase extends Command
 
         if ($academicPeriodId === 0) { //POCOR-8898
             $io->error('No valid academic period given');
-            return static::CODE_ERROR;
+            return CommandInterface::CODE_ERROR;
         }
         if ($pid === 0) { //POCOR-8898
             $io->error('No valid pid given');
-            return static::CODE_ERROR;
+            return CommandInterface::CODE_ERROR;
         }
 
         $processedDateTime = date('d-m-Y H:i:s'); //POCOR-8898
@@ -130,7 +131,7 @@ abstract class ArchiveCommandBase extends Command
         }
 
         $io->out("Ended $processName:  $processedDateTime");
-        return static::CODE_SUCCESS; //POCOR-8898
+        return CommandInterface::CODE_SUCCESS; //POCOR-8898
     }
 
     public function out(string $message): void
