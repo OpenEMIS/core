@@ -203,6 +203,16 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
      */
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
+        //POCOR-8898: warn if no archived records exist for this institution
+        $institutionId = $this->getInstitutionID();
+        $archiveTable = $this->StudentsReportCards->getTable();
+        $hasArchived = ConnectionManager::get('default')->execute(
+            "SELECT 1 FROM `{$archiveTable}` WHERE institution_id = {$institutionId} LIMIT 1"
+        )->fetch('assoc'); //POCOR-8898
+        if (empty($hasArchived)) {
+            $this->Alert->warning(__('No archived report cards found for this institution. You need to archive some report cards first.'), ['reset' => true, 'type' => 'string']); //POCOR-8898
+        }
+
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->field('student_name', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('student_id', ['type' => 'hidden']);
@@ -415,50 +425,68 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
         $Classes = $this->InstitutionClasses;
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
 
-        // Academic Periods filter
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        //POCOR-8898: start — filters built from archive table only, so dropdowns show only what was actually archived
+        $archiveTable = $this->StudentsReportCards->getTable();
+
+        // Academic Periods filter — only periods present in the archive for this institution
+        $archivedPeriodIds = ConnectionManager::get('default')->execute(
+            "SELECT DISTINCT academic_period_id FROM `{$archiveTable}` WHERE institution_id = {$institutionId}"
+        )->fetchAll('assoc'); //POCOR-8898
+        $archivedPeriodIds = array_column($archivedPeriodIds, 'academic_period_id'); //POCOR-8898
+
+        $academicPeriodOptions = [];
+        if (!empty($archivedPeriodIds)) {
+            $academicPeriodOptions = $this->AcademicPeriods->find('list')
+                ->where([$this->AcademicPeriods->aliasField('id IN') => $archivedPeriodIds])
+                ->order([$this->AcademicPeriods->aliasField('order')])
+                ->toArray(); //POCOR-8898
+        }
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id'))
+            ? $this->request->getQuery('academic_period_id')
+            : (!empty($archivedPeriodIds) ? reset($archivedPeriodIds) : null); //POCOR-8898
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        //End
 
-        $availableGrades = $InstitutionGrades->find()
-            ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
-            ->extract('education_grade_id')
-            ->toArray();
-        // Report Cards filter
+        // Report Cards filter — only report cards present in the archive for this institution + period
+        $archivedReportCardIds = ConnectionManager::get('default')->execute(
+            "SELECT DISTINCT report_card_id FROM `{$archiveTable}`
+             WHERE institution_id = {$institutionId}
+               AND academic_period_id = " . (int)$selectedAcademicPeriod
+        )->fetchAll('assoc'); //POCOR-8898
+        $archivedReportCardIds = array_column($archivedReportCardIds, 'report_card_id'); //POCOR-8898
+
         $reportCardOptions = [];
-        if (!empty($availableGrades)) {
+        if (!empty($archivedReportCardIds)) {
             $reportCardOptions = $this->ReportCards->find('list')
-                ->where([
-                    $this->ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                    $this->ReportCards->aliasField('education_grade_id IN ') => $availableGrades
-                ])
-                ->toArray();
-        } else {
-            $this->Alert->warning('ReportCardStatuses.noProgrammes');
+                ->where([$this->ReportCards->aliasField('id IN') => $archivedReportCardIds])
+                ->toArray(); //POCOR-8898
         }
         $reportCardOptions = ['-1' => '-- ' . __('Select Report Card') . ' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->getQuery('report_card_id')) ? $this->request->getQuery('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-        //End
 
-        // Class filter
+        // Class filter — only classes present in the archive for this institution + period + report card
         $classOptions = [];
         $selectedClass = !is_null($this->request->getQuery('class_id')) ? $this->request->getQuery('class_id') : -1;
         $educationGradeByReportCardId = '';
         if ($selectedReportCard != -1) {
+            $archivedClassIds = ConnectionManager::get('default')->execute(
+                "SELECT DISTINCT institution_class_id FROM `{$archiveTable}`
+                 WHERE institution_id = {$institutionId}
+                   AND academic_period_id = " . (int)$selectedAcademicPeriod . "
+                   AND report_card_id = " . (int)$selectedReportCard
+            )->fetchAll('assoc'); //POCOR-8898
+            $archivedClassIds = array_column($archivedClassIds, 'institution_class_id'); //POCOR-8898
+
+            if (!empty($archivedClassIds)) {
+                $classOptions = $Classes->find('list')
+                    ->where([$Classes->aliasField('id IN') => $archivedClassIds])
+                    ->order([$Classes->aliasField('name')])
+                    ->toArray(); //POCOR-8898
+            }
+
             $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
             if (!empty($reportCardEntity)) {
-                $classOptions = $Classes->find('list')
-                    ->matching('ClassGrades')
-                    ->where([
-                        $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                        $Classes->aliasField('institution_id') => $institutionId,
-                        'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
-                    ])
-                    ->order([$Classes->aliasField('name')])
-                    ->toArray();
                 $educationGradeByReportCardId = $reportCardEntity->education_grade_id; //POCOR-7212
             } else {
                 $selectedClass = -1;
@@ -471,6 +499,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
 
         $classOptions = ['-1' => '-- ' . __('Select Class') . ' --'] + $classOptions;
         $this->controller->set(compact('classOptions', 'selectedClass'));
+        //POCOR-8898: end
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         $where[$this->aliasField('institution_id')] = $institutionId; //POCOR-6817
         $where[$this->aliasField('student_status_id NOT IN')] = 3; //POCOR-6817
@@ -505,7 +534,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
             ->innerJoin([$UsersTable->getAlias() => $UsersTable->getTable()], [
                 $UsersTable->aliasField('id = ') . $this->aliasField('student_id')
             ])
-            ->leftJoin(
+            ->innerJoin( //POCOR-8898: INNER JOIN — only show students who have an archived record
                 [$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
