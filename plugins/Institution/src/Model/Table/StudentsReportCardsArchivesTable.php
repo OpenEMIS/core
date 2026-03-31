@@ -434,16 +434,18 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
         )->fetchAll('assoc'); //POCOR-8898
         $archivedPeriodIds = array_column($archivedPeriodIds, 'academic_period_id'); //POCOR-8898
 
-        $academicPeriodOptions = [];
+        //POCOR-8898: always show period filter — restrict to archived periods when available, else full list
         if (!empty($archivedPeriodIds)) {
             $academicPeriodOptions = $this->AcademicPeriods->find('list')
                 ->where([$this->AcademicPeriods->aliasField('id IN') => $archivedPeriodIds])
                 ->order([$this->AcademicPeriods->aliasField('order')])
                 ->toArray(); //POCOR-8898
+        } else {
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]); //POCOR-8898: fallback so filter stays visible
         }
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id'))
             ? $this->request->getQuery('academic_period_id')
-            : (!empty($archivedPeriodIds) ? reset($archivedPeriodIds) : null); //POCOR-8898
+            : $this->AcademicPeriods->getCurrent(); //POCOR-8898
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
