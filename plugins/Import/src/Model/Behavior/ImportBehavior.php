@@ -674,6 +674,11 @@ class ImportBehavior extends Behavior
                         //POCOR-9294[END]
                         // Log::debug('@ImportBehavior::processImport attempting save with entity=' . json_encode($tableEntity->toArray())); //[TEMP-LOG]
                         //$model->log('@ImportBehavior pre-save errors=' . json_encode($errors), 'debug');
+                        //POCOR-9583 Start
+                        if($activeModel->getAlias() == 'AssessmentItemResults' && isset($tableEntity->institution_class_id)) {
+                            $tableEntity->set('institution_classes_id', $tableEntity->institution_class_id);
+                        } 
+                        //POCOR-9583 End
                         $newEntity = $activeModel->save($tableEntity);
                         // Log::debug('@ImportBehavior::processImport save result newEntity=' . json_encode($newEntity ? 'saved' : 'failed')); //[TEMP-LOG]
                         //POCOR-9584: merge errors set during beforeSave (not captured before save() runs)
