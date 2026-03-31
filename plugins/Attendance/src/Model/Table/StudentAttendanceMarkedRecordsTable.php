@@ -441,6 +441,18 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             );
         }
         //POCOR-7143[END]
+
+        //POCOR-9617: return a fresh query that confirms the saved record exists,
+        //so the restful API returns total > 0 and the JS sets isMarked = true
+        $query = $this->find()->where([
+            $this->aliasField('institution_class_id') => $institutionClassId,
+            $this->aliasField('education_grade_id') => $educationGradeId,
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+            $this->aliasField('date') => $day,
+            $this->aliasField('period IS') => $period,
+            $this->aliasField('no_scheduled_class') => 1,
+        ])->limit(1);
         //POCOR-9617: end
 
         return $query;
