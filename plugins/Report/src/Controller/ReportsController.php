@@ -405,6 +405,7 @@ class ReportsController extends AppController
         //POCOR-9567: start - prefer companion CSV (written at generation time, no timeout risk)
         $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
         if (file_exists($csvFileName) && is_readable($csvFileName)) {
+            $this->log('[POCOR-9567] Serving CSV soup: ' . $csvFileName, 'debug'); //POCOR-9567: log which path is used
             $csvHandle = fopen($csvFileName, 'r');
             $rowHeader = null;
             $rowHeaderNew = [];
@@ -424,6 +425,7 @@ class ReportsController extends AppController
             }
             fclose($csvHandle);
         } else {
+            $this->log('[POCOR-9567] Serving xlsx salad: ' . $inputFileName, 'debug'); //POCOR-9567: log which path is used
             // POCOR-8289 - for view report change in IOFactory logic
             // POCOR-9567: use read-data-only mode to skip formatting/formulas — 2-5x faster for large files
             try {
