@@ -74,6 +74,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     Controller.postError = [];
     Controller.pastTeachers = [];
     Controller.institutionSubjectName = null;
+    Controller.originalInstitutionSubjectName = null; //POCOR-9624
     Controller.academicPeriodId = null;
     Controller.institutionId = null;
     Controller.educationSubjectId = null;
@@ -129,6 +130,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             })
             .finally(markControllerReady);
 
+        $scope.$watch('InstitutionSubjectStudentsController.institutionSubjectName', onNameChange); //POCOR-9624
         $scope.$watch('InstitutionSubjectStudentsController.classes', onClassesChange);
         $scope.$watch('InstitutionSubjectStudentsController.teachers', onTeachersChange);
         $scope.$watch('InstitutionSubjectStudentsController.rooms', onRoomsChange);
@@ -143,6 +145,7 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     function setBasicData(institutionSubjectDetailsResponse) {
         Controller.institutionSubjectDetails = institutionSubjectDetailsResponse;
         Controller.institutionSubjectName = institutionSubjectDetailsResponse.name;
+        Controller.originalInstitutionSubjectName = institutionSubjectDetailsResponse.name; //POCOR-9624
         Controller.academicPeriodId = institutionSubjectDetailsResponse.academic_period_id;
         Controller.institutionId = institutionSubjectDetailsResponse.institution_id;
         Controller.academicPeriodName = institutionSubjectDetailsResponse.academic_period.name;
@@ -187,7 +190,16 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     }
 
     function checkIfCanSave() {
-        // List of base property names to compare
+        //POCOR-9624[START]
+        const normalize = function (val) {
+            return (val || '').toString().trim();
+        };
+
+        const hasNameChanged = !angular.equals(
+            normalize(Controller.institutionSubjectName),
+            normalize(Controller.originalInstitutionSubjectName)
+        );
+        
         const props = [
             'classes',
             'rooms',
@@ -195,17 +207,15 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
             'assignedStudents'
         ];
 
-        // Determine if any prop differs from its “original” counterpart
-        const hasChanged = props.some(prop => {
-            // Build the original property name, e.g. "originalClasses"
+        const hasCollectionChanged = props.some(prop => {
             const originalKey = 'original' +
                 prop.charAt(0).toUpperCase() +
                 prop.slice(1);
-            return !angular.equals(
-                Controller[prop],
-                Controller[originalKey]
-            );
+            return !angular.equals(Controller[prop], Controller[originalKey]);
+            //POCOR-9624[END]
         });
+
+        const hasChanged = hasNameChanged || hasCollectionChanged;
         // Enable save only if something changed
         Controller.disableSave = !hasChanged;
 
@@ -361,6 +371,12 @@ function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsS
     function onStudentsChange(newVal, oldVal) {
             checkIfCanSave();
     }
+
+    //POCOR-9624[START]
+    function onNameChange(newVal, oldVal) {
+            checkIfCanSave();
+    }
+    //POCOR-9624[END]
 
     function mapAssignedStudent(value) {
         return {
