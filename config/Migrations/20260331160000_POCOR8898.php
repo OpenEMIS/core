@@ -36,46 +36,57 @@ class POCOR8898 extends AbstractMigration
             $this->execute('CREATE TABLE `institution_students_report_cards_archived` LIKE `institution_students_report_cards`'); //POCOR-8898
         }
 
-        //POCOR-8898: insert security_function for Student Report Card Archive,
-        //positioned after Student Assessment Archive — shift existing rows to make room
-        $anchor = $this->fetchRow(
-            "SELECT `order`, `parent_id` FROM `security_functions`
-             WHERE `name` = 'Student Assessment Archive'
+        //POCOR-8898: insert security_function for Student Report Card Archive only if absent —
+        //guard against re-running on the same DB (up→down→up testing scenario)
+        $alreadyExists = $this->fetchRow(
+            "SELECT id FROM `security_functions`
+             WHERE `name` = 'Student Report Card Archive'
                AND `controller` = 'Institutions'
                AND `module` = 'Institutions'
                AND `category` = 'Students'
              LIMIT 1"
         ); //POCOR-8898
 
-        if ($anchor) { //POCOR-8898
-            $newOrder = (int) $anchor['order'] + 1; //POCOR-8898
-            $parentId = (int) $anchor['parent_id']; //POCOR-8898
-
-            //POCOR-8898: shift all sibling functions at order >= newOrder up by 1
-            $this->execute(
-                "UPDATE `security_functions`
-                 SET `order` = `order` + 1
-                 WHERE `parent_id` = {$parentId}
+        if (!$alreadyExists) { //POCOR-8898
+            $anchor = $this->fetchRow(
+                "SELECT `order`, `parent_id` FROM `security_functions`
+                 WHERE `name` = 'Student Assessment Archive'
+                   AND `controller` = 'Institutions'
+                   AND `module` = 'Institutions'
                    AND `category` = 'Students'
-                   AND `order` >= {$newOrder}
-                   AND `name` != 'Student Assessment Archive'"
+                 LIMIT 1"
             ); //POCOR-8898
 
-            $this->execute(
-                "INSERT IGNORE INTO `security_functions`
-                    (`id`, `name`, `controller`, `module`, `category`, `parent_id`,
-                     `_view`, `_edit`, `_add`, `_delete`, `_execute`,
-                     `order`, `visible`, `description`,
-                     `modified_user_id`, `modified`, `created_user_id`, `created`)
-                 VALUES
-                    (NULL,
-                     'Student Report Card Archive',
-                     'Institutions', 'Institutions', 'Students', {$parentId},
-                     'InstitutionStudentsReportCardsArchived.index | ReportCardArchives.index',
-                     NULL, NULL, NULL, NULL,
-                     {$newOrder}, 1, NULL,
-                     2, NOW(), 1, NOW())"
-            ); //POCOR-8898
+            if ($anchor) { //POCOR-8898
+                $newOrder = (int) $anchor['order'] + 1; //POCOR-8898
+                $parentId = (int) $anchor['parent_id']; //POCOR-8898
+
+                //POCOR-8898: shift all sibling functions at order >= newOrder up by 1
+                $this->execute(
+                    "UPDATE `security_functions`
+                     SET `order` = `order` + 1
+                     WHERE `parent_id` = {$parentId}
+                       AND `category` = 'Students'
+                       AND `order` >= {$newOrder}
+                       AND `name` != 'Student Assessment Archive'"
+                ); //POCOR-8898
+
+                $this->execute(
+                    "INSERT IGNORE INTO `security_functions`
+                        (`id`, `name`, `controller`, `module`, `category`, `parent_id`,
+                         `_view`, `_edit`, `_add`, `_delete`, `_execute`,
+                         `order`, `visible`, `description`,
+                         `modified_user_id`, `modified`, `created_user_id`, `created`)
+                     VALUES
+                        (NULL,
+                         'Student Report Card Archive',
+                         'Institutions', 'Institutions', 'Students', {$parentId},
+                         'InstitutionStudentsReportCardsArchived.index | ReportCardArchives.index',
+                         NULL, NULL, NULL, NULL,
+                         {$newOrder}, 1, NULL,
+                         2, NOW(), 1, NOW())"
+                ); //POCOR-8898
+            }
         }
     }
 
