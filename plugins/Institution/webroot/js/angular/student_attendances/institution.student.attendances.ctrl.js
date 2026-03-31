@@ -1478,6 +1478,11 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (classStudents) {
                 vm.updateClassStudentList(classStudents);
+                //POCOR-9617: stamp no_scheduled_class=1 on every row so the grid
+                //renders "No Lessons" immediately without a page reload
+                angular.forEach(vm.classStudentList, function (row) {
+                    row.no_scheduled_class = 1;
+                });
                 vm.setGridData();
                 vm.setColumnDef(true);
                 vm.countStudentData();
