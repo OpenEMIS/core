@@ -2669,6 +2669,11 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
+            'Reports.InstitutionInfrastructures' => [
+                'title' => 'Infrastructure',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
             /*POCOR-6513 starts - Added new report module*/
             'Reports.Performance' => [
                 'title' => 'Performance',
