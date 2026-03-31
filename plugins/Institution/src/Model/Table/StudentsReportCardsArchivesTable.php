@@ -210,7 +210,7 @@ class StudentsReportCardsArchivesTable extends ControllerActionTable
             "SELECT 1 FROM `{$archiveTable}` WHERE institution_id = {$institutionId} LIMIT 1"
         )->fetch('assoc'); //POCOR-8898
         if (empty($hasArchived)) {
-            $this->Alert->warning(__('No archived report cards found for this institution. You need to archive some report cards first.'), ['reset' => true, 'type' => 'string']); //POCOR-8898
+            $this->Alert->warning(__('No archived student report cards found for this institution.'), ['reset' => true, 'type' => 'string']); //POCOR-8898
         }
 
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
