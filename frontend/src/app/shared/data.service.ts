@@ -9,21 +9,25 @@ import { BehaviorSubject, Observable, Subject, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
 import { KdAlertEvent } from "openemis-styleguide-lib";
 
-import { environment } from "../../environments/environment";
+//POCOR-9594: environment URL removed — base URL derived dynamically from window.location.origin
 import urls from "./config.urls";
 
 @Injectable({ providedIn: "root" })
 export class DataService {
- 
-  // base Url to hold url for api call set in enviroment.ts file
-  apiV4BaseUrl = environment.apiV4BaseUrl;
+
+  //POCOR-9594: dynamic base URL — always call the same origin the browser is on
+  get apiV4BaseUrl(): string {
+    const base = localStorage.getItem('baseCoreUrl') || window.location.href;
+    return new URL('api/v4/', base).href;
+  }
+
   loginPayload = {
     // username:environment.user_name,
     // password:environment.password,
     // api_key:environment.api_key
   }
 
-  // Implementing behaviour subject for enabling and enabling and disabling next button 
+  // Implementing behaviour subject for enabling and enabling and disabling next button
   private nextBtn:BehaviorSubject<string> = new BehaviorSubject<string>('enable');
   nextBtnEvent:Observable<string> = this.nextBtn.asObservable();
 
@@ -162,19 +166,19 @@ export class DataService {
     )
     .pipe(catchError(this.handleError));
   }
-  
+
   getAcademicPeriod(){
     return this.httpClient
     .get(
       `${this.apiV4BaseUrl}/${urls.academicPeriods}/${urls.list}`, this.setHeader())
-      .pipe(catchError(this.handleError)); 
+      .pipe(catchError(this.handleError));
   }
 
   getEducationGrade(academic_period_id){
     return this.httpClient
     .get(
       `${this.apiV4BaseUrl}/${urls.educationGrades}/${urls.list}?academic_period_id=${academic_period_id}`, this.setHeader())
-      .pipe(catchError(this.handleError)); 
+      .pipe(catchError(this.handleError));
   }
 
   getNationality(){
@@ -228,7 +232,7 @@ export class DataService {
         .get(`${this.apiV4BaseUrl}/area-administrative/display-address-area-level`, this.setHeader())
         .pipe(catchError(this.handleError));
       }
-     
+
       getBirthPlace(){
         return this.httpClient
         .get(`${this.apiV4BaseUrl}/area-administrative/display-birthplace-area-level`, this.setHeader())
@@ -264,11 +268,11 @@ export class DataService {
       (err: any) => {
         console.log(err);
       }
-    ); 
+    );
   }
 
   readMessage():Observable<any>{
-    
+
     return this.httpClient.get('assets/configuration/configuration.json', {responseType: 'json'})
     .pipe(catchError(this.handleError));
   }
@@ -277,7 +281,7 @@ export class DataService {
     return this.httpClient
     .get(
       `${this.apiV4BaseUrl}/${urls.institution}/grades/${id}/list`, this.setHeader())
-      .pipe(catchError(this.handleError)); 
+      .pipe(catchError(this.handleError));
   }
 
   loadLanguage():Observable<any>{
@@ -292,16 +296,16 @@ export class DataService {
    // call on view button api
    pluginsView(userId){
     console.log(userId,"userId");
-    
+
     // console.log(`pluginsView , ${id}`);
     let pluginsUrl = `https://dmo-tst.openemis.org/marketplace/api/v1/plugins/${userId}`
-    return this.httpClient.get<any>(pluginsUrl, {}).pipe(catchError(this.handleError));    
+    return this.httpClient.get<any>(pluginsUrl, {}).pipe(catchError(this.handleError));
   }
 
-   // add api data 
+   // add api data
    public pluginsAdd(payload){
     let pluginsUrl = `${this.apiV4BaseUrl}/plugins`
     return this.httpClient.post<any>(pluginsUrl, payload).pipe(catchError(this.handleError))
   }
-  
+
 }

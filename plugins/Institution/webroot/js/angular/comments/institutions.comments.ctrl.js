@@ -12,6 +12,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     vm.comments = {};
     vm.currentUserName = null;
     vm.currentUserId = null;
+    vm.teacherSearchText = '';
+    vm.allTabs = []; // Store all tabs for filtering
+    vm.filteredTabs = []; // Store filtered tabs for display
 
     vm.pageSizeDropdown = null;
 
@@ -22,6 +25,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     vm.onEditClick = onEditClick;
     vm.onBackClick = onBackClick;
     vm.addPageSizeDropdown = addPageSizeDropdown;
+    vm.filterTeachers = filterTeachers;
+    vm.clearTeacherSearch = clearTeacherSearch;
 
     // Initialisation
     angular.element(document).ready(function() {
@@ -273,7 +278,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         // getTabs
         .then(function(tabs)
         {
-            vm.tabs = tabs;
+            vm.allTabs = tabs;
+            vm.filteredTabs = angular.copy(tabs);
+            vm.tabs = tabs; // Keep for backward compatibility
             if (angular.isObject(tabs) && tabs.length > 0) {
                 var tab = tabs[0];
                 vm.initGrid(tab);
@@ -546,5 +553,42 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         vm.count = 0;
         vm.onChangeSubject(vm.currentTab, limit);
         // var value = document.getElementById('page-size').value;
+    }
+
+    // Teacher tabs filter function - filters tabs by tabName (POCOR-XXXX: Similar to subject filter in results)
+    function filterTeachers() {
+        var searchText = vm.teacherSearchText.toLowerCase().trim();
+
+        if (searchText === '') {
+            // If search is empty, show all tabs
+            vm.filteredTabs = angular.copy(vm.allTabs);
+        } else {
+            // Filter tabs based on tabName match
+            vm.filteredTabs = vm.allTabs.filter(function(tab) {
+                return tab.tabName.toLowerCase().indexOf(searchText) !== -1;
+            });
+        }
+
+        // If the currently selected tab is not in filtered list, select the first available
+        if (vm.filteredTabs.length > 0) {
+            var currentTabExists = vm.filteredTabs.some(function(tab) {
+                return vm.currentTab && tab.id === vm.currentTab.id;
+            });
+
+            if (!currentTabExists) {
+                var firstTab = vm.filteredTabs[0];
+                vm.onChangeSubject(firstTab);
+            }
+        } else {
+            // No tabs match search, clear the grid
+            if (vm.gridOptions) {
+                vm.gridOptions.api.setRowData([]);
+            }
+        }
+    }
+
+    function clearTeacherSearch() {
+        vm.teacherSearchText = '';
+        filterTeachers();
     }
 }

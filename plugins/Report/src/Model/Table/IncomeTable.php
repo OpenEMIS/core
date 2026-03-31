@@ -5,7 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\AppTable;
 
@@ -45,6 +45,14 @@ class IncomeTable extends AppTable  {
         if ($areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId;
         }
+        $dateConditions = [];
+        if ($startDate) {
+            $dateConditions[$this->aliasField('date') . ' >='] = $startDate;
+        }
+
+        if ($endDate) {
+            $dateConditions[$this->aliasField('date') . ' <='] = $endDate;
+        }
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -67,9 +75,7 @@ class IncomeTable extends AppTable  {
             ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
                 'AcademicPeriods.id =' . $this->aliasField('academic_period_id')
             ])
-            ->where($conditions)
-
-            ->andWhere([$this->aliasField('date').' >= ' => $startDate, $this->aliasField('date').' <= ' => $endDate]);  
+            ->where($conditions)->andWhere($dateConditions);
                
     }
 
