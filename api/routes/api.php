@@ -445,6 +445,7 @@ Route::group(
         Route::get('/institutions/{institutionId}/academic-period/{academicPeriodId}/shifts', 'InstitutionController@shifts');
         Route::get('/institutions/{institutionId}/staffs', 'InstitutionController@staffs');
         Route::get('/institutions/{institutionId}/rooms', 'InstitutionController@rooms');
+        Route::get('/institutions/{institutionId}/rooms/for-timetable', 'InstitutionController@roomsForTimetable'); //POCOR-9594: rooms with building+floor display name for timetable lesson picker
         Route::get('/institutions/{institutionId}/education-grades/{educationGradeId}/institution-subjects/{institutionSubjectId}/classes', 'InstitutionController@subjectClasses');
         Route::get('/institutions/{institutionId}/classes/{classId}/unassigned-students', 'InstitutionController@unassignedStudentsInClass');
         Route::get('/institutions/{institutionId}/subjects/{subjectId}/unassigned-students', 'InstitutionController@unassignedStudentsInSubject');
