@@ -360,8 +360,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $subjectId = isset($options['subject_id']) ? (int)$options['subject_id'] : 0; //POCOR-9617
 
         //POCOR-9617: start
-        $getRecord = $this->find('all')
-            ->select([$this->aliasField('id')]) //POCOR-9617: select only id — existence check, no heavy hydration
+        //POCOR-9617: use COUNT(*) for existence check — no entity loading, no OOM risk on large datasets
+        $existsCount = $this->find('all')
             ->where([
                 $this->aliasField('institution_class_id') => $institutionClassId,
                 $this->aliasField('education_grade_id') => $educationGradeId,
@@ -369,9 +369,9 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('date') => $day,
                 $this->aliasField('period IS') => $period //POCOR-8383
-            ])->limit(1)->disableHydration()->toArray(); //POCOR-9617: limit(1)+disableHydration — prevents OOM on large datasets
+            ])->count(); //POCOR-9617: COUNT(*) — SQL only, zero entity hydration
 
-        if (!empty($getRecord)) {
+        if ($existsCount > 0) {
             $updateQuery = $this->query();
             $updateQuery->update()
                 ->set(['period' => $period, 'subject_id' => 0, 'no_scheduled_class' => 1])
