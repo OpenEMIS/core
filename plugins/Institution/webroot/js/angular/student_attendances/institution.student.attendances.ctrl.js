@@ -1469,33 +1469,30 @@ function InstitutionStudentAttendancesController(
                 UtilsSvc.isAppendLoader(false);
             });
     };
+    //POCOR-9617: named handler — called after No Scheduled save confirms isMarked=true
+    vm.onNoScheduledSaved = function (isMarked) {
+        vm.updateIsMarked(isMarked);
+        angular.forEach(vm.classStudentList, function (row) {
+            row.no_scheduled_class = 1;
+        });
+        vm.setColumnDef(true);  //POCOR-9617: column defs first so renderer has noScheduledClicked=true before rows render
+        vm.setGridData();
+        vm.countStudentData();
+        AlertSvc.reset($scope);
+    };
+
     vm.onNoScheduledClick = function () {
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
-        vm.noScheduledSaving = true; //POCOR-9617: block changeClass from overwriting grid
+        vm.noScheduledSaving = true; //POCOR-9617: block changeClass.finally from overwriting grid mid-save
         UtilsSvc.isAppendLoader(true);
 
-        //POCOR-9617: start
-        InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(
-            vm.getIsMarkedParams()
-        )
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                //POCOR-9617: stamp no_scheduled_class=1 on existing rows so cell renderer shows "No Lessons"
-                angular.forEach(vm.classStudentList, function (row) {
-                    row.no_scheduled_class = 1;
-                });
-                //POCOR-9617: setColumnDef first (sets renderer with noScheduledClicked=true), then setGridData to render rows
-                vm.setColumnDef(true);
-                vm.setGridData();
-                vm.countStudentData();
-                AlertSvc.reset($scope);
-            }, vm.error)
+        InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(vm.getIsMarkedParams())
+            .then(vm.onNoScheduledSaved, vm.error)
             .finally(function () {
-                vm.noScheduledSaving = false; //POCOR-9617: release block
+                vm.noScheduledSaving = false;
                 UtilsSvc.isAppendLoader(false);
             });
-        //POCOR-9617: end
     };
 
     vm.onExcelClick = function () {
