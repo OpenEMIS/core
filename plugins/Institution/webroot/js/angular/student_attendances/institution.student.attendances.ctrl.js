@@ -84,6 +84,7 @@ function InstitutionStudentAttendancesController(
 
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
+    vm.noScheduledSaving = false; //POCOR-9617: guard flag — blocks changeClass from overwriting grid during No Scheduled save
 
     vm.superAdmin = 1;
     vm.permissionView = 1;
@@ -1153,6 +1154,8 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (classStudents) {
                 logStep("getClassStudent (Data received)"); // Шаг 7
+                //POCOR-9617: skip overwriting grid if No Scheduled save is in progress
+                if (vm.noScheduledSaving) return;
                 if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
                     classStudents = [];
                 }
@@ -1162,6 +1165,11 @@ function InstitutionStudentAttendancesController(
                 // Замеряем время ДО тяжелых функций рендеринга
                 logStep("Before UI Rendering (setGridData/setColumnDef)");
 
+                //POCOR-9617: skip re-rendering grid if No Scheduled save is in progress
+                if (vm.noScheduledSaving) {
+                    UtilsSvc.isAppendLoader(false);
+                    return;
+                }
                 vm.setGridData();
                 vm.setColumnDef();
                 UtilsSvc.isAppendLoader(false);
@@ -1464,6 +1472,7 @@ function InstitutionStudentAttendancesController(
     vm.onNoScheduledClick = function () {
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
+        vm.noScheduledSaving = true; //POCOR-9617: block changeClass from overwriting grid
         UtilsSvc.isAppendLoader(true);
 
         //POCOR-9617: start
@@ -1472,7 +1481,7 @@ function InstitutionStudentAttendancesController(
         )
             .then(function (isMarked) {
                 vm.updateIsMarked(isMarked);
-                //POCOR-9617: stamp no_scheduled_class=1 on existing rows immediately
+                //POCOR-9617: stamp no_scheduled_class=1 on existing rows so cell renderer shows "No Lessons"
                 angular.forEach(vm.classStudentList, function (row) {
                     row.no_scheduled_class = 1;
                 });
@@ -1482,6 +1491,7 @@ function InstitutionStudentAttendancesController(
                 AlertSvc.reset($scope);
             }, vm.error)
             .finally(function () {
+                vm.noScheduledSaving = false; //POCOR-9617: release block
                 UtilsSvc.isAppendLoader(false);
             });
         //POCOR-9617: end
