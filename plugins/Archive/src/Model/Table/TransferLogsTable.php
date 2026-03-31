@@ -200,10 +200,9 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * common proc to show related user name
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @return mixed
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public function onGetGeneratedBy(EventInterface $event, Entity $entity)
     {
@@ -217,7 +216,6 @@ class TransferLogsTable extends ControllerActionTable
     /**
      * common proc to get the setting from Configuration
      * @return bool
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public static function hideAcademicPeriod()
     {
@@ -233,7 +231,6 @@ class TransferLogsTable extends ControllerActionTable
     /**
      * common proc to get the setting from Configuration
      * @return bool
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     public static function disableAcademicPeriod()
     {
@@ -250,7 +247,6 @@ class TransferLogsTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
@@ -312,11 +308,9 @@ class TransferLogsTable extends ControllerActionTable
     }
 
     /**
-     * @param Event $event
+     * @param EventInterface $event
      * @param Entity $entity
      * @param ArrayObject $data
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      */
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data)
@@ -421,9 +415,7 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
-     * cleaner code
+      * cleaner code
      * Archive following tables
      * institution_class_attendance_records
      * institution_student_absences
@@ -440,8 +432,6 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      * Archive following tables
      * institution_staff_attendances
@@ -456,8 +446,6 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      * archive following tables
      * assessment_item_results
@@ -492,8 +480,6 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity , $tablesToArchive, $shellName
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * Archive table records
      */
     private function archiveTableRecords(Entity $entity, $tablesToArchive, $shellName)
@@ -510,7 +496,7 @@ class TransferLogsTable extends ControllerActionTable
                         $academic_period_id);
                 $recordsToArchive = $recordsToArchive + $tableRecordsCount;
             }
-            
+
             if ($recordsToArchive == 0) {
 //                $this->log($entity, 'debug');
                 $entity['process_status'] = self::DONE;
@@ -593,8 +579,6 @@ class TransferLogsTable extends ControllerActionTable
      * @param $table_name
      * @param $academic_period_id
      * @return int
-     * POCOR-7521-KHINDOL
-     * @author Dr Khindol Madraimov <khindol.madraimov@gmail.com>
      * cleaner code
      */
     private static function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)

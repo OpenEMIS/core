@@ -3,68 +3,14 @@ declare(strict_types=1);
 
 use Migrations\AbstractMigration;
 
-// =============================================================================
-// POCOR-8898 — CRITICAL DATA INTEGRITY WARNING
-// =============================================================================
-//
-// This branch introduces STUDENT REPORT CARD ARCHIVING and refactors ALL
-// existing archive features (Student Attendances, Staff Attendances, Student
-// Assessments) from CakePHP Shells to CakePHP Commands.
-//
-// THE ARCHIVING PROCESS MOVES (not copies) records from live tables into
-// archive tables, then DELETES them from the live tables. This is destructive
-// and irreversible without the backups created here.
-//
-// TABLES BACKED UP IN up():
-//
-//   Feature: Student Report Cards  (NEW in this branch)
-//     institution_students_report_cards
-//
-//   security_functions  (modified by this migration)
-//
-// WHY ONLY THESE TWO:
-//   This branch also refactors Student Attendances, Staff Attendances, and
-//   Student Assessments archiving from CakePHP Shell to CakePHP Command.
-//   Those tables were backed up during development testing (as z_8898_* tables)
-//   and all three features were confirmed working correctly. Their backups were
-//   removed from this migration before production deployment to avoid copying
-//   potentially very large tables (causing unacceptable downtime on big installs).
-//
-// DO NOT deploy to production without:
-//   - A full database backup independent of this migration
-//   - Sysadmin awareness that archiving is destructive and one-way
-//   - Confirmation that no archive has been triggered since deployment
-//     (if it has, see SYSADMIN RESTORE INSTRUCTIONS in down())
-//
-// =============================================================================
 
 class POCOR8898 extends AbstractMigration
 {
-    // -------------------------------------------------------------------------
-    // Tables to back up. Only the table directly modified by this branch's
-    // new feature is backed up here. The other archive tables
-    // (student/staff attendances, assessments) were tested separately and
-    // confirmed working — their z_8898_ backups were dropped after testing
-    // to avoid copying large tables in production migrations.
-    // Prefix for backup tables: z_8898_
-    // -------------------------------------------------------------------------
-    private array $archiveTables = [
+        private array $archiveTables = [
         // Student Report Cards — NEW archiving feature in this branch
         'institution_students_report_cards',
     ]; //POCOR-8898
 
-    // Tables that had temporary z_8898_ backups during testing but are now
-    // removed from the backup list. down() will clean them up if they exist.
-    private array $testOnlyBackups = [
-        'institution_class_attendance_records',
-        'institution_student_absences',
-        'institution_student_absence_details',
-        'student_attendance_marked_records',
-        'student_attendance_mark_types',
-        'institution_staff_attendances',
-        'institution_staff_leave',
-        'assessment_item_results',
-    ]; //POCOR-8898
 
     private function backupTables(): void //POCOR-8898
     {
@@ -107,15 +53,6 @@ class POCOR8898 extends AbstractMigration
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
 
-        // Drop test-only backup tables created during testing (if they still exist)
-        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
-        foreach ($this->testOnlyBackups as $table) {
-            $backup = 'z_8898_' . $table;
-            if ($this->hasTable($backup)) {
-                $this->execute("DROP TABLE IF EXISTS `{$backup}`");
-            }
-        }
-        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     } //POCOR-8898
 
     // =========================================================================
@@ -201,51 +138,5 @@ class POCOR8898 extends AbstractMigration
             $this->execute('DROP TABLE IF EXISTS `institution_students_report_cards_archived`'); //POCOR-8898
         }
 
-        // Do NOT drop institution_students_report_cards_archived here.
-        //
-        // =====================================================================
-        // POCOR-8898 — SYSADMIN MANUAL RESTORE INSTRUCTIONS
-        // =====================================================================
-        //
-        // After this rollback, all live tables have been restored to their
-        // state AT THE TIME this migration originally ran (before any archiving).
-        //
-        // IF any archiving was performed after the migration ran, those records
-        // were MOVED out of the live tables into archive tables:
-        //   institution_students_report_cards_archived
-        //   (and equivalents for student/staff attendances, assessments if applicable)
-        //
-        // Those archived records are NOT in the backups restored above.
-        // They now exist ONLY in the archive tables.
-        //
-        // -----------------------------------------------------------------------
-        // TO RECOVER ARCHIVED REPORT CARD RECORDS:
-        // -----------------------------------------------------------------------
-        //
-        // Step 1 — Check how many archived records exist:
-        //   SELECT COUNT(*) FROM `institution_students_report_cards_archived`;
-        //
-        // Step 2 — Copy archived records back to the live table (safe to re-run):
-        //   INSERT IGNORE INTO `institution_students_report_cards`
-        //   SELECT * FROM `institution_students_report_cards_archived`;
-        //
-        // Step 3 — Verify count before dropping:
-        //   SELECT COUNT(*) FROM `institution_students_report_cards`
-        //   WHERE (report_card_id, student_id, institution_id, academic_period_id, education_grade_id)
-        //   IN (SELECT report_card_id, student_id, institution_id, academic_period_id, education_grade_id
-        //       FROM `institution_students_report_cards_archived`);
-        //
-        // Step 4 — Only after confirming records are restored, drop the archive:
-        //   DROP TABLE `institution_students_report_cards_archived`;
-        //
-        // -----------------------------------------------------------------------
-        // The same logic applies to other archive tables if those features were
-        // triggered. Check institution_class_attendance_records_archived,
-        // assessment_item_results_archived, etc. as appropriate.
-        //
-        // WARNING: Do NOT drop any archive table without first verifying its
-        // records are safely present in the corresponding live table.
-        // Premature deletion means permanent, unrecoverable data loss.
-        // =====================================================================
-    }
+            }
 }
