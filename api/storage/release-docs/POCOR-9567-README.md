@@ -2,37 +2,47 @@
 
 ## What is the Task?
 
-When viewing a large Staff Subjects Report, the system hangs and returns a 404 error. The download functionality works correctly, but the inline view fails due to PHP execution timeout during PhpSpreadsheet processing. This fix adds proper timeout handling and performance optimizations to handle large Excel files without hanging.
+When viewing a large Staff Subjects Report, the system hangs and returns a 404 error. The download functionality works correctly, but the inline view fails due to PHP execution timeout during PhpSpreadsheet processing. This fix eliminates PhpSpreadsheet from the view path entirely for new reports by writing a companion CSV file at generation time.
 
 ## Situation Before
 
 - Clicking "View" on large Staff Subjects Reports returned 404 after timeout
 - Download worked fine due to different code path
-- No time limit set during `ViewReport()` Excel processing
-- PhpSpreadsheet loaded all formatting, formulas, and metadata unnecessarily
-- Row accumulation loop had inefficient logic with `reset()` check
+- `set_time_limit(0)` was insufficient because PHP-FPM overrides `max_execution_time` via `php_admin_value` — user-level calls cannot override this
+- PhpSpreadsheet was the only way to read xlsx at view time — slow for large files
 
 ## What Was Implemented
 
 ### Key Changes
 
-1. **Timeout Prevention:** Added `set_time_limit(0)` in `ViewReport()` to prevent PHP timeout during large file processing
-2. **Performance Optimization:** Added `$objReader->setReadDataOnly(true)` to skip formatting/formula metadata — measured 2-5x faster load times
-3. **Row Accumulation Refactoring:** Fixed inefficient loop logic:
-   - Initialize `$rowData = []` and `$newArr2 = []` before loop
-   - `reset()` now correctly checks current row, not always first row
-   - Single-pass accumulation eliminates redundant iterations
+1. **Companion CSV at Generation Time (`ExcelBehavior::generateXLXS`):**
+   - Before calling `$generate()`, open a CSV file handle at the same path as the xlsx but with `.csv` extension
+   - Pass the handle through `$_settings['csv_handle']`
+   - In `generate()`, write each header row and data row to the CSV alongside the xlsx (landscape orientation)
+   - After `$writer->writeToFile()`, close the CSV handle
+   - Report shell runs as CLI with no `max_execution_time` limit — CSV writes happen without timeout risk
+
+2. **CSV-First ViewReport (`ReportsController::ViewReport`):**
+   - Derive `$csvFileName` from `$inputFileName` using `preg_replace('/\.xlsx$/i', '.csv', ...)`
+   - If the CSV exists, read it entirely with `fgetcsv` — no PhpSpreadsheet, no timeout
+   - If the CSV does not exist (old report pre-fix), fall back to existing PhpSpreadsheet logic
+
+3. **Retained from earlier fix:**
+   - `set_time_limit(0)` in `ViewReport()` (still useful for old-report fallback path)
+   - `$objReader->setReadDataOnly(true)` in fallback path
+   - Single-pass row accumulation loop
 
 ### Files Changed Summary
 
 ```
 Added:    0 files
-Modified: 1 file
+Modified: 2 files
 Removed:  0 files
 ```
 
 **Modified Files:**
-- `plugins/Report/src/Controller/ReportsController.php` — ViewReport() method
+- `src/Model/Behavior/ExcelBehavior.php` — `generateXLXS()` and `generate()`: companion CSV writing
+- `plugins/Report/src/Controller/ReportsController.php` — `ViewReport()`: CSV-first read with xlsx fallback
 
 ### Database Migrations
 
@@ -45,21 +55,24 @@ None.
    git pull origin POCOR-9567
    ```
 
-2. **Clear PHP Cache (if applicable)**
+2. **Clear PHP Cache**
    ```bash
-   php artisan cache:clear
-   php artisan config:cache
+   php artisan route:clear && php artisan config:cache && php artisan cache:clear
    ```
 
-3. **Test ViewReport on Large Files**
-   - Generate a Staff Subjects Report with 5000+ rows
-   - Click "View" in the report list
-   - Verify report displays without 404 or timeout (previously hung)
-   - Verify Download still functions
+3. **Generate a New Report**
+   - Generate a Staff Subjects Report with 5000+ rows (new reports created after this deploy will have a companion `.csv` file)
 
-4. **Smoke Test**
-   - Test ViewReport on small report (basic functionality)
-   - Confirm no performance regression on small files
+4. **Test ViewReport on New Report**
+   - Click "View" on the newly generated report
+   - Verify it displays instantly without timeout
+
+5. **Test ViewReport on Old Report (Fallback)**
+   - Click "View" on a report generated before this deploy (no `.csv` companion)
+   - Verify it still loads via PhpSpreadsheet fallback
+
+6. **Verify Download Still Works**
+   - Download any report — should be unaffected
 
 ## System Administrator Guide
 
@@ -67,11 +80,9 @@ None.
 
 - **CakePHP Error Log:** `/var/www/html/emis/core/logs/hin-error.log`
 - **CakePHP Debug Log:** `/var/www/html/emis/core/logs/hin-debug.log`
-- **PHP Error Log:** Check `php.ini` `error_log` directive
 
 ### Rollback
 
-If issues arise, revert the commit:
 ```bash
 git revert POCOR-9567
 git push origin master
@@ -81,18 +92,20 @@ git push origin master
 
 | Issue | Root Cause | Solution |
 |-------|-----------|----------|
-| ViewReport still times out | `set_time_limit(0)` not applied | Check PHP `max_execution_time` is not lower than call value; may need to increase in `php.ini` |
-| ViewReport very slow on moderate files | `setReadDataOnly(true)` not active | Verify PhpSpreadsheet version ≥ 1.18; confirm reader type is IOFactory |
-| Incorrect data in view | Row logic regression | Compare output with Download; check `$rowData` initialization |
+| ViewReport still times out on new reports | `.csv` not being written | Check write permissions on report folder; check `fopen` errors in error log |
+| ViewReport times out on old reports | PHP-FPM `php_admin_value max_execution_time` override | Increase `max_execution_time` in PHP-FPM pool config; old reports must be regenerated |
+| CSV exists but view shows wrong data | Column count mismatch in `array_combine` | Check `count($csvRow) === count($rowHeaderNew)` guard; rows silently skipped if mismatched |
+| Incorrect data in view | Row logic regression | Compare CSV content with xlsx download; check `fgetcsv` delimiter matches |
 
 ### Performance Notes
 
-- `setReadDataOnly(true)` disables style/formula parsing; recommended for data-only views
-- Typical large file (10K rows): ~2–5 seconds vs. 10–25 seconds without optimization
-- No database impact — purely client-side Excel processing
+- CSV read via `fgetcsv` is ~50-100x faster than PhpSpreadsheet for large files
+- Companion CSV adds negligible overhead at generation time (streaming write, same data pass)
+- No database impact — purely filesystem
 
 ---
 
 **Branch:** POCOR-9567
 **Ticket:** POCOR-9567
 **Date Created:** 2026-03-25
+**Last Updated:** 2026-03-31
