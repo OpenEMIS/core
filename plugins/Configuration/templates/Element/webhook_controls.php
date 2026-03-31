@@ -4,36 +4,14 @@
 			$template = $this->ControllerAction->getFormTemplate();
 			$this->Form->templates($template);
 
-			//POCOR-9257: type dropdown base URL (no type param — JS adds it via data-named-key)
-			$typeBaseUrl = $this->Url->build([
-				'plugin' => $this->request->getParam('plugin'),
-				'controller' => $this->request->getParam('controller'),
-				'action' => $this->request->getParam('action'),
-			]);
-
-			//POCOR-9257: webhook filter base URL preserves type=49 so Configurations scope is kept
-			$typeParam = $this->request->getQuery('type');
+			//POCOR-9257: standalone controller — no type param needed, build filter URL directly
 			$filterBaseUrl = $this->Url->build([
 				'plugin' => $this->request->getParam('plugin'),
 				'controller' => $this->request->getParam('controller'),
 				'action' => $this->request->getParam('action'),
-				'?' => array_filter(['type' => $typeParam]),
 			]);
 
-			//POCOR-9257: start - combined type filter + webhook filters in one toolbar line
-			// Type dropdown — rendered from typeOptions set by ConfigItemsBehavior
-			if (!empty($typeOptions)) {
-				echo $this->Form->select('config_item_type', ['-1' => __('-- Select Type --')] + $typeOptions, [
-					'class' => 'form-control',
-					'style' => 'flex:0 0 auto; min-width:150px;',
-					'value' => $this->request->getQuery('type'),
-					'url' => $typeBaseUrl,
-					'data-named-key' => 'type',
-					// No data-named-group: changing type navigates away, don't preserve webhook filters
-				]);
-			}
-
-			// Webhook filters — share filterBaseUrl which keeps type=49
+			//POCOR-9257: start - webhook filters only (type dropdown removed — no ConfigItemsBehavior)
 			echo $this->Form->select('event_key', $eventKeyOptions, [
 				'class' => 'form-control',
 				'style' => 'flex:0 0 auto; min-width:150px;',
