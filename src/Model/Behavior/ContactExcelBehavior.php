@@ -202,7 +202,9 @@ class ContactExcelBehavior extends Behavior
                 $id = $settings['id'];
                 if ($id != 0 && $this->_table->request->getParam('action') != 'InstitutionCalendars') {//POCOR-8469
                     $primaryKey = $table->getPrimaryKey();
-                    $query->where([$table->aliasField($primaryKey) => $id]);
+                    if (!is_array($primaryKey)) { //POCOR-9615: Skip if composite primary key (e.g. student_attendance_marked_records)
+                        $query->where([$table->aliasField($primaryKey) => $id]);
+                    }
                 }
             }
 
