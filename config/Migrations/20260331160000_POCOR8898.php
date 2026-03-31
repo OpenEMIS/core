@@ -15,33 +15,20 @@ use Migrations\AbstractMigration;
 // archive tables, then DELETES them from the live tables. This is destructive
 // and irreversible without the backups created here.
 //
-// TABLES AFFECTED BY ARCHIVING (all backed up in up()):
-//
-//   Feature: Student Attendances
-//     institution_class_attendance_records
-//     institution_student_absences
-//     institution_student_absence_details
-//     student_attendance_marked_records
-//     student_attendance_mark_types
-//
-//   Feature: Staff Attendances
-//     institution_staff_attendances
-//     institution_staff_leave
-//
-//   Feature: Student Assessments
-//     assessment_item_results
+// TABLES BACKED UP IN up():
 //
 //   Feature: Student Report Cards  (NEW in this branch)
 //     institution_students_report_cards
 //
-// WHY ALL THESE TABLES:
-//   This branch changes the internal mechanism used to trigger archiving —
-//   from CakePHP Shell (bin/cake ArchiveStudentAttendances) to CakePHP Command
-//   (bin/cake archive_student_attendances). While the SQL logic is unchanged,
-//   the refactor touches the dispatch path for ALL archive features. If a bug
-//   was introduced in the Command layer, any of these features could misbehave
-//   and corrupt or lose data. Backing up all affected tables here means down()
-//   can restore a clean pre-POCOR-8898 state for all of them.
+//   security_functions  (modified by this migration)
+//
+// WHY ONLY THESE TWO:
+//   This branch also refactors Student Attendances, Staff Attendances, and
+//   Student Assessments archiving from CakePHP Shell to CakePHP Command.
+//   Those tables were backed up during development testing (as z_8898_* tables)
+//   and all three features were confirmed working correctly. Their backups were
+//   removed from this migration before production deployment to avoid copying
+//   potentially very large tables (causing unacceptable downtime on big installs).
 //
 // DO NOT deploy to production without:
 //   - A full database backup independent of this migration
@@ -54,23 +41,29 @@ use Migrations\AbstractMigration;
 class POCOR8898 extends AbstractMigration
 {
     // -------------------------------------------------------------------------
-    // All tables to back up, grouped by archive feature.
+    // Tables to back up. Only the table directly modified by this branch's
+    // new feature is backed up here. The other archive tables
+    // (student/staff attendances, assessments) were tested separately and
+    // confirmed working — their z_8898_ backups were dropped after testing
+    // to avoid copying large tables in production migrations.
     // Prefix for backup tables: z_8898_
     // -------------------------------------------------------------------------
     private array $archiveTables = [
-        // Student Attendances — refactored Shell → Command
+        // Student Report Cards — NEW archiving feature in this branch
+        'institution_students_report_cards',
+    ]; //POCOR-8898
+
+    // Tables that had temporary z_8898_ backups during testing but are now
+    // removed from the backup list. down() will clean them up if they exist.
+    private array $testOnlyBackups = [
         'institution_class_attendance_records',
         'institution_student_absences',
         'institution_student_absence_details',
         'student_attendance_marked_records',
         'student_attendance_mark_types',
-        // Staff Attendances — refactored Shell → Command
         'institution_staff_attendances',
         'institution_staff_leave',
-        // Student Assessments — refactored Shell → Command
         'assessment_item_results',
-        // Student Report Cards — NEW archiving feature in this branch
-        'institution_students_report_cards',
     ]; //POCOR-8898
 
     private function backupTables(): void //POCOR-8898
@@ -113,6 +106,16 @@ class POCOR8898 extends AbstractMigration
             $this->execute('RENAME TABLE `z_8898_security_functions` TO `security_functions`');
             $this->execute('SET FOREIGN_KEY_CHECKS=1;');
         }
+
+        // Drop test-only backup tables created during testing (if they still exist)
+        $this->execute('SET FOREIGN_KEY_CHECKS=0;');
+        foreach ($this->testOnlyBackups as $table) {
+            $backup = 'z_8898_' . $table;
+            if ($this->hasTable($backup)) {
+                $this->execute("DROP TABLE IF EXISTS `{$backup}`");
+            }
+        }
+        $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     } //POCOR-8898
 
     // =========================================================================
