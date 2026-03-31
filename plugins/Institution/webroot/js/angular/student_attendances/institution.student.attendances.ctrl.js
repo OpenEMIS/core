@@ -84,8 +84,7 @@ function InstitutionStudentAttendancesController(
 
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
-    vm.noScheduledSaving = false; //POCOR-9617: guard flag — blocks changeClass from overwriting grid during No Scheduled save
-    vm.changeClassGeneration = 0; //POCOR-9617: incremented each changeClass call; stale calls skip grid render
+    vm.noScheduledSaving = false; //POCOR-9617: true while No Scheduled save+render is in progress; changeClass skips render
 
     vm.superAdmin = 1;
     vm.permissionView = 1;
@@ -1086,9 +1085,6 @@ function InstitutionStudentAttendancesController(
             // console.log(`⏱ [${stepName}] выполнено за ${elapsed} ms`);
         };
 
-        vm.changeClassGeneration++; //POCOR-9617: tag this invocation; stale calls must not render
-        var myGeneration = vm.changeClassGeneration;
-
         // console.log("🚀 Начинаю смену класса...");
         UtilsSvc.isAppendLoader(true);
 
@@ -1158,8 +1154,8 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (classStudents) {
                 logStep("getClassStudent (Data received)"); // Шаг 7
-                //POCOR-9617: discard result if a newer changeClass or No Scheduled save has taken over
-                if (myGeneration !== vm.changeClassGeneration || vm.noScheduledSaving) return;
+                //POCOR-9617: skip updating student list if No Scheduled save owns the grid right now
+                if (vm.noScheduledSaving) return;
                 if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
                     classStudents = [];
                 }
@@ -1169,8 +1165,8 @@ function InstitutionStudentAttendancesController(
                 // Замеряем время ДО тяжелых функций рендеринга
                 logStep("Before UI Rendering (setGridData/setColumnDef)");
 
-                //POCOR-9617: skip re-render if stale or No Scheduled save has taken over
-                if (myGeneration !== vm.changeClassGeneration || vm.noScheduledSaving) {
+                //POCOR-9617: skip re-render if No Scheduled save owns the grid right now
+                if (vm.noScheduledSaving) {
                     UtilsSvc.isAppendLoader(false);
                     return;
                 }
@@ -1473,30 +1469,27 @@ function InstitutionStudentAttendancesController(
                 UtilsSvc.isAppendLoader(false);
             });
     };
-    //POCOR-9617: named handler — called after No Scheduled save confirms isMarked=true
+    //POCOR-9617: named handler — called after No Scheduled save confirms save succeeded
     vm.onNoScheduledSaved = function (isMarked) {
-        vm.updateIsMarked(isMarked);
-        angular.forEach(vm.classStudentList, function (row) {
-            row.no_scheduled_class = 1;
-        });
-        vm.setColumnDef(true);  //POCOR-9617: column defs first so renderer has noScheduledClicked=true before rows render
-        vm.setGridData();
-        vm.countStudentData();
         AlertSvc.reset($scope);
+        //POCOR-9617: release guard so the fresh changeClass below can render
+        vm.noScheduledSaving = false;
+        UtilsSvc.isAppendLoader(false);
+        //POCOR-9617: reload from DB — DB now has no_scheduled_class=1, so changeClass will render "No Lessons"
+        vm.changeClass();
     };
 
     vm.onNoScheduledClick = function () {
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
-        vm.noScheduledSaving = true; //POCOR-9617: block changeClass.finally from overwriting grid mid-save
-        vm.changeClassGeneration++; //POCOR-9617: invalidate any in-flight changeClass — its data is now stale
+        vm.noScheduledSaving = true; //POCOR-9617: block any concurrent in-flight changeClass from overwriting
         UtilsSvc.isAppendLoader(true);
 
         InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(vm.getIsMarkedParams())
             .then(vm.onNoScheduledSaved, vm.error)
-            .finally(function () {
+            .catch(function (err) {
                 vm.noScheduledSaving = false;
-                UtilsSvc.isAppendLoader(false);
+                vm.error(err);
             });
     };
 
