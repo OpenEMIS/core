@@ -417,21 +417,18 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         //POCOR-9617: end
 
         //POCOR-7143[START]
-        $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-        $totalMarkedCount = $StudentAttendanceMarkedRecords
-            ->find()
-            ->select([$StudentAttendanceMarkedRecords->aliasField('id')]) //POCOR-9617: existence check only
-            ->where([
-                $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
-                $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
-                $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
-                $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-                $StudentAttendanceMarkedRecords->aliasField('date') => $day,
-                $StudentAttendanceMarkedRecords->aliasField('period IS') => $period,
-            ])
-            ->disableHydration() //POCOR-9617: no entity needed, just existence check
-            ->first();
-        if (!empty($totalMarkedCount)) {
+        //POCOR-9617: raw SQL existence check for POCOR-7143 block — bypasses ORM memory overhead
+        $periodSql7143 = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+        $markedCheckSql = "SELECT 1 FROM `{$tableName}`
+            WHERE institution_id = {$institutionId}
+              AND academic_period_id = {$academicPeriodId}
+              AND institution_class_id = {$institutionClassId}
+              AND education_grade_id = {$educationGradeId}
+              AND `date` = '{$day}'
+              AND {$periodSql7143}
+            LIMIT 1";
+        $markedCheckResult = $connection->execute($markedCheckSql)->fetchAll('assoc');
+        if (!empty($markedCheckResult)) {
             $explodedData = explode("-", $day);
             $year = (int) $explodedData[0];
             $month = (int) $explodedData[1];
