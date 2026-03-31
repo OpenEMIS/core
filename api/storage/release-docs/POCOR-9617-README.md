@@ -45,7 +45,67 @@ Under Attendance > Students, clicking "No Scheduled Lessons" for a day where no 
    - Click "No Scheduled Lessons" — the day should now show "No Lessons" and the button state should persist on navigation.
    - Go to a day that has some students marked as absent, click "No Scheduled Lessons" — verify the absence records are cleared (students no longer show as absent when you return to normal edit mode on that day).
 
-## 5. System Administrator Guide
+## 5. Known Architectural Issue — Memory Exhaustion on Large Deployments
+
+### The Problem
+
+On large production servers (e.g. GY-MOE-TST) with many years of attendance data, clicking "No Scheduled Lessons" caused a PHP `Fatal Error: Allowed memory size exhausted` crash, even when the PHP memory limit was already set to 2 GB. The crash occurred inside `findNoScheduledClass()` during CakePHP ORM existence checks — even a simple `.first()` or `.count()` query OOMed because the CakePHP ORM hydrates entities into memory before the result is used.
+
+The fix (raw SQL `SELECT 1 ... LIMIT 1`) resolves the OOM on the existence checks. However, the returned `$query` at the end of `findNoScheduledClass` (used by the restful API's `total` count) still uses ORM and will still OOM on very large datasets. The INSERT/UPDATE commits to the database *before* the crash, so the "No Lessons" state is written correctly — the JS frontend always reloads from DB via `changeClass()` regardless of the API response, so the UI still reflects the correct state.
+
+### Root Cause: Table Architecture
+
+The two tables involved have an unusual primary key design:
+
+**`student_attendance_marked_records`**
+
+| Column | Type | Key |
+|--------|------|-----|
+| institution_id | int | PRI (1st) |
+| academic_period_id | int | PRI (2nd) |
+| institution_class_id | int | PRI (3rd) |
+| education_grade_id | int | PRI (4th) |
+| date | date | PRI (5th) |
+| period | int | PRI (6th) |
+| subject_id | int | PRI (7th) |
+| no_scheduled_class | tinyint | — |
+
+The entire primary key is a 7-column composite. There is no surrogate `id` column. The composite PK doubles as the only unique lookup index, but CakePHP ORM builds entity objects for every matched row before returning results — on a table with millions of rows this hydration is extremely expensive.
+
+**`institution_student_absence_details`**
+
+| Column | Type | Key |
+|--------|------|-----|
+| student_id | int | PRI (1st) |
+| institution_id | int | PRI (2nd) |
+| academic_period_id | int | PRI (3rd) |
+| institution_class_id | int | PRI (4th) |
+| date | date | PRI (5th) |
+| period | int | PRI (6th) |
+| subject_id | int | PRI (7th) |
+
+Same pattern — no surrogate key, 7-column composite PK. Separate indexes on `date` and `period` exist but are single-column, so a lookup by `institution_class_id + date + period` cannot use the composite PK efficiently unless all leading columns are also provided.
+
+### Recommendation for System Administrators
+
+On large deployments (> 500,000 rows in `student_attendance_marked_records`):
+
+1. **Add a composite index** covering the most common lookup pattern used by `findNoScheduledClass`:
+   ```sql
+   ALTER TABLE student_attendance_marked_records
+   ADD INDEX idx_nsc_lookup (institution_class_id, education_grade_id, date, period);
+
+   ALTER TABLE institution_student_absence_details
+   ADD INDEX idx_absence_cleanup (institution_class_id, date, period);
+   ```
+2. **Increase PHP memory limit** to at least 4 GB if the ORM path is still triggered by other attendance features.
+3. **Monitor** `logs/hin-error.log` for `Allowed memory size exhausted` errors after deployment — they indicate the ORM-based `$query` return path at the end of `findNoScheduledClass` is still being reached on very large result sets.
+
+### Long-Term Fix (Future Ticket)
+
+Replace the final ORM `$query` return in `findNoScheduledClass()` with a raw SQL count, the same way the existence checks were replaced. This would eliminate the last OOM vector in this function entirely.
+
+## 6. System Administrator Guide
 
 - **Log locations:** CakePHP error log at `logs/hin-error.log`, debug log at `logs/hin-debug.log`.
 - **Configuration:** None required.
