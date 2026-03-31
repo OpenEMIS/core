@@ -1467,16 +1467,19 @@ function InstitutionStudentAttendancesController(
         UtilsSvc.isAppendLoader(true);
 
         //POCOR-9617: start
+        console.log('[POCOR-9617] onNoScheduledClick fired, classStudentList length:', vm.classStudentList ? vm.classStudentList.length : 'null');
         InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(
             vm.getIsMarkedParams()
         )
             .then(function (isMarked) {
+                console.log('[POCOR-9617] getNoScheduledClassMarked resolved, isMarked:', isMarked);
                 vm.updateIsMarked(isMarked);
-                //POCOR-9617: stamp no_scheduled_class=1 on existing rows immediately —
-                //avoids timing race where changeDay() reload renders before data arrives
+                console.log('[POCOR-9617] classStudentList length at stamp time:', vm.classStudentList ? vm.classStudentList.length : 'null');
+                //POCOR-9617: stamp no_scheduled_class=1 on existing rows immediately
                 angular.forEach(vm.classStudentList, function (row) {
                     row.no_scheduled_class = 1;
                 });
+                console.log('[POCOR-9617] stamped, calling setGridData + setColumnDef(true)');
                 vm.setGridData();
                 vm.setColumnDef(true);
                 vm.countStudentData();
