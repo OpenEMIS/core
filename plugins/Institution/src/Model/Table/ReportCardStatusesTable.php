@@ -354,7 +354,48 @@ class ReportCardStatusesTable extends ControllerActionTable
             ])
             ->enableHydration(false)
             ->toArray();
+        //POCOR-8898: start
+        $this->addExtraButtons($extra);
     }
+
+    private function addExtraButtons(ArrayObject $extra) //POCOR-8898
+    {
+        $toolbarButtons = $extra['toolbarButtons']; //POCOR-8898
+        $this->addArchiveButton($toolbarButtons); //POCOR-8898
+    }
+
+    private function addArchiveButton($toolbarButtons) //POCOR-8898
+    {
+        $queryString = $this->getQueryString(); //POCOR-8898
+        $encodedQueryString = $this->paramsEncode($queryString); //POCOR-8898
+        $customButtonUrl = [ //POCOR-8898
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ReportCardArchives',
+            '0' => 'index',
+            $encodedQueryString,
+        ];
+        $this->generateButton($toolbarButtons, 'archive', __('Archive'), '<i class="fa fa-folder"></i>', $customButtonUrl); //POCOR-8898
+    }
+
+    private function generateButton(ArrayObject $toolbarButtons, $name, $title, $label, $url, $btnAttr = null) //POCOR-8898
+    {
+        if (!$btnAttr) { //POCOR-8898
+            $btnAttr = $this->getButtonAttr(); //POCOR-8898
+        }
+        $customButton = []; //POCOR-8898
+        foreach (['_ext', 'pass', 'paging', 'filter'] as $key) { //POCOR-8898
+            unset($url[$key]); //POCOR-8898
+        }
+        $customButton['type'] = 'button'; //POCOR-8898
+        $customButton['attr'] = $btnAttr; //POCOR-8898
+        $customButton['attr']['title'] = $title; //POCOR-8898
+        $customButton['label'] = $label; //POCOR-8898
+        $customButton['url'] = $url; //POCOR-8898
+        $customButton['name'] = $name; //POCOR-8898
+        $toolbarButtons[$name] = $customButton; //POCOR-8898
+    }
+    //POCOR-8898: end
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
