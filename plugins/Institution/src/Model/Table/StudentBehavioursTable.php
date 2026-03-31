@@ -1258,6 +1258,35 @@ class StudentBehavioursTable extends ControllerActionTable
         return $attr;
     }
     //POCOR-8665 End
+
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        // populate 'to be deleted' field
+        $student = TableRegistry::getTableLocator()->get('Security.Users')->get($entity->student_id);
+        $entity->showDeletedValueAs = $student['first_name'] . ' ' . $student['last_name'];
+    }
+
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        
+        $this->StudentBehaviourAttachments = TableRegistry::getTableLocator()->get('Institution.StudentBehaviourAttachments');
+        // Check if any associated records exist in any related tables.
+        $associatedRecordsExist = 
+            $this->StudentBehaviourAttachments->exists([
+                'student_behaviour_id' => $entity->id
+            ]);
+
+            
+        // If associated records exist, show alert message and abort deletion
+        if ($associatedRecordsExist) {
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            
+            $url = $this->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
 }
 
 
