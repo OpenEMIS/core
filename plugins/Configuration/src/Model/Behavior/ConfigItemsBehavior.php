@@ -61,6 +61,9 @@ class ConfigItemsBehavior extends Behavior
             if (in_array($value, (array) Configure::read('School.excludedPlugins'))) {
                 unset($typeOptions[$key]);
             }
+            if ($value === 'Webhooks') { //POCOR-9257: Webhooks has its own dedicated page under System Setup
+                unset($typeOptions[$key]);
+            }
         }
         //POCOR-8883 code logic change start
         $selectedType = $this->model->queryString('type', $typeOptions);
