@@ -360,16 +360,20 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $subjectId = isset($options['subject_id']) ? (int)$options['subject_id'] : 0; //POCOR-9617
 
         //POCOR-9617: start
-        //POCOR-9617: use COUNT(*) for existence check — no entity loading, no OOM risk on large datasets
-        $existsCount = $this->find('all')
-            ->where([
-                $this->aliasField('institution_class_id') => $institutionClassId,
-                $this->aliasField('education_grade_id') => $educationGradeId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('date') => $day,
-                $this->aliasField('period IS') => $period //POCOR-8383
-            ])->count(); //POCOR-9617: COUNT(*) — SQL only, zero entity hydration
+        //POCOR-9617: raw SQL existence check — bypasses ORM, zero entity hydration, safe on large datasets
+        $connection = ConnectionManager::get('default');
+        $tableName = $this->getTable();
+        $periodSql = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+        $existsSql = "SELECT 1 FROM `{$tableName}`
+            WHERE institution_class_id = {$institutionClassId}
+              AND education_grade_id = {$educationGradeId}
+              AND institution_id = {$institutionId}
+              AND academic_period_id = {$academicPeriodId}
+              AND `date` = '{$day}'
+              AND {$periodSql}
+            LIMIT 1";
+        $existsResult = $connection->execute($existsSql)->fetchAll('assoc');
+        $existsCount = count($existsResult);
 
         if ($existsCount > 0) {
             $updateQuery = $this->query();
