@@ -335,22 +335,22 @@ function InstitutionStudentAttendancesController(
     vm.error = function (error, test) {
         UtilsSvc.isAppendLoader(false);
 
-        // Детальное логирование
-        console.group("🚨 Ошибка в цепочке changeClass");
-        console.error("Original Error Object:", error);
-        if (test) console.log("Test Context:", test);
+        // // Детальное логирование
+        // console.group("🚨 Ошибка в цепочке changeClass");
+        // console.error("Original Error Object:", error);
+        // if (test) console.log("Test Context:", test);
 
-        // Если ошибка null или undefined, пытаемся понять на каком этапе упало
-        if (!error) {
-            console.warn("Предупреждение: Получена пустая ошибка (null/undefined). Скорее всего, бэкенд вернул пустой результат или сработал пустой reject.");
-        }
+        // // Если ошибка null или undefined, пытаемся понять на каком этапе упало
+        // if (!error) {
+        //     console.warn("Предупреждение: Получена пустая ошибка (null/undefined). Скорее всего, бэкенд вернул пустой результат или сработал пустой reject.");
+        // }
 
-        // Если это объект ошибки от $http
-        if (error && error.data) {
-            console.error("Backend Message:", error.data.message || "No message provided");
-            console.error("Backend Status:", error.status);
-        }
-        console.groupEnd();
+        // // Если это объект ошибки от $http
+        // if (error && error.data) {
+        //     console.error("Backend Message:", error.data.message || "No message provided");
+        //     console.error("Backend Status:", error.status);
+        // }
+        // console.groupEnd();
 
         return $q.reject(error);
     };
