@@ -1469,16 +1469,6 @@ function InstitutionStudentAttendancesController(
                 UtilsSvc.isAppendLoader(false);
             });
     };
-    //POCOR-9617: named handler — called after No Scheduled save confirms save succeeded
-    vm.onNoScheduledSaved = function (isMarked) {
-        AlertSvc.reset($scope);
-        //POCOR-9617: release guard so the fresh changeClass below can render
-        vm.noScheduledSaving = false;
-        UtilsSvc.isAppendLoader(false);
-        //POCOR-9617: reload from DB — DB now has no_scheduled_class=1, so changeClass will render "No Lessons"
-        vm.changeClass();
-    };
-
     vm.onNoScheduledClick = function () {
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
@@ -1486,10 +1476,13 @@ function InstitutionStudentAttendancesController(
         UtilsSvc.isAppendLoader(true);
 
         InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(vm.getIsMarkedParams())
-            .then(vm.onNoScheduledSaved, vm.error)
-            .catch(function (err) {
+            .then(function () { AlertSvc.reset($scope); }, vm.error)
+            .finally(function () {
+                //POCOR-9617: always reload from DB after save attempt — DB has no_scheduled_class=1
+                //even if PHP returned 500, the INSERT/UPDATE may have committed before the crash
                 vm.noScheduledSaving = false;
-                vm.error(err);
+                UtilsSvc.isAppendLoader(false);
+                vm.changeClass();
             });
     };
 
