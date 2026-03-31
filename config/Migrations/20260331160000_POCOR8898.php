@@ -196,6 +196,11 @@ class POCOR8898 extends AbstractMigration
         // from their point-in-time backups taken at migration time.
         $this->restoreTables(); //POCOR-8898
 
+        // Drop the archive table to allow clean re-testing
+        if ($this->hasTable('institution_students_report_cards_archived')) { //POCOR-8898
+            $this->execute('DROP TABLE IF EXISTS `institution_students_report_cards_archived`'); //POCOR-8898
+        }
+
         // Do NOT drop institution_students_report_cards_archived here.
         //
         // =====================================================================
