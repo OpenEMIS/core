@@ -135,8 +135,8 @@ class NavigationComponent extends Component
         $authUserId = $session->read('Auth.User.id');
         //POCOR-9429 start
         $userRoleIdArray = $this->getUserRoleIdArray($authUserId);
-        
-        if(!$this->AccessControl->isAdmin() && (empty($userRoleIdArray)||$userRoleIdArray[0]==0)) { //POCOR-9429 
+
+        if(!$this->AccessControl->isAdmin() && (empty($userRoleIdArray)||$userRoleIdArray[0]==0)) { //POCOR-9429
            $navigations = [];
            $navigations = $this->appendNavigation('Profiles.Profiles', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
            $navigations = $this->appendNavigation('Profiles.Personal', $navigations, $this->getProfileNavigationForUsersWithoutSecurityRoles());
@@ -196,7 +196,10 @@ class NavigationComponent extends Component
                 'StaffBehaviourAttachments',
                 'Guardians',
                 'GuardianComments',
-                'InstitutionStandards'
+                'InstitutionStandards',
+                'InfrastructureElectricitiesHistory',
+                'InfrastructureInternetHistory',
+                'InfrastructureTelephonesHistory',
             ];
 
             $profileControllers = [
@@ -1115,7 +1118,8 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureUtilityElectricities.view',
                     'Institutions.InfrastructureUtilityElectricities.add',
                     'Institutions.InfrastructureUtilityElectricities.edit',
-                    'Institutions.InfrastructureUtilityElectricities.delete'
+                    'Institutions.InfrastructureUtilityElectricities.delete',
+                    'Institutions.InfrastructureElectricitiesHistory.index'
                 ]
             ],
 
@@ -1127,7 +1131,8 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureUtilityInternets.view',
                     'Institutions.InfrastructureUtilityInternets.add',
                     'Institutions.InfrastructureUtilityInternets.edit',
-                    'Institutions.InfrastructureUtilityInternets.delete'
+                    'Institutions.InfrastructureUtilityInternets.delete',
+                    'Institutions.InfrastructureInternetHistory.index'
                 ]
             ],
 
@@ -1138,7 +1143,8 @@ class NavigationComponent extends Component
                     'Institutions.InfrastructureUtilityTelephones.view',
                     'Institutions.InfrastructureUtilityTelephones.add',
                     'Institutions.InfrastructureUtilityTelephones.edit',
-                    'Institutions.InfrastructureUtilityTelephones.delete'
+                    'Institutions.InfrastructureUtilityTelephones.delete',
+                    'Institutions.InfrastructureTelephonesHistory.index'
                 ]
             ],
             // POCOR-6152
@@ -1562,7 +1568,7 @@ class NavigationComponent extends Component
     /**
      * common function to get institution id
      * @return string|null
-     * @author Khindol Madraimov <khindol.madraimov@gmail.com>
+     *
      */
     private
     function getInstitutionID($debug = "")
@@ -2343,7 +2349,7 @@ class NavigationComponent extends Component
     public function getProfileNavigationForUsersWithoutSecurityRoles()
     {
 
-        
+
         $session = $this->getController()->getRequest()->getSession();
         $userID = $session->read('Auth.User.id');
         $params = [
@@ -2385,7 +2391,7 @@ class NavigationComponent extends Component
                 'selected' => [
                     'Profiles.Personal.view',
                     'Profiles.Personal.pull',
-                ] 
+                ]
             ],
         ];
         foreach ($navigation as &$n) {
@@ -2628,6 +2634,7 @@ class NavigationComponent extends Component
         return $navigation;
     }
 
+    //POCOR-9563[START]: Rearrange reports according to the modules that is in Institutions.
     public function getReportNavigation()
     {
         $navigation = [
@@ -2636,18 +2643,22 @@ class NavigationComponent extends Component
             //     'parent' => 'Reports',
             //     'params' => ['plugin' => 'Report'],
             // ],
-
-            'Reports.Directory' => [
-                'title' => 'Directory',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
-
             'Reports.Institutions' => [
                 'title' => 'Institutions',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
                 'selected' => ['Reports.ViewReport']
+            ],
+            'Map.index' => [
+                'title' => 'Map',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Map'],
+            ],
+            /*POCOR-6513 ends*/
+            'Reports.Textbooks' => [
+                'title' => 'Textbooks',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
             ],
             'Reports.Students' => [
                 'title' => 'Students',
@@ -2659,8 +2670,13 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            'Reports.Textbooks' => [
-                'title' => 'Textbooks',
+            'Reports.Trainings' => [
+                'title' => 'Trainings',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
+            'Reports.InstitutionInfrastructures' => [
+                'title' => 'Infrastructure',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
@@ -2670,14 +2686,8 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            /*POCOR-6513 ends*/
             'Reports.Examinations' => [
                 'title' => 'Examinations',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
-            'Reports.Trainings' => [
-                'title' => 'Trainings',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
@@ -2685,7 +2695,12 @@ class NavigationComponent extends Component
                 'title' => 'Scholarships',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ],
+            ],//POCOR-9267 Starts
+            'Reports.Meals' => [
+                'title' => 'Meals',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ], //POCOR-9267 Ends
             'Reports.Surveys' => [
                 'title' => 'Surveys',
                 'parent' => 'Reports',
@@ -2716,24 +2731,21 @@ class NavigationComponent extends Component
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
             ],
-            'Map.index' => [
-                'title' => 'Map',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Map'],
-            ],
             'Reports.CustomReports' => [
                 'title' => 'Custom',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ], //POCOR-9267 Starts
-            'Reports.Meals' => [
-                'title' => 'Meals',
+            ],
+            'Reports.Directory' => [
+                'title' => 'Directory',
                 'parent' => 'Reports',
                 'params' => ['plugin' => 'Report'],
-            ] //POCOR-9267 Ends
+            ]
         ];
         return $navigation;
     }
+
+    //POCOR-9563[END]
 
     public function getAdministrationNavigation()
     {
@@ -2938,6 +2950,11 @@ class NavigationComponent extends Component
                         'Configurations.StaffReleases',//POCOR-9455
                         'Configurations.StaffTransfers',//POCOR-9455
                         'Configurations.AdministrativeBoundaries',
+                        'Configurations.ExternalAlertServiceSMS',
+                        'Configurations.ExternalDataServiceWebhook',
+                        'Configurations.ExternalDataSourceExams',
+                        'Configurations.ExternalDataSourceIdentity',
+                        'Configurations.ExternalDataSourceLMS',
                         'Configurations.Theme' => [
                             'title' => 'Themes',
                             'parent' => 'Themes',
@@ -3517,6 +3534,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Institutions' => [
                         'title' => 'Institutions',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.InstitutionProfiles',
                             'ProfileTemplates.view',
@@ -3528,6 +3546,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Classes' => [
                         'title' => 'Classes',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.ClassesProfiles',
                             'Class.view',
@@ -3539,6 +3558,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Staff' => [
                         'title' => 'Staff',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.StaffProfiles',
                             'Staff.view',
@@ -3550,6 +3570,7 @@ class NavigationComponent extends Component
                     'ProfileTemplates.Students' => [
                         'title' => 'Students',
                         'parent' => 'ProfileTemplates',
+                        'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                         'selected' => [
                             'ProfileTemplates.StudentProfiles',
                             'Students.view',
@@ -3570,6 +3591,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Institutions' => [
                     'title' => 'Institutions',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.InstitutionProfiles',
                         'ProfileTemplates.view',
@@ -3581,6 +3603,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Classes' => [
                     'title' => 'Classes',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.ClassesProfiles',
                         'Class.view',
@@ -3592,6 +3615,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Staff' => [
                     'title' => 'Staff',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.StaffProfiles',
                         'Staff.view',
@@ -3603,6 +3627,7 @@ class NavigationComponent extends Component
                 'ProfileTemplates.Students' => [
                     'title' => 'Students',
                     'parent' => 'ProfileTemplates',
+                    'params' => ['plugin' => 'ProfileTemplate'], //POCOR-9598: missing plugin param caused MissingControllerException
                     'selected' => [
                         'ProfileTemplates.StudentProfiles',
                         'Students.view',
@@ -4298,11 +4323,13 @@ class NavigationComponent extends Component
             'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',
+                'params' => ['plugin' => 'System'], // POCOR-9584
                 'link' => true,
             ],
             'Systems.StaffEntitlements' => [
                 'title' => 'Entitlements',
                 'parent' => 'Administration.Staff',
+                'params' => ['plugin' => 'System'], // POCOR-9584
                 'link' => true,
             ],
 
@@ -4397,6 +4424,7 @@ class NavigationComponent extends Component
                             'Scholarships.Guardians.index',
                             'Scholarships.Guardians.view',
                             'Scholarships.Histories',
+                            'Scholarships.Qualifications',
                             'Scholarships.ScholarshipApplicationInstitutionChoices.index',
                             'Scholarships.ScholarshipApplicationInstitutionChoices.add',
                             'Scholarships.ScholarshipApplicationAttachments',
@@ -4471,6 +4499,7 @@ class NavigationComponent extends Component
                         'Scholarships.Guardians.index',
                         'Scholarships.Guardians.view',
                         'Scholarships.Histories',
+                        'Scholarships.Qualifications',
                         'Scholarships.ScholarshipApplicationInstitutionChoices.index',
                         'Scholarships.ScholarshipApplicationInstitutionChoices.add',
                         'Scholarships.ScholarshipApplicationInstitutionChoices.view',
