@@ -598,7 +598,8 @@ class ConfigItemsTable extends AppTable
                 $value = $optionsModel->find()
                     ->where([
                         'ConfigItemOptions.option_type' => $entity->option_type,
-                        'ConfigItemOptions.value' => $entity->{$valueField},
+                        // 'ConfigItemOptions.value' => $entity->{$valueField},
+                        'ConfigItemOptions.value' => $entity->value,
                     ])
                     ->first();
                 if (is_object($value)) {

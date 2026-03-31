@@ -34,7 +34,7 @@ class UpdateStaffRolesShell extends Shell {
 		$name = 'Update Staff Roles';
 		$model = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
 		$eventName = 'shellRestartUpdateRole';
-		$processModel = $model->registryAlias();
+		$processModel = $model->getRegistryAlias();
 		$param = json_encode($param);
 		$SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
 		if (!is_null($systemProcessId)) {

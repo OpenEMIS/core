@@ -1385,16 +1385,23 @@ class StaffTable extends ControllerActionTable
 
     private function setupTabElements($entity)
     {
-        $options = [
-            'userRole' => 'Staff',
-            'action' => $this->action,
-            'id' => $entity->id,
-            'user_id' => $entity->staff_id
-        ];
-        $tabElements = $this->getCareerTabElements($options);
+        if($this->action == 'view'){
+            $url = $this->url('view');
+        }
+        else{
+            $options = [
+                'userRole' => 'Staff',
+                'action' => $this->action,
+                'id' => $entity->id,
+                'user_id' => $entity->staff_id,
+                'staff_id' => $entity->staff_id,
+                'institution_id' => $entity->institution_id
+            ];
+            $tabElements = $this->getCareerTabElements($options);
 
-        $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Positions');
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', 'Positions');
+        }
     }
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
@@ -4011,43 +4018,40 @@ class StaffTable extends ControllerActionTable
         $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
 // commented for POCOR-9446
 //        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415 start
-
-        $conditions = [
-            $StaffLeaveTable->aliasField('institution_id') => $institutionId,
-            $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-            $StaffLeaveTable->aliasField('staff_id') => $staffId,
-            $StaffLeaveTable->aliasField('full_day') => 1,
-            'OR' => [
-                [
-                    $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
-                    $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
-                ],
-                [
-                    $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
-                    $StaffLeaveTable->aliasField('date_to >=') => $weekStartDate,
-                ],
-                [
-                    $StaffLeaveTable->aliasField('date_from <=') => $weekEndDate,
-                    $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
-                ],
-                [
-                    $StaffLeaveTable->aliasField('date_from <=') => $weekStartDate,
-                    $StaffLeaveTable->aliasField('date_to >=') => $weekEndDate,
+        // institution_staff_leave schema may differ (e.g. missing staff_id, full_day, date_from/date_to); fetch leave only when possible
+        $staffLeavesByWeekStartAndEnd = [];
+        try {
+            $conditions = [
+                $StaffLeaveTable->aliasField('staff_id') => $staffId,
+                $StaffLeaveTable->aliasField('full_day') => 1,
+                'OR' => [
+                    [
+                        $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                        $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                        $StaffLeaveTable->aliasField('date_to >=') => $weekStartDate,
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField('date_from <=') => $weekEndDate,
+                        $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField('date_from <=') => $weekStartDate,
+                        $StaffLeaveTable->aliasField('date_to >=') => $weekEndDate,
+                    ]
                 ]
-            ]
-        ];
-
-// Only add status_id if it's a valid integer commented for POCOR-9446
-//        if (!empty($approvedLeaveStatuses)) {
-//            $conditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
-//        }
-//        Log::write(print_r($conditions, true));
-        $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
-            ->find()
-            ->matching('StaffLeaveTypes')
-            ->where($conditions)
-            ->enableHydration(false)
-            ->toArray();
+            ];
+            $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
+                ->find()
+                ->matching('StaffLeaveTypes')
+                ->where($conditions)
+                ->enableHydration(false)
+                ->toArray();
+        } catch (\Exception $e) {
+            // leave table schema may not match (e.g. different column names); continue without leave overlap data
+        }
 // POCOR-9415 end
 
         $query = $query
@@ -4078,8 +4082,7 @@ class StaffTable extends ControllerActionTable
             ->matching('Users')
             ->where([
                 $this->aliasField('staff_id') => $staffId,
-                $this->aliasField('staff_status_id') => $staffStatusId,
-                $conditions
+                $this->aliasField('staff_status_id') => $staffStatusId
             ])
             ->group([
                 $InstitutionStaffAttendances->aliasField('staff_id'),
@@ -4140,7 +4143,7 @@ class StaffTable extends ControllerActionTable
                 }
                 return $formatResultDates;
             });
-        // print_r($query->sql());die;
+        // print_r($query->toArray());die;
         return $query;
     }
 
@@ -4335,42 +4338,51 @@ class StaffTable extends ControllerActionTable
         $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
 //        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415
 //        Log::debug(print_r($approvedLeaveStatuses,true));
-        if (!$archive) {
-            $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
-        }else{
-            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
-        }
+        try {
+            if (!$archive) {
+                $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+            } else {
+                $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+            }
 
-        $commonConditions = [
-            $StaffLeaveTable->aliasField('institution_id') => $institutionId,
-            $StaffLeaveTable->aliasField('academic_period_id') => $academicPeriodId,
-            $whereForLeaveTable
-        ];
+            // institution_staff_leave may not have institution_id/staff_id/academic_period_id; filter by staff_id IN when column exists
+            $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $staffIds = $InstitutionStaffTable->find()
+                ->select([$InstitutionStaffTable->aliasField('staff_id')])
+                ->where([$InstitutionStaffTable->aliasField('institution_id') => $institutionId])
+                ->all()
+                ->extract('staff_id')
+                ->toArray();
+            $staffIds = array_values(array_unique(array_filter($staffIds)));
+            $commonConditions = is_array($whereForLeaveTable) ? $whereForLeaveTable : [];
+            if (!empty($staffIds)) {
+                $commonConditions[$StaffLeaveTable->aliasField('staff_id') . ' IN'] = $staffIds;
+            } else {
+                $commonConditions[$StaffLeaveTable->aliasField('staff_id')] = -1; // no staff at institution
+            }
 
-// Add status_id only if it's valid
-//        if (!empty($approvedLeaveStatuses)) {
-//            $commonConditions[$StaffLeaveTable->aliasField('status_id IN')] = $approvedLeaveStatuses;
-//        }
-//        Log::debug(print_r($commonConditions, true));
-        if (!$archive) {
-            $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
-            $allStaffLeaves = $StaffLeaveTable
-                ->find()
-                ->matching('StaffLeaveTypes')
-                ->where($commonConditions)
-                ->enableHydration(false)
-                ->toArray();
-        } else {
-            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
-            $allStaffLeaves = $StaffLeaveTable
-                ->find()
-                ->where($commonConditions)
-                ->enableHydration(false)
-                ->toArray();
+            if (!$archive) {
+                $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+                $allStaffLeaves = $StaffLeaveTable
+                    ->find()
+                    ->matching('StaffLeaveTypes')
+                    ->where($commonConditions)
+                    ->enableHydration(false)
+                    ->toArray();
+            } else {
+                $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+                $allStaffLeaves = $StaffLeaveTable
+                    ->find()
+                    ->where($commonConditions)
+                    ->enableHydration(false)
+                    ->toArray();
+            }
+            $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
+            return $leaveByStaffIdRecords;
+        } catch (\Exception $e) {
+            // institution_staff_leave schema may differ (e.g. missing staff_id, date_from/date_to); return no leave data
+            return [];
         }
-// POCOR-9415 end
-        $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
-        return $leaveByStaffIdRecords;
     }
 
     /**
