@@ -84,7 +84,9 @@ class POCOR8898 extends AbstractMigration
         //POCOR-8898: restore security_functions from backup (reverts order shifts too)
         $this->restoreTable(); //POCOR-8898
 
-        //POCOR-8898: drop archive table — safe, created empty by up()
-        $this->execute('DROP TABLE IF EXISTS `institution_students_report_cards_archived`'); //POCOR-8898
+        //POCOR-8898: intentionally NOT dropping institution_students_report_cards_archived
+        //If archiving was already performed, that table contains live data that cannot be recovered.
+        //Dropping it here would cause permanent data loss (records moved out of source are gone).
+        //A sysadmin must manually decide what to do with the archived data before removing the table.
     }
 }
