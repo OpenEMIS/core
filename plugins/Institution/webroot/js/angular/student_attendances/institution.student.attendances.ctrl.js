@@ -1485,8 +1485,9 @@ function InstitutionStudentAttendancesController(
                 angular.forEach(vm.classStudentList, function (row) {
                     row.no_scheduled_class = 1;
                 });
-                vm.setGridData();
+                //POCOR-9617: setColumnDef first (sets renderer with noScheduledClicked=true), then setGridData to render rows
                 vm.setColumnDef(true);
+                vm.setGridData();
                 vm.countStudentData();
                 AlertSvc.reset($scope);
             }, vm.error)
