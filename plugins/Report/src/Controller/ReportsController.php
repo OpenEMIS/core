@@ -37,7 +37,8 @@ class ReportsController extends AppController
             'UisStatistics' => ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']],
-            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']]//POCOR-9267 
+            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']],//POCOR-9267 
+            'InstitutionInfrastructures' => ['className' => 'Report.InstitutionInfrastructures', 'actions' => ['index', 'add']]//POCOR-9562 
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -63,7 +64,12 @@ class ReportsController extends AppController
 
     public function onInitialize(EventInterface $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->getAlias());
+        $alias = $table->getAlias();
+        if ($alias == 'InstitutionInfrastructures') {
+            $header = __('Reports') . ' - ' . __('Infrastructures');
+        } else {
+            $header = __('Reports') . ' - ' . __($alias);
+        }
         $this->set('contentHeader', $header);
     }
 
@@ -86,44 +92,38 @@ class ReportsController extends AppController
                 'Report.Users' => __('User List')
             ];
         } elseif ($module == 'Institutions') {
-            $options = [
-                'Report.InstitutionAssets' => __('Assets'),
+           $options = [
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
                 'Report.InstitutionClasses' => __('Classes'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
-                'Report.Expenditure' => __('Expenditure Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionAssociations' => __('Houses'), //POCOR-7938
-                'Report.Income' => __('Income Report'),
-                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
-                'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
                 'Report.Institutions' => __('Institutions'),
                 'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionPositionsSummaries' => __('Institution Positions Summaries'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
-                // 'Report.StaffAbsences' => __('Staff Absence'), Institution Positions Summaries
+                'Report.InstitutionStaff' => __('Staff'),
                 'Report.StaffAttendances' => __('Staff Attendance'),
                 'Report.StaffBehaviours' => __('Staff Behaviours'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
-                'Report.InstitutionStaff' => __('Staff'),
-                'Report.BodyMasses' => __('Student Body Masses'),
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
                 'Report.StudentBehaviours' => __('Student Behaviours'),
+                'Report.BodyMasses' => __('Student Body Masses'),
                 'Report.InstitutionStudents' => __('Students'),
+                'Report.InstitutionSubjects' => __('Subjects'),
+                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
                 // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
                 // 'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
                 // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
-                'Report.InstitutionSubjects' => __('Subjects'),
-                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
-                'Report.WashReports' => __('Wash Report'),
+                // 'Report.StaffAbsences' => __('Staff Absence'), Institution Positions Summaries
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -271,6 +271,20 @@ class ReportsController extends AppController
                 'Report.MealSummary' => __('Meals Summary Report'),
             ];
         }//POCOR-9267 Ends
+        elseif ($module == 'InstitutionInfrastructures') {
+            $options = [
+                'Report.InstitutionAssets' => __('Assets'),
+                'Report.Expenditure' => __('Expenditure Report'),
+                'Report.Income' => __('Income Report'),
+                'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
+                'Report.InfrastructureElectricities' => __('Utilities Electricity'),
+                'Report.InfrastructureInternets' => __('Utilities Internet'),
+                'Report.InfrastructureTelephones' => __('Utilities Telephone'),
+                'Report.WashReports' => __('Wash Report'),
+            ];
+                
+        }
         return $options;
     }
     //POCOR-9563[END]
@@ -384,7 +398,6 @@ class ReportsController extends AppController
 
         $moduleTitle = __(Inflector::humanize(Inflector::underscore($dataModule)));
         $this->Navigation->addCrumb($moduleTitle);
-
         $header = __('Reports') . ' - ' . $moduleTitle;
 
         $inputFileName = $replace_data;
