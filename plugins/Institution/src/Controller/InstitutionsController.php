@@ -1523,6 +1523,9 @@ class InstitutionsController extends AppController
         $this->set('user', $user);
         $this->set('pass', $pass);
         $this->set('ngController', 'TimetableCtrl as $ctrl');
+        //POCOR-9589: inject baseCoreUrl so Angular SPA resolves api/v4/ correctly on any deployment path
+        $baseCoreUrl = $this->getRequest()->getSession()->read('System.baseCoreUrl');
+        $this->set('baseCoreUrl', $baseCoreUrl);
         $this->render('timetable');
     }
 

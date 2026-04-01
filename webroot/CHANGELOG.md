@@ -1,3 +1,15 @@
+### [5.5.0] - 2026-03-30
+- Implemented: Develop a migration script to prevent duplicates in the summary_area_institution_grade_attendances database table
+- Implemented: Develop Infrastructure Utilities report
+- Implemented: Develop changes to the OpenEMIS Core API page to include the version number
+- Bug Fixed: Attendance>Students>Edit>Mark attendance>Click No Scheduled Classes: No schedule class is not working properly
+- Bug Fixed: Save Student API(Add/Update): API is not saving the Profile Photo correctly.
+- Bug Fixed: Instituitons>Students>Attendance: Last date of each week is overlapping the first day of the following week
+- Bug Fixed: Administration>System Setup>System Configurations>Products List (Dropdown): Error 404 seen on clicking Save on the Products List dropdown.
+- Bug Fixed: Institutions > Students > Timetable > View: Timetable is empty even though there is data for the class
+- Bug Fixed: Core>Institutions>Performance>Assessments>Edit: When entering grades in the Gradebook, selecting a grade cell and then clicking outside of the cell without entering a value triggers an error message.
+- Bug Fixed: Institutions > Performances > Report Cards : Investigate why placeholder for Male/Female students counts does not match Institution > Classes
+
 ### [5.4.1] - 2026-03-19
 - Bug Fixed: Reports > Customs: Area Filters is not showing the proper data for country area
 - Bug Fixed: Institution>Academic>Feeders>Incoming: View is getting 404 error

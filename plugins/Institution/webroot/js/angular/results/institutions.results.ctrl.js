@@ -303,53 +303,62 @@ function InstitutionsResultsController($q,
         }
 
         function onAggridCellValueChanged(params) {
-            // console.log('onCellValueChanged')
-            // console.log(JSON.stringify(params));
-            if (params.newValue != params.oldValue || params.data.save_error[params.colDef.field]) {
-                var index = params.colDef.field.replace(/period_(\d+)/, '$1');
-
-                if (angular.isUndefined($scope.results[params.data.student_id])) {
-                    $scope.results[params.data.student_id] = {};
-                }
-
-                if (angular.isUndefined($scope.results[params.data.student_id][index])) {
-                    $scope.results[params.data.student_id][index] = {marks: ''};
-                }
-
-                $scope.results[params.data.student_id][index]['marks'] = params.newValue;
-
-                params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
-                // marked as dirty
-                params.data.is_dirty = true;
-
-                var subject = $scope.subject;
-                var gradingTypes = $scope.gradingTypes;
-                var extra = {
-                    subject: subject,
-                    gradingTypes: gradingTypes
-                };
-
-                InstitutionsResultsSvc.saveSingleRecordData(params, extra)
-                    .then(function (response) {
-                        params.data.save_error[params.colDef.field] = false;
-                        AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
-                        // refreshCells function updated parameters
-                        params.api.refreshCells({
-                            rowNodes: [params.node],
-                            columns: [params.colDef.field, 'total_mark'],
-                            force: true
-                        });
-                    }, function (error) {
-                        params.data.save_error[params.colDef.field] = true;
-                        console.error(error);
-                        AlertSvc.error($scope, 'There was an error when saving the result');
-                        params.api.refreshCells({
-                            rowNodes: [params.node],
-                            columns: [params.colDef.field],
-                            force: true
-                        });
-                    });
+            //POCOR-9608 -- Ignore if value didn't actually change 
+            if (params.newValue === params.oldValue) {
+                return;
             }
+
+            //POCOR-9608 -- Ignore empty / undefined values
+            if (
+                params.newValue === null ||
+                params.newValue === undefined ||
+                params.newValue === ''
+            ) {
+                return;
+            }
+
+            // Existing logic unchanged
+            var index = params.colDef.field.replace(/period_(\d+)/, '$1');
+
+            if (angular.isUndefined($scope.results[params.data.student_id])) {
+                $scope.results[params.data.student_id] = {};
+            }
+
+            if (angular.isUndefined($scope.results[params.data.student_id][index])) {
+                $scope.results[params.data.student_id][index] = {marks: ''};
+            }
+
+            $scope.results[params.data.student_id][index]['marks'] = params.newValue;
+
+            params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
+            params.data.is_dirty = true;
+
+            var subject = $scope.subject;
+            var gradingTypes = $scope.gradingTypes;
+            var extra = {
+                subject: subject,
+                gradingTypes: gradingTypes
+            };
+
+            InstitutionsResultsSvc.saveSingleRecordData(params, extra)
+                .then(function (response) {
+                    params.data.save_error[params.colDef.field] = false;
+                    AlertSvc.info($scope, 'Student result will be saved after the result has been entered.');
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field, 'total_mark'],
+                        force: true
+                    });
+                }, function (error) {
+                    params.data.save_error[params.colDef.field] = true;
+                    console.error(error);
+                    AlertSvc.error($scope, 'There was an error when saving the result1');
+                    params.api.refreshCells({
+                        rowNodes: [params.node],
+                        columns: [params.colDef.field],
+                        force: true
+                    });
+                });
         }
 
         AggridLocaleSvc.getTranslatedGridLocale()
