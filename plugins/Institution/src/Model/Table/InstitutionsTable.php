@@ -1042,6 +1042,10 @@ class InstitutionsTable extends ControllerActionTable
         if ($LatLongPermission == LatLongOptions::EXCLUDED) {
             $this->field('longitude', ['visible' => false]);
             $this->field('latitude', ['visible' => false]);
+        } elseif ($LatLongPermission == LatLongOptions::MANDATORY) {
+            //POCOR-9257: null=false drives the * required marker in ControllerAction forms
+            $this->field('latitude', ['null' => false]);
+            $this->field('longitude', ['null' => false]);
         }
     }
 

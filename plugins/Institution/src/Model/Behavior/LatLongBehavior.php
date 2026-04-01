@@ -15,18 +15,19 @@ class LatLongBehavior extends Behavior
     public function LatLongValidation()
     {    
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-       // $LatLongPermission = $ConfigItems->value("latitude_longitude");
-        $LatLongPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
-        $LongPermission = $ConfigItems->value("longitude_mandatory"); //POCOR-7045
+        //POCOR-9257: use the single latitude_longitude config key (1=Mandatory, 0=Non-mandatory, 2=Excluded)
+        $LatLongPermission = $ConfigItems->value("latitude_longitude");
+        $LongPermission = $LatLongPermission; // same config governs both fields
         $model = $this->_table; //POCOR-8082
         if ($LatLongPermission == self::MANDATORY && $LongPermission == self::MANDATORY) { //POCOR-7045
             $validator = new Validator();
             return $validator->setProvider('custom', $model) //POCOR-8082
-                ->allowEmpty('longitude')
+                //POCOR-9257: notEmpty enforces mandatory when config latitude_mandatory/longitude_mandatory = 1
+                ->notEmptyString('longitude', __('Longitude is required'))
                 ->add('longitude', 'ruleLongitude', [
                         'rule' => 'checkLongitude'
                 ])
-                ->allowEmpty('latitude')
+                ->notEmptyString('latitude', __('Latitude is required'))
                 ->add('latitude', 'ruleLatitude', [
                     'rule' => 'checkLatitude'
                 ])
