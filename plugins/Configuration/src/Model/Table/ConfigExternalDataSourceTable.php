@@ -172,6 +172,29 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             // POCOR-7981 END
         }
 
+        //POCOR-9590: add Test Connection button on view page
+        if ($this->action == 'view') {
+            $testBtn = [
+                'type'  => 'button',
+                'label' => '<i class="fa fa-plug"></i>',
+                'url'   => [
+                    'plugin'     => 'Configuration',
+                    'controller' => 'Configurations',
+                    'action'     => 'testExternalConnection',
+                ],
+                'attr'  => [
+                    'class'          => 'btn btn-xs btn-info icon-big',
+                    'title'          => __('Test Connection'),
+                    'id'             => 'btn-test-connection',
+                    'data-toggle'    => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape'         => false,
+                ],
+            ];
+            $extra['toolbarButtons']['test_connection'] = $testBtn;
+        }
+        //POCOR-9590: end Test Connection button
+
         // Start POCOR-5188
         $is_manual_exist = $this->getManualUrl('Administration', 'External Data Source - Identity', 'System Configurations');
         if (!empty($is_manual_exist)) {
@@ -262,7 +285,12 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 unset($attributes['address_mapping']);
                 unset($attributes['postal_mapping']);
                 unset($attributes['public_key']);
-                unset($attributes['user_endpoint_uri']);
+                //POCOR-9590: show sync_mode as human-readable label
+                if (isset($attributes['sync_mode'])) {
+                    $attributes['sync_mode'] = $attributes['sync_mode'] === 'readonly'
+                        ? __('Readonly (fields locked after sync)')
+                        : __('Editable (fields can be changed after sync)');
+                }
                 // POCOR-9118 end
             }
             foreach ($attributes as $key => $obj) {
@@ -480,7 +508,13 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('nationality_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('address_mapping', ['type' => 'hidden']);
                 $this->field('postal_mapping', ['type' => 'hidden']);
-                $this->field('user_endpoint_uri', ['type' => 'hidden']);
+                $this->field('user_endpoint_uri', ['type' => 'string', 'attr' => []]);
+                //POCOR-9590: sync_mode controls whether synced users are locked (readonly) or editable
+                $this->field('sync_mode', [
+                    'type'    => 'select',
+                    'options' => ['readonly' => __('Readonly (fields locked after sync)'), 'editable' => __('Editable (fields can be changed after sync)')],
+                    'attr'    => [],
+                ]);
 
                 break;
             // POCOR-7981
@@ -735,7 +769,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping', 'external_reference_mapping',
             'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping',
             'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id',
-            'gender_id_mapping', 'openemis_no_mapping', 'scopes', 'client_secret', 'grant_type' // POCOR-9481
+            'gender_id_mapping', 'openemis_no_mapping', 'scopes', 'client_secret', 'grant_type', // POCOR-9481
+            'sync_mode', 'user_endpoint_uri' //POCOR-9590: sync_mode and user_endpoint_uri
         ];
 
         foreach ($fields as $field) {

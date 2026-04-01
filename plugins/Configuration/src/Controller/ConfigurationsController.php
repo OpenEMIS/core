@@ -179,6 +179,95 @@ class ConfigurationsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
     }
 
+    //POCOR-9590: Test Connection endpoint - returns JSON with connection status for the active external data source
+    public function testExternalConnection()
+    {
+        $this->autoRender = false;
+        $this->response = $this->response->withType('application/json');
+
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $ConfigItems   = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+
+        //POCOR-9590: find the currently active source type from config_items
+        $activeItem = $ConfigItems->find()
+            ->where(['code' => 'external_data_source_type'])
+            ->where(['value IS NOT' => null])
+            ->where(['value !=' => ''])
+            ->where(['value !=' => 'None'])
+            ->first();
+
+        if (!$activeItem) {
+            $this->response->getBody()->write(json_encode(['status' => 'no_config', 'message' => 'No active external data source configured']));
+            return $this->response;
+        }
+
+        $sourceType = $activeItem->name; //POCOR-9590: name field holds the human-readable source name
+
+        $attrs = $ExternalAttrs->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
+            ->where(['external_data_source_type' => $sourceType])
+            ->toArray();
+
+        $tokenUri = $attrs['token_uri'] ?? null;
+
+        if (empty($tokenUri)) {
+            $this->response->getBody()->write(json_encode(['status' => 'no_address', 'message' => 'Token URI is not configured for ' . $sourceType]));
+            return $this->response;
+        }
+
+        //POCOR-9590: attempt to reach token URI - just a reachability check (HEAD/GET without credentials)
+        try {
+            $client = new Client(['timeout' => 5, 'ssl_verify_peer' => false, 'ssl_verify_host' => false]);
+
+            if ($sourceType === 'Seychelles Civil Status') {
+                //POCOR-9590: Seychelles uses client_credentials OAuth2 - test by posting to token URI
+                $clientId     = $attrs['client_id'] ?? '';
+                $clientSecret = $attrs['client_secret'] ?? '';
+                $grantType    = $attrs['grant_type'] ?? 'client_credentials';
+                $scopes       = $attrs['scopes'] ?? '';
+
+                if (empty($clientId) || empty($clientSecret)) {
+                    $this->response->getBody()->write(json_encode(['status' => 'credentials_missing', 'message' => 'client_id or client_secret not configured']));
+                    return $this->response;
+                }
+
+                $tokenResponse = $client->post($tokenUri, [
+                    'grant_type'    => $grantType,
+                    'client_id'     => $clientId,
+                    'client_secret' => $clientSecret,
+                    'scope'         => $scopes,
+                ]);
+
+                $code = $tokenResponse->getStatusCode();
+                $body = $tokenResponse->getStringBody();
+                $json = json_decode($body, true);
+
+                if ($code === 200 && !empty($json['access_token'])) {
+                    $this->response->getBody()->write(json_encode(['status' => 'ok', 'message' => 'Connected to ' . $sourceType . ' — token obtained successfully', 'http_code' => $code]));
+                } elseif ($code === 401 || $code === 403) {
+                    $this->response->getBody()->write(json_encode(['status' => 'credentials_error', 'message' => 'Address reachable but credentials rejected (HTTP ' . $code . ')', 'http_code' => $code, 'body' => substr($body, 0, 300)]));
+                } else {
+                    $this->response->getBody()->write(json_encode(['status' => 'address_error', 'message' => 'Address responded with HTTP ' . $code, 'http_code' => $code, 'body' => substr($body, 0, 300)]));
+                }
+
+            } else {
+                //POCOR-9590: for other sources just do a GET ping on the token URI
+                $pingResponse = $client->get($tokenUri);
+                $code = $pingResponse->getStatusCode();
+
+                if ($code >= 200 && $code < 500) {
+                    $this->response->getBody()->write(json_encode(['status' => 'address_ok', 'message' => 'Address reachable (HTTP ' . $code . ') — full auth test not implemented for ' . $sourceType, 'http_code' => $code]));
+                } else {
+                    $this->response->getBody()->write(json_encode(['status' => 'address_error', 'message' => 'Address returned HTTP ' . $code, 'http_code' => $code]));
+                }
+            }
+        } catch (\Exception $e) {
+            $this->response->getBody()->write(json_encode(['status' => 'no_address', 'message' => 'Cannot reach address: ' . $e->getMessage()]));
+        }
+
+        return $this->response;
+    }
+    //POCOR-9590: end testExternalConnection
+
     // POCOR-9403
     public function ExternalDataSourceWebhook()
     {
