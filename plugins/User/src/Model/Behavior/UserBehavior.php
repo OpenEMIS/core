@@ -405,7 +405,13 @@ class UserBehavior extends Behavior
                 $UserIdentities->aliasField('security_user_id') => $security_users_id,
             ])
             ->toArray();
-        return $data;
+
+        //POCOR-9590: fetch sync_status from security_users to show Synced column in Identities tab
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $userRow = $SecurityUsers->find()->select(['sync_status'])->where(['id' => $security_users_id])->first();
+        $syncStatus = $userRow ? $userRow->sync_status : 0;
+
+        return ['data' => $data, 'sync_status' => $syncStatus];
     }
     //POCOR-5668 add identity section ends
 
