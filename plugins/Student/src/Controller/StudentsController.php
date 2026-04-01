@@ -1063,23 +1063,25 @@ class StudentsController extends AppController
 
         $institutionClassId = (!empty($InstitutionClassStudentsResult)) ? $InstitutionClassStudentsResult['institution_class_id'] : 0;
 
+        //POCOR-9594: start - fetch ALL published timetables (one per term+shift), not just the first
         $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables')
             ->find()
+            ->contain(['ScheduleTerms', 'ScheduleIntervals.Shifts.ShiftOptions'])
             ->where([
-                'academic_period_id' => $academicPeriodId,
-                'institution_class_id' => $institutionClassId,
-                'institution_id' => $institutionId,
-                'status' => 2
+                'ScheduleTimetables.academic_period_id' => $academicPeriodId,
+                'ScheduleTimetables.institution_class_id' => $institutionClassId,
+                'ScheduleTimetables.institution_id' => $institutionId,
+                'ScheduleTimetables.status' => 2
             ])
-            ->enableHydration(false)
-            ->first();
+            ->order(['ScheduleTerms.name', 'ShiftOptions.name'])
+            ->toArray();
+        //POCOR-9594: end
 
         $this->set('userId', $userId);
-        $timetable_id = (isset($ScheduleTimetables['id'])) ? $ScheduleTimetables['id'] : 0;
-        $this->set('timetable_id', $timetable_id);
+        $this->set('timetables', $ScheduleTimetables); //POCOR-9594: pass all timetables
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('institutionDefaultId', $institutionId);
-        $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
+        // ngController intentionally not set — each timetable block renders its own ng-controller instance //POCOR-9594
 
         // Start POCOR-5188
         $manualTable = TableRegistry::getTableLocator()->get('Manuals');
