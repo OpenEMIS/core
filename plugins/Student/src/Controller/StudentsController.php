@@ -1178,94 +1178,147 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
     }
 
+    //POCOR-9590: start - Sync student identity from external data source with review/diff page
     public function syncUser()
     {
-        $userId = $this->request->getQuery('user_id');
+        //POCOR-9590: user_id is passed as encoded pass param (positional), decode it the standard way
+        $pass = $this->request->getAttribute('params')['pass'] ?? [];
+        $decoded = !empty($pass[0]) ? $this->StudentUser->paramsDecode($pass[0]) : [];
+        $userId = $decoded['user_id'] ?? null;
 
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
         $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
-        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.Students');
+        $Genders       = TableRegistry::getTableLocator()->get('User.Genders');
 
-        // Get user
-        $user = $SecurityUsers->get($userId);
+        $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
 
         if (empty($user->external_reference)) {
-            $this->Flash->error('User is not linked to external source');
+            $this->Flash->error(__('User is not linked to an external identity source.'));
             return $this->redirect($this->referer());
         }
 
-        // Get external config
+        // Load field mapping config
         $configs = $ExternalAttrs->find()
             ->where(['external_data_source_type' => 'OpenEMIS Identity'])
             ->all()
             ->combine('attribute_field', 'value')
             ->toArray();
 
-        $tokenUrl     = $configs['token_uri'];
-        $userEndpoint = $configs['user_endpoint_uri'];
-        $clientId     = $configs['client_id'];
-        $privateKey   = $configs['private_key'];
+        $tokenUrl     = $configs['token_uri'] ?? null;
+        $userEndpoint = $configs['user_endpoint_uri'] ?? null;
+        $clientId     = $configs['client_id'] ?? null;
+        $privateKey   = $configs['private_key'] ?? null;
 
-        $http = new Client();
-
-        // Step 1: Get OAuth Token
-        $tokenResponse = $http->post($tokenUrl, [
-            'grant_type' => 'client_credentials',
-            'client_id' => $clientId,
-            'client_secret' => $privateKey
-        ]);
-
-        if (!$tokenResponse->isOk()) {
-            $this->Flash->error('Failed to get token');
+        if (!$tokenUrl || !$userEndpoint) {
+            $this->Flash->error(__('External identity source is not configured.'));
             return $this->redirect($this->referer());
         }
 
-        $tokenData = $tokenResponse->getJson();
-        $accessToken = $tokenData['access_token'];
+        $http = new Client();
 
-        // Step 2: Call External API
-        $apiUrl = str_replace('{external_reference}', $user->external_reference, $userEndpoint);
+        // Step 1: get Bearer token
+        $tokenResponse = $http->post($tokenUrl, json_encode([
+            'client_id'     => $clientId,
+            'client_secret' => $privateKey,
+            'grant_type'    => 'client_credentials',
+        ]), ['type' => 'json']);
 
-        $apiResponse = $http->get($apiUrl, [], [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $accessToken
-            ]
-        ]);
+        if (!$tokenResponse->isOk()) {
+            $this->Flash->error(__('Failed to authenticate with external identity source.'));
+            return $this->redirect($this->referer());
+        }
+
+        $accessToken = $tokenResponse->getJson()['access_token'] ?? null;
+        if (!$accessToken) {
+            $this->Flash->error(__('External identity source did not return a valid token.'));
+            return $this->redirect($this->referer());
+        }
+
+        // Step 2: fetch user data from external API
+        $apiUrl      = str_replace('{external_reference}', $user->external_reference, $userEndpoint);
+        $apiResponse = $http->get($apiUrl, [], ['headers' => ['Authorization' => 'Bearer ' . $accessToken]]);
 
         if (!$apiResponse->isOk()) {
-            $this->Flash->error('Failed to fetch user from external system');
+            $this->Flash->error(__('Failed to retrieve data from external identity source.'));
             return $this->redirect($this->referer());
         }
 
         $apiData = $apiResponse->getJson();
 
-        // Step 3: Map Fields
-        $user->first_name     = $apiData['first_name'] ?? $user->first_name;
-        $user->middle_name    = $apiData['middle_name'] ?? $user->middle_name;
-        $user->third_name     = $apiData['third_name'] ?? $user->third_name;
-        $user->last_name      = $apiData['last_name'] ?? $user->last_name;
-        $user->gender         = $apiData['gender']['name'] ?? $user->gender;
-        $user->date_of_birth  = $apiData['date_of_birth'] ?? $user->date_of_birth;
-
-        if ($SecurityUsers->save($user)) {
-
-            // Step 4: Update Sync Status
-            $student = $InstitutionStudents->find()
-                ->where(['security_user_id' => $userId])
-                ->first();
-
-            if ($student) {
-                $student->sync_status = 'synced';
-                $InstitutionStudents->save($student);
+        // Step 3: resolve mapped field values from API response
+        $mappingKeys = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender', 'date_of_birth'];
+        $externalValues = [];
+        foreach ($mappingKeys as $field) {
+            $path = $configs[$field . '_mapping'] ?? null;
+            if ($path) {
+                $externalValues[$field] = $this->resolveMappingPath($apiData, $path);
             }
-
-            $this->Flash->success('User synced successfully');
-        } else {
-            $this->Flash->error('Failed to save user');
         }
 
-        return $this->redirect($this->referer());
+        // Step 4: resolve gender name → gender_id
+        $externalGenderId = null;
+        if (!empty($externalValues['gender'])) {
+            $genderRow = $Genders->find()->where(['name' => $externalValues['gender']])->first();
+            $externalGenderId = $genderRow ? $genderRow->id : null;
+        }
+
+        // Step 5: build diff (only fields that would actually change)
+        $diff = [];
+        $textFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth'];
+        foreach ($textFields as $field) {
+            if (isset($externalValues[$field]) && (string)$externalValues[$field] !== (string)$user->$field) {
+                $diff[$field] = ['current' => $user->$field, 'external' => $externalValues[$field]];
+            }
+        }
+        if ($externalGenderId && $externalGenderId !== $user->gender_id) {
+            $diff['gender'] = [
+                'current'  => $user->has('gender') ? $user->gender->name : '',
+                'external' => $externalValues['gender'],
+            ];
+        }
+
+        if ($this->request->is('post')) {
+            // Apply all mapped fields
+            foreach ($textFields as $field) {
+                if (isset($externalValues[$field])) {
+                    $user->$field = $externalValues[$field];
+                }
+            }
+            if ($externalGenderId) {
+                $user->gender_id = $externalGenderId;
+            }
+            $user->sync_status = 1; //POCOR-9590: mark as synced
+
+            if ($SecurityUsers->save($user)) {
+                $this->Flash->success(__('User synced successfully.'));
+            } else {
+                $this->Flash->error(__('Failed to save synced data.'));
+            }
+
+            $originUrl = $this->request->getSession()->read('Sync.origin_url');
+            $this->request->getSession()->delete('Sync.origin_url');
+            return $this->redirect($originUrl ?: $this->referer());
+        }
+
+        // GET: store origin referer and show review page
+        $this->request->getSession()->write('Sync.origin_url', $this->referer());
+        //POCOR-9590: pass encoded param back to view so form can POST to same encoded URL
+        $encodedParams = !empty($pass[0]) ? $pass[0] : '';
+        $this->set(compact('user', 'diff', 'externalValues', 'encodedParams'));
     }
-        
+
+    //POCOR-9590: resolve dot-notation path from nested array (e.g. "gender.name" → $data['gender']['name'])
+    private function resolveMappingPath(array $data, string $path)
+    {
+        $value = $data;
+        foreach (explode('.', $path) as $key) {
+            if (!is_array($value) || !array_key_exists($key, $value)) {
+                return null;
+            }
+            $value = $value[$key];
+        }
+        return $value;
+    }
+    //POCOR-9590: end
 
 }

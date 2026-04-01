@@ -540,6 +540,15 @@ class StudentUserTable extends ControllerActionTable
                 return $this->controller->redirect($url);
             }
         }
+
+        //POCOR-9590: if any identity field is manually edited, reset sync_status to 0
+        $syncFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
+        foreach ($syncFields as $field) {
+            if ($entity->isDirty($field)) {
+                $entity->sync_status = 0;
+                break;
+            }
+        }
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -656,6 +665,7 @@ class StudentUserTable extends ControllerActionTable
         ]);
 
     }
+
 
     //POCOR-9393
     public function studentsAfterSave(EventInterface $event)
@@ -1416,7 +1426,6 @@ class StudentUserTable extends ControllerActionTable
             $action = $this->setUrlParams(['controller' => $this->controller->getName(), 'action' => 'IndividualPromotion', 'add'], $params);
             // Show Promote button only if the Student Status is Current and academic period is editable
             // Promote button
-           // $this->addSyncButton($entity, $extra);
             $promoteButton = $toolbarButtons['back'];
             $promoteButton['type'] = 'button';
             $promoteButton['label'] = '<i class="fa kd-graduate"></i>';
@@ -1430,31 +1439,26 @@ class StudentUserTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9590: Sync button on the student General view toolbar
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
-        $queryString = $this->getQueryString();
-        $encodedQueryString = $this->paramsEncode($queryString);
-            $toolbarButtons = $extra['toolbarButtons'];
-            //$institutionStudentId = $extra['institutionStudentId'];
-            $institutionStudentId = $this->getQueryString('institution_student_id');
-            $params = [
-                'student_id' => $institutionStudentId,
-                'user_id' => $entity->id
-            ];
+        $toolbarButtons = $extra['toolbarButtons'];
 
-            $action = $this->setUrlParams([
-                'plugin' => 'Student',
-                'controller' => 'Students',
-                'action' => 'SyncUser'
-            ], $params);
-            $syncButton = $toolbarButtons['back'];
-            $syncButton['type'] = 'button';
-            $syncButton['label'] = '<i class="fa fa-refresh"></i>';
-            $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-            $syncButton['attr']['title'] = __('Sync');
-            $syncButton['url'] = $action;
-            $syncButton['url'][1] = $encodedQueryString;
-            $toolbarButtons['sync'] = $syncButton;
+        //POCOR-9590: encode user_id via paramsEncode so URL cannot be tampered with
+        $encodedParams = $this->paramsEncode(['user_id' => $entity->id]);
+
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Student',
+            'controller' => 'Students',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
     }
 
     // needs to migrate
