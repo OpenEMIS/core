@@ -7,7 +7,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use Cake\Validation\Validator;
 use Cake\Datasource\ResultSetInterface;
@@ -44,6 +43,38 @@ class StaffTable extends AppTable  {
         ]);
     }
 
+    //POCOR-8417
+    public function validationStaff(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                // If completely empty
+                if (empty($value)) {
+                    return false;
+                }
+                // Check _ids exists
+                if (!isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids);
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+        
+        return $validator;
+    }
     public function validationStaffLeaveReport(Validator $validator): Validator
 
     {
@@ -82,11 +113,14 @@ class StaffTable extends AppTable  {
             $options['validate'] = 'StaffHealthReports';
         }
 
-        //POCOR-5185[start]
+        //POCOR-5185
         if ($data[$this->getAlias()]['feature'] == 'Report.StaffRequirements') {
             $options['validate'] = 'StaffRequirements';
         }
-        //POCOR-5185[end]
+        //POCOR-8417
+        if ($data[$this->getAlias()]['feature'] == 'Report.Staff') {
+            $options['validate'] = 'Staff';
+        }
     }
     //POCOR - 7408 start
     public function addBeforeAction(EventInterface $event)
@@ -117,6 +151,30 @@ class StaffTable extends AppTable  {
         $this->ControllerAction->field('lower_tolerance', ['type' => 'hidden']); //POCOR-5185
         $this->ControllerAction->field('format');
 
+    }
+    public function addAfterAction(EventInterface $event, Entity $entity)
+    {
+        $fieldsOrder = ['feature'];
+        if ($entity->has('feature')) {
+            $feature = $entity->feature;
+            switch ($feature) {
+                case 'Report.Staff':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'institution_dropdown';
+                    $fieldsOrder[] = 'format';
+                    //custom element field
+                    $this->ControllerAction->field('institution_dropdown', [
+                        'type'   => 'element',
+                        'element'=> 'institutiondropdown',
+                    ]);
+
+                    break;
+            }
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }
     }
 
     public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
@@ -374,124 +432,137 @@ class StaffTable extends AppTable  {
         return $statuses;
     }
 
-    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    {
         $requestData = json_decode($settings['process']['params']);
+
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
-        $institutionId = $requestData->institution_id;
+        $institutionIds = $requestData->institution_id->_ids ?? [];
+
         $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
+
         $userId = $requestData->user_id;
         $superAdmin = $requestData->super_admin;
-        $institutionQuery = $InstitutionsTable
-                        ->find('list', [
-                            'keyField' => 'id',
-                            'valueField' => 'code_name'
-                        ])
-                        ->order([
-                            $InstitutionsTable->aliasField('code') => 'ASC',
-                            $InstitutionsTable->aliasField('name') => 'ASC'
-                        ]);
 
-        if (!$superAdmin) { // if user is not super admin, the list will be filtered
+        // Institution list based on access
+        $institutionQuery = $InstitutionsTable
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'code_name'
+            ])
+            ->order([
+                $InstitutionsTable->aliasField('code') => 'ASC',
+                $InstitutionsTable->aliasField('name') => 'ASC'
+            ]);
+
+        if (!$superAdmin) {
             $institutionQuery->find('byAccess', ['userId' => $userId]);
         }
+
         $institutionList = $institutionQuery->toArray();
+
         $conditions = [];
+
+        // Academic Period Date Conditions
         if (!empty($academicPeriodId)) {
-                $conditions['OR'] = [
-                    'OR' => [
-                        [
-                            'InstitutionStaff.end_date' . ' IS NOT NULL',
-                            'InstitutionStaff.start_date' . ' <=' => $startDate,
-                            'InstitutionStaff.end_date' . ' >=' => $startDate
-                        ],
-                        [
-                            'InstitutionStaff.end_date' . ' IS NOT NULL',
-                            'InstitutionStaff.start_date' . ' <=' => $endDate,
-                            'InstitutionStaff.end_date' . ' >=' => $endDate
-                        ],
-                        [
-                            'InstitutionStaff.end_date' . ' IS NOT NULL',
-                            'InstitutionStaff.start_date' . ' >=' => $startDate,
-                            'InstitutionStaff.end_date' . ' <=' => $endDate
-                        ]
+            $conditions[] = [
+                'OR' => [
+                    [
+                        'InstitutionStaff.end_date IS NOT NULL',
+                        'InstitutionStaff.start_date <=' => $startDate,
+                        'InstitutionStaff.end_date >=' => $startDate
                     ],
                     [
-                        'InstitutionStaff.end_date' . ' IS NULL',
-                        'InstitutionStaff.start_date' . ' <=' => $endDate
+                        'InstitutionStaff.end_date IS NOT NULL',
+                        'InstitutionStaff.start_date <=' => $endDate,
+                        'InstitutionStaff.end_date >=' => $endDate
+                    ],
+                    [
+                        'InstitutionStaff.end_date IS NOT NULL',
+                        'InstitutionStaff.start_date >=' => $startDate,
+                        'InstitutionStaff.end_date <=' => $endDate
+                    ],
+                    [
+                        'InstitutionStaff.end_date IS NULL',
+                        'InstitutionStaff.start_date <=' => $endDate
                     ]
-                ];
+                ]
+            ];
         }
-        if ($institutionId == 0 && !$superAdmin) {
-            $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
+
+        // Institution Filter (_ids logic)
+        if (!empty($institutionIds) &&  ($institutionIds > 0)) {
+            if (in_array(0, $institutionIds)) {
+                if (!$superAdmin) {
+                    $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
+                }
+            } else {
+                $conditions['InstitutionStaff.institution_id IN'] = $institutionIds;
+            }
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InstitutionStaff.institution_id'] = $institutionId;
-        }
+
+        // Area Filter
         if (!empty($areaId) && $areaId != -1) {
             $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId;
         }
+
+        // Main Query
         $query
             ->select([
-               'user_id' =>$this->aliasField('id'),
-               'username' =>  $this->aliasField('username'),
-               'first_name' =>  $this->aliasField('first_name'),
-               'middle_name' =>  $this->aliasField('middle_name'),
-               'third_name' =>  $this->aliasField('third_name'),
-               'last_name' =>  $this->aliasField('last_name'),
-               'last_name' =>  $this->aliasField('last_name'),
-               'preferred_name' =>  $this->aliasField('preferred_name'),
-               'email' =>  $this->aliasField('email'),
-               'address' =>  $this->aliasField('address'),
-               'postal_code' =>  $this->aliasField('postal_code'),
-               'birth_date' =>  $this->aliasField('date_of_birth'),
-               'death_date' =>  $this->aliasField('date_of_death'),
-               'external_reference' =>  $this->aliasField('external_reference'),
-               'preferred_language' =>  $this->aliasField('preferred_language'),
-               'last_login' =>  $this->aliasField('last_login'),
-
+                'user_id' => $this->aliasField('id'),
+                'username' => $this->aliasField('username'),
+                'first_name' => $this->aliasField('first_name'),
+                'middle_name' => $this->aliasField('middle_name'),
+                'third_name' => $this->aliasField('third_name'),
+                'last_name' => $this->aliasField('last_name'),
+                'preferred_name' => $this->aliasField('preferred_name'),
+                'email' => $this->aliasField('email'),
+                'address' => $this->aliasField('address'),
+                'postal_code' => $this->aliasField('postal_code'),
+                'birth_date' => $this->aliasField('date_of_birth'),
+                'death_date' => $this->aliasField('date_of_death'),
+                'external_reference' => $this->aliasField('external_reference'),
+                'preferred_language' => $this->aliasField('preferred_language'),
+                'last_login' => $this->aliasField('last_login'),
+                'institution_name' => 'Institutions.name',
+                'institution_code' => 'Institutions.code',
             ])
             ->contain([
                 'AddressAreas' => [
-                    'fields' => [
-                        'address_area' => 'AddressAreas.name',
-                    ]
+                    'fields' => ['address_area' => 'AddressAreas.name']
                 ],
-                'BirthplaceAreas'  => [
-                    'fields' => [
-                        'birth_area' => 'BirthplaceAreas.name',
-                    ]
+                'BirthplaceAreas' => [
+                    'fields' => ['birth_area' => 'BirthplaceAreas.name']
                 ],
-
-                'Genders'  => [
-                    'fields' => [
-                        'gender_name' => 'Genders.name',
-                    ]
+                'Genders' => [
+                    'fields' => ['gender_name' => 'Genders.name']
                 ],
-                'BirthplaceAreas'  => [
-                    'fields' => [
-                        'birth_area' => 'BirthplaceAreas.name',
-                    ]
-                ],
-                'MainNationalities'  => [
-                    'fields' => [
-                        'nationality_name' => 'MainNationalities.name',
-                    ]
+                'MainNationalities' => [
+                    'fields' => ['nationality_name' => 'MainNationalities.name']
                 ],
             ])
             ->innerJoin(['InstitutionStaff' => 'institution_staff'], [
                 'InstitutionStaff.staff_id = ' . $this->aliasField('id')
             ])
-            ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
-                $InstitutionsTable->aliasField('id = ') . 'InstitutionStaff.institution_id'
+            ->innerJoin(['Institutions' => 'institutions'], [
+                'Institutions.id = InstitutionStaff.institution_id'
             ])
-
-            ->where([$this->aliasField('is_staff') => 1, $conditions]);
+            ->leftJoin([$InstitutionsTable->getAlias() => $InstitutionsTable->getTable()], [
+                $InstitutionsTable->aliasField('id') . ' = InstitutionStaff.institution_id'
+            ])
+            ->where([$this->aliasField('is_staff') => 1])
+            ->andWhere($conditions)
+            ->group([
+                $this->aliasField('id'),
+                'Institutions.id'
+            ]);
     }
 
     public function onExcelGetBirthcertificateNumber(EventInterface $event, Entity $entity)
@@ -600,6 +671,18 @@ class StaffTable extends AppTable  {
             'field' => 'last_name',
             'type' => 'string',
             'label' => __('Last Names')
+        ];
+        $newFields[] = [
+            'key' => 'institution_name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution Name')
+        ];
+        $newFields[] = [
+            'key' => 'institution_code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
         ];
         $newFields[] = [
             'key' => 'preferred_name',
@@ -807,7 +890,7 @@ class StaffTable extends AppTable  {
                         'Report.StaffLeaveReport',
                         'Report.StaffDuties',
                         'Report.PositionSummary',
-                        'Report.Staff',
+                      //  'Report.Staff',
                         'Report.StaffPhoto',
                         'Report.StaffIdentities',
                         'Report.StaffContacts',
@@ -825,20 +908,27 @@ class StaffTable extends AppTable  {
                     ])) {
                         if (!empty($institutionList) && count($institutionList) > 1) {
 
-                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')]+ $institutionList ;
+                           $institutionOptions = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institutions')]+ $institutionList ;
                         } else {
 
-                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                            $institutionOptions = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institutions')] + $institutionList;
                         }
 
                     } else {
 
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
+                    if($superAdmin){
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institutions')]+ $institutionList ;
+                    }
 
+                    if(in_array($feature, ['Report.Staff'])) {
+                        $attr['attr']['multiple'] = true;
+                    } else {
+                        $attr['attr']['multiple'] = false;
+                    }
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
-                    $attr['attr']['multiple'] = false;
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }

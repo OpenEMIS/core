@@ -141,7 +141,9 @@ class StudentsTable extends AppTable
             $options['validate'] = 'SubjectsBookLists';
         } else if ($data[$this->getAlias()]['feature'] == 'Report.StudentNotAssignedClass') {
             $options['validate'] = 'StudentNotAssignedClass';
-        }
+        }else if ($data[$this->getAlias()]['feature'] == 'Report.Students') {
+            $options['validate'] = 'Students';
+        } //POCOR-8417
 
     }
 
@@ -159,7 +161,30 @@ class StudentsTable extends AppTable
         $this->ControllerAction->field('health_report_type', ['type' => 'hidden']);
     }
 
+    public function addAfterAction(EventInterface $event, Entity $entity)
+    {
+        $fieldsOrder = ['feature'];
+        if ($entity->has('feature')) {
+            $feature = $entity->feature;
+            switch ($feature) {
+                case 'Report.Students':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'institution_dropdown';
+                    $fieldsOrder[] = 'format';
+                    //custom element field
+                    $this->ControllerAction->field('institution_dropdown', [
+                        'type'   => 'element',
+                        'element'=> 'institutiondropdown',
+                    ]);
 
+                    break;
+            }
+            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        }
+    }
 
     public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
@@ -177,7 +202,40 @@ class StudentsTable extends AppTable
         return $attr;
     }
 
-     public function validationStudentsEnrollmentSummary(Validator $validator)
+    //POCOR-8417
+    public function validationStudents(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                // If completely empty
+                if (empty($value)) {
+                    return false;
+                }
+                // Check _ids exists
+                if (!isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids);
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStudentsEnrollmentSummary(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
@@ -347,8 +405,6 @@ class StudentsTable extends AppTable
                             $InstitutionsTable->aliasField('code') => 'ASC',
                             $InstitutionsTable->aliasField('name') => 'ASC'
                         ]);
-
-
                     $superAdmin = $this->Auth->user('super_admin');
                     if (!$superAdmin) { // if user is not super admin, the list will be filtered
                         $userId = $this->Auth->user('id');
@@ -455,7 +511,7 @@ class StudentsTable extends AppTable
                         'Report.InstitutionStudentReports', //POCOR-6970
                         'Report.SpecialNeeds',
                         'Report.StudentGuardians',
-                        'Report.Students',
+                        //'Report.Students',
                         'Report.StudentsPhoto',
                         'Report.StudentContacts',
                         'Report.StudentsEnrollmentSummary',
@@ -467,10 +523,17 @@ class StudentsTable extends AppTable
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
-                   
+                    if($superAdmin){
+                       $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                    }
+
+                    if(in_array($feature, ['Report.Students'])) { //POCOR-8417
+                        $attr['attr']['multiple'] = true;
+                    } else {
+                        $attr['attr']['multiple'] = false;
+                    }
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
-                    $attr['attr']['multiple'] = false;
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }
@@ -491,50 +554,6 @@ class StudentsTable extends AppTable
         $selectedArea = $requestData->area_education_id;//POCOR-8768
         //Start:POCOR-6818 Modified this for POCOR-6859
         $AreaT = TableRegistry::getTableLocator()->get('areas');                    
-        //Level-1
-        /*$AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
-        $childArea =[];
-        $childAreaMain = [];
-        $childArea3 = [];
-        $childArea4 = [];
-        foreach($AreaData as $kkk =>$AreaData11 ){
-            $childArea[$kkk] = $AreaData11->id;
-        }
-        //level-2
-        foreach($childArea as $kyy =>$AreaDatal2 ){
-            $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
-            foreach($AreaDatas as $ky =>$AreaDatal22 ){
-                $childAreaMain[$ky] = $AreaDatal22->id;
-            }
-        }
-        //level-3
-        if(!empty($childAreaMain)){
-            foreach($childAreaMain as $kyy =>$AreaDatal3 ){
-                $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
-                foreach($AreaDatass as $ky =>$AreaDatal222 ){
-                    $childArea3[$ky] = $AreaDatal222->id;
-                }
-            }
-        }
-        
-        //level-4
-        if(!empty($childAreaMain)){
-            foreach($childArea3 as $kyy =>$AreaDatal4 ){
-                $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
-                foreach($AreaDatasss as $ky =>$AreaDatal44 ){
-                    $childArea4[$ky] = $AreaDatal44->id;
-                }
-            }
-        }
-        $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
-        array_push($mergeArr,$areaId);
-        $mergeArr = array_unique($mergeArr);
-        $finalIds = implode(',',$mergeArr);
-        $finalIds = explode(',',$finalIds);
-        //echo "<pre>"; print_r($finalIds);die;
-        //End:POCOR-6818 Modified this for POCOR-6859 */
-
-
         $conditions = [];
         //POCOR-8598 starts
         if ($areaId != -1 && $areaId != '') {
@@ -548,15 +567,15 @@ class StudentsTable extends AppTable
             }//POCOR-6944 code ends
                 $conditions['Institution.area_id IN'] = $allselectedAreas;//POCOR-8768
         } //POCOR-8598 end
-        /*if ($areaId != -1) {
-            $conditions['Institution.area_id IN'] = $finalIds;
-        }*/
+       
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InstitutionStudent.institution_id'] = $institutionId;
+       
+        if (!empty($institutionIds) &&  ($institutionIds > 0)) { //POCOR-8417
+            $conditions['InstitutionStaff.institution_id IN'] = $institutionIds;
         }
+
         if (!empty($enrolled)) {
             $conditions['InstitutionStudent.student_status_id'] = $enrolled;
         }

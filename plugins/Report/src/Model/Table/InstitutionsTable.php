@@ -115,7 +115,7 @@ class InstitutionsTable extends AppTable
 
 
         $feature = $this->request->getData($this->getAlias())['feature']; //POCOR-6333
-        if (in_array($feature, ['Report.Institutions', 'Report.StaffBehaviours', 'Report.StudentAbsencesPerDays', 'Report.StudentBehaviours',])) {
+        if (in_array($feature, ['Report.StaffBehaviours', 'Report.StudentAbsencesPerDays', 'Report.StudentBehaviours',])) {
             $validator = $validator
                 ->notEmpty('area_level_id')
                 ->notEmpty('area_education_id');
@@ -126,6 +126,31 @@ class InstitutionsTable extends AppTable
                 ->notEmpty('institution_id');
         }
 
+        if ($feature == 'Report.Institutions') { //POCOR-8417
+            $validator
+                ->notEmpty('area_level_id')
+                ->notEmpty('area_education_id');
+            $validator->add('institution_id', 'required', [
+                'rule' => function ($value, $context) {
+                    if (!empty($context['data']['reload'])) {
+                        return true;
+                    }
+                    // If completely empty
+                    if (empty($value)) {
+                        return false;
+                    }
+                    // Check _ids exists
+                    if (!isset($value['_ids'])) {
+                        return false;
+                    }
+                    $ids = (array)$value['_ids'];
+                    $ids = array_filter($ids);
+
+                    return !empty($ids);
+                },
+                'message' => __('This field cannot be left empty')
+            ]);
+        }
 
         return $validator;
     }
@@ -347,6 +372,7 @@ class InstitutionsTable extends AppTable
         $this->ControllerAction->field('classification', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_locality_id', ['type' => 'hidden', 'value' => 'x']);
         $this->ControllerAction->field('logo_content', ['type' => 'hidden']);
+        
     }
 
     public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -389,11 +415,17 @@ class InstitutionsTable extends AppTable
             $fieldsOrder = ['feature'];
             switch ($feature) {
                 /*POCOR-6176 Starts*/
-                case 'Report.Institutions':
                 case 'Report.StaffBehaviours':
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
                     $fieldsOrder[] = 'institution_filter';
+                    $fieldsOrder[] = 'format';
+                    break;
+                case 'Report.Institutions':
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'institution_dropdown';
                     $fieldsOrder[] = 'format';
                     break;
                 case 'Report.InstitutionAssociations':
@@ -648,6 +680,13 @@ class InstitutionsTable extends AppTable
             $fieldsOrder[] = 'format';
             $this->ControllerAction->setFieldOrder($fieldsOrder);
         } //POCOR-6637::END
+        if($feature = 'Report.Institution'){ //POCOR-8417
+            $this->ControllerAction->field('institution_dropdown', [
+                'type' => 'element',
+                'element' => 'institutiondropdown',   
+            ]);
+        }
+       
     }
 
     public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
@@ -717,7 +756,7 @@ class InstitutionsTable extends AppTable
 
         $fields->exchangeArray($newFields);
 
-        if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
+        /*if ($feature == 'Report.Institutions' && $filter != self::NO_FILTER) {
             // Stop the customfieldlist behavior onExcelUpdateFields function
             $includedFields = ['name', 'alternative_name', 'code', 'area_code', 'area_id', 'area_administrative_code', 'area_administrative_id'];
             foreach ($newFields as $key => $value) {
@@ -736,7 +775,7 @@ class InstitutionsTable extends AppTable
             }
             $fields->exchangeArray($newFields);
             $event->stopPropagation();
-        }
+        }*/
     }
 
     public function onExcelGetShiftType(EventInterface $event, Entity $entity)
@@ -785,7 +824,7 @@ class InstitutionsTable extends AppTable
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
-            if ($feature == 'Report.Institutions' || $feature == 'Report.StaffBehaviours') {
+            if ($feature == 'Report.StaffBehaviours') {
                 $option[self::NO_FILTER] = __('All Institutions');
                 $option[self::NO_STUDENT] = __('Institutions with No Students');
                 $option[self::NO_STAFF] = __('Institutions with No Staff');
@@ -1581,6 +1620,7 @@ class InstitutionsTable extends AppTable
             $feature = $data['feature'];
 
             $reportModels = [
+                'Report.Institutions',
                 'Report.InstitutionSubjects',
                 'Report.InstitutionSubjectsClasses',
                 'Report.StudentAttendanceSummary',
@@ -1776,9 +1816,16 @@ class InstitutionsTable extends AppTable
                         }
                         /*POCOR-6304 Ends*/
                     }
+                    if(!$superAdmin){
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                    }
+                    if(in_array($feature, ['Report.Institutions'])) {
+                        $attr['attr']['multiple'] = true;
+                    } else {
+                        $attr['attr']['multiple'] = false;
+                    }
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
-                    $attr['attr']['multiple'] = false;
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }
@@ -2210,10 +2257,24 @@ class InstitutionsTable extends AppTable
    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $filter = $requestData->institution_filter;
-        $areaId = $requestData->area_education_id;
+       // $filter = $requestData->institution_filter;
+        $areaId = $requestData->area_education_id; // area id dropdown
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
+        $institutionIds = $requestData->institution_id->_ids ?? [];
+        $conditions = [];
+        if (!empty($institutionIds) && !in_array('0', $institutionIds)) {
+            if (in_array(0, $institutionIds)) {
+                if (!$superAdmin) {
+                    $conditions['Institutions.id IN'] = $institutionIds;
+                }
+            } else {
+                $conditions['Institutions.id IN'] = $institutionIds;
+            }
+        }
+        if(!empty($areaId) && $areaId > 0){
+            $conditions['Institutions.area_id'] = $areaId;
+        }
 
         //POCOR-9449 Start
         $query
@@ -2222,60 +2283,12 @@ class InstitutionsTable extends AppTable
                 'area_code' => 'Areas.code',
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'institution_status' => 'Statuses.name'
-            ]);
+            ])->where($conditions);
 
-        // --- Area / Island Filter (No orWhere) ---
-        if ($areaId != -1) {
-            $query->matching('Areas', function ($q) use ($areaId) {
-                return $q->where([
-                    'OR' => [
-                        ['Areas.id' => $areaId],  
-                        ['Areas.parent_id' => $areaId],
-                    ]
-                ]);
-            });
-        }
-        //POCOR-9449 end
+      
+        
 
-        switch ($filter) {
-            case self::NO_STUDENT: // POCOR-8794
-                $StudentsTable = TableRegistry::getTableLocator()->get('Institution.Students');
-                $academicPeriodId = $requestData->academic_period_id;
-
-                $query
-                    ->leftJoin(
-                        [$StudentsTable->getAlias() => $StudentsTable->getTable()],
-                        [
-                            $StudentsTable->aliasField('institution_id') . ' = ' . $this->aliasField('id'),
-                            $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
-                        ]
-                    )
-                    ->select(['student_count' => $query->func()->count('Students.id')])
-                    ->group([$this->aliasField('id')])
-                    ->having(['student_count' => 0]);
-                break;
-
-            case self::NO_STAFF:
-                $query
-                    ->leftJoin(
-                        ['Staff' => 'institution_staff'],
-                        [$this->aliasField('id') . ' = Staff.institution_id']
-                    )
-                    ->select(['staff_count' => $query->func()->count('Staff.id')])
-                    ->group([$this->aliasField('id')])
-                    ->having(['staff_count' => 0]);
-                break;
-
-            case self::NO_FILTER:
-                break;
-        }
-
-        if (!$superAdmin) {
-            $query->find('byAccess', [
-                'user_id' => $userId,
-                'institution_field_alias' => $this->aliasField('id')
-            ]);
-        }
+        
     }
 
     public
