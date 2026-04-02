@@ -12,10 +12,14 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\EventInterface;
 use Cake\I18n\Time;
-use Cake\I18n\Date;//POCOR-6841
+use Cake\I18n\Date;
+
+//POCOR-6841
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
-use Cake\Datasource\ConnectionManager; //POCOR-6785
+use Cake\Datasource\ConnectionManager;
+
+//POCOR-6785
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardStatusesTable extends ControllerActionTable
@@ -24,13 +28,13 @@ class ReportCardStatusesTable extends ControllerActionTable
     private $reportProcessList = [];
 
     // for status
-    CONST NEW_REPORT = 1;
-    CONST IN_PROGRESS = 2;
-    CONST GENERATED = 3;
-    CONST PUBLISHED = 4;
-    CONST ERROR = -1; //POCOR-6788
+    const NEW_REPORT = 1;
+    const IN_PROGRESS = 2;
+    const GENERATED = 3;
+    const PUBLISHED = 4;
+    const ERROR = -1; //POCOR-6788
 
-    CONST MAX_PROCESSES = 2;
+    const MAX_PROCESSES = 2;
     // POCOR-7321 start
     public $fileTypes = [
         'jpeg' => 'image/jpeg',
@@ -51,13 +55,14 @@ class ReportCardStatusesTable extends ControllerActionTable
         'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'zip' => 'application/zip'
     ];
-     // POCOR-7321 end
+
+    // POCOR-7321 end
     public function initialize(array $config): void
     {
         $this->setTable('institution_class_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses','foreignKey' => 'institution_class_id']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -85,7 +90,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             self::ERROR => __('Error') //POCOR-6788
         ];
         $this->addBehavior('Institution.InstitutionTab', [
-            'appliedAction' => ['ReportCardStatuses' =>['student_id','institution_class_id','class_id','education_grade_id','academic_period_id']
+            'appliedAction' => ['ReportCardStatuses' => ['student_id', 'institution_class_id', 'class_id', 'education_grade_id', 'academic_period_id']
             ]
         ]);
     }
@@ -246,7 +251,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
-        $this->field('student_name', ['type' => 'integer','sort' => ['field' => 'Users.first_name']]);
+        $this->field('student_name', ['type' => 'integer', 'sort' => ['field' => 'Users.first_name']]);
         //$this->field('student_id', ['type' => 'hidden', 'sort' => ['field' => 'Users.first_name']]);
         $this->field('student_id', ['type' => 'hidden']);
         $this->field('report_card');
@@ -285,9 +290,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $conn = ConnectionManager::get('default');
         $institutionId = $this->getInstitutionID();
         $ReportCardProcessesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
-        $entitydata = $ReportCardProcessesTable->find('all',['conditions'=>[
-                'institution_id' =>$institutionId,
-                'status !=' =>'-1'
+        $entitydata = $ReportCardProcessesTable->find('all', ['conditions' => [
+            'institution_id' => $institutionId,
+            'status !=' => '-1'
         ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
 
         foreach ($entitydata as $keyy => $entity) {
@@ -363,7 +368,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $toolbarButtons = $extra['toolbarButtons']; //POCOR-8898
         $this->addArchiveButton($toolbarButtons); //POCOR-8898
-        Log::write('debug', '[POCOR-8898] Archive button added. Current buttons: ' . json_encode(array_keys($toolbarButtons->getArrayCopy()))); //POCOR-8898
     }
 
     private function addArchiveButton($toolbarButtons) //POCOR-8898
@@ -396,8 +400,9 @@ class ReportCardStatusesTable extends ControllerActionTable
         $customButton['url'] = $url; //POCOR-8898
         $customButton['name'] = $name; //POCOR-8898
         $toolbarButtons[$name] = $customButton; //POCOR-8898
-        dd($toolbarButtons);
+
     }
+
     //POCOR-8898: end
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -411,8 +416,21 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->select(['academic_period_id'])
             ->where([$this->StudentsReportCards->aliasField('institution_id') => $institutionId])
             ->distinct(['academic_period_id'])
+            ->disableHydration()
+            ->disableAutoFields()
             ->extract('academic_period_id')
             ->toArray();
+
+        // POCOR-8898: Always include current academic period if editable, even with no records
+        $currentPeriodId = $this->AcademicPeriods->getCurrent();
+        if ($currentPeriodId && !in_array($currentPeriodId, $activePeriodIds)) {
+            $currentPeriodIsEditable = $this->AcademicPeriods->find()
+                ->where([$this->AcademicPeriods->aliasField('id') => $currentPeriodId, $this->AcademicPeriods->aliasField('editable') => 1])
+                ->count() > 0;
+            if ($currentPeriodIsEditable) {
+                $activePeriodIds[] = $currentPeriodId;
+            }
+        }
 
         if (!empty($activePeriodIds)) {
             $academicPeriodOptions = $this->AcademicPeriods->find('list')
@@ -429,7 +447,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
             $academicPeriodOptions = $academicPeriodOptionsWithEditable;
 
-            $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+            $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $currentPeriodId;
         } else {
             $academicPeriodOptions = [];
             $selectedAcademicPeriod = null;
@@ -456,7 +474,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         } else {
             $this->Alert->warning('ReportCardStatuses.noProgrammes');
         }
-        $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
+        $reportCardOptions = ['-1' => '-- ' . __('Select Report Card') . ' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->getQuery('report_card_id')) ? $this->request->getQuery('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
         //End
@@ -513,7 +531,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $UsersTable = TableRegistry::getTableLocator()->get('Security.Users');
         // POCOR-9569: Start
         $StudentStatuses = $this->StudentStatuses;
-        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN'];
         $query->contain('StudentStatuses')->where($where);
         // POCOR-9569: End
         $query
@@ -543,7 +561,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 return $q->where(['StudentStatuses.code NOT IN ' => ['WITHDRAWN']]);
             }])
             ->innerJoin([$UsersTable->getAlias() => $UsersTable->getTable()], [
-                        $UsersTable->aliasField('id = ') . $this->aliasField('student_id')])
+                $UsersTable->aliasField('id = ') . $this->aliasField('student_id')])
             //POCOR-7153[END]
             ->leftJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
@@ -720,9 +738,9 @@ class ReportCardStatusesTable extends ControllerActionTable
                         ])
                         ->count();
 
-                        if (
-                            // ($dataCount == $generatedCount) &&
-                            ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-9537
+                    if (
+                        // ($dataCount == $generatedCount) &&
+                    ($generatedCount > 0 || $publishedCount > 0)) { //POCOR-9537
                         if ($this->AccessControl->isAdmin()) {
                             $downloadButtonPdf['url'] = $this->setQueryString($this->url('mergeAnddownloadAllPdf'), $params);
                             $downloadButtonPdf['type'] = 'button';
@@ -1220,14 +1238,15 @@ class ReportCardStatusesTable extends ControllerActionTable
 
 
     private function mergePDFFiles(
-        Array $filenames,
+        array $filenames,
               $outFile = '',
               $title = '',
               $author = '',
               $subject = ''
-    ) {
+    )
+    {
         // Detect base page size from first valid PDF
-        $width  = 297;
+        $width = 297;
         $height = 210;
 
         try {
@@ -1236,7 +1255,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $probe->SetSourceFile($filenames[0]);
                 $tplId = $probe->ImportPage(1);
                 $wh = $probe->getTemplateSize($tplId);
-                $width  = $wh['width']  ?? 297;
+                $width = $wh['width'] ?? 297;
                 $height = $wh['height'] ?? 210;
             }
         } catch (\Throwable $e) {
@@ -1244,7 +1263,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
 
         $mpdf = new \Mpdf\Mpdf([
-            'mode'   => 'utf-8',
+            'mode' => 'utf-8',
             'format' => [$width, $height],
         ]);
 
@@ -1252,7 +1271,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $mpdf->SetAuthor($author);
         $mpdf->SetSubject($subject);
         $mpdf->autoScriptToLang = true;
-        $mpdf->autoLangToFont   = true;
+        $mpdf->autoLangToFont = true;
 
         $mergedCount = 0;
 
@@ -1368,12 +1387,12 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'academic_period_id' => 'AcademicPeriods.name',
                 'institution_class' => 'InstitutionClasses.name',
                 'student_name' => $query->func()->group_concat([
-                            'Users.first_name' => 'literal',
-                            " ",
-                            'Users.last_name' => 'literal'
-                        ]),
-                ])
-            ->contain(['Users', 'AcademicPeriods','InstitutionClasses'])
+                    'Users.first_name' => 'literal',
+                    " ",
+                    'Users.last_name' => 'literal'
+                ]),
+            ])
+            ->contain(['Users', 'AcademicPeriods', 'InstitutionClasses'])
             ->leftJoin([$this->StudentsReportCards->getAlias() => $this->StudentsReportCards->getTable()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -1450,18 +1469,18 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         if ($this->action === 'index') {
             $conditions = [
-                'report_card_id IS'      => $entity->report_card_id,
-                'student_id'          => $entity->student_id,
-                'institution_id IS'      => $this->getInstitutionID(),
-                'academic_period_id IS'  => $entity->academic_period_id,
-                'education_grade_id IS'  => $entity->education_grade_id,
+                'report_card_id IS' => $entity->report_card_id,
+                'student_id' => $entity->student_id,
+                'institution_id IS' => $this->getInstitutionID(),
+                'academic_period_id IS' => $entity->academic_period_id,
+                'education_grade_id IS' => $entity->education_grade_id,
             ];
             $finalStatus = $this->determineReportCardStatus($conditions);
             return $this->statusOptions[$finalStatus] ?? $this->statusOptions[self::NEW_REPORT];
 
-        }else{
+        } else {
             if ($entity->has('report_card_status')) {
-            $value = $this->statusOptions[$entity->report_card_status];
+                $value = $this->statusOptions[$entity->report_card_status];
             } else {
                 $value = $this->statusOptions[self::NEW_REPORT];
             }
@@ -1641,7 +1660,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         if (!$record || empty($record['pdf_size'])) {
             return '';
         }
-        $bytes = (int) $record['pdf_size'];
+        $bytes = (int)$record['pdf_size'];
 
         if ($bytes >= 1048576) { // 1 MB
             return round($bytes / 1048576, 2) . ' MB';
@@ -1990,7 +2009,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         //POCOR-7067 Starts
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $timeZone= $ConfigItems->value("time_zone");
+        $timeZone = $ConfigItems->value("time_zone");
         date_default_timezone_set($timeZone);//POCOR-7067 Ends
         Log::write('debug', 'Initialize Add All Report Cards ' . $reportCardId . ' for Class ' . $institutionClassId . ' to processes (' . Time::now() . ')');
 
@@ -2004,7 +2023,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
         // POCOR-9569: filter out students with withdrawn or transferred status
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
-        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN'];
         // POCOR-9569 end
         $classStudents = $classStudentsTable->find()
             ->contain('StudentStatuses')
@@ -2021,7 +2040,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         foreach ($classStudents as $student) {
             // Report card processes
-           // $checkgpaStudent = $student->student_id;//POCOR-7656
+            // $checkgpaStudent = $student->student_id;//POCOR-7656
             $idKeys = [
                 'report_card_id' => $reportCardId,
                 'institution_class_id' => $student->institution_class_id,
@@ -2142,7 +2161,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards ' . $args;
             $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logs;
-             //print_r($shellCmd);die();
+            //print_r($shellCmd);die();
             try {
                 $pid = exec($shellCmd);
                 Log::write('debug', $shellCmd);
@@ -2455,7 +2474,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     **/
 
     //POCOR-8020 :: modified the query
-    private function addGpaReportCards($checkgpaStudent, $reportCardId,$selectedAcademicPeriodId)//POCOR-7807
+    private function addGpaReportCards($checkgpaStudent, $reportCardId, $selectedAcademicPeriodId)//POCOR-7807
     {
         $studentId = $checkgpaStudent;//POCOR-7656
         $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -2613,6 +2632,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     }
 
     //POCOR-7998:start
+
     /**
      * @return array
      */
@@ -2844,54 +2864,6 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $buttons;
     }//POCOR-7998:end
 
-    //POCOR-8898: Check if ALL 4 archive types are completed (year becomes read-only)
-    private function getFullyArchivedPeriods($academicPeriodIds)
-    {
-        if (empty($academicPeriodIds)) {
-            return [];
-        }
-
-        $fullyArchived = [];
-
-        foreach ($academicPeriodIds as $periodId) {
-            // Count how many of the 4 archive types have records for this period
-            $archivedCount = 0;
-
-            // 1. Student Report Cards
-            $reportCardsArchived = $this->InstitutionStudentsReportCardsArchived->find('count')
-                ->where(['academic_period_id' => $periodId])
-                ->first() > 0;
-            if ($reportCardsArchived) $archivedCount++;
-
-            // 2. Student Assessments
-            $AssessmentsArchived = TableRegistry::getTableLocator()->get('Student.ArchivedAssessments');
-            $assessmentsArchived = $AssessmentsArchived->find('count')
-                ->where(['academic_period_id' => $periodId])
-                ->first() > 0;
-            if ($assessmentsArchived) $archivedCount++;
-
-            // 3. Student Attendances
-            $StudentAttendanceArchived = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecordsArchived');
-            $studentAttendancesArchived = $StudentAttendanceArchived->find('count')
-                ->where(['academic_period_id' => $periodId])
-                ->first() > 0;
-            if ($studentAttendancesArchived) $archivedCount++;
-
-            // 4. Staff Attendances
-            $StaffAttendanceArchived = TableRegistry::getTableLocator()->get('Institution.StaffAttendancesArchived');
-            $staffAttendancesArchived = $StaffAttendanceArchived->find('count')
-                ->where(['academic_period_id' => $periodId])
-                ->first() > 0;
-            if ($staffAttendancesArchived) $archivedCount++;
-
-            // Year becomes READ-ONLY only when ALL 4 are archived (4/4)
-            if ($archivedCount === 4) {
-                $fullyArchived[] = $periodId;
-            }
-        }
-
-        return $fullyArchived;
-    }
 
     /*public function onGetEmailStatus(EventInterface $event, Entity $entity)
     {
