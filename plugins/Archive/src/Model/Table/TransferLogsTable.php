@@ -711,6 +711,30 @@ class TransferLogsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-8898: Log archive completion alert to transfer log
+    public function logArchiveCompletionAlert($pid, $alert)
+    {
+        /**
+         * Appends an alert message to the transfer log when archiving
+         * will make a year non-editable (all 4 archive types completed).
+         * Alert is logged to notes field so operators are aware.
+         */
+        if (!$alert) {
+            return;
+        }
+
+        $existingRecord = $this->find()
+            ->where(['p_id' => $pid])
+            ->first();
+
+        if ($existingRecord) {
+            $notes = $existingRecord->notes ?? '';
+            $notes = $notes . "\n[ARCHIVE COMPLETION ALERT]\n" . $alert;
+            $this->patchEntity($existingRecord, ['notes' => $notes]);
+            $this->save($existingRecord);
+        }
+    }
+
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {

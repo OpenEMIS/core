@@ -214,5 +214,74 @@ class ArchiveService
         return intval($result['count']);
     }
 
+    //POCOR-8898: Check if archiving will make year non-editable + return alert message
+    public static function checkArchiveCompletionStatus($academicPeriodId, $institutionId, $archiveTypeName)
+    {
+        /**
+         * Returns:
+         * ['willBecomeReadOnly' => false, 'alert' => null] — normal archive
+         * ['willBecomeReadOnly' => true, 'alert' => 'Archiving X will make year YYYY read-only (all 4 types archived)']
+         *
+         * The 4 archive types checked:
+         * 1. Student Report Cards (InstitutionStudentsReportCardsArchived)
+         * 2. Student Assessments (ArchivedAssessments)
+         * 3. Student Attendances (StudentAttendanceMarkedRecordsArchived)
+         * 4. Staff Attendances (StaffAttendancesArchived)
+         */
+
+        $archiveStatusChecks = [
+            'Institution.InstitutionStudentsReportCardsArchived' => true,  // Will be checked as "not yet archived" before this operation
+            'Student.ArchivedAssessments' => true,
+            'Attendance.StudentAttendanceMarkedRecordsArchived' => true,
+            'Institution.StaffAttendancesArchived' => true,
+        ];
+
+        $archivedCount = 0;
+        $archiveNames = [];
+
+        foreach ($archiveStatusChecks as $tableName => $checkRequired) {
+            if (!$checkRequired) continue;
+
+            $ArchiveTable = TableRegistry::getTableLocator()->get($tableName);
+            $hasArchiveRecords = $ArchiveTable->find('count')
+                ->where([
+                    'academic_period_id' => $academicPeriodId,
+                    'institution_id' => $institutionId
+                ])
+                ->first() > 0;
+
+            if ($hasArchiveRecords) {
+                $archivedCount++;
+                // Extract friendly name from table name
+                $friendlyName = match($tableName) {
+                    'Institution.InstitutionStudentsReportCardsArchived' => 'Student Report Cards',
+                    'Student.ArchivedAssessments' => 'Student Assessments',
+                    'Attendance.StudentAttendanceMarkedRecordsArchived' => 'Student Attendances',
+                    'Institution.StaffAttendancesArchived' => 'Staff Attendances',
+                    default => $tableName
+                };
+                $archiveNames[] = $friendlyName;
+            }
+        }
+
+        // If 3 are already archived, and we're archiving the 4th, it will become read-only
+        $willBecomeReadOnly = ($archivedCount === 3);
+
+        $alert = null;
+        if ($willBecomeReadOnly) {
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+            $periodRecord = $AcademicPeriods->get($academicPeriodId);
+            $yearLabel = $periodRecord->name ?? "Period $academicPeriodId";
+            $alert = "⚠️ NOTICE: Archiving this will make year $yearLabel READ-ONLY (all 4 archive types completed):\n"
+                . "- Already archived: " . implode(', ', $archiveNames) . "\n"
+                . "- Now archiving: $archiveTypeName";
+        }
+
+        return [
+            'willBecomeReadOnly' => $willBecomeReadOnly,
+            'alert' => $alert
+        ];
+    }
+
 }
 //POCOR-8898: end
