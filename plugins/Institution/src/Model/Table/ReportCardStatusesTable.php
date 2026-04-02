@@ -73,6 +73,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $this->ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $this->StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
+        $this->InstitutionStudentsReportCardsArchived = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCardsArchived'); //POCOR-8898
         $this->ReportCardEmailProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmailProcesses');
         $this->ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
 
@@ -418,6 +419,16 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->where([$this->AcademicPeriods->aliasField('id IN') => $activePeriodIds])
                 ->order([$this->AcademicPeriods->aliasField('order')])
                 ->toArray();
+
+            //POCOR-8898: Mark years as read-only if 3+ archive types are completed
+            $readOnlyPeriodIds = $this->getPartiallyArchivedPeriods(array_keys($academicPeriodOptions));
+            $academicPeriodOptionsWithEditable = [];
+            foreach ($academicPeriodOptions as $id => $label) {
+                $editable = !in_array($id, $readOnlyPeriodIds);
+                $academicPeriodOptionsWithEditable[$id] = ['text' => $label, 'editable' => $editable];
+            }
+            $academicPeriodOptions = $academicPeriodOptionsWithEditable;
+
             $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         } else {
             $academicPeriodOptions = [];
@@ -2832,6 +2843,55 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
         return $buttons;
     }//POCOR-7998:end
+
+    //POCOR-8898: Check if 3+ archive types are completed (year becomes read-only)
+    private function getPartiallyArchivedPeriods($academicPeriodIds)
+    {
+        if (empty($academicPeriodIds)) {
+            return [];
+        }
+
+        $partiallyArchived = [];
+
+        foreach ($academicPeriodIds as $periodId) {
+            // Count how many of the 4 archive types have records for this period
+            $archivedCount = 0;
+
+            // 1. Student Report Cards
+            $reportCardsArchived = $this->InstitutionStudentsReportCardsArchived->find('count')
+                ->where(['academic_period_id' => $periodId])
+                ->first() > 0;
+            if ($reportCardsArchived) $archivedCount++;
+
+            // 2. Student Assessments
+            $AssessmentsArchived = TableRegistry::getTableLocator()->get('Student.ArchivedAssessments');
+            $assessmentsArchived = $AssessmentsArchived->find('count')
+                ->where(['academic_period_id' => $periodId])
+                ->first() > 0;
+            if ($assessmentsArchived) $archivedCount++;
+
+            // 3. Student Attendances
+            $StudentAttendanceArchived = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecordsArchived');
+            $studentAttendancesArchived = $StudentAttendanceArchived->find('count')
+                ->where(['academic_period_id' => $periodId])
+                ->first() > 0;
+            if ($studentAttendancesArchived) $archivedCount++;
+
+            // 4. Staff Attendances
+            $StaffAttendanceArchived = TableRegistry::getTableLocator()->get('Institution.StaffAttendancesArchived');
+            $staffAttendancesArchived = $StaffAttendanceArchived->find('count')
+                ->where(['academic_period_id' => $periodId])
+                ->first() > 0;
+            if ($staffAttendancesArchived) $archivedCount++;
+
+            // If 3+ are archived, mark period as read-only (editable=false)
+            if ($archivedCount >= 3) {
+                $partiallyArchived[] = $periodId;
+            }
+        }
+
+        return $partiallyArchived;
+    }
 
     /*public function onGetEmailStatus(EventInterface $event, Entity $entity)
     {
