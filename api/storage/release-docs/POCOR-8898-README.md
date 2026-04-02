@@ -1,185 +1,198 @@
-# POCOR-8898: Fix Report Card Archiving Bugs
+# POCOR-8898: Report Card Archiving — Bug Fixes & Enhancements
 
 ## What is the Task?
 
-Fix three critical bugs in the Report Card Archiving system:
+Fix three bugs in the Report Card Archiving system and add enhancements:
 
-1. **Bug 1**: Academic period filter in the archive view shows only periods that have active (non-archived) report cards, eliminating confusion when browsing archived data
-2. **Bug 2**: Archive button is now visible in the Report Card Statuses toolbar for users with proper permissions (all roles, not just superrole)
-3. **Bug 3**: Database query code in the archives table uses idiomatic CakePHP ORM instead of raw SQL for maintainability and security
+1. **Bug 1**: Academic period filter shows only periods with active records for the current school; always includes current editable period even if empty
+2. **Bug 2**: Archive button visible for any role with proper permission (not just superrole)
+3. **Bug 3**: Archive filters replaced raw SQL with safe CakePHP ORM queries
+4. **Enhancement**: Year becomes read-only when ALL 4 archive types are completed (Student Report Cards, Student Assessments, Student Attendances, Staff Attendances)
+5. **Enhancement**: Archive commands warn operators when archiving will make a year non-editable (3/4 already archived — next one locks it)
 
 ## Situation Before
 
-- The Report Card Archive view would display academic periods that have no active records, confusing users
-- Archive button was missing from the Report Card Statuses index toolbar due to a migration error (`_view` pointed to non-existent route)
-- Archive filters were written in raw SQL, making them brittle and harder to maintain
-- No debug logging existed for permission checks, making troubleshooting difficult
+- Archive view displayed all academic periods regardless of active records, confusing operators
+- Archive button missing from toolbar due to wrong `_view` route in `security_functions`
+- Archive filters used raw SQL — brittle and unsafe
+- Year could become read-only after only 3 of 4 archive operations, inconsistently
+- No warning when archiving would lock a year
 
 ## What Was Implemented
 
 ### Files Changed Summary
 
-| File | Purpose | Changes |
-|------|---------|---------|
-| `config/Migrations/20260331160000_POCOR8898.php` | Database schema & security functions | Backs up `institution_students_report_cards` table; corrects `security_functions._view` from `'ReportCardArchives.index'` to `'ReportCardStatuses.index'` |
-| `plugins/Institution/src/Model/Table/ReportCardStatusesTable.php` | Report card status filters | Changed `getYearList()` from raw SQL to ORM query with DISTINCT; filters now show only periods with active (non-archived) records |
-| `plugins/Institution/src/Model/Table/StudentsReportCardsArchivesTable.php` | Archive data access | Replaced three raw SQL queries with safe ORM equivalents: `getAcademicPeriods()`, `getReportCardIds()`, `getInstitutionClassIds()` |
-| `src/Controller/Component/AccessControlComponent.php` | Permission checking | Added comprehensive debug logging to `check()` method for permission tracing |
+| File | Changes |
+|------|---------|
+| `config/Migrations/20260331160000_POCOR8898.php` | Backs up `institution_students_report_cards` + `security_functions`; fixes `_view` route |
+| `plugins/Institution/src/Model/Table/ReportCardStatusesTable.php` | Smart academic period filter — active records for this school + always include current editable period |
+| `plugins/Institution/src/Model/Table/StudentsReportCardsArchivesTable.php` | Replaced raw SQL with ORM: `getAcademicPeriods()`, `getReportCardIds()`, `getInstitutionClassIds()` |
+| `src/Controller/Component/AccessControlComponent.php` | Removed debug logging added during development |
+| `src/Service/ArchiveService.php` | New `checkArchiveCompletionStatus()` — checks 4/4 archive completion, returns warning at 3/4 |
+| `src/Command/ArchiveCommandBase.php` | Calls `checkArchiveCompletionStatus()` after archiving; logs alert to TransferLogs when year will become read-only |
+| `plugins/Archive/src/Model/Table/TransferLogsTable.php` | New `logArchiveCompletionAlert()` — appends alert to transfer log notes |
+| `plugins/Institution/src/Controller/InstitutionsController.php` | CakePHP 5 port |
+| `plugins/Institution/src/Model/Table/InstitutionStudentsReportCardsArchivedTable.php` | New archive table model |
+| `src/Command/Archive*Command.php` (×4) | CakePHP 5 commands replacing Shells |
+| `src/Shell/ArchiveStudentReportCardsShell.php` | Legacy shell retained for backward compatibility |
+| `src/Controller/Component/NavigationComponent.php` | Navigation entries for archive feature |
 
 ### Database Migrations
 
 **Migration File**: `config/Migrations/20260331160000_POCOR8898.php`
 
-- **Backs up**: `institution_students_report_cards` table (new archiving feature)
-- **Backs up**: `security_functions` table (modified, not archived)
-- **Updates**: `security_functions` row for "Student Report Card Archive" — sets `_view` to correct navigation route
-- **Idempotent**: Safe for up → down → up testing; guards against re-run with `hasTable()` checks
+**Tables backed up by migration:**
+- `institution_students_report_cards` → `z_8898_institution_students_report_cards`
+- `security_functions` → `z_8898_security_functions`
 
-**Tables Affected**:
-- `institution_students_report_cards` — backed up (no data changes)
-- `security_functions` — one row updated (`_view` field)
+**Tables modified:**
+- `security_functions` — one row updated: `_view` corrected from `'ReportCardArchives.index'` to `'ReportCardStatuses.index'`
 
-### Key Improvements
+**Migration is idempotent** — safe for up → down → up testing via `hasTable()` guards.
 
-#### Bug 1 Fix: Smart Academic Period Filter
-- **Before**: Raw SQL query returned all periods in database
-- **After**: ORM query with DISTINCT filters by active records only, using indexed `institution_id` FK
-- **Scales**: Efficiently handles millions of rows via database-side DISTINCT on indexed column
+### ⚠️ Migration Limitations — Manual Restoration Required
 
-```php
-// New approach (ORM)
-$this->find('distinct', ['fields' => 'academic_period_id'])
-    ->where(['archived' => 0])
-    ->order(['academic_period_id' => 'DESC'])
-```
+The following tables are **NOT included in the migration backup** and are **NOT restored on rollback**:
 
-#### Bug 2 Fix: Archive Button Visibility
-- **Root cause**: Migration set `_view` to non-existent `'ReportCardArchives.index'` route
-- **Fix**: Corrected to `'ReportCardStatuses.index'` — the actual button location
-- **Permission**: Button now visible for superrole AND any role with explicit "Student Report Card Archive" permission assignment
-- **Debug**: Added logging to `AccessControlComponent::check()` to trace permission evaluation
+#### `transfer_logs`
+- Archive operations write entries to `transfer_logs` during execution
+- Rolling back the migration does **not** remove these log entries
+- If rollback is needed, a sysadmin must manually clean up:
+  ```sql
+  -- Review entries first
+  SELECT * FROM transfer_logs WHERE academic_period_id = <period_id> ORDER BY generated_on DESC;
 
-#### Bug 3 Fix: Safe Database Queries
-- **Before**: Raw SQL with implicit parameter binding
-- **After**: Three ORM methods with safe parameter binding:
-  - `getAcademicPeriods()` — fetches distinct periods from archive
-  - `getReportCardIds()` — finds matching report card IDs
-  - `getInstitutionClassIds()` — lists institution classes in archive
+  -- Then delete if appropriate
+  DELETE FROM transfer_logs WHERE academic_period_id = <period_id>;
+  ```
+
+#### `academic_periods` (`editable` field)
+- When ALL 4 archive types are completed for a period, that year becomes read-only (`editable = 0`) in `academic_periods`
+- This change is made by the archive commands at runtime — **not by the migration**
+- Rolling back the migration does **not** restore `editable = 1`
+- If a year was locked and rollback is needed, a sysadmin must manually restore:
+  ```sql
+  -- Check current state
+  SELECT id, name, editable FROM academic_periods WHERE id = <period_id>;
+
+  -- Restore editable if needed
+  UPDATE academic_periods SET editable = 1 WHERE id = <period_id>;
+  ```
+
+**When this matters**: If archiving was run (locking a year or writing transfer logs) and then the migration is rolled back, the system will be in an inconsistent state. The sysadmin must decide whether to restore these values based on the operational situation.
+
+### Read-Only Year Logic
+
+A year becomes **read-only** (`academic_periods.editable = 0`) only when ALL 4 of these archive types are completed:
+
+| # | Archive Type | Table |
+|---|-------------|-------|
+| 1 | Student Report Cards | `institution_students_report_cards` |
+| 2 | Student Assessments | `assessment_item_results` |
+| 3 | Student Attendances | `student_attendance_marked_records` |
+| 4 | Staff Attendances | `institution_staff_attendances` |
+
+At **3/4 completed**, operators see a warning in the archive command output and in `transfer_logs.notes`:
+> ⚠️ WARNING: Archiving this will make year YYYY READ-ONLY (all 4 archive types will be completed)
+
+### Academic Period Filter Logic
+
+The Report Card Statuses index filter now shows:
+- Academic periods that have **at least 1 active record** in the current school
+- **Always includes the current academic period** if it is editable (`editable = 1`), even if no records exist yet
+- Periods where ALL 4 archives are complete do **not** appear (no active records remain)
 
 ## Deployment Instructions
 
 ### Step 1: Run Migration
-Apply the database migration on the target environment:
 
 ```bash
-# Inside container
 docker exec poe-application /bin/sh -c \
   "cd /var/www/html/emis/core && php bin/cake.php migrations migrate"
 
-# Check status
+# Verify
 docker exec poe-application /bin/sh -c \
   "cd /var/www/html/emis/core && php bin/cake.php migrations status 2>&1 | tail -5"
 ```
 
-### Step 2: Verify Database Update
-Confirm the security function `_view` was updated correctly:
+### Step 2: Verify Security Function
 
 ```sql
-SELECT id, title, _view 
-FROM security_functions 
+SELECT id, title, _view
+FROM security_functions
 WHERE title LIKE '%Student Report Card Archive%';
 ```
 
-Expected result:
-- `_view` = `'ReportCardStatuses.index'` (if updated by migration)
+Expected: `_view = 'ReportCardStatuses.index'`
 
 ### Step 3: Assign Permissions (if needed)
-If users do not see the Archive button:
 
 1. Log in as sysadmin
 2. Navigate to **Settings > Security > Roles**
-3. Select the role that should have archive access
-4. Enable the permission: **Student Report Card Archive** (view = 'ReportCardStatuses.index')
+3. Select the role that needs archive access
+4. Enable: **Student Report Card Archive**
 5. Save
 
 ### Step 4: Clear User Cache
-Users must clear browser cache and re-login for permissions to rebuild in session:
 
-```bash
-# On browser: Ctrl+Shift+Delete (or Cmd+Shift+Delete on Mac)
-# Clear: Cookies, Cache, Site data for the domain
-```
-
-Alternatively, ask users to:
-1. Log out completely
-2. Close all browser tabs for the domain
-3. Log back in
+Users must log out and back in for permissions to rebuild in session.
 
 ## System Administrator Guide
 
 ### Troubleshooting: Archive Button Not Visible
 
-**Symptom**: Users with role have permission but Archive button is missing.
-
-**Investigation**:
-1. Check `security_functions` table for the permission record:
+1. Check `security_functions._view`:
    ```sql
-   SELECT id, title, _view FROM security_functions 
+   SELECT id, title, _view FROM security_functions
    WHERE title LIKE '%Student Report Card Archive%';
    ```
-   - If missing, migration may not have run — run it again
-   - If `_view` = `'ReportCardArchives.index'`, button URL is broken — run migration
+   If `_view = 'ReportCardArchives.index'` — migration has not run. Run it.
 
-2. Check user's role permission assignment:
+2. Check role has permission:
    ```sql
-   SELECT sf.title, r.name 
+   SELECT sf.title, r.name
    FROM security_functions sf
    JOIN security_permissions sp ON sf.id = sp.security_function_id
    JOIN security_roles r ON sp.security_role_id = r.id
    WHERE sf.title LIKE '%Student Report Card Archive%';
    ```
-   - If no rows, role is not assigned the permission — assign via UI
+   If no rows — assign permission via **Settings > Security > Roles**.
 
-3. Enable debug logging in `AccessControlComponent`:
-   ```php
-   // In AccessControlComponent::check()
-   log('DEBUG: Checking permission ' . $permission . ' for user ' . $userId);
-   ```
-   - Check `logs/hin-debug.log` for permission evaluation trace
+### Troubleshooting: Year Unexpectedly Read-Only
 
-### Rollback Instructions (if needed)
-
-If the migration causes issues, rollback:
-
-```bash
-# Inside container
-docker exec poe-application /bin/sh -c \
-  "cd /var/www/html/emis/core && php bin/cake.php migrations rollback -t 20260331000000"
+Check how many archive types are completed:
+```sql
+SELECT 'report_cards' AS type, COUNT(*) FROM institution_students_report_cards_archived WHERE academic_period_id = <id>
+UNION ALL
+SELECT 'assessments', COUNT(*) FROM assessment_item_results_archived WHERE academic_period_id = <id>
+UNION ALL
+SELECT 'student_attendance', COUNT(*) FROM student_attendance_marked_records_archived WHERE academic_period_id = <id>
+UNION ALL
+SELECT 'staff_attendance', COUNT(*) FROM institution_staff_attendances_archived WHERE academic_period_id = <id>;
 ```
 
-**What happens**:
-- Table `z_8898_institution_students_report_cards` is restored to original
-- Table `z_8898_security_functions` is restored, overwriting any manual edits
+If all 4 have records, the year is correctly locked. To unlock manually:
+```sql
+UPDATE academic_periods SET editable = 1 WHERE id = <period_id>;
+```
 
-**Data recovery**:
-- Archived report cards remain in their respective archive table (separate from this migration)
-- No data loss — migration only backs up and restores tables
+### Rollback Instructions
 
-### Performance Notes
+```bash
+docker exec poe-application /bin/sh -c \
+  "cd /var/www/html/emis/core && php bin/cake.php migrations rollback -t 20260330000000"
+```
 
-- Academic period filter now uses indexed `institution_id` FK
-- DISTINCT operation happens at database level, not in PHP
-- Scales to millions of rows efficiently — no application changes needed
+**What the rollback restores:**
+- `institution_students_report_cards` — from backup `z_8898_institution_students_report_cards`
+- `security_functions` — from backup `z_8898_security_functions`
 
-### Monitoring
-
-After deployment, verify in `logs/hin-debug.log`:
-- No permission errors for expected users
-- Archive button appears in Report Card Statuses toolbar
-- No SQL query failures from new ORM methods
+**What the rollback does NOT restore (manual action required):**
+- `transfer_logs` entries written during archive operations — delete manually if needed
+- `academic_periods.editable = 0` set when year was locked — restore manually if needed (see SQL above)
 
 ---
 
-**Released**: 2026-04-02  
-**Branch**: POCOR-8898  
-**Related Issues**: POCOR-8898 Bugs 1, 2, 3
+**Released**: 2026-04-02
+**Branch**: POCOR-8898
+**Related Issues**: POCOR-8898 Bugs 1, 2, 3 + Enhancements
