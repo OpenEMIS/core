@@ -361,7 +361,7 @@ class TransferLogsTable extends ControllerActionTable
         $logs = ROOT . DS . 'logs' . DS . $commandName . '.log & echo $!'; //POCOR-8898
         $shellCmd = $cmd . ' >> ' . $logs; //POCOR-8898
         exec($shellCmd); //POCOR-8898
-        Log::write('debug', $shellCmd);
+        // Log::write('debug', $shellCmd); //POCOR-8898
         $this->log("<<<<<<<<<<======== After $commandName", 'debug'); //POCOR-8898
     }
 
@@ -719,20 +719,20 @@ class TransferLogsTable extends ControllerActionTable
          * will make a year non-editable (all 4 archive types completed).
          * Alert is logged to notes field so operators are aware.
          */
-        if (!$alert) {
-            return;
-        }
+        if (!$alert) { //POCOR-8898
+            return; //POCOR-8898
+        } //POCOR-8898
 
-        $existingRecord = $this->find()
-            ->where(['p_id' => $pid])
-            ->first();
+        $existingRecord = $this->find() //POCOR-8898
+            ->where(['p_id' => $pid]) //POCOR-8898
+            ->first(); //POCOR-8898
 
-        if ($existingRecord) {
-            $notes = $existingRecord->notes ?? '';
-            $notes = $notes . "\n[ARCHIVE COMPLETION ALERT]\n" . $alert;
-            $this->patchEntity($existingRecord, ['notes' => $notes]);
-            $this->save($existingRecord);
-        }
+        if ($existingRecord) { //POCOR-8898
+            $notes = $existingRecord->notes ?? ''; //POCOR-8898
+            $notes = $notes . "\n[ARCHIVE COMPLETION ALERT]\n" . $alert; //POCOR-8898
+            $this->patchEntity($existingRecord, ['notes' => $notes]); //POCOR-8898
+            $this->save($existingRecord); //POCOR-8898
+        } //POCOR-8898
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
