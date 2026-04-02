@@ -116,7 +116,7 @@ class SystemUpdatesTable extends ControllerActionTable
                             Log::write('error', $entity->toArray());
                             Log::write('error', $entity->errors());
                             $email = new Email('openemis');
-                            $email->to($emails)->subject($subject)->send('Unable to update system versions');
+                            $email->setTo($emails)->subject($subject)->send('Unable to update system versions');
                         } catch (InvalidArgumentException $ex) {
                             Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
                         }
@@ -142,7 +142,7 @@ class SystemUpdatesTable extends ControllerActionTable
             try {
                 Log::write('error', 'Unable to retrieve system versions (Status Code: ' . $response->getStatusCode() . ')');
                 $email = new Email('openemis');
-                $email->to($emails)->subject($subject)->send('Unable to retrieve system versions.');
+                $email->setTo($emails)->setSubject($subject)->send('Unable to retrieve system versions.');
             } catch (InvalidArgumentException $ex) {
                 Log::write('error', __METHOD__ . ': ' . $ex->getMessage());
             }

@@ -4305,16 +4305,23 @@ class StaffTable extends ControllerActionTable
             }
         }
         if ($archive) {
-            $InstitutionStaffAttendances = ArchiveConnections::getArchiveTable('institution_staff_attendances');
-            $allStaffAttendancesQuery = $InstitutionStaffAttendances
-                ->find('all')
-                ->where([
-                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
-                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
-                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
-                ]);
+            try {
+                //POCOR-9606
+                // $InstitutionStaffAttendances = ArchiveConnections::getArchiveTable('institution_staff_attendances');
+                $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffAttendancesArchived');
+                //POCOR-9606
 
+                $allStaffAttendancesQuery = $InstitutionStaffAttendances
+                    ->find('all')
+                    ->where([
+                        $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                        $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                        $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                        $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                    ]);
+            } catch (\Throwable $e) {
+                return [];
+            }
         }
 
         $allStaffAttendances = $allStaffAttendancesQuery
@@ -4370,7 +4377,10 @@ class StaffTable extends ControllerActionTable
                     ->enableHydration(false)
                     ->toArray();
             } else {
-                $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+                //POCOR-9606
+                // $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+                $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Institution.StaffLeaveArchived');
+                //POCOR-9606
                 $allStaffLeaves = $StaffLeaveTable
                     ->find()
                     ->where($commonConditions)
@@ -4399,7 +4409,7 @@ class StaffTable extends ControllerActionTable
             $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
         }
         if ($archive) {
-            $StaffLeaveTable = ArchiveConnections::getArchiveTable('Institution.InstitutionStaffLeave');
+            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
         }
         if ($weekEndDate == $weekStartDate) {
             $whereForLeaveTable = [
@@ -4667,10 +4677,9 @@ class StaffTable extends ControllerActionTable
 
         $conditionQuery = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
         //POCOR-6971[START]
-
+        
         //Gets all the days in the selected week based on its start date end date
         $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
-
 //        $query = $this->getQueryWithShiftId($query, $shiftId);
         $query = $query
             ->matching('Users')

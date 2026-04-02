@@ -1,3 +1,16 @@
+### [5.6.0] - 2026-04-02
+- Implemented: Develop "Absent" count on Staff attendance mini dashboard
+- Bug Fixed: Institution>Behaviors>Students>Export: Error 404 seen on clicking on Export
+- Bug Fixed: CakePHP 5 - Administration - Failed Cases
+- Bug Fixed: CakePHP 5 - Administration - Related Cases
+- Bug Fixed: Institutions > Behaviour > Students > Delete: Delete is not showing any associated records
+- Bug Fixed: Administration>Security>Roles>System Roles tab>Edit: On clicking Save, the page refreshes and comes back to the same edit page with no changes being saved.
+- Bug Fixed: Institution>Attendance>Students>Export: Day-wise attendance columns are empty
+- Bug Fixed: Institutions>Staff>Career>Subjects: The search bar is not working as expected
+- Bug Fixed: Directory>Student>Merge: Error 404 seen on attempting to merge student
+- Bug Fixed: Attendance>Students>No scheduled lessons: No schedule lesson is not working when no attendances are marked.
+- Bug Fixed: Institution>Academic>Subjects>Edit: System doesn't enable Save button when the Subject name field is edited, it is only enabled after some other fields are modified.
+
 ### [5.5.0] - 2026-03-30
 - Implemented: Develop a migration script to prevent duplicates in the summary_area_institution_grade_attendances database table
 - Implemented: Develop Infrastructure Utilities report
