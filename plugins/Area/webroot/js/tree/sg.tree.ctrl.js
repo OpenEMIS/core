@@ -18,9 +18,26 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         multipleSelection: '%tree_no_of_item items selected'
     };
 
+    /** userId from ng-init can be missing until bind (2nd SgTree on same page) or already a number — avoid JSON.parse(undefined) */
+    function resolveUserId(ctrl) {
+        var v = ctrl.userId;
+        if (v === undefined || v === null || v === '') {
+            return 2;
+        }
+        if (typeof v === 'number') {
+            return v;
+        }
+        try {
+            return JSON.parse(String(v));
+        } catch (e) {
+            var n = parseInt(String(v), 10);
+            return isNaN(n) ? 2 : n;
+        }
+    }
+
     angular.element(document).ready(function () {
         SgTreeSvc.init(angular.baseUrl);
-        var userId = JSON.parse(Controller.userId ? Controller.userId : 2);
+        var userId = resolveUserId(Controller);
         var authArea = [];
         var counter = 0;
         SgTreeSvc.getRecords(Controller.model ? Controller.model : 'Area.AreaAdministratives', userId, Controller.displayCountry, Controller.outputValue, true)
@@ -46,7 +63,7 @@ function SgTreeController($scope, $window, SgTreeSvc) {
         // eg: assign parentData to _pData.
         if (!Controller.loaded) {
             Controller.loaded = true;
-            var userId = JSON.parse(Controller.userId);
+            var userId = resolveUserId(Controller);
             SgTreeSvc.getRecords(Controller.model, userId, Controller.displayCountry, Controller.outputValue)
             .then(function(response) {
                 console.log("triggerLoad");

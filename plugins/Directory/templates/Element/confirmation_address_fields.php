@@ -1,3 +1,9 @@
+<?php
+// Institution flows (e.g. student_add) often omit $logged_id_user_id; empty value breaks ng-init ("SgTree.userId=;") and kd.data area URLs.
+$treeSgUserId = (isset($logged_id_user_id) && $logged_id_user_id !== '' && $logged_id_user_id !== null)
+    ? (int) $logged_id_user_id
+    : 2;
+?>
 <div class="row section-header header-space-lg"><?= __('Location') ?></div>
 <div class="input string">
     <label><?= __('Address') ?></label>
@@ -19,7 +25,7 @@
         class="tree-form"
         id="address_area_id"
         ng-controller="SgTreeCtrl as SgTree"
-        ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=addressAreaId; SgTree.userId=<?= $logged_id_user_id; ?>; SgTree.displayCountry=1; SgTree.triggerOnChange=false;">
+        ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=addressAreaId; SgTree.userId=<?= $treeSgUserId ?>; SgTree.displayCountry=1; SgTree.triggerOnChange=false;">
         <kd-tree-dropdown-ng id="address_area_id-tree"
                              expand-parent="SgTree.triggerLoad(refreshList)"
                              output-model="addressAreaOutputModelText" model-type="single"
@@ -39,7 +45,7 @@
         class="tree-form"
         id="birthplace_area"
         ng-controller="SgTreeCtrl as SgTree"
-        ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=birthplaceAreaId; SgTree.userId=<?= $logged_id_user_id; ?>; SgTree.displayCountry=1; SgTree.triggerOnChange=false; ">
+        ng-init="SgTree.model='Area.AreaAdministratives'; SgTree.outputValue=birthplaceAreaId; SgTree.userId=<?= $treeSgUserId ?>; SgTree.displayCountry=1; SgTree.triggerOnChange=false; ">
         <kd-tree-dropdown-ng id="birthplace_area-tree"
                              expand-parent="SgTree.triggerLoad(refreshList)"
                              output-model="birthplaceAreaOutputModelText" model-type="single"
