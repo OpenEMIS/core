@@ -36,7 +36,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         $path_uri = '/restful/v2/Attendance-StudentAttendanceMarkedRecords.json';
-        if (is_int(strpos($_SERVER['REQUEST_URI'], $path_uri))) {
+        $requestMethod = isset($_SERVER['REQUEST_METHOD']) ? strtoupper($_SERVER['REQUEST_METHOD']) : ''; //POCOR-9617
+        if (is_int(strpos($_SERVER['REQUEST_URI'], $path_uri)) && in_array($requestMethod, ['POST', 'PUT', 'PATCH'])) { //POCOR-9617: skip on GET (internal saves from findNoScheduledClass)
             $institution_id = $entity['institution_id'];
             $academic_period_id = $entity['academic_period_id'];
             $institution_class_id = $entity['institution_class_id'];
@@ -356,121 +357,109 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $educationGradeId = $options['education_grade_id'];
         $day = $options['day_id'];
         $period = $options['attendance_period_id']; //POCOR-8383
+        $subjectId = isset($options['subject_id']) ? (int)$options['subject_id'] : 0; //POCOR-9617
 
-        $query->where([$this->aliasField('institution_id') => $institutionId, $this->aliasField('academic_period_id') => $academicPeriodId, $this->aliasField('institution_class_id') => $institutionClassId, $this->aliasField('education_grade_id') => $educationGradeId, $this->aliasField('date') => $day, $this->aliasField('period') => $period]); //POCOR-8372,POCOR-8383 taking long
-        $row = [];
+        //POCOR-9617: start
+        //POCOR-9617: raw SQL existence check — bypasses ORM, zero entity hydration, safe on large datasets
+        $connection = ConnectionManager::get('default');
+        $tableName = $this->getTable();
+        $periodSql = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+        $existsSql = "SELECT 1 FROM `{$tableName}`
+            WHERE institution_class_id = {$institutionClassId}
+              AND education_grade_id = {$educationGradeId}
+              AND institution_id = {$institutionId}
+              AND academic_period_id = {$academicPeriodId}
+              AND `date` = '{$day}'
+              AND {$periodSql}
+            LIMIT 1";
+        $existsResult = $connection->execute($existsSql)->fetchAll('assoc');
+        $existsCount = count($existsResult);
 
-        return $query
-            ->formatResults(function (ResultSetInterface $results) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day, $period) {
-                return $results->map(function ($row) use ($institutionClassId, $educationGradeId, $institutionId, $academicPeriodId, $day, $period) {
-                    $getRecord = $this->find('all')
-                        ->where([
-                            $this->aliasField('institution_class_id') => $institutionClassId,
-                            $this->aliasField('education_grade_id') => $educationGradeId,
-                            $this->aliasField('institution_id') => $institutionId,
-                            $this->aliasField('academic_period_id') => $academicPeriodId,
-                            $this->aliasField('date') => $day,
-                            $this->aliasField('period IS') => $period //POCOR-8383
-                        ])->toArray();
-                    if (!empty($getRecord)) {
-                        /*$this->deleteAll([
-                                            $this->aliasField('institution_class_id') => $institutionClassId,
-                                            $this->aliasField('education_grade_id') => $educationGradeId,
-                                            $this->aliasField('institution_id') => $institutionId,
-                                            $this->aliasField('academic_period_id') => $academicPeriodId,
-                                            $this->aliasField('date') => $day,
-                                            $this->aliasField('no_scheduled_class') => 0,
-                                        ]);*/
-                        $query = $this->query();
-                        $query->update()
-                            ->set(['period' => $period, 'subject_id' => 0, 'no_scheduled_class' => 1])
-                            ->where([
-                                $this->aliasField('institution_class_id') => $institutionClassId,
-                                $this->aliasField('education_grade_id') => $educationGradeId,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('academic_period_id') => $academicPeriodId,
-                                $this->aliasField('date') => $day,
-                                $this->aliasField('period') => $period //POCOR-8383
-                            ])
-                            ->execute();
-                    } else {
-                        try {
-                            /*$connection = ConnectionManager::get('default');
-                                            $sql = "INSERT INTO student_attendance_marked_records (
-                                                institution_class_id,
-                                                education_grade_id,
-                                                institution_id,
-                                                academic_period_id,
-                                                date,
-                                                period,
-                                                subject_id,
-                                                no_scheduled_class
-                                            ) VALUES (
-                                                $institutionClassId,
-                                                $educationGradeId,
-                                                $institutionId,
-                                                $academicPeriodId,
-                                                '$day', -- Make sure the date is formatted correctly and enclosed in quotes
-                                                $period,
-                                                0,
-                                                1
-                                            )";
-                                            $result = $connection->execute($sql);*/
-                            $newRecord = $this->newEntity([
-                                'institution_class_id' => $institutionClassId,
-                                'education_grade_id' => $educationGradeId,
-                                'institution_id' => $institutionId,
-                                'academic_period_id' => $academicPeriodId,
-                                'date' => $day,
-                                'period' => $period,
-                                'subject_id' => 0,
-                                'no_scheduled_class' => 1
-                            ]);
-                            $this->save($newRecord);
-                        } catch (\Exception $e) {
-                            echo "<pre>";
-                            print_r($e);
-                            die;
-                        }
-                    }
+        if ($existsCount > 0) {
+            $updateQuery = $this->query();
+            $updateQuery->update()
+                ->set(['period' => $period, 'subject_id' => 0, 'no_scheduled_class' => 1])
+                ->where([
+                    $this->aliasField('institution_class_id') => $institutionClassId,
+                    $this->aliasField('education_grade_id') => $educationGradeId,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('date') => $day,
+                    $this->aliasField('period') => $period //POCOR-8383
+                ])
+                ->execute();
+        } else {
+            $newRecord = $this->newEntity([
+                'institution_class_id' => $institutionClassId,
+                'education_grade_id' => $educationGradeId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'date' => $day,
+                'period' => $period,
+                'subject_id' => 0,
+                'no_scheduled_class' => 1
+            ]);
+            $this->save($newRecord);
+        }
 
+        $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
+        $absenceConditions = [
+            $InstitutionStudentAbsenceDetails->aliasField('institution_id') => $institutionId,
+            $InstitutionStudentAbsenceDetails->aliasField('academic_period_id') => $academicPeriodId,
+            $InstitutionStudentAbsenceDetails->aliasField('institution_class_id') => $institutionClassId,
+            $InstitutionStudentAbsenceDetails->aliasField('date') => $day,
+            $InstitutionStudentAbsenceDetails->aliasField('period') => $period,
+        ];
+        if ($subjectId > 0) {
+            $absenceConditions[$InstitutionStudentAbsenceDetails->aliasField('subject_id')] = $subjectId;
+        }
+        $InstitutionStudentAbsenceDetails->deleteAll($absenceConditions);
+        //POCOR-9617: end
 
-                    //POCOR-7143[START]
-                    $StudentAttendanceMarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-                    $totalMarkedCount = $StudentAttendanceMarkedRecords
-                        ->find()
-                        ->where([
-                            $StudentAttendanceMarkedRecords->aliasField('institution_id') => $institutionId,
-                            $StudentAttendanceMarkedRecords->aliasField('academic_period_id') => $academicPeriodId,
-                            $StudentAttendanceMarkedRecords->aliasField('institution_class_id') => $institutionClassId,
-                            $StudentAttendanceMarkedRecords->aliasField('education_grade_id') => $educationGradeId,
-                            $StudentAttendanceMarkedRecords->aliasField('date') => $day,
-                            $StudentAttendanceMarkedRecords->aliasField('period IS') => $period,
-                        ])
-                        ->first();
-                    if (!empty($totalMarkedCount)) {
-                        $explodedData = explode("-", $day);
-                        $year = (int) $explodedData[0];
-                        $month = (int) $explodedData[1];
-                        $daydata = (int) $explodedData[2];
-                        $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('Institution.ClassAttendanceRecords');
-                        $ClassAttendanceRecords->updateAll(
-                            [self::DAY_COLUMN_PREFIX . $daydata => self::PARTIAL_MARKED],
-                            [
-                                $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId,
-                                $ClassAttendanceRecords->aliasField('institution_class_id') => $institutionClassId,
-                                $ClassAttendanceRecords->aliasField('year') => $year,
-                                $ClassAttendanceRecords->aliasField('month') => $month
-                            ]
-                        );
-                    }
-                    //POCOR-7143[END]
+        //POCOR-7143[START]
+        //POCOR-9617: raw SQL existence check for POCOR-7143 block — bypasses ORM memory overhead
+        $periodSql7143 = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+        $markedCheckSql = "SELECT 1 FROM `{$tableName}`
+            WHERE institution_id = {$institutionId}
+              AND academic_period_id = {$academicPeriodId}
+              AND institution_class_id = {$institutionClassId}
+              AND education_grade_id = {$educationGradeId}
+              AND `date` = '{$day}'
+              AND {$periodSql7143}
+            LIMIT 1";
+        $markedCheckResult = $connection->execute($markedCheckSql)->fetchAll('assoc');
+        if (!empty($markedCheckResult)) {
+            $explodedData = explode("-", $day);
+            $year = (int) $explodedData[0];
+            $month = (int) $explodedData[1];
+            $daydata = (int) $explodedData[2];
+            $ClassAttendanceRecords = TableRegistry::getTableLocator()->get('Institution.ClassAttendanceRecords');
+            $ClassAttendanceRecords->updateAll(
+                [self::DAY_COLUMN_PREFIX . $daydata => self::PARTIAL_MARKED],
+                [
+                    $ClassAttendanceRecords->aliasField('academic_period_id') => $academicPeriodId,
+                    $ClassAttendanceRecords->aliasField('institution_class_id') => $institutionClassId,
+                    $ClassAttendanceRecords->aliasField('year') => $year,
+                    $ClassAttendanceRecords->aliasField('month') => $month
+                ]
+            );
+        }
+        //POCOR-7143[END]
 
+        //POCOR-9617: return a fresh query that confirms the saved record exists,
+        //so the restful API returns total > 0 and the JS sets isMarked = true
+        $query = $this->find()->where([
+            $this->aliasField('institution_class_id') => $institutionClassId,
+            $this->aliasField('education_grade_id') => $educationGradeId,
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+            $this->aliasField('date') => $day,
+            $this->aliasField('period IS') => $period,
+            $this->aliasField('no_scheduled_class') => 1,
+        ])->limit(1);
+        //POCOR-9617: end
 
-                    $row->is_Scheduled = 1;
-                    return $row;
-                });
-            });
+        return $query;
     }
     /*POCOR-6021 ends*/
 }
