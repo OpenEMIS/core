@@ -28,7 +28,7 @@ Fix three bugs in the Report Card Archiving system and add enhancements:
 | `plugins/Institution/src/Model/Table/ReportCardStatusesTable.php` | Smart academic period filter — active records for this school + always include current editable period |
 | `plugins/Institution/src/Model/Table/StudentsReportCardsArchivesTable.php` | Replaced raw SQL with ORM: `getAcademicPeriods()`, `getReportCardIds()`, `getInstitutionClassIds()` |
 | `src/Controller/Component/AccessControlComponent.php` | Removed debug logging added during development |
-| `src/Service/ArchiveService.php` | New `checkArchiveCompletionStatus()` — checks 4/4 archive completion, returns warning at 3/4 |
+| `src/Service/ArchiveService.php` | New `checkArchiveCompletionStatus()` — checks 4/4 archive completion, returns warning at 3/4; fixed to use raw SQL instead of `TableRegistry::getTableLocator()->get()` to avoid triggering archive table `initialize()` which redirects to remote connection and throws an exception |
 | `src/Command/ArchiveCommandBase.php` | Calls `checkArchiveCompletionStatus()` after archiving; logs alert to TransferLogs when year will become read-only |
 | `plugins/Archive/src/Model/Table/TransferLogsTable.php` | New `logArchiveCompletionAlert()` — appends alert to transfer log notes |
 | `plugins/Institution/src/Controller/InstitutionsController.php` | CakePHP 5 port |
@@ -139,6 +139,20 @@ Users must log out and back in for permissions to rebuild in session.
 
 ## System Administrator Guide
 
+### Troubleshooting: Archive Run Shows ERROR Status Despite Successful Completion
+
+**Symptom**: Archive completes (all records moved) but `transfer_logs.process_status = 3` (Error).
+
+**Root cause**: `checkArchiveCompletionStatus()` in `ArchiveService` was loading archive table models via `TableRegistry::getTableLocator()->get()`, which triggers each table's `initialize()` method. Some archive tables (e.g. `StaffAttendancesArchived`) redirect to a remote connection in `initialize()`, throwing an exception that causes the error status to be set even though archiving succeeded.
+
+**Fix applied**: `checkArchiveCompletionStatus()` now uses parameterized raw SQL (`getSimpleCount()`) against the archive tables directly — no model loading, no connection redirection.
+
+**If this was already triggered**: Manually set the status to Completed and fix `academic_periods.visible`:
+```sql
+UPDATE transfer_logs SET process_status = 2, completed_on = NOW() WHERE p_id = <pid>;
+UPDATE academic_periods SET visible = 1, editable = 1 WHERE id = <period_id>;
+```
+
 ### Troubleshooting: Archive Button Not Visible
 
 1. Check `security_functions._view`:
@@ -193,6 +207,6 @@ docker exec poe-application /bin/sh -c \
 
 ---
 
-**Released**: 2026-04-02
+**Released**: 2026-04-03
 **Branch**: POCOR-8898
 **Related Issues**: POCOR-8898 Bugs 1, 2, 3 + Enhancements
