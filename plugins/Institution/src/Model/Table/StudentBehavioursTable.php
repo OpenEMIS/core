@@ -9,13 +9,10 @@ use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
-
 // use Page\Traits\EncodingTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Http\ServerRequest;
@@ -350,10 +347,16 @@ class StudentBehavioursTable extends ControllerActionTable
 
         $selectedCategories = $this->queryString('category_id', $categories);
         $this->advancedSelectOptions($categories, $selectedCategories);
-        // End setup class
+        $selectedCategories = $this->queryString('category_id', $categories);
+        $this->advancedSelectOptions($categories, $selectedCategories);
+        //POCOR-9652 start
+        $query->contain(['Statuses']);
+        if(!empty($this->request->getQuery('category_id')))
+        {
+            $query->where(['Statuses.category' => $this->request->getQuery('category_id') ]);
+        }//POCOR-9652 end
 
         $this->controller->set(compact('periodOptions', 'classOptions','categories'));
-
         if ($selectedClass > 0) {
             $query->innerJoin(
                 ['class_student' => 'institution_class_students'],
@@ -363,7 +366,6 @@ class StudentBehavioursTable extends ControllerActionTable
                 ]
             );
         }
-
         // will need to check for search by name: AdvancedNameSearchBehavior
 
         // POCOR-2547 Adding sortWhiteList to $options
