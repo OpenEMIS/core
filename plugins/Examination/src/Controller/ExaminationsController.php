@@ -163,6 +163,12 @@ class ExaminationsController extends AppController
     public function getExamCentresTab($action = null)
     {
         $queryString = $this->request->getQuery('queryString');
+        if (empty($queryString) && isset($this->ControllerAction)) {
+            $centreId = $this->ControllerAction->getQueryString('examination_centre_id');
+            if ($centreId !== null && $centreId !== '') {
+                $queryString = $this->ControllerAction->paramsEncode(['examination_centre_id' => $centreId]);
+            }
+        }
         $tabElements = [
             'ExamCentres' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ExamCentres', 'view', 'queryString' => $queryString],
