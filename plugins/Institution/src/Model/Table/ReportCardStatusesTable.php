@@ -78,7 +78,6 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $this->ReportCards = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $this->StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
-        $this->InstitutionStudentsReportCardsArchived = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCardsArchived'); //POCOR-8898
         $this->ReportCardEmailProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmailProcesses');
         $this->ReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
 
@@ -437,15 +436,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->where([$this->AcademicPeriods->aliasField('id IN') => $activePeriodIds])
                 ->order([$this->AcademicPeriods->aliasField('order')])
                 ->toArray();
-
-            //POCOR-8898: Mark years as read-only if ALL 4 archive types are completed
-            $readOnlyPeriodIds = $this->getFullyArchivedPeriods(array_keys($academicPeriodOptions));
-            $academicPeriodOptionsWithEditable = [];
-            foreach ($academicPeriodOptions as $id => $label) {
-                $editable = !in_array($id, $readOnlyPeriodIds);
-                $academicPeriodOptionsWithEditable[$id] = ['text' => $label, 'editable' => $editable];
-            }
-            $academicPeriodOptions = $academicPeriodOptionsWithEditable;
 
             $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $currentPeriodId;
         } else {
