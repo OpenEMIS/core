@@ -235,6 +235,15 @@ class InfrastructureNeedsTable extends AppTable  {
             }
         }
         
-        return implode(",", $projects);
+        $projects = [];
+        if (!empty($data)) {
+            foreach ($data as $value) {
+                if (!empty($value->InfrastructureProjects['name'])) {
+                    $projects[] = $value->InfrastructureProjects['name'];
+                }
+            }
+        }
+
+        return implode(", ", $projects);
     }
 }

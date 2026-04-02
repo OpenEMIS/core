@@ -254,8 +254,6 @@ class UserRepository extends Controller
     }
     //POCOR-8840 end
 
-
-
     public function saveStudentData($request)
     {
         DB::beginTransaction();
@@ -335,9 +333,6 @@ class UserRepository extends Controller
                     ->where('workflows.name', 'Student Transfer - Receiving')
                     ->select('workflow_steps.id as workflowSteps_id')
                     ->first();
-
-
-
                 $entityTransferData = [
                     'start_date' => $start_date??null,
                     'end_date' => $end_date??null,
@@ -361,11 +356,20 @@ class UserRepository extends Controller
                     'created' => Carbon::now()->toDateTimeString()
                 ];
 
-
                 $storeIST = InstitutionStudentTransfers::insert($entityTransferData);
 
             } else {
-                $openemis_no = $param['openemis_no']??0;
+                $photoBinary = null;
+                $photoName = null;
+                //POCOR-9527
+                if (isset($param['photo_content']) && $param['photo_content'] instanceof \Illuminate\Http\UploadedFile) {
+                    $file = $param['photo_content'];
+
+                    $photoBinary = file_get_contents($file->getRealPath());
+                    $photoName = $file->getClientOriginalName();
+                } 
+                
+                $openemis_no = $param['openemis_no']??'';
 
                 $checkStudentExist = SecurityUsers::where('openemis_no', $openemis_no)->first();
 
@@ -386,7 +390,8 @@ class UserRepository extends Controller
                     'address_area_id' => $param['address_area_id']??null,
                     'birthplace_area_id' => $param['birthplace_area_id']??null,
                     'postal_code' => $param['postal_code']??null,
-
+                    'photo_name' => $photoName,
+                    'photo_content' => $photoBinary,
                     'is_student' => 1,
                     'created_user_id' => JWTAuth::user()->id,
                     'created' => Carbon::now()->toDateTimeString()
@@ -628,8 +633,6 @@ class UserRepository extends Controller
         }
     }
 
-
-
     public function getUsersGender($request)
     {
         try {
@@ -663,8 +666,6 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Users Gender Data Not Found');
         }
     }
-
-
 
     public function saveStaffData($request)
     {
@@ -1331,7 +1332,6 @@ class UserRepository extends Controller
             return $this->sendErrorResponse('Failed to store staff data.');
         }
     }
-
 
     public function saveGuardianData($request)
     {
