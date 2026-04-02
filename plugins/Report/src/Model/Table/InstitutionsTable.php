@@ -128,23 +128,21 @@ class InstitutionsTable extends AppTable
 
         if ($feature == 'Report.Institutions') { //POCOR-8417
             $validator
-                ->notEmpty('area_level_id')
-                ->notEmpty('area_education_id');
+                ->notEmpty('area_level_id', __('This field cannot be left empty'))
+                ->notEmpty('area_education_id', __('This field cannot be left empty'));
+
             $validator->add('institution_id', 'required', [
                 'rule' => function ($value, $context) {
                     if (!empty($context['data']['reload'])) {
                         return true;
                     }
-                    // If completely empty
-                    if (empty($value)) {
-                        return false;
-                    }
-                    // Check _ids exists
-                    if (!isset($value['_ids'])) {
+                    if (empty($value) || !isset($value['_ids'])) {
                         return false;
                     }
                     $ids = (array)$value['_ids'];
-                    $ids = array_filter($ids);
+                    $ids = array_filter($ids, function($v) {
+                        return $v !== '' && $v !== null;
+                    });
 
                     return !empty($ids);
                 },
@@ -153,6 +151,7 @@ class InstitutionsTable extends AppTable
         }
 
         return $validator;
+
     }
 
     public function validationSubjectsClasses(Validator $validator)
@@ -2221,6 +2220,7 @@ class InstitutionsTable extends AppTable
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
         $institutionIds = $requestData->institution_id->_ids ?? [];
+        $selectedArea = $requestData->area_education_id;
         $conditions = [];
         if (!empty($institutionIds) && !in_array('0', $institutionIds)) {
             if (in_array(0, $institutionIds)) {
@@ -2231,7 +2231,7 @@ class InstitutionsTable extends AppTable
                 $conditions['Institutions.id IN'] = $institutionIds;
             }
         }
-        if ($areaId > 0 && $areaId != '') {
+        if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
             $selectedArea1[]= $selectedArea;
@@ -2240,7 +2240,7 @@ class InstitutionsTable extends AppTable
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+            $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
         //POCOR-9449 Start
         $query
@@ -2664,7 +2664,7 @@ class InstitutionsTable extends AppTable
         $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
         $result = $Areas->find()
                            ->where([
-                               $Areas->aliasField('parent_id') => $id
+                               $Areas->aliasField('parent_id IS') => $id
                             ])
                              ->toArray();
        foreach ($result as $key => $value) {

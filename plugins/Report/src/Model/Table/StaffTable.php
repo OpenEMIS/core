@@ -53,25 +53,24 @@ class StaffTable extends AppTable  {
             ->notEmpty('area_level_id')
             ->notEmpty('area_education_id');
         $validator->add('institution_id', 'required', [
-            'rule' => function ($value, $context) {
-                if (!empty($context['data']['reload'])) {
-                    return true;
-                }
-                // If completely empty
-                if (empty($value)) {
-                    return false;
-                }
-                // Check _ids exists
-                if (!isset($value['_ids'])) {
-                    return false;
-                }
-                $ids = (array)$value['_ids'];
-                $ids = array_filter($ids);
+                'rule' => function ($value, $context) {
+                    if (!empty($context['data']['reload'])) {
+                        return true;
+                    }
 
-                return !empty($ids);
-            },
-            'message' => __('This field cannot be left empty')
-        ]);
+                    if (empty($value) || !isset($value['_ids'])) {
+                        return false;
+                    }
+                    $ids = (array)$value['_ids'];
+
+                    $ids = array_filter($ids, function($v) {
+                        return $v !== '' && $v !== null;
+                    });
+
+                    return !empty($ids);
+                },
+                'message' => __('This field cannot be left empty')
+            ]);
         
         return $validator;
     }
@@ -439,7 +438,7 @@ class StaffTable extends AppTable  {
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
         $institutionIds = $requestData->institution_id->_ids ?? [];
-
+        $selectedArea = $requestData->area_education_id;
         $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -451,7 +450,7 @@ class StaffTable extends AppTable  {
         $userId = $requestData->user_id;
         $superAdmin = $requestData->super_admin;
         $conditions = [];
-        if ($areaId > 0 && $areaId != '') {
+        if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
             $selectedArea1[]= $selectedArea;
@@ -460,7 +459,7 @@ class StaffTable extends AppTable  {
             }else{
                 $allselectedAreas = $selectedArea1;
             }
-                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+            $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
         // Institution list based on access
         $institutionQuery = $InstitutionsTable
