@@ -23,13 +23,10 @@ WORKDIR /app
 # Copies the frontend application file
 COPY ./frontend/ ./
 
-# Replace the baseUrl
+# POCOR-9594: URL substitution removed — ApiService now derives base URL dynamically
+# from window.location.origin at runtime, so no build-time URL baking needed.
 RUN cp ./src/environments/environment.ts_default ./src/environments/environment.ts &&\
-    cp ./src/environments/environment.prod.ts_default ./src/environments/environment.prod.ts &&\
-    sed -i "s|apiV4BaseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4',|" ./src/environments/environment.ts &&\
-    sed -i "s|apiV5BaseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5',|" ./src/environments/environment.ts &&\
-    sed -i "s|apiV4BaseUrl:.*|apiV4BaseUrl: 'http://localhost:80/core/api/v4',|" ./src/environments/environment.prod.ts &&\
-    sed -i "s|apiV5BaseUrl:.*|apiV5BaseUrl: 'http://localhost:80/core/api/v5',|" ./src/environments/environment.prod.ts
+    cp ./src/environments/environment.prod.ts_default ./src/environments/environment.prod.ts
 
 # Install Dependencies
 RUN npm install && \

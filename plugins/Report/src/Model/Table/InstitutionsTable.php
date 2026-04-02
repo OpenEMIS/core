@@ -232,7 +232,7 @@ class InstitutionsTable extends AppTable
         return $validator;
     }
 
-    public function validationInstitutionInfrastructures(Validator $validator)
+    /*public function validationInstitutionInfrastructures(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
@@ -240,7 +240,7 @@ class InstitutionsTable extends AppTable
             ->notEmpty('institution_id')
             ->notEmpty('infrastructure_level');
         return $validator;
-    }
+    }*/
 
     public function validationGuardians(Validator $validator)
     {
@@ -667,6 +667,13 @@ class InstitutionsTable extends AppTable
                     $fieldsOrder[] = 'institution_id';
                     $fieldsOrder[] = 'format';
                     break;
+                case 'Report.InfrastructureElectricities': //POCOR-7517
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
+                    break;
                 default:
                     break;
             }
@@ -835,29 +842,6 @@ class InstitutionsTable extends AppTable
             } else {
                 $attr['value'] = self::NO_FILTER;
             }
-        }
-    }
-
-    public function onUpdateFieldWashType(EventInterface $event, array $attr, $action, ServerRequest $request)
-    {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-            if (in_array($feature, ['Report.WashReports'])) {
-                $options = [
-                    'All' => __('All'),   //POCOR-6732
-                    'Water' => __('Water'),
-                    'Sanitation' => __('Sanitation'),
-                    'Hygiene' => __('Hygiene'),
-                    'Waste' => __('Waste'),
-                    'Sewage' => __('Sewage'),
-                ];
-                $attr['type'] = 'select';
-                $attr['select'] = false;
-                $attr['options'] = $options;
-            } else {
-                $attr['value'] = self::NO_FILTER;
-            }
-            return $attr;
         }
     }
 
@@ -1180,7 +1164,7 @@ class InstitutionsTable extends AppTable
                 'Report.StudentAbsencesPerDays',
                 'Report.StaffBehaviours', //POCOR-7276
                 'Report.InstitutionInfrastructureSummaryReport',
-                'Report.StudentBehaviours' //POCOR-7517
+                'Report.StudentBehaviours', //POCOR-7517
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1534,31 +1518,6 @@ class InstitutionsTable extends AppTable
         }
     }
 
-    public function onUpdateFieldInfrastructureLevel(EventInterface $event, array $attr, $action, ServerRequest $request)
-    {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-            if (in_array(
-                $feature,
-                [
-                    'Report.InstitutionInfrastructures'
-                ]
-            )) {
-
-                $TypesTable = self::getDynamicTableInstance('Infrastructure.InfrastructureLevels');
-                $typeOptions = $TypesTable
-                    ->find('list')
-                    ->toArray();
-
-                $attr['type'] = 'select';
-                $attr['onChangeReload'] = true;
-                $attr['options'] = $typeOptions;
-                $attr['attr']['required'] = true;
-            }
-            return $attr;
-        }
-    }
-
     public function onUpdateFieldInfrastructureType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
@@ -1629,7 +1588,7 @@ class InstitutionsTable extends AppTable
                 'Report.BodyMasses',
                 'Report.WashReports',
                 'Report.Guardians',
-                'Report.InstitutionInfrastructures',
+              //  'Report.InstitutionInfrastructures',
                 'Report.InstitutionAssets',
                 'Report.InstitutionClasses',
                 'Report.StudentWithdrawalReport',
@@ -1794,7 +1753,7 @@ class InstitutionsTable extends AppTable
                         'Report.Income',
                         'Report.Expenditure',
                         'Report.WashReports',
-                        'Report.InstitutionInfrastructures',
+                     //   'Report.InstitutionInfrastructures',
                         'Report.InstitutionAssets',
                         'Report.StudentAttendanceSummary',
                         'Report.StudentAbsences',
@@ -2380,41 +2339,6 @@ class InstitutionsTable extends AppTable
                 $attr['value'] = self::NO_FILTER;
             }
             return $attr;
-        }
-    }
-
-    public
-    function onUpdateFieldFromDate(EventInterface $event, array $attr, $action, ServerRequest $request)
-    {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-
-            if ((in_array($feature, ['Report.Income']))) {
-                $attr['type'] = 'date';
-                return $attr;
-            }
-            if ((in_array($feature, ['Report.Expenditure']))) {
-                $attr['type'] = 'date';
-                return $attr;
-            }
-        }
-    }
-
-
-    public
-    function onUpdateFieldToDate(EventInterface $event, array $attr, $action, ServerRequest $request)
-    {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-
-            if ((in_array($feature, ['Report.Income']))) {
-                $attr['type'] = 'date';
-                return $attr;
-            }
-            if ((in_array($feature, ['Report.Expenditure']))) {
-                $attr['type'] = 'date';
-                return $attr;
-            }
         }
     }
 

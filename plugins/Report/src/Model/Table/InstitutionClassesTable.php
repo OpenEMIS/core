@@ -238,18 +238,25 @@ class InstitutionClassesTable extends AppTable
             return $results->map(function ($row) {
 
                 $class_id = $row['class_id'];
-                $femaleCountByClass = self::getFemaleCountByClass($class_id);
+                //POCOR-9613[START]
 
-                if ($femaleCountByClass != $row->total_female_students) {
-                    $this->updateAll(['total_female_students' => $femaleCountByClass], ['id' => $class_id]);
-                    $row['total_female_students'] = $femaleCountByClass;
-                }
-                $maleCountByClass = self::getMaleCountByClass($class_id);
-                if ($maleCountByClass != $row->total_male_students) {
-                    $this->updateAll(['total_male_students' => $maleCountByClass], ['id' => $class_id]);
-                    $row['total_male_students'] = $maleCountByClass;
-                }
-                $row['total_students'] = $maleCountByClass + $femaleCountByClass;
+                // $femaleCountByClass = self::getFemaleCountByClass($class_id);
+
+                // if ($femaleCountByClass != $row->total_female_students) {
+                //     $this->updateAll(['total_female_students' => $femaleCountByClass], ['id' => $class_id]);
+                //     $row['total_female_students'] = $femaleCountByClass;
+                // }
+                // $maleCountByClass = self::getMaleCountByClass($class_id);
+                // if ($maleCountByClass != $row->total_male_students) {
+                //     $this->updateAll(['total_male_students' => $maleCountByClass], ['id' => $class_id]);
+                //     $row['total_male_students'] = $maleCountByClass;
+                // }
+
+                $row['total_female_students'] = $row['total_female_students'];
+                $row['total_male_students'] = $row['total_male_students'];
+                $row['total_students'] = $row['total_male_students'] + $row['total_female_students'];
+                // $row['total_students'] = $maleCountByClass + $femaleCountByClass;
+                //POCOR-9613[END]
 
                //POCOR-8739 start
                 $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
