@@ -254,8 +254,11 @@ class AccessControlComponent extends Component
     public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
+        //POCOR-8898: Log permission check
+        Log::write('debug', '[POCOR-8898] AccessControlComponent::check() called with URL: ' . json_encode($url) . ' | super_admin: ' . $superAdmin);
 
         if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
+            Log::write('debug', '[POCOR-8898] Permission check bypassed (super_admin=1 or URL is string)');
             return true;
         }
         //POCOR-9429 start
@@ -462,7 +465,11 @@ class AccessControlComponent extends Component
 
         }
 
+        //POCOR-8898: Log permission key lookup
+        Log::write('debug', '[POCOR-8898] Checking permissionKey: ' . $permissionKey . ' | Session check result: ' . ($this->Session->check($permissionKey) ? 'YES' : 'NO'));
+
         if ($this->Session->check($permissionKey)) {
+            Log::write('debug', '[POCOR-8898] Permission found in session for key: ' . $permissionKey);
             if (!empty($roleIds)) {
                 $roles = $this->Session->read($permissionKey);
                 if (!isset($roles[0])) {
@@ -480,13 +487,16 @@ class AccessControlComponent extends Component
         }
         //POCOR-9198
         if ($this->Session->read('Permissions.reportCardGenerateAllowed')) {
+            Log::write('debug', '[POCOR-8898] reportCardGenerateAllowed found in session');
             return true;
         }
         //POCOR-8898
         if($this->Session->read('Permissions.reportCardArchiveAllowed')){
+            Log::write('debug', '[POCOR-8898] reportCardArchiveAllowed found in session');
             return true;
         }
 
+        Log::write('debug', '[POCOR-8898] No permission found - returning false. permissionKey: ' . $permissionKey);
         return false;
     }
 

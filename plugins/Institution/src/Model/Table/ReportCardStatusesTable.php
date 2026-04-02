@@ -362,6 +362,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $toolbarButtons = $extra['toolbarButtons']; //POCOR-8898
         $this->addArchiveButton($toolbarButtons); //POCOR-8898
+        Log::write('debug', '[POCOR-8898] Archive button added. Current buttons: ' . json_encode(array_keys($toolbarButtons->getArrayCopy()))); //POCOR-8898
     }
 
     private function addArchiveButton($toolbarButtons) //POCOR-8898
@@ -394,6 +395,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $customButton['url'] = $url; //POCOR-8898
         $customButton['name'] = $name; //POCOR-8898
         $toolbarButtons[$name] = $customButton; //POCOR-8898
+        dd($toolbarButtons);
     }
     //POCOR-8898: end
 
@@ -403,11 +405,28 @@ class ReportCardStatusesTable extends ControllerActionTable
         $Classes = $this->InstitutionClasses;
         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
 
-        // Academic Periods filter
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        // Academic Periods filter — POCOR-8898: only show periods with active (non-archived) records
+        $activePeriodIds = $this->StudentsReportCards->find()
+            ->select(['academic_period_id'])
+            ->where([$this->StudentsReportCards->aliasField('institution_id') => $institutionId])
+            ->distinct(['academic_period_id'])
+            ->extract('academic_period_id')
+            ->toArray();
+
+        if (!empty($activePeriodIds)) {
+            $academicPeriodOptions = $this->AcademicPeriods->find('list')
+                ->where([$this->AcademicPeriods->aliasField('id IN') => $activePeriodIds])
+                ->order([$this->AcademicPeriods->aliasField('order')])
+                ->toArray();
+            $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        } else {
+            $academicPeriodOptions = [];
+            $selectedAcademicPeriod = null;
+        }
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        if ($selectedAcademicPeriod) {
+            $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        }
         //End
 
         $availableGrades = $InstitutionGrades->find()
