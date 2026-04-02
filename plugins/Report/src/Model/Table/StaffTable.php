@@ -450,7 +450,18 @@ class StaffTable extends AppTable  {
 
         $userId = $requestData->user_id;
         $superAdmin = $requestData->super_admin;
-
+        $conditions = [];
+        if ($areaId > 0 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
+        }
         // Institution list based on access
         $institutionQuery = $InstitutionsTable
             ->find('list', [
@@ -465,11 +476,7 @@ class StaffTable extends AppTable  {
         if (!$superAdmin) {
             $institutionQuery->find('byAccess', ['userId' => $userId]);
         }
-
         $institutionList = $institutionQuery->toArray();
-
-        $conditions = [];
-
         // Academic Period Date Conditions
         if (!empty($academicPeriodId)) {
             $conditions[] = [
@@ -1231,5 +1238,19 @@ class StaffTable extends AppTable  {
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ])
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 }

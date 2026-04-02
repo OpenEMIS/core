@@ -2231,10 +2231,17 @@ class InstitutionsTable extends AppTable
                 $conditions['Institutions.id IN'] = $institutionIds;
             }
         }
-        if(!empty($areaId) && $areaId > 0){
-            $conditions['Institutions.area_id'] = $areaId;
+        if ($areaId > 0 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }
+                $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
-
         //POCOR-9449 Start
         $query
             ->contain(['Areas', 'AreaAdministratives', 'Statuses'])
@@ -2242,12 +2249,7 @@ class InstitutionsTable extends AppTable
                 'area_code' => 'Areas.code',
                 'area_administrative_code' => 'AreaAdministratives.code',
                 'institution_status' => 'Statuses.name'
-            ])->where($conditions);
-
-      
-        
-
-        
+            ])->where($conditions);  
     }
 
     public
@@ -2656,5 +2658,19 @@ class InstitutionsTable extends AppTable
 
         // Return the table instance
         return $locator->get($tableFullAlias);
+    }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ])
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 }
