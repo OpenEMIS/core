@@ -1777,7 +1777,7 @@ class InstitutionsTable extends AppTable
                     if(!$superAdmin){
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
-                    if(in_array($feature, ['Report.Institutions'])) {
+                    if(in_array($feature, ['Report.Institutions'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
                     } else {
                         $attr['attr']['multiple'] = false;

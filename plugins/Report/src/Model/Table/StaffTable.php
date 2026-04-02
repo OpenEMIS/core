@@ -928,7 +928,7 @@ class StaffTable extends AppTable  {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institutions')]+ $institutionList ;
                     }
 
-                    if(in_array($feature, ['Report.Staff'])) {
+                    if(in_array($feature, ['Report.Staff'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
                     } else {
                         $attr['attr']['multiple'] = false;
