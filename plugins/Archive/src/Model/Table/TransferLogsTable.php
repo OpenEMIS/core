@@ -350,7 +350,7 @@ class TransferLogsTable extends ControllerActionTable
     //POCOR-8898: renamed triggerArchiveShell to triggerArchiveCommand; uses bin/cake with snake_case command name
     public function triggerArchiveCommand($commandName, $academicPeriodId = null, $pid = null, $recordsToArchive = 0, $recordsInArchive = 0)
     {
-        $this->log("=======>Before $commandName", 'debug'); //POCOR-8898
+        // $this->log("=======>Before $commandName", 'debug'); //POCOR-8898
         $args = ''; //POCOR-8898
         $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : ' 0'; //POCOR-8898
         $args .= !is_null($pid) ? ' ' . $pid : ' 0'; //POCOR-8898
@@ -362,7 +362,7 @@ class TransferLogsTable extends ControllerActionTable
         $shellCmd = $cmd . ' >> ' . $logs; //POCOR-8898
         exec($shellCmd); //POCOR-8898
         // Log::write('debug', $shellCmd); //POCOR-8898
-        $this->log("<<<<<<<<<<======== After $commandName", 'debug'); //POCOR-8898
+        // $this->log("<<<<<<<<<<======== After $commandName", 'debug'); //POCOR-8898
     }
 
 
@@ -471,9 +471,9 @@ class TransferLogsTable extends ControllerActionTable
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentReportCards'];
         $shellName = self::$ArchiveVars['Command']['StudentReportCards']; //POCOR-8898: renamed Shell key to Command
-        $this->log((string) self::$ArchiveVars, 'debug');
-        $this->log((string) $tablesToArchive, 'debug');
-        $this->log((string) $shellName, 'debug');
+        // $this->log((string) self::$ArchiveVars, 'debug'); //POCOR-8898
+        // $this->log((string) $tablesToArchive, 'debug'); //POCOR-8898
+        // $this->log((string) $shellName, 'debug'); //POCOR-8898
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
     //POCOR-8898 end
