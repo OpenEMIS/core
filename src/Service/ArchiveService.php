@@ -232,35 +232,22 @@ class ArchiveService
          * 4. Staff Attendances (StaffAttendancesArchived)
          */
 
-        $archiveStatusChecks = [ //POCOR-8898
-            'Institution.InstitutionStudentsReportCardsArchived' => true, //POCOR-8898
-            'Student.ArchivedAssessments' => true, //POCOR-8898
-            'Attendance.StudentAttendanceMarkedRecordsArchived' => true, //POCOR-8898
-            'Institution.StaffAttendancesArchived' => true, //POCOR-8898
+        //POCOR-8898: use raw SQL counts instead of TableRegistry::getTableLocator()->get() to avoid
+        //POCOR-8898: triggering archive table initialize() which may redirect to a remote connection
+        $archiveTableChecks = [ //POCOR-8898
+            'institution_students_report_cards_archived' => 'Student Report Cards', //POCOR-8898
+            'assessment_item_results_archived'           => 'Student Assessments', //POCOR-8898
+            'student_attendance_marked_records_archived' => 'Student Attendances', //POCOR-8898
+            'institution_staff_attendances_archived'     => 'Staff Attendances', //POCOR-8898
         ]; //POCOR-8898
 
         $archivedCount = 0; //POCOR-8898
         $archiveNames = []; //POCOR-8898
 
-        foreach ($archiveStatusChecks as $tableName => $checkRequired) { //POCOR-8898
-            if (!$checkRequired) continue; //POCOR-8898
-
-            $ArchiveTable = TableRegistry::getTableLocator()->get($tableName); //POCOR-8898
-            $hasArchiveRecords = $ArchiveTable->find() //POCOR-8898
-                ->select(['academic_period_id']) //POCOR-8898
-                ->where(['academic_period_id' => $academicPeriodId]) //POCOR-8898
-                ->disableHydration() //POCOR-8898
-                ->first() !== null; //POCOR-8898
-
-            if ($hasArchiveRecords) { //POCOR-8898
+        foreach ($archiveTableChecks as $archiveTable => $friendlyName) { //POCOR-8898
+            $count = self::getSimpleCount($archiveTable, 'default', 'academic_period_id', $academicPeriodId); //POCOR-8898
+            if ($count > 0) { //POCOR-8898
                 $archivedCount++; //POCOR-8898
-                $friendlyName = match($tableName) { //POCOR-8898
-                    'Institution.InstitutionStudentsReportCardsArchived' => 'Student Report Cards', //POCOR-8898
-                    'Student.ArchivedAssessments' => 'Student Assessments', //POCOR-8898
-                    'Attendance.StudentAttendanceMarkedRecordsArchived' => 'Student Attendances', //POCOR-8898
-                    'Institution.StaffAttendancesArchived' => 'Staff Attendances', //POCOR-8898
-                    default => $tableName //POCOR-8898
-                }; //POCOR-8898
                 $archiveNames[] = $friendlyName; //POCOR-8898
             } //POCOR-8898
         } //POCOR-8898
