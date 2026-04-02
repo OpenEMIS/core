@@ -19,6 +19,7 @@ abstract class ArchiveCommandBase extends Command
     public int $recordsToArchive = 0; //POCOR-8898
     public int $recordsToArchiveTotal = 0; //POCOR-8898
     public int $recordsInArchive = 0; //POCOR-8898
+    public int $academicPeriodId = 0; //POCOR-8898
 
     protected ConsoleIo $io; //POCOR-8898
 
@@ -62,6 +63,7 @@ abstract class ArchiveCommandBase extends Command
         $this->recordsInArchive = $recordsInArchive; //POCOR-8898
         $this->recordsToArchive = $recordsToArchive; //POCOR-8898
         $this->recordsToArchiveTotal = $recordsToArchive; //POCOR-8898
+        $this->academicPeriodId = $academicPeriodId; //POCOR-8898
 
         $io->out("academic period id: $academicPeriodId, process id : $pid, recordsToArchive: $recordsToArchive, recordsInArchive: $recordsInArchive");
 
@@ -107,6 +109,15 @@ abstract class ArchiveCommandBase extends Command
 
         if ($tableMovedOK) {
             try {
+                //POCOR-8898: Check if this archive will make year non-editable
+                $archiveStatus = ArchiveService::checkArchiveCompletionStatus($academicPeriodId, $this->featureName);
+                if ($archiveStatus['willBecomeReadOnly'] && $archiveStatus['alert']) {
+                    $io->warning($archiveStatus['alert']);
+                    // Log alert to transfer logs
+                    $TransferLogs = \Cake\ORM\TableRegistry::getTableLocator()->get('Archive.TransferLogs');
+                    $TransferLogs->logArchiveCompletionAlert($pid, $archiveStatus['alert']);
+                }
+
                 $processedDateTime = ArchiveService::setTransferLogsCompleted($pid); //POCOR-8898
                 $io->out("Transfer completed $processName:  $processedDateTime");
                 $processedDateTime = ArchiveService::setSystemProcessCompleted($systemProcessId); //POCOR-8898

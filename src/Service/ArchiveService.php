@@ -215,12 +215,15 @@ class ArchiveService
     }
 
     //POCOR-8898: Check if archiving will make year non-editable + return alert message
-    public static function checkArchiveCompletionStatus($academicPeriodId, $institutionId, $archiveTypeName)
+    public static function checkArchiveCompletionStatus($academicPeriodId, $archiveTypeName)
     {
         /**
          * Returns:
          * ['willBecomeReadOnly' => false, 'alert' => null] — normal archive
          * ['willBecomeReadOnly' => true, 'alert' => 'Archiving X will make year YYYY read-only (all 4 types archived)']
+         *
+         * Checks if ALL 4 archive types have records for this academic period.
+         * No institution filtering — archive completion is per academic period globally.
          *
          * The 4 archive types checked:
          * 1. Student Report Cards (InstitutionStudentsReportCardsArchived)
@@ -230,7 +233,7 @@ class ArchiveService
          */
 
         $archiveStatusChecks = [
-            'Institution.InstitutionStudentsReportCardsArchived' => true,  // Will be checked as "not yet archived" before this operation
+            'Institution.InstitutionStudentsReportCardsArchived' => true,
             'Student.ArchivedAssessments' => true,
             'Attendance.StudentAttendanceMarkedRecordsArchived' => true,
             'Institution.StaffAttendancesArchived' => true,
@@ -244,10 +247,7 @@ class ArchiveService
 
             $ArchiveTable = TableRegistry::getTableLocator()->get($tableName);
             $hasArchiveRecords = $ArchiveTable->find('count')
-                ->where([
-                    'academic_period_id' => $academicPeriodId,
-                    'institution_id' => $institutionId
-                ])
+                ->where(['academic_period_id' => $academicPeriodId])
                 ->first() > 0;
 
             if ($hasArchiveRecords) {
