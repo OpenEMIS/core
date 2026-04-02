@@ -57,7 +57,7 @@ class MergeBehavior extends Behavior
      * @return Entity|mixed|null
      *
      */
-    public function merge(Event $mainEvent, ArrayObject $extra)
+    public function merge(EventInterface $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
 
