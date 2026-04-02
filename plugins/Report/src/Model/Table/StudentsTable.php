@@ -556,7 +556,7 @@ class StudentsTable extends AppTable
         $AreaT = TableRegistry::getTableLocator()->get('areas');                    
         $conditions = [];
         //POCOR-8598 starts
-        if ($areaId != -1 && $areaId != '') {
+        if ($areaId > 0 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
             $selectedArea1[]= $selectedArea;
