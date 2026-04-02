@@ -246,9 +246,11 @@ class ArchiveService
             if (!$checkRequired) continue;
 
             $ArchiveTable = TableRegistry::getTableLocator()->get($tableName);
-            $hasArchiveRecords = $ArchiveTable->find('count')
+            $hasArchiveRecords = $ArchiveTable->find()
+                ->select(['academic_period_id'])
                 ->where(['academic_period_id' => $academicPeriodId])
-                ->first() > 0;
+                ->disableHydration()
+                ->first() !== null;
 
             if ($hasArchiveRecords) {
                 $archivedCount++;
