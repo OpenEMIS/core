@@ -264,24 +264,25 @@ class ArchiveService
             }
         }
 
-        // Year becomes read-only when 3+ types are archived (definitive lock at 4/4, but practical at 3+)
-        $willBecomeReadOnly = ($archivedCount >= 3);
-        $isFullyArchived = ($archivedCount === 4);
+        // Year becomes READ-ONLY ONLY when ALL 4 types are archived (4/4)
+        // But we warn when 3+ are archived (so operators know it's coming)
+        $willBecomeReadOnly = ($archivedCount === 4);
+        $hasWarning = ($archivedCount === 3); // 3/4 archived — warn before final archive locks it
 
         $alert = null;
-        if ($willBecomeReadOnly && $archivedCount === 3) {
-            // Alert when archiving the 4th type will fully lock the year
+        if ($hasWarning) {
+            // Alert when 3 are done and 4th type is about to fully lock the year
             $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
             $periodRecord = $AcademicPeriods->get($academicPeriodId);
             $yearLabel = $periodRecord->name ?? "Period $academicPeriodId";
-            $alert = "⚠️ NOTICE: Archiving this will make year $yearLabel READ-ONLY (all 4 archive types will be completed):\n"
+            $alert = "⚠️ WARNING: Archiving this will make year $yearLabel READ-ONLY (all 4 archive types will be completed):\n"
                 . "- Already archived: " . implode(', ', $archiveNames) . "\n"
                 . "- Now archiving: $archiveTypeName";
         }
 
         return [
             'willBecomeReadOnly' => $willBecomeReadOnly,
-            'isFullyArchived' => $isFullyArchived,
+            'hasWarning' => $hasWarning,
             'alert' => $alert,
             'archivedCount' => $archivedCount
         ];

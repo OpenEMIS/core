@@ -420,8 +420,8 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->order([$this->AcademicPeriods->aliasField('order')])
                 ->toArray();
 
-            //POCOR-8898: Mark years as read-only if 3+ archive types are completed
-            $readOnlyPeriodIds = $this->getPartiallyArchivedPeriods(array_keys($academicPeriodOptions));
+            //POCOR-8898: Mark years as read-only if ALL 4 archive types are completed
+            $readOnlyPeriodIds = $this->getFullyArchivedPeriods(array_keys($academicPeriodOptions));
             $academicPeriodOptionsWithEditable = [];
             foreach ($academicPeriodOptions as $id => $label) {
                 $editable = !in_array($id, $readOnlyPeriodIds);
@@ -2844,14 +2844,14 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $buttons;
     }//POCOR-7998:end
 
-    //POCOR-8898: Check if 3+ archive types are completed (year becomes read-only)
-    private function getPartiallyArchivedPeriods($academicPeriodIds)
+    //POCOR-8898: Check if ALL 4 archive types are completed (year becomes read-only)
+    private function getFullyArchivedPeriods($academicPeriodIds)
     {
         if (empty($academicPeriodIds)) {
             return [];
         }
 
-        $partiallyArchived = [];
+        $fullyArchived = [];
 
         foreach ($academicPeriodIds as $periodId) {
             // Count how many of the 4 archive types have records for this period
@@ -2884,13 +2884,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->first() > 0;
             if ($staffAttendancesArchived) $archivedCount++;
 
-            // If 3+ are archived, mark period as read-only (editable=false)
-            if ($archivedCount >= 3) {
-                $partiallyArchived[] = $periodId;
+            // Year becomes READ-ONLY only when ALL 4 are archived (4/4)
+            if ($archivedCount === 4) {
+                $fullyArchived[] = $periodId;
             }
         }
 
-        return $partiallyArchived;
+        return $fullyArchived;
     }
 
     /*public function onGetEmailStatus(EventInterface $event, Entity $entity)
