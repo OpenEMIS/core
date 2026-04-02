@@ -110,13 +110,12 @@ abstract class ArchiveCommandBase extends Command
         if ($tableMovedOK) {
             try {
                 //POCOR-8898: Check if this archive will make year non-editable
-                $archiveStatus = ArchiveService::checkArchiveCompletionStatus($academicPeriodId, $this->featureName);
-                if ($archiveStatus['willBecomeReadOnly'] && $archiveStatus['alert']) {
-                    $io->warning($archiveStatus['alert']);
-                    // Log alert to transfer logs
-                    $TransferLogs = \Cake\ORM\TableRegistry::getTableLocator()->get('Archive.TransferLogs');
-                    $TransferLogs->logArchiveCompletionAlert($pid, $archiveStatus['alert']);
-                }
+                $archiveStatus = ArchiveService::checkArchiveCompletionStatus($academicPeriodId, $this->featureName); //POCOR-8898
+                if ($archiveStatus['hasWarning'] && $archiveStatus['alert']) { //POCOR-8898
+                    $io->warning($archiveStatus['alert']); //POCOR-8898
+                    $TransferLogs = \Cake\ORM\TableRegistry::getTableLocator()->get('Archive.TransferLogs'); //POCOR-8898
+                    $TransferLogs->logArchiveCompletionAlert($pid, $archiveStatus['alert']); //POCOR-8898
+                } //POCOR-8898
 
                 $processedDateTime = ArchiveService::setTransferLogsCompleted($pid); //POCOR-8898
                 $io->out("Transfer completed $processName:  $processedDateTime");

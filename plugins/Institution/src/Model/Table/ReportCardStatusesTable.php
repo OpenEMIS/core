@@ -421,15 +421,15 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->toArray();
 
         // POCOR-8898: Always include current academic period if editable, even with no records
-        $currentPeriodId = $this->AcademicPeriods->getCurrent();
-        if ($currentPeriodId && !in_array($currentPeriodId, $activePeriodIds)) {
-            $currentPeriodIsEditable = $this->AcademicPeriods->find()
-                ->where([$this->AcademicPeriods->aliasField('id') => $currentPeriodId, $this->AcademicPeriods->aliasField('editable') => 1])
-                ->count() > 0;
-            if ($currentPeriodIsEditable) {
-                $activePeriodIds[] = $currentPeriodId;
-            }
-        }
+        $currentPeriodId = $this->AcademicPeriods->getCurrent(); //POCOR-8898
+        if ($currentPeriodId && !in_array($currentPeriodId, $activePeriodIds)) { //POCOR-8898
+            $currentPeriodIsEditable = $this->AcademicPeriods->find() //POCOR-8898
+                ->where([$this->AcademicPeriods->aliasField('id') => $currentPeriodId, $this->AcademicPeriods->aliasField('editable') => 1]) //POCOR-8898
+                ->count() > 0; //POCOR-8898
+            if ($currentPeriodIsEditable) { //POCOR-8898
+                $activePeriodIds[] = $currentPeriodId; //POCOR-8898
+            } //POCOR-8898
+        } //POCOR-8898
 
         if (!empty($activePeriodIds)) {
             $academicPeriodOptions = $this->AcademicPeriods->find('list')
@@ -437,7 +437,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 ->order([$this->AcademicPeriods->aliasField('order')])
                 ->toArray();
 
-            $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $currentPeriodId;
+            $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $currentPeriodId; //POCOR-8898
         } else {
             $academicPeriodOptions = [];
             $selectedAcademicPeriod = null;

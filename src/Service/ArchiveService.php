@@ -116,7 +116,7 @@ class ArchiveService
             ->where(['p_id' => $pid])->first();
         $moved = "{$featureName}: {$recordsToArchive} / {$recordsInArchive}. {$proc} {$step}."; // POCOR-7957
         $caller->out($moved);
-        Log::write('debug', $moved);
+        // Log::write('debug', $moved); //POCOR-8898
         $moved = "{$featureName}: {$recordsToArchive} / {$recordsInArchive}"; // POCOR-7957
         $transferlog->features = $moved;
         try {
@@ -232,62 +232,60 @@ class ArchiveService
          * 4. Staff Attendances (StaffAttendancesArchived)
          */
 
-        $archiveStatusChecks = [
-            'Institution.InstitutionStudentsReportCardsArchived' => true,
-            'Student.ArchivedAssessments' => true,
-            'Attendance.StudentAttendanceMarkedRecordsArchived' => true,
-            'Institution.StaffAttendancesArchived' => true,
-        ];
+        $archiveStatusChecks = [ //POCOR-8898
+            'Institution.InstitutionStudentsReportCardsArchived' => true, //POCOR-8898
+            'Student.ArchivedAssessments' => true, //POCOR-8898
+            'Attendance.StudentAttendanceMarkedRecordsArchived' => true, //POCOR-8898
+            'Institution.StaffAttendancesArchived' => true, //POCOR-8898
+        ]; //POCOR-8898
 
-        $archivedCount = 0;
-        $archiveNames = [];
+        $archivedCount = 0; //POCOR-8898
+        $archiveNames = []; //POCOR-8898
 
-        foreach ($archiveStatusChecks as $tableName => $checkRequired) {
-            if (!$checkRequired) continue;
+        foreach ($archiveStatusChecks as $tableName => $checkRequired) { //POCOR-8898
+            if (!$checkRequired) continue; //POCOR-8898
 
-            $ArchiveTable = TableRegistry::getTableLocator()->get($tableName);
-            $hasArchiveRecords = $ArchiveTable->find()
-                ->select(['academic_period_id'])
-                ->where(['academic_period_id' => $academicPeriodId])
-                ->disableHydration()
-                ->first() !== null;
+            $ArchiveTable = TableRegistry::getTableLocator()->get($tableName); //POCOR-8898
+            $hasArchiveRecords = $ArchiveTable->find() //POCOR-8898
+                ->select(['academic_period_id']) //POCOR-8898
+                ->where(['academic_period_id' => $academicPeriodId]) //POCOR-8898
+                ->disableHydration() //POCOR-8898
+                ->first() !== null; //POCOR-8898
 
-            if ($hasArchiveRecords) {
-                $archivedCount++;
-                // Extract friendly name from table name
-                $friendlyName = match($tableName) {
-                    'Institution.InstitutionStudentsReportCardsArchived' => 'Student Report Cards',
-                    'Student.ArchivedAssessments' => 'Student Assessments',
-                    'Attendance.StudentAttendanceMarkedRecordsArchived' => 'Student Attendances',
-                    'Institution.StaffAttendancesArchived' => 'Staff Attendances',
-                    default => $tableName
-                };
-                $archiveNames[] = $friendlyName;
-            }
-        }
+            if ($hasArchiveRecords) { //POCOR-8898
+                $archivedCount++; //POCOR-8898
+                $friendlyName = match($tableName) { //POCOR-8898
+                    'Institution.InstitutionStudentsReportCardsArchived' => 'Student Report Cards', //POCOR-8898
+                    'Student.ArchivedAssessments' => 'Student Assessments', //POCOR-8898
+                    'Attendance.StudentAttendanceMarkedRecordsArchived' => 'Student Attendances', //POCOR-8898
+                    'Institution.StaffAttendancesArchived' => 'Staff Attendances', //POCOR-8898
+                    default => $tableName //POCOR-8898
+                }; //POCOR-8898
+                $archiveNames[] = $friendlyName; //POCOR-8898
+            } //POCOR-8898
+        } //POCOR-8898
 
-        // Year becomes READ-ONLY ONLY when ALL 4 types are archived (4/4)
-        // But we warn when 3+ are archived (so operators know it's coming)
-        $willBecomeReadOnly = ($archivedCount === 4);
-        $hasWarning = ($archivedCount === 3); // 3/4 archived — warn before final archive locks it
+        // POCOR-8898: Year becomes READ-ONLY ONLY when ALL 4 types are archived (4/4)
+        // Warn at 3/4 so operators know the next archive will lock the year
+        $willBecomeReadOnly = ($archivedCount === 4); //POCOR-8898
+        $hasWarning = ($archivedCount === 3); //POCOR-8898
 
-        $alert = null;
-        if ($hasWarning) {
-            // Alert when 3 are done and 4th type is about to fully lock the year
-            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-            $periodRecord = $AcademicPeriods->get($academicPeriodId);
-            $yearLabel = $periodRecord->name ?? "Period $academicPeriodId";
-            $alert = "⚠️ WARNING: Archiving this will make year $yearLabel READ-ONLY (all 4 archive types will be completed):\n"
-                . "- Already archived: " . implode(', ', $archiveNames) . "\n"
-                . "- Now archiving: $archiveTypeName";
-        }
+        $alert = null; //POCOR-8898
+        if ($hasWarning) { //POCOR-8898
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //POCOR-8898
+            $periodRecord = $AcademicPeriods->get($academicPeriodId); //POCOR-8898
+            $yearLabel = $periodRecord->name ?? "Period $academicPeriodId"; //POCOR-8898
+            $alert = "WARNING: Archiving this will make year $yearLabel READ-ONLY (all 4 archive types will be completed):\n" //POCOR-8898
+                . "- Already archived: " . implode(', ', $archiveNames) . "\n" //POCOR-8898
+                . "- Now archiving: $archiveTypeName"; //POCOR-8898
+        } //POCOR-8898
 
-        return [
-            'willBecomeReadOnly' => $willBecomeReadOnly,
-            'hasWarning' => $hasWarning,
-            'alert' => $alert,
-            'archivedCount' => $archivedCount
-        ];
+        return [ //POCOR-8898
+            'willBecomeReadOnly' => $willBecomeReadOnly, //POCOR-8898
+            'hasWarning' => $hasWarning, //POCOR-8898
+            'alert' => $alert, //POCOR-8898
+            'archivedCount' => $archivedCount //POCOR-8898
+        ]; //POCOR-8898
     }
 
 }
