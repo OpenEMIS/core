@@ -869,7 +869,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // console.log(this.selected_meal_program, "selected_meal_program");
 
     if (this.academic_Period && this.academic_period_day && this.selected_academic_class && this.selected_meal_program) {
-      this.Rest.getWithToken(`institution-class-students?_scope=withMeals&_conditions=institution_id:${this.institution_id};academic_period_id:${this.academic_Period};institution_class_id:${this.selected_academic_class}&_date=${this.academic_period_day}&_meal_programmes_id=${this.selected_meal_program}`, true).subscribe({ //POCOR-9633: use v5 institution-class-students with withMeals scope; standard filters via _conditions, scope params via _ prefix
+      this.Rest.getWithToken(`institution-class-students?_scope=withMeals&_conditions=institution_class_students.institution_id:${this.institution_id};institution_class_students.academic_period_id:${this.academic_Period};institution_class_students.institution_class_id:${this.selected_academic_class}&_date=${this.academic_period_day}&_meal_programmes_id=${this.selected_meal_program}`, true).subscribe({ //POCOR-9633: use v5 institution-class-students with withMeals scope; qualified table.column in _conditions to avoid ambiguity
         next: (response: any) => {
           if (response && response?.data?.data?.length > 0) {
             let newDataRow = [];
