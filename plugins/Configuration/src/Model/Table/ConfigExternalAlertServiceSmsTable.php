@@ -158,7 +158,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->getSubject()->renderElement('Configuration.external_alert_service_sms', ['attr' => $attr]);
+        return $event->getSubject()->element('Configuration.external_alert_service_sms', ['attr' => $attr]); //POCOR-9633: renderElement() renamed to element() in CakePHP 5
 
     }
 
