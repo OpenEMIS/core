@@ -614,6 +614,10 @@ Route::group(
 );
 
 Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
+    // POCOR-9633: start - custom v5 meal-students endpoint (cleaner replacement for v4 institutions/{id}/meal-students)
+    Route::get('institutions/{institutionId}/meal-students', 'MealController@getMealStudents');
+    // POCOR-9633: end
+
     // POCOR-8915 start
     // should be always the last, as it is all-consuming
     Route::group(

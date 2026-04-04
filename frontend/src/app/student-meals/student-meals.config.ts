@@ -191,7 +191,7 @@ function getEditMealElement(data, mealTypes, api, context) {
     eCell.setAttribute("class", "oe-select-wrapper input-select-wrapper");
     eCell.setAttribute("id", dataKey);
     if (data[dataKey] == null) {
-        data[dataKey] = 1;
+        data[dataKey] = data.default_meal_receive_id ?? 1; //POCOR-9633: use API-supplied default instead of hardcoded Received
     }
     let eSelect = document.createElement("select");
     eSelect.setAttribute('style', 'width: 190px;')
