@@ -705,6 +705,7 @@ class StudentMealsTable extends ControllerActionTable
         $MealReceivedTable = TableRegistry::getTableLocator()->get('Meal.MealReceived');
         $mealReceivedData = $MealReceivedTable->find()->where(['name' => $DefaultDeliveryStatus])->first(); //POCOR-9633: find() without 'all' arg, CakePHP 5 compatible
         $default_meal_receive_id = $mealReceivedData ? $mealReceivedData->id : null; //POCOR-9633: null-safe in case no match
+        $this->log('[TEMP-LOG] getDefaultMealReceiveID: DefaultDeliveryStatus=' . $DefaultDeliveryStatus . ' id=' . $default_meal_receive_id, 'debug'); //POCOR-9633: [TEMP-LOG]
         return $default_meal_receive_id;
         //POCOR-9633: end
     }

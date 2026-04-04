@@ -32,6 +32,9 @@ $event->getSubject()->renderElement('Configuration.external_alert_service_sms', 
 |------|--------|
 | `plugins/Institution/src/Model/Table/StudentMealsTable.php` | Fixed `getDefaultMealReceiveID()` to use `ConfigItems->value()` + CakePHP 5 `find()->where()` |
 | `plugins/Configuration/src/Model/Table/ConfigExternalAlertServiceSmsTable.php` | Fixed `renderElement()` → `element()` |
+| `frontend/src/app/student-meals/student-meals.config.ts` | Fixed `getEditMealElement()` — was hardcoding `meal_received_id = 1` when null; now uses `data.default_meal_receive_id` |
+| `frontend/src/app/student-meals/student-meals.component.ts` | Fixed `onBackClick()` — was hardcoding `meal_received_id = 1`; now uses `item.default_meal_receive_id`. Switched `getMealStudent()` to v5 API |
+| `api/routes/api.php` | Added `GET /api/v5/institutions/{id}/meal-students` route (v5 equivalent of v4 endpoint) |
 
 ### Bug 1 & 2 Fix (`StudentMealsTable.php`)
 
@@ -57,6 +60,39 @@ return $event->getSubject()->renderElement('Configuration.external_alert_service
 // After:
 return $event->getSubject()->element('Configuration.external_alert_service_sms', ['attr' => $attr]);
 ```
+
+### Bug 4 — Default Delivery Status Still Showed "Received" (Root Cause: Angular Frontend)
+
+Investigation via Playwright network requests revealed the Meals Students page is an **Angular 11 SPA** (`frontend/src/`) that calls the Laravel API directly. The CakePHP `StudentMealsTable::getDefaultMealReceiveID()` fix was correct but irrelevant for this page.
+
+The actual bug was in the Angular frontend (`student-meals.config.ts` and `student-meals.component.ts`):
+
+```ts
+// student-meals.config.ts — getEditMealElement() — Before:
+if (data[dataKey] == null) {
+    data[dataKey] = 1; // Hardcoded to Received!
+}
+
+// After:
+if (data[dataKey] == null) {
+    data[dataKey] = data.default_meal_receive_id ?? 1; //POCOR-9633: use API-supplied default
+}
+```
+
+```ts
+// student-meals.component.ts — onBackClick() — Before:
+} else if (indexInArray2.index != -1 && indexInArray2.data == null) {
+    item.meal_received_id = 1; // Hardcoded to Received!
+
+// After:
+    item.meal_received_id = item.default_meal_receive_id ?? 1; //POCOR-9633: use API-supplied default
+```
+
+The Laravel API already correctly returns `default_meal_receive_id` from `config_items.DefaultDeliveryStatus` — the frontend was just ignoring it.
+
+### v5 API Migration
+
+Added `GET /api/v5/institutions/{institutionId}/meal-students` route before the v5 catch-all, reusing the existing `MealController@getMealStudents` logic. Angular component updated to call v5 endpoint (`getWithToken(..., true)`).
 
 ### Database Migrations
 None required.

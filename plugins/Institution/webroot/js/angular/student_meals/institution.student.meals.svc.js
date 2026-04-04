@@ -267,9 +267,11 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
         var success = function (response, deferred) {
             var classStudents = response.data.data;
-            // console.log('getClassStudent');
-            // console.log(options);
-            // console.log(classStudents);
+            console.log('[Meals] getStudents options:', JSON.stringify(options)); //POCOR-9633: [TEMP-LOG]
+            console.log('[Meals] getStudents response students count:', classStudents ? classStudents.length : 'null'); //POCOR-9633: [TEMP-LOG]
+            if (classStudents && classStudents.length > 0) { //POCOR-9633: [TEMP-LOG]
+                console.log('[Meals] first student meal_received_id:', classStudents[0].meal_received_id, 'default_meal_receive_id:', classStudents[0].default_meal_receive_id); //POCOR-9633: [TEMP-LOG]
+            } //POCOR-9633: [TEMP-LOG]
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
             } else {
@@ -291,13 +293,14 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
         var success = function (response, deferred) {
             var classStudents = response.data.data;
-            // console.log('getClassStudent');
-            // console.log(response);
-            // console.log(classStudents);
+            console.log('[Meals] saveStudents options:', JSON.stringify(options)); //POCOR-9633: [TEMP-LOG]
+            console.log('[Meals] saveStudents response students count:', classStudents ? classStudents.length : 'null'); //POCOR-9633: [TEMP-LOG]
+            if (classStudents && classStudents.length > 0) { //POCOR-9633: [TEMP-LOG]
+                console.log('[Meals] first student after save — meal_received_id:', classStudents[0].meal_received_id, 'default_meal_receive_id:', classStudents[0].default_meal_receive_id); //POCOR-9633: [TEMP-LOG]
+            } //POCOR-9633: [TEMP-LOG]
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
             } else {
-                // console.log(response);
                 deferred.reject('There was an error when saving the class student list');
             }
         };
