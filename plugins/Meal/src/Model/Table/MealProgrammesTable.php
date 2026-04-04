@@ -66,8 +66,8 @@ use AllowDynamicProperties; // POCOR-8988
         $validator = parent::validationDefault($validator);
         $validator
             ->requirePresence('amount', 'create')
-            ->notEmptyString('amount', __('Please enter the Amount'))
-            ->decimal('amount', null, __('Amount must be a valid decimal number'));
+            ->notEmptyString('amount', __('Please enter the Cost'))
+            ->decimal('amount', null, __('Cost must be a valid decimal number'));
         return $validator;
     }
     //POCOR-9633: end
