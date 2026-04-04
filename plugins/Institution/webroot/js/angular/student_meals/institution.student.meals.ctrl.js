@@ -318,10 +318,6 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     function setClassStudents(classStudents) {
-        console.log('[Meals] setClassStudents count:', classStudents ? classStudents.length : 'null'); //POCOR-9633: [TEMP-LOG]
-        if (classStudents && classStudents.length > 0) { //POCOR-9633: [TEMP-LOG]
-            console.log('[Meals] first student:', JSON.stringify({meal_received_id: classStudents[0].meal_received_id, default_meal_receive_id: classStudents[0].default_meal_receive_id, meal_received_name: classStudents[0].meal_received_name})); //POCOR-9633: [TEMP-LOG]
-        } //POCOR-9633: [TEMP-LOG]
         vm.classStudents = [];
         vm.classStudentList = classStudents;
     }
@@ -674,8 +670,6 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
     // button events
     vm.onEditClick = function () {
-        console.log('[Meals] onEditClick — selectedDay:', vm.selectedDay, 'selectedClass:', vm.selectedClass, 'selectedMealProgram:', vm.selectedMealProgram); //POCOR-9633: [TEMP-LOG]
-
         getMealProgramOptions()
             .then(saveStudents)
             .then(setClassStudents)
