@@ -65,22 +65,24 @@ class StudentBehavioursTable extends ControllerActionTable
 
         //if ($this->AccessControl->check(['Institutions', 'StudentBehaviours', 'Excel'])) { // to check execute permission
         ///}
-        $roles = [1,2,3,4,5,6,7,8,9,10,11];
-        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
-                    'SecurityFunctions._execute'=>'StaffBehaviours.excel',
-                    'SecurityRoleFunctions._execute' => 1
-                ])
-                ->toArray();
-        if(!empty($QueryResult)){
-            $this->addBehavior('Excel', ['pages' => ['index']]);
-        }
+        //POCOR-9632[START] This code need to verify again commented based on releted ticket
+        // $roles = [1,2,3,4,5,6,7,8,9,10,11];
+        // $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
+        //         ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+        //             [
+        //                 'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+        //             ]
+        //         ])
+        //         ->where([
+        //             'SecurityRoleFunctions.security_role_id IN'=>$roles,
+        //             'SecurityFunctions._execute'=>'StaffBehaviours.excel',
+        //             'SecurityRoleFunctions._execute' => 1
+        //         ])
+        //         ->toArray();
+        // if(!empty($QueryResult)){
+        //     $this->addBehavior('Excel', ['pages' => ['index']]);
+        // }
+        //POCOR-9632[END]
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['StudentBehaviours' =>['id']
             ]
