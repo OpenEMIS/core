@@ -82,6 +82,7 @@ class StudentBehavioursTable extends ControllerActionTable
         // if(!empty($QueryResult)){
         //     $this->addBehavior('Excel', ['pages' => ['index']]);
         // }
+        $this->addBehavior('Excel', ['pages' => ['index']]);
         //POCOR-9632[END]
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['StudentBehaviours' =>['id']
