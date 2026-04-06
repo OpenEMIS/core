@@ -539,9 +539,15 @@ class StudentAdmissionTable extends ControllerActionTable
                 } catch (\Exception $exception) {
                     Log::error($exception->getMessage());
                 }  //POCOR-9404 end
+                //POCOR-9635: log identity save validation errors (silent when save returns false)
+                if ($newStduentIdentities->hasErrors()) {
+                    Log::error('[POCOR-9635] Identity save failed for student_id=' . $entity->student_id . ' errors=' . json_encode($newStduentIdentities->getErrors()));
+                }
             }
             return $newEntity;
         }else{
+            //POCOR-9635: institution_students save returned false with validation errors — was previously silent
+            Log::error('[POCOR-9635] addInstitutionStudent failed for student_id=' . $entity->student_id . ' institution_id=' . $entity->institution_id . ' academic_period_id=' . $entity->academic_period_id . ' errors=' . json_encode($newEntity->getErrors()));
             return null;
         }
     }
@@ -617,6 +623,9 @@ class StudentAdmissionTable extends ControllerActionTable
         $newEnrolmentEntity = $StudentEnrolments->newEntity($enrolmentArr);
         if ($StudentEnrolments->save($newEnrolmentEntity)) { // POCOR-9323
             $this->handleCandidateNumber($newEnrolmentEntity);
+        } else {
+            //POCOR-9635: StudentEnrolment save failed silently — no error was logged, user saw success
+            Log::error('[POCOR-9635] StudentEnrolment save failed for student_id=' . $entity->student_id . ' institution_id=' . $entity->institution_id . ' academic_period_id=' . $entity->academic_period_id . ' errors=' . json_encode($newEnrolmentEntity->getErrors()));
         }
     }
 
@@ -673,13 +682,22 @@ class StudentAdmissionTable extends ControllerActionTable
                             $this->save($entity);
                             $saved = true;
                         } catch (\Exception $exception) {
+                            //POCOR-9635: autoAssignAssignee failed, retrying save without it
+                            Log::error('[POCOR-9635] autoAssignAssignee failed for admission_id=' . $entity->id . ' student_id=' . $student_id . ' error=' . $exception->getMessage());
                             try {
                                 $this->save($entity);
                                 $saved = true;
                             } catch (\Exception $exception) {
+                                //POCOR-9635: second save attempt failed, falling back to created_user_id as assignee
+                                Log::error('[POCOR-9635] Second save attempt failed for admission_id=' . $entity->id . ' student_id=' . $student_id . ' error=' . $exception->getMessage());
                                 $entity->assignee_id = $entity->created_user_id;
-                                $this->save($entity);
-                                $saved = true;
+                                try {
+                                    $this->save($entity);
+                                    $saved = true;
+                                } catch (\Exception $exception) {
+                                    //POCOR-9635: all three save attempts failed — admission status not updated
+                                    Log::error('[POCOR-9635] All save attempts failed for admission_id=' . $entity->id . ' student_id=' . $student_id . ' error=' . $exception->getMessage());
+                                }
                             }
                         }
                         if ($saved) {
@@ -698,7 +716,10 @@ class StudentAdmissionTable extends ControllerActionTable
                                 'created' => new FrozenTime('NOW')
                             ];
                             $transitionEntity = $WorkflowTransitions->newEntity($transition);
-                            $WorkflowTransitions->save($transitionEntity);
+                            //POCOR-9635: WorkflowTransitions save had no try/catch — failure was fully silent
+                            if (!$WorkflowTransitions->save($transitionEntity)) {
+                                Log::error('[POCOR-9635] WorkflowTransition save failed for admission_id=' . $entity->id . ' student_id=' . $student_id . ' errors=' . json_encode($transitionEntity->getErrors()));
+                            }
                         }
                     }
                 }
