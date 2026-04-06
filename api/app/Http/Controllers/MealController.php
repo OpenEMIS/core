@@ -10,13 +10,14 @@ use App\Http\Requests\StudentMealImportRequest;
 use App\Http\Requests\StudentMealExportRequest;
 use App\Http\Requests\StudentMealImportTemplateRequest;
 use App\Exports\StudentMealExport;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\StudentMealImport;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class MealController extends Controller
 {
@@ -92,12 +93,12 @@ class MealController extends Controller
      * )
      */
     public function getMealInstitutionProgrammes(Request $request, $institutionId){
-    
+
         try {
             $params = $request->all();
             $data = $this->mealService->getMealInstitutionProgrammes($params, $institutionId);
             return $this->sendSuccessResponse("Meal Institution Programmes Found.", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch list from DB',
@@ -170,10 +171,10 @@ class MealController extends Controller
     public function getMealBenefits(Request $request)
     {
         try {
-            
+
             $data = $this->mealService->getMealBenefits($request);
             return $this->sendSuccessResponse("Meal Benefit Types List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Benefits List from DB',
@@ -368,7 +369,7 @@ class MealController extends Controller
             $options = $request->all();
             $data = $this->mealService->getMealStudents($options, $institutionId);
             return $this->sendSuccessResponse("Student Meals List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Student Meals List from DB',
@@ -443,7 +444,7 @@ class MealController extends Controller
             $options = $request->all();
             $data = $this->mealService->getMealDistributions($options, $institutionId);
             return $this->sendSuccessResponse("Meal Distribution List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meals Distribution List from DB',
@@ -507,7 +508,7 @@ class MealController extends Controller
             $data = $this->mealService->getMealProgrammeData($options, $programmeId);
 
             return $this->sendSuccessResponse("Meal Programme Data Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Programme Data from DB',
@@ -584,7 +585,7 @@ class MealController extends Controller
             $data = $this->mealService->getMealTargets($options);
 
             return $this->sendSuccessResponse("Meal Targets List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Targets List from DB',
@@ -662,7 +663,7 @@ class MealController extends Controller
             $data = $this->mealService->getMealImplementers($options);
 
             return $this->sendSuccessResponse("Meal Implementers List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Implementers List from DB',
@@ -736,7 +737,7 @@ class MealController extends Controller
             $data = $this->mealService->getMealNutritions($options);
 
             return $this->sendSuccessResponse("Meal Nutritions List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Nutritions List from DB',
@@ -814,7 +815,7 @@ class MealController extends Controller
             $data = $this->mealService->getMealRatings($options);
 
             return $this->sendSuccessResponse("Meal Ratings List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Ratings List from DB',
@@ -890,7 +891,7 @@ class MealController extends Controller
             $data = $this->mealService->getMealStatusTypes($options);
 
             return $this->sendSuccessResponse("Meal Status Types List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Status Types List from DB',
@@ -967,7 +968,7 @@ class MealController extends Controller
             $data = $this->mealService->getMealFoodTypes($options);
 
             return $this->sendSuccessResponse("Meal Food Types List Found", $data);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch Meal Food Types List from DB',
@@ -1071,41 +1072,53 @@ class MealController extends Controller
      *     )
      * )
      */
+
+
+
+
     public function getStudentMealImport(StudentMealImportRequest $request)
     {
         try {
-            $params = $request->all();
-            $data = $this->mealService->getStudentMealImport($params);
-            if(!is_array($data)){
-                if(isset($data) && $data == 1){
-                    return $this->sendErrorResponse('Invalid file extension.');
-                } elseif(isset($data) && $data == 2){
-                    return $this->sendErrorResponse('Header is not present.');
-                } elseif(isset($data) && $data == 3){
-                    return $this->sendErrorResponse('Imported file is empty.');
-                } elseif(isset($data) && $data == 4){
-                    return $this->sendErrorResponse('Not a valid heading.');
-                } elseif(isset($data) && $data == 5){
-                    return $this->sendErrorResponse('Institution is not linked with Institution Class.');
-                } elseif(isset($data) && $data == 6){
-                    return $this->sendErrorResponse('No current Academic Period is set in DB.');
-                } elseif(isset($data) && $data == 7){
-                    return $this->sendErrorResponse('Uploaded file exceeds maximum no of records limit ('.config("constantvalues.importExcelRules.maxRows").').');
-                } else {
-                    return $this->sendErrorResponse('Student meals not imported.');
-                }
-            } else {
-                return $this->sendSuccessResponse("Student meals imported.", $data);
+            $result = $this->mealService->getStudentMealImport($request->all());
+
+            if ($result instanceof Response) {
+                return $result;
             }
-            
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to import students meals in DB.',
-                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
-            );
+
+            if (is_array($result) && array_key_exists('total_count', $result)) {
+                return $this->sendSuccessResponse('Student meals imported.', $result);
+            }
+
+            if (is_int($result) || ctype_digit((string) $result)) {
+                return $this->sendErrorResponse(
+                    $this->getStudentMealImportErrorMessage((int) $result)
+                );
+            }
+
+            return $this->sendErrorResponse('Student meals not imported.');
+        } catch (\Throwable $e) {
+            Log::error('Failed to import students meals in DB.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return $this->sendErrorResponse('Failed to import students meals in DB.');
         }
+    }
+
+    private function getStudentMealImportErrorMessage(int $code): string
+    {
+        $messages = [
+            1 => 'Invalid file extension.',
+            2 => 'Header is not present.',
+            3 => 'Imported file is empty.',
+            4 => 'Not a valid heading.',
+            5 => 'Institution is not linked with Institution Class.',
+            6 => 'No current Academic Period is set in DB.',
+            7 => 'Uploaded file exceeds maximum no of records limit (' . config('constantvalues.importExcelRules.maxRows') . ').',
+        ];
+
+        return $messages[$code] ?? 'Student meals not imported.';
     }
 
 
@@ -1192,8 +1205,14 @@ class MealController extends Controller
             $params = $request->all();
             $str = time();
             $fileName = 'StudentMeals_'.$str.'.xlsx';
-            return Excel::download(new StudentMealExport($params), $fileName);
-            
+            $spreadsheet = (new StudentMealExport($params))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_');
+            $writer->save($tempFile);
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to exported students meals from DB.',
@@ -1253,7 +1272,7 @@ class MealController extends Controller
             if(file_exists($filePath)){
                 $templatePath = public_path('storage/templates');
                 $templateFile = $templatePath.'/'.$fileName;
-                
+
 
                 if(!File::exists($templatePath)){
                     File::makeDirectory($templatePath, 0775, true, true);
@@ -1268,13 +1287,13 @@ class MealController extends Controller
             }
 
             $spreadsheet = IOFactory::load($templateFile);
-            
+
             // Select the 'References' sheet (assuming it's the second sheet)
             $sheet = $spreadsheet->getSheetByName('References');
-            
+
             if (!$sheet) {
                 return $this->sendErrorResponse('Reference sheet not found in import template.');
-            }  
+            }
 
             $getDataForSheet = $this->mealService->getDataForSheet($params);
 
@@ -1294,13 +1313,13 @@ class MealController extends Controller
             $writer->save($templateFile);
 
             return response()->download($templateFile);
-            
+
         } catch (\Exception $e) {
             Log::error(
                 'Failed to fetch student meals import template data from DB.',
                 ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
             );
-            
+
             return $this->sendErrorResponse('Failed to fetch student meals import template data from DB.');
         }
     }

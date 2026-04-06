@@ -43,6 +43,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     vm.allAttendances = 0;
     vm.allPresentCount = 0;
     vm.allLeaveCount = 0;
+    vm.allAbsentCount = 0; //POCOR-8135
     // vm.allLateCount = 0;
     // vm.globalLateCount = 0;
     // gridOptions
@@ -321,6 +322,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         vm.totalStaff = 0;
         vm.allAttendances = 0;
         vm.allLeaveCount = 0;
+        vm.allAbsentCount = 0; //POCOR-8135
         // vm.allLateCount = 0;
         vm.count = 0;
         vm.staffList = staffList;
@@ -337,6 +339,11 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                     if (attendance.leave.length > 0) {
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
+                    //POCOR-8135: start - count absent (no time_in and no leave record)
+                    if (!attendance.time_in && attendance.leave.length === 0) {
+                        vm.allAbsentCount = vm.allAbsentCount + 1;
+                    }
+                    //POCOR-8135: end
                     // if (attendance.absence_type_id == 3) {
                     //     vm.allLateCount++; //POCOR-8118
                     // }
@@ -351,6 +358,9 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             }
             if (vm.allLeaveCount == 0) {
                 vm.allLeaveCount = '-';
+            }
+            if (vm.allAbsentCount == 0) { //POCOR-8135
+                vm.allAbsentCount = '-';
             }
             if (vm.allLateCount == 0) {
                 vm.allLateCount = '-';

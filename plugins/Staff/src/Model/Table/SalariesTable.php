@@ -3,6 +3,7 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use App\Model\Table\ControllerActionTable;
+use Cake\Datasource\EntityInterface;
 use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
@@ -18,8 +19,24 @@ class SalariesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->hasMany('SalaryAdditions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('SalaryDeductions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        //POCOR-9584: Load all transactions - filtering will happen in addEditBeforePatch based on type_id
+        $this->hasMany('SalaryAdditions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'foreignKey' => 'staff_salary_id', // <-- put your real FK here
+            'conditions' => ['SalaryAdditions.salary_addition_type_id IS NOT' => null],
+            'dependent' => true,
+            'saveStrategy' => 'replace',
+            'cascadeCallbacks' => true,
+        ]);
+
+        $this->hasMany('SalaryDeductions', [
+            'className' => 'Staff.StaffSalaryTransactions',
+            'foreignKey' => 'staff_salary_id', // <-- same FK
+            'conditions' => ['SalaryDeductions.salary_deduction_type_id IS NOT' => null],
+            'dependent' => true,
+            'saveStrategy' => 'replace',
+            'cascadeCallbacks' => true,
+        ]);
         $this->hasMany('SalaryTransactions', ['className' => 'Staff.StaffSalaryTransactions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
 
@@ -124,7 +141,7 @@ class SalariesTable extends ControllerActionTable
         $this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 
         if($this->request->getAttribute('params')['controller'] == 'Staff'){
-            $is_manual_exist = $this->getManualUrl('Personal','Salaries','Staff - Finance');       
+            $is_manual_exist = $this->getManualUrl('Personal','Salaries','Staff - Finance');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -133,7 +150,7 @@ class SalariesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -141,8 +158,8 @@ class SalariesTable extends ControllerActionTable
                 $helpBtn['attr']['title'] = __('Help');
                 $extra['toolbarButtons']['help'] = $helpBtn;
             }
-        }elseif($this->request->getAttribute('params')['controller'] == 'Directories'){ 
-            $is_manual_exist = $this->getManualUrl('Directory','Salary List','Staff - Finance');       
+        }elseif($this->request->getAttribute('params')['controller'] == 'Directories'){
+            $is_manual_exist = $this->getManualUrl('Directory','Salary List','Staff - Finance');
             if(!empty($is_manual_exist)){
                 $btnAttr = [
                     'class' => 'btn btn-xs btn-default icon-big',
@@ -151,7 +168,7 @@ class SalariesTable extends ControllerActionTable
                     'escape' => false,
                     'target'=>'_blank'
                 ];
-        
+
                 $helpBtn['url'] = $is_manual_exist['url'];
                 $helpBtn['type'] = 'button';
                 $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
@@ -166,71 +183,34 @@ class SalariesTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
     }
 
-    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options)
     {
         $totalAddition = 0;
         $totalDeduction = 0;
 
-        $SalaryAdditions = TableRegistry::getTableLocator()->get('Staff.SalaryAdditions');
-        $present = [];
+        // --- ADDITIONS ---
         if ($entity->has('salary_additions')) {
-            foreach ($entity->salary_additions as $key => $value) {
-                if ($value->has('amount')) {
-                    $totalAddition += $value->amount;
-                }
-                if ($value->has($SalaryAdditions->getPrimaryKey())) {
-                    $present[] = $value->{$SalaryAdditions->getPrimaryKey()};
+            foreach ((array)$entity->salary_additions as $item) {
+                if ($item && $item->has('amount')) {
+                    $totalAddition += (float)$item->amount;
                 }
             }
         }
-        if(!empty($entity->id)){
-            $deleteOptions = [
-                'staff_salary_id' => $entity->id,
-            ];
-        }
-        if (!empty($present)) {
-            $deleteOptions[$SalaryAdditions->getPrimaryKey().' NOT IN'] = $present;
-        }
-        $SalaryAdditions->deleteAll($deleteOptions);
 
-        $SalaryDeductions = TableRegistry::getTableLocator()->get('Staff.SalaryDeductions');
-        $present = [];
+        // --- DEDUCTIONS ---
         if ($entity->has('salary_deductions')) {
-            foreach ($entity->salary_deductions as $key => $value) {
-                if ($value->has('amount')) {
-                    $totalDeduction += $value->amount;
-                }
-                if ($value->has($SalaryDeductions->getPrimaryKey())) {
-                    $present[] = $value->{$SalaryDeductions->getPrimaryKey()};
+            foreach ((array)$entity->salary_deductions as $item) {
+                if ($item && $item->has('amount')) {
+                    $totalDeduction += (float)$item->amount;
                 }
             }
         }
-        if(!empty($entity->id)){
-            $deleteOptions = [
-                'staff_salary_id' => $entity->id,
-            ];
-        }
-        if (!empty($present)) {
-            $deleteOptions[$SalaryDeductions->getPrimaryKey().' NOT IN'] = $present;
-        }
-        $SalaryDeductions->deleteAll($deleteOptions);
 
-        $data = ['additions' => $totalAddition, 'deductions' => $totalDeduction];
-
-        $entity = $this->patchEntity($entity, $data);
+        // Set totals directly (do NOT patchEntity here)
+        $entity->additions = $totalAddition;
+        $entity->deductions = $totalDeduction;
     }
 
-    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        if (array_key_exists($this->getAlias(), (array) $data)) { //POCOR-9300[START] added array in second param
-            if (!array_key_exists('salary_additions', $data[$this->getAlias()])) {
-                $data[$this->getAlias()]['salary_additions'] = [];
-            }
-            if (!array_key_exists('salary_deductions', $data[$this->getAlias()])) {
-                $data[$this->getAlias()]['salary_deductions'] = [];
-            }
-        }
-    }
 
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -250,37 +230,18 @@ class SalariesTable extends ControllerActionTable
 
     public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        //$paramsPass = $this->paramsDecode($this->ControllerAction->getParam('Pass')[1]);cakephp 3
-        $paramsPass = $this->paramsDecode($this->request->getParam('pass.1'));
-        $SalaryTransactions = TableRegistry::getTableLocator()->get('Staff.StaffSalaryTransactions');
-        $findData = $SalaryTransactions->find()
-                    ->select([
-                      $SalaryTransactions->aliasField('salary_addition_type_id'),
-                      $SalaryTransactions->aliasField('salary_deduction_type_id')   
-                    ])
-                    ->where([$SalaryTransactions->aliasField('staff_salary_id') => $paramsPass['id']])->toArray();
-        
-        $addition  = $deduction = []; 
-        if (!empty($findData)) {
-            foreach ($findData as $key => $value) {
-               $addition[] = $value->salary_addition_type_id;
-               $deduction[] = $value->salary_deduction_type_id;        
+        //POCOR-9584: Load both relationships with conditions to filter additions vs deductions
+        error_log('[POCOR-9584] editBeforeQuery - Loading relationships with conditions');
+        $query->contain([
+            'SalaryAdditions' => function(Query $q) {
+                error_log('[POCOR-9584] editBeforeQuery - Building SalaryAdditions query');
+                return $q;
+            },
+            'SalaryDeductions' => function(Query $q) {
+                error_log('[POCOR-9584] editBeforeQuery - Building SalaryDeductions query');
+                return $q;
             }
-            if (!empty($addition[0]) && empty($deduction[1])) {
-                $query->contain([
-                    'SalaryAdditions'
-                ]);
-            } elseif (empty($addition[0]) && !empty($deduction[1])) {
-                $query->contain([
-                    'SalaryDeductions'
-                ]);
-            } else {
-                $query->contain([
-                    'SalaryAdditions',
-                    'SalaryDeductions'
-                ]);    
-            }
-        }
+        ]);
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -385,12 +346,25 @@ class SalariesTable extends ControllerActionTable
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
+        $LabelTable = TableRegistry::getTableLocator()->get('Labels'); // POCOR-9525
+
         if ($field == 'salary_date') {
             return __('Salary Date');
-        } elseif ($field == 'gross_salary') {
+        } elseif ($field == 'gross_salary') { // POCOR-9525 start
+            $label = $LabelTable->find()->where(['module' => 'InstitutionStaffFinanceSalaries', 'field' => 'gross_salary'])->first();
+            if (!empty($label) && $label->name) {
+                return $label->name;
+            } else {
             return __('Gross Salary');
+            }
         } elseif ($field == 'net_salary') {
-            return __('Net Salary');
+            $label = $LabelTable->find()->where(['module' => 'InstitutionStaffFinanceSalaries', 'field' => 'net_salary'])->first();
+            if (!empty($label) && $label->name) {
+                return $label->name;
+            } else {
+                return __('Net Salary');
+            }
+            // POCOR-9525 end
         } elseif ($field == 'comment') {
             return __('Comment');
         } elseif ($field == 'modified_user_id') {

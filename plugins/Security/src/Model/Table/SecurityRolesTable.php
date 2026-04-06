@@ -102,8 +102,10 @@ class SecurityRolesTable extends ControllerActionTable
             ->add('code', 'ruleUnique', [
                 'rule' => 'validateUnique',
                 'provider' => 'table',
-                'message' => __('Code must be unique')
-            ])->requirePresence('security_group_id')
+                'message' => __('Code must be unique'),
+                'on' => 'create' 
+            ])
+            ->requirePresence('security_group_id')
             ->notEmptyString('security_group_id');
         ; //POCOR-7236 code must ne unique
 

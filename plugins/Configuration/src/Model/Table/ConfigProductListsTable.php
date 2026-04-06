@@ -3,13 +3,14 @@ namespace Configuration\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
-use Cake\Validation\Validator;
-use Cake\Network\Session;
 use Cake\ORM\Entity;
+use Cake\Routing\Router;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use ArrayObject;
+use Cake\Http\ServerRequest;
+use Cake\Validation\Validator;
+use Cake\Http\Session;
 
 class ConfigProductListsTable extends ControllerActionTable
 {
@@ -80,24 +81,24 @@ class ConfigProductListsTable extends ControllerActionTable
         $this->fields['file_content']['visible'] = false;
 
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Product Lists','System Configurations');       
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration','Product Lists','System Configurations');       
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function addBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -117,8 +118,10 @@ class ConfigProductListsTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $session = new Session();
-        $session->delete('ConfigProductLists.list');
+        $request = Router::getRequest();
+        if ($request !== null) {
+            $request->getSession()->delete('ConfigProductLists.list');
+        }
     }
 
     public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
@@ -129,7 +132,9 @@ class ConfigProductListsTable extends ControllerActionTable
             $image->delete();
         }
 
-        $session = new Session();
-        $session->delete('ConfigProductLists.list');
+        $request = Router::getRequest();
+        if ($request !== null) {
+            $request->getSession()->delete('ConfigProductLists.list');
+        }
     }
 }

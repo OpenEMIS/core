@@ -40,7 +40,7 @@ class ApiSecuritiesController extends PageController
         return $event;
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         parent::beforeFilter($event);
         //POCOR-7520[START]

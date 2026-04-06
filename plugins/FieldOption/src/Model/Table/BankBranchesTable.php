@@ -7,6 +7,7 @@ use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
+use Cake\ORM\Entity;
 
 class BankBranchesTable extends ControllerActionTable
 {

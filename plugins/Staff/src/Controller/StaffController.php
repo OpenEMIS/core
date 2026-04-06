@@ -5,6 +5,7 @@ namespace Staff\Controller;
 use App\Controller\AppController;
 use ArrayObject;
 use Cake\Event\EventInterface;
+use Cake\Log\Log;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -87,6 +88,7 @@ class StaffController extends AppController
             'Extracurriculars' => ['className' => 'Staff.Extracurriculars', 'actions' => ['index', 'view', 'search']],
             'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
             'ImportStaff' => ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
+            'ImportStaffLeave' => ['className' => 'Institution.ImportStaffLeave', 'actions' => ['add']],
             'TrainingResults' => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
             'Achievements' => ['className' => 'Staff.Achievements'],
             'ImportSalaries' => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']],
@@ -396,7 +398,7 @@ class StaffController extends AppController
         }
         if (!$institution_id) {
             $session = $this->request->getSession();
-            return $_SESSION;
+            //POCOR-9584: removed accidental `return $_SESSION;` that blocked the session fallback
             $institution_id = $session->read('Institution.Institutions.id');
             if(!$institution_id){
                 if ($debugString != "") {
@@ -590,6 +592,7 @@ class StaffController extends AppController
     public function beforeFilter(EventInterface $event)//POCOR-8456
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
+//        Log::debug(print_r([__FUNCTION__ => $this->getQueryString()], true));
         if ($isInstitutionIndex) {
             return;
         }
@@ -646,6 +649,16 @@ class StaffController extends AppController
     public function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
     {
         $isInstitutionIndex = $this->isInstitutionIDSkipped();
+        //POCOR-9584: log full request details to trace where query string gets stripped
+        //Log::debug('@StaffController::onInitialize'
+        //    . ' url=' . $this->request->getRequestTarget()
+        //    . ' action=' . $this->request->getParam('action')
+        //    . ' pass=' . json_encode($this->request->getParam('pass'))
+        //    . ' query=' . json_encode($this->request->getQueryParams())
+        //    . ' model=' . $model->getAlias()
+        //    . ' isInstitutionIndex=' . var_export($isInstitutionIndex, true));
+//        Log::debug(print_r([__FUNCTION__ => $this->getQueryString()], true));
+
         if ($isInstitutionIndex) {
             return;
         }
@@ -681,10 +694,15 @@ class StaffController extends AppController
             $pass = $this->request->getParam('pass');
             $subaction = isset($pass[0]) ? $pass[0] : null;
 
-            if($model->alias = 'StaffAppraisals'){
+            if($model->alias == 'StaffAppraisals'){ //POCOR-9584: fix assignment operator causing alias corruption for all models
                 return true;
             }
-            if ($subaction != 'index') {
+            //POCOR-9584: start - only run record-ownership check for view/edit/delete; non-record sub-actions
+            //            (excel, download, template, results, etc.) carry context params at pass[1], not a record ID,
+            //            so decoding them as a record ID produces null which CakePHP 5 rejects with InvalidArgumentException
+            $recordActions = ['view', 'edit', 'delete', 'remove'];
+            if (in_array($subaction, $recordActions)) {
+            //POCOR-9584: end
                 if ($model->hasField('security_user_id')) {
                     $model->fields['security_user_id']['type'] = 'hidden';
                     $model->fields['security_user_id']['value'] = $userId;
@@ -729,7 +747,9 @@ class StaffController extends AppController
                 }
             }
         } else {
-            if ($model->getAlias() == 'ImportStaff') {
+            //POCOR-9584: all import models have no staff_id in URL on results/template/download pages
+            $importAliases = ['ImportStaff', 'ImportStaffLeave', 'ImportStaffQualifications', 'ImportSalaries'];
+            if (in_array($model->getAlias(), $importAliases)) {
                 $this->Navigation->addCrumb($model->getHeader($model->getAlias()));
                 $header = __('Staff') . ' - ' . $model->getHeader($model->getAlias());
                 $this->set('contentHeader', $header);
@@ -907,13 +927,24 @@ class StaffController extends AppController
 
         $tabElements = array_merge($tabElements, $trainingTabElements);
 
-        foreach ($trainingTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+        //POCOR-9584: start - pass[1] carries the encoded query string (institution_id, staff_id, user_id);
+        //            append it to every tab URL so staff context is not lost when navigating between tabs
+        $pass = $this->request->getParam('pass');
+        $encodedQueryString = $pass[1] ?? null;
+        //POCOR-9584: end
 
+        foreach ($trainingTabElements as $key => $tab) {
             if ($key == 'Courses') {
-                $trainingUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+                $coursesUrl = ['plugin' => 'Staff', 'controller' => 'Staff']; //POCOR-9584: Courses lives in Staff controller
+                $tabElements[$key]['url'] = array_merge($coursesUrl, ['action' => $key, 'index']);
+            } else {
                 $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
             }
+            //POCOR-9584: start - append encoded params so all tabs preserve staff/institution context
+            if ($encodedQueryString) {
+                $tabElements[$key]['url'][1] = $encodedQueryString;
+            }
+            //POCOR-9584: end
         }
 
         return $this->TabPermission->checkTabPermission($tabElements);
@@ -974,6 +1005,11 @@ class StaffController extends AppController
 
         $shiftOptions = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals')
             ->getShiftOptions($academicPeriodId, false, $institutionId);
+
+        // Required by Timetables/controls so shift/institution dropdown redirects keep the same index URL (avoid 404 on shift change)
+        $pass = $this->request->getParam('pass');
+        $encodedQueryString = isset($pass[1]) ? $pass[1] : null;
+        $this->set('encodedQueryString', $encodedQueryString);
 
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
@@ -1072,16 +1108,46 @@ class StaffController extends AppController
     function isInstitutionIDSkipped(): bool
     {
         $request = $this->request;
+//        Log::debug(print_r([__FUNCTION__ => $this->getQueryString()], true));
 
         $pass = $request->getParam('pass');
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
-        $furtherAction = $pass[0];
+        $furtherAction = $pass[0] ?? '';
+//        Log::debug(print_r([$pass, $action, $controller, $plugin, $furtherAction], true));
+        //POCOR-9584: start - Support AJAX autocomplete and clean code with arrays
+        $downloadActions = [
+            'Qualifications',
+            'EmploymentStatuses',
+            'Payslips',
+            'Healths',
+        ];
 
-        if ($pass[0] == 'download' && ($action == 'Qualifications' || $action == 'EmploymentStatuses' || $action == 'Payslips' || 'Healths') && ($plugin == 'Staff') && ($controller == 'Staff')) {
+        $ajaxActions = [
+            'image',
+            'download',
+            'ajaxReferrerAutocomplete',
+            'ajaxAssessorAutocomplete'
+        ];
+
+        if ($pass[0] == 'download' && in_array($action, $downloadActions) && ($plugin == 'Staff') && ($controller == 'Staff')) {
             return true;
         }
+
+        if ($pass[0] == 'template'){
+            return true;
+        }
+        if (in_array($pass[0], ['add', 'results', 'downloadFailed', 'downloadPassed']) //POCOR-9584: results + downloadFailed have no staff_id in URL
+            && ($plugin == 'Staff') && ($controller == 'Staff')) {
+
+            return true;
+        }
+
+        if (in_array($furtherAction, $ajaxActions)) {
+            return true;
+        }
+        //POCOR-9584: end
 
         return false;
     }

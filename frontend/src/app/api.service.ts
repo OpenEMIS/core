@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 import { KdAlertEvent } from 'openemis-styleguide-lib';
 import { BehaviorSubject, Observable, throwError } from "rxjs";
 import { map, catchError, tap } from "rxjs/operators";
-import { environment } from 'src/environments/environment';
+//POCOR-9594: environment URL removed — base URL derived dynamically from window.location.origin
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +14,16 @@ import { environment } from 'src/environments/environment';
 export class ApiService {
   private nextBtn: BehaviorSubject<string> = new BehaviorSubject<string>('enable');
   nextBtnEvent: Observable<string> = this.nextBtn.asObservable();
+
+  //POCOR-9594: dynamic base URLs — always call the same origin the browser is on
+  get apiV4BaseUrl(): string {
+    const base = localStorage.getItem('baseCoreUrl') || window.location.href;
+    return new URL('api/v4/', base).href;
+  }
+  get apiV5BaseUrl(): string {
+    const base = localStorage.getItem('baseCoreUrl') || window.location.href;
+    return new URL('api/v5/', base).href;
+  }
 
   constructor(
     private http: HttpClient,
@@ -29,7 +39,14 @@ export class ApiService {
       );
     }
 
-    return throwError(error.error);
+    //POCOR-9594: normalise 401 errors — server returns {error:"Token Expired"|"Token Invalid"}
+    // but component handlers check error.message == "Token has expired". Unify here so all
+    // components get a consistent message without each needing its own string mapping.
+    const body = (error.error && typeof error.error === 'object') ? error.error : { error: error.error };
+    if (error.status === 401) {
+      return throwError({ ...body, message: 'Token has expired' });
+    }
+    return throwError(body);
   }
 
   setSessionStorage(key: any, value: any) {
@@ -46,7 +63,7 @@ export class ApiService {
       "username": "admin",
       "api_key": "apikeytest"
     }
-    return this.http.post(`${environment.apiV4BaseUrl}login`, obj).pipe(catchError(this.handleError))
+    return this.http.post(`${this.apiV4BaseUrl}login`, obj).pipe(catchError(this.handleError))
   }
 
   setSession(){
@@ -66,19 +83,19 @@ export class ApiService {
       "username": userName,
       "api_key": "apikeytest"
     }
-    return this.http.post(`${environment.apiV4BaseUrl}login`, obj).pipe(catchError(this.handleError))
+    return this.http.post(`${this.apiV4BaseUrl}login`, obj).pipe(catchError(this.handleError))
   }
 
   postWithToken(url: any, data: any) {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.post(`${environment.apiV4BaseUrl}${url}`, data, {
+    return this.http.post(`${this.apiV4BaseUrl}${url}`, data, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
 
   putWithToken(url: any, data: any, v5?: boolean) {
-    let baseUrl = environment.apiV4BaseUrl;
+    let baseUrl = this.apiV4BaseUrl;
     if(v5 && !baseUrl.includes('/v5/')){
       baseUrl = baseUrl.replace('/v4/', '/v5/');
     }
@@ -96,7 +113,7 @@ export class ApiService {
   }
 
   getWithToken(url: any, v5?: boolean) {
-    let baseUrl = environment.apiV4BaseUrl;
+    let baseUrl = this.apiV4BaseUrl;
     if(v5 && !baseUrl.includes('/v5/')){
       baseUrl = baseUrl.replace('/v4/', '/v5/');
     }
@@ -110,7 +127,7 @@ export class ApiService {
   deleteWithToken(url: any) {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.delete(`${environment.apiV4BaseUrl}${url}`, {
+    return this.http.delete(`${this.apiV4BaseUrl}${url}`, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
@@ -119,7 +136,7 @@ export class ApiService {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http
-      .get(`${environment.apiV4BaseUrl}${url}`, {
+      .get(`${this.apiV4BaseUrl}${url}`, {
         headers: headers
       })
       .pipe(catchError(this.handleError));
@@ -129,7 +146,7 @@ export class ApiService {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http
-      .get(`${environment.apiV4BaseUrl}${url}`, {
+      .get(`${this.apiV4BaseUrl}${url}`, {
         headers: headers,
         responseType: 'blob'
       })
@@ -139,7 +156,7 @@ export class ApiService {
   postImportTemplete(url: any, data: any) {
     let token = localStorage.getItem("loginToken");
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
-    return this.http.post(`${environment.apiV4BaseUrl}${url}`, data, {
+    return this.http.post(`${this.apiV4BaseUrl}${url}`, data, {
       headers: headers
     }).pipe(catchError(this.handleError));
   }
@@ -147,7 +164,7 @@ export class ApiService {
   get(url: any, token: any) {
     const headers = new HttpHeaders().set("Authorization", "Bearer " + token);
     return this.http
-      .get(`${environment.apiV4BaseUrl}${url} `, {
+      .get(`${this.apiV4BaseUrl}${url} `, {
         headers: headers
       })
       .pipe(catchError(this.handleError));

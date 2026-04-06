@@ -47,6 +47,15 @@ class ExpenditureTable extends AppTable  {
             $conditions['Institutions.area_id'] = $areaId;
         }
 
+        $dateConditions = [];
+        if ($startDate) {
+            $dateConditions[$this->aliasField('date') . ' >='] = $startDate;
+        }
+
+        if ($endDate) {
+            $dateConditions[$this->aliasField('date') . ' <='] = $endDate;
+        }
+
         $query
             ->select([
                 'institution_code' => 'Institutions.code',
@@ -69,8 +78,8 @@ class ExpenditureTable extends AppTable  {
             ->innerJoin(['AcademicPeriods' => 'academic_periods'], [
                 'AcademicPeriods.id =' . $this->aliasField('academic_period_id')
             ])
-            ->where($conditions)
-            ->andWhere([$this->aliasField('date').' >= ' => $startDate, $this->aliasField('date').' <= ' => $endDate]);  
+            ->where($conditions)->andWhere($dateConditions);
+           // ->andWhere([$this->aliasField('date IS').' >= ' => $startDate, $this->aliasField('date IS').' <= ' => $endDate]);  
                
     }
 
