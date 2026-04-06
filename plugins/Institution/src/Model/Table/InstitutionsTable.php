@@ -948,6 +948,16 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+
+        $LatLongPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
+        $LatPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
+        $LongPermission = $ConfigItems->value("longitude_mandatory"); //POCOR-7045
+        dd([
+            '$LatLongPermission' => $LatLongPermission,
+            '$LatPermission' => $LatPermission,
+            '$LongPermission' => $LongPermission,
+        ]);
         $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
@@ -1036,7 +1046,6 @@ class InstitutionsTable extends ControllerActionTable
             $this->field('logo_content', ['type' => 'image']);
         }
 
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $LatLongPermission = $ConfigItems->value("latitude_longitude");
 
         if ($LatLongPermission == LatLongOptions::EXCLUDED) {
