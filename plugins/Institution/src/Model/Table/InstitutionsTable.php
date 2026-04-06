@@ -950,7 +950,7 @@ class InstitutionsTable extends ControllerActionTable
     {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
-        $LatLongPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
+        $LatLongPermission = $ConfigItems->value("latitude_longitude"); //POCOR-7045
         $LatPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
         $LongPermission = $ConfigItems->value("longitude_mandatory"); //POCOR-7045
         dd([
