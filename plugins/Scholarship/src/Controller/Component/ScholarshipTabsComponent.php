@@ -72,6 +72,11 @@ class ScholarshipTabsComponent extends Component
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Histories',  'index',  1 => $urlRequest],
                 'text' => __('Scholarship History')
             ],
+
+            'Qualifications' => [
+                'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'Qualifications',  'index',  1 => $urlRequest],
+                'text' => __('Qualifications')
+            ],
             'InstitutionChoices' => [
                 'url' => ['plugin' => 'Scholarship', 'controller' => 'Scholarships', 'action' => 'ScholarshipApplicationInstitutionChoices', 0 => 'index', 1=> $urlRequest, 'queryString' => $this->queryString],
                 'text' => __('Institution Choices')

@@ -75,6 +75,11 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function afterSaveCommit(EventInterface $event, Entity $entity, ArrayObject $options): Entity
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[SAVE PHP] afterSaveCommit() - Transaction committed');
+        // Log::debug('Student ID: ' . $entity->student_id . ', Absence Type: ' . $entity->absence_type_id);
+        // Log::debug('========================================');
 
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
         if ($entity->has('record_source') && $entity->record_source == 'import_student_attendances') {
@@ -120,12 +125,30 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     */
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[SAVE PHP] beforeSave() called');
+        // Log::debug('Is new record: ' . ($entity->isNew() ? 'YES' : 'NO'));
+        // Log::debug('Entity data: ' . json_encode([
+        //     'student_id' => $entity->student_id,
+        //     'absence_type_id' => $entity->absence_type_id,
+        //     'student_absence_reason_id' => $entity->student_absence_reason_id ?? null,
+        //     'comment' => $entity->comment ?? null,
+        //     'date' => $entity->date ?? null,
+        //     'period' => $entity->period ?? null
+        // ]));
+
         if ($entity->absence_type_id == 0) {
+            // Log::debug('[SAVE PHP] absence_type_id == 0 → DELETING record (PRESENT)');
             $this->delete($entity);
             $event->stopPropagation();
+            // Log::debug('[SAVE PHP] Record deleted, event stopped');
+            // Log::debug('========================================');
             return $entity;
         }
 
+        // Log::debug('[SAVE PHP] absence_type_id != 0 → Continuing with save');
+        // Log::debug('========================================');
 
         // if ($entity->isNew() || $entity->dirty('absence_type_id')) {
         //     $this->updateStudentAbsencesRecord($entity);
@@ -134,6 +157,10 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function findFirst(Query $query, array $options)
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[FIND PHP] findFirst() called with options: ' . json_encode($options));
+
         $compositeKeyFields = [
             'student_id',
             'institution_id',
@@ -150,15 +177,31 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             if (isset($options[$field])) {
                 $conditions[$field] = $options[$field];
             } else {
+                Log::error('[FIND PHP] Missing composite key field: ' . $field);
                 throw new InvalidArgumentException("Missing composite key field: {$field}");
             }
         }
+
+        // Log::debug('[FIND PHP] Built WHERE conditions: ' . json_encode($conditions));
+        // Log::debug('========================================');
 
         return $query->where($conditions)->limit(1);
     }
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData): Entity
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[SAVE PHP] afterSave() - Save completed successfully');
+        // Log::debug('Saved entity data: ' . json_encode([
+        //     'student_id' => $entity->student_id,
+        //     'absence_type_id' => $entity->absence_type_id,
+        //     'student_absence_reason_id' => $entity->student_absence_reason_id ?? null,
+        //     'comment' => $entity->comment ?? null,
+        //     'date' => $entity->date->format('Y-m-d') ?? null,
+        //     'period' => $entity->period ?? null
+        // ]));
+        // Log::debug('========================================');
 
         $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
         return $entity;

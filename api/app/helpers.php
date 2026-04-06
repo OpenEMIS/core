@@ -726,10 +726,19 @@ if(!function_exists('getClassStudents')){
 
 
 if(!function_exists('getMealProgrammes')){
-    function getMealProgrammes()
+    //POCOR-9594: start - accept optional meal_programme_id to restrict template references to the selected programme
+    function getMealProgrammes($meal_programme_id = null)
     {
-        $currentAcademicYear = AcademicPeriod::where('current', 1)->first();
-        $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
+        //POCOR-9594: when a specific programme is requested, query by ID only — skip academic_period filter
+        //  (the programme may belong to a different academic period than the current one)
+        if (!empty($meal_programme_id)) {
+            $getMealProgrammes = MealProgrammes::where('id', $meal_programme_id)->get()->toArray();
+        } else {
+            //POCOR-9594: academic_period_level_id=-1 is the "All Data" catch-all; only Year-type periods (level_id>0) are valid here
+            $currentAcademicYear = AcademicPeriod::where('current', 1)->where('academic_period_level_id', '>', 0)->orderBy('start_date', 'desc')->first();
+            $getMealProgrammes = MealProgrammes::where('academic_period_id', $currentAcademicYear->id??0)->get()->toArray();
+        }
+        // Log::debug('@helpers::getMealProgrammes meal_programme_id=' . json_encode($meal_programme_id) . ' count=' . count($getMealProgrammes)); //[TEMP-LOG]
 
         $resp = [];
         foreach($getMealProgrammes as $k => $mealProgramme){

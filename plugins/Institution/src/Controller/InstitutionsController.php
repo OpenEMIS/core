@@ -930,11 +930,29 @@ class InstitutionsController extends AppController
         if (!$institution_id) {
             $session = $this->request->getSession();
             $institution_id = $session->read('Institution.Institutions.id');
-            if (!$institution_id) {
-                if ($debugString != "") {
-                    die($debugString . 'For Developer: You should put institution_id into query string first');
+        }
+        // StaffBehaviours view: if still missing, decode pass[1] or load behaviour by id so view does not redirect to Dashboard
+        if (!$institution_id && $this->request->getParam('action') == 'StaffBehaviours') {
+            $pass = $this->request->getParam('pass');
+            if (!empty($pass[1])) {
+                try {
+                    $decoded = $this->paramsDecode($pass[1]);
+                    if (!empty($decoded['institution_id'])) {
+                        $institution_id = $decoded['institution_id'];
+                    } elseif (!empty($decoded['id'])) {
+                        $StaffBehaviours = TableRegistry::getTableLocator()->get('Institution.StaffBehaviours');
+                        $behaviour = $StaffBehaviours->get($decoded['id'], ['fields' => ['id', 'institution_id']]);
+                        if ($behaviour && !empty($behaviour->institution_id)) {
+                            $institution_id = $behaviour->institution_id;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // ignore
                 }
             }
+        }
+        if (!$institution_id && $debugString != "") {
+            die($debugString . 'For Developer: You should put institution_id into query string first');
         }
         return $institution_id;
     }
@@ -1064,20 +1082,10 @@ class InstitutionsController extends AppController
         $academicPeriodId = $this->request->getQuery('academic_period_id');
         $reportCardId = $this->request->getQuery('report_card_id');
 
-        if (!empty($classId) && $classId == 'all') {
-            return  $this->redirect([
-                'action' => 'ReportCardStatusProgress',
-                '0' => 'index',
-                '1' => $encodedQueryString,
-                '?' => [ //POCOR-8773
-                    'class_id' => $classId,
-                    'academic_period_id' => $academicPeriodId,
-                    'report_card_id' => $reportCardId
-                ]
-            ]);
-        } else {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
-        }
+        // POCOR-6822: Stay on Report Card Statuses for "All Classes" so all roles (not only super admin)
+        // see the list; ReportCardStatusesTable uses institution_class_id IN (class ids) when class_id=all.
+        // Previously redirecting to ReportCardStatusProgress caused redirect to Dashboard for non-super-admin.
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
     }//POCOR-6822 Ends
 
     public function ReportCardStatusProgress()
@@ -1515,6 +1523,9 @@ class InstitutionsController extends AppController
         $this->set('user', $user);
         $this->set('pass', $pass);
         $this->set('ngController', 'TimetableCtrl as $ctrl');
+        //POCOR-9589: inject baseCoreUrl so Angular SPA resolves api/v4/ correctly on any deployment path
+        $baseCoreUrl = $this->getRequest()->getSession()->read('System.baseCoreUrl');
+        $this->set('baseCoreUrl', $baseCoreUrl);
         $this->render('timetable');
     }
 
@@ -1623,13 +1634,14 @@ class InstitutionsController extends AppController
             //POCOR-8148:End
 
             // issue
+            //POCOR-9615: Fixed URL - removed redundant second encoding
             $excelUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StudentAttendances',
-                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]),
-                'excel',
-                $this->ControllerAction->paramsEncode(['institution_id' => $institutionId])
+                0 => 'excel',
+                1 => $this->ControllerAction->paramsEncode(['id' => $institutionId,'institution_id' => $institutionId]), //POCOR-8886
+
             ];
 
             $importUrl = [
@@ -2439,11 +2451,37 @@ class InstitutionsController extends AppController
                 'action' => 'setAlert',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
+            //POCOR-9526 start
+            $LabelTable = TableRegistry::get('Labels');
+            $secondarystaff = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'secondary_staff_id'])->first();
+            if (!empty($secondarystaff)) {
+                $secondarystaffName = !empty($secondarystaff->name)
+                    ? (string)$secondarystaff->name
+                    : (string)$secondarystaff->field_name;
+            } else {
+                $secondarystaffName = 'Secondary Teacher';
+            }
+
+            $homeRoomTeacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Classes', 'field' => 'staff_id'])->first();
+            if (!empty($homeRoomTeacher)) {
+                if (!empty($homeRoomTeacher->code) && !empty($homeRoomTeacher->name)) {
+                    $homeRoomTeacherName = $homeRoomTeacher->code . ' ' . $homeRoomTeacher->name;
+                } elseif (!empty($homeRoomTeacher->name)) {
+                    $homeRoomTeacherName = $homeRoomTeacher->name;
+                } else {
+                    $homeRoomTeacherName = $homeRoomTeacher->field_name;
+                }
+            } else {
+                $homeRoomTeacherName = 'Home Room Teacher';
+            }
+            //POCOR-9526 end
             $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $classId['id']);
             $this->set('institutionId', $institutionId);
+            $this->set('secondarystaffName', $secondarystaffName); //POCOR-9526
+            $this->set('homeRoomTeacherName', $homeRoomTeacherName); // POCOR-9526
             $this->render('institution_classes_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
@@ -3277,6 +3315,7 @@ class InstitutionsController extends AppController
             'classCustomFields', //POCOR-8538,
             'ImportInstitutions', // POCOR-8683
             'importInstitutions', // POCOR-8683
+
             'checkConfigurationForExternalSearch',
             'studentCustomFields',
             'staffCustomFields'
@@ -3285,7 +3324,8 @@ class InstitutionsController extends AppController
         $furtherActions = [
             'removeReport',
             'downloadFailed',
-            'downloadPassed'
+            'downloadPassed',
+            'template', //POCOR-9584: template is a file-download action; skip institution ID check (same as downloadFailed/downloadPassed)
         ];
 
         if (in_array($action, $primaryActions) || in_array($furtherAction, $furtherActions)) {
@@ -3316,6 +3356,13 @@ class InstitutionsController extends AppController
         if (($furtherAction == 'view'
                 || $furtherAction == 'edit' || $furtherAction =='remove')
             && $action == 'Institutions'
+            && $plugin == 'Institution'
+            && $controller == 'Institutions') {
+            return true;
+        }
+        // StaffBehaviours view/edit: skip role-based SecurityAuthorize here; checkInstitutionAccess in beforeFilter will enforce institution access (avoids redirect to Dashboard when roles are null or view link came from Staff plugin)
+        if (($furtherAction == 'view' || $furtherAction == 'edit')
+            && $action == 'StaffBehaviours'
             && $plugin == 'Institution'
             && $controller == 'Institutions') {
             return true;
@@ -3379,6 +3426,43 @@ class InstitutionsController extends AppController
             if (!array_key_exists($id, $institutionIds)) {
 
                 $this->Alert->error('security.noAccess');
+                // If user came from Staff Behaviours view, send back to Staff Behaviours index instead of Institution index (which redirects to Dashboard)
+                $action = $this->request->getParam('action');
+                $pass = $this->request->getParam('pass');
+                if ($action == 'StaffBehaviours' && !empty($pass[1])) {
+                    try {
+                        $decoded = $this->paramsDecode($pass[1]);
+                        $institutionId = $decoded['institution_id'] ?? $id;
+                        $staffId = $decoded['staff_id'] ?? null;
+                        if (empty($staffId) && !empty($decoded['id'])) {
+                            $StaffBehaviours = TableRegistry::getTableLocator()->get('Institution.StaffBehaviours');
+                            $behaviour = $StaffBehaviours->get($decoded['id'], ['fields' => ['staff_id']]);
+                            if ($behaviour) {
+                                $staffId = $behaviour->staff_id;
+                            }
+                        }
+                        if ($institutionId || $staffId) {
+                            $params = array_filter([
+                                'institution_id' => $institutionId,
+                                'staff_id' => $staffId,
+                                'user_id' => $decoded['user_id'] ?? $staffId,
+                            ]);
+                            if (!empty($params)) {
+                                $url = [
+                                    'plugin' => 'Staff',
+                                    'controller' => 'Staff',
+                                    'action' => 'Behaviours',
+                                    '0' => 'index',
+                                    '1' => $this->ControllerAction->paramsEncode($params),
+                                ];
+                                $event->stopPropagation();
+                                return $this->redirect($url);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        // fall through to default redirect
+                    }
+                }
                 $url = ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'index'];
                 $event->stopPropagation();
 
@@ -9968,6 +10052,24 @@ class InstitutionsController extends AppController
             ->withStringBody(stream_get_contents($fileResource));
 
         return $this->response;
+    }
+
+    //POCOR-9475
+    public function InfrastructureElectricitiesHistory()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureElectricitiesHistory']);
+    }
+
+    //POCOR-9475
+    public function InfrastructureInternetHistory()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureInternetHistory']);
+    }
+
+    //POCOR-9475
+    public function InfrastructureTelephonesHistory()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureTelephonesHistory']);
     }
 
 }

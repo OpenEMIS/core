@@ -6,7 +6,6 @@ namespace Institution\Model\Table;
 use ArrayObject;
 use Cake\Database\Schema\Collection;
 use Cake\Database\Schema\Table;
-use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -50,6 +49,22 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     }
 
     /**
+     * Map physical table name to Cake ORM table class alias for TableRegistry.
+     *
+     * @param string $tableName
+     * @return string
+     */
+    private static function getRelatedTableClassName($tableName)
+    {
+        $map = [
+            'institution_classes' => 'Institution.InstitutionClasses',
+            'education_grades' => 'Education.EducationGrades',
+            'security_users' => 'User.Users',
+        ];
+        return isset($map[$tableName]) ? $map[$tableName] : $tableName;
+    }
+
+    /**
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
@@ -60,7 +75,8 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         if (!$relatedField) {
             return "";
         }
-        $Table = TableRegistry::getTableLocator()->get($tableName);
+        $tableClassName = self::getRelatedTableClassName($tableName);
+        $Table = TableRegistry::getTableLocator()->get($tableClassName);
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -246,19 +262,16 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     /**
      * @param string $table_name
      * @param array $where
-     * @return array
-     * @throws \Exception
+     * @return string
      *
      */
     public static function getArchiveStudentsPresent(string $table_name, array $where)
     {
-        $targetTableNameAndConnection = ArchiveConnections::getArchiveTableAndConnection($table_name);
-        $targetTableName = $targetTableNameAndConnection[0];
-        $targetTableConnection = $targetTableNameAndConnection[1];
-        $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
-            'connection' => $remoteConnection,
-        ]);
+        try {
+            $tableArchived = ArchiveConnections::getArchiveTable($table_name);
+        } catch (\Throwable $e) {
+            return '<i class="fa fa-close"></i>';
+        }
         $distinctResults = $tableArchived->find('all')
             ->where($where)
             ->select(['student_id'])

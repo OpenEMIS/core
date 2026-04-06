@@ -64,7 +64,7 @@ class InstitutionCurricularsTable extends ControllerActionTable
         return $validator;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $sortable = !is_null($this->request->getQuery('sort')) ? true : false;
         $institutionId = $this->getInstitutionID();

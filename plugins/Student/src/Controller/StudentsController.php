@@ -71,6 +71,7 @@ class StudentsController extends AppController
             'Extracurriculars' => ['className' => 'Student.Extracurriculars', 'actions' => ['index', 'add', 'edit', 'remove', 'view']],//POCOR-6700
 //            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']], //POCOR-7485 cakephp4 use as a function
             'ImportStudents' => ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
+            'ImportStaffQualifications' => ['className' => 'Staff.ImportStaffQualifications', 'actions' => ['add']], //POCOR-9584: register so Import button from Students > Qualifications works
         ];
 
         $this->loadComponent('User.Image');
@@ -544,7 +545,7 @@ class StudentsController extends AppController
         }
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $StudentUser = TableRegistry::getTableLocator()->get('Institution.StudentUser');
         parent::beforeFilter($event);
@@ -639,6 +640,12 @@ class StudentsController extends AppController
         if ($furtherAction == 'image' || $furtherAction == 'download' || $furtherAction == 'ajaxReferrerAutocomplete') {
             return true;
         }
+        //POCOR-9584: start - skip student ID guard for import sub-actions (ImportStaffQualifications)
+        $importAliases = ['ImportStaffQualifications'];
+        if (in_array($action, $importAliases)) {
+            return true;
+        }
+        //POCOR-9584: end
 //        $this->log(print_r($request,true), debug);
         return false;
     }
@@ -1055,23 +1062,25 @@ class StudentsController extends AppController
 
         $institutionClassId = (!empty($InstitutionClassStudentsResult)) ? $InstitutionClassStudentsResult['institution_class_id'] : 0;
 
+        //POCOR-9594: start - fetch ALL published timetables (one per term+shift), not just the first
         $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables')
             ->find()
+            ->contain(['ScheduleTerms', 'ScheduleIntervals.Shifts.ShiftOptions'])
             ->where([
-                'academic_period_id' => $academicPeriodId,
-                'institution_class_id' => $institutionClassId,
-                'institution_id' => $institutionId,
-                'status' => 2
+                'ScheduleTimetables.academic_period_id' => $academicPeriodId,
+                'ScheduleTimetables.institution_class_id' => $institutionClassId,
+                'ScheduleTimetables.institution_id' => $institutionId,
+                'ScheduleTimetables.status' => 2
             ])
-            ->enableHydration(false)
-            ->first();
+            ->order(['ScheduleTerms.name', 'ShiftOptions.name'])
+            ->toArray();
+        //POCOR-9594: end
 
         $this->set('userId', $userId);
-        $timetable_id = (isset($ScheduleTimetables['id'])) ? $ScheduleTimetables['id'] : 0;
-        $this->set('timetable_id', $timetable_id);
+        $this->set('timetables', $ScheduleTimetables); //POCOR-9594: pass all timetables
         $this->set('academicPeriodId', $academicPeriodId);
         $this->set('institutionDefaultId', $institutionId);
-        $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
+        // ngController intentionally not set — each timetable block renders its own ng-controller instance //POCOR-9594
 
         // Start POCOR-5188
         $manualTable = TableRegistry::getTableLocator()->get('Manuals');

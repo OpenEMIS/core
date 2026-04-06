@@ -29,7 +29,8 @@ class StudentMealImportTemplateRequest extends FormRequest
     {
         return [
             'institution_class_id' => 'required|int',
-            'institution_id' => 'required|int'
+            'institution_id'       => 'required|int',
+            'meal_programme_id'    => 'nullable|int', //POCOR-9594: optional — filter template references to the selected programme only
         ];
     }
 
