@@ -951,13 +951,11 @@ class InstitutionsTable extends ControllerActionTable
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         $LatLongPermission = $ConfigItems->value("latitude_longitude"); //POCOR-7045
-        $LatPermission = $ConfigItems->value("latitude_mandatory"); //POCOR-7045
-        $LongPermission = $ConfigItems->value("longitude_mandatory"); //POCOR-7045
-        dd([
-            '$LatLongPermission' => $LatLongPermission,
-            '$LatPermission' => $LatPermission,
-            '$LongPermission' => $LongPermission,
-        ]);
+        $LatPermission = $LatLongPermission; //POCOR-9257: legacy key — mirror latitude_longitude so they never diverge
+        $LongPermission = $LatLongPermission; //POCOR-9257: legacy key — mirror latitude_longitude so they never diverge
+        //POCOR-9257: keep legacy latitude_mandatory/longitude_mandatory in sync with latitude_longitude
+        $ConfigItems->updateAll(['value' => $LatLongPermission], ['code IN' => ['latitude_mandatory', 'longitude_mandatory']]);
+
         $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
