@@ -7527,6 +7527,14 @@ class InstitutionsController extends AppController
         $academicPeriodId = $requestData['academic_period_id'] ?? null;
         $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
         $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+        //POCOR-9635: end_date sent as "0000-00-00" or "1970-01-01" from disabled form field — fall back to academic period end_date
+        if (empty($endDate) || $endDate === '1970-01-01' || $endDate === '0000-00-00') {
+            if (!empty($academicPeriodId)) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $period = $AcademicPeriods->find()->select(['end_date'])->where(['id' => $academicPeriodId])->first();
+                $endDate = !empty($period) ? date('Y-m-d', strtotime($period->end_date)) : null;
+            }
+        }
         //POCOR-8434 starts
         $studentAdmissionStatus = !empty($requestData['student_admission_status']) ? $requestData['student_admission_status'] : null;//POCOR-7716
         $studentAdmissionStatusValue = !empty($requestData['student_admission_status_value']) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
