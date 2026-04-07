@@ -166,7 +166,15 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $extra['elements']['controls'] = [
+            'name' => 'Institution.Behaviours/controls',
+            'data' => ['encodedQueryString' => $encodedQueryString],
+            'options' => [],
+            'order' => 1
+        ];
         $periodOptions = $this->AcademicPeriods->getYearList();
         $requestData = $this->request->getQuery('academic_period_id');
         if (empty($requestData)) {
