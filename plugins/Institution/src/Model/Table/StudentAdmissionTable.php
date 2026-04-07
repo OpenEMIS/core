@@ -671,13 +671,13 @@ class StudentAdmissionTable extends ControllerActionTable
                         try {
                             $this->autoAssignAssignee($entity);
                             $this->save($entity);
-                            $saved = true;
-                        } catch (\Exception $exception) {
-                            try {
+                                                        $saved = true;
+                                                    } catch (\Exception $exception) {
+                                                        try {
                                 $this->save($entity);
-                                $saved = true;
-                            } catch (\Exception $exception) {
-                                $entity->assignee_id = $entity->created_user_id;
+                                                            $saved = true;
+                                                        } catch (\Exception $exception) {
+                                                            $entity->assignee_id = $entity->created_user_id;
                                 $this->save($entity);
                                 $saved = true;
                             }

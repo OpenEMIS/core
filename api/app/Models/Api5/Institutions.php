@@ -2,6 +2,7 @@
 
 namespace App\Models\Api5;
 
+use App\Models\Concerns\WebhookQueueTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
@@ -12,7 +13,11 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class Institutions extends Model
 {
     use HasFactory;
-use InstitutionScope;
+    use InstitutionScope;
+
+    // POCOR-9257: Configure webhook events
+    use WebhookQueueTrait;
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'name', 'alternative_name', 'code', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website', 'date_opened', 'year_opened', 'date_closed', 'year_closed', 'longitude', 'latitude', 'logo_name', 'logo_content', 'shift_type', 'classification','vision', 'mission', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id','modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
