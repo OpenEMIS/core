@@ -423,6 +423,7 @@ class ControllerActionHelper extends Helper
                     'value' => !empty($limit) ?  $limit : 0,//POCOR-8677
                     'options' => $pageOptions,
                     'onchange' => "$(this).closest('form').submit()",
+                    'style' => 'margin-bottom: -4px;', //POCOR-9631
                     'templates' => $this->getFormTemplate()
                 ]);
             }
