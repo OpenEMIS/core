@@ -139,11 +139,24 @@ class ExcelBehavior extends Behavior
             $generate = $event->getResult();
         }
 
+        //POCOR-9567: start - open CSV companion file before generate so rows can be written in parallel
+        $csvFilepath = $_settings['path'] . preg_replace('/\.xlsx$/i', '.csv', $_settings['file']);
+        $csvHandle = fopen($csvFilepath, 'w');
+        $_settings['csv_handle'] = $csvHandle;
+        //POCOR-9567: end
+
         $generate($_settings);
 
         $filepath = $_settings['path'] . $_settings['file'];
         $_settings['file_path'] = $filepath;
         $writer->writeToFile($_settings['file_path']);
+
+        //POCOR-9567: start - close CSV companion file after xlsx write completes
+        if (isset($_settings['csv_handle']) && is_resource($_settings['csv_handle'])) {
+            fclose($_settings['csv_handle']);
+        }
+        //POCOR-9567: end
+
         $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerateComplete'), 'onExcelGenerateComplete', [$_settings]);
 
         if ($_settings['download']) {
@@ -336,6 +349,11 @@ class ExcelBehavior extends Behavior
 
                 $writer->writeSheetHeader($sheetName, $headerFormat, true);
                 $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
+                //POCOR-9567: write header row to companion CSV
+                if (isset($settings['csv_handle']) && is_resource($settings['csv_handle'])) {
+                    fputcsv($settings['csv_handle'], $headerRow);
+                }
+                //POCOR-9567: end
 
                 $this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
 
@@ -379,6 +397,11 @@ class ExcelBehavior extends Behavior
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
                         if (!$event->getResult()) {
                             $writer->writeSheetRow($sheetName, $row, $rowStyle);
+                            //POCOR-9567: write data row to companion CSV
+                            if (isset($settings['csv_handle']) && is_resource($settings['csv_handle'])) {
+                                fputcsv($settings['csv_handle'], $row);
+                            }
+                            //POCOR-9567: end
                         }
                     }
                 }
