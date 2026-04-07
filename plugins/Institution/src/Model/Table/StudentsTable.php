@@ -2341,6 +2341,7 @@ class StudentsTable extends ControllerActionTable
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();
+        $params['options']['title'] = ['text' => __('Number of Students')]; //POCOR-9636: Rename chart label
 
         return $params;
     }
