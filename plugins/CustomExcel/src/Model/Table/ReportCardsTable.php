@@ -387,8 +387,16 @@ class ReportCardsTable extends AppTable
 
             $reportStartDate = $reportCard->start_date;
             $reportEndDate   = $reportCard->end_date;
-
-            if (!empty($student_id) && !empty($institution_id) &&
+            $this->handleGpaGeneration(
+                    $report_card_id,
+                    $student_id,
+                    $institution_id,
+                    $academic_period_id,
+                    $education_grade_id,
+                    $reportStartDate,
+                    $reportEndDate
+                );
+            /*if (!empty($student_id) && !empty($institution_id) &&
                 !empty($education_grade_id) && !empty($academic_period_id)) {
 //                ReportCardGpaTable::addGpaReportCards(
 //                    $student_id,
@@ -402,7 +410,7 @@ class ReportCardsTable extends AppTable
                     $education_grade_id,
                     $reportStartDate,
                     $reportEndDate);
-            }
+            }*/
 
             $StudentsReportCards = self::getDynamicTableInstance('Institution.InstitutionStudentsReportCards');
             $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
@@ -582,6 +590,61 @@ class ReportCardsTable extends AppTable
             }
             //POCOR-8967 -- END
             return $entity;
+        }
+    }
+
+    private function handleGpaGeneration(
+    $report_card_id,
+    $student_id,
+    $institution_id,
+    $academic_period_id,
+    $education_grade_id,
+    $reportStartDate,
+    $reportEndDate
+    ) 
+    {
+        $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
+        $reportCard = $ReportCards->get($report_card_id);
+
+        if (empty($student_id) || empty($institution_id) ||
+            empty($education_grade_id) || empty($academic_period_id)) {
+            return;
+        }
+
+        //Regenerate GPA
+        if ($reportCard->regenerate_gpa == 1) {
+            ReportCardGpaTable::addGpaReportCards(
+                $student_id,
+                $academic_period_id,
+                $institution_id,
+                $education_grade_id
+            );
+        }
+
+        //Regenerate Cumulative GPA
+        if ($reportCard->regenerate_cumulative_gpa == 1) {
+            ReportCardCumulativeGpaTable::addGpaReportCards(
+                $student_id,
+                $academic_period_id,
+                $institution_id,
+                $education_grade_id,
+                $reportStartDate,
+                $reportEndDate
+            );
+        }
+
+        //Default case
+        if ($reportCard->regenerate_gpa != 1 &&
+            $reportCard->regenerate_cumulative_gpa != 1) {
+
+            ReportCardCumulativeGpaTable::addGpaReportCards(
+                $student_id,
+                $academic_period_id,
+                $institution_id,
+                $education_grade_id,
+                $reportStartDate,
+                $reportEndDate
+            );
         }
     }
 
