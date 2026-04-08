@@ -556,7 +556,8 @@ class StudentsTable extends AppTable
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
-        $institutionId = $requestData->institution_id;
+        //$institutionId = $requestData->institution_id;
+        $institutionIds = $requestData->institution_id->_ids ?? [];
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
         $selectedArea = $requestData->area_education_id;//POCOR-8768
@@ -572,16 +573,28 @@ class StudentsTable extends AppTable
                 $allselectedAreas = array_merge($selectedArea1, $allgetArea);
             }else{
                 $allselectedAreas = $selectedArea1;
-            }//POCOR-6944 code ends
+            }
             $conditions['Institution.area_id IN'] = $allselectedAreas;//POCOR-8768
-        } //POCOR-8598 end
+        } 
        
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
         }
        
-        if (!empty($institutionIds) &&  ($institutionIds > 0)) { //POCOR-8417
-            $conditions['InstitutionStaff.institution_id IN'] = $institutionIds;
+        // Institution Filter (_ids logic)
+        if (!empty($institutionIds) &&  ($institutionIds > 0)) {
+            if (in_array(0, $institutionIds)) {
+                if (!$superAdmin) {
+                    $conditions['InstitutionStudent.institution_id IN'] = array_keys($institutionList);
+                }
+            } else {
+                $conditions['InstitutionStudent.institution_id IN'] = $institutionIds;
+            }
+        }
+
+        // Area Filter
+        if (!empty($areaId) && $areaId != -1) {
+            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId;
         }
 
         if (!empty($enrolled)) {
