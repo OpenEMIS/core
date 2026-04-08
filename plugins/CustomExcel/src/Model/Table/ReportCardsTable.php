@@ -620,7 +620,6 @@ class ReportCardsTable extends AppTable
         $ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
         $reportCard = $ReportCards->get($report_card_id);
 
-        // Validate required params
         if (empty($student_id) || empty($institution_id) ||
             empty($education_grade_id) || empty($academic_period_id)) {
             return;
@@ -629,9 +628,23 @@ class ReportCardsTable extends AppTable
         $regenGpa  = (int)$reportCard->regenerate_gpa;
         $regenCgpa = (int)$reportCard->regenerate_cumulative_gpa;
 
-        //Case 1: BOTH YES.  GPA + Cumulative GPA
+        $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+
+        $existing = $StudentsGpa->find()
+            ->where([
+                'student_id' => $student_id,
+                'institution_id' => $institution_id,
+                'academic_period_id' => $academic_period_id,
+                'education_grade_id' => $education_grade_id
+            ])
+            ->first();
+
+        $isNew = empty($existing);
+
+        //Case 1: BOTH YES
         if ($regenGpa === 1 && $regenCgpa === 1) {
 
+            //regenerate gpa/cgpa (update allowed)
             ReportCardCumulativeGpaTable::addGpaReportCards(
                 $student_id,
                 $academic_period_id,
@@ -644,6 +657,7 @@ class ReportCardsTable extends AppTable
         //Case 2: ONLY GPA
         } elseif ($regenGpa === 1 && $regenCgpa === 0) {
 
+            // Always regenerate GPA
             ReportCardGpaTable::addGpaReportCards(
                 $student_id,
                 $academic_period_id,
@@ -651,21 +665,34 @@ class ReportCardsTable extends AppTable
                 $education_grade_id
             );
 
-        //Case 3: ONLY CUMULATIVE GPA
+        //Case 3: ONLY CGPA
         } elseif ($regenGpa === 0 && $regenCgpa === 1) {
 
+            // DO NOT update existing → only insert if missing
             ReportCardCumulativeGpaTable::addGpaReportCardRegenrate(
                 $student_id,
                 $academic_period_id,
                 $institution_id,
                 $education_grade_id,
                 $reportStartDate,
-                $reportEndDate
+                $reportEndDate,
+                false // regenerate = NO
             );
 
-        //Case 4: BOTH NO → DO NOTHING
+        //Case 4: BOTH NO
         } else {
-            
+
+            // Default: insert only if no record exists
+            if ($isNew) {
+                ReportCardCumulativeGpaTable::addGpaReportCards(
+                    $student_id,
+                    $academic_period_id,
+                    $institution_id,
+                    $education_grade_id,
+                    $reportStartDate,
+                    $reportEndDate
+                );
+            }
         }
     }
     public function onExcelTemplateInitialiseFirstGuardian(EventInterface $event, array $params, ArrayObject $extra)
