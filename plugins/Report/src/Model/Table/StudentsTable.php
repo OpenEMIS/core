@@ -56,6 +56,17 @@ class StudentsTable extends AppTable
         return $events;
     }
 
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+            return $validator;
+    }
+
     public function validationSubjectsBookLists(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
