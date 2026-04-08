@@ -2692,4 +2692,90 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
+    //POCOR-9629 calculate CGPA only
+    public static function addGpaReportCardRegenrate(
+    $checkgpaStudent,
+    $selectedAcademicPeriodId,
+    $institutionId,
+    $educationGradeId,
+    $reportStartDate = null,
+    $reportEndDate = null
+    ): array {
+
+        $studentId        = $checkgpaStudent;
+        $academicPeriodId = $selectedAcademicPeriodId;
+
+        // 1. Get enrollment
+        $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $enrollment = $institutionStudents->find()
+            ->where([
+                'student_id' => $studentId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'education_grade_id' => $educationGradeId,
+            ])
+            ->first();
+
+        if (!$enrollment) {
+            return [];
+        }
+
+        // 2. Get GPA terms
+        $gpaGrades = self::getDynamicTableInstance('Gpa.GpaSystem');
+
+        $gpaResults = $gpaGrades->find()
+            ->select(['id', 'start_date', 'end_date'])
+            ->where([
+                'academic_period_id' => $academicPeriodId,
+                'education_grade_id' => $educationGradeId,
+                'start_date <=' => $enrollment->end_date,
+                'end_date >='   => $enrollment->start_date,
+            ])
+            ->orderAsc('start_date')
+            ->toArray();
+
+        if (empty($gpaResults)) {
+            return [];
+        }
+
+        // 3. Filter GPA IDs 
+        $gpaIds = [];
+
+        foreach ($gpaResults as $gpa) {
+            if ($reportStartDate && $reportEndDate) {
+                if (
+                    $gpa->start_date <= $reportEndDate &&
+                    $gpa->end_date   >= $reportStartDate
+                ) {
+                    $gpaIds[] = $gpa->id;
+                }
+            } else {
+                if ($gpa->start_date <= FrozenDate::today()) {
+                    $gpaIds[] = $gpa->id;
+                }
+            }
+        }
+
+        $gpaIds = array_values(array_unique($gpaIds));
+
+        if (empty($gpaIds)) {
+            return [];
+        }
+
+        // ONLY cumulative GPA calculation (NO individual GPA insert)
+        $results = [];
+
+        foreach ($gpaIds as $gpaId) {
+            $results[] = self::insertCumulativeGpaPerStudentPerGpa(
+                $institutionId,
+                $studentId,
+                $academicPeriodId,
+                $educationGradeId,
+                $gpaId
+            );
+        }
+
+        return $results;
+    }
+
 }
