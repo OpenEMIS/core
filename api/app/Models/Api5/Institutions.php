@@ -14,7 +14,9 @@ class Institutions extends Model
     use HasFactory;
 use InstitutionScope;
     // ✅ Allow mass assignment
+    //POCOR-9610: start - Persist external registrations sync fields on institution records
     protected $fillable = ['id', 'name', 'alternative_name', 'code', 'external_id', 'registration_status', 'registration_valid_until', 'address', 'postal_code', 'contact_person', 'telephone', 'email', 'website', 'date_opened', 'year_opened', 'date_closed', 'year_closed', 'longitude', 'latitude', 'logo_name', 'logo_content', 'shift_type', 'classification','vision', 'mission', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'area_id', 'area_administrative_id', 'institution_locality_id', 'institution_type_id', 'institution_ownership_id', 'institution_status_id', 'institution_sector_id', 'institution_provider_id', 'institution_gender_id', 'security_group_id','modified_user_id', 'created_user_id'];
+    //POCOR-9610: end
     // ✅ Treat 'modified' and 'created' as timestamps
     protected $dates = ['modified', 'created'];
 
@@ -23,10 +25,12 @@ use InstitutionScope;
 
     protected $appends = ['code_name'];
 
+    //POCOR-9610: start - Bind the Api5 model to the existing root Database\Factories namespace
     protected static function newFactory()
     {
         return \Database\Factories\InstitutionsFactory::new();
     }
+    //POCOR-9610: end
 
 
 /**
