@@ -11,13 +11,10 @@ use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
-
 // use Page\Traits\EncodingTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Http\ServerRequest;
@@ -65,22 +62,25 @@ class StudentBehavioursTable extends ControllerActionTable
 
         //if ($this->AccessControl->check(['Institutions', 'StudentBehaviours', 'Excel'])) { // to check execute permission
         ///}
-        $roles = [1,2,3,4,5,6,7,8,9,10,11];
-        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
-                    'SecurityFunctions._execute'=>'StaffBehaviours.excel',
-                    'SecurityRoleFunctions._execute' => 1
-                ])
-                ->toArray();
-        if(!empty($QueryResult)){
-            $this->addBehavior('Excel', ['pages' => ['index']]);
-        }
+        //POCOR-9632[START] This code need to verify again commented based on releted ticket
+        // $roles = [1,2,3,4,5,6,7,8,9,10,11];
+        // $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
+        //         ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+        //             [
+        //                 'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+        //             ]
+        //         ])
+        //         ->where([
+        //             'SecurityRoleFunctions.security_role_id IN'=>$roles,
+        //             'SecurityFunctions._execute'=>'StaffBehaviours.excel',
+        //             'SecurityRoleFunctions._execute' => 1
+        //         ])
+        //         ->toArray();
+        // if(!empty($QueryResult)){
+        //     $this->addBehavior('Excel', ['pages' => ['index']]);
+        // }
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        //POCOR-9632[END]
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['StudentBehaviours' =>['id']
             ]
@@ -352,10 +352,16 @@ class StudentBehavioursTable extends ControllerActionTable
 
         $selectedCategories = $this->queryString('category_id', $categories);
         $this->advancedSelectOptions($categories, $selectedCategories);
-        // End setup class
+        $selectedCategories = $this->queryString('category_id', $categories);
+        $this->advancedSelectOptions($categories, $selectedCategories);
+        //POCOR-9652 start
+        $query->contain(['Statuses']);
+        if(!empty($this->request->getQuery('category_id')))
+        {
+            $query->where(['Statuses.category' => $this->request->getQuery('category_id') ]);
+        }//POCOR-9652 end
 
         $this->controller->set(compact('periodOptions', 'classOptions','categories'));
-
         if ($selectedClass > 0) {
             $query->innerJoin(
                 ['class_student' => 'institution_class_students'],
@@ -365,7 +371,6 @@ class StudentBehavioursTable extends ControllerActionTable
                 ]
             );
         }
-
         // will need to check for search by name: AdvancedNameSearchBehavior
 
         // POCOR-2547 Adding sortWhiteList to $options

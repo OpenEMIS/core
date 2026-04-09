@@ -8,6 +8,22 @@ $icon = strpos($_productName, 'School') !== false ? '_school' : '';
 <head>
 	<?= $this->Html->charset(); ?>
 	<title><?= $description ?></title>
+	<script>
+		//POCOR-9633: Clear stale baseCoreUrl if origin has changed — prevents Angular from calling wrong API path
+		(function() {
+			var stored = localStorage.getItem('baseCoreUrl');
+			if (stored) {
+				try {
+					var storedOrigin = new URL(stored).origin;
+					if (storedOrigin !== window.location.origin) {
+						localStorage.removeItem('baseCoreUrl');
+					}
+				} catch(e) {
+					localStorage.removeItem('baseCoreUrl');
+				}
+			}
+		})();
+	</script>
 	<?php
 		echo $this->Html->meta(['name' => 'viewport', 'content' => 'width=320, initial-scale=1']);
 		echo $this->Html->meta('favicon', 'favicon'.$icon.'.ico', ['type' => 'icon']);
