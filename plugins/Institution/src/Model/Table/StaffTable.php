@@ -3494,7 +3494,7 @@ class StaffTable extends ControllerActionTable
                                     ])->first();
                             }
                             //POCOR-9028
-                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class', 'subject_edit_data' =>  $InstitutionSubjectStaffData];
+                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class', 'subject_edit_data' =>  $InstitutionSubjectStaffData =[]]; //POCOR-9618
                         }
                     }
                 }
@@ -4333,6 +4333,17 @@ class StaffTable extends ControllerActionTable
                 ])
                 ->enableHydration(false);
 
+                $allStaffAttendancesQuery = $InstitutionStaffAttendances
+                    ->find('all')
+                    ->where([
+                        $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                        $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                        $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                        $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                    ]);
+            } catch (\Throwable $e) {
+                return [];
+            }
         }
 
         $attendanceByStaffIdRecords = [];
@@ -4464,7 +4475,10 @@ class StaffTable extends ControllerActionTable
                     ->enableHydration(false)
                     ->toArray();
             } else {
-                $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+                //POCOR-9606
+                // $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+                $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Institution.StaffLeaveArchived');
+                //POCOR-9606
                 $allStaffLeaves = $StaffLeaveTable
                     ->find()
                     ->where($commonConditions)
@@ -4767,10 +4781,9 @@ class StaffTable extends ControllerActionTable
         $conditionQuery[$this->aliasField('staff_id') . ' IN'] = $staffIdsWithArchivedAttendance;
 
         //POCOR-6971[START]
-
+        
         //Gets all the days in the selected week based on its start date end date
         $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
-
 //        $query = $this->getQueryWithShiftId($query, $shiftId);
         $query = $query
             ->matching('Users')

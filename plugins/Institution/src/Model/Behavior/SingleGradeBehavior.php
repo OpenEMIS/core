@@ -231,6 +231,9 @@ class SingleGradeBehavior extends Behavior
                     $requestData['MultiClasses'][$key]['capacity'] = $commonData['capacity'];
                     $requestData['MultiClasses'][$key]['education_grades']['_ids'] = [$commonData['education_grade']];
                     $requestData['MultiClasses'][$key]['secondary_staff'] = $requestData['MultiClasses'][$key]['classes_secondary_staff'];
+                    //POCOR-9257: default to 0 so NOT NULL constraint is satisfied for new classes
+                    $requestData['MultiClasses'][$key]['total_male_students'] = 0;
+                    $requestData['MultiClasses'][$key]['total_female_students'] = 0;
                 }
 
                 $classes = $model->newEntities($requestData['MultiClasses']);

@@ -552,8 +552,6 @@ class DataManagementConnectionsTable extends ControllerActionTable
             ->distinct(['academic_period_id'])
             ->toArray();
         $distinctYearValues = array_column($distinctYears, 'academic_period_id');
-//        Log::write('debug', '$distinctYearValues');
-//        Log::write('debug', $distinctYearValues);
         $uniqu_array = array_unique($distinctYearValues);
 
         return $uniqu_array;
@@ -678,8 +676,6 @@ class DataManagementConnectionsTable extends ControllerActionTable
         }
 
         $distinctResultsValues = array_column($distinctResults, 'institution_class_id');
-//        Log::write('debug', '$distinctResultsValues');
-//        Log::write('debug', $distinctResultsValues);
         $uniqu_array = array_unique($distinctResultsValues);
 
         return $uniqu_array;
@@ -716,11 +712,15 @@ class DataManagementConnectionsTable extends ControllerActionTable
     /**
      * @param $table_name
      * @return Table
+     * @throws \Cake\Http\Exception\NotFoundException when no archive table exists
      */
     public static function getArchiveTable($table_name)
     {
         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
+        if ($targetTableName === '') {
+            throw new NotFoundException('Archive table not available for ' . $table_name);
+        }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
 
@@ -732,6 +732,9 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
+        if ($targetTableName === '') {
+            return [];
+        }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
         $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
@@ -754,6 +757,9 @@ class DataManagementConnectionsTable extends ControllerActionTable
 
         $targetTableNameAndConnection = self::getArchiveTableAndConnection($table_name);
         $targetTableName = $targetTableNameAndConnection[0];
+        if ($targetTableName === '') {
+            return [];
+        }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
         $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
