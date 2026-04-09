@@ -631,20 +631,24 @@ class ReportCardsTable extends AppTable
         $regenCgpa = (int)$reportCard->regenerate_cumulative_gpa;
 
         $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
-
-        $existing = $StudentsGpa->find()
+        $records = $StudentsGpa->find()
             ->where([
                 'student_id' => $student_id,
                 'institution_id' => $institution_id,
                 'academic_period_id' => $academic_period_id,
                 'education_grade_id' => $education_grade_id
             ])
-            ->first();
-
-        $isNew = empty($existing);
-        $hasMissingValues = !empty($existing) && ($existing->gpa === null || $existing->cumulative_gpa === null);
+            ->toArray();
+        $isNew = empty($records);
+        $hasMissingValues = false;
+        foreach ($records as $row) {
+            if ($row->gpa === null || $row->cumulative_gpa === null) {
+                $hasMissingValues = true;
+                break;
+            }
+        }
         
-         //if GPA or CGPA is NULL
+        //if GPA or CGPA is NULL
         if ($isNew || $hasMissingValues) {
             ReportCardCumulativeGpaTable::addGpaReportCards(
                 $student_id,
