@@ -387,11 +387,7 @@ class AppTable extends Table
     public function onInitializeButtons(EventInterface $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
 
-        // echo '<pre>';
-        // print_r($this->request->params);
-        // echo $this->request->url;
-        // die;
-        // needs clean up
+//         needs clean up
         $controller = $event->getSubject()->_registry->getController();
         $access = $controller->AccessControl;
 
@@ -1002,10 +998,16 @@ class AppTable extends Table
 
     public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons START (table: ' . $this->getAlias() . ')');
+        //Log::debug('[TEMP-LOG] Incoming buttons: ' . print_r($buttons, true));
+
         $id = $this->getEncodedKeys($entity);
+        //Log::debug('[TEMP-LOG] Encoded key: ' . $id);
 
         if (isset($buttons['view'])) {
+            //Log::debug('[TEMP-LOG] View button URL before append: ' . print_r($buttons['view']['url'], true));
             $buttons['view']['url'][] = $id;
+            //Log::debug('[TEMP-LOG] View button URL after append: ' . print_r($buttons['view']['url'], true));
         }
         if (isset($buttons['edit'])) {
             $buttons['edit']['url'][] = $id;
@@ -1021,6 +1023,10 @@ class AppTable extends Table
                 $buttons['remove']['url'][] = $id;
             }
         }
+
+        //Log::debug('[TEMP-LOG] AppTable final buttons: ' . print_r($buttons, true));
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons END');
+
         return $buttons;
     }
 

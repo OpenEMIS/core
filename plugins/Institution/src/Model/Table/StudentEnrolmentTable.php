@@ -388,7 +388,7 @@ class StudentEnrolmentTable extends ControllerActionTable
                 $incomingStudent['class'] = $entity->institution_class_id;
             }
 
-            $newEntity = $Students->newEntity($incomingStudent);
+                $newEntity = $Students->newEntity($incomingStudent);
             $student = $Students->save($newEntity);
 
             if (!$student) {
@@ -968,7 +968,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
+            $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = self::getDynamicTableInstance('Workflow.WorkflowActions');
