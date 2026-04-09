@@ -25,10 +25,15 @@ class AlertLogsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    //POCOR-9509: Numeric status constants — matches alert_logs.status SMALLINT values
+    const STATUS_PENDING = 0;
+    const STATUS_SENT = 1;
+    const STATUS_FAILED = -1;
+
     private $statusTypes = [
-        0 => 'Pending',
-        1 => 'Success',
-        -1 => 'Failed'
+        self::STATUS_PENDING => 'Pending',
+        self::STATUS_SENT => 'Success',
+        self::STATUS_FAILED => 'Failed'
     ];
 
     private $featureGrouping = [];
@@ -653,7 +658,7 @@ class AlertLogsTable extends ControllerActionTable
                 'feature' => $feature,
                 'method' => $method,
                 'destination' => $recipient,
-                'status' => 0,
+                'status' => self::STATUS_PENDING, //POCOR-9509: use constant
                 'subject' => $subject,
                 'message' => $message,
                 'checksum' => $checksum

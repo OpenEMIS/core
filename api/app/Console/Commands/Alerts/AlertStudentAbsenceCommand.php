@@ -171,8 +171,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
 
         // Check against threshold
         if ($totalDays < $threshold) {
-            $this->info("Student has {$totalDays} absence days, below threshold of {$threshold}");
-            //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - Below threshold'); //[TEMP-LOG]
+            // $this->info("Student has {$totalDays} absence days, below threshold of {$threshold}"); //POCOR-9509: commented out per CLAUDE.md            //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - Below threshold'); //[TEMP-LOG]
             return [];
         }
 

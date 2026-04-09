@@ -72,8 +72,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
 
         // Validate threshold
         if (!$statusTypeId || !$value || !in_array($condition, [self::CONDITION_DAYS_BEFORE, self::CONDITION_DAYS_AFTER], true)) {
-            $this->info("Invalid threshold configuration");
-            return [];
+            // $this->info("Invalid threshold configuration"); //POCOR-9509: commented out per CLAUDE.md            return [];
         }
 
         // Build date condition

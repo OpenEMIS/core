@@ -82,8 +82,7 @@ class AlertLicenseRenewalCommand extends AlertCommandBase
 
         //POCOR-9509: Validate required threshold values
         if (!$daysBefore || !$licenseTypeId) {
-            $this->info("Invalid threshold configuration for LicenseRenewal");
-            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() EXIT [] - Invalid threshold (daysBefore=' . $daysBefore . ', licenseTypeId=' . $licenseTypeId . ')'); //[TEMP-LOG]
+            // $this->info("Invalid threshold configuration for LicenseRenewal"); //POCOR-9509: commented out per CLAUDE.md            // Log::debug('[TEMP-LOG] @' . class_basename($this) . '::getPendingItems() EXIT [] - Invalid threshold (daysBefore=' . $daysBefore . ', licenseTypeId=' . $licenseTypeId . ')'); //[TEMP-LOG]
             return [];
         }
 

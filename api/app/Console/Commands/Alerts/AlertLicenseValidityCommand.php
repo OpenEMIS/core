@@ -88,8 +88,7 @@ class AlertLicenseValidityCommand extends AlertCommandBase
 
         //POCOR-9509: validate required threshold fields
         if (!$value || !$licenseTypeId || !in_array($condition, [self::CONDITION_DAYS_BEFORE, self::CONDITION_DAYS_AFTER], true)) {
-            $this->info("Invalid threshold configuration for LicenseValidity");
-            return [];
+            // $this->info("Invalid threshold configuration for LicenseValidity"); //POCOR-9509: commented out per CLAUDE.md            return [];
         }
 
         //POCOR-9509: start - build DATEDIFF condition matching CakePHP getModelAlertData

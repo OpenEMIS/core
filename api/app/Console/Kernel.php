@@ -25,6 +25,14 @@ class Kernel extends ConsoleKernel
             ->onSuccess(function () {
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
+
+        // POCOR-9509: Alert queue processing
+        $schedule->command('alerts:process', ['--limit=50'])
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('[AlertScheduler] Alert queue processor failed');
+            });
     }
 
     /**

@@ -98,8 +98,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
         $studentStatusIds = $threshold['statuses'] ?? [];
 
         if (empty($studentStatusIds)) {
-            $this->info("No statuses configured in threshold");
-            return [];
+            // $this->info("No statuses configured in threshold"); //POCOR-9509: commented out per CLAUDE.md            return [];
         }
 
         // Query student with all related data including guardians

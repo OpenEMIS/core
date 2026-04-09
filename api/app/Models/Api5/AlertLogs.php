@@ -23,8 +23,8 @@ class AlertLogs extends Model
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
 
-    // ✅ Treat 'modified' and 'created' as timestamps
-    protected $dates = ['modified', 'created'];
+    // ✅ Treat 'created' as timestamp (alert_logs has no 'modified' column) //POCOR-9509: removed 'modified'
+    protected $dates = ['created'];
 
     // ✅ Define the primary key
 

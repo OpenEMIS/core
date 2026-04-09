@@ -15,6 +15,10 @@ use App\Models\Api5\AlertLogs;
 
 class ProcessAlertQueue extends Command
 {
+    //POCOR-9509: alert_queue has 4 states (AlertLogs only has 3 — no PROCESSING state)
+    const QUEUE_STATUS_PROCESSING = 1;
+    const QUEUE_STATUS_SENT = 2;
+
     protected $signature = 'alerts:process {--limit=50}';
     protected $description = 'Process pending alerts from alert_queue';
 
@@ -33,7 +37,7 @@ class ProcessAlertQueue extends Command
             return Command::SUCCESS;
         }
 
-        $this->info("Processing {$alerts->count()} alerts...");
+        // $this->info("Processing {$alerts->count()} alerts..."); //POCOR-9509: commented out per CLAUDE.md
 
         foreach ($alerts as $alert) {
             $this->processSingleAlert($alert);
@@ -77,7 +81,7 @@ class ProcessAlertQueue extends Command
                 ->where('id', $alert->id)
                 ->where('status', AlertLogs::STATUS_PENDING) //POCOR-9509: use constant
                 ->update([
-                    'status' => 1, //POCOR-9509: alert_queue processing state (no constant in AlertLogs — use raw 1)
+                    'status' => self::QUEUE_STATUS_PROCESSING, //POCOR-9509: alert_queue processing state
                     'modified' => now(),
                 ]);
 
@@ -120,7 +124,7 @@ class ProcessAlertQueue extends Command
                 DB::table('alert_queue')
                     ->where('id', $alert->id)
                     ->update([
-                        'status' => 2, //POCOR-9509: alert_queue STATUS_SENT=2 (queue has extra PROCESSING state)
+                        'status' => self::QUEUE_STATUS_SENT, //POCOR-9509: alert_queue STATUS_SENT=2 (queue has extra PROCESSING state)
                         'sent_at' => now(),
                         'modified' => now(),
                     ]);

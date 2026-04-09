@@ -137,8 +137,7 @@ abstract class AlertCommandBase extends Command
             ->get();
 
         if ($roles->isEmpty()) {
-            $this->info("No roles assigned to alert rule ID {$this->ruleId}. Skipping.");
-            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - No roles assigned'); //[TEMP-LOG]
+            // $this->info("No roles assigned to alert rule ID {$this->ruleId}. Skipping."); //POCOR-9509: commented out per CLAUDE.md            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - No roles assigned'); //[TEMP-LOG]
             return false;
         }
 
@@ -174,12 +173,11 @@ abstract class AlertCommandBase extends Command
             //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() getPendingItems returned ' . count($pendingItems) . ' items'); //[TEMP-LOG]
 
             if (empty($pendingItems)) {
-                $this->info("✅ Alert {$featureKey} has no pending items");
-                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXIT SUCCESS - No pending items'); //[TEMP-LOG]
+                // $this->info("✅ Alert {$featureKey} has no pending items"); //POCOR-9509: commented out per CLAUDE.md                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXIT SUCCESS - No pending items'); //[TEMP-LOG]
                 return Command::SUCCESS;
             }
 
-            $this->info("Processing " . count($pendingItems) . " pending items for {$featureKey}");
+            // $this->info("Processing " . count($pendingItems) . " pending items for {$featureKey}");
             //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Starting loop over ' . count($pendingItems) . ' items'); //[TEMP-LOG]
 
             $itemCount = 0;
@@ -338,8 +336,7 @@ abstract class AlertCommandBase extends Command
             if ($queued) {
                 $shortSubject = mb_strimwidth($subject, 0, 100, '...');
                 $shortMessage = mb_strimwidth($message, 0, 100, '...');
-                $this->info("✅ Alert {$this->featureName} queued via {$method} to {$recipient}");
-                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() INSERT SUCCESS'); //[TEMP-LOG]
+                // $this->info("✅ Alert {$this->featureName} queued via {$method} to {$recipient}"); //POCOR-9509: commented out per CLAUDE.md                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() INSERT SUCCESS'); //[TEMP-LOG]
                 // Log::debug("[POCOR-9509] Alert queued", [
                 //     'feature' => $this->featureName,
                 //     'method' => $method,

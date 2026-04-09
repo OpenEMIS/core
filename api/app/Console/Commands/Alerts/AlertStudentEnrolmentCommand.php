@@ -111,8 +111,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         $workflowStepIds = $threshold['workflow_steps'] ?? [];
 
         if (empty($workflowStepIds)) {
-            $this->info("No workflow steps configured in threshold");
-            return [];
+            // $this->info("No workflow steps configured in threshold"); //POCOR-9509: commented out per CLAUDE.md            return [];
         }
 
         // Query enrolment with all related data including guardians

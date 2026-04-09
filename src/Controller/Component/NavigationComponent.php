@@ -3855,7 +3855,7 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
                     ],
-                    'Alerts.Queue' => [
+                    'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
                         'title' => 'Queue',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
@@ -3897,7 +3897,7 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
                 ],
-                'Alerts.Queue' => [
+                'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
                     'title' => 'Queue',
                     'parent' => 'Administration.Communications',
                     'params' => ['plugin' => 'Alert'],
