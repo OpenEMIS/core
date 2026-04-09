@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
 
+use App\Models\Concerns\WebhookQueueTrait;
 class InstitutionGrades extends Model
 {
     use HasFactory;
-use InstitutionScope;
+    use InstitutionScope;
+
+    // POCOR-9257: Configure webhook events
+    use WebhookQueueTrait;
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'education_grade_id', 'academic_period_id', 'start_date', 'start_year', 'end_date', 'end_year', 'institution_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'education_grade_id', 'academic_period_id', 'institution_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps

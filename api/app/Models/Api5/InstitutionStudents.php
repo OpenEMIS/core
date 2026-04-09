@@ -7,11 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
 use App\Traits\UuidId;
 
+use App\Models\Concerns\WebhookQueueTrait;
 class InstitutionStudents extends Model
 {
     use HasFactory;
-use InstitutionScope;
-use UuidId;
+    use InstitutionScope;
+
+
+    // POCOR-9257: Configure webhook events
+    use WebhookQueueTrait;
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
+
+    use UuidId;
 
     protected $table = 'institution_students';
 

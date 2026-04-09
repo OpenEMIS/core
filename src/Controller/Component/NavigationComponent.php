@@ -2946,7 +2946,7 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Configuration'],
                     'selected' => [
                         'Configurations.Themes',
-                        'Configurations.Webhooks',
+                        //POCOR-9257: Configurations.Webhooks removed — webhooks now live at Webhooks.Webhooks
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
@@ -2995,6 +2995,33 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Risk'],
                     'selected' => ['Risks.Risks']
                 ],
+
+                //POCOR-9257: start - Add Webhooks submenu under System Setup
+                'SystemSetup.Webhooks' => [
+                    'title' => 'Webhooks',
+                    'parent' => 'SystemSetup',
+                    'link' => false,
+                ],
+                //POCOR-9257: Setup points to new independent WebhooksController
+                'Webhooks.Webhooks' => [
+                    'title' => 'Setup',
+                    'parent' => 'SystemSetup.Webhooks',
+                    'params' => ['plugin' => 'Configuration', 'controller' => 'Webhooks'], //POCOR-9257
+                    'selected' => ['Webhooks.Webhooks'] //POCOR-9257
+                ],
+                'Webhook.WebhookQueue' => [
+                    'title' => 'Queue',
+                    'parent' => 'SystemSetup.Webhooks',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Webhook.WebhookQueue']
+                ],
+                'Webhook.WebhookLogs' => [
+                    'title' => 'Log',
+                    'parent' => 'SystemSetup.Webhooks',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Webhook.WebhookLogs']
+                ],
+                //POCOR-9257: end
             ];
             $menuNavigation = array_merge($navigations, $getDropdownMenu);
             return $menuNavigation;
@@ -3848,6 +3875,7 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Notices']
                     ],
+
                 ];
             }
         } else {
@@ -3883,6 +3911,7 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Notices']
                 ],
+
             ];
         }
         return $navfour;
