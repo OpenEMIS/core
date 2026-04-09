@@ -6,7 +6,7 @@ use Exception;
 use message;
 Use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\Utility\Hash;
 use Cake\Console\Shell;
 
@@ -35,7 +35,7 @@ class EmailAllExcelReportCardsShell extends Shell
             $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
             $this->SystemProcesses->updatePid($systemProcessId, $pid);
 
-            $this->out('Initialize Email All Report Cards ('.Time::now().')');
+            $this->out('Initialize Email All Report Cards ('.FrozenTime::now().')');
 
             $exit = false;
             while (!$exit) {
@@ -59,7 +59,7 @@ class EmailAllExcelReportCardsShell extends Shell
                     ->first();
 
                 if (!empty($recordToProcess)) {
-                    $this->out('Sending report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
+                    $this->out('Sending report card for Student '.$recordToProcess['student_id'].' ('. FrozenTime::now() .')');
 
                     $studentsReportCardEntity = $this->InstitutionStudentsReportCards
                         ->find()
@@ -198,13 +198,13 @@ class EmailAllExcelReportCardsShell extends Shell
                         $this->out('Student Report Cards not found');
                     }
 
-                    $this->out('End sending report card for Student '.$recordToProcess['student_id'].' ('. Time::now() .')');
+                    $this->out('End sending report card for Student '.$recordToProcess['student_id'].' ('. FrozenTime::now() .')');
                 } else {
                     $exit = true;
-                    $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+                    $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
                 }
             }   // end while
-            $this->out('End Email All Report Cards ('.Time::now().')');
+            $this->out('End Email All Report Cards ('.FrozenTime::now().')');
         }
     }
 
@@ -225,7 +225,7 @@ class EmailAllExcelReportCardsShell extends Shell
         $subject = '';
 
         $ReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmail');
-        $modelAlias = $ReportCardEmailTable->registryAlias();
+        $modelAlias = $ReportCardEmailTable->getRegistryAlias();
         $availablePlaceholders = $ReportCardEmailTable->getPlaceholders();
         //print_r($availablePlaceholders); die;
         $reportCardId = $studentsReportCardEntity->report_card_id;
@@ -243,7 +243,7 @@ class EmailAllExcelReportCardsShell extends Shell
         $message = '';
 
         $ReportCardEmailTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardEmail');
-        $modelAlias = $ReportCardEmailTable->registryAlias();
+        $modelAlias = $ReportCardEmailTable->getRegistryAlias();
         $availablePlaceholders = $ReportCardEmailTable->getPlaceholders();
         $reportCardId = $studentsReportCardEntity->report_card_id;
         $emailTemplateEntity = $this->EmailTemplates->getTemplate($modelAlias, $reportCardId);

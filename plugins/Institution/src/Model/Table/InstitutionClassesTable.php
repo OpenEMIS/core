@@ -211,6 +211,15 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9613[START]
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        //POCOR-9257: default to 0 for new classes where total_male/female_students is not yet set
+        $entity->total_male_students = $entity->total_male_students ?? 0;
+        $entity->total_female_students = $entity->total_female_students ?? 0;
+    }
+    //POCOR-9613[END]
+
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
@@ -1640,101 +1649,115 @@ class InstitutionClassesTable extends ControllerActionTable
         /*POCOR-6566 ends*/
     }
 
+
+    //POCOR-9613[START]
+    // public function onGetTotalMaleStudents(EventInterface $event, Entity $entity)
+    // {
+    //     /*POCOR-6566 starts*/
+    //     $gender_id = 1; // male
+    //     $classId = $entity->id;
+    //     $institutionId = $entity->institution_id;
+    //     $periodId = $entity->academic_period_id;
+    //     $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+    //     $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+    //     $grades = [];
+    //     $classGradeData = $this->find()
+    //         ->select(['grade_id' => $InstitutionClassGrades->aliasField('education_grade_id')])
+    //         ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()], [
+    //             $this->aliasField('id = ') . $InstitutionClassGrades->aliasField('institution_class_id')
+    //         ])
+    //         ->where([
+    //             $InstitutionClassGrades->aliasField('institution_class_id') => $classId,
+    //             $this->aliasField('institution_id') => $institutionId,
+    //             $this->aliasField('academic_period_id') => $periodId
+    //         ])
+    //         ->toArray();
+    //     if (!empty($classGradeData)) {
+    //         foreach ($classGradeData as $data) {
+    //             $grades[] = $data->grade_id;
+    //         }
+    //     }
+
+    //     $totalMaleStudentRecord = $InstitutionClassStudents->find()
+    //         ->contain('Users')
+    //         ->matching('StudentStatuses', function ($q) {
+    //             return $q->where(['StudentStatuses.code IN' => ['CURRENT', 'REPEATED', 'PROMOTED', 'GRADUATED']]);
+    //         })
+    //         ->where([
+    //             $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+    //             $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
+    //             $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
+    //             $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
+    //             $InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id
+    //         ]);
+    //     $count = 0;
+    //     if (!empty($totalMaleStudentRecord)) {
+    //         return $count = $totalMaleStudentRecord->count();
+    //     } else {
+    //         return $count;
+    //     }
+    //     /*POCOR-6566 ends*/
+    // }
+
     public function onGetTotalMaleStudents(EventInterface $event, Entity $entity)
     {
-        /*POCOR-6566 starts*/
-        $gender_id = 1; // male
-        $classId = $entity->id;
-        $institutionId = $entity->institution_id;
-        $periodId = $entity->academic_period_id;
-        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
-        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
-        $grades = [];
-        $classGradeData = $this->find()
-            ->select(['grade_id' => $InstitutionClassGrades->aliasField('education_grade_id')])
-            ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()], [
-                $this->aliasField('id = ') . $InstitutionClassGrades->aliasField('institution_class_id')
-            ])
-            ->where([
-                $InstitutionClassGrades->aliasField('institution_class_id') => $classId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $periodId
-            ])
-            ->toArray();
-        if (!empty($classGradeData)) {
-            foreach ($classGradeData as $data) {
-                $grades[] = $data->grade_id;
-            }
-        }
-
-        $totalMaleStudentRecord = $InstitutionClassStudents->find()
-            ->contain('Users')
-            ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code IN' => ['CURRENT', 'REPEATED', 'PROMOTED', 'GRADUATED']]);
-            })
-            ->where([
-                $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
-                $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
-                $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
-                $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
-                $InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id
-            ]);
-        $count = 0;
-        if (!empty($totalMaleStudentRecord)) {
-            return $count = $totalMaleStudentRecord->count();
-        } else {
-            return $count;
-        }
-        /*POCOR-6566 ends*/
+        return $entity->total_male_students;
     }
+
+    // public function onGetTotalFemaleStudents(EventInterface $event, Entity $entity)
+    // {
+    //     /*POCOR-6566 starts*/
+    //     $gender_id = 2; // female
+    //     $classId = $entity->id;
+    //     $institutionId = $entity->institution_id;
+    //     $periodId = $entity->academic_period_id;
+    //     $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
+    //     $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
+    //     $grades = [];
+    //     $classGradeData = $this->find()
+    //         ->select(['grade_id' => $InstitutionClassGrades->aliasField('education_grade_id')])
+    //         ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()], [
+    //             $this->aliasField('id = ') . $InstitutionClassGrades->aliasField('institution_class_id')
+    //         ])
+    //         ->where([
+    //             $InstitutionClassGrades->aliasField('institution_class_id') => $classId,
+    //             $this->aliasField('institution_id') => $institutionId,
+    //             $this->aliasField('academic_period_id') => $periodId
+    //         ])
+    //         ->toArray();
+    //     if (!empty($classGradeData)) {
+    //         foreach ($classGradeData as $data) {
+    //             $grades[] = $data->grade_id;
+    //         }
+    //     }
+
+    //     $totalFemaleStudentRecord = $InstitutionClassStudents->find()
+    //         ->contain('Users')
+    //         ->matching('StudentStatuses', function ($q) {
+    //             return $q->where(['StudentStatuses.code IN' => ['CURRENT', 'REPEATED', 'PROMOTED', 'GRADUATED']]);
+    //         })
+    //         ->where([
+    //             $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
+    //             $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
+    //             $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
+    //             $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
+    //             $InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id
+    //         ]);
+    //     $count = 0;
+    //     if (!empty($totalFemaleStudentRecord)) {
+    //         return $count = $totalFemaleStudentRecord->count();
+    //     } else {
+    //         return $count;
+    //     }
+    //     /*POCOR-6566 ends*/
+    // }
 
     public function onGetTotalFemaleStudents(EventInterface $event, Entity $entity)
     {
-        /*POCOR-6566 starts*/
-        $gender_id = 2; // female
-        $classId = $entity->id;
-        $institutionId = $entity->institution_id;
-        $periodId = $entity->academic_period_id;
-        $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
-        $InstitutionClassStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents');
-        $grades = [];
-        $classGradeData = $this->find()
-            ->select(['grade_id' => $InstitutionClassGrades->aliasField('education_grade_id')])
-            ->leftJoin([$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()], [
-                $this->aliasField('id = ') . $InstitutionClassGrades->aliasField('institution_class_id')
-            ])
-            ->where([
-                $InstitutionClassGrades->aliasField('institution_class_id') => $classId,
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $periodId
-            ])
-            ->toArray();
-        if (!empty($classGradeData)) {
-            foreach ($classGradeData as $data) {
-                $grades[] = $data->grade_id;
-            }
-        }
-
-        $totalFemaleStudentRecord = $InstitutionClassStudents->find()
-            ->contain('Users')
-            ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code IN' => ['CURRENT', 'REPEATED', 'PROMOTED', 'GRADUATED']]);
-            })
-            ->where([
-                $InstitutionClassStudents->aliasField('institution_class_id') => $classId,
-                $InstitutionClassStudents->aliasField('institution_id') => $institutionId,
-                $InstitutionClassStudents->aliasField('academic_period_id') => $periodId,
-                $InstitutionClassStudents->aliasField('education_grade_id IN') => $grades,
-                $InstitutionClassStudents->Users->aliasField('gender_id') => $gender_id
-            ]);
-        $count = 0;
-        if (!empty($totalFemaleStudentRecord)) {
-            return $count = $totalFemaleStudentRecord->count();
-        } else {
-            return $count;
-        }
-        /*POCOR-6566 ends*/
+        return $entity->total_female_students;
     }
+
+    //POCOR-9613[END]
     public function onExcelGetTotalStudents(EventInterface $event, Entity $entity)
     {
         return $entity->total_male_students + $entity->total_female_students;

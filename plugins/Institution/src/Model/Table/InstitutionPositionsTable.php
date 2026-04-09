@@ -1666,7 +1666,17 @@ public function onGetHomeroomTeacher(EventInterface $event, Entity $entity)
             case 'status_id':
                 return __('Status');
             case 'homeroom_teacher':
-                return __('Homeroom Teacher');
+                //POCOR-9607
+                //return __('Homeroom Teacher');
+                if ($field == 'homeroom_teacher') {
+                    $LabelTable = TableRegistry::get('Labels');
+                    $teacher = $LabelTable->find()->where(['module_name' => 'Institutions -> Positions', 'field' => 'is_homeroom'])->first();
+                    $teacherName = !empty($teacher->name)
+                                    ? (string)$teacher->name
+                                    : (string)$teacher->field_name;
+                    return  __((string)$teacherName);
+                }
+                //POCOR-9607
             case '':
                 return __('Status');
 
