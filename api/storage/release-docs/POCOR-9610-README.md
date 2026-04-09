@@ -26,7 +26,7 @@ Both tabs appear in the Institution left sidebar under **General** as **read-onl
 
 ### Schema
 
-Migration file: `config/Migrations/20260409090000_POCOR9610.php`
+Migration file: `config/Migrations/20260410120000_POCOR9610.php`
 
 **`institution_registrations`**
 | Column | Type | Notes |
@@ -55,9 +55,9 @@ Migration file: `config/Migrations/20260409090000_POCOR9610.php`
 
 The migration also inserts `security_functions` rows for both tabs (order 52 and 53, parent `General`, module/controller `Institutions`) with the following permission model:
 
-**CakePHP UI:** Read-only for all roles — Add/Edit/Delete buttons are disabled in the table class (`toggle('add/edit/remove', false)`).
+**CakePHP UI:** Read-only for all roles — Add/Edit/Delete buttons are disabled in the table class (`toggle('add/edit/remove', false)`) and further suppressed by `HideButtonBehavior`.
 
-**API v5:** Controlled via `PermissionService::checkPermission()` which reads `security_role_functions` joined against `security_functions` action strings. The `security_functions._view/_add/_edit/_delete` columns contain both CakePHP action names (e.g. `Registrations.index`) and API model names (e.g. `InstitutionRegistrations.view`) so both systems resolve permissions from the same rows.
+**API v5:** Controlled via `PermissionService::checkPermission()` which reads `security_role_functions` joined against `security_functions` action strings.
 
 | Role | Order | UI | API view | API write |
 |------|-------|----|----------|-----------|
@@ -80,9 +80,19 @@ The migration also inserts `security_functions` rows for both tabs (order 52 and
 
 Both use `ControllerActionTable`, `Excel` behavior (index export), and `Institution.InstitutionTab` behavior.
 
-- **Registrations index** shows: Valid From | Valid To | Actions
-- **Accreditations index** shows: Programme Code | Programme Name | Valid From | Valid To | Actions (programme data from FK via `onGetProgrammeCode` / `onGetProgrammeName`)
-- **Accreditations add/edit** shows a dropdown of visible education programmes
+**Registrations index columns:** Valid From | Valid To | Status | Actions
+
+**Accreditations index columns:** Programme Code | Programme Name | Valid From | Valid To | Status | Actions
+
+- **Programme Code** — from `education_programmes.code` via FK
+- **Programme Name** — full label: `"Name (Level — System — Period)"` using the full education chain
+- **Status** — computed virtual field: `Valid` when `valid_to` is NULL or in the future; `Expired` when `valid_to` is in the past
+
+**Read-only enforcement:** `toggle('add', false)`, `toggle('edit', false)`, `toggle('remove', false)` + `addBehavior('ControllerAction.HideButton')`. Both layers are required — `toggle()` prevents button creation, `HideButtonBehavior` catches any remaining instances.
+
+**Excel export notes:**
+- Date fields (`valid_from`, `valid_to`) are forced to `'type' => 'string'` in `onExcelUpdateFields` so that `onExcelGet*` handlers are called instead of the default `onExcelRenderDate` (which returns blank in this system)
+- Registrations Excel is filtered by `institution_id` via `onExcelBeforeQuery`
 
 **Controller:**
 - `plugins/Institution/src/Controller/InstitutionsController.php` — added `Registrations()` and `Accreditations()` action methods
@@ -106,11 +116,17 @@ Both registered in `CrudApiController::$allowedResources` as `institution-regist
 - `api/tests/Feature/InstitutionRegistrationsApiTest.php`
 - `api/tests/Feature/InstitutionAccreditationsApiTest.php`
 
+### Seed Tool
+
+A developer seed page is available at `logs/pocor-9610-seed.html`. It includes:
+- Sample INSERT statements for both tables
+- A collapsible developer API reference section with `curl` examples for all endpoints (login, list, view, create, update, delete) for both resources
+
 ### Files Changed Summary
 
 | Change | File |
 |--------|------|
-| Added | `config/Migrations/20260409090000_POCOR9610.php` |
+| Added | `config/Migrations/20260410120000_POCOR9610.php` |
 | Added | `plugins/Institution/src/Model/Table/InstitutionRegistrationsTable.php` |
 | Added | `plugins/Institution/src/Model/Table/InstitutionAccreditationsTable.php` |
 | Modified | `plugins/Institution/src/Controller/InstitutionsController.php` |
@@ -121,8 +137,9 @@ Both registered in `CrudApiController::$allowedResources` as `institution-regist
 | Added | `api/database/factories/InstitutionAccreditationsFactory.php` |
 | Added | `api/tests/Feature/InstitutionRegistrationsApiTest.php` |
 | Added | `api/tests/Feature/InstitutionAccreditationsApiTest.php` |
+| Added | `logs/pocor-9610-seed.html` |
 
-**Files Added:** 9  |  **Files Modified:** 2
+**Files Added:** 10  |  **Files Modified:** 2
 
 ---
 
@@ -154,7 +171,7 @@ Get a JWT token first, then:
 # List registrations
 curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8082/api/v5/institution-registrations | jq .
 
-# Create a registration (valid_from will auto-fill from institution date_opened if omitted)
+# Create a registration
 curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"institution_id":6,"valid_from":"2024-01-01","valid_to":"2026-12-31"}' \
   http://localhost:8082/api/v5/institution-registrations | jq .
@@ -176,9 +193,15 @@ curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/
 
 ### valid_from Default Behaviour
 
-`valid_from` is stored as `DATE NOT NULL`. If a user submits a blank `valid_from` on the CakePHP add/edit form, the system automatically looks up the institution's `date_opened` and uses it as the start date. This prevents accreditation/registration records from appearing to start from the beginning of time.
+`valid_from` is stored as `DATE NOT NULL`. If a user submits a blank `valid_from` on the CakePHP add/edit form, the system automatically looks up the institution's `date_opened` and uses it as the start date.
 
-The same logic applies in the Laravel API — if the factory creates a record, it uses `institution.date_opened` as the default.
+### Status Field
+
+Both tabs display a computed **Status** column:
+- `Valid` — `valid_to` is NULL or in the future
+- `Expired` — `valid_to` is in the past
+
+This field is virtual (not stored in the database) and is included in Excel exports.
 
 ### Rollback Procedure
 
@@ -186,7 +209,7 @@ The same logic applies in the Laravel API — if the factory creates a record, i
 docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake migrations rollback -t <previous_migration_version>'
 ```
 
-The `down()` method removes both tables, removes the two `security_functions` rows (and their `security_role_functions`), and restores the `institutions` table from the `z_9610_institutions` backup.
+The `down()` method removes both tables, removes the `security_functions` and `security_role_functions` rows, and restores the `institutions` table from the `z_9610_institutions` backup.
 
 ### Troubleshooting
 
@@ -196,4 +219,6 @@ The `down()` method removes both tables, removes the two `security_functions` ro
 | 404 after saving a record | Confirm `InstitutionTabBehavior` is attached; check that `institution_id` is in the queryString |
 | `valid_from` saves as NULL | Should not happen — `beforeSave` sets it from `date_opened`; verify institution has `date_opened` set |
 | API `Invalid resource` | Confirm the resource key is in `CrudApiController::$allowedResources` |
-| Programme dropdown empty on add/edit | Confirm `education_programmes` table has rows with `visible=1` |
+| Programme Code / Name blank in Accreditations | Confirm `indexBeforeQuery` uses closure-style `contain()` with explicit `->select()` — `ControllerActionTable::beforeFind` strips non-default FK fields otherwise |
+| Excel dates blank | Confirm `onExcelUpdateFields` forces `'type' => 'string'` on date fields |
+| Add/Edit/Delete buttons still visible | Both `toggle('add/edit/remove', false)` AND `HideButtonBehavior` must be present |

@@ -5,20 +5,19 @@ namespace Database\Factories;
 use App\Models\Api5\InstitutionRegistrations;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-//POCOR-9610: start - Factory for institution_registrations (valid_from / valid_to per spec)
+//POCOR-9610: Factory for institution_registrations
 class InstitutionRegistrationsFactory extends Factory
 {
     protected $model = InstitutionRegistrations::class;
 
     public function definition(): array
     {
-        //POCOR-9610: start - valid_from defaults to institution's date_opened (NOT NULL per spec)
+        // valid_from defaults to institution's date_opened (NOT NULL per spec)
         $institution = \App\Models\Institutions::inRandomOrder()->first();
         $institutionId = $institution?->id ?? \App\Models\Institutions::factory()->create()->id;
         $validFrom = $institution?->date_opened
             ? \Carbon\Carbon::parse($institution->date_opened)->format('Y-m-d')
             : \Carbon\Carbon::now()->format('Y-m-d');
-        //POCOR-9610: end
 
         return [
             'id'               => $this->model::max('id') + 1,
@@ -32,4 +31,3 @@ class InstitutionRegistrationsFactory extends Factory
         ];
     }
 }
-//POCOR-9610: end

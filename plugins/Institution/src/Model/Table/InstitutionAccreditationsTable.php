@@ -1,5 +1,5 @@
 <?php
-//POCOR-9610: start - CakePHP Table for institution_accreditations — education_programme_id FK per spec
+//POCOR-9610: Institution Accreditations tab — read-only view of institution_accreditations, managed via API
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -15,7 +15,6 @@ class InstitutionAccreditationsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        //POCOR-9610: start - associations
         $this->belongsTo('Institutions', [
             'className'  => 'Institution.Institutions',
             'foreignKey' => 'institution_id',
@@ -32,28 +31,23 @@ class InstitutionAccreditationsTable extends ControllerActionTable
             'className'  => 'Security.Users',
             'foreignKey' => 'created_user_id',
         ]);
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Excel export on index; InstitutionTab for back-button fix
         $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => [
                 'Accreditations' => ['id'],
             ],
         ]);
-        //POCOR-9610: end
 
-        //POCOR-9610: start - read-only: data managed via API only
+        // Read-only: data managed via API; HideButton removes add/edit/delete from UI
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->addBehavior('ControllerAction.HideButton');
-        //POCOR-9610: end
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        //POCOR-9610: start - index columns: Programme Code | Programme Name | Valid From | Valid To | Actions
         $this->field('institution_id', ['visible' => false]);
         $this->field('education_programme_id', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
@@ -61,35 +55,23 @@ class InstitutionAccreditationsTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
 
-        //POCOR-9610: virtual columns — visible:true required so isFieldVisible() returns true and onGet* listeners are registered
-        $this->field('programme_code', [
-            'label'   => __('Programme Code'),
-            'visible' => true,
-        ]);
-        $this->field('programme_name', [
-            'label'   => __('Programme Name'),
-            'visible' => true,
-        ]);
-        //POCOR-9610: also add Status virtual column — Expired vs Valid based on valid_to vs today
-        $this->field('status', [
-            'label'   => __('Status'),
-            'visible' => true,
-        ]);
+        // visible:true required so isFieldVisible() returns true and onGet* listeners are registered
+        $this->field('programme_code', ['label' => __('Programme Code'), 'visible' => true]);
+        $this->field('programme_name', ['label' => __('Programme Name'), 'visible' => true]);
+        $this->field('status',         ['label' => __('Status'),         'visible' => true]);
 
         $this->setFieldOrder(['programme_code', 'programme_name', 'valid_from', 'valid_to', 'status']);
-        //POCOR-9610: end
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra): Query
     {
-        //POCOR-9610: start - filter by institution_id; contain full programme chain for display label
         $institutionId = $this->getQueryString('institution_id');
         if ($institutionId) {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
         }
+        // Explicit field select required — ControllerActionTable beforeFind may strip non-default fields
         $query->contain([
             'EducationProgrammes' => function ($q) {
-                //POCOR-9610: explicitly select code+name — ControllerActionTable beforeFind may strip non-default fields
                 return $q->select(['EducationProgrammes.id', 'EducationProgrammes.code', 'EducationProgrammes.name', 'EducationProgrammes.education_cycle_id'])
                     ->contain(['EducationCycles' => function ($q2) {
                         return $q2->select(['EducationCycles.id', 'EducationCycles.name', 'EducationCycles.education_level_id'])
@@ -106,20 +88,16 @@ class InstitutionAccreditationsTable extends ControllerActionTable
             },
         ]);
         return $query;
-        //POCOR-9610: end
     }
 
     public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra): Query
     {
-        //POCOR-9610: start - contain full programme chain so onGetProgrammeCode/Name work on view
         $query->contain(['EducationProgrammes' => ['EducationCycles' => ['EducationLevels' => ['EducationSystems' => ['AcademicPeriods']]]]]);
         return $query;
-        //POCOR-9610: end
     }
 
     public function viewBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        //POCOR-9610: start - hide audit fields; show programme code, name, status as virtual fields (same as index)
         $this->field('institution_id', ['visible' => false]);
         $this->field('education_programme_id', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
@@ -132,21 +110,17 @@ class InstitutionAccreditationsTable extends ControllerActionTable
         $this->field('status',         ['label' => __('Status'),         'visible' => true]);
 
         $this->setFieldOrder(['programme_code', 'programme_name', 'valid_from', 'valid_to', 'status']);
-        //POCOR-9610: end
     }
-
-    //POCOR-9610: start - onGet* handlers for virtual display fields
 
     public function onGetProgrammeCode(EventInterface $event, Entity $entity): string
     {
         $prog = $entity->education_programme ?? null;
-
         return $prog ? ((string) ($prog->code ?? '')) : '';
     }
 
     public function onGetProgrammeName(EventInterface $event, Entity $entity): string
     {
-        //POCOR-9610: full label "Name (Level — System — Period)" mirroring the HTML seed page
+        // Full label: "Name (Level — System — Period)" — mirrors the HTML seed page format
         $prog = $entity->education_programme ?? null;
         if (!$prog) {
             return '';
@@ -168,74 +142,43 @@ class InstitutionAccreditationsTable extends ControllerActionTable
 
     public function onGetStatus(EventInterface $event, Entity $entity): string
     {
-        //POCOR-9610: compare valid_to against today; null valid_to = perpetually valid
+        // null valid_to = no expiry = always valid
         $validTo = $entity->valid_to;
         if (!$validTo) {
             return __('Valid');
         }
-        $today = new Date();
-        return ($validTo < $today) ? __('Expired') : __('Valid');
+        return ($validTo < new Date()) ? __('Expired') : __('Valid');
     }
 
-    //POCOR-9610: start - Excel export customisation
+    // Excel: contain full chain, fix date type (force string → onExcelGet*), custom column set
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query): void
     {
-        //POCOR-9610: contain full chain so onExcelGetEducationProgrammeId can build the full label
         $query->contain(['EducationProgrammes' => ['EducationCycles' => ['EducationLevels' => ['EducationSystems' => ['AcademicPeriods']]]]]);
     }
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields): void
     {
-        //POCOR-9610: remove raw FK/audit columns; keep programme_id (renamed), valid_from, valid_to, status virtual
-        $keep = ['education_programme_id', 'valid_from', 'valid_to'];
-        $newFields = new ArrayObject();
+        // Keep only date columns (renamed), prepend Programme Code/Name, append Status
+        $keep = ['valid_from', 'valid_to'];
+        $dateCols = new ArrayObject();
         foreach ($fields->getArrayCopy() as $f) {
             $col = $f['field'] ?? '';
             if (!in_array($col, $keep, true)) {
                 continue;
             }
-            if ($col === 'education_programme_id') {
-                $f['label'] = __('Education Programme');
-            }
-            if (in_array($col, ['valid_from', 'valid_to'], true)) {
-                $f['type'] = 'string'; //POCOR-9610: force string so onExcelGet* is called instead of onExcelRenderDate
-            }
+            // Force string type so onExcelGet* is called instead of onExcelRenderDate (which returns blank)
+            $f['type'] = 'string';
+            $dateCols[] = $f;
+        }
+
+        $newFields = new ArrayObject();
+        $newFields[] = ['key' => 'InstitutionAccreditations.programme_code', 'field' => 'programme_code', 'type' => 'string', 'label' => __('Programme Code'), 'style' => [], 'formatting' => 'GENERAL'];
+        $newFields[] = ['key' => 'InstitutionAccreditations.programme_name', 'field' => 'programme_name', 'type' => 'string', 'label' => __('Programme Name'), 'style' => [], 'formatting' => 'GENERAL'];
+        foreach ($dateCols->getArrayCopy() as $f) {
             $newFields[] = $f;
         }
-        //POCOR-9610: prepend virtual Programme Code and Programme Name columns before the date columns
-        $dateAndStatus = $newFields->getArrayCopy();
-        $newFields = new ArrayObject();
-        $newFields[] = [
-            'key'        => 'InstitutionAccreditations.programme_code',
-            'field'      => 'programme_code',
-            'type'       => 'string',
-            'label'      => __('Programme Code'),
-            'style'      => [],
-            'formatting' => 'GENERAL',
-        ];
-        $newFields[] = [
-            'key'        => 'InstitutionAccreditations.programme_name',
-            'field'      => 'programme_name',
-            'type'       => 'string',
-            'label'      => __('Programme Name'),
-            'style'      => [],
-            'formatting' => 'GENERAL',
-        ];
-        foreach ($dateAndStatus as $f) {
-            if (($f['field'] ?? '') !== 'education_programme_id') {
-                $newFields[] = $f; // valid_from, valid_to
-            }
-        }
-        //POCOR-9610: append virtual Status column
-        $newFields[] = [
-            'key'        => 'InstitutionAccreditations.status',
-            'field'      => 'status',
-            'type'       => 'string',
-            'label'      => __('Status'),
-            'style'      => [],
-            'formatting' => 'GENERAL',
-        ];
+        $newFields[] = ['key' => 'InstitutionAccreditations.status', 'field' => 'status', 'type' => 'string', 'label' => __('Status'), 'style' => [], 'formatting' => 'GENERAL'];
         $fields->exchangeArray($newFields->getArrayCopy());
     }
 
@@ -263,7 +206,4 @@ class InstitutionAccreditationsTable extends ControllerActionTable
     {
         return $this->onGetStatus($event, $entity);
     }
-
-    //POCOR-9610: end
 }
-//POCOR-9610: end

@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-//POCOR-9610: start - Feature tests for institution_registrations API (valid_from / valid_to per spec)
+//POCOR-9610: Feature tests for institution_registrations API
 class InstitutionRegistrationsApiTest extends TestCase
 {
     use DatabaseTransactions;
@@ -98,4 +98,3 @@ class InstitutionRegistrationsApiTest extends TestCase
         $response->assertStatus(204);
     }
 }
-//POCOR-9610: end

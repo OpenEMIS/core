@@ -1,5 +1,5 @@
 <?php
-//POCOR-9610: start - CakePHP Table for institution_registrations — valid_from / valid_to per spec
+//POCOR-9610: Institution Registrations tab — read-only view of institution_registrations, managed via API
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -16,7 +16,6 @@ class InstitutionRegistrationsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        //POCOR-9610: start - associations
         $this->belongsTo('Institutions', [
             'className'  => 'Institution.Institutions',
             'foreignKey' => 'institution_id',
@@ -29,52 +28,44 @@ class InstitutionRegistrationsTable extends ControllerActionTable
             'className'  => 'Security.Users',
             'foreignKey' => 'created_user_id',
         ]);
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Excel export on index; InstitutionTab for back-button fix
         $this->addBehavior('Excel', ['pages' => ['index']]);
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => [
                 'Registrations' => ['id'],
             ],
         ]);
-        //POCOR-9610: end
 
-        //POCOR-9610: start - read-only: data managed via API only
+        // Read-only: data managed via API; HideButton removes add/edit/delete from UI
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
         $this->addBehavior('ControllerAction.HideButton');
-        //POCOR-9610: end
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        //POCOR-9610: start - index columns: Valid From | Valid To | Actions
         $this->field('institution_id', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
+        // visible:true required so isFieldVisible() returns true and onGet* listener is registered
         $this->field('status', ['label' => __('Status'), 'visible' => true]);
         $this->setFieldOrder(['valid_from', 'valid_to', 'status']);
-        //POCOR-9610: end
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra): Query
     {
-        //POCOR-9610: start - filter by institution_id from queryString
         $institutionId = $this->getQueryString('institution_id');
         if ($institutionId) {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
         }
         return $query;
-        //POCOR-9610: end
     }
 
     public function viewBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        //POCOR-9610: start - hide audit fields on view; show status virtual field
         $this->field('institution_id', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
@@ -82,12 +73,10 @@ class InstitutionRegistrationsTable extends ControllerActionTable
         $this->field('created', ['visible' => false]);
         $this->field('status', ['label' => __('Status'), 'visible' => true]);
         $this->setFieldOrder(['valid_from', 'valid_to', 'status']);
-        //POCOR-9610: end
     }
 
     public function onGetStatus(EventInterface $event, Entity $entity): string
     {
-        //POCOR-9610: Valid if valid_to is in future or null; Expired otherwise
         $validTo = $entity->valid_to;
         if (!$validTo) {
             return __('Valid');
@@ -95,11 +84,10 @@ class InstitutionRegistrationsTable extends ControllerActionTable
         return ($validTo < new Date()) ? __('Expired') : __('Valid');
     }
 
-    //POCOR-9610: start - Excel export: filter by institution_id, fix date rendering, hide audit columns
+    // Excel: filter by institution_id, fix date type (force string → onExcelGet*), append Status column
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query): void
     {
-        //POCOR-9610: filter Excel to current institution only (same as index)
         $institutionId = $this->getQueryString('institution_id');
         if ($institutionId) {
             $query->where([$this->aliasField('institution_id') => $institutionId]);
@@ -108,7 +96,6 @@ class InstitutionRegistrationsTable extends ControllerActionTable
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields): void
     {
-        //POCOR-9610: keep only valid_from and valid_to; override type to string so onExcelGet* handles rendering
         $keep = ['valid_from', 'valid_to'];
         $newFields = new ArrayObject();
         foreach ($fields->getArrayCopy() as $f) {
@@ -116,10 +103,10 @@ class InstitutionRegistrationsTable extends ControllerActionTable
             if (!in_array($col, $keep, true)) {
                 continue;
             }
-            $f['type'] = 'string'; //POCOR-9610: force string type so onExcelGet* is called instead of onExcelRenderDate
+            // Force string type so onExcelGet* is called instead of onExcelRenderDate (which returns blank)
+            $f['type'] = 'string';
             $newFields[] = $f;
         }
-        //POCOR-9610: append virtual Status column
         $newFields[] = [
             'key'        => 'InstitutionRegistrations.status',
             'field'      => 'status',
@@ -133,13 +120,11 @@ class InstitutionRegistrationsTable extends ControllerActionTable
 
     public function onExcelGetValidFrom(EventInterface $event, Entity $entity): string
     {
-        //POCOR-9610: format Date as Y-m-d string for Excel
         return $entity->valid_from ? $entity->valid_from->format('Y-m-d') : '';
     }
 
     public function onExcelGetValidTo(EventInterface $event, Entity $entity): string
     {
-        //POCOR-9610: format Date as Y-m-d string for Excel
         return $entity->valid_to ? $entity->valid_to->format('Y-m-d') : '';
     }
 
@@ -147,7 +132,4 @@ class InstitutionRegistrationsTable extends ControllerActionTable
     {
         return $this->onGetStatus($event, $entity);
     }
-
-    //POCOR-9610: end
 }
-//POCOR-9610: end
