@@ -20,9 +20,11 @@ class InstitutionsFactory extends Factory
     'name' => $this->faker->lexify(str_repeat("?", 150)),
     'alternative_name' => $this->faker->lexify(str_repeat("?", 150)),
     'code' => $this->faker->lexify(str_repeat("?", 20)),
+    //POCOR-9610: start - Seed the new external registrations sync columns for Institution API coverage
     'external_id' => 'ACC-INS-' . str_pad((string) $this->faker->unique()->numberBetween(1, 999999), 6, '0', STR_PAD_LEFT),
     'registration_status' => $this->faker->randomElement(['pending', 'active', 'revoked', 'expired']),
     'registration_valid_until' => \Carbon\Carbon::now()->addYear()->format("Y-m-d"),
+    //POCOR-9610: end
     'address' => $this->faker->text(50),
     'postal_code' => $this->faker->lexify(str_repeat("?", 20)),
     'contact_person' => $this->faker->lexify(str_repeat("?", 100)),

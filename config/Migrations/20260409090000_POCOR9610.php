@@ -9,8 +9,11 @@ class POCOR9610 extends AbstractMigration
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
+        //POCOR-9610: start - Snapshot institutions before extending the schema for external registrations integration
         $this->backupTable('institutions', 'z_9610_institutions');
+        //POCOR-9610: end
 
+        //POCOR-9610: start - Create the registration history table for institution-level external sync records
         if (!$this->hasTable('institution_registrations')) {
             $this->execute("
                 CREATE TABLE `institution_registrations` (
@@ -36,7 +39,9 @@ class POCOR9610 extends AbstractMigration
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             ");
         }
+        //POCOR-9610: end
 
+        //POCOR-9610: start - Create the accreditation table for programme-level external sync records
         if (!$this->hasTable('institution_accreditations')) {
             $this->execute("
                 CREATE TABLE `institution_accreditations` (
@@ -64,7 +69,9 @@ class POCOR9610 extends AbstractMigration
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
             ");
         }
+        //POCOR-9610: end
 
+        //POCOR-9610: start - Add institution sync fields used by the external registrations integration
         if (!$this->table('institutions')->hasColumn('external_id')) {
             $this->execute("ALTER TABLE `institutions` ADD COLUMN `external_id` VARCHAR(50) NULL AFTER `code`");
         }
@@ -81,6 +88,7 @@ class POCOR9610 extends AbstractMigration
         if (empty($indexExists)) {
             $this->execute("ALTER TABLE `institutions` ADD INDEX `idx_institutions_external_id` (`external_id`)");
         }
+        //POCOR-9610: end
 
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
@@ -89,6 +97,7 @@ class POCOR9610 extends AbstractMigration
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
+        //POCOR-9610: start - Drop integration tables before restoring the pre-ticket institutions snapshot
         if ($this->hasTable('institution_accreditations')) {
             $this->execute('DROP TABLE `institution_accreditations`');
         }
@@ -96,15 +105,19 @@ class POCOR9610 extends AbstractMigration
         if ($this->hasTable('institution_registrations')) {
             $this->execute('DROP TABLE `institution_registrations`');
         }
+        //POCOR-9610: end
 
+        //POCOR-9610: start - Restore institutions exactly as captured before the schema extension
         if ($this->hasTable('z_9610_institutions')) {
             $this->execute('DROP TABLE `institutions`');
             $this->execute('RENAME TABLE `z_9610_institutions` TO `institutions`');
         }
+        //POCOR-9610: end
 
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
 
+    //POCOR-9610: start - Reusable backup helper for destructive migration rollback safety
     private function backupTable(string $original, string $backup): void
     {
         if (!$this->hasTable($backup)) {
@@ -112,4 +125,5 @@ class POCOR9610 extends AbstractMigration
             $this->execute("INSERT INTO `$backup` SELECT * FROM `$original`");
         }
     }
+    //POCOR-9610: end
 }

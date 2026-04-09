@@ -2,6 +2,7 @@
 
 namespace App\Models\Api5;
 
+use App\Models\Api5\SecurityUsers;
 use App\Traits\InstitutionScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ class InstitutionAccreditations extends Model
 
     protected $table = 'institution_accreditations';
 
+    //POCOR-9610: start - API v5 accreditation payload fields from external registrations integration
     protected $fillable = [
         'id',
         'institution_id',
@@ -28,15 +30,20 @@ class InstitutionAccreditations extends Model
         'created_user_id',
         'created',
     ];
+    //POCOR-9610: end
 
+    //POCOR-9610: start - Cast imported accreditation lifecycle dates for CRUD responses
     protected $dates = ['valid_from', 'valid_to', 'modified', 'created'];
+    //POCOR-9610: end
 
     public $timestamps = false;
 
+    //POCOR-9610: start - Bind the Api5 model to the existing root Database\Factories namespace
     protected static function newFactory()
     {
         return \Database\Factories\InstitutionAccreditationsFactory::new();
     }
+    //POCOR-9610: end
 
     /**
      * @OA\PathItem(
@@ -130,6 +137,7 @@ class InstitutionAccreditations extends Model
      */
     public function _swaggerDelete() {}
 
+    //POCOR-9610: start - Expose institution and audit-user relations for shared CRUD responses
     public function institution()
     {
         return $this->belongsTo(Institutions::class, 'institution_id', 'id');
@@ -144,4 +152,5 @@ class InstitutionAccreditations extends Model
     {
         return $this->belongsTo(SecurityUsers::class, 'created_user_id', 'id');
     }
+    //POCOR-9610: end
 }
