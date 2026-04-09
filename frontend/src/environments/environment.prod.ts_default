@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiV4BaseUrl: 'https://dmo-tst.openemis.org/core/api/v4/',
-  apiV5BaseUrl: 'https://dmo-tst.openemis.org/core/api/v5/'
+  // POCOR-9594: apiV4BaseUrl/apiV5BaseUrl removed from env — ApiService and DataService
+  // now compute the base URL dynamically from window.location.origin at runtime.
 };

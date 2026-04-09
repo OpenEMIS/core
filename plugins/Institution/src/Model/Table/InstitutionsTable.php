@@ -948,6 +948,14 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+
+        $LatLongPermission = $ConfigItems->value("latitude_longitude"); //POCOR-7045
+        $LatPermission = $LatLongPermission; //POCOR-9257: legacy key — mirror latitude_longitude so they never diverge
+        $LongPermission = $LatLongPermission; //POCOR-9257: legacy key — mirror latitude_longitude so they never diverge
+        //POCOR-9257: keep legacy latitude_mandatory/longitude_mandatory in sync with latitude_longitude
+        $ConfigItems->updateAll(['value' => $LatLongPermission], ['code IN' => ['latitude_mandatory', 'longitude_mandatory']]);
+
         $DataManagementConnections = TableRegistry::getTableLocator()->get('Archive.DataManagementConnections');
         $DataManagementConnectionsResult = $DataManagementConnections
             ->find()
@@ -1036,12 +1044,15 @@ class InstitutionsTable extends ControllerActionTable
             $this->field('logo_content', ['type' => 'image']);
         }
 
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $LatLongPermission = $ConfigItems->value("latitude_longitude");
 
         if ($LatLongPermission == LatLongOptions::EXCLUDED) {
             $this->field('longitude', ['visible' => false]);
             $this->field('latitude', ['visible' => false]);
+        } elseif ($LatLongPermission == LatLongOptions::MANDATORY) {
+            //POCOR-9257: null=false drives the * required marker in ControllerAction forms
+            $this->field('latitude', ['null' => false]);
+            $this->field('longitude', ['null' => false]);
         }
     }
 
@@ -2553,8 +2564,8 @@ class InstitutionsTable extends ControllerActionTable
 
         // --- 3. Queue webhook for async processing (POCOR-9257) ---
         try {
-            $WebhooksQueue = TableRegistry::getTableLocator()->get('WebhooksQueue');
-            $result = $WebhooksQueue->queueWebhook($eventKey, $body, $user);
+            $WebhookQueue = TableRegistry::getTableLocator()->get('Alert.WebhookQueue'); //POCOR-9257: moved to Alert plugin
+            $result = $WebhookQueue->queueWebhook($eventKey, $body, $user);
             if ($result) {
                 // Log::debug("[InstitutionsTable] ✓ Queued webhook for event: {$eventKey}, institution ID: {$entity->id}");
             } else {

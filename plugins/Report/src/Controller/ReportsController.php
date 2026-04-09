@@ -37,7 +37,8 @@ class ReportsController extends AppController
             'UisStatistics' => ['className' => 'Report.UisStatistics', 'actions' => ['index', 'add']],
             'CustomReports' => ['className' => 'Report.CustomReports', 'actions' => ['index', 'add']],
             'Performance' => ['className' => 'Report.Performance', 'actions' => ['index', 'add']],
-            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']]//POCOR-9267 
+            'Meals' => ['className' => 'Report.Meals', 'actions' => ['index', 'add']],//POCOR-9267 
+            'InstitutionInfrastructures' => ['className' => 'Report.InstitutionInfrastructures', 'actions' => ['index', 'add']]//POCOR-9562 
         ];
         $this->loadComponent('Paginator');
         $this->loadComponent('Training.Training');
@@ -63,7 +64,12 @@ class ReportsController extends AppController
 
     public function onInitialize(EventInterface $event, Table $table, ArrayObject $extra)
     {
-        $header = __('Reports') . ' - ' . __($table->getAlias());
+        $alias = $table->getAlias();
+        if ($alias == 'InstitutionInfrastructures') {
+            $header = __('Reports') . ' - ' . __('Infrastructures');
+        } else {
+            $header = __('Reports') . ' - ' . __($alias);
+        }
         $this->set('contentHeader', $header);
     }
 
@@ -86,44 +92,38 @@ class ReportsController extends AppController
                 'Report.Users' => __('User List')
             ];
         } elseif ($module == 'Institutions') {
-            $options = [
-                'Report.InstitutionAssets' => __('Assets'),
+           $options = [
                 'Report.InstitutionCases' => __('Cases'),
                 'Report.ClassAttendanceNotMarkedRecords' => __('Class Attendance Marked'),
                 'Report.ClassAttendanceMarkedSummaryReport' => __('Class Attendance Marked Summary Report'),
                 'Report.InstitutionClasses' => __('Classes'),
                 'Report.InstitutionCommittees' => __('Committees'),
                 'Report.Curriculars' => __('Curriculars'), //POCOR-6673
-                'Report.Expenditure' => __('Expenditure Report'),
                 'Report.Guardians' => __('Guardians'),
                 'Report.InstitutionAssociations' => __('Houses'), //POCOR-7938
-                'Report.Income' => __('Income Report'),
-                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
-                'Report.InstitutionInfrastructures' => __('Infrastructure'),
                 'Report.InstitutionInfrastructureSummaryReport' => __('Institution Infrastructure Summary Report'), //POCOR-8006
                 'Report.Institutions' => __('Institutions'),
                 'Report.InstitutionPositions' => __('Institution Positions'),
                 'Report.InstitutionPositionsSummaries' => __('Institution Positions Summaries'),
                 'Report.InstitutionProgrammes' => __('Programmes'),
                 'Report.SpecialNeedsFacilities' => __('Special Needs Facilities'),
-                // 'Report.StaffAbsences' => __('Staff Absence'), Institution Positions Summaries
+                'Report.InstitutionStaff' => __('Staff'),
                 'Report.StaffAttendances' => __('Staff Attendance'),
                 'Report.StaffBehaviours' => __('Staff Behaviours'),
                 'Report.StaffLeave' => __('Staff Leave'),
                 'Report.StaffTransfers' => __('Staff Transfer'),
-                'Report.InstitutionStaff' => __('Staff'),
-                'Report.BodyMasses' => __('Student Body Masses'),
                 'Report.StudentAbsences' => __('Student Absence'),
                 'Report.StudentAbsencesPerDays' => __('Student Absences per Day'), //POCOR-7276
                 'Report.StudentAttendanceSummary' => __('Student Attendance Summary'),
                 'Report.StudentBehaviours' => __('Student Behaviours'),
+                'Report.BodyMasses' => __('Student Body Masses'),
                 'Report.InstitutionStudents' => __('Students'),
+                'Report.InstitutionSubjects' => __('Subjects'),
+                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
                 // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
                 // 'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
                 // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
-                'Report.InstitutionSubjects' => __('Subjects'),
-                'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
-                'Report.WashReports' => __('Wash Report'),
+                // 'Report.StaffAbsences' => __('Staff Absence'), Institution Positions Summaries
             ];
         } elseif ($module == 'Students') {
             $options = [
@@ -271,6 +271,20 @@ class ReportsController extends AppController
                 'Report.MealSummary' => __('Meals Summary Report'),
             ];
         }//POCOR-9267 Ends
+        elseif ($module == 'InstitutionInfrastructures') {
+            $options = [
+                'Report.InstitutionAssets' => __('Assets'),
+                'Report.Expenditure' => __('Expenditure Report'),
+                'Report.Income' => __('Income Report'),
+                'Report.InstitutionInfrastructures' => __('Infrastructure'),
+                'Report.InfrastructureNeeds' => __('Infrastructure Needs'),
+                'Report.InfrastructureElectricities' => __('Utilities Electricity'),
+                'Report.InfrastructureInternets' => __('Utilities Internet'),
+                'Report.InfrastructureTelephones' => __('Utilities Telephone'),
+                'Report.WashReports' => __('Wash Report'),
+            ];
+                
+        }
         return $options;
     }
     //POCOR-9563[END]
@@ -346,6 +360,7 @@ class ReportsController extends AppController
     public function ViewReport()
     {
         ini_set('memory_limit', '-1');
+        set_time_limit(0); //POCOR-9567: prevent PHP timeout on large report files
         $data = $this->request->getQuery();
         $file = $this->request->getData('file_path');
         $data['file_path'] = $this->request->getQuery('file_path');
@@ -383,45 +398,70 @@ class ReportsController extends AppController
 
         $moduleTitle = __(Inflector::humanize(Inflector::underscore($dataModule)));
         $this->Navigation->addCrumb($moduleTitle);
-
         $header = __('Reports') . ' - ' . $moduleTitle;
 
         $inputFileName = $replace_data;
-        // POCOR-8289 - for view report chagne in IOFactory logic
-        try {
-            $inputFileType = IOFactory::identify($inputFileName);
-            $objReader = IOFactory::createReader($inputFileType);
-            $spreadsheet = $objReader->load($inputFileName);
-        } catch (\Exception $e) {
-            throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
-        }
 
-        $sheet = $spreadsheet->getSheet(0);
-        $highestRow = $sheet->getHighestRow();
-        if ($data['module'] == 'InstitutionStatistics') {
-            $highestRow = $sheet->getHighestRow() + 1;
-        }
-        $highestColumn = $sheet->getHighestColumn();
-
-        for ($row = 1; $row <= 1; $row++) {
-            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-        }
-
-        $rowHeaderNew = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow - 1; $row++) {
-            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-            if ($this->isEmptyRow(reset($rowData))) {
-                continue;
+        //POCOR-9567: start - prefer companion CSV (written at generation time, no timeout risk)
+        $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
+        if (file_exists($csvFileName) && is_readable($csvFileName)) {
+            $csvHandle = fopen($csvFileName, 'r');
+            $rowHeader = null;
+            $rowHeaderNew = [];
+            $newArr2 = [];
+            while (($csvRow = fgetcsv($csvHandle)) !== false) {
+                if ($rowHeader === null) {
+                    $rowHeader = [$csvRow];
+                    $rowHeaderNew = $csvRow;
+                    continue;
+                }
+                if ($this->isEmptyRow($csvRow)) {
+                    continue;
+                }
+                if (count($csvRow) === count($rowHeaderNew)) {
+                    $newArr2[] = array_combine($rowHeaderNew, $csvRow);
+                }
             }
-        }
+            fclose($csvHandle);
+        } else {
+            // POCOR-8289 - for view report change in IOFactory logic
+            // POCOR-9567: use read-data-only mode to skip formatting/formulas — 2-5x faster for large files
+            try {
+                $inputFileType = IOFactory::identify($inputFileName);
+                $objReader = IOFactory::createReader($inputFileType);
+                $objReader->setReadDataOnly(true); //POCOR-9567: skip cell formatting metadata for faster load
+                $spreadsheet = $objReader->load($inputFileName);
+            } catch (\Exception $e) {
+                throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+            }
 
-        foreach ($rowData as $newKey => $newDataVal) {
-            foreach ($newDataVal as $kay2 => $new_data_arr) {
-                if (isset($new_data_arr)) {
-                    $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+            $sheet = $spreadsheet->getSheet(0);
+            $highestRow = $sheet->getHighestRow();
+            if ($data['module'] == 'InstitutionStatistics') {
+                $highestRow = $sheet->getHighestRow() + 1;
+            }
+            $highestColumn = $sheet->getHighestColumn();
+
+            for ($row = 1; $row <= 1; $row++) {
+                $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+            }
+
+            $rowHeaderNew = $this->array_flatten($rowHeader);
+            $rowData = [];
+            $newArr2 = [];
+            for ($row = 2; $row <= $highestRow - 1; $row++) {
+                $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+                if ($this->isEmptyRow(reset($currentRow))) {
+                    continue;
+                }
+                foreach ($currentRow as $new_data_arr) {
+                    if (isset($new_data_arr)) {
+                        $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+                    }
                 }
             }
         }
+        //POCOR-9567: end
 
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);

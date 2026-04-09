@@ -18,7 +18,9 @@ use Cake\Cache\Cache;
 
 class DashboardController extends AppController
 {
-//    private bool $useCacheInCallAlerts = false;
+    private const SKIPPABLE_ALERTS = [
+        'UnmarkedAttendance'];
+    private bool $useCacheInCallAlerts = false;
     public function initialize(): void
     {
         parent::initialize();
@@ -36,27 +38,22 @@ class DashboardController extends AppController
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 
-        // POCOR-9509: Do not call alerts in Dashboard
-        // All the logic for checking alerts are moved to CheckAndQueueAlerts
-        // Laravel command which will be triggered every 1 mins via cron job.
-        // This will improve the performance of Dashboard page and
-        // also make sure that alerts are triggered in time without any delay.
-//        $user = $this->Auth->user();
-//        if(!$user){
-//            return;
-//        }
-//        $userId = $user['id'];
-//        $isSuperAdmin = !empty($user['super_admin']);
-//        if (!$this->useCacheInCallAlerts) {
-//            $this->callAlerts($userId, $isSuperAdmin);
-//            return;
-//        }
-//
-//        $cacheKey = 'alerts_triggered_' . $userId . '_' . FrozenTime::now()->format('Y-m-d-H'); // e.g. every hour
-//        if (!Cache::read($cacheKey)) {
-//            $this->callAlerts($userId, $isSuperAdmin);
-//            Cache::write($cacheKey, true, 'default');
-//        }
+        $user = $this->Auth->user();
+        if(!$user){
+            return;
+        }
+        $userId = $user['id'];
+        $isSuperAdmin = !empty($user['super_admin']);
+        if (!$this->useCacheInCallAlerts) {
+            $this->callAlerts($userId, $isSuperAdmin);
+            return;
+        }
+
+        $cacheKey = 'alerts_triggered_' . $userId . '_' . FrozenTime::now()->format('Y-m-d-H'); // e.g. every hour
+        if (!Cache::read($cacheKey)) {
+            $this->callAlerts($userId, $isSuperAdmin);
+            Cache::write($cacheKey, true, 'default');
+        }
 
     }
 
@@ -100,7 +97,7 @@ class DashboardController extends AppController
                 $lastLogin = $userInfo->last_login;
                 $this->request->getSession()->write('Auth.User.last_login', $lastLogin);
                 if ($check) {
-                    // Log::debug('Redirecting to change password page');
+                    Log::debug('Redirecting to change password page');
                     $this->Alert->warning('security.login.changePassword');
                     $this->redirect($changePasswordUrl);
                 }else{
@@ -667,50 +664,49 @@ class DashboardController extends AppController
 
 
     //POCOR-7558 end
-    // POCOR-9509: Extracted the alert triggering logic to a separate method which can be called from Laravel command.
-//    private function callAlerts($userId, $isSuperAdmin): void
-//    {
-//        //         $this->sendSystemUpdateAlerts(); //POCOR-7559
-//        //        $this->sendRetirementWarningAlerts(); //POCOR-8341
-//
-//        $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
-//        $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
-//        $systemProcessesTable = TableRegistry::getTableLocator()->get('SystemProcesses');
-//
-//        $userRoleIds = $isSuperAdmin ? [] : $this->getUserSecurityRoleIds($userId);
-//
-//        $alerts = $this->getUserAccessibleAlerts($alertsTable, $userRoleIds, $isSuperAdmin);
-//
-//        foreach ($alerts as $alert) {
-//            if(!is_array($alert)){
-//                $alert = $alert->toArray();
-//            }
-//            $alert_name = $alert['name'];
-//            if (in_array($alert_name, self::SKIPPABLE_ALERTS, true)) {
-//                continue;
-//            }
-//
-//            if ($this->shouldTriggerAlert($alert)) {
-//                $activeRules = $alertRulesTable->find()
-//                    ->where([
-//                        $alertRulesTable->aliasField('feature') => $alert['name'],
-//                        $alertRulesTable->aliasField('enabled') => 1
-//                    ])
-//                    ->toArray();
-//
-//                foreach ($activeRules as $rule) {
-//                    if(!is_array($rule)){
-//                        $rule = $rule->toArray();
-//                    }
-//                    // POCOR-9509: Queue Laravel worker job instead of blocking on shell
-//                    self::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId);
-//                }
-//            }else{
-//                Log::debug('Should Not Trigger Alert');
-//            }
-//        }
-//
-//    }
+    private function callAlerts($userId, $isSuperAdmin): void
+    {
+        //         $this->sendSystemUpdateAlerts(); //POCOR-7559
+        //        $this->sendRetirementWarningAlerts(); //POCOR-8341
+
+        $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+        $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
+        $systemProcessesTable = TableRegistry::getTableLocator()->get('SystemProcesses');
+
+
+        $userRoleIds = $isSuperAdmin ? [] : $this->getUserSecurityRoleIds($userId);
+
+        $alerts = $this->getUserAccessibleAlerts($alertsTable, $userRoleIds, $isSuperAdmin);
+
+        foreach ($alerts as $alert) {
+            if(!is_array($alert)){
+                $alert = $alert->toArray();
+            }
+            $alert_name = $alert['name'];
+            if (in_array($alert_name, self::SKIPPABLE_ALERTS, true)) {
+                continue;
+            }
+
+            if ($this->shouldTriggerAlert($alert)) {
+                $activeRules = $alertRulesTable->find()
+                    ->where([
+                        $alertRulesTable->aliasField('feature') => $alert['name'],
+                        $alertRulesTable->aliasField('enabled') => 1
+                    ])
+                    ->toArray();
+
+                foreach ($activeRules as $rule) {
+                    if(!is_array($rule)){
+                        $rule = $rule->toArray();
+                    }
+                    self::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId);
+                }
+            }else{
+                Log::debug('Should Not Trigger Alert');
+            }
+        }
+
+    }
 
     public function getUserSecurityRoleIds(int $userId): array
     {
@@ -718,104 +714,175 @@ class DashboardController extends AppController
         return collection($roles)->extract('security_role_id')->toArray();
     }
 
-//    private function getUserAccessibleAlerts($alertsTable, array $userRoleIds, bool $isSuperAdmin)
-//    {
-//        if ($isSuperAdmin) {
-//            return $alertsTable->find()
-//                ->where([
-//                    'frequency IS NOT' => null,
-//                    'frequency NOT IN' => ['Never', 'Once']
-//                ]);
-//        }
-//        //POCOR-9429 start
-//        if(empty($userRoleIds)){
-//            return [];
-//        }
-//        //POCOR-9429 end
-//
-//        return $alertsTable->find()
-//            ->distinct(['Alerts.id'])
-//            ->matching('AlertRules.SecurityRoles', function ($q) use ($userRoleIds) {
-//                return $q->where(['SecurityRoles.id IN' => $userRoleIds]);
-//            })
-//            ->where([
-//                'Alerts.frequency IS NOT' => null,
-//                'Alerts.frequency NOT IN' => ['Never', 'Once']
-//            ]);
-//    }
-//
-//    private function shouldTriggerAlert($alert): bool
-//    {
-//        $currentDate = FrozenTime::now()->format('Y-m-d');
-//        $frequency = $alert['frequency'];
-//
-//        $lastRunDate = $this->getLastRunDateForAlert($alert['process_name']);
-//
-//        if ($lastRunDate == -1 ) {
-//            Log::debug("[Alert: {$alert['name']}] Not eligible for run – still active or never completed.");
-//            return false;
-//        }else if (empty($lastRunDate)) {
-//            Log::debug("[Alert: {$alert['name']}] Not triggered yet");
-//            return true;
-//        }
-//        Log::debug("[Alert: {$alert['name']}] $lastRunDate");
-//        $nextRunDate = $this->calculateNextRunDate($frequency, clone $lastRunDate);
-//
-//        if ($nextRunDate === null) {
-//            Log::debug("[Alert: {$alert->name}] Should run once, skipping.");
-//            return false;
-//        }
-//
-//        return $currentDate >= $nextRunDate;
-//    }
-//
-//    private function getLastRunDateForAlert(string $processName)
-//    {
-//        $systemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
-//
-//        // Check for active processes first
-//        $active = $systemProcesses->find()
-//            ->where([
-//                'name' => $processName,
-//                'status IN' => [1, 2]
-//            ])
-//            ->first();
-//
-//        if ($active) {
-//            return -1; // Signal active/running, not eligible
-//        }
-//
-//        // Then fetch the last completed run
-//        $completed = $systemProcesses->find()
-//            ->select(['end_date'])
-//            ->where([
-//                'name' => $processName,
-//                'status' => 3
-//            ])
-//            ->orderDesc('end_date')
-//            ->limit(1)
-//            ->first();
-//
-//        return $completed?->end_date;
-//    }
-//
-//    private function calculateNextRunDate(string $frequency, FrozenTime $date): ?string
-//    {
-//        switch ($frequency) {
-//            case 'Weekly':
-//                return $date->modify('+1 week')->format('Y-m-d');
-//            case 'Monthly':
-//                return $date->modify('+1 month')->format('Y-m-d');
-//            case 'Yearly':
-//                return $date->modify('+1 year')->format('Y-m-d');
-//            case 'Daily':
-//                return $date->modify('+1 day')->format('Y-m-d');
-//            case 'Once':
-//                return null; // never run
-//            default:
-//                return '9999-12-31'; // never run
-//        }
-//    }
+    private function getUserAccessibleAlerts($alertsTable, array $userRoleIds, bool $isSuperAdmin)
+    {
+        if ($isSuperAdmin) {
+            return $alertsTable->find()
+                ->where([
+                    'frequency IS NOT' => null,
+                    'frequency NOT IN' => ['Never', 'Once']
+                ]);
+        }
+        //POCOR-9429 start
+        if(empty($userRoleIds)){
+            return [];
+        }
+        //POCOR-9429 end
 
+        return $alertsTable->find()
+            ->distinct(['Alerts.id'])
+            ->matching('AlertRules.SecurityRoles', function ($q) use ($userRoleIds) {
+                return $q->where(['SecurityRoles.id IN' => $userRoleIds]);
+            })
+            ->where([
+                'Alerts.frequency IS NOT' => null,
+                'Alerts.frequency NOT IN' => ['Never', 'Once']
+            ]);
+    }
+
+    private function shouldTriggerAlert($alert): bool
+    {
+        $currentDate = FrozenTime::now()->format('Y-m-d');
+        $frequency = $alert['frequency'];
+
+        $lastRunDate = $this->getLastRunDateForAlert($alert['process_name']);
+
+        if ($lastRunDate == -1 ) {
+            Log::debug("[Alert: {$alert['name']}] Not eligible for run – still active or never completed.");
+            return false;
+        }else if (empty($lastRunDate)) {
+            Log::debug("[Alert: {$alert['name']}] Not triggered yet");
+            return true;
+        }
+        Log::debug("[Alert: {$alert['name']}] $lastRunDate");
+        $nextRunDate = $this->calculateNextRunDate($frequency, clone $lastRunDate);
+
+        if ($nextRunDate === null) {
+            Log::debug("[Alert: {$alert->name}] Should run once, skipping.");
+            return false;
+        }
+
+        return $currentDate >= $nextRunDate;
+    }
+
+    private function getLastRunDateForAlert(string $processName)
+    {
+        $systemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+
+        // Check for active processes first
+        $active = $systemProcesses->find()
+            ->where([
+                'name' => $processName,
+                'status IN' => [1, 2]
+            ])
+            ->first();
+
+        if ($active) {
+            return -1; // Signal active/running, not eligible
+        }
+
+        // Then fetch the last completed run
+        $completed = $systemProcesses->find()
+            ->select(['end_date'])
+            ->where([
+                'name' => $processName,
+                'status' => 3
+            ])
+            ->orderDesc('end_date')
+            ->limit(1)
+            ->first();
+
+        return $completed?->end_date;
+    }
+
+    private function calculateNextRunDate(string $frequency, FrozenTime $date): ?string
+    {
+        switch ($frequency) {
+            case 'Weekly':
+                return $date->modify('+1 week')->format('Y-m-d');
+            case 'Monthly':
+                return $date->modify('+1 month')->format('Y-m-d');
+            case 'Yearly':
+                return $date->modify('+1 year')->format('Y-m-d');
+            case 'Daily':
+                return $date->modify('+1 day')->format('Y-m-d');
+            case 'Once':
+                return null; // never run
+            default:
+                return '9999-12-31'; // never run
+        }
+    }
+
+
+    public static function triggerSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
+    {
+        $now = FrozenTime::now();
+        // POCOR-9391 start
+        $extraRuleOptions = $extraOptions;
+        $extraRuleOptions['rule_id'] = $rule['id'];
+        $paramsJson = json_encode($extraRuleOptions);
+        // POCOR-9391 end
+        // Check for an existing process with same model, name, rule and params
+        $feature = $rule['feature'];
+        $existing = $systemProcessesTable->find()
+            ->where([
+                'model' => $processName,
+                'name' => $feature,
+                'params' => $paramsJson,
+                'created_user_id' => $userId,
+//                'status IN' => [1, 2, 3] // Start, Running, Finished
+            ])
+            ->first();
+
+        if ($existing) {
+            // 🦕 Skip creating duplicate process
+            Log::debug(print_r([
+                __FUNCTION__ => ' Already Present',
+                'params' => $paramsJson], true));
+            return;
+        }
+
+        $processValues = [
+            'name' => $feature,
+            'status' => 1,
+            'start_date' => $now,
+            'model' => $processName,
+            'created_user_id' => $userId,
+            'params' => $paramsJson
+        ];
+
+        $process = $systemProcessesTable->newEntity($processValues);
+        if ($systemProcessesTable->save($process)) {
+            Log::debug(__FUNCTION__ . 'Fired!');
+            self::triggerAlertCommand($processName, $userId, $rule['id'], $process->id, $extraOptions);
+        } else {
+            Log::debug(__FUNCTION__ . 'Could Not Fire');
+        }
+    }
+
+
+    public static function triggerAlertCommand(string $processName, int $userId, int $ruleId, int $processId, array $extraOptions = []): void
+    {
+        $command = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $processName)); // CamelCase to snake_case
+
+        $argsArray = [
+            '--user_id=' . $userId,
+            '--rule_id=' . $ruleId,
+            '--process_id=' . $processId
+        ];
+
+        foreach ($extraOptions as $key => $value) {
+            $argsArray[] = '--' . $key . '=' . escapeshellarg($value);
+        }
+
+        $args = implode(' ', $argsArray);
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $command . ' ' . $args;
+        $logPath = ROOT . DS . 'logs' . DS . $command . '.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logPath;
+
+        exec($shellCmd);
+        Log::write('debug', '[AlertCommand] ' . $shellCmd);
+    }
 
 }

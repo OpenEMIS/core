@@ -41,7 +41,7 @@ class AlertRulesTable extends ControllerActionTable
         ]);
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Alert.AlertRuleStudentAttendance');
-        $this->addBehavior('Alert.AlertRuleStaffAttendance');
+        //$this->addBehavior('Alert.AlertRuleAttendance');
         $this->addBehavior('Alert.AlertRuleLicenseRenewal');
         $this->addBehavior('Alert.AlertRuleLicenseValidity');
         $this->addBehavior('Alert.AlertRuleRetirementWarning');
@@ -53,7 +53,6 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleCaseEscalation');//POCOR-7642
         $this->addBehavior('Alert.AlertRuleSystemUpdates');//POCOR-7642
         $this->addBehavior('Alert.AlertRuleStudentAdmission');//POCOR-8869
-        $this->addBehavior('Alert.AlertRuleStudentStatus');//POCOR-7554
         $this->addBehavior('Alert.AlertRuleStudentEnrolment');//POCOR-8286
     }
 
@@ -247,7 +246,7 @@ class AlertRulesTable extends ControllerActionTable
     public function extractThresholdValuesFromEntity(Entity $entity)
     {
         $thresholdArray = json_decode($entity->threshold, true);
-//        Log::debug("Extracting threshold values from entity with threshold: " . $entity->threshold . ' and decoded array: ' . print_r($thresholdArray, true));
+
         if (is_array($thresholdArray)) {
             $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
             $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
@@ -259,8 +258,6 @@ class AlertRulesTable extends ControllerActionTable
                     // for threshold with type chosenSelect type
                     if ($fieldType == 'chosenSelect') {
                         $lookupModel = $thresholdConfig[$field]['lookupModel'];
-//                        Log::debug("Extracting threshold values for field: $field with lookup model:
-//                        $lookupModel and value: " . print_r($value, true) . 'and thresholdConfig: ' . print_r($thresholdConfig, true));
                         if (isset($lookupModel)) {//POCOR-7462
                             $Model = TableRegistry::getTableLocator()->get($lookupModel);
                             if (is_array($value)) {
@@ -285,7 +282,6 @@ class AlertRulesTable extends ControllerActionTable
                                 }
                             }
                         }
-
 
                     }
                 }
@@ -526,10 +522,6 @@ class AlertRulesTable extends ControllerActionTable
             return $this->assignToGuardianOnly($attr);
         }
 
-        if ($feature === 'StudentStatus') {
-            return $this->assignToGuardianOnly($attr);
-        }
-
         if ($feature === 'StudentEnrolment') {
             return $this->assignToGuardianOnly($attr);
         }
@@ -735,7 +727,7 @@ class AlertRulesTable extends ControllerActionTable
                 return __('Method');
             case 'threshold':
                 return __('Threshold');
-
+                return __('Enabled');
             case 'name':
                 return __('Name');
             case 'enabled':

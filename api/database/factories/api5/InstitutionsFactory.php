@@ -12,7 +12,7 @@ class InstitutionsFactory extends Factory
     protected $model = Institutions::class;
 
     // POCOR-9257: Override make and create to remove fax attribute
-    public function make(array $attributes = [])
+    public function make(array $attributes = [], ?Model $parent = null)
     {
         // Remove fax from attributes before making
         unset($attributes['fax']);

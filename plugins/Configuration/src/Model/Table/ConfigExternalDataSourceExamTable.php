@@ -42,6 +42,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         $validator->setProvider('custom', $this);
         if ($this->request->getData()['ConfigExternalDataSourceExam']['value'] == 'Jordan CSPD') {
             return $validator
+                ->requirePresence('type')
                 ->requirePresence('url')
                 ->requirePresence('username')
                 ->requirePresence('password')
@@ -52,6 +53,7 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         //POCOR-7531 start
         else if ($this->request->getData()['ConfigExternalDataSourceExam']['value'] == 'OpenEMIS Exams') {
             return $validator
+                ->requirePresence('type')
                 ->requirePresence('url')
                 ->requirePresence('username')
                 ->requirePresence('password');
@@ -75,6 +77,9 @@ class ConfigExternalDataSourceExamTable extends ControllerActionTable
         //POCOR-7532 end
         else { //POCOR-6930 Ends
             return $validator
+                ->requirePresence('type')
+                ->requirePresence('label')
+                ->requirePresence('value')
                 ->requirePresence('client_id')
                 ->requirePresence('url')
                 ->requirePresence('token_uri')

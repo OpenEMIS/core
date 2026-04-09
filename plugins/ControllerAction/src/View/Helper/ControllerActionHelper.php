@@ -363,17 +363,7 @@ class ControllerActionHelper extends Helper
         }
 
         $encodedKeys = $this->paramsEncode($primaryKeyValue);
-        // Merge data-row-id into first cell options if it already has options
-        $firstCell = $row[0];
-        if (is_array($firstCell) && array_key_exists(1, $firstCell) && is_array($firstCell[1])) {
-            // First cell already has options (e.g., tableColumnClass)
-            $content = $firstCell[0];
-            $options = $firstCell[1];
-            $options['data-row-id'] = $encodedKeys;
-            $row[0] = [$content, $options];
-        } else {
-            $row[0] = [$firstCell, ['data-row-id' => $encodedKeys]];
-        }
+        $row[0] = [$row[0], ['data-row-id' => $encodedKeys]];
 
         return $row;
     }
@@ -433,6 +423,7 @@ class ControllerActionHelper extends Helper
                     'value' => !empty($limit) ?  $limit : 0,//POCOR-8677
                     'options' => $pageOptions,
                     'onchange' => "$(this).closest('form').submit()",
+                    'style' => 'margin-bottom: -4px;', //POCOR-9631
                     'templates' => $this->getFormTemplate()
                 ]);
             }
