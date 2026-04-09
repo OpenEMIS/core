@@ -324,7 +324,7 @@ abstract class AlertCommandBase extends Command
                     'rule_id' => $this->ruleId,
                     'user_id' => $this->userId,
                 ]),
-                'status' => 0, // pending
+                'status' => \App\Models\Api5\AlertLogs::STATUS_PENDING, //POCOR-9509: use constant
                 'retry_count' => 0,
                 'available_at' => now(),
                 'created' => now(),
