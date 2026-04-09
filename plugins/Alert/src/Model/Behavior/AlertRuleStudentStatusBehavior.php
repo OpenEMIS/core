@@ -5,8 +5,7 @@ namespace Alert\Model\Behavior;
 use ArrayObject;
 use Cake\Log\Log;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
-use Cake\Event\Event;
+use Cake\Event\EventInterface; //POCOR-9509: CakePHP 5 - replaced Cake\Event\Event
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;

@@ -65,14 +65,14 @@ class AlertTriggerService
         string $entityType = '',
         string $triggerType = 'threshold_alert'
     ): array {
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() ENTRY'); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() All params: processName=' . $processName . ', featureName=' . $featureName . ', userId=' . $userId . ', ruleId=' . $ruleId . ', entityId=' . ($entityId ?? 'null') . ', context=' . json_encode($context) . ', entityType=' . $entityType . ', triggerType=' . $triggerType); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() ENTRY'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() All params: processName=' . $processName . ', featureName=' . $featureName . ', userId=' . $userId . ', ruleId=' . $ruleId . ', entityId=' . ($entityId ?? 'null') . ', context=' . json_encode($context) . ', entityType=' . $entityType . ', triggerType=' . $triggerType); //[TEMP-LOG]
 
         try {
             $entityType = $entityType ?: $processName;
             $now = Carbon::now();
 
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() entityType resolved: ' . $entityType . ', now=' . $now); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() entityType resolved: ' . $entityType . ', now=' . $now); //[TEMP-LOG]
 
             // POCOR-9509: Build params with Phase 2 structure
             $params = self::buildParams(
@@ -85,14 +85,14 @@ class AlertTriggerService
             );
 
             $checksum = $params['checksum'];
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() Computed checksum: ' . $checksum); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() Computed checksum: ' . $checksum); //[TEMP-LOG]
 
             // POCOR-9509: Check for duplicate (same checksum)
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() Checking for duplicate process...'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() Checking for duplicate process...'); //[TEMP-LOG]
             $existingProcess = self::checkDuplicate($processName, $featureName, $userId, $checksum);
 
             if ($existingProcess) {
-                Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() DUPLICATE FOUND - existing_process_id=' . $existingProcess->id); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() DUPLICATE FOUND - existing_process_id=' . $existingProcess->id); //[TEMP-LOG]
                 // Log::debug('[POCOR-9509] Duplicate alert skipped (checksum match)', [
                 //     'process_name' => $processName,
                 //     'feature' => $featureName,
@@ -109,10 +109,10 @@ class AlertTriggerService
                 ];
             }
 
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() No duplicate, proceeding to create system_processes'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() No duplicate, proceeding to create system_processes'); //[TEMP-LOG]
 
             // POCOR-9509: Create system_processes record (consistent with CakePHP)
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() Calling createSystemProcess()'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() Calling createSystemProcess()'); //[TEMP-LOG]
             $processId = self::createSystemProcess(
                 $featureName,
                 $processName,
@@ -121,7 +121,7 @@ class AlertTriggerService
                 $now
             );
 
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() system_processes created with ID: ' . $processId); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() system_processes created with ID: ' . $processId); //[TEMP-LOG]
             // Log::info('[POCOR-9509] Alert process created (Laravel)', [
             //     'process_id' => $processId,
             //     'process_name' => $processName,
@@ -131,9 +131,9 @@ class AlertTriggerService
             // ]);
 
             // POCOR-9509: Trigger Laravel alert command (Phase 3 - remove duplicate logic)
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() About to call triggerAlertCommand()'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() About to call triggerAlertCommand()'); //[TEMP-LOG]
             self::triggerAlertCommand($processName, $userId, $ruleId, $processId, $entityId);
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() triggerAlertCommand() returned'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() triggerAlertCommand() returned'); //[TEMP-LOG]
 
             return [
                 'success' => true,
@@ -142,7 +142,7 @@ class AlertTriggerService
                 'duplicate' => false,
             ];
         } catch (\Throwable $e) {
-            Log::error('[TEMP-LOG] @AlertTriggerService::triggerAlert() EXCEPTION: ' . $e->getMessage() . ' - trace: ' . $e->getTraceAsString()); //[TEMP-LOG]
+            //Log::error('[TEMP-LOG] @AlertTriggerService::triggerAlert() EXCEPTION: ' . $e->getMessage() . ' - trace: ' . $e->getTraceAsString()); //[TEMP-LOG]
             Log::error('[POCOR-9509] Failed to trigger alert', [
                 'process_name' => $processName,
                 'feature' => $featureName,
@@ -410,8 +410,8 @@ class AlertTriggerService
         int    $processId,
         ?int   $entityId
     ): void {
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() ENTRY'); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() params: processName=' . $processName . ', userId=' . $userId . ', ruleId=' . $ruleId . ', processId=' . $processId . ', entityId=' . ($entityId ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() ENTRY'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() params: processName=' . $processName . ', userId=' . $userId . ', ruleId=' . $ruleId . ', processId=' . $processId . ', entityId=' . ($entityId ?? 'null')); //[TEMP-LOG]
 
         // Map process names to Laravel artisan commands
         $commandMap = [
@@ -427,10 +427,10 @@ class AlertTriggerService
 
         $commandName = $commandMap[$processName] ?? null;
 
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Command mapping: ' . ($commandName ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Command mapping: ' . ($commandName ?? 'null')); //[TEMP-LOG]
 
         if (!$commandName) {
-            Log::warning('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() NO COMMAND MAPPING - returning early'); //[TEMP-LOG]
+            //Log::warning('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() NO COMMAND MAPPING - returning early'); //[TEMP-LOG]
             // Log::warning('[POCOR-9509 Phase 3] No command mapping for process', [
             //     'process_name' => $processName,
             //     'process_id' => $processId,
@@ -438,7 +438,7 @@ class AlertTriggerService
             return;
         }
 
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Command mapped successfully: ' . $commandName); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Command mapped successfully: ' . $commandName); //[TEMP-LOG]
 
         // POCOR-9509: Build command arguments
         // Only pass entity_id (not context fields) - commands will query what they need
@@ -448,29 +448,29 @@ class AlertTriggerService
             '--process_id' => $processId,
         ];
 
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Base arguments: ' . json_encode($arguments)); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Base arguments: ' . json_encode($arguments)); //[TEMP-LOG]
 
         // Add entity_id if provided (admission_id, enrolment_id, student_id, etc.)
         if ($entityId !== null) {
             $arguments['--entity_id'] = $entityId;
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Added entity_id: ' . $entityId); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Added entity_id: ' . $entityId); //[TEMP-LOG]
         }
 
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Final arguments: ' . json_encode($arguments)); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Final arguments: ' . json_encode($arguments)); //[TEMP-LOG]
 
         try {
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Calling Artisan::call()'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Calling Artisan::call()'); //[TEMP-LOG]
             // Dispatch command asynchronously
             \Illuminate\Support\Facades\Artisan::call($commandName, $arguments);
 
-            Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Artisan::call() returned successfully'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Artisan::call() returned successfully'); //[TEMP-LOG]
             // Log::info('[POCOR-9509 Phase 3] Alert command triggered', [
             //     'command' => $commandName,
             //     'process_id' => $processId,
             //     'arguments' => $arguments,
             // ]);
         } catch (\Throwable $e) {
-            Log::error('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() EXCEPTION in Artisan::call(): ' . $e->getMessage()); //[TEMP-LOG]
+            //Log::error('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() EXCEPTION in Artisan::call(): ' . $e->getMessage()); //[TEMP-LOG]
             Log::error('[POCOR-9509 Phase 3] Failed to trigger alert command', [
                 'command' => $commandName,
                 'process_id' => $processId,
@@ -479,6 +479,6 @@ class AlertTriggerService
             throw $e;
         }
 
-        Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() EXIT'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() EXIT'); //[TEMP-LOG]
     }
 }

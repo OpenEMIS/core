@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Models\Concerns;
 
+use App\Models\Api5\AlertLogs;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -65,7 +66,7 @@ trait QueueableAlerts
                 'subject' => $subject,
                 'message_body' => $messageBody,
                 'payload' => json_encode($enrichedPayload),
-                'status' => 0, // pending
+                'status' => AlertLogs::STATUS_PENDING, //POCOR-9509: use constant
                 'retry_count' => 0,
                 'available_at' => $availableAt ?? now(),
                 'created' => now(),
@@ -190,17 +191,17 @@ trait QueueableAlerts
 
         return [
             'pending' => DB::table('alert_queue')
-                ->where('status', 0)
+                ->where('status', AlertLogs::STATUS_PENDING)
                 ->where('payload->model_class', $modelClass)
                 ->where('payload->model_id', $modelId)
                 ->count(),
             'processing' => DB::table('alert_queue')
-                ->where('status', 1)
+                ->where('status', 1) //POCOR-9509: alert_queue STATUS_PROCESSING=1
                 ->where('payload->model_class', $modelClass)
                 ->where('payload->model_id', $modelId)
                 ->count(),
             'failed' => DB::table('alert_queue')
-                ->where('status', -1)
+                ->where('status', AlertLogs::STATUS_FAILED)
                 ->where('payload->model_class', $modelClass)
                 ->where('payload->model_id', $modelId)
                 ->count(),

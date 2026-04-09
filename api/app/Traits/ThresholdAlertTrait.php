@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Traits;
 
+use App\Models\Api5\AlertLogs;
 use App\Services\AlertProcessor\PlaceholderReplacer;
 use App\Services\AlertProcessor\RecipientResolver;
 use Illuminate\Support\Facades\DB;
@@ -367,7 +368,7 @@ trait ThresholdAlertTrait
                     'subject' => $subject,
                     'message_body' => $message,
                     'payload' => json_encode($payload),
-                    'status' => 0, // pending
+                    'status' => AlertLogs::STATUS_PENDING, //POCOR-9509: use constant
                     'retry_count' => 0,
                     'available_at' => now(),
                     'created' => now(),
