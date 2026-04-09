@@ -341,8 +341,8 @@ class InstitutionsController extends AppController
             case 'AssessmentItemResultsArchived':
                 $this->Angular->addModules([
                     'alert.svc',
-                    'institutions.results.archive.ctrl',
-                    'institutions.results.archive.svc'
+                    'institutions.results.archived.svc',
+                    'institutions.results.archived.ctrl',
                 ]);
                 break;
             case 'Surveys':
@@ -956,98 +956,91 @@ class InstitutionsController extends AppController
         }
         return $institution_id;
     }
+    
+    //POCOR-9620
 
-    public function AssessmentItemResultsArchived($pass = '')
-    {
-//        $this->log($pass, 'debug');
-        if ($pass == 'excel') {
+    // public function AssessmentItemResultsArchived($pass = '')
+    // {
+    //     if ($pass == 'excel') {
 
-            $classId = $this->ControllerAction->getQueryString('class_id');
-            $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
-        } else {
-            $queryString = $this->request->getQuery('queryString');
-            $classId = $this->ControllerAction->getQueryString('class_id');
+    //         $classId = $this->ControllerAction->getQueryString('class_id');
+    //         $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+    //         $institutionId = $this->ControllerAction->getQueryString('institution_id');
+    //         $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+    //         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
+    //     } else {
+    //         $queryString = $this->request->getQuery('queryString');
+    //         $classId = $this->ControllerAction->getQueryString('class_id');
 
-            $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
-            $myClassName = $this->getInstitutionClassName($classId);
-            $this->Navigation->addCrumb('Assessments', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-            $this->Navigation->addCrumb('Assessment Archives',
-                ['plugin' => $this->getPlugin(),
-                    'controller' => 'Institutions',
-                    'action' => 'AssessmentArchives',
-                    'academic_period_id' => $academicPeriodId]);
-            $this->Navigation->addCrumb("$myClassName");
+    //         $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+    //         $institutionId = $this->ControllerAction->getQueryString('institution_id');
+    //         $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+    //         $myClassName = $this->getInstitutionClassName($classId);
+    //         $this->Navigation->addCrumb('Assessments', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+    //         $this->Navigation->addCrumb('Assessment Archives',
+    //             ['plugin' => $this->getPlugin(),
+    //                 'controller' => 'Institutions',
+    //                 'action' => 'AssessmentArchives',
+    //                 'academic_period_id' => $academicPeriodId]);
+    //         $this->Navigation->addCrumb("$myClassName");
+    //         $roles = [];
 
-//            $this->log("academic_period_id $academicPeriodId", 'debug');
-//            $this->log("institution_id $institutionId", 'debug');
-//            $this->log("class_id $classId", 'debug');
-//            $this->log("assessmentId $assessmentId", 'debug');
-            $roles = [];
+    //         if (!$this->AccessControl->isAdmin()) {
+    //             $userId = $this->Auth->user('id');
+    //             $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+    //         }
 
-            if (!$this->AccessControl->isAdmin()) {
-                $userId = $this->Auth->user('id');
-                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-            }
+    //         $this->set('_roles', $roles);
 
-            $this->set('_roles', $roles);
+    //         // POCOR-3983 check institution status
+    //         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+    //         $isActive = $Institutions->isActive($institutionId);
+    //         if ($isActive) {
+    //             $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+    //         } else {
+    //             $_edit = false;
+    //         }
+    //         // end POCOR-3983
 
-            // POCOR-3983 check institution status
-            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $isActive = $Institutions->isActive($institutionId);
-            if ($isActive) {
-                $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
-            } else {
-                $_edit = false;
-            }
-            // end POCOR-3983
+    //         $this->set('_edit', $_edit);
+    //         $this->set('_excel', $this->AccessControl->check(['Institutions', 'AssessmentItemResultsArchived', 'excel'], $roles));
 
-            $this->set('_edit', $_edit);
-            $this->set('_excel', $this->AccessControl->check(['Institutions', 'AssessmentItemResultsArchived', 'excel'], $roles));
-            // $url = $this->ControllerAction->url('index');
-            // $url['plugin'] = 'Institution';
-            // $url['controller'] = 'Institutions';
-            // $url['action'] = 'AssessmentItemResultsArchived';
+    //         $url = Router::url([
+    //             'plugin' => 'Institution',
+    //             'controller' => 'Institutions',
+    //             'action' => 'AssessmentItemResultsArchived',
+    //             'excel',
+    //             'queryString' => $queryString
+    //         ]);
 
-            $url = Router::url([
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'AssessmentItemResultsArchived',
-                'excel',
-                'queryString' => $queryString
-            ]);
+    //         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+    //         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
+    //         if ($hasTemplate) {
 
-            $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
-            $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
-            if ($hasTemplate) {
+    //             $customUrl = Router::url([
+    //                 'plugin' => 'Institution',
+    //                 'controller' => 'Institutions',
+    //                 'action' => 'reportCardGenerate',
+    //                 'add',
+    //                 'queryString' => $queryString
+    //             ]);
 
-                $customUrl = Router::url([
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'reportCardGenerate',
-                    'add',
-                    'queryString' => $queryString
-                ]);
+    //             $this->set('reportCardGenerate', $customUrl);
 
-                $this->set('reportCardGenerate', $customUrl);
+    //             $exportPDF_Url = $this->ControllerAction->url('index');
+    //             $exportPDF_Url['plugin'] = 'CustomExcel';
+    //             $exportPDF_Url['controller'] = 'CustomExcels';
+    //             $exportPDF_Url['action'] = 'exportPDF';
+    //             $exportPDF_Url[0] = 'AssessmentResults';
+    //             $this->set('exportPDF', Router::url($exportPDF_Url));
+    //         }
 
-                $exportPDF_Url = $this->ControllerAction->url('index');
-                $exportPDF_Url['plugin'] = 'CustomExcel';
-                $exportPDF_Url['controller'] = 'CustomExcels';
-                $exportPDF_Url['action'] = 'exportPDF';
-                $exportPDF_Url[0] = 'AssessmentResults';
-                $this->set('exportPDF', Router::url($exportPDF_Url));
-            }
-
-            $this->set('excelUrl', $url);
-            $this->set('ngController', 'InstitutionsAssessmentArchiveCtrl');
-        }
-        // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
-    }
+    //         $this->set('excelUrl', $url);
+    //         $this->set('ngController', 'InstitutionsAssessmentArchiveCtrl');
+    //     }
+    // }
+    
+    //POCOR-9620
 
     /**
      * @param $classId
@@ -1977,6 +1970,49 @@ class InstitutionsController extends AppController
         $this->render('results');
 
     }
+    
+    //POCOR-9620
+    public function AssessmentItemResultsArchived()
+    {
+        $classId = $this->getQueryString('class_id');
+        $assessmentId = $this->getQueryString('assessment_id');
+        $institutionId = $this->getQueryString('institution_id');
+        $academicPeriodId = $this->getQueryString('academic_period_id');
+        $roles = [];
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+        }
+        $this->set('_roles', $roles);
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        $_edit = $isActive && $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+        $queryString = $this->request->getQuery('queryString');
+        $this->set('_edit', $_edit);
+        $this->set('queryString', $queryString);
+        $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
+        $url = $this->ControllerAction->url('index');
+        $url['plugin'] = 'Institution';
+        $url['controller'] = 'Institutions';
+        $url['action'] = 'resultsExport';
+        $url['?'] = ['queryString' => $queryString];
+
+        $labelsTable = self::getDynamicTableInstance('labels');
+        $labelsData = $labelsTable->find()->where([
+            $labelsTable->aliasField('module') => 'Institution Assessments',
+            $labelsTable->aliasField('field') => 'total_mark'])->first();
+        $dynamicTotalMarkHeader = $labelsData->name;
+        if(empty($dynamicTotalMarkHeader)) {
+            $dynamicTotalMarkHeader = $labelsData->code;
+        }
+        $this->set('dynamicTotalMarkHeader', $dynamicTotalMarkHeader);
+        //POCOR-8146 End
+        $this->set('excelUrl', Router::url($url));
+        $this->set('ngController', 'InstitutionsResultsArchivedCtrl');
+        $this->render('results_archived');
+
+    }
+    //POCOR-9620
 
     // POCOR-8224 start
     public function AssessmentItemExemptions($subaction = 'index', $institutionSubjectId = null)
