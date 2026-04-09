@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 use Migrations\AbstractMigration;
 
-//POCOR-9610: start - Institution Registrations and Accreditations tabs
-// Two new tables: institution_registrations, institution_accreditations.
+//POCOR-9610: Two new tables: institution_registrations, institution_accreditations.
 // CakePHP UI: read-only for all roles (data pushed from OpenEMIS Accreditations via API).
 // API v5 (Security → Roles → API tab): view for all standard roles;
 //   write (add/edit/delete) only for roles with order < 5
@@ -16,13 +15,10 @@ class POCOR9610 extends AbstractMigration
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
-        //POCOR-9610: start - Full backups of all tables touched by this migration
         $this->backupTable('institutions',            'z_9610_institutions');
         $this->backupTable('security_functions',      'z_9610_security_functions');
         $this->backupTable('security_role_functions', 'z_9610_security_role_functions');
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Create institution_registrations
         // valid_from is NOT NULL; app layer defaults it to institution.date_opened when left blank.
         if (!$this->hasTable('institution_registrations')) {
             $this->execute("
@@ -54,9 +50,7 @@ class POCOR9610 extends AbstractMigration
             ");
             $this->execute("ALTER TABLE `institution_registrations` MODIFY COLUMN `valid_from` DATE NOT NULL");
         }
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Create institution_accreditations
         // education_programme_id FK; valid_from NOT NULL.
         if (!$this->hasTable('institution_accreditations')) {
             $this->execute("
@@ -90,11 +84,9 @@ class POCOR9610 extends AbstractMigration
             ");
             $this->execute("ALTER TABLE `institution_accreditations` MODIFY COLUMN `valid_from` DATE NOT NULL");
         }
-        //POCOR-9610: end
 
         $now = date('Y-m-d H:i:s');
 
-        //POCOR-9610: start - Institutions-module security_functions (CakePHP sidebar tabs — view only)
         // _add/_edit/_delete are NULL because the CakePHP UI is read-only (toggle disabled in Table class).
         // API permissions are handled separately by the API-module rows below.
         $registrationsExists = $this->fetchRow(
@@ -148,9 +140,7 @@ class POCOR9610 extends AbstractMigration
                 WHERE r.`id` IN (1, 2, 3, 4, 10)
             ");
         }
-        //POCOR-9610: end
 
-        //POCOR-9610: start - API-module security_functions (Security → Roles → Permissions → API tab)
         // These rows control PermissionService::checkPermission() in the Laravel API.
         // module='API', controller='API', category='API', parent_id=10000 (standard for all API rows).
         // Roles with order < 5 get full write; Principal and below get view-only.
@@ -219,7 +209,6 @@ class POCOR9610 extends AbstractMigration
                 WHERE r.`id` IN (1, 2, 3, 4, 5, 6, 9, 10)
             ");
         }
-        //POCOR-9610: end
 
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
@@ -228,49 +217,38 @@ class POCOR9610 extends AbstractMigration
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
-        //POCOR-9610: start - Restore security_role_functions from backup (full table restore)
         if ($this->hasTable('z_9610_security_role_functions')) {
             $this->execute('DROP TABLE `security_role_functions`');
             $this->execute('RENAME TABLE `z_9610_security_role_functions` TO `security_role_functions`');
         }
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Restore security_functions from backup (full table restore)
         if ($this->hasTable('z_9610_security_functions')) {
             $this->execute('DROP TABLE `security_functions`');
             $this->execute('RENAME TABLE `z_9610_security_functions` TO `security_functions`');
         }
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Restore institution_accreditations from backup or drop if newly created
         if ($this->hasTable('z_9610_institution_accreditations')) {
             $this->execute('DROP TABLE IF EXISTS `institution_accreditations`');
             $this->execute('RENAME TABLE `z_9610_institution_accreditations` TO `institution_accreditations`');
         } elseif ($this->hasTable('institution_accreditations')) {
             $this->execute('DROP TABLE `institution_accreditations`');
         }
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Restore institution_registrations from backup or drop if newly created
         if ($this->hasTable('z_9610_institution_registrations')) {
             $this->execute('DROP TABLE IF EXISTS `institution_registrations`');
             $this->execute('RENAME TABLE `z_9610_institution_registrations` TO `institution_registrations`');
         } elseif ($this->hasTable('institution_registrations')) {
             $this->execute('DROP TABLE `institution_registrations`');
         }
-        //POCOR-9610: end
 
-        //POCOR-9610: start - Restore institutions from snapshot
         if ($this->hasTable('z_9610_institutions')) {
             $this->execute('DROP TABLE `institutions`');
             $this->execute('RENAME TABLE `z_9610_institutions` TO `institutions`');
         }
-        //POCOR-9610: end
 
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
     }
 
-    //POCOR-9610: start - Reusable backup helper (skips if backup already exists — idempotent)
     private function backupTable(string $original, string $backup): void
     {
         if (!$this->hasTable($backup)) {
@@ -278,6 +256,4 @@ class POCOR9610 extends AbstractMigration
             $this->execute("INSERT INTO `$backup` SELECT * FROM `$original`");
         }
     }
-    //POCOR-9610: end
 }
-//POCOR-9610: end
