@@ -800,12 +800,7 @@ class AlertLogsTable extends ControllerActionTable
         return $message;
     }
 
-    //POCOR-9509: Render checkbox HTML directly — type:'element' is not handled by ControllerActionHelper::getTableRow()
-    public function onGet_select(EventInterface $event, Entity $entity): string
-    {
-        $value = h($entity->id ?? '');
-        return '<div class="selection-wrapper"><input type="checkbox" name="selected_ids[]" value="' . $value . '" class="no-selection-label" kd-checkbox-radio><label></label></div>';
-    }
+    //POCOR-9509: No onGetSelect needed — type:'element' renders select_checkbox.php via HtmlField->element()
 
     public function onGetFeature(EventInterface $event, Entity $entity)
     {
