@@ -2692,7 +2692,12 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
-    //POCOR-9629 calculate CGPA only
+    /**
+     * Cumulative CGPA generation for a student based on report card configuration.
+     * calculate CGPA only
+     * POCOR-9629
+     * @return void
+     */
     public static function addGpaReportCardRegenrate(
     $checkgpaStudent,
     $selectedAcademicPeriodId,
@@ -2794,7 +2799,13 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $results;
     }
 
-     //POCOR-9629 calculate CGPA only
+    /**
+     * Cumulative CGPA generation for a student based on report card configuration.
+     * calculate CGPA only
+     * insert CGPA based on report card configuration
+     * POCOR-9629
+     * @return void
+     */
     private static function insertOnlyCumulativeGpaPerStudentPerGpa(
     $institutionId,
     $studentId,
@@ -2830,7 +2841,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
         if ($existing) {
 
-            // ✅ ONLY update cumulative_gpa
+            //ONLY update cumulative_gpa
             if ($existing->cumulative_gpa != $cum_gpa) {
                 $new = true;
 
@@ -2843,7 +2854,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
 
         } else {
 
-            // ✅ Insert with ONLY CGPA (GPA = NULL or keep default)
+            //Insert with ONLY CGPA (GPA = NULL or keep default)
             $new = true;
 
             $existing = $gpaTable->newEntity([

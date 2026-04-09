@@ -387,6 +387,8 @@ class ReportCardsTable extends AppTable
 
             $reportStartDate = $reportCard->start_date;
             $reportEndDate   = $reportCard->end_date;
+
+             //POCOR-9629
             $this->handleGpaGeneration(
                     $report_card_id,
                     $student_id,
