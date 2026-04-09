@@ -154,6 +154,10 @@ class InstitutionAccreditationsTable extends ControllerActionTable
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query): void
     {
+        $institutionId = $this->getQueryString('institution_id');
+        if ($institutionId) {
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        }
         $query->contain(['EducationProgrammes' => ['EducationCycles' => ['EducationLevels' => ['EducationSystems' => ['AcademicPeriods']]]]]);
     }
 
