@@ -214,8 +214,9 @@ class InstitutionClassesTable extends ControllerActionTable
     //POCOR-9613[START]
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-         $entity->total_male_students = $entity->total_male_students;
-         $entity->total_female_students = $entity->total_female_students;
+        //POCOR-9257: default to 0 for new classes where total_male/female_students is not yet set
+        $entity->total_male_students = $entity->total_male_students ?? 0;
+        $entity->total_female_students = $entity->total_female_students ?? 0;
     }
     //POCOR-9613[END]
 

@@ -61,7 +61,12 @@ class HideButtonBehavior extends Behavior
 
     public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
+        //Log::debug('[TEMP-LOG] HideButtonBehavior::onUpdateActionButtons START');
+        //Log::debug('[TEMP-LOG] HideButtonBehavior incoming buttons count: ' . count($buttons) . ', keys: ' . implode(', ', array_keys($buttons)));
+
         $buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+
+        //Log::debug('[TEMP-LOG] HideButtonBehavior after table call, buttons count: ' . count($buttons) . ', keys: ' . implode(', ', array_keys($buttons)));
 
         if (isset($buttons['edit'])) {
             unset($buttons['edit']);
@@ -70,6 +75,9 @@ class HideButtonBehavior extends Behavior
         if (isset($buttons['remove'])) {
             unset($buttons['remove']);
         }
+
+        //Log::debug('[TEMP-LOG] HideButtonBehavior FINAL buttons count: ' . count($buttons) . ', keys: ' . implode(', ', array_keys($buttons)));
+        //Log::debug('[TEMP-LOG] HideButtonBehavior::onUpdateActionButtons END');
 
         return $buttons;
     }
