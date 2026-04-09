@@ -12,6 +12,7 @@ class POCOR9509 extends AbstractMigration
     private const BACKUP_TABLES = [
         'alerts',
         'alert_queue',
+        'alert_logs', //POCOR-9509: backup needed for status column type change
     ];
 
     public function up(): void
@@ -21,6 +22,7 @@ class POCOR9509 extends AbstractMigration
         $this->createAlertQueue();   //POCOR-9509: alerts delivery queue
         $this->createJobsTable();     //POCOR-9509: Laravel queue jobs table
         $this->createFailedJobsTable(); //POCOR-9509: Laravel failed jobs table
+        $this->migrateAlertLogsStatus(); //POCOR-9509: change alert_logs.status from VARCHAR to SMALLINT
     }
 
     public function down(): void
@@ -66,6 +68,7 @@ class POCOR9509 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `jobs`');
         $this->execute('DROP TABLE IF EXISTS `failed_jobs`');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+        // alert_logs is restored from backup — column type reverts automatically
     }
 
     // -------------------------------------------------------------------------
@@ -162,6 +165,25 @@ class POCOR9509 extends AbstractMigration
             ->addIndex(['alert_type'], ['name' => 'idx_alert_type'])
             ->addIndex(['recipient'], ['name' => 'idx_recipient'])
             ->create();
+    }
+
+    // -------------------------------------------------------------------------
+    // POCOR-9509: Change alert_logs.status from VARCHAR(20) to SMALLINT
+    // Status values: -1=Failed, 0=Pending, 1=Success (language-agnostic integers)
+    // -------------------------------------------------------------------------
+
+    private function migrateAlertLogsStatus(): void
+    {
+        if (!$this->hasTable('alert_logs')) {
+            return;
+        }
+        // Convert any existing string values to their integer equivalents before changing type
+        $this->execute("UPDATE `alert_logs` SET `status` = -1 WHERE `status` = 'Failed'");
+        $this->execute("UPDATE `alert_logs` SET `status` = 1 WHERE `status` = 'Success'");
+        $this->execute("UPDATE `alert_logs` SET `status` = 0 WHERE `status` NOT IN ('-1', '1') OR `status` IS NULL");
+        // Change column type: VARCHAR(20) -> SMALLINT NOT NULL DEFAULT 0
+        // Comment preserved: -1=Failed, 0=Pending, 1=Success
+        $this->execute("ALTER TABLE `alert_logs` MODIFY COLUMN `status` SMALLINT NOT NULL DEFAULT 0 COMMENT '-1=Failed, 0=Pending, 1=Success'");
     }
 
     // -------------------------------------------------------------------------

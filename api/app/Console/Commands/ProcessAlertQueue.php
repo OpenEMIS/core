@@ -11,6 +11,7 @@ use Throwable;
 use App\Services\AlertSender\EmailSender;
 use App\Services\AlertSender\SmsSender;
 use App\Services\AlertSender\MessageSanitizer;
+use App\Models\Api5\AlertLogs;
 
 class ProcessAlertQueue extends Command
 {
@@ -22,7 +23,7 @@ class ProcessAlertQueue extends Command
         $limit = (int)$this->option('limit');
 
         $alerts = DB::table('alert_queue')
-            ->where('status', 0)
+            ->where('status', AlertLogs::STATUS_PENDING) //POCOR-9509: use constant
             ->where('available_at', '<=', now())
             ->orderBy('id')
             ->limit($limit)
@@ -63,19 +64,20 @@ class ProcessAlertQueue extends Command
                     'feature' => $alertType,
                     'method' => $channel,
                     'destination' => $recipient,
-                    'status' => 0,
+                    'status' => AlertLogs::STATUS_PENDING, //POCOR-9509: use constant
                     'subject' => $subject,
                     'message' => $message,
                     'checksum' => $checksum,
+                    'created_user_id' => 2, //POCOR-9509: system user (NOT NULL, no default)
                     'created' => now(),
                 ]);
             }
             // Lock the row using optimistic locking
             $updated = DB::table('alert_queue')
                 ->where('id', $alert->id)
-                ->where('status', 0)
+                ->where('status', AlertLogs::STATUS_PENDING) //POCOR-9509: use constant
                 ->update([
-                    'status' => 1,
+                    'status' => 1, //POCOR-9509: alert_queue processing state (no constant in AlertLogs — use raw 1)
                     'modified' => now(),
                 ]);
 
@@ -118,7 +120,7 @@ class ProcessAlertQueue extends Command
                 DB::table('alert_queue')
                     ->where('id', $alert->id)
                     ->update([
-                        'status' => 2,
+                        'status' => 2, //POCOR-9509: alert_queue STATUS_SENT=2 (queue has extra PROCESSING state)
                         'sent_at' => now(),
                         'modified' => now(),
                     ]);
@@ -128,9 +130,9 @@ class ProcessAlertQueue extends Command
                     ->where('method', $channel)
                     ->where('destination', $recipient)
                     ->where('checksum', $checksum)
-                    ->where('status', '=', 0)
+                    ->where('status', '=', AlertLogs::STATUS_PENDING)
                     ->update([
-                        'status' => 1,
+                        'status' => AlertLogs::STATUS_SENT, //POCOR-9509: use constant
                         'processed_date' => now(),
                     ]);
 
@@ -159,7 +161,7 @@ class ProcessAlertQueue extends Command
         $maxRetries = config('alerts.max_retries', 3);
 
         $retryCount = $alert->retry_count + 1;
-        $status = $retryCount >= $maxRetries ? -1 : 0;
+        $status = $retryCount >= $maxRetries ? AlertLogs::STATUS_FAILED : AlertLogs::STATUS_PENDING; //POCOR-9509: use constants
 
         DB::table('alert_queue')
             ->where('id', $alert->id)
