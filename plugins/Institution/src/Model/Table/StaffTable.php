@@ -4341,9 +4341,6 @@ class StaffTable extends ControllerActionTable
                         $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
                         $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
                     ]);
-            } catch (\Throwable $e) {
-                return [];
-            }
         }
 
         $attendanceByStaffIdRecords = [];
