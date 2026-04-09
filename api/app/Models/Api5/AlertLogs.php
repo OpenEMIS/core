@@ -9,6 +9,12 @@ class AlertLogs extends Model
 {
     use HasFactory;
 
+    //POCOR-9509: Numeric status constants — language-agnostic integers stored in alert_logs.status (SMALLINT)
+    // Mirrors AlertQueueTable::STATUS_* in CakePHP
+    const STATUS_PENDING = 0;
+    const STATUS_SENT = 1;
+    const STATUS_FAILED = -1;
+
     protected $table = 'alert_logs';
 
     // ✅ Allow mass assignment

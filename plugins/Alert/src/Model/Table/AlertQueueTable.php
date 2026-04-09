@@ -16,11 +16,19 @@ use DateTimeInterface;
 
 class AlertQueueTable extends ControllerActionTable
 {
+    //POCOR-9509: Numeric status constants — language-agnostic, used by both CakePHP and Laravel
+    // alert_queue.status uses: PENDING, PROCESSING, SENT, FAILED
+    // alert_logs.status uses:  PENDING, SENT, FAILED
+    const STATUS_PENDING = 0;
+    const STATUS_PROCESSING = 1;
+    const STATUS_SENT = 2;
+    const STATUS_FAILED = -1;
+
     private array $statusTypes = [
-        0 => 'Pending',
-        1 => 'Processing',
-        2 => 'Sent',
-        -1 => 'Failed'
+        self::STATUS_PENDING => 'Pending',
+        self::STATUS_PROCESSING => 'Processing',
+        self::STATUS_SENT => 'Sent',
+        self::STATUS_FAILED => 'Failed',
     ];
 
     public function initialize(array $config): void
@@ -361,7 +369,7 @@ class AlertQueueTable extends ControllerActionTable
             'subject' => $subject,
             'message_body' => $messageBody,
             'payload' => $payload ? json_encode($payload) : null,
-            'status' => 0, // pending
+            'status' => self::STATUS_PENDING, //POCOR-9509: use constant
             'retry_count' => 0,
             'available_at' => $availableAt ?? new DateTime(),
         ]);
@@ -408,15 +416,15 @@ class AlertQueueTable extends ControllerActionTable
         $connection = $this->getConnection();
 
         $pending = $connection->execute(
-            'SELECT COUNT(*) as count FROM alert_queue WHERE status = 0'
+            'SELECT COUNT(*) as count FROM alert_queue WHERE status = ' . self::STATUS_PENDING
         )->fetch('assoc')['count'] ?? 0;
 
         $processing = $connection->execute(
-            'SELECT COUNT(*) as count FROM alert_queue WHERE status = 1'
+            'SELECT COUNT(*) as count FROM alert_queue WHERE status = ' . self::STATUS_PROCESSING
         )->fetch('assoc')['count'] ?? 0;
 
         $failed = $connection->execute(
-            'SELECT COUNT(*) as count FROM alert_queue WHERE status = -1'
+            'SELECT COUNT(*) as count FROM alert_queue WHERE status = ' . self::STATUS_FAILED
         )->fetch('assoc')['count'] ?? 0;
 
         return [
