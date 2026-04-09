@@ -65,10 +65,10 @@ class ApiCredentialsTable extends ControllerActionTable
 
     }
 
-    //POCOR-9256 start
+    //POCOR-9256 start - call parent so View/Edit/Delete URLs include encoded id per row (fixes same result for all items in v5)
     public function onUpdateActionButtons(EventInterface $event, $entity, array $buttons)
     {
-        return $buttons;
+        return parent::onUpdateActionButtons($event, $entity, $buttons);
     }
     //POCOR-9256 end
 
