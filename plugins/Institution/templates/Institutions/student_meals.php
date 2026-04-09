@@ -21,6 +21,7 @@
     localStorage.setItem('institution_id', '<?php echo h($institution_id);?>');
     localStorage.setItem('institutionIndexUrl', '<?php echo $institutionIndexUrl;?>');
     localStorage.setItem('baseUrl', '<?php echo $baseUrl;?>');
+    localStorage.setItem('baseCoreUrl', '<?php echo $baseCoreUrl;?>'); //POCOR-9633: inject baseCoreUrl so Angular api.service.ts resolves api/v4/ and api/v5/ correctly
 </script>
 
 <div>
