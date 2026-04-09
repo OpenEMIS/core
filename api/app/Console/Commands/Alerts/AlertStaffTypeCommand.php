@@ -100,8 +100,7 @@ class AlertStaffTypeCommand extends AlertCommandBase
         $value = (int) ($threshold['value'] ?? 1);
 
         if (!$staffTypeId) {
-            $this->info("No staff_type configured in threshold");
-            return [];
+            // $this->info("No staff_type configured in threshold"); //POCOR-9509: commented out per CLAUDE.md            return [];
         }
 
         // POCOR-9509: Build DATEDIFF condition (matches CakePHP logic)
@@ -168,11 +167,11 @@ class AlertStaffTypeCommand extends AlertCommandBase
         })->toArray();
 
         if (empty($results)) {
-            $this->info("No staff records found matching threshold (staff_type={$staffTypeId}, condition={$condition}, value={$value})");
+            // $this->info("No staff records found matching threshold (staff_type={$staffTypeId}, condition={$condition}, value={$value})");
             return [];
         }
 
-        $this->info("Found " . count($results) . " staff record(s) matching threshold");
+        // $this->info("Found " . count($results) . " staff record(s) matching threshold");
 
         return $results;
     }

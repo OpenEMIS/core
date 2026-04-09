@@ -74,8 +74,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
         $approvedStepIds = $this->getApprovedStepIds();
 
         if (empty($approvedStepIds)) {
-            $this->info("No approved workflow steps found");
-            return [];
+            // $this->info("No approved workflow steps found"); //POCOR-9509: commented out per CLAUDE.md            return [];
         }
 
         // Check if user is super admin
