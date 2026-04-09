@@ -3,6 +3,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\I18n\Date;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\EventInterface;
@@ -39,13 +40,12 @@ class InstitutionRegistrationsTable extends ControllerActionTable
         ]);
         //POCOR-9610: end
 
-        //POCOR-9610: start - read-only: data is pushed from OpenEMIS Accreditations via API
+        //POCOR-9610: start - read-only: data managed via API only
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+        $this->addBehavior('ControllerAction.HideButton');
         //POCOR-9610: end
-
-        $this->setDeleteStrategy('restrict');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
@@ -56,7 +56,8 @@ class InstitutionRegistrationsTable extends ControllerActionTable
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
-        $this->setFieldOrder(['valid_from', 'valid_to']);
+        $this->field('status', ['label' => __('Status'), 'visible' => true]);
+        $this->setFieldOrder(['valid_from', 'valid_to', 'status']);
         //POCOR-9610: end
     }
 
@@ -73,13 +74,80 @@ class InstitutionRegistrationsTable extends ControllerActionTable
 
     public function viewBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        //POCOR-9610: start - hide audit fields on view
+        //POCOR-9610: start - hide audit fields on view; show status virtual field
         $this->field('institution_id', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
+        $this->field('status', ['label' => __('Status'), 'visible' => true]);
+        $this->setFieldOrder(['valid_from', 'valid_to', 'status']);
         //POCOR-9610: end
     }
+
+    public function onGetStatus(EventInterface $event, Entity $entity): string
+    {
+        //POCOR-9610: Valid if valid_to is in future or null; Expired otherwise
+        $validTo = $entity->valid_to;
+        if (!$validTo) {
+            return __('Valid');
+        }
+        return ($validTo < new Date()) ? __('Expired') : __('Valid');
+    }
+
+    //POCOR-9610: start - Excel export: filter by institution_id, fix date rendering, hide audit columns
+
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query): void
+    {
+        //POCOR-9610: filter Excel to current institution only (same as index)
+        $institutionId = $this->getQueryString('institution_id');
+        if ($institutionId) {
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        }
+    }
+
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields): void
+    {
+        //POCOR-9610: keep only valid_from and valid_to; override type to string so onExcelGet* handles rendering
+        $keep = ['valid_from', 'valid_to'];
+        $newFields = new ArrayObject();
+        foreach ($fields->getArrayCopy() as $f) {
+            $col = $f['field'] ?? '';
+            if (!in_array($col, $keep, true)) {
+                continue;
+            }
+            $f['type'] = 'string'; //POCOR-9610: force string type so onExcelGet* is called instead of onExcelRenderDate
+            $newFields[] = $f;
+        }
+        //POCOR-9610: append virtual Status column
+        $newFields[] = [
+            'key'        => 'InstitutionRegistrations.status',
+            'field'      => 'status',
+            'type'       => 'string',
+            'label'      => __('Status'),
+            'style'      => [],
+            'formatting' => 'GENERAL',
+        ];
+        $fields->exchangeArray($newFields->getArrayCopy());
+    }
+
+    public function onExcelGetValidFrom(EventInterface $event, Entity $entity): string
+    {
+        //POCOR-9610: format Date as Y-m-d string for Excel
+        return $entity->valid_from ? $entity->valid_from->format('Y-m-d') : '';
+    }
+
+    public function onExcelGetValidTo(EventInterface $event, Entity $entity): string
+    {
+        //POCOR-9610: format Date as Y-m-d string for Excel
+        return $entity->valid_to ? $entity->valid_to->format('Y-m-d') : '';
+    }
+
+    public function onExcelGetStatus(EventInterface $event, Entity $entity): string
+    {
+        return $this->onGetStatus($event, $entity);
+    }
+
+    //POCOR-9610: end
 }
 //POCOR-9610: end
