@@ -148,16 +148,23 @@ class InstitutionCasesTable extends AppTable
         }
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
-            $startDate = $requestData->report_start_date;
-            $endDate = $requestData->report_end_date;
+            $startDate = $requestData->report_start_date ?? null;
+            $endDate = $requestData->report_end_date ?? null;
+            $isValidStart = $startDate !== null && $startDate !== '' && $startDate !== '0' && $startDate !== 0;
+            $isValidEnd = $endDate !== null && $endDate !== '' && $endDate !== '0' && $endDate !== 0;
 
-            $reportStartDate = (new DateTime($startDate))->format('Y-m-d');
-            $reportEndDate = (new DateTime($endDate))->format('Y-m-d');
-
-            $query->where([
-                $this->aliasField('created') . ' <= ' => $reportEndDate. ' 23:59:59',
-                $this->aliasField('created') . ' >= ' => $reportStartDate.' 00:00:00'
-            ]);
+            if ($isValidStart && $isValidEnd) {
+                try {
+                    $reportStartDate = (new DateTime($startDate))->format('Y-m-d');
+                    $reportEndDate = (new DateTime($endDate))->format('Y-m-d');
+                    $query->where([
+                        $this->aliasField('created') . ' <= ' => $reportEndDate . ' 23:59:59',
+                        $this->aliasField('created') . ' >= ' => $reportStartDate . ' 00:00:00'
+                    ]);
+                } catch (\Exception $e) {
+                    // Skip date filter if dates are invalid
+                }
+            }
         }
     }
 

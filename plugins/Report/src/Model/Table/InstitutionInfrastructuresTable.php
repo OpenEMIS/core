@@ -14,7 +14,6 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Institution\Model\Table\InstitutionsTable as Institutions;
-use Report\Model\Table\InstitutionPositionsTable as InstitutionPositions;
 use Cake\Database\Connection;
 
 class InstitutionInfrastructuresTable extends AppTable
@@ -31,21 +30,303 @@ class InstitutionInfrastructuresTable extends AppTable
     {
 
         $this->setTable('institutions');
-
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('AreaLevels', ['className' => 'Area.AreaLevels']);
+        $this->belongsTo('Areas', ['className' => 'Area.Areas']);
+        $this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         parent::initialize($config);
-        //$this->hasMany('InstitutionShifts', ['className' => 'Institution.InstitutionShifts', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'location_institution_id']);
         $this->addBehavior('Excel', ['excludes' => ['security_group_id', 'logo_name'], 'pages' => false]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.AreaList');//POCOR-7794
 
     }
 
-   public function beforeAction(EventInterface $event)
+    public function beforeAction(EventInterface $event)
     {
         $this->fields = [];
-        $this->ControllerAction->field('feature');
+        $this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_level_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('infrastructure_level', ['type' => 'hidden']);
+        $this->ControllerAction->field('infrastructure_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_start_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('report_end_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('wash_type', ['type' => 'hidden']);
+        $this->ControllerAction->field('from_date', ['type' => 'hidden']);
+        $this->ControllerAction->field('to_date', ['type' => 'hidden']);
         $this->ControllerAction->field('format');
     }
+
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->getAlias()]['feature'] == 'Report.InstitutionInfrastructures') {
+            $options['validate'] = 'InstitutionInfrastructures';
+        }
+    }
+
+    public function addBeforeAction(EventInterface $event)
+    {
+        $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Education','required' => true]]);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden', 'attr' => ['required' => true]]);
+    }
+
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $options = $this->controller->getFeatureOptions($this->getAlias());
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
+        $attr['onChangeReload'] = true;
+        if (!(isset($this->request->getData($this->getAlias())['feature']))) {
+                $option = $attr['options'];
+                reset($option);
+                $defaultFeatureValue = key($options);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+            }
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $alias = $this->getAlias();
+        $data = $this->request->getData($alias);
+        $areaId = $data['area_education_id'];
+        $institutionTypeId = $data['institution_type_id'] ?? -1;
+        $InstitutionsTable = self::getDynamicTableInstance('Institution.Institutions');
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+
+            if (in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones'])) {
+                $institutionList = [];
+                if (array_key_exists('institution_type_id', (array)$request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['institution_type_id'])) {
+                    $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('institution_type_id') => $institutionTypeId
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                } elseif (!$institutionTypeId && array_key_exists('area_education_id', (array)$request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_education_id']) && $areaId != -1) {
+                    //Start:POCOR-6818 Modified this for POCOR-6859
+                    $AreaT = TableRegistry::getTableLocator()->get('Area.Areas');                    
+                    //Level-1
+                    $AreaData = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $areaId])->toArray();
+                    $childArea =[];
+                    $childAreaMain = [];
+                    $childArea3 = [];
+                    $childArea4 = [];
+                    foreach($AreaData as $kkk =>$AreaData11 ){
+                        $childArea[$kkk] = $AreaData11->id;
+                    }
+                    //level-2
+                    foreach($childArea as $kyy =>$AreaDatal2 ){
+                        $AreaDatas = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal2])->toArray();
+                        foreach($AreaDatas as $ky =>$AreaDatal22 ){
+                            $childAreaMain[$ky] = $AreaDatal22->id;
+                        }
+                    }
+                    //level-3
+                    if(!empty($childAreaMain)){
+                        foreach($childAreaMain as $kyy =>$AreaDatal3 ){
+                            $AreaDatass = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal3])->toArray();
+                            foreach($AreaDatass as $ky =>$AreaDatal222 ){
+                                $childArea3[$ky] = $AreaDatal222->id;
+                            }
+                        }
+                    }
+                    
+                    //level-4
+                    if(!empty($childAreaMain)){
+                        foreach($childArea3 as $kyy =>$AreaDatal4 ){
+                            $AreaDatasss = $AreaT->find('all',['fields'=>'id'])->where(['parent_id' => $AreaDatal4])->toArray();
+                            foreach($AreaDatasss as $ky =>$AreaDatal44 ){
+                                $childArea4[$ky] = $AreaDatal44->id;
+                            }
+                        }
+                    }
+                    $mergeArr = array_merge($childAreaMain,$childArea,$childArea3,$childArea4);
+                    array_push($mergeArr,$areaId);
+                    $mergeArr = array_unique($mergeArr);
+                    $finalIds = implode(',',$mergeArr);
+                    $finalIds = explode(',',$finalIds);
+                    //End:POCOR-6818 Modified this for POCOR-6859
+                    $institutionQuery = $InstitutionsTable
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
+                        ->where([
+                            $InstitutionsTable->aliasField('area_id').' IN' => $finalIds //POCOR-6818
+                        ])
+                        ->order([
+                            $InstitutionsTable->aliasField('code') => 'ASC',
+                            $InstitutionsTable->aliasField('name') => 'ASC'
+                        ]);
+
+                    $superAdmin = $this->Auth->user('super_admin');
+                    if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                        $userId = $this->Auth->user('id');
+                        $institutionQuery->find('byAccess', ['userId' => $userId]);
+                    }
+
+                    $institutionList = $institutionQuery->toArray();
+                } else {
+                   $institutionQuery = $InstitutionsTable
+                                       ->find('list', [
+                                                'keyField' => 'id',
+                                                'valueField' => 'code_name'
+                                            ])
+                                       ->order([
+                                           $InstitutionsTable->aliasField('code') => 'ASC',
+                                           $InstitutionsTable->aliasField('name') => 'ASC'
+                                       ]);
+
+                   $superAdmin = $this->Auth->user('super_admin');
+                   if (!$superAdmin) { // if user is not super admin, the list will be filtered
+                       $userId = $this->Auth->user('id');
+                       $institutionQuery->find('byAccess', ['userId' => $userId]);
+                   }
+
+                   $institutionList = $institutionQuery->toArray();
+                }
+
+                if (empty($institutionList)) {
+                    $institutionOptions = ['' => $this->getMessage('general.select.noOptions')];
+                    $attr['type'] = 'select';
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+
+                    if (count($institutionList) > 1) {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+                    } else {
+                        $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+                    }
+                   
+                    $attr['type'] = 'chosenSelect';
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['multiple'] = false;
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                }
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+
+            if ((in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports','Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones'])
+            )) {
+                $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+                $academicPeriodOptions = $AcademicPeriodTable->getYearList();
+                $currentPeriod = $AcademicPeriodTable->getCurrent();
+
+                $attr['options'] = $academicPeriodOptions;
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+
+                if (in_array($feature, ['Report.Meals','Report.MealDetails'])
+                ) {
+                    $attr['onChangeReload'] = true;
+                }
+
+                if (empty($request->getData($this->getAlias())['academic_period_id'])) {
+                    $request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
+                }
+                return $attr;
+            }
+        }
+    }
+
+    public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+
+            if ((in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones']))) {
+                $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
+                $entity = $attr['entity'];
+
+                if ($action == 'add') {
+                    $areaOptions = $Areas
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->order(['level'])
+                        ->enableHydration(false);
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['select'] = true;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
+                    $attr['onChangeReload'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
+            }
+        }
+        
+        return $attr;
+    }
+
+    public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            $areaLevelId = $this->request->getData($this->getAlias())['area_level_id'];//POCOR-6333
+            if (in_array($feature, ['Report.InstitutionInfrastructures','Report.InfrastructureNeeds', 'Report.InstitutionAssets', 'Report.Income', 'Report.Expenditure', 'Report.WashReports', 'Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones'])) {
+                    $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                    $entity = $attr['entity'];
+
+                    if ($action == 'add') {
+                        $where = [];
+                        
+                        if ($areaLevelId != -1 && !empty($areaLevelId)) {
+                            $where[$Areas->aliasField('area_level_id')] = $areaLevelId;
+                        }
+                        $areas = $Areas
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                            ->where([$where])
+                            ->order([$Areas->aliasField('order')]);
+                        $areaOptions = $areas->toArray();
+                        $attr['type'] = 'chosenSelect';
+                        $attr['attr']['multiple'] = false;
+                        $attr['select'] = true;
+                        /*POCOR-6333 starts*/
+                        if (count($areaOptions) > 1) {
+                            $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas')] + $areaOptions;
+                        } else {
+                            $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $areaOptions;
+                        }
+                        /*POCOR-6333 ends*/
+                        $attr['onChangeReload'] = true;
+                    } else {
+                        $attr['type'] = 'hidden';
+                    }
+            }
+        }
+        return $attr;
+    }
+
 
     public function onExcelGetAccessibility(EventInterface $event, Entity $entity)
     {
@@ -377,7 +658,7 @@ class InstitutionInfrastructuresTable extends AppTable
                                                     'keyField' => 'id',
                                                     'valueField' => 'id'
                                              ])
-                            ->where(['institution_type_id' => $institutionTypeId])
+                            ->where(['institution_type_id IS' => $institutionTypeId])
                             ->toArray();
 
         if (!empty($institutionTypeId)) {
@@ -601,7 +882,7 @@ class InstitutionInfrastructuresTable extends AppTable
                 $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                 $areasData = $areas1
                             ->find()
-                            ->where([$areas1->aliasField('code') => $row->area_code])
+                            ->where([$areas1->aliasField('code IS') => $row->area_code])
                             ->first();
                 $row['region_code'] = '';
                 $row['region_name'] = '';
@@ -747,6 +1028,56 @@ class InstitutionInfrastructuresTable extends AppTable
         });
     }
 
+    public function onUpdateFieldInfrastructureLevel(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            if (in_array(
+                $feature,
+                [
+                    'Report.InstitutionInfrastructures'
+                ]
+            )) {
+
+                $TypesTable = self::getDynamicTableInstance('Infrastructure.InfrastructureLevels');
+                $typeOptions = $TypesTable
+                    ->find('list')
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
+                $attr['options'] = $typeOptions;
+                $attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldInfrastructureType(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            if (in_array(
+                $feature,
+                [
+                    //'Report.InstitutionInfrastructures'
+                ]
+            )) {
+
+                $TypesTable = self::getDynamicTableInstance('building_types');
+                $typeOptions = $TypesTable
+                    ->find('list')
+                    ->toArray();
+
+                $attr['type'] = 'select';
+                $attr['onChangeReload'] = true;
+                $attr['options'] = ['0' => __('All Infrastructure Type')] + $typeOptions;
+                //$attr['attr']['required'] = true;
+            }
+            return $attr;
+        }
+    }
+
     //POCOR-9400
     public function getChildren($id, $idArray) {
         $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
@@ -761,4 +1092,225 @@ class InstitutionInfrastructuresTable extends AppTable
         }
         return $idArray;
     }
+
+    private static function getDynamicTableInstance(string $tableName): Table
+    {
+        // Parse plugin and table names if dot notation is used
+        $locator = TableRegistry::getTableLocator();
+        try {
+            return $locator->get($tableName);
+        } catch (\Exception $exception) {
+        }
+        if ($tableName == 'Institution.InstitutionStatuses') {
+            $tableName = 'Institution.Statuses';
+        }
+        $parts = explode('.', $tableName);
+        $plugin = count($parts) > 1 ? $parts[0] : null;
+        $table = count($parts) > 1 ? $parts[1] : $parts[0];
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableFullAlias = Inflector::camelize($tableName);
+        $tableAlias = Inflector::camelize($table);
+
+        // Create the fully qualified class name if a plugin is specified
+        if ($plugin) {
+            $className = $plugin . '\\Model\\Table\\' . $tableAlias . 'Table';
+        } else {
+            $className = 'App\\Model\\Table\\' . $tableAlias . 'Table';
+        }
+        // Check if the table instance already exists
+        if (!$locator->exists($tableFullAlias)) {
+            // Check if the specific table class exists
+            if (!class_exists($className)) {
+                $className = Table::class; // Fallback to generic Table class
+            }
+
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'className' => $className,
+                'table' => $table,
+                'alias' => $tableAlias,
+            ]);
+        }
+
+        // Return the table instance
+        return $locator->get($tableFullAlias);
+    }
+
+    public function onUpdateFieldWashType(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+            if (in_array($feature, ['Report.WashReports'])) {
+                $options = [
+                    'All' => __('All'),   //POCOR-6732
+                    'Hygiene' => __('Hygiene'),
+                    'Sanitation' => __('Sanitation'),
+                    'Sewage' => __('Sewage'),
+                    'Waste' => __('Waste'),
+                    'Water' => __('Water'),
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+            } else {
+                $attr['value'] = self::NO_FILTER;
+            }
+            return $attr;
+        }
+    }
+
+    public
+    function onUpdateFieldFromDate(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+
+            if ((in_array($feature, ['Report.Income']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+            if ((in_array($feature, ['Report.Expenditure']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
+    }
+
+    public
+    function onUpdateFieldToDate(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $feature = $this->request->getData($this->getAlias())['feature'];
+
+            if ((in_array($feature, ['Report.Income']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+            if ((in_array($feature, ['Report.Expenditure']))) {
+                $attr['type'] = 'date';
+                return $attr;
+            }
+        }
+    }
+
+     public function onUpdateFieldReportStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        //POCOR-7665 refactured code to minimize errors
+        $requestData = $this->request->getData($this->getAlias());
+        $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
+        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        if ($feature) {
+            $attr['value'] = self::NO_FILTER;
+            if ($selectedAcademicPeriodId) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($selectedAcademicPeriodId);
+            }
+                
+            if (in_array($feature, [
+                'Report.InstitutionAssets'
+            ])) {
+                $attr['type'] = 'date';
+                if ($requestData['report_start_date']) {
+                    $attr['value'] = $requestData['report_start_date'];
+                } else {
+                    $currentDate = new \DateTime();
+                    // Set the date to the first day of the year
+                    $firstDayOfTheYear = $currentDate->setDate($currentDate->format('Y'), 1, 1);
+                    // Format the result if needed
+                    $attr['value'] = $firstDayOfTheYear;
+                }
+                $attr['onChangeReload'] = false;
+            }
+            return $attr;
+        }
+    }
+
+    public
+    function onUpdateFieldReportEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        //POCOR-7665 refactured code to minimize errors
+        $requestData = $this->request->getData($this->getAlias());
+        $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
+        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        if ($feature) {
+            $attr['value'] = self::NO_FILTER;
+            if ($selectedAcademicPeriodId) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $selectedPeriod = $AcademicPeriods->get($selectedAcademicPeriodId);
+            }
+            if (in_array($feature, [
+                'Report.InstitutionAssets'
+            ])) {
+                $attr['type'] = 'date';
+                if ($requestData['report_end_date']) {
+                    $attr['value'] = $requestData['report_end_date'];
+                } else {
+                    $currentDate = new \DateTime();
+                    // Set the date to the first day of the year
+                    $lastDayOfTheYear = $currentDate->setDate($currentDate->format('Y'), 12, 31);
+                    // Format the result if needed
+                    $attr['value'] = $lastDayOfTheYear;
+                }
+                $attr['onChangeReload'] = false;
+            }
+            return $attr;
+        }
+    }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator
+            ->add('report_start_date', [
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'report_end_date', true],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, [
+                            'Report.InstitutionAssets',
+                        ]);
+                    }
+                ],
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.InstitutionAssets']);
+                    },
+                    'message' => __('Report Start Date should be later than Academic Period Start Date')
+                ],
+            ]);
+
+        $validator
+            ->add('report_end_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+                    'on' => function ($context) {
+                        $feature = $context['data']['feature'];
+                        return in_array($feature, ['Report.InstitutionAssets']);
+                    },
+                    'message' => __('Report End Date should be earlier than Academic Period End Date')
+                ]
+            ]);
+        $validator = $validator
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
+
+    public function validationInstitutionInfrastructures(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            //->notEmpty('institution_type_id')
+            ->notEmpty('infrastructure_level');
+        return $validator;
+    }
+
+
+
+    
 }

@@ -11,6 +11,34 @@ class InstitutionsFactory extends Factory
 {
     protected $model = Institutions::class;
 
+    // POCOR-9257: Override make and create to remove fax attribute
+    public function make(array $attributes = [], ?Model $parent = null)
+    {
+        // Remove fax from attributes before making
+        unset($attributes['fax']);
+        $instance = parent::make($attributes);
+        // Also remove if auto-generated
+        if (isset($instance['fax'])) {
+            unset($instance['fax']);
+        }
+        return $instance;
+    }
+
+    public function create(array $attributes = [], ?\Closure $afterMaking = null)
+    {
+        // Remove fax from attributes before creating
+        unset($attributes['fax']);
+        return parent::create($attributes, function ($instance) use ($afterMaking) {
+            // Remove fax from instance before DB insert
+            if (isset($instance['fax'])) {
+                unset($instance['fax']);
+            }
+            if ($afterMaking) {
+                $afterMaking($instance);
+            }
+        });
+    }
+
     public function definition(): array
     {
 
@@ -24,7 +52,6 @@ class InstitutionsFactory extends Factory
     'postal_code' => $this->faker->lexify(str_repeat("?", 20)),
     'contact_person' => $this->faker->lexify(str_repeat("?", 100)),
     'telephone' => $this->faker->lexify(str_repeat("?", 30)),
-    'fax' => $this->faker->lexify(str_repeat("?", 30)),
     'email' => $this->faker->lexify(str_repeat("?", 100)),
     'website' => $this->faker->lexify(str_repeat("?", 100)),
     'date_opened' => \Carbon\Carbon::now()->format("Y-m-d"),

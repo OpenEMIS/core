@@ -857,7 +857,7 @@ export class AddStudentComponent extends KdPageBase implements OnInit {
   }
 
   loginData() {
-    this.Rest.setSession();
+    // this.Rest.setSession(); //POCOR-9594: CakePHP template injects real credentials via sessionStorage
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('username');

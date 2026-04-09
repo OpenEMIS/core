@@ -4,6 +4,7 @@ import { IMiniDashboardItem } from 'openemis-styleguide-lib/kd-components/kd-ang
 import { ITableApi, ITableColumn, ITableConfig, KdAlertEvent, KdPageBase, KdPageBaseEvent, KdTable } from 'openemis-styleguide-lib';
 import { timer } from 'rxjs';
 import { ApiService } from '../api.service';
+import { StudentMealsCacheService } from './student-meals-cache.service'; //POCOR-9594: caching service
 import { ActivatedRoute, Router } from '@angular/router';
 import { DEFAULT_TEMPLATE_THEME } from '../shared/config.default-val';
 import { saveAs } from 'file-saver'
@@ -172,7 +173,8 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     public pageEvent: KdPageBaseEvent,
     public _router: Router,
     public _activatedRoute: ActivatedRoute,
-    private _kdAlertEvent: KdAlertEvent
+    private _kdAlertEvent: KdAlertEvent,
+    private cache: StudentMealsCacheService //POCOR-9594: inject cache service
   ) {
     super({
       router: _router,
@@ -225,9 +227,14 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // console.log(this.mealImportUrl, "mealImportUrl");
 
     let tokenData = localStorage.getItem('encoded_url');
+    // console.log('@StudentMealsComponent::importTableFields', { tokenData, institution_id: this.institution_id, academic_Period: this.academic_Period, selected_academic_class: this.selected_academic_class, selected_meal_program: this.selected_meal_program }); //[TEMP-LOG]
     if (tokenData) {
       localStorage.setItem("institution_id", JSON.stringify(this.institution_id));
       localStorage.setItem("academic_Period", JSON.stringify(this.academic_Period));
+      //POCOR-9594: start - pass the already-selected class and meal programme so the import page can pre-fill without re-selecting
+      localStorage.setItem("institution_class_id", JSON.stringify(this.selected_academic_class));
+      localStorage.setItem("meal_programme_id", JSON.stringify(this.selected_meal_program));
+      //POCOR-9594: end
       this.router.navigateByUrl(`Institution/Institutions/${tokenData}/ImportStudentMeals/add`);
     }
   }
@@ -310,7 +317,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         this.callPostMealAPI(item);
         this.setDashboard();
       } else if (indexInArray2.index != -1 && indexInArray2.data == null) {
-        item.meal_received_id = 1;
+        item.meal_received_id = item.default_meal_receive_id ?? 1; //POCOR-9633: use API-supplied default instead of hardcoded Received
         item.meal_benefit_id = 1;
         this.callPostMealAPI(item);
         this.setDashboard();
@@ -510,7 +517,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   loginData() {
-    // this.Rest.setSession();
+    // // this.Rest.setSession(); //POCOR-9594: CakePHP template injects real credentials via sessionStorage
     let token = localStorage.getItem("loginToken");
     if (!token) {
       let userName = sessionStorage.getItem('nbn');
@@ -598,7 +605,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   mealBenefitType() {
-    this.Rest.getWithToken('meal-benefit-types').subscribe({
+    this.cache.getWithToken('meal-benefit-types').subscribe({ //POCOR-9594: use cache
       next: (response: any) => {
         if (response) {
           this.meal_benefit = [];
@@ -626,7 +633,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   mealType() {
-    this.Rest.getWithToken(`institutions/${this.institution_id}/meal-distributions`).subscribe({
+    this.cache.getWithToken(`institutions/${this.institution_id}/meal-distributions`).subscribe({ //POCOR-9594: use cache
       next: (response: any) => {
         if (response) {
           this.meal_distribution = [];
@@ -654,22 +661,29 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   getAPIData() {
-    this.Rest.getWithToken('academic-periods').subscribe({
+    //POCOR-9594: use cache; getClassData() moved to getAcademicDay() to fix race condition
+    this.cache.getWithToken('academic-periods').subscribe({
       next: (response: any) => {
         if (response) {
 
           this.academicYear = [];
+          let selectedPeriodId: any = null;
           response?.data?.data.forEach((element: any) => {
             let obj = {
               key: element.id,
               value: element.start_year
             }
             this.academicYear.push(obj);
+            //POCOR-9594: pick period marked as current/selected by the API
+            if (element.current || element.selected) {
+              selectedPeriodId = element.id;
+            }
           });
-          this.academic_Period = this.academicYear[0].key;
+          //POCOR-9594: fall back to first item if none is flagged as current
+          this.academic_Period = selectedPeriodId ?? this.academicYear[0].key;
           this.academicPeriod[0].options = this.academicYear;
+          this.academicPeriod[0].value = this.academic_Period;
           this.getAcademicWeek(this.academic_Period);
-          this.getClassData();
         }
       },
       error: (error: any) => {
@@ -685,7 +699,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
 
   getAcademicWeek(id: any) {
     this.academic_Period = id;
-    this.Rest.getWithToken('academic-periods/' + this.academic_Period + '/weeks').subscribe({
+    this.cache.getWithToken('academic-periods/' + this.academic_Period + '/weeks').subscribe({ //POCOR-9594: use cache
       next: (response: any) => {
         this.academic_week = [];
         response?.data?.list?.weeks.forEach((element: any) => {
@@ -751,9 +765,15 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         newDay[0].options = this.academic_day;
         newDay[0].value = this.academic_period_day;
         this.day = [...newDay];
-        if(status) {
+        //POCOR-9594: start - serial chain fix
+        // status=true  → week changed by user: day is set, just reload students
+        // status=false → initial load: academic_period_day is now set; continue chain to classes
+        if (status) {
           this.getMealStudent(this.selected_meal_program);
+        } else {
+          this.getClassData();
         }
+        //POCOR-9594: end
       },
       error: (error: any) => {
         if (error) {
@@ -767,7 +787,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   getClassData() {
-    this.Rest.getWithToken(`institutions/${this.institution_id}/classes?order=id&academic_period_id=${this.academic_Period}`).subscribe({
+    this.cache.getWithToken(`institutions/${this.institution_id}/classes?order=id&academic_period_id=${this.academic_Period}`).subscribe({ //POCOR-9594: use cache
       next: (response: any) => {
         if (response) {
           this.academic_class = [];
@@ -799,7 +819,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
   }
 
   getMealProgramData() {
-    this.Rest.getWithToken(`institutions/${this.institution_id}/meal-programmes?academic_period_id=${this.academic_Period}`).subscribe({
+    this.cache.getWithToken(`institutions/${this.institution_id}/meal-programmes?academic_period_id=${this.academic_Period}`).subscribe({ //POCOR-9594: use cache
       next: (response: any) => {
         if (response) {
           this.academic_meal = [];
@@ -849,7 +869,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // console.log(this.selected_meal_program, "selected_meal_program");
 
     if (this.academic_Period && this.academic_period_day && this.selected_academic_class && this.selected_meal_program) {
-      this.Rest.getWithToken(`institutions/${this.institution_id}/meal-students?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&institution_class_id=${this.selected_academic_class}&meal_program_id=${this.selected_meal_program}`).subscribe({
+      this.Rest.getWithToken(`institution-class-students?_scope=withMeals&_conditions=institution_class_students.institution_id:${this.institution_id};institution_class_students.academic_period_id:${this.academic_Period};institution_class_students.institution_class_id:${this.selected_academic_class}&_date=${this.academic_period_day}&_meal_programmes_id=${this.selected_meal_program}`, true).subscribe({ //POCOR-9633: use v5 institution-class-students with withMeals scope; qualified table.column in _conditions to avoid ambiguity
         next: (response: any) => {
           if (response && response?.data?.data?.length > 0) {
             let newDataRow = [];
@@ -973,10 +993,10 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     this.displayLoading = true;
     switch (type) {
       case 'academicPeriod': {
-        await this.getAcademicWeek(event.target.value);
-        this.academicPeriod[0].value = event.target.value;
         this.academic_Period = event.target.value;
-        this.getClassData();
+        this.academicPeriod[0].value = event.target.value;
+        //POCOR-9594: getClassData() removed here — getAcademicDay() chains to it
+        this.getAcademicWeek(event.target.value);
         break;
       }
       case 'week': {

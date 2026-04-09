@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
+use Cake\Routing\Router;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
@@ -129,6 +130,7 @@ class UsersTable extends AppTable
             'last_login' => $lastLogin,
             'preferred_language' => $preferredLanguage
         ], ['id' => $user['id']]);
+        $session->write('System.baseCoreUrl', Router::url('/', true));
     }
 
     public function createAuthorisedUser(EventInterface $event, $userName, array $userInfo)

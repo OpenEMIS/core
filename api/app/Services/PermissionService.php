@@ -97,13 +97,13 @@ class PermissionService
         $permissions = Cache::get($cacheKey);
 
         if (empty($permissions)) {
-            Log::info("Permissions cache miss for user {$user->id}. Reloading from DB.");
+            // Log::info("Permissions cache miss for user {$user->id}. Reloading from DB.");
             $permissions = $this->loadPermissionsFromDb($user->id);
 
             if (!empty($permissions)) {
                 Cache::put($cacheKey, $permissions, $cacheTTL);
             } else {
-                Log::warning("No permissions found for user {$user->id} after DB reload.");
+                // Log::warning("No permissions found for user {$user->id} after DB reload.");
                 return false;
             }
         }

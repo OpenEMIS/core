@@ -158,7 +158,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->getSubject()->renderElement('Configuration.external_alert_service_sms', ['attr' => $attr]);
+        return $event->getSubject()->element('Configuration.external_alert_service_sms', ['attr' => $attr]); //POCOR-9633: renderElement() renamed to element() in CakePHP 5
 
     }
 
@@ -213,7 +213,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
             $error_prefix = __CLASS__ . ':' . __FILE__ . __FUNCTION__ . __LINE__;
             $this->log($error_prefix);
             $this->log($errorMessage);
-            $this->log($errors);
+            $this->log((string) $errors);
             //POCOR-7981:ends
             $this->Alert->error('general.externalSourceDataErr', ['reset' => true]);
         } else {//POCOR-6930 Ends
