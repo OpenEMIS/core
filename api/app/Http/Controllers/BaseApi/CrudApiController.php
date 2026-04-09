@@ -339,6 +339,8 @@ class CrudApiController extends Controller
         'insurance-types' => \App\Models\Api5\InsuranceTypes::class,
         'insurance-providers' => \App\Models\Api5\InsuranceProviders::class,
         'institutions' => \App\Models\Api5\Institutions::class,
+        'institution-registrations' => \App\Models\Api5\InstitutionRegistrations::class,
+        'institution-accreditations' => \App\Models\Api5\InstitutionAccreditations::class,
         'institution-visit-requests' => \App\Models\Api5\InstitutionVisitRequests::class,
         'institution-units' => \App\Models\Api5\InstitutionUnits::class,
         'institution-types' => \App\Models\Api5\InstitutionTypes::class,

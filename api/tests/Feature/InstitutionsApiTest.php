@@ -69,13 +69,21 @@ class InstitutionsApiTest extends TestCase
         $record = Institutions::factory()->create();
         $updatedData = [
             'id' => $record->id,
-            // Add at least one field from schema to update
+            'external_id' => 'ACC-INS-POCOR-9610',
+            'registration_status' => 'active',
+            'registration_valid_until' => '2027-01-01',
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/institutions/' . $record->id, $updatedData);
 
         $response->assertStatus(200);
+        $this->assertDatabaseHas('institutions', [
+            'id' => $record->id,
+            'external_id' => 'ACC-INS-POCOR-9610',
+            'registration_status' => 'active',
+            'registration_valid_until' => '2027-01-01',
+        ]);
     }
 
     public function test_can_delete_Institutions()
