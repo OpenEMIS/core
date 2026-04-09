@@ -727,8 +727,8 @@ class DashboardController extends AppController
         if(empty($userRoleIds)){
             return [];
         }
-        //POCOR-9429 end 
-           
+        //POCOR-9429 end
+
         return $alertsTable->find()
             ->distinct(['Alerts.id'])
             ->matching('AlertRules.SecurityRoles', function ($q) use ($userRoleIds) {

@@ -33,11 +33,10 @@ $totalRecords = isset($params['count']) ? $params['count'] : 0;
 			echo sprintf(__('Showing %s to %s of %s records'), $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
 		?>
 	</div>
+	<!-- POCOR-9631 -->
 	<div class="display-limit">
 		<span><?= __('Display') ?></span>
-		<div class="input-select-wrapper">
-			<?= $this->ControllerAction->getPageOptions() ?>
-		</div>
+		<?= $this->ControllerAction->getPageOptions() ?>
 		<p><?= __('records') ?></p>
 	</div>
 </div>

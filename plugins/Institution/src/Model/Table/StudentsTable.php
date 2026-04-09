@@ -144,12 +144,12 @@ class StudentsTable extends ControllerActionTable
             'Institution.InstitutionTab',
             ['appliedAction' => [
                 'Students' =>
-                ['student_status_id', 'academic_period_id',],
+                    ['student_status_id', 'academic_period_id',],
                 'StudentUser' =>
-                [
-                    'student_status_id',
-                    'academic_period_id',
-                ]
+                    [
+                        'student_status_id',
+                        'academic_period_id',
+                    ]
             ]]
         );
 
@@ -210,12 +210,12 @@ class StudentsTable extends ControllerActionTable
             'Institution.InstitutionTab',
             ['appliedAction' => [
                 'Students' =>
-                ['student_status_id', 'academic_period_id',],
+                    ['student_status_id', 'academic_period_id',],
                 'StudentUser' =>
-                [
-                    'student_status_id',
-                    'academic_period_id',
-                ]
+                    [
+                        'student_status_id',
+                        'academic_period_id',
+                    ]
             ]]
         );
 
@@ -889,6 +889,7 @@ class StudentsTable extends ControllerActionTable
         // End POCOR-5188
 
     }
+
     /**
      * @param Entity $entity
      * POCOR-8333 -- Initialize for delete.
@@ -3424,11 +3425,11 @@ class StudentsTable extends ControllerActionTable
             ])
             ->leftJoin([$contact_types->getAlias() => $contact_types->getTable()], [
                 $contact_types->aliasField('id = ')
-                    . $student_contacts->aliasField('contact_type_id'),
+                . $student_contacts->aliasField('contact_type_id'),
             ])
             ->leftJoin([$contact_options->getAlias() => $contact_options->getTable()], [
                 $contact_options->aliasField('id = ')
-                    . $contact_types->aliasField('contact_option_id'),
+                . $contact_types->aliasField('contact_option_id'),
             ])
             ->orderDesc($student_contacts->aliasField('preferred'));
         $contact_type = $contact_types->aliasField('name');
@@ -3441,6 +3442,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // POCOR-8131 -- START
+
     /**
      * Get custom field options grouped by field ID
      *
@@ -3478,6 +3480,7 @@ class StudentsTable extends ControllerActionTable
             return [];
         }
     }
+
     // POCOR-8131 -- END
 
     private function addStudentCustomFields(Query $query)
@@ -3646,7 +3649,7 @@ class StudentsTable extends ControllerActionTable
         } catch (\Exception $e) {
             Log::error( // POCOR-8683
                 print_r(['Failed to fetch remove from table' =>
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
+                    ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
             );
         }
         return $affected;
@@ -3741,7 +3744,7 @@ class StudentsTable extends ControllerActionTable
                 [$this->getAlias() => $this->getTable()],
                 [
                     $InstitutionStudents->aliasField('id = ')
-                        . $this->aliasField('previous_institution_student_id')
+                    . $this->aliasField('previous_institution_student_id')
                 ]
             )
             ->where([

@@ -360,6 +360,7 @@ class ReportsController extends AppController
     public function ViewReport()
     {
         ini_set('memory_limit', '-1');
+        set_time_limit(0); //POCOR-9567: prevent PHP timeout on large report files
         $data = $this->request->getQuery();
         $file = $this->request->getData('file_path');
         $data['file_path'] = $this->request->getQuery('file_path');
@@ -400,41 +401,67 @@ class ReportsController extends AppController
         $header = __('Reports') . ' - ' . $moduleTitle;
 
         $inputFileName = $replace_data;
-        // POCOR-8289 - for view report chagne in IOFactory logic
-        try {
-            $inputFileType = IOFactory::identify($inputFileName);
-            $objReader = IOFactory::createReader($inputFileType);
-            $spreadsheet = $objReader->load($inputFileName);
-        } catch (\Exception $e) {
-            throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
-        }
 
-        $sheet = $spreadsheet->getSheet(0);
-        $highestRow = $sheet->getHighestRow();
-        if ($data['module'] == 'InstitutionStatistics') {
-            $highestRow = $sheet->getHighestRow() + 1;
-        }
-        $highestColumn = $sheet->getHighestColumn();
-
-        for ($row = 1; $row <= 1; $row++) {
-            $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-        }
-
-        $rowHeaderNew = $this->array_flatten($rowHeader);
-        for ($row = 2; $row <= $highestRow - 1; $row++) {
-            $rowData[] = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-            if ($this->isEmptyRow(reset($rowData))) {
-                continue;
+        //POCOR-9567: start - prefer companion CSV (written at generation time, no timeout risk)
+        $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
+        if (file_exists($csvFileName) && is_readable($csvFileName)) {
+            $csvHandle = fopen($csvFileName, 'r');
+            $rowHeader = null;
+            $rowHeaderNew = [];
+            $newArr2 = [];
+            while (($csvRow = fgetcsv($csvHandle)) !== false) {
+                if ($rowHeader === null) {
+                    $rowHeader = [$csvRow];
+                    $rowHeaderNew = $csvRow;
+                    continue;
+                }
+                if ($this->isEmptyRow($csvRow)) {
+                    continue;
+                }
+                if (count($csvRow) === count($rowHeaderNew)) {
+                    $newArr2[] = array_combine($rowHeaderNew, $csvRow);
+                }
             }
-        }
+            fclose($csvHandle);
+        } else {
+            // POCOR-8289 - for view report change in IOFactory logic
+            // POCOR-9567: use read-data-only mode to skip formatting/formulas — 2-5x faster for large files
+            try {
+                $inputFileType = IOFactory::identify($inputFileName);
+                $objReader = IOFactory::createReader($inputFileType);
+                $objReader->setReadDataOnly(true); //POCOR-9567: skip cell formatting metadata for faster load
+                $spreadsheet = $objReader->load($inputFileName);
+            } catch (\Exception $e) {
+                throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+            }
 
-        foreach ($rowData as $newKey => $newDataVal) {
-            foreach ($newDataVal as $kay2 => $new_data_arr) {
-                if (isset($new_data_arr)) {
-                    $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+            $sheet = $spreadsheet->getSheet(0);
+            $highestRow = $sheet->getHighestRow();
+            if ($data['module'] == 'InstitutionStatistics') {
+                $highestRow = $sheet->getHighestRow() + 1;
+            }
+            $highestColumn = $sheet->getHighestColumn();
+
+            for ($row = 1; $row <= 1; $row++) {
+                $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+            }
+
+            $rowHeaderNew = $this->array_flatten($rowHeader);
+            $rowData = [];
+            $newArr2 = [];
+            for ($row = 2; $row <= $highestRow - 1; $row++) {
+                $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
+                if ($this->isEmptyRow(reset($currentRow))) {
+                    continue;
+                }
+                foreach ($currentRow as $new_data_arr) {
+                    if (isset($new_data_arr)) {
+                        $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+                    }
                 }
             }
         }
+        //POCOR-9567: end
 
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
