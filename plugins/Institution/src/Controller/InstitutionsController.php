@@ -7530,6 +7530,14 @@ class InstitutionsController extends AppController
         $academicPeriodId = $requestData['academic_period_id'] ?? null;
         $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
         $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+        //POCOR-9635: end_date sent as "0000-00-00" or "1970-01-01" from disabled form field — fall back to academic period end_date
+        if (empty($endDate) || $endDate === '1970-01-01' || $endDate === '0000-00-00') {
+            if (!empty($academicPeriodId)) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $period = $AcademicPeriods->find()->select(['end_date'])->where(['id' => $academicPeriodId])->first();
+                $endDate = !empty($period) ? date('Y-m-d', strtotime($period->end_date)) : null;
+            }
+        }
         //POCOR-8434 starts
         $studentAdmissionStatus = !empty($requestData['student_admission_status']) ? $requestData['student_admission_status'] : null;//POCOR-7716
         $studentAdmissionStatusValue = !empty($requestData['student_admission_status_value']) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
@@ -7554,10 +7562,15 @@ class InstitutionsController extends AppController
                 ];
                 $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
                 try {
-                    $saved_student['institution_student'] = $institutionStudents->save($entityStudentsData)->toArray();
+                    $savedResult = $institutionStudents->save($entityStudentsData);
+                    if ($savedResult !== false) {
+                        $saved_student['institution_student'] = $savedResult->toArray();
+                    } else {
+                        //POCOR-9635: save returned false (validation failure) — toArray() on false caused fatal crash
+                        Log::error('[POCOR-9635] institution_students save failed in saveStudentData for student_id=' . ($entityStudentsData->student_id ?? 'unknown') . ' institution_id=' . ($entityStudentsData->institution_id ?? 'unknown') . ' errors=' . json_encode($entityStudentsData->getErrors()));
+                    }
                 } catch (\Exception $exception) {
                     Log::debug(__FUNCTION__);
-
                     Log::debug('Error: ' . $exception->getMessage());
                 }
             }
@@ -7719,7 +7732,13 @@ class InstitutionsController extends AppController
             ];
             $entityClassData = $institutionClassStudents->newEntity($entityClassData);
             try {
-                $saved_student['institution_class_student'] = $institutionClassStudents->save($entityClassData)->toArray();
+                $savedClassResult = $institutionClassStudents->save($entityClassData);
+                if ($savedClassResult !== false) {
+                    $saved_student['institution_class_student'] = $savedClassResult->toArray();
+                } else {
+                    //POCOR-9635: save returned false — toArray() on false would cause fatal crash
+                    Log::error('[POCOR-9635] institution_class_students save failed in saveStudentData for student_id=' . ($entityClassData->student_id ?? 'unknown') . ' institution_id=' . ($entityClassData->institution_id ?? 'unknown') . ' errors=' . json_encode($entityClassData->getErrors()));
+                }
             } catch (\Exception $exception) {
                 Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $exception->getMessage());
