@@ -267,9 +267,6 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
         var success = function (response, deferred) {
             var classStudents = response.data.data;
-            // console.log('getClassStudent');
-            // console.log(options);
-            // console.log(classStudents);
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
             } else {
@@ -291,13 +288,9 @@ function InstitutionStudentMealsSvc($http, $q, $filter, KdDataSvc, AlertSvc, Uti
 
         var success = function (response, deferred) {
             var classStudents = response.data.data;
-            // console.log('getClassStudent');
-            // console.log(response);
-            // console.log(classStudents);
             if (angular.isObject(classStudents)) {
                 deferred.resolve(classStudents);
             } else {
-                // console.log(response);
                 deferred.reject('There was an error when saving the class student list');
             }
         };
