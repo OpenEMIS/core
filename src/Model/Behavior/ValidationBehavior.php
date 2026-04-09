@@ -406,7 +406,11 @@ class ValidationBehavior extends Behavior
                 $fieldName = !empty($fieldLabel) ? $fieldLabel : __(Inflector::humanize($globalData['field']));
                 $compareFieldName = !empty($compareFieldLabel) ? $compareFieldLabel : __(Inflector::humanize($compareField));
 
-                return (!$result) ? $fieldName . ' should be earlier than ' . $compareFieldName : true;
+                //POCOR-9635: include actual date values in message so user and logs can diagnose the failure
+                $fieldValue = $field instanceof \DateTime ? $field->format('Y-m-d') : (string)$field;
+                $compareValue = isset($globalData['data'][$compareField]) ? (string)$globalData['data'][$compareField] : '?';
+                if ($compareValue instanceof \DateTime) { $compareValue = $compareValue->format('Y-m-d'); }
+                return (!$result) ? $fieldName . ' (' . $fieldValue . ') should be earlier than ' . $compareFieldName . ' (' . $compareValue . ')' : true;
             }
         } else {
             return true;
