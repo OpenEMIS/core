@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
+//POCOR-9610: start - Feature tests for institution_registrations API (valid_from / valid_to per spec)
 class InstitutionRegistrationsApiTest extends TestCase
 {
     use DatabaseTransactions;
@@ -69,9 +70,9 @@ class InstitutionRegistrationsApiTest extends TestCase
     {
         $record = InstitutionRegistrations::factory()->create();
         $updatedData = [
-            'id' => $record->id,
-            'status' => 'expired',
-            'decision_reference' => 'DEC-POCOR-9610-UPDATED',
+            'id'         => $record->id,
+            'valid_from' => '2025-01-01',
+            'valid_to'   => '2027-12-31',
         ];
 
         $response = $this->withHeaders([
@@ -80,9 +81,9 @@ class InstitutionRegistrationsApiTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('institution_registrations', [
-            'id' => $record->id,
-            'status' => 'expired',
-            'decision_reference' => 'DEC-POCOR-9610-UPDATED',
+            'id'         => $record->id,
+            'valid_from' => '2025-01-01',
+            'valid_to'   => '2027-12-31',
         ]);
     }
 
@@ -97,3 +98,4 @@ class InstitutionRegistrationsApiTest extends TestCase
         $response->assertStatus(204);
     }
 }
+//POCOR-9610: end

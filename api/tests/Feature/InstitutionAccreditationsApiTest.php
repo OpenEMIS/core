@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
+//POCOR-9610: start - Feature tests for institution_accreditations API (education_programme_id FK per spec)
 class InstitutionAccreditationsApiTest extends TestCase
 {
     use DatabaseTransactions;
@@ -69,9 +70,10 @@ class InstitutionAccreditationsApiTest extends TestCase
     {
         $record = InstitutionAccreditations::factory()->create();
         $updatedData = [
-            'id' => $record->id,
-            'status' => 'revoked',
-            'qualification_level' => 'Advanced Diploma',
+            'id'                     => $record->id,
+            'education_programme_id' => $record->education_programme_id,
+            'valid_from'             => '2025-01-01',
+            'valid_to'               => '2027-12-31',
         ];
 
         $response = $this->withHeaders([
@@ -80,9 +82,9 @@ class InstitutionAccreditationsApiTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('institution_accreditations', [
-            'id' => $record->id,
-            'status' => 'revoked',
-            'qualification_level' => 'Advanced Diploma',
+            'id'         => $record->id,
+            'valid_from' => '2025-01-01',
+            'valid_to'   => '2027-12-31',
         ]);
     }
 
@@ -97,3 +99,4 @@ class InstitutionAccreditationsApiTest extends TestCase
         $response->assertStatus(204);
     }
 }
+//POCOR-9610: end

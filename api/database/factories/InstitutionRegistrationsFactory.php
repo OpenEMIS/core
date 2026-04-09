@@ -5,25 +5,31 @@ namespace Database\Factories;
 use App\Models\Api5\InstitutionRegistrations;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+//POCOR-9610: start - Factory for institution_registrations (valid_from / valid_to per spec)
 class InstitutionRegistrationsFactory extends Factory
 {
     protected $model = InstitutionRegistrations::class;
 
     public function definition(): array
     {
+        //POCOR-9610: start - valid_from defaults to institution's date_opened (NOT NULL per spec)
+        $institution = \App\Models\Institutions::inRandomOrder()->first();
+        $institutionId = $institution?->id ?? \App\Models\Institutions::factory()->create()->id;
+        $validFrom = $institution?->date_opened
+            ? \Carbon\Carbon::parse($institution->date_opened)->format('Y-m-d')
+            : \Carbon\Carbon::now()->format('Y-m-d');
+        //POCOR-9610: end
+
         return [
-            'id' => $this->model::max('id') + 1,
-            'institution_id' => \App\Models\Institutions::inRandomOrder()->value('id') ?? \App\Models\Institutions::factory()->create()->id,
-            'external_id' => 'ACC-INS-' . str_pad((string) $this->faker->unique()->numberBetween(1, 999999), 6, '0', STR_PAD_LEFT),
-            'status' => $this->faker->randomElement(['pending', 'active', 'revoked', 'expired']),
-            'approved_date' => \Carbon\Carbon::now()->subDays(5)->format('Y-m-d'),
-            'valid_from' => \Carbon\Carbon::now()->format('Y-m-d'),
-            'valid_to' => \Carbon\Carbon::now()->addYears(3)->format('Y-m-d'),
-            'decision_reference' => 'DEC-' . $this->faker->unique()->numerify('######'),
+            'id'               => $this->model::max('id') + 1,
+            'institution_id'   => $institutionId,
+            'valid_from'       => $validFrom,
+            'valid_to'         => \Carbon\Carbon::now()->addYear()->format('Y-m-d'),
             'modified_user_id' => 2,
-            'modified' => \Carbon\Carbon::now()->format('Y-m-d H:i:s'),
-            'created_user_id' => 2,
-            'created' => \Carbon\Carbon::now()->format('Y-m-d H:i:s'),
+            'modified'         => \Carbon\Carbon::now()->format('Y-m-d H:i:s'),
+            'created_user_id'  => 2,
+            'created'          => \Carbon\Carbon::now()->format('Y-m-d H:i:s'),
         ];
     }
 }
+//POCOR-9610: end

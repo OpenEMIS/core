@@ -7,6 +7,7 @@ use App\Traits\InstitutionScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+//POCOR-9610: start - API v5 model for institution_accreditations (education_programme_id FK per spec)
 class InstitutionAccreditations extends Model
 {
     use HasFactory;
@@ -14,17 +15,13 @@ class InstitutionAccreditations extends Model
 
     protected $table = 'institution_accreditations';
 
-    //POCOR-9610: start - API v5 accreditation payload fields from external registrations integration
+    //POCOR-9610: start - API v5 accreditation payload fields per spec
     protected $fillable = [
         'id',
         'institution_id',
-        'programme_name',
-        'programme_code',
-        'qualification_level',
-        'status',
+        'education_programme_id',
         'valid_from',
         'valid_to',
-        'external_id',
         'modified_user_id',
         'modified',
         'created_user_id',
@@ -73,13 +70,9 @@ class InstitutionAccreditations extends Model
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="institution_id", type="integer", example=6),
-     *             @OA\Property(property="programme_name", type="string", example="Diploma Electrical"),
-     *             @OA\Property(property="programme_code", type="string", example="DE-101"),
-     *             @OA\Property(property="qualification_level", type="string", example="Diploma"),
-     *             @OA\Property(property="status", type="string", example="active"),
+     *             @OA\Property(property="education_programme_id", type="integer", example=9),
      *             @OA\Property(property="valid_from", type="string", format="date", example="2024-01-01"),
-     *             @OA\Property(property="valid_to", type="string", format="date", example="2027-01-01"),
-     *             @OA\Property(property="external_id", type="string", example="ACC-PROG-000123")
+     *             @OA\Property(property="valid_to", type="string", format="date", example="2026-12-31")
      *         )
      *     ),
      *     @OA\Response(response=201, description="Created successfully"),
@@ -111,13 +104,12 @@ class InstitutionAccreditations extends Model
      *         required=true,
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="status", type="string", example="revoked"),
-     *             @OA\Property(property="valid_from", type="string", format="date", example="2024-01-01"),
-     *             @OA\Property(property="valid_to", type="string", format="date", example="2027-01-01")
+     *             @OA\Property(property="education_programme_id", type="integer", example=9),
+     *             @OA\Property(property="valid_from", type="string", format="date", example="2025-01-01"),
+     *             @OA\Property(property="valid_to", type="string", format="date", example="2027-12-31")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Updated successfully"),
-     *     @OA\Response(response=400, description="Invalid data"),
      *     @OA\Response(response=401, description="Unauthorized"),
      *     @OA\Response(response=404, description="Not found")
      * )
@@ -137,10 +129,15 @@ class InstitutionAccreditations extends Model
      */
     public function _swaggerDelete() {}
 
-    //POCOR-9610: start - Expose institution and audit-user relations for shared CRUD responses
+    //POCOR-9610: start - Expose institution, programme, and audit-user relations for shared CRUD responses
     public function institution()
     {
         return $this->belongsTo(Institutions::class, 'institution_id', 'id');
+    }
+
+    public function educationProgramme()
+    {
+        return $this->belongsTo(EducationProgrammes::class, 'education_programme_id', 'id');
     }
 
     public function modifiedUser()

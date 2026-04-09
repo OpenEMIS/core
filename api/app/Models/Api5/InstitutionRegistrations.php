@@ -7,6 +7,7 @@ use App\Traits\InstitutionScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+//POCOR-9610: start - API v5 model for institution_registrations (valid_from / valid_to per spec)
 class InstitutionRegistrations extends Model
 {
     use HasFactory;
@@ -14,16 +15,12 @@ class InstitutionRegistrations extends Model
 
     protected $table = 'institution_registrations';
 
-    //POCOR-9610: start - API v5 registration payload fields from external registrations integration
+    //POCOR-9610: start - API v5 registration payload fields per spec
     protected $fillable = [
         'id',
         'institution_id',
-        'external_id',
-        'status',
-        'approved_date',
         'valid_from',
         'valid_to',
-        'decision_reference',
         'modified_user_id',
         'modified',
         'created_user_id',
@@ -32,7 +29,7 @@ class InstitutionRegistrations extends Model
     //POCOR-9610: end
 
     //POCOR-9610: start - Cast imported registration lifecycle dates for CRUD responses
-    protected $dates = ['approved_date', 'valid_from', 'valid_to', 'modified', 'created'];
+    protected $dates = ['valid_from', 'valid_to', 'modified', 'created'];
     //POCOR-9610: end
 
     public $timestamps = false;
@@ -72,12 +69,8 @@ class InstitutionRegistrations extends Model
      *         @OA\JsonContent(
      *             type="object",
      *             @OA\Property(property="institution_id", type="integer", example=6),
-     *             @OA\Property(property="external_id", type="string", example="ACC-INS-000123"),
-     *             @OA\Property(property="status", type="string", example="active"),
-     *             @OA\Property(property="approved_date", type="string", format="date", example="2024-01-01"),
      *             @OA\Property(property="valid_from", type="string", format="date", example="2024-01-01"),
-     *             @OA\Property(property="valid_to", type="string", format="date", example="2027-01-01"),
-     *             @OA\Property(property="decision_reference", type="string", example="DEC-2024-001")
+     *             @OA\Property(property="valid_to", type="string", format="date", example="2026-12-31")
      *         )
      *     ),
      *     @OA\Response(response=201, description="Created successfully"),
@@ -109,13 +102,11 @@ class InstitutionRegistrations extends Model
      *         required=true,
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="status", type="string", example="expired"),
-     *             @OA\Property(property="valid_to", type="string", format="date", example="2027-01-01"),
-     *             @OA\Property(property="decision_reference", type="string", example="DEC-2024-001")
+     *             @OA\Property(property="valid_from", type="string", format="date", example="2025-01-01"),
+     *             @OA\Property(property="valid_to", type="string", format="date", example="2027-12-31")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Updated successfully"),
-     *     @OA\Response(response=400, description="Invalid data"),
      *     @OA\Response(response=401, description="Unauthorized"),
      *     @OA\Response(response=404, description="Not found")
      * )
