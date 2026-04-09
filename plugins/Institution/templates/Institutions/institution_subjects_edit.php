@@ -36,8 +36,7 @@ $this->start('panelBody');
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
-        <input ng-model="InstitutionSubjectStudentsController.institutionSubjectName" type="string"
-               ng-init="InstitutionSubjectStudentsController.institutionSubjectName='';">
+        <input ng-model="InstitutionSubjectStudentsController.institutionSubjectName" type="text"> <!--type="text" initally it was type="string" -->
         <div ng-if="InstitutionSubjectStudentsController.postError.name" class="error-message">
             <p ng-repeat="error in InstitutionSubjectStudentsController.postError.name">{{ error }}</p>
         </div>

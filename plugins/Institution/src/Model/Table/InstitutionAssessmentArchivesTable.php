@@ -262,8 +262,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     /**
      * @param string $table_name
      * @param array $where
-     * @return array
-     * @throws \Exception
+     * @return string
      *
      */
     public static function getArchiveStudentsPresent(string $table_name, array $where)

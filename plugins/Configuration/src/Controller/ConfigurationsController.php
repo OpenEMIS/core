@@ -38,7 +38,7 @@ class ConfigurationsController extends AppController
 
     public function Webhooks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigWebhooks']);
+        $this->redirect(['plugin' => 'Configuration', 'controller' => 'Webhooks', 'action' => 'Webhooks']); //POCOR-9257: redirect to standalone WebhooksController
     }
     public function ProductLists()
     {

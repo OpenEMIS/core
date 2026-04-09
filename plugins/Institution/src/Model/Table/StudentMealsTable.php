@@ -699,13 +699,14 @@ class StudentMealsTable extends ControllerActionTable
      */
     private function getDefaultMealReceiveID()
     {
+        //POCOR-9633: start - fix CakePHP5 find: conditions arg ignored, use ->where() + use ConfigItems->value() helper
         $ConfigItemsTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $configItemData = $ConfigItemsTable->find('all', ['conditions' => ['code' => 'DefaultDeliveryStatus']])->first();
-        $DefaultDeliveryStatus = $configItemData->value;
+        $DefaultDeliveryStatus = $ConfigItemsTable->value('DefaultDeliveryStatus'); //POCOR-9633: use value() instead of find('all', ['conditions'=>...]) which CakePHP 5 silently ignores
         $MealReceivedTable = TableRegistry::getTableLocator()->get('Meal.MealReceived');
-        $mealReceivedData = $MealReceivedTable->find('all')->where(['name' => $DefaultDeliveryStatus])->first();
-        $default_meal_receive_id = $mealReceivedData->id;
+        $mealReceivedData = $MealReceivedTable->find()->where(['name' => $DefaultDeliveryStatus])->first(); //POCOR-9633: find() without 'all' arg, CakePHP 5 compatible
+        $default_meal_receive_id = $mealReceivedData ? $mealReceivedData->id : null; //POCOR-9633: null-safe in case no match
         return $default_meal_receive_id;
+        //POCOR-9633: end
     }
 
     /**

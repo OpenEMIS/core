@@ -515,6 +515,19 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var scope = params.context.scope;
         var leave = data.attendance[data.date].leave;
         var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
+        var isTimeOutField = (timeKey === 'time_out');
+
+        function hasTimeInSelected() {
+            return angular.isDefined(params.value.time_in) && params.value.time_in !== null && params.value.time_in !== '';
+        }
+
+        function guardTimeOutWithoutTimeIn() {
+            if (isTimeOutField && !hasTimeInSelected()) {
+                AlertSvc.warning(scope, 'Please select Time In first.');
+                return true;
+            }
+            return false;
+        }
 
         // div element
         var timeInputDivElement = document.createElement('div');
@@ -550,6 +563,40 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 var time24Hour = null;
                 if (timeInputElement.value.length > 0) {
                     time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                }
+                // Validate ordering: time_out must be strictly greater than time_in (and vice versa)
+                try {
+                    var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
+                    if (time24Hour !== null && otherTime) {
+                        // Compare as strings HH:MM:SS works lexicographically
+                        if (timeKey === 'time_out' && time24Hour <= otherTime) {
+                            AlertSvc.error(scope, 'Time Out must be after Time In.');
+                            // revert UI value to previous saved value
+                            try {
+                                timeInputElement.value = convert12Timeformat(params.value[timeKey] || '');
+                            } catch (err) {
+                                timeInputElement.value = '';
+                            }
+                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                            UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                            timeInputElement.setAttribute('readonly', 'readonly');
+                            return;
+                        }
+                        if (timeKey === 'time_in' && time24Hour >= otherTime) {
+                            AlertSvc.error(scope, 'Time In must be before Time Out.');
+                            try {
+                                timeInputElement.value = convert12Timeformat(params.value[timeKey] || '');
+                            } catch (err) {
+                                timeInputElement.value = '';
+                            }
+                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                            UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                            timeInputElement.setAttribute('readonly', 'readonly');
+                            return;
+                        }
+                    }
+                } catch (cmpErr) {
+                    // If validation comparison fails, just proceed to server-side validation
                 }
                 saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
                     .then(
@@ -620,6 +667,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         timeInputElement.addEventListener('click', function (event) {
+            if (guardTimeOutWithoutTimeIn()) {
+                return;
+            }
             timeInputElement.removeAttribute('readonly', 'readonly');
             //POCOR-7770 to hide - Close all other time pickers before showing the selected one
             // First, hide all visible timepicker widgets in the DOM
@@ -665,6 +715,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         // Add click handler to timeSpanElement (icon) to close other timepickers
         timeSpanElement.addEventListener('click', function (event) {
             if (!isDisabled) {
+                if (guardTimeOutWithoutTimeIn()) {
+                    return;
+                }
                 timeInputElement.removeAttribute('readonly', 'readonly');
                 //POCOR-7770 to hide - Close all other time pickers before showing the selected one
                 // First, hide all visible timepicker widgets in the DOM
@@ -807,11 +860,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             var timeIn  = params.data.attendance[dateString].time_in;
             var timeOut = params.data.attendance[dateString].time_out;
 
-            if (timeIn && timeOut && timeIn > timeOut) {
-                var tmp = timeIn;
-                timeIn = timeOut;
-                timeOut = tmp;
-            }
+             // Enforce ordering: Time Out must be strictly greater than Time In
+             if (timeIn && timeOut && timeOut <= timeIn) {
+                 if ($scope) {
+                     AlertSvc.error($scope, 'Time Out must be after Time In.');
+                 }
+                 // Do not proceed to save; reject to stop the chain
+                 return $q.reject('TIME_ORDER_INVALID');
+             }
 
             staffAttendanceData = {
                 staff_id: params.data.staff_id,

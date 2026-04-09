@@ -43,7 +43,9 @@ class ContactTypesTable extends ControllerActionTable
 
 	public function validationDefault(Validator $validator): Validator {
 		$validator = parent::validationDefault($validator);
-		return $validator;
+		return $validator
+            ->requirePresence('contact_option_id')
+			->requirePresence('name');
 	}
 
 	public function indexBeforeAction(EventInterface $event, ArrayObject $extra)

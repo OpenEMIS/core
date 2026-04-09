@@ -1137,11 +1137,11 @@ class ProfilesController extends AppController
             }
         }
         $totalProfileComplete = count($data);
-        $profilePercentage = 100 / $totalProfileComplete * $profileComplete;
-        $profilePercentage = round($profilePercentage);
-        $data['percentage'] = $profilePercentage;
-//        echo "<pre>"; print_r($data);
-//        die;
+        if($totalProfileComplete != 0){
+            $profilePercentage = 100 / $totalProfileComplete * $profileComplete;
+            $profilePercentage = round($profilePercentage);
+            $data['percentage'] = $profilePercentage;
+        }
         return $data;
     }
 

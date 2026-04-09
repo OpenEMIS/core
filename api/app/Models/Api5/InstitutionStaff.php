@@ -6,10 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
 
+use App\Models\Concerns\WebhookQueueTrait;
 class InstitutionStaff extends Model
 {
     use HasFactory;
     use InstitutionScope;
+    // POCOR-9257: Configure webhook events
+    use WebhookQueueTrait;
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
 
     // ✅ Allow mass assignment
     public $timestamps = false;
