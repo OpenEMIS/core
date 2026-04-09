@@ -1,23 +1,24 @@
-# POCOR-9610 — Core Registrations and Accreditations API Foundation
+# POCOR-9610 — Institution Registrations and Accreditations Tabs
 
 ---
 
 ## 1. What is the Task?
 
-POCOR-9610 is the **OpenEMIS Core-side integration slice** for the future external OpenEMIS Accreditations application. Core must be able to store institution registration state, retain registration history, retain programme accreditation records, and expose those records through the existing `/api/v5/*` Laravel CRUD layer.
+Add two new institution-profile tabs in OpenEMIS Core:
 
-This implementation does **not** build the external Accreditations app and does **not** yet add the CakePHP institution-profile tabs. It delivers the schema and v5 API foundation required for that integration.
+- **Registrations** — track institution registration validity periods (`valid_from`, `valid_to`)
+- **Accreditations** — track programme-level accreditations, each linked to an education programme (`education_programme_id`), with validity dates
+
+Both tabs appear in the Institution left sidebar under **General** as **read-only views** (data is pushed from OpenEMIS Accreditations via API). Excel export is supported. The `/api/v5/*` endpoints expose read and write access with role-based permissions.
 
 ---
 
 ## 2. Situation Before
 
-- `institutions` had no accreditation-sync key like `external_id`.
-- `institutions` had no dedicated registration status or expiry fields for the external service.
-- Core had no `institution_registrations` history table.
-- Core had no `institution_accreditations` table for programme-level accreditation records.
-- `/api/v5/*` had no `institution-registrations` or `institution-accreditations` resources.
-- `/api/v5/institutions/{id}` could not persist the new external integration fields.
+- No `institution_registrations` or `institution_accreditations` tables existed.
+- No CakePHP tabs or controllers existed for these two concepts.
+- No Laravel API resources existed for these models.
+- The Institution left sidebar had no entries for Registrations or Accreditations.
 
 ---
 
@@ -25,85 +26,103 @@ This implementation does **not** build the external Accreditations app and does 
 
 ### Schema
 
-Added migration:
-- [20260409090000_POCOR9610.php](/Users/khindol/PhpstormProjects/emis/emis/core/config/Migrations/20260409090000_POCOR9610.php)
+Migration file: `config/Migrations/20260409090000_POCOR9610.php`
 
-This migration:
-- adds `external_id`, `registration_status`, `registration_valid_until` to `institutions`
-- creates `institution_registrations`
-- creates `institution_accreditations`
-- adds index `idx_institutions_external_id`
-- adds foreign keys to `institutions` and `security_users`
+**`institution_registrations`**
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | INT AUTO_INCREMENT PK | |
+| `institution_id` | INT NOT NULL FK→institutions | |
+| `valid_from` | DATE NOT NULL | Defaults to institution `date_opened` if left empty on entry |
+| `valid_to` | DATE NULL | Optional end date |
+| `modified_user_id` | INT NULL FK→security_users | |
+| `modified` | DATETIME NULL | |
+| `created_user_id` | INT NOT NULL FK→security_users | |
+| `created` | DATETIME NOT NULL | |
 
-### API v5 Resources
+**`institution_accreditations`**
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | INT AUTO_INCREMENT PK | |
+| `institution_id` | INT NOT NULL FK→institutions | |
+| `education_programme_id` | INT NOT NULL FK→education_programmes | Programme being accredited |
+| `valid_from` | DATE NOT NULL | Defaults to institution `date_opened` if left empty on entry |
+| `valid_to` | DATE NULL | Optional end date |
+| `modified_user_id` | INT NULL FK→security_users | |
+| `modified` | DATETIME NULL | |
+| `created_user_id` | INT NOT NULL FK→security_users | |
+| `created` | DATETIME NOT NULL | |
 
-Added new `Api5` models:
-- [InstitutionRegistrations.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/app/Models/Api5/InstitutionRegistrations.php)
-- [InstitutionAccreditations.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/app/Models/Api5/InstitutionAccreditations.php)
+The migration also inserts `security_functions` rows for both tabs (order 52 and 53, parent `General`, module/controller `Institutions`) with the following permission model:
 
-Updated existing model:
-- [Institutions.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/app/Models/Api5/Institutions.php)
+**CakePHP UI:** Read-only for all roles — Add/Edit/Delete buttons are disabled in the table class (`toggle('add/edit/remove', false)`).
 
-Added generic v5 route registration entries:
-- [CrudApiController.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/app/Http/Controllers/BaseApi/CrudApiController.php)
+**API v5:** Controlled via `PermissionService::checkPermission()` which reads `security_role_functions` joined against `security_functions` action strings. The `security_functions._view/_add/_edit/_delete` columns contain both CakePHP action names (e.g. `Registrations.index`) and API model names (e.g. `InstitutionRegistrations.view`) so both systems resolve permissions from the same rows.
 
-This enables these endpoints through the existing catch-all `/api/v5/{resource}` CRUD pipeline:
-- `GET/POST/PUT/DELETE /api/v5/institution-registrations`
-- `GET/POST/PUT/DELETE /api/v5/institution-accreditations`
-- updated `POST/PUT /api/v5/institutions`
+| Role | Order | UI | API view | API write |
+|------|-------|----|----------|-----------|
+| Superrole | 1 | view only | ✓ (super_admin bypass) | ✓ (super_admin bypass) |
+| Administrator | 2 | view only | ✓ | ✓ |
+| Group Administrator | 3 | view only | ✓ | ✓ |
+| District Officer | 4 | view only | ✓ | ✓ |
+| Principal | 5 | view only | ✓ | ✗ |
+| Teacher / Staff / etc. | 7+ | view only | ✓ (where _view=1) | ✗ |
 
-### Swagger Documentation
+#### valid_from default logic
 
-Swagger-style model annotations were added for:
-- `InstitutionRegistrations`
-- `InstitutionAccreditations`
-- new fields on `Institutions`
+`valid_from` is `NOT NULL` in the database. If a user leaves it blank on the add/edit form, the system automatically uses the institution's `date_opened` as the start date — this is handled in `beforeSave()` in both CakePHP Table classes, and the factories also derive it from `institution.date_opened`.
 
-### Factories
+### CakePHP UI
 
-Added:
-- [InstitutionRegistrationsFactory.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/database/factories/InstitutionRegistrationsFactory.php)
-- [InstitutionAccreditationsFactory.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/database/factories/InstitutionAccreditationsFactory.php)
+**New Table classes:**
+- `plugins/Institution/src/Model/Table/InstitutionRegistrationsTable.php`
+- `plugins/Institution/src/Model/Table/InstitutionAccreditationsTable.php`
 
-Updated:
-- [InstitutionsFactory.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/database/factories/InstitutionsFactory.php)
+Both use `ControllerActionTable`, `Excel` behavior (index export), and `Institution.InstitutionTab` behavior.
 
-Note:
-- explicit `newFactory()` methods were added to the affected `Api5` models because this repo resolves `App\Models\Api5\...` factories differently from flat `Database\Factories\...` naming.
-- a stale `fax` field was removed from `InstitutionsFactory` because the current `institutions` table no longer has that column, and it was blocking Docker test execution.
+- **Registrations index** shows: Valid From | Valid To | Actions
+- **Accreditations index** shows: Programme Code | Programme Name | Valid From | Valid To | Actions (programme data from FK via `onGetProgrammeCode` / `onGetProgrammeName`)
+- **Accreditations add/edit** shows a dropdown of visible education programmes
 
-### Feature Tests
+**Controller:**
+- `plugins/Institution/src/Controller/InstitutionsController.php` — added `Registrations()` and `Accreditations()` action methods
 
-Added:
-- [InstitutionRegistrationsApiTest.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/tests/Feature/InstitutionRegistrationsApiTest.php)
-- [InstitutionAccreditationsApiTest.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/tests/Feature/InstitutionAccreditationsApiTest.php)
+**Sidebar navigation:**
+- `src/Controller/Component/NavigationComponent.php` — added `Institutions.Registrations.index` and `Institutions.Accreditations.index` entries under `Institution.General` parent
 
-Updated:
-- [InstitutionsApiTest.php](/Users/khindol/PhpstormProjects/emis/emis/core/api/tests/Feature/InstitutionsApiTest.php)
+### Laravel API v5
 
-The updated institutions test verifies:
-- `external_id`
-- `registration_status`
-- `registration_valid_until`
+**Models:**
+- `api/app/Models/Api5/InstitutionRegistrations.php`
+- `api/app/Models/Api5/InstitutionAccreditations.php`
+
+Both registered in `CrudApiController::$allowedResources` as `institution-registrations` and `institution-accreditations`.
+
+**Factories:**
+- `api/database/factories/InstitutionRegistrationsFactory.php` — `valid_from` derived from institution `date_opened`
+- `api/database/factories/InstitutionAccreditationsFactory.php` — `valid_from` derived from institution `date_opened`
+
+**Feature tests (all passing 5/5 each):**
+- `api/tests/Feature/InstitutionRegistrationsApiTest.php`
+- `api/tests/Feature/InstitutionAccreditationsApiTest.php`
 
 ### Files Changed Summary
 
 | Change | File |
 |--------|------|
 | Added | `config/Migrations/20260409090000_POCOR9610.php` |
+| Added | `plugins/Institution/src/Model/Table/InstitutionRegistrationsTable.php` |
+| Added | `plugins/Institution/src/Model/Table/InstitutionAccreditationsTable.php` |
+| Modified | `plugins/Institution/src/Controller/InstitutionsController.php` |
+| Modified | `src/Controller/Component/NavigationComponent.php` |
 | Added | `api/app/Models/Api5/InstitutionRegistrations.php` |
 | Added | `api/app/Models/Api5/InstitutionAccreditations.php` |
-| Modified | `api/app/Models/Api5/Institutions.php` |
-| Modified | `api/app/Http/Controllers/BaseApi/CrudApiController.php` |
 | Added | `api/database/factories/InstitutionRegistrationsFactory.php` |
 | Added | `api/database/factories/InstitutionAccreditationsFactory.php` |
-| Modified | `api/database/factories/InstitutionsFactory.php` |
 | Added | `api/tests/Feature/InstitutionRegistrationsApiTest.php` |
 | Added | `api/tests/Feature/InstitutionAccreditationsApiTest.php` |
-| Modified | `api/tests/Feature/InstitutionsApiTest.php` |
-| Added | `api/storage/release-docs/POCOR-9610-README.md` |
 
-**Files Added:** 7  |  **Files Modified:** 4  |  **Files Removed:** 0
+**Files Added:** 9  |  **Files Modified:** 2
 
 ---
 
@@ -111,63 +130,40 @@ The updated institutions test verifies:
 
 ### Apply schema
 
-Run inside Docker:
-
 ```bash
 docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake migrations migrate'
 ```
 
-### Run API tests inside Docker
+### Clear CakePHP cache
 
 ```bash
-docker exec poe-application sh -c 'cd /var/www/html/emis/core/api && php artisan test tests/Feature/InstitutionRegistrationsApiTest.php'
-docker exec poe-application sh -c 'cd /var/www/html/emis/core/api && php artisan test tests/Feature/InstitutionAccreditationsApiTest.php'
-docker exec poe-application sh -c 'cd /var/www/html/emis/core/api && php artisan test tests/Feature/InstitutionsApiTest.php'
+docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake cache clear_all'
 ```
 
-### Smoke test the new endpoints
+### Run API tests
 
-1. Authenticate and obtain a JWT token from `/core/api/v5/login`.
-2. Create a registration row:
-   ```json
-   POST /api/v5/institution-registrations
-   {
-     "institution_id": 6,
-     "external_id": "ACC-INS-000123",
-     "status": "active",
-     "approved_date": "2024-01-01",
-     "valid_from": "2024-01-01",
-     "valid_to": "2027-01-01",
-     "decision_reference": "DEC-2024-001"
-   }
-   ```
-3. Create an accreditation row:
-   ```json
-   POST /api/v5/institution-accreditations
-   {
-     "institution_id": 6,
-     "programme_name": "Diploma Electrical",
-     "programme_code": "DE-101",
-     "qualification_level": "Diploma",
-     "status": "active",
-     "valid_from": "2024-01-01",
-     "valid_to": "2027-01-01",
-     "external_id": "ACC-PROG-000123"
-   }
-   ```
-4. Update the institution:
-   ```json
-   PUT /api/v5/institutions/{id}
-   {
-     "external_id": "ACC-INS-000123",
-     "registration_status": "active",
-     "registration_valid_until": "2027-01-01"
-   }
-   ```
-5. Verify via:
-   - `GET /api/v5/institution-registrations?institution_id=6`
-   - `GET /api/v5/institution-accreditations?institution_id=6`
-   - `GET /api/v5/institutions/6`
+```bash
+docker exec poe-application sh -c 'cd /var/www/html/emis/core/api && php artisan test tests/Feature/InstitutionRegistrationsApiTest.php tests/Feature/InstitutionAccreditationsApiTest.php'
+```
+
+### Smoke test via curl
+
+Get a JWT token first, then:
+
+```bash
+# List registrations
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8082/api/v5/institution-registrations | jq .
+
+# Create a registration (valid_from will auto-fill from institution date_opened if omitted)
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"institution_id":6,"valid_from":"2024-01-01","valid_to":"2026-12-31"}' \
+  http://localhost:8082/api/v5/institution-registrations | jq .
+
+# Create an accreditation
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"institution_id":6,"education_programme_id":1,"valid_from":"2024-01-01"}' \
+  http://localhost:8082/api/v5/institution-accreditations | jq .
+```
 
 ---
 
@@ -175,46 +171,29 @@ docker exec poe-application sh -c 'cd /var/www/html/emis/core/api && php artisan
 
 ### Log Locations
 
-- CakePHP logs: `/var/www/html/emis/core/logs/`
+- CakePHP logs: `/var/www/html/emis/core/logs/hin-error.log`
 - Laravel logs: `/var/www/html/emis/core/api/storage/logs/laravel.log`
 
-### Configuration
+### valid_from Default Behaviour
 
-No new configuration toggles were introduced.
+`valid_from` is stored as `DATE NOT NULL`. If a user submits a blank `valid_from` on the CakePHP add/edit form, the system automatically looks up the institution's `date_opened` and uses it as the start date. This prevents accreditation/registration records from appearing to start from the beginning of time.
+
+The same logic applies in the Laravel API — if the factory creates a record, it uses `institution.date_opened` as the default.
 
 ### Rollback Procedure
 
-Schema rollback:
-
 ```bash
-docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake migrations rollback -t 20260312062543'
+docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake migrations rollback -t <previous_migration_version>'
 ```
 
-Code rollback:
-
-```bash
-git revert <commit-hash>
-```
+The `down()` method removes both tables, removes the two `security_functions` rows (and their `security_role_functions`), and restores the `institutions` table from the `z_9610_institutions` backup.
 
 ### Troubleshooting
 
 | Symptom | Check |
 |---------|-------|
-| `Invalid resource` on `/api/v5/institution-registrations` | Confirm the resource key was added to `BaseApi/CrudApiController::$allowedResources` |
-| Factory-related test failure for `App\Models\Api5\...` | Confirm the model defines explicit `newFactory()` returning the flat `Database\Factories\...Factory` |
-| Migration applies but tests fail on old schema fields | Check that local factories still match the live DB schema |
-| Institutions update succeeds but new fields are not saved | Confirm the fields are present in `Api5\Institutions::$fillable` |
-| Endpoint returns `403 Forbidden` | Verify the authenticated user has permission through the existing v5 permission model, or use a super admin account for smoke testing |
-
----
-
-## 6. Out of Scope / Still Pending
-
-This release document covers the API foundation only.
-
-Still pending for full ticket completion:
-- CakePHP institution profile tabs for `Registrations` and `Accreditations`
-- read-only tab rendering in the Institution plugin
-- any `custom_modules` / `security_functions` UI permission wiring for those tabs
-- end-to-end browser verification of those new tabs
-
+| Tabs not visible in sidebar | Confirm `NavigationComponent.php` has the entries; confirm `security_functions` rows exist in DB |
+| 404 after saving a record | Confirm `InstitutionTabBehavior` is attached; check that `institution_id` is in the queryString |
+| `valid_from` saves as NULL | Should not happen — `beforeSave` sets it from `date_opened`; verify institution has `date_opened` set |
+| API `Invalid resource` | Confirm the resource key is in `CrudApiController::$allowedResources` |
+| Programme dropdown empty on add/edit | Confirm `education_programmes` table has rows with `visible=1` |
