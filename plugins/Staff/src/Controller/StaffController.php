@@ -1006,6 +1006,11 @@ class StaffController extends AppController
         $shiftOptions = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals')
             ->getShiftOptions($academicPeriodId, false, $institutionId);
 
+        // Required by Timetables/controls so shift/institution dropdown redirects keep the same index URL (avoid 404 on shift change)
+        $pass = $this->request->getParam('pass');
+        $encodedQueryString = isset($pass[1]) ? $pass[1] : null;
+        $this->set('encodedQueryString', $encodedQueryString);
+
         $this->set('userId', $userId);
         $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
         $this->set('shiftOptions', $shiftOptions);

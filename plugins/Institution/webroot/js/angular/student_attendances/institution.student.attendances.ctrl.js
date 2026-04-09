@@ -84,6 +84,7 @@ function InstitutionStudentAttendancesController(
 
     vm.classStudentList = [];
     vm.isMarkableSubjectAttendance = false;
+    vm.noScheduledSaving = false; //POCOR-9617: true while No Scheduled save+render is in progress; changeClass skips render
 
     vm.superAdmin = 1;
     vm.permissionView = 1;
@@ -334,22 +335,22 @@ function InstitutionStudentAttendancesController(
     vm.error = function (error, test) {
         UtilsSvc.isAppendLoader(false);
 
-        // Детальное логирование
-        console.group("🚨 Ошибка в цепочке changeClass");
-        console.error("Original Error Object:", error);
-        if (test) console.log("Test Context:", test);
+        // // Детальное логирование
+        // console.group("🚨 Ошибка в цепочке changeClass");
+        // console.error("Original Error Object:", error);
+        // if (test) console.log("Test Context:", test);
 
-        // Если ошибка null или undefined, пытаемся понять на каком этапе упало
-        if (!error) {
-            console.warn("Предупреждение: Получена пустая ошибка (null/undefined). Скорее всего, бэкенд вернул пустой результат или сработал пустой reject.");
-        }
+        // // Если ошибка null или undefined, пытаемся понять на каком этапе упало
+        // if (!error) {
+        //     console.warn("Предупреждение: Получена пустая ошибка (null/undefined). Скорее всего, бэкенд вернул пустой результат или сработал пустой reject.");
+        // }
 
-        // Если это объект ошибки от $http
-        if (error && error.data) {
-            console.error("Backend Message:", error.data.message || "No message provided");
-            console.error("Backend Status:", error.status);
-        }
-        console.groupEnd();
+        // // Если это объект ошибки от $http
+        // if (error && error.data) {
+        //     console.error("Backend Message:", error.data.message || "No message provided");
+        //     console.error("Backend Status:", error.status);
+        // }
+        // console.groupEnd();
 
         return $q.reject(error);
     };
@@ -675,6 +676,13 @@ function InstitutionStudentAttendancesController(
             // single day
             vm.totalStudents = vm.classStudentList.length;
             if (vm.isMarked) {
+                //POCOR-9609: no_scheduled_class day — counts are not meaningful
+                if (vm.totalStudents > 0 && vm.classStudentList[0].no_scheduled_class == 1) {
+                    vm.presentCount = "-";
+                    vm.absenceCount = "-";
+                    vm.lateCount = "-";
+                    return;
+                }
                 var presentCount = 0;
                 var absenceCount = 0;
                 var lateCount = 0;
@@ -1146,6 +1154,8 @@ function InstitutionStudentAttendancesController(
             }, vm.error)
             .then(function (classStudents) {
                 logStep("getClassStudent (Data received)"); // Шаг 7
+                //POCOR-9617: skip updating student list if No Scheduled save owns the grid right now
+                if (vm.noScheduledSaving) return;
                 if (vm.isMarkableSubjectAttendance == true && vm.subjectListOptions.length == 0) {
                     classStudents = [];
                 }
@@ -1155,6 +1165,11 @@ function InstitutionStudentAttendancesController(
                 // Замеряем время ДО тяжелых функций рендеринга
                 logStep("Before UI Rendering (setGridData/setColumnDef)");
 
+                //POCOR-9617: skip re-render if No Scheduled save owns the grid right now
+                if (vm.noScheduledSaving) {
+                    UtilsSvc.isAppendLoader(false);
+                    return;
+                }
                 vm.setGridData();
                 vm.setColumnDef();
                 UtilsSvc.isAppendLoader(false);
@@ -1457,19 +1472,17 @@ function InstitutionStudentAttendancesController(
     vm.onNoScheduledClick = function () {
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
+        vm.noScheduledSaving = true; //POCOR-9617: block any concurrent in-flight changeClass from overwriting
         UtilsSvc.isAppendLoader(true);
 
-        InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(
-            vm.getIsMarkedParams()
-        )
-            .then(function (isMarked) {
-                vm.updateIsMarked(isMarked);
-                vm.setColumnDef(isMarked);
-                vm.countStudentData();
-                AlertSvc.reset($scope);
-            }, vm.error)
+        InstitutionStudentAttendancesSvc.getNoScheduledClassMarked(vm.getIsMarkedParams())
+            .then(function () { AlertSvc.reset($scope); }, vm.error)
             .finally(function () {
+                //POCOR-9617: always reload from DB after save attempt — DB has no_scheduled_class=1
+                //even if PHP returned 500, the INSERT/UPDATE may have committed before the crash
+                vm.noScheduledSaving = false;
                 UtilsSvc.isAppendLoader(false);
+                vm.changeClass();
             });
     };
 

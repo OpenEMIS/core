@@ -274,12 +274,19 @@ class ReportListBehavior extends Behavior {
 
 	public function onExcelTemplateAfterGenerate(EventInterface $event, array $params, ArrayObject $extra)
 	{
+		if (!$extra->offsetExists('process') || !$extra->offsetExists('file_path')) {
+			return;
+		}
 		$process = $extra['process'];
+		$processId = is_object($process) ? $process->id : ($process['id'] ?? null);
+		if ($processId === null) {
+			return;
+		}
 		$expiryDate = new FrozenTime();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
 			['status' => Process::COMPLETED, 'file_path' => $extra['file_path'], 'expiry_date' => $expiryDate, 'modified' => new FrozenTime()],
-			['id' => $process->id]
+			['id' => $processId]
 		);
 	}
 

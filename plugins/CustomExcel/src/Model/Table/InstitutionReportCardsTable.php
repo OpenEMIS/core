@@ -886,7 +886,7 @@ class InstitutionReportCardsTable extends AppTable
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
         if (!empty($staffPosnId)) {
             if (is_array($staffPosnId)) {
-                $condition = ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId]; 
+                $condition = ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId];
             } else {
                 $condition = ['InstitutionPositions.staff_position_title_id' => $staffPosnId];
             }
@@ -930,7 +930,7 @@ class InstitutionReportCardsTable extends AppTable
                          'email',
                          'address',
                          'postal_code',
-                         'gender_id' 
+                         'gender_id'
                      ]
                  ]
              ])
@@ -972,7 +972,7 @@ class InstitutionReportCardsTable extends AppTable
         return $uniqu_array;
     }
 
-    public function onExcelTemplateInitialiseDeputyPrincipal(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseDeputyPrincipal(EventInterface $event, array $params, ArrayObject $extra)
     {
         //POCOR-8013 rewritten
         if (isset($params['institution_id'])) {
@@ -2869,7 +2869,7 @@ class InstitutionReportCardsTable extends AppTable
                                             'area_parent_id' => $areasTbl->aliasField('parent_id')
                                         ])
                                         ->where([$areasTbl->aliasField('parent_id IN') => $reg])
-                                        ->toArray(); 
+                                        ->toArray();
                                     }
                                     if (!empty($areas4)) {
                                         foreach ($areas4 as $ar4) {
@@ -6492,7 +6492,7 @@ class InstitutionReportCardsTable extends AppTable
                             'name' => $Grade['name'].' '.$gender['name']
                         ];
                     }
-                    
+
                 }
             }
             return $entity;
@@ -6512,16 +6512,16 @@ class InstitutionReportCardsTable extends AppTable
                             ->select(['start_date', 'start_year','end_date'])
                             ->where(['id' => $params['academic_period_id']])
                             ->first();
-            
+
             $entity = [];
             if(!empty($periodObj)){
                 $year = $periodObj->start_year;
-                $start = $periodObj->start_date instanceof \Cake\I18n\FrozenDate 
-                        ? $periodObj->start_date 
+                $start = $periodObj->start_date instanceof \Cake\I18n\FrozenDate
+                        ? $periodObj->start_date
                         : FrozenDate::create($year, 1, 1);
 
-                $end = $periodObj->end_date instanceof \Cake\I18n\FrozenDate 
-                    ? $periodObj->end_date 
+                $end = $periodObj->end_date instanceof \Cake\I18n\FrozenDate
+                    ? $periodObj->end_date
                     : FrozenDate::create($year, 12, 31);
 
                 $dateRange = [];
@@ -6624,7 +6624,7 @@ class InstitutionReportCardsTable extends AppTable
 
         $entity = [];
         $connection = ConnectionManager::get('default');
-        
+
         foreach ($gradesData as $grade) {
             foreach ($gendersData as $gender) {
                 $studentDetails = $this->fetchStudentAttendanceDetails($connection, $academicPeriodId, $institutionId, $grade['EducationGrades']['id'], $gender['id'], $date);
@@ -6673,7 +6673,7 @@ class InstitutionReportCardsTable extends AppTable
                             ON institution_subjects.id = student_attendance_marked_records.subject_id
                             LEFT JOIN education_subjects
                             ON education_subjects.id = institution_subjects.education_subject_id
-                            WHERE student_attendance_marked_records.no_scheduled_class = 0 
+                            WHERE student_attendance_marked_records.no_scheduled_class = 0
                             AND student_attendance_marked_records.academic_period_id = ".$academicPeriodId."
                             AND student_attendance_marked_records.institution_id = ".$institutionId."
                             AND student_attendance_marked_records.education_grade_id = ".$gradeId."
@@ -6715,7 +6715,7 @@ class InstitutionReportCardsTable extends AppTable
                             ,attend_info.institution_class_id
                             ,attend_info.absence_date
                             ,COUNT(DISTINCT(attend_info.student_id)) absent_count
-                        FROM 
+                        FROM
                         (
                             SELECT institution_student_absence_details.academic_period_id
                                 ,institution_student_absence_details.institution_id
@@ -6725,11 +6725,11 @@ class InstitutionReportCardsTable extends AppTable
                                 ,institution_student_absence_details.date absence_date
                                 ,institution_student_absence_details.subject_id
                                 ,subject_counter.subjects_taken
-                                ,attendance_type.value 
+                                ,attendance_type.value
                             FROM institution_student_absence_details
                             INNER JOIN security_users
                             ON security_users.id = institution_student_absence_details.student_id
-                            LEFT JOIN 
+                            LEFT JOIN
                             (
                                 SELECT institution_subject_students.academic_period_id
                                     ,institution_subject_students.institution_id
@@ -6776,12 +6776,12 @@ class InstitutionReportCardsTable extends AppTable
                                 ,institution_student_absence_details.institution_class_id
                                 ,institution_student_absence_details.student_id
                                 ,institution_student_absence_details.date
-                            HAVING 
-                                CASE 
-                                    WHEN attendance_type.value = 1 
-                                    THEN COUNT(*) >= 1 
-                                    ELSE 
-                                        CASE WHEN institution_student_absence_details.subject_id = 0 
+                            HAVING
+                                CASE
+                                    WHEN attendance_type.value = 1
+                                    THEN COUNT(*) >= 1
+                                    ELSE
+                                        CASE WHEN institution_student_absence_details.subject_id = 0
                                         THEN COUNT(*) >= 2
                                         ELSE COUNT(*) >= IFNULL(subject_counter.subjects_taken, 0)
                                         END
@@ -6793,11 +6793,11 @@ class InstitutionReportCardsTable extends AppTable
                             ,attend_info.institution_class_id
                             ,attend_info.absence_date
                     ) marked_absence
-                    ON marked_absence.institution_id = marked_attendance.institution_id 
-                    AND marked_absence.academic_period_id = marked_attendance.academic_period_id 
-                    AND marked_absence.institution_class_id = marked_attendance.institution_class_id 
-                    AND marked_absence.education_grade_id = marked_attendance.education_grade_id 
-                    AND marked_absence.absence_date = marked_attendance.date 
+                    ON marked_absence.institution_id = marked_attendance.institution_id
+                    AND marked_absence.academic_period_id = marked_attendance.academic_period_id
+                    AND marked_absence.institution_class_id = marked_attendance.institution_class_id
+                    AND marked_absence.education_grade_id = marked_attendance.education_grade_id
+                    AND marked_absence.absence_date = marked_attendance.date
                     GROUP BY marked_attendance.academic_period_id
                         ,marked_attendance.institution_id
                         ,marked_attendance.education_grade_id

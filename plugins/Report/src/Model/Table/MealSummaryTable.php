@@ -8,7 +8,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 
