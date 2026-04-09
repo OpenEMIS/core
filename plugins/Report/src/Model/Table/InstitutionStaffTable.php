@@ -212,7 +212,7 @@ class InstitutionStaffTable extends AppTable
                         'position_title_teaching' => 'StaffPositionTitles.type'
                     ]
                 ]
-            ])->group([]);
+            ]);
         $query->formatResults(function (\Cake\Collection\CollectionInterface $results) use ($academicPeriodId) {
             return $results->map(function ($row) use ($academicPeriodId) {
                 $row['academic_period_id'] = $academicPeriodId;
