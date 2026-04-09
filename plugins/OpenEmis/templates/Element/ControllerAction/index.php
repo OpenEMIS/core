@@ -3,6 +3,7 @@ echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.m
 
 use Cake\Event\Event;
 use Cake\Event\EventInterface;
+use Cake\Log\Log;
 
 //ControllerActionComponent - Version 1.0.5
 $dataKeys = [];
@@ -10,6 +11,7 @@ $table = $ControllerAction['table'];
 $tableHeaders = $this->ControllerAction->getTableHeaders($ControllerAction['fields'], $table->getAlias(), $dataKeys);
 
 $displayAction = is_array($indexButtons) ? count($indexButtons) : $indexButtons->count() > 0;
+//Log::debug('[TEMP-LOG] Template: $indexButtons count = ' . $indexButtons->count() . ', keys: ' . implode(', ', array_keys($indexButtons->getArrayCopy())));
 //$displayReorder = isset($reorder) && $reorder && $data->count() > 1;//commnet cakephp4
 $displayReorder = isset($reorder) && $reorder;
 
@@ -36,12 +38,16 @@ foreach ($data as $entity) {
 
 	if ($displayAction) {
 		$buttons = $indexButtons->getArrayCopy();
+		//Log::debug('[TEMP-LOG] Template: before event - indexButtons count = ' . count($buttons) . ', keys: ' . implode(', ', array_keys($buttons)));
 		$event = $this->ControllerAction->dispatchEvent($table, $eventKey, null, [$entity, $indexButtons->getArrayCopy()]);
 		$buttons = $event->getResult();
+		//Log::debug('[TEMP-LOG] Template: after event - result buttons count = ' . count($buttons) . ', keys: ' . implode(', ', array_keys($buttons)));
 
 		if (empty($buttons)) {
+			//Log::debug('[TEMP-LOG] Template: buttons empty for entity ' . $entity->id);
 			$row[] = '';
 		} else {
+			//Log::debug('[TEMP-LOG] Template: rendering buttons: ' . print_r($buttons, true));
 			$row[] = [$this->element('OpenEmis.actions', ['entity' => $entity, 'buttons' => $buttons]), ['class' => 'rowlink-skip']];
 		}
 	}
