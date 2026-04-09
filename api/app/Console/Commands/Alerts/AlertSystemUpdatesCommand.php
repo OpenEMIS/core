@@ -64,7 +64,7 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
     protected function getPendingItems(string $featureKey): array
     {
         try {
-            // Get latest local version ID
+            // Get latest local version ID and current installed version
             $latestVersion = DB::table('system_updates')
                 ->orderByDesc('id')
                 ->first();
@@ -94,10 +94,16 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
             $json = $response->json();
             $data = array_reverse($json['data'] ?? []);
 
+            // POCOR-9509: Fetch current installed version once, attach to every item
+            $currentVersion = DB::table('config_items')
+                ->where('code', 'db_version')
+                ->value('value') ?? 'unknown';
+
             // Filter new versions not yet alerted
             $newVersions = [];
             foreach ($data as $item) {
                 if ($item['id'] > $maxId && !$this->versionAlreadyAlerted($featureKey, $item['version'])) {
+                    $item['current_version'] = $currentVersion; //POCOR-9509: carry installed version into fillPlaceholders
                     $newVersions[] = $item;
                 }
             }
@@ -130,13 +136,34 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
     /**
      * POCOR-9509: Fill placeholders for system update alert
      *
+     * Available placeholders:
+     *   ${new_version}     — the new version available (e.g. 5.7.0)
+     *   ${release_date}    — the date it was released (e.g. 11.12.2025)
+     *   ${current_version} — the currently installed version (e.g. 5.5.0)
+     *
+     * Example message:
+     *   "Version ${new_version} was released on ${release_date}.
+     *    Your current version is ${current_version}. Please update the system."
+     *
      * @param array $item System update data from getPendingItems()
      * @return array Placeholder => value mapping
      */
     protected function fillPlaceholders(array $item): array
     {
+        $releaseDate = '';
+        if (!empty($item['date_released'])) {
+            try {
+                $releaseDate = (new \DateTime($item['date_released']))->format('d.m.Y');
+            } catch (\Throwable $e) {
+                $releaseDate = $item['date_released'];
+            }
+        }
+
         return [
-            '${version}' => $item['version'] ?? '',
+            '${new_version}'     => $item['version'] ?? '',
+            '${release_date}'    => $releaseDate,
+            '${current_version}' => $item['current_version'] ?? '',
+            '${version}'         => $item['version'] ?? '', //POCOR-9509: legacy alias — not shown in UI but kept for backward compatibility
         ];
     }
 }

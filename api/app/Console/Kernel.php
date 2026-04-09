@@ -26,8 +26,8 @@ class Kernel extends ConsoleKernel
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
 
-        // POCOR-9509: Alert queue processing
-        $schedule->command('alerts:process', ['--limit=50'])
+        // POCOR-9509: Alert queue processing — throttle via ALERTS_PROCESS_LIMIT in .env (default 50/run)
+        $schedule->command('alerts:process', ['--limit=' . config('alerts.process_limit', 20)])
             ->everyMinute()
             ->withoutOverlapping()
             ->onFailure(function () {

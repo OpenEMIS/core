@@ -179,6 +179,14 @@ Maps process names for event-based commands triggered from the Laravel side. Onl
 - **Threshold:** none
 - **Recipients:** role-based (global, no institution)
 - **Note:** Only alert with `Daily` frequency enabled by default
+- **Placeholders:**
+  | Placeholder | Example | Source |
+  |-------------|---------|--------|
+  | `${new_version}` | `5.7.0` | Version API |
+  | `${release_date}` | `11.12.2025` | Version API `date_released` (formatted `dd.mm.yyyy`) |
+  | `${current_version}` | `5.5.0` | `config_items.db_version` |
+- **Example message:**
+  > `Version ${new_version} was released on ${release_date}. Your current version is ${current_version}. Please update the system.`
 - **Test:**
   ```bash
   php artisan alerts:system-updates --user_id=1 --rule_id=<id> --process_id=0
@@ -347,6 +355,100 @@ SELECT * FROM alert_queue ORDER BY created DESC LIMIT 20;
 -- Check process record:
 SELECT * FROM system_processes ORDER BY created DESC LIMIT 5;
 ```
+
+### Preparing Test Data — Dev/Test Databases Only
+
+> ⚠️ **Run these on dev/test databases only.** Never on production.
+
+The alert pipeline resolves recipients from `security_users.email` and `security_users.mobile_number`. On fresh or anonymised databases many users have these fields empty, which means no recipients are resolved and no alerts are dispatched — making end-to-end testing impossible.
+
+The senders have built-in safety blockers to prevent accidental delivery:
+- `EmailSender` skips any address ending in `.comz` (logs "Skipped fake email address")
+- `SmsSender` skips any number ending in `zz` (logs "Skipped fake phone number")
+
+This means you can fill every user with fake-but-unique values and the full pipeline — queuing, recipient resolution, placeholder replacement, sender — will run completely **without sending a single real email or SMS**.
+
+Run these two queries to populate missing contacts:
+
+```sql
+-- Fill missing or invalid emails (no '@') with a fake-but-unique address
+UPDATE security_users
+SET email = CONCAT(
+        IF(REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '') = '', id, REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '')),
+        '@gmail.comz'
+            )
+WHERE email IS NULL OR email NOT LIKE '%@%';
+
+-- Fill missing mobile numbers with a fake-but-unique number
+UPDATE security_users
+SET mobile_number = CONCAT(
+        IF(REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '') = '', id, REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '')),
+        'zz'
+                    )
+WHERE mobile_number IS NULL OR mobile_number = '';
+```
+
+**How the values are constructed:**
+- `REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '')` strips all non-alphanumeric characters from `openemis_no` (removes dashes, spaces, dots, etc.)
+- If the result is empty (e.g. `openemis_no` is `NULL` or pure symbols), `id` is used instead — guaranteed unique and numeric
+- The `.comz` / `zz` suffixes are what the senders check to block delivery
+
+After running these, re-run your alert command. Recipients will be resolved, the queue will be populated, and you can verify the full flow up to — but not including — real delivery.
+
+> ⚠️ **If the anonymised database still contains real email addresses or phone numbers** (partial anonymisation, copied from production, etc.) — it is the tester's or deployer's responsibility to verify this before running any alert command. A single test run can dispatch a large volume of messages to real people. Check with:
+> ```sql
+> SELECT COUNT(*) FROM security_users WHERE email NOT LIKE '%@%.comz' AND email LIKE '%@%';
+> SELECT COUNT(*) FROM security_users WHERE mobile_number IS NOT NULL AND mobile_number NOT LIKE '%zz';
+> ```
+> If either returns non-zero, anonymise those rows first or disconnect the mail/SMS provider.
+
+### Cron Schedule — Respect Working Hours
+
+The alert queue is processed by `alerts:process` every minute via Laravel's scheduler. **The system scheduler itself should be restricted to working hours and working days.** A misconfigured schedule will deliver emails and SMS at 3 am on a Monday or on a Saturday — disruptive and damaging to user trust.
+
+The standard Laravel scheduler cron entry (runs every minute, all day):
+```cron
+* * * * *  cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
+```
+
+To restrict to working hours in `Kernel.php`, add `->weekdays()->between('08:00', '17:00')`:
+```php
+// POCOR-9509: Alert queue processing — weekdays, working hours only
+$schedule->command('alerts:process', ['--limit=' . config('alerts.process_limit', 50)])
+    ->everyMinute()
+    ->weekdays()
+    ->between('08:00', '17:00')
+    ->withoutOverlapping();
+```
+
+Adjust the window to the target country's working hours and weekend definition (e.g. Friday–Saturday weekend).
+
+### Throttling — Slow Down If Overspam Occurs
+
+`alerts:process` processes a fixed number of queue rows per run, controlled by `ALERTS_PROCESS_LIMIT` in `.env`. Default is `50` per minute run (~3,000/hour at full load).
+
+If the system is sending too many messages too fast, **lower this value without touching code**:
+
+```env
+# .env — default 20, safe for free-tier providers that cap at ~20 msg/min
+ALERTS_PROCESS_LIMIT=20
+```
+
+Then clear config cache:
+```bash
+php artisan config:cache
+```
+
+No deployment or code change needed. The scheduler picks up the new limit on the next run.
+
+| `ALERTS_PROCESS_LIMIT` | Max messages/hour | Use case |
+|------------------------|-------------------|----------|
+| `20` (default) | ~1,200 | Safe for free-tier mail/SMS providers |
+| `50` | ~3,000 | High-throughput production with paid provider |
+| `5` | ~300 | Throttled / overspam investigation |
+| `0` | 0 | Emergency pause (queue accumulates, resumes when raised) |
+
+> Setting `ALERTS_PROCESS_LIMIT=0` pauses processing without disabling the cron — messages accumulate in `alert_queue` and will be delivered once the limit is raised again.
 
 ---
 

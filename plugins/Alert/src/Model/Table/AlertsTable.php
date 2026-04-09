@@ -382,11 +382,14 @@ class AlertsTable extends ControllerActionTable
     {
         // POCOR-8286 start
         $entity = $attr['entity'];
+        // POCOR-9509: Event-based alerts fire on afterSave — daily schedule makes no sense for them
         $oneTimeProcesses = [
             'AlertAttendance',
-            'AlertStudentAbsence', // POCOR-9391
+            'AlertStudentAbsence',      // POCOR-9391
             'AlertStudentAdmission',
-            'AlertStudentEnrolment'
+            'AlertStudentEnrolment',
+            'AlertStudentStatus',       // POCOR-9509: event-based (afterSave)
+            'AlertStaffType',           // POCOR-9509: event-based (afterSave)
         ];
 
         // POCOR-9509: Non-implemented alerts can only be "Never"

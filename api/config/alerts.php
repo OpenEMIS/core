@@ -15,6 +15,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Process Limit (throttle)
+    |--------------------------------------------------------------------------
+    |
+    | Maximum number of alerts processed per cron run (every minute).
+    | Default 20 = up to 1,200 messages/hour, safe for free-tier mail/SMS
+    | providers that cap at ~20 messages/minute.
+    | Lower this further if the system is sending too many messages too fast
+    | — no code change required, just update .env and run config:cache.
+    | Set to 0 to pause processing entirely (queue accumulates).
+    |
+    */
+    'process_limit' => env('ALERTS_PROCESS_LIMIT', 20),
+
+    /*
+    |--------------------------------------------------------------------------
     | Twilio SMS Configuration
     |--------------------------------------------------------------------------
     |
