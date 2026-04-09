@@ -21,12 +21,18 @@ use App\Model\Table\ControllerActionTable;
 
 class InstitutionStudentsTable extends ControllerActionTable
 {
+
+
 	public function initialize(array $config): void
-    { 
+    {
         parent::initialize($config);
 
         // Associations
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
     }
+
+
+
+
 
 }

@@ -3494,7 +3494,7 @@ class StaffTable extends ControllerActionTable
                                     ])->first();
                             }
                             //POCOR-9028
-                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class', 'subject_edit_data' =>  $InstitutionSubjectStaffData];
+                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class', 'subject_edit_data' =>  $InstitutionSubjectStaffData =[]]; //POCOR-9618
                         }
                     }
                 }

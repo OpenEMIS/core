@@ -35,13 +35,14 @@
 		<?php	} ?>
 
 		<?php	if (!empty($categories)) { ?>
-				<?php echo $this->Form->input('class', array(
+				<?php echo $this->Form->input('category', array(
 					'type' => 'select',
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $categories,
 					'url' => $baseUrl,
 					'data-named-key' => 'category_id',
+					'data-named-group' => 'academic_period_id,class_id'
 				)); ?>
 				
 		<?php	} ?>

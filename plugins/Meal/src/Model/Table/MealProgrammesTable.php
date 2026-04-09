@@ -60,6 +60,18 @@ use AllowDynamicProperties; // POCOR-8988
 
     }
 
+    //POCOR-9633: start - add validation for amount field (NOT NULL, no default in DB)
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->requirePresence('amount', 'create')
+            ->notEmptyString('amount', __('Please enter the Cost'))
+            ->decimal('amount', null, __('Cost must be a valid decimal number'));
+        return $validator;
+    }
+    //POCOR-9633: end
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();

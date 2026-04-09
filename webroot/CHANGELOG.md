@@ -1,3 +1,16 @@
+### [5.7.0] - 2026-04-09
+- Implemented: Develop webhooks in Laravel
+- Bug Fixed: Institutions>Academic>Classes>Add: User gets a error 404 when adding a class on clicking Save.
+- Bug Fixed: Core >Institution>Report Cards>Comments
+- Bug Fixed: COPY - Issues from POCOR-9607 & POCOR-9604
+- Bug Fixed: Institutions>Students>Add: Able to add Student successfully but the student is not seen in the Student list for the year in which she was added
+- Bug Fixed: Institution>Behaviors>Students: Survey Status Filter does not maintain the selection made, it reverts back to All Categories on loading.
+- Bug Fixed: Institutions > Students > Academic > Assessments: System should not add up all marks from all schools.
+- Bug Fixed: Reports>Staff>Add>Generate Staff Subjects Report>View: Should be able to view file without any errors regardless of the size of the file
+- Bug Fixed: Institution>Behaviors>Students>Export: Export button is missing
+- Bug Fixed: Administration>System Setup>System Configuration: Pagination is showing double arrow
+- Bug Fixed: Core>Institutions>Attendance>Staff>Edit: User can set the Time Out before the Time In
+
 ### [5.6.0] - 2026-04-02
 - Implemented: Develop "Absent" count on Staff attendance mini dashboard
 - Bug Fixed: Institution>Behaviors>Students>Export: Error 404 seen on clicking on Export
