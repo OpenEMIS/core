@@ -642,11 +642,24 @@ class ReportCardsTable extends AppTable
             ->first();
 
         $isNew = empty($existing);
+        $hasMissingValues = !empty($existing) && ($existing->gpa === null || $existing->cumulative_gpa === null);
+        
+         //if GPA or CGPA is NULL
+        if ($isNew || $hasMissingValues) {
+            ReportCardCumulativeGpaTable::addGpaReportCards(
+                $student_id,
+                $academic_period_id,
+                $institution_id,
+                $education_grade_id,
+                $reportStartDate,
+                $reportEndDate
+            );
+            return; 
+        }
 
         //Case 1: BOTH YES
         if ($regenGpa === 1 && $regenCgpa === 1) {
-
-            //regenerate gpa/cgpa (update allowed)
+            // Always regenerate GPA and CGPA
             ReportCardCumulativeGpaTable::addGpaReportCards(
                 $student_id,
                 $academic_period_id,
@@ -658,7 +671,6 @@ class ReportCardsTable extends AppTable
 
         //Case 2: ONLY GPA
         } elseif ($regenGpa === 1 && $regenCgpa === 0) {
-
             // Always regenerate GPA
             ReportCardGpaTable::addGpaReportCards(
                 $student_id,
@@ -669,7 +681,6 @@ class ReportCardsTable extends AppTable
 
         //Case 3: ONLY CGPA
         } elseif ($regenGpa === 0 && $regenCgpa === 1) {
-
             // DO NOT update existing → only insert if missing
             ReportCardCumulativeGpaTable::addGpaReportCardRegenrate(
                 $student_id,
@@ -681,20 +692,9 @@ class ReportCardsTable extends AppTable
                 false // regenerate = NO
             );
 
-        //Case 4: BOTH NO
+        //Case 4: BOTH NO. do nothing
         } else {
-
-            // Default: insert only if no record exists
-            if ($isNew) {
-                ReportCardCumulativeGpaTable::addGpaReportCards(
-                    $student_id,
-                    $academic_period_id,
-                    $institution_id,
-                    $education_grade_id,
-                    $reportStartDate,
-                    $reportEndDate
-                );
-            }
+           
         }
     }
     public function onExcelTemplateInitialiseFirstGuardian(EventInterface $event, array $params, ArrayObject $extra)
