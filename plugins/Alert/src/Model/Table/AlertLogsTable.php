@@ -822,7 +822,7 @@ class AlertLogsTable extends ControllerActionTable
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->field('status', ['after' => 'message']);
+        $this->field('status', ['after' => 'message', 'type' => 'select']); //POCOR-9509: type=select triggers onGetStatus
         $this->field('checksum', ['visible' => false]);
     }
 

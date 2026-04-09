@@ -47,6 +47,32 @@ Modified: 2 files (src/Model/Behavior/AlertQueueBehavior.php, plugins/Alert/src/
 Removed:  1 file  (src/Model/Table/AlertsQueueTable.php)
 ```
 
+### Post-release Fixes (2026-04-09)
+
+4. **SystemUpdates alert — extended placeholders**
+   - Added `${new_version}`, `${release_date}`, `${current_version}` placeholders
+   - `${version}` kept as legacy alias (not shown in UI, still works in saved templates)
+   - `current_version` sourced from `config_items.db_version`
+   - Behavior updated so all 3 placeholders appear in the alert rule edit window
+
+5. **Event-based alerts — frequency corrected**
+   - `AlertStudentStatus` and `AlertStaffType` added to `$oneTimeProcesses` (UI now shows Never/Once only)
+   - DB corrected: StudentAbsence, StudentAdmission, StudentEnrolment, StudentStatus, StaffType set to `Once`
+
+6. **Alert logs — status column display fixed**
+   - `beforeAction` field declaration missing `'type' => 'select'` — `onGetStatus` was never called, Status column blank
+
+7. **Alert queue throttle — `ALERTS_PROCESS_LIMIT` env var**
+   - Default changed from 50 → 20 (safe for free-tier providers ~20 msg/min)
+   - `config/alerts.php` exposes `ALERTS_PROCESS_LIMIT`; `Kernel.php` reads it at runtime
+   - Set to `0` to pause queue without disabling cron
+
+8. **Institution Messaging — class/subject scope role filter**
+   - Added `HOMEROOM_TEACHER_ROLE (5)`, `TEACHER_ROLE (6)`, `STAFF_ROLE (7)` constants
+   - Class and Subject scopes now only show: Homeroom Teacher, Teacher, Staff, Student, Guardian
+   - Institution-level roles (Principal, Administrator, etc.) no longer appear for class/subject scope
+   - Institution scope warning added: users without security group link to institution won't receive message
+
 ### Database Migrations
 
 None required. The AlertQueue table structure is unchanged; only the ORM location is consolidated.
@@ -73,7 +99,55 @@ None required. The AlertQueue table structure is unchanged; only the ORM locatio
    >>> exit
    ```
 
-4. **Run smoke tests** for alert commands:
+4. **Prepare test data** (dev/test databases only — never production):
+
+   Many users on fresh or anonymised databases have no email or mobile number, causing zero recipients to be resolved. Fill them with fake-but-unique values that the built-in sender blockers will silently discard (`.comz` blocks email delivery, `zz` blocks SMS delivery):
+
+   ```sql
+   -- Fill missing or invalid emails
+   UPDATE security_users
+   SET email = CONCAT(
+           IF(REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '') = '', id, REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '')),
+           '@gmail.comz'
+               )
+   WHERE email IS NULL OR email NOT LIKE '%@%';
+
+   -- Fill missing mobile numbers
+   UPDATE security_users
+   SET mobile_number = CONCAT(
+           IF(REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '') = '', id, REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '')),
+           'zz'
+                       )
+   WHERE mobile_number IS NULL OR mobile_number = '';
+   ```
+
+   This lets the entire pipeline run (queuing → recipient resolution → placeholder replacement → sender) without sending any real email or SMS.
+
+   > ⚠️ **If the anonymised database still contains real email addresses or phone numbers**, it is the tester's or deployer's responsibility to verify this before running any alert command — a single test run can send a large volume of messages to real people. Check with:
+   > ```sql
+   > SELECT COUNT(*) FROM security_users WHERE email NOT LIKE '%@%.comz' AND email LIKE '%@%';
+   > SELECT COUNT(*) FROM security_users WHERE mobile_number IS NOT NULL AND mobile_number NOT LIKE '%zz';
+   > ```
+   > If either returns non-zero, anonymise those rows first or disconnect the mail/SMS provider.
+
+5. **Set cron to working hours** before enabling the scheduler. The alert queue is cron-driven — a misconfigured schedule will deliver messages at 3 am on a Monday or on a Saturday. Restrict to working hours and weekdays only:
+
+   ```cron
+   ```cron
+   # Standard Laravel scheduler entry (every minute, all day)
+   * * * * *  cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
+   ```
+
+   Restrict to working hours in `Kernel.php` with `->weekdays()->between('08:00', '17:00')`. Adjust the window to the target country's working hours and weekend definition.
+
+   **To throttle sending speed**, set `ALERTS_PROCESS_LIMIT` in `.env` — no code change needed:
+   ```env
+   # Default 20 — safe for free-tier mail/SMS providers (e.g. 20 msg/min limit)
+   ALERTS_PROCESS_LIMIT=20
+   ```
+   Then run `php artisan config:cache`. Setting it to `0` pauses processing entirely (queue accumulates, resumes when raised).
+
+6. **Run smoke tests** for alert commands:
    ```bash
    # Test queue stats retrieval
    php artisan tinker
@@ -88,7 +162,7 @@ None required. The AlertQueue table structure is unchanged; only the ORM locatio
       --user_id=1 --rule_id=1 --process_id=0"
    ```
 
-5. **Verify queue is populated**:
+6. **Verify queue is populated**:
    ```sql
    SELECT COUNT(*) as queued_alerts FROM alerts_queue WHERE is_read = 0;
    ```

@@ -33,8 +33,10 @@ class MessagingTable extends ControllerActionTable
     const GRADE_CLASS = 4;
     const SUBJECT = 5;
 
-    const STUDENT_ROLE = 8; // POCOR-9274
-
+    const HOMEROOM_TEACHER_ROLE = 5; //POCOR-9509
+    const TEACHER_ROLE          = 6; //POCOR-9509
+    const STAFF_ROLE            = 7; //POCOR-9509
+    const STUDENT_ROLE  = 8; // POCOR-9274
     const GUARDIAN_ROLE = 9; // POCOR-9274
 
     //status
@@ -756,6 +758,12 @@ class MessagingTable extends ControllerActionTable
         $attr['attr']['multiple'] = true;
         $attr['options'] = $options;
         $attr['attr']['required'] = true;
+
+        //POCOR-9509: warn for institution scope — super-admin without institution link won't receive
+        if ((int) $recipient_level_id === self::INSTITUTION) {
+            $attr['after'] = __('Note: Only users who have the selected role assigned to this institution via a security group will receive this message. System administrators or users with roles not linked to this institution will not be included.');
+        }
+
         return $attr;
         // POCOR-9274 end
     }
@@ -767,12 +775,21 @@ class MessagingTable extends ControllerActionTable
      */
     private static function getInstitutionSecurityRoleIds($institution_id, $recipient_level_id)
     {
-        if(in_array($recipient_level_id, [
-            self::PROGRAMME,
-            self::GRADE])){
+        if (in_array($recipient_level_id, [self::PROGRAMME, self::GRADE])) {
             return [
                 self::STUDENT_ROLE,
-                self::GUARDIAN_ROLE
+                self::GUARDIAN_ROLE,
+            ];
+        }
+
+        //POCOR-9509: Class and Subject scope — only roles that can be linked to a class
+        if (in_array($recipient_level_id, [self::GRADE_CLASS, self::SUBJECT])) {
+            return [
+                self::HOMEROOM_TEACHER_ROLE,
+                self::TEACHER_ROLE,
+                self::STAFF_ROLE,
+                self::STUDENT_ROLE,
+                self::GUARDIAN_ROLE,
             ];
         }
         $securityGroupInstitutions = self::getDynamicTableInstance('security_group_institutions');

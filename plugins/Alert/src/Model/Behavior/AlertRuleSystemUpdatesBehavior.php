@@ -38,7 +38,9 @@ class AlertRuleSystemUpdatesBehavior extends AlertRuleBehavior
             // ]
         ],
         'placeholder' => [
-            '${version}' => 'System Version.',
+            '${new_version}'     => 'New version available (e.g. 5.7.0).', //POCOR-9509
+            '${release_date}'    => 'Release date of the new version (e.g. 11.12.2025).', //POCOR-9509
+            '${current_version}' => 'Currently installed version (e.g. 5.5.0).', //POCOR-9509
         ]
     ];
 
