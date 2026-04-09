@@ -1762,6 +1762,9 @@ class InstitutionsController extends AppController
             $this->set('user', $user);
             $this->set('pass', $pass);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
+            //POCOR-9633: inject baseCoreUrl so Angular api.service.ts resolves api/v4/ and api/v5/ correctly
+            $baseCoreUrl = $this->getRequest()->getSession()->read('System.baseCoreUrl');
+            $this->set('baseCoreUrl', $baseCoreUrl);
         }
 
     }
