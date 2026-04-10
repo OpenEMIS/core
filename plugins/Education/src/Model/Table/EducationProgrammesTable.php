@@ -725,7 +725,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     // POCOR-9485
     public function onUpdateFieldNextProgrammeOptionId(EventInterface $event, array $attr, $action, ServerRequest $request) {
         $attr['type'] = 'select';
-        $attr['options'] = [1 => __('Show one grade per programme'), 0 => __('Show All Grades per programme')];
+        $attr['options'] = [1 => __('Show one grade'), 0 => __('Show All Grades')];
         $attr['onChangeReload'] = false;
         return $attr;
     }
@@ -744,10 +744,10 @@ class EducationProgrammesTable extends ControllerActionTable {
     public function onGetNextProgrammeOptions(EventInterface $event, Entity $entity)
     {
        if($entity->next_programme_option_id==1){
-          return  __('Show one grade per programme');
+          return  __('Show one grade');
        }
        if($entity->next_programme_option_id==0){
-          return __('Show All Grades per programme');
+          return __('Show All Grades');
        }
        return 'Buh';
     }
