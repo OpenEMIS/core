@@ -20,6 +20,7 @@ use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
+use App\Utility\ApplicationTimezone; //POCOR-9565
 
 class AppTable extends Table
 {
@@ -263,6 +264,8 @@ class AppTable extends Table
 
         $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
         $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
+        $displayTimezone = new \DateTimeZone(ApplicationTimezone::getDisplayTimezone());
+        $utcTimezone = new \DateTimeZone('UTC');
 
         $displayFormat = $dateFormat . ' - ' . $timeFormat;
         $inputFormat   = $displayFormat;
@@ -270,7 +273,11 @@ class AppTable extends Table
         try {
             // Case 1: Already a DateTime object
             if ($dateInput instanceof \DateTimeInterface) {
-                return FrozenTime::instance($dateInput)->format($displayFormat);
+                //POCOR-9565[START]
+                return FrozenTime::createFromTimestamp($dateInput->getTimestamp(), $utcTimezone)
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565[END]
             }
 
             // Case 2: String input
@@ -279,15 +286,20 @@ class AppTable extends Table
                 // Try parsing EXACT expected format first
                 $date = FrozenTime::createFromFormat(
                     $inputFormat,
-                    $dateInput
+                    $dateInput,//POCOR-9565
+                    $utcTimezone//POCOR-9565
                 );
 
                 if ($date !== false) {
-                    return $date->format($displayFormat);
+                    return $date->setTimezone($displayTimezone)->format($displayFormat);//POCOR-9565
                 }
 
                 // Fallback: try ISO / DB formats
-                return (new FrozenTime($dateInput))->format($displayFormat);
+                //POCOR-9565
+                return (new FrozenTime($dateInput, $utcTimezone))
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565
             }
 
         } catch (\Throwable $e) {
