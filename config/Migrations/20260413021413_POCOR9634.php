@@ -6,6 +6,7 @@ class POCOR9634 extends AbstractMigration
 {
 
     /**
+     * Update security_functions
      * http://docs.phinx.org/en/latest/migrations.html#the-change-method
      * @return void
      */
