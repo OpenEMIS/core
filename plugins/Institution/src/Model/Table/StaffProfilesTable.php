@@ -264,14 +264,14 @@ class StaffProfilesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         $this->field('email_status');
-        $this->field('age', ['type' => 'string']); //POCOR-9593: profile age indicator
+        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue', 'email_status']); //POCOR-9593: age column
-        $this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue', 'email_status']); //POCOR-9593: age column
+        $this->setFieldOrder(['age', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']); //POCOR-9593: age first, no label
+        $this->setFieldVisible(['index'], ['age', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']); //POCOR-9593: age first, no label
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->StaffReportCardProcesses
