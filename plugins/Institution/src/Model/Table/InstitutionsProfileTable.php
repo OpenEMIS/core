@@ -327,14 +327,16 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     }
 
-    //POCOR-9593: start - stale profile banner (only when generation window is open)
+    //POCOR-9593: start - stale profile banner
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $staleReportCardId = $this->request->getQuery('report_card_id'); //POCOR-9593: query param name
         $generationWindowOpen = false; //POCOR-9593: assume closed unless confirmed open
-        if (!empty($staleReportCardId)) { //POCOR-9593: check window dates
+        $staleTemplateFound = false; //POCOR-9593: track if template was fetched
+        if (!empty($staleReportCardId)) {
             $staleTemplate = $this->ReportCards->find()->where([$this->ReportCards->aliasField('id') => $staleReportCardId])->first();
             if (!empty($staleTemplate)) {
+                $staleTemplateFound = true; //POCOR-9593: template exists
                 $today = FrozenTime::now()->format('Y-m-d');
                 $startDate = !empty($staleTemplate->generate_start_date) ? $staleTemplate->generate_start_date->format('Y-m-d') : null;
                 $endDate   = !empty($staleTemplate->generate_end_date)   ? $staleTemplate->generate_end_date->format('Y-m-d')   : null;
@@ -342,7 +344,7 @@ class InstitutionsProfileTable extends ControllerActionTable
                     || (!is_null($startDate) && !is_null($endDate) && $today >= $startDate && $today <= $endDate);
             }
         }
-        if ($generationWindowOpen) { //POCOR-9593: only show stale banner when regeneration is actually possible
+        if ($staleTemplateFound) { //POCOR-9593: only process if template exists
             $maxDaysOld = 0;
             foreach ($data as $institution) {
                 if ($institution->has('report_card_completed_on')
@@ -358,10 +360,17 @@ class InstitutionsProfileTable extends ControllerActionTable
                 }
             }
             if ($maxDaysOld >= 30) {
-                $this->Alert->warning(
-                    __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld), //POCOR-9593: single translatable string with %d placeholder
-                    ['type' => 'string', 'reset' => true]
-                );
+                if ($generationWindowOpen) { //POCOR-9593: window open — show full regenerate prompt
+                    $this->Alert->warning(
+                        __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld),
+                        ['type' => 'string', 'reset' => true]
+                    );
+                } else { //POCOR-9593: window closed — combine with "not enabled" message
+                    $this->Alert->warning(
+                        __('This profile template generation is not enabled. Consult with system administrator to check the dates. Note: some reports are %d days old and may not reflect the most recent data.', $maxDaysOld),
+                        ['type' => 'string', 'reset' => true]
+                    );
+                }
             }
         }
     }
