@@ -207,6 +207,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
+        $this->field('age', ['type' => 'string']); //POCOR-9593: profile age indicator
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
@@ -215,8 +216,8 @@ class InstitutionsProfileTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
-        $this->setFieldVisible(['index'], ['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
+        $this->setFieldOrder(['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue']); //POCOR-9593: age column
+        $this->setFieldVisible(['index'], ['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue']); //POCOR-9593: age column
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->InstitutionReportCardProcesses
@@ -326,6 +327,37 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     }
 
+    //POCOR-9593: start - stale profile banner
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $reportCardId = $this->request->getQuery('report_card_id');
+        if (is_null($reportCardId)) {
+            return;
+        }
+
+        $maxDaysOld = 0;
+        foreach ($data as $institution) {
+            if ($institution->has('report_card_completed_on')
+                && !empty($institution->report_card_completed_on)
+                && in_array($institution->report_card_status ?? self::NEW_REPORT, [self::GENERATED, self::PUBLISHED])
+            ) {
+                $now2 = FrozenTime::now();
+                $completed2 = new FrozenTime($institution->report_card_completed_on);
+                $days = $now2->greaterThan($completed2) ? (int) $now2->diffInDays($completed2) : 0; //POCOR-9593: 0 if future date
+                if ($days > $maxDaysOld) {
+                    $maxDaysOld = $days;
+                }
+            }
+        }
+        if ($maxDaysOld >= 30) {
+            $this->Alert->warning(
+                __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld), //POCOR-9593: single translatable string with %d placeholder
+                ['type' => 'string', 'reset' => true]
+            );
+        }
+    }
+    //POCOR-9593: end
+
     public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
     {
         $searchableFields[] = 'institution_name';
@@ -366,6 +398,33 @@ class InstitutionsProfileTable extends ControllerActionTable
 
         return $value;
     }
+
+    //POCOR-9593: start - profile age indicator square
+    public function onGetAge(EventInterface $event, Entity $entity)
+    {
+        $completedOn = $entity->has('report_card_completed_on') ? $entity->report_card_completed_on : null;
+        $status = $entity->has('report_card_status') ? $entity->report_card_status : self::NEW_REPORT;
+
+        if (empty($completedOn) || !in_array($status, [self::GENERATED, self::PUBLISHED])) {
+            return '<span style="display:inline-block;width:14px;height:14px;border:2px solid #aaa;background:transparent;vertical-align:middle;" title="' . __('Not yet generated') . '"></span>';
+        }
+
+        $now = FrozenTime::now(); //POCOR-9593: use diffInDays for correct future-date handling
+        $completed = new FrozenTime($completedOn);
+        $days = $now->greaterThan($completed) ? (int) $now->diffInDays($completed) : 0; //POCOR-9593: 0 if completed_on is in the future
+
+        if ($days < 30) {
+            $color = '#2196F3';
+        } elseif ($days < 365) {
+            $color = '#FFC107';
+        } else {
+            $color = '#F44336';
+        }
+
+        $title = __('Generated %d days ago', $days); //POCOR-9593: single translatable string
+        return '<span style="display:inline-block;width:14px;height:14px;background:' . $color . ';vertical-align:middle;" title="' . $title . '"></span>';
+    }
+    //POCOR-9593: end
 
     public function onGetReportQueue(EventInterface $event, Entity $entity)
     {
