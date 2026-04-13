@@ -271,13 +271,14 @@ class StudentProfilesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         $this->field('email_status');
+        $this->field('age', ['type' => 'string']); //POCOR-9593: profile age indicator
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'student_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
-        $this->setFieldVisible(['index'], ['openemis_no', 'student_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['openemis_no', 'student_id', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue', 'email_status']); //POCOR-9593: age column
+        $this->setFieldVisible(['index'], ['openemis_no', 'student_id', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue', 'email_status']); //POCOR-9593: age column
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->StudentReportCardProcesses
@@ -421,6 +422,27 @@ class StudentProfilesTable extends ControllerActionTable
                         }
                     }
                 }
+
+                //POCOR-9593: start - stale profile banner
+                $maxDaysOld = 0;
+                foreach ($data as $student) {
+                    if ($student->has('report_card_completed_on')
+                        && !empty($student->report_card_completed_on)
+                        && in_array($student->report_card_status ?? self::NEW_REPORT, [self::GENERATED, self::PUBLISHED])
+                    ) {
+                        $days = (int) FrozenTime::now()->diff(new FrozenTime($student->report_card_completed_on))->days;
+                        if ($days > $maxDaysOld) {
+                            $maxDaysOld = $days;
+                        }
+                    }
+                }
+                if ($maxDaysOld >= 30) {
+                    $this->Alert->warning(
+                        __('This report was generated ') . $maxDaysOld . __(' days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.'),
+                        ['type' => 'string', 'reset' => true]
+                    );
+                }
+                //POCOR-9593: end
 
                 $toolbarAttr = [
                     'class' => 'btn btn-xs btn-default',
@@ -612,6 +634,33 @@ class StudentProfilesTable extends ControllerActionTable
 
         return $value;
     }
+
+    //POCOR-9593: start - profile age indicator square
+    public function onGetAge(EventInterface $event, Entity $entity)
+    {
+        $completedOn = $entity->has('report_card_completed_on') ? $entity->report_card_completed_on : null;
+        $status = $entity->has('report_card_status') ? $entity->report_card_status : self::NEW_REPORT;
+
+        if (empty($completedOn) || !in_array($status, [self::GENERATED, self::PUBLISHED])) {
+            return '<span style="display:inline-block;width:14px;height:14px;border:2px solid #aaa;background:transparent;vertical-align:middle;" title="' . __('Not yet generated') . '"></span>';
+        }
+
+        $now = FrozenTime::now();
+        $completed = new FrozenTime($completedOn);
+        $days = (int) $now->diff($completed)->days;
+
+        if ($days < 30) {
+            $color = '#2196F3';
+        } elseif ($days < 365) {
+            $color = '#FFC107';
+        } else {
+            $color = '#F44336';
+        }
+
+        $title = sprintf(__('Generated %d days ago'), $days);
+        return '<span style="display:inline-block;width:14px;height:14px;background:' . $color . ';vertical-align:middle;" title="' . $title . '"></span>';
+    }
+    //POCOR-9593: end
 
     public function onGetReportQueue(EventInterface $event, Entity $entity)
     {
