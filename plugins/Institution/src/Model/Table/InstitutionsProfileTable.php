@@ -207,7 +207,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-        $this->field('age', ['type' => 'string']); //POCOR-9593: profile age indicator
+        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
@@ -216,8 +216,8 @@ class InstitutionsProfileTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue']); //POCOR-9593: age column
-        $this->setFieldVisible(['index'], ['institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'age', 'report_queue']); //POCOR-9593: age column
+        $this->setFieldOrder(['age', 'institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']); //POCOR-9593: age first, no label
+        $this->setFieldVisible(['index'], ['age', 'institution_name', 'institution_code', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']); //POCOR-9593: age first, no label
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->InstitutionReportCardProcesses
