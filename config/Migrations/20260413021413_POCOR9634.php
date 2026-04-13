@@ -6,9 +6,6 @@ class POCOR9634 extends AbstractMigration
 {
 
     /**
-     * Change Method.
-     * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
-     * More information on this method is available here:
      * http://docs.phinx.org/en/latest/migrations.html#the-change-method
      * @return void
      */
