@@ -421,26 +421,40 @@ class StaffProfilesTable extends ControllerActionTable
                     }
                 }
 
-                //POCOR-9593: start - stale profile banner
-                $maxDaysOld = 0;
-                foreach ($data as $staff) {
-                    if ($staff->has('report_card_completed_on')
-                        && !empty($staff->report_card_completed_on)
-                        && in_array($staff->report_card_status ?? self::NEW_REPORT, [self::GENERATED, self::PUBLISHED])
-                    ) {
-                        $now2 = FrozenTime::now();
-                        $completed2 = new FrozenTime($staff->report_card_completed_on);
-                        $days = $now2->greaterThan($completed2) ? (int) $now2->diffInDays($completed2) : 0; //POCOR-9593: 0 if future date
-                        if ($days > $maxDaysOld) {
-                            $maxDaysOld = $days;
-                        }
+                //POCOR-9593: start - stale profile banner (only when generation window is open)
+                $staleReportCardId = $this->request->getQuery('staff_profile_template_id'); //POCOR-9593: get template to check generation window
+                $generationWindowOpen = false; //POCOR-9593: assume closed unless confirmed open
+                if (!empty($staleReportCardId)) {
+                    $staleTemplate = $this->StaffTemplates->find()->where([$this->StaffTemplates->aliasField('id') => $staleReportCardId])->first();
+                    if (!empty($staleTemplate)) {
+                        $today = FrozenTime::now()->format('Y-m-d'); //POCOR-9593: compare as strings
+                        $startDate = !empty($staleTemplate->generate_start_date) ? $staleTemplate->generate_start_date->format('Y-m-d') : null; //POCOR-9593: null if not set
+                        $endDate   = !empty($staleTemplate->generate_end_date)   ? $staleTemplate->generate_end_date->format('Y-m-d')   : null; //POCOR-9593: null if not set
+                        $generationWindowOpen = (is_null($startDate) && is_null($endDate)) //POCOR-9593: no date restriction = always open
+                            || (!is_null($startDate) && !is_null($endDate) && $today >= $startDate && $today <= $endDate); //POCOR-9593: within window
                     }
                 }
-                if ($maxDaysOld >= 30) {
-                    $this->Alert->warning(
-                        __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld), //POCOR-9593: single translatable string with %d placeholder
-                        ['type' => 'string', 'reset' => true]
-                    );
+                if ($generationWindowOpen) { //POCOR-9593: only show stale banner when regeneration is actually possible
+                    $maxDaysOld = 0;
+                    foreach ($data as $staff) {
+                        if ($staff->has('report_card_completed_on')
+                            && !empty($staff->report_card_completed_on)
+                            && in_array($staff->report_card_status ?? self::NEW_REPORT, [self::GENERATED, self::PUBLISHED])
+                        ) {
+                            $now2 = FrozenTime::now();
+                            $completed2 = new FrozenTime($staff->report_card_completed_on);
+                            $days = $now2->greaterThan($completed2) ? (int) $now2->diffInDays($completed2) : 0; //POCOR-9593: 0 if future date
+                            if ($days > $maxDaysOld) {
+                                $maxDaysOld = $days;
+                            }
+                        }
+                    }
+                    if ($maxDaysOld >= 30) {
+                        $this->Alert->warning(
+                            __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld), //POCOR-9593: single translatable string with %d placeholder
+                            ['type' => 'string', 'reset' => true]
+                        );
+                    }
                 }
                 //POCOR-9593: end
 
