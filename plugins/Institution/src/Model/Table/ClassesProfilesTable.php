@@ -344,7 +344,7 @@ class ClassesProfilesTable extends ControllerActionTable
     {
         $reportCardId = $this->request->getQuery('class_profile_template_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
-        $institutionId = $this->request->getQuery('institution_id');
+        $institutionId = $this->request->getQuery('institution_id') ?? $this->getInstitutionID(); //POCOR-9593: fallback to session institution_id
 
         //Log::debug('@ClassesProfilesTable::indexAfterAction ENTRY reportCardId=' . ($reportCardId ?? 'NULL') . ' academicPeriodId=' . ($academicPeriodId ?? 'NULL') . ' institutionId=' . ($institutionId ?? 'NULL')); //[TEMP-LOG]
 
@@ -403,24 +403,24 @@ class ClassesProfilesTable extends ControllerActionTable
                         if ($generationWindowOpen) { //POCOR-9593: window open — show full regenerate prompt
                             if ($staleCount === 1) { //POCOR-9593: singular
                                 $this->Alert->warning(
-                                    __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld),
+                                    sprintf(__('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.'), $maxDaysOld),
                                     ['type' => 'string', 'reset' => true]
                                 );
                             } else { //POCOR-9593: plural
                                 $this->Alert->warning(
-                                    __('There are reports generated up to %d days ago. To ensure these reports reflect the most recent data updates, please regenerate the reports before viewing or downloading.', $maxDaysOld),
+                                    sprintf(__('There are reports generated up to %d days ago. To ensure these reports reflect the most recent data updates, please regenerate the reports before viewing or downloading.'), $maxDaysOld),
                                     ['type' => 'string', 'reset' => true]
                                 );
                             }
                         } else { //POCOR-9593: window closed — combine with "not enabled" message
                             if ($staleCount === 1) { //POCOR-9593: singular
                                 $this->Alert->warning(
-                                    __('This profile template generation is not enabled. Consult with system administrator to check the dates. Note: this report is %d days old and may not reflect the most recent data.', $maxDaysOld),
+                                    sprintf(__('This profile template generation is not enabled. Consult with system administrator to check the dates. Note: this report is %d days old and may not reflect the most recent data.'), $maxDaysOld),
                                     ['type' => 'string', 'reset' => true]
                                 );
                             } else { //POCOR-9593: plural
                                 $this->Alert->warning(
-                                    __('This profile template generation is not enabled. Consult with system administrator to check the dates. Note: some reports are up to %d days old and may not reflect the most recent data.', $maxDaysOld),
+                                    sprintf(__('This profile template generation is not enabled. Consult with system administrator to check the dates. Note: some reports are up to %d days old and may not reflect the most recent data.'), $maxDaysOld),
                                     ['type' => 'string', 'reset' => true]
                                 );
                             }
