@@ -327,33 +327,42 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     }
 
-    //POCOR-9593: start - stale profile banner
+    //POCOR-9593: start - stale profile banner (only when generation window is open)
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->getQuery('report_card_id');
-        if (is_null($reportCardId)) {
-            return;
-        }
-
-        $maxDaysOld = 0;
-        foreach ($data as $institution) {
-            if ($institution->has('report_card_completed_on')
-                && !empty($institution->report_card_completed_on)
-                && in_array($institution->report_card_status ?? self::NEW_REPORT, [self::GENERATED, self::PUBLISHED])
-            ) {
-                $now2 = FrozenTime::now();
-                $completed2 = new FrozenTime($institution->report_card_completed_on);
-                $days = $now2->greaterThan($completed2) ? (int) $now2->diffInDays($completed2) : 0; //POCOR-9593: 0 if future date
-                if ($days > $maxDaysOld) {
-                    $maxDaysOld = $days;
-                }
+        $staleReportCardId = $this->request->getQuery('report_card_id'); //POCOR-9593: query param name
+        $generationWindowOpen = false; //POCOR-9593: assume closed unless confirmed open
+        if (!empty($staleReportCardId)) { //POCOR-9593: check window dates
+            $staleTemplate = $this->ReportCards->find()->where([$this->ReportCards->aliasField('id') => $staleReportCardId])->first();
+            if (!empty($staleTemplate)) {
+                $today = FrozenTime::now()->format('Y-m-d');
+                $startDate = !empty($staleTemplate->generate_start_date) ? $staleTemplate->generate_start_date->format('Y-m-d') : null;
+                $endDate   = !empty($staleTemplate->generate_end_date)   ? $staleTemplate->generate_end_date->format('Y-m-d')   : null;
+                $generationWindowOpen = (is_null($startDate) && is_null($endDate)) //POCOR-9593: no date restriction = always open
+                    || (!is_null($startDate) && !is_null($endDate) && $today >= $startDate && $today <= $endDate);
             }
         }
-        if ($maxDaysOld >= 30) {
-            $this->Alert->warning(
-                __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld), //POCOR-9593: single translatable string with %d placeholder
-                ['type' => 'string', 'reset' => true]
-            );
+        if ($generationWindowOpen) { //POCOR-9593: only show stale banner when regeneration is actually possible
+            $maxDaysOld = 0;
+            foreach ($data as $institution) {
+                if ($institution->has('report_card_completed_on')
+                    && !empty($institution->report_card_completed_on)
+                    && in_array($institution->report_card_status ?? self::NEW_REPORT, [self::GENERATED, self::PUBLISHED])
+                ) {
+                    $now2 = FrozenTime::now();
+                    $completed2 = new FrozenTime($institution->report_card_completed_on);
+                    $days = $now2->greaterThan($completed2) ? (int) $now2->diffInDays($completed2) : 0; //POCOR-9593: 0 if future date
+                    if ($days > $maxDaysOld) {
+                        $maxDaysOld = $days;
+                    }
+                }
+            }
+            if ($maxDaysOld >= 30) {
+                $this->Alert->warning(
+                    __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld), //POCOR-9593: single translatable string with %d placeholder
+                    ['type' => 'string', 'reset' => true]
+                );
+            }
         }
     }
     //POCOR-9593: end
