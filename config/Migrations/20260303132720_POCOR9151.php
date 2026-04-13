@@ -20,6 +20,7 @@ class POCOR9151 extends AbstractMigration
         $this->execute('INSERT INTO `zz_9151_staff_training_needs` SELECT * FROM `staff_training_needs`');
         // Alter table `staff_training_needs`
         $this->execute("ALTER TABLE `staff_training_needs` CHANGE `training_need_category_id` `training_need_category_id` INT(11) NULL DEFAULT NULL COMMENT 'links to training_need_categories.id'");    
+        $this->execute("ALTER TABLE `staff_training_needs` CHANGE `training_need_competency_id` `training_need_competency_id` INT(11) NULL DEFAULT NULL COMMENT 'links to training_need_competencies.id', CHANGE `training_need_sub_standard_id` `training_need_sub_standard_id` INT(11) NULL DEFAULT NULL COMMENT 'links to training_need_sub_standards.id'");    
     }
 
     public function down(): void
