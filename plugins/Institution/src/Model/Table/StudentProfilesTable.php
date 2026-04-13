@@ -430,7 +430,9 @@ class StudentProfilesTable extends ControllerActionTable
                         && !empty($student->report_card_completed_on)
                         && in_array($student->report_card_status ?? self::NEW_REPORT, [self::GENERATED, self::PUBLISHED])
                     ) {
-                        $days = (int) FrozenTime::now()->diff(new FrozenTime($student->report_card_completed_on))->days;
+                        $now2 = FrozenTime::now();
+                        $completed2 = new FrozenTime($student->report_card_completed_on);
+                        $days = $now2->greaterThan($completed2) ? (int) $now2->diffInDays($completed2) : 0; //POCOR-9593: 0 if future date
                         if ($days > $maxDaysOld) {
                             $maxDaysOld = $days;
                         }
@@ -438,7 +440,7 @@ class StudentProfilesTable extends ControllerActionTable
                 }
                 if ($maxDaysOld >= 30) {
                     $this->Alert->warning(
-                        __('This report was generated ') . $maxDaysOld . __(' days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.'),
+                        __('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.', $maxDaysOld), //POCOR-9593: single translatable string with %d placeholder
                         ['type' => 'string', 'reset' => true]
                     );
                 }
@@ -645,9 +647,9 @@ class StudentProfilesTable extends ControllerActionTable
             return '<span style="display:inline-block;width:14px;height:14px;border:2px solid #aaa;background:transparent;vertical-align:middle;" title="' . __('Not yet generated') . '"></span>';
         }
 
-        $now = FrozenTime::now();
+        $now = FrozenTime::now(); //POCOR-9593: use diffInDays for correct future-date handling
         $completed = new FrozenTime($completedOn);
-        $days = (int) $now->diff($completed)->days;
+        $days = $now->greaterThan($completed) ? (int) $now->diffInDays($completed) : 0; //POCOR-9593: 0 if completed_on is in the future
 
         if ($days < 30) {
             $color = '#2196F3';
