@@ -84,9 +84,11 @@ class AlertsTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
+        $params = $this->request->getQuery();
         if(empty($params)){
             $extra['options']['direction'] = 'asc';
-            $extra['options']['limit'] = 20;
+            // Keep default list behavior aligned with other screens (10 rows/page).
+            $extra['options']['limit'] = 10;
             $extra['options']['sort'] = 'name';
         }
          //POCOR-7558 start
