@@ -26,6 +26,8 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentsTable extends ControllerActionTable
 {
+    use \Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     const PENDING_TRANSFERIN = -1;
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
@@ -855,6 +857,26 @@ class StudentsTable extends ControllerActionTable
     }
 
     //End:POCOR-6931
+
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $extra) //POCOR-9385: start — student creation restriction on Add
+    {
+        if (!$entity->isNew()) { //POCOR-9385: only applies to new records
+            return;
+        }
+
+        $gradeId = !empty($entity->education_grade_id) ? (int)$entity->education_grade_id : null;
+        if (!$this->isStudentCreationAllowed($gradeId)) { //POCOR-9385: check if grade allows creation
+            $gradeName = '';
+            if (!empty($gradeId)) {
+                $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                $grade = $EducationGrades->find()->select(['name'])->where(['id' => $gradeId])->first();
+                $gradeName = $grade ? $grade->name : '';
+            }
+            $entity->setError('education_grade_id', [$this->studentCreationBlockMessage($gradeName)]); //POCOR-9385: set validation error
+            $event->stopPropagation();
+            return false;
+        }
+    } //POCOR-9385: end — student creation restriction on Add
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
