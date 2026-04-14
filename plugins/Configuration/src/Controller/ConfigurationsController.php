@@ -78,6 +78,10 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffTransfers']);
     }
+    public function StudentCreationRules() //POCOR-9385: student creation config
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStudentCreationRules']);
+    }
     public function StaffReleases()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffReleases']);
