@@ -583,7 +583,13 @@ class ReportCardsTable extends ControllerActionTable
             // one or more of the 'special characters' found in $string
             $this->Alert->error('Templates.specialCharr', ['reset' => true]);
             $event->stopPropagation();
-            return $this->controller->redirect($this->url('edit'));;
+            //POCOR-9639: redirect back to the current action (add or edit) instead of hardcoding 'edit'
+            //Previously always redirected to /edit with no entity ID, causing SecurityException:
+            //"Wrong number of segments" in paramsDecode() when pass[1] is null on Edit page load
+            if ($entity->isNew()) {
+                return $this->controller->redirect($this->url('add'));
+            }
+            return $this->controller->redirect($this->url('edit'));
         }
         //POCOR-7860 :: End
         if (!empty($data[$this->getAlias()]['teacher_comments_required']) && !empty($data[$this->getAlias()]['education_grade_id'])) {
