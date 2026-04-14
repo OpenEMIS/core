@@ -86,12 +86,12 @@ class ImportResultsTable extends AppTable
             ->order($order);
         
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 4;
-        $data[$columnOrder]['data'][] = [ __('Examination Id'), $translatedReadableCol, __('Code'), $translatedCol];
+        $data[$columnOrder]['lookupColumn'] = 3;
+        $data[$columnOrder]['data'][] = [ $translatedReadableCol, __('Code'), $translatedCol];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
-                    $row->_matchingData[$Examinations->getAlias()]->id,
+                    //$row->_matchingData[$Examinations->getAlias()]->id,
                     $row->_matchingData[$lookedUpTable->getAlias()]->name,
                     $row->_matchingData[$lookedUpTable->getAlias()]->code,
                     $row->_matchingData[$lookedUpTable->getAlias()]->{$lookupColumn}
@@ -128,7 +128,7 @@ class ImportResultsTable extends AppTable
     {
         $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $ExaminationGradingTypes = TableRegistry::getTableLocator()->get('Examination.ExaminationGradingTypes');
-        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $ExaminationGradingTypes->aliasField('code'), $ExaminationGradingTypes->aliasField('name')];
+        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $ExaminationGradingTypes->aliasField('code'), $ExaminationGradingTypes->aliasField('name'), $ExaminationGradingTypes->aliasField('id')];
         $order = [$ExaminationGradingTypes->aliasField('name'), $lookupModel.'.order'];
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
@@ -136,15 +136,16 @@ class ImportResultsTable extends AppTable
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 3;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading Type')];
+        $data[$columnOrder]['lookupColumn'] = 4;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading Type'), $translatedCol, __('Grading Type Id')];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
                     $row->code,
                     $row->{$lookupColumn},
-                    $row->_matchingData[$ExaminationGradingTypes->getAlias()]->name
+                    $row->_matchingData[$ExaminationGradingTypes->getAlias()]->name,
+                    $row->_matchingData[$ExaminationGradingTypes->getAlias()]->id
                 ];
             }
         }
