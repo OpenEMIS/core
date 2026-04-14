@@ -26,8 +26,10 @@ There was no mechanism to restrict student creation by grade. Any user with acce
 
 1. **Global toggle** (`restrict_student_creation`) — Enabled/Disabled dropdown under System Configurations → Add New Student
 2. **Excluded Security Roles** (`student_creation_excluded_roles`) — Multi-select of security roles that bypass the restriction entirely, under the same page
-3. **Per-grade allow/block matrix** — New "Student Creation Rules List" under System Configurations → Add New Student. Each education grade has an `allow_student_creation` toggle (default: allowed)
-4. **Enforcement** — When the toggle is Enabled and the requesting user is not in an excluded role, all four entry points check the per-grade flag before proceeding
+3. **Calculated entry grade** — A grade is considered an authorised entry point when `education_grades.order = 1` (the first grade within its programme). No separate configuration table is needed; the rule is derived automatically.
+4. **Enforcement** — When the toggle is Enabled and the requesting user is not in an excluded role, all four entry points check whether the target grade has `order = 1` before proceeding
+
+> **Important limitation:** The entry-grade calculation relies on `education_grades.order` being set correctly. If a programme's grade records are manually reordered and no grade has `order = 1`, the restriction will block student creation for all grades in that programme. Administrators should ensure that every education programme has exactly one grade with `order = 1`.
 
 ### Logic Flow
 
@@ -43,8 +45,8 @@ Is user in an excluded security role?
 Is a grade ID available?
   → No  → BLOCK (no grade context — blanket block)
   ↓ Yes
-Does student_creation_rules.allow_student_creation == 1 for this grade?
-  → Yes → ALLOW
+Does education_grades.order == 1 for this grade?
+  → Yes → ALLOW (entry grade)
   → No  → BLOCK with message
 ```
 
@@ -60,36 +62,17 @@ Does student_creation_rules.allow_student_creation == 1 for this grade?
 
 | File | Change |
 |------|--------|
-| `config/Migrations/20260414120000_POCOR9385.php` | New migration |
-| `plugins/Institution/src/Model/Traits/StudentCreationCheckTrait.php` | New trait |
+| `config/Migrations/20260414120000_POCOR9385.php` | New migration — two `config_items` rows + options, no new tables |
+| `plugins/Institution/src/Model/Traits/StudentCreationCheckTrait.php` | New shared enforcement trait |
 | `plugins/Institution/src/Model/Table/StudentsTable.php` | Added `addBeforeSave()` enforcement |
 | `plugins/Institution/src/Model/Table/ImportStudentAdmissionTable.php` | Added row-level enforcement in `onImportModelSpecificValidation` |
 | `plugins/Directory/src/Model/Table/DirectoriesTable.php` | Added enforcement in `beforeSave` |
 | `plugins/Directory/src/Model/Table/ImportUsersTable.php` | Added blanket + grade-aware enforcement |
-| `plugins/Configuration/src/Model/Table/StudentCreationRulesTable.php` | New grade matrix table |
-| `plugins/Configuration/src/Controller/ConfigurationsController.php` | Registered `StudentCreationRulesList` action |
+| `plugins/Configuration/src/Controller/ConfigurationsController.php` | No changes — config items appear automatically on existing Add New Student page |
 
 ### Database Migrations
 
-**New table:** `student_creation_rules`
-
-```sql
-CREATE TABLE `student_creation_rules` (
-  `id`                     int          NOT NULL AUTO_INCREMENT,
-  `education_grade_id`     int          NOT NULL,
-  `allow_student_creation` tinyint(1)   NOT NULL DEFAULT 1,
-  `modified_user_id`       int          DEFAULT NULL,
-  `modified`               datetime     DEFAULT NULL,
-  `created_user_id`        int          NOT NULL,
-  `created`                datetime     NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_scr_grade` (`education_grade_id`),
-  CONSTRAINT `fk_scr_grade` FOREIGN KEY (`education_grade_id`)
-    REFERENCES `education_grades` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-```
-
-Seeded with one row per `education_grades` record (`allow_student_creation = 1` — all allowed by default).
+No new tables. The entry-grade rule is calculated from the existing `education_grades.order` column (`order = 1` = authorised entry grade).
 
 **New `config_items` rows:**
 
@@ -136,12 +119,11 @@ Seeded with one row per `education_grades` record (`allow_student_creation = 1` 
 3. Optionally set **"Excluded Security Roles for Student Creation"** — select any roles whose users should bypass the restriction (e.g. Super Admins)
 4. Save
 
-### Configuring Per-Grade Rules
+### Entry Grade Determination
 
-1. Navigate to **Administration → System Configurations → Student Creation Rules List**
-2. The table shows all education grades grouped by programme
-3. Click **Edit** on any grade to toggle `allow_student_creation` between Yes and No
-4. Set **No** for grades that should NOT allow new student creation (e.g. all except Grade 1)
+No manual configuration of individual grades is required. A grade is automatically treated as an authorised entry point when its `order` field equals `1` in the `education_grades` table (i.e. the first grade in its programme).
+
+> **Warning:** If a programme's grade `order` values are manually edited and no grade has `order = 1`, student creation will be blocked for all grades in that programme. Always ensure each programme has exactly one grade with `order = 1`.
 
 ### Effect on Users
 
