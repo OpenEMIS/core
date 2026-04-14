@@ -87,8 +87,8 @@ class AlertsTable extends ControllerActionTable
         $params = $this->request->getQuery();
         if(empty($params)){
             $extra['options']['direction'] = 'asc';
-            // Keep default list behavior aligned with other screens (10 rows/page).
-            $extra['options']['limit'] = 10;
+            // Do not set limit here; IndexBehavior handles "Display" (Search.limit)
+            // and stores it in session. Overriding it here breaks server-side display.
             $extra['options']['sort'] = 'name';
         }
          //POCOR-7558 start
