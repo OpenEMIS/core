@@ -3,6 +3,7 @@
 // POCOR-9509: SMS sender service for asynchronous alerts queue
 namespace App\Services\AlertSender;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -40,19 +41,32 @@ class SmsSender
         }
     }
 
+    // POCOR-9509: Load Twilio credentials from external_data_source_attributes (same source as CakePHP sender)
+    private function getTwilioCredentials(): array
+    {
+        $rows = DB::table('external_data_source_attributes')
+            ->where('external_data_source_type', 'Twilio')
+            ->whereIn('attribute_field', ['sms_account_sid', 'sms_auth_token', 'sms_number'])
+            ->pluck('value', 'attribute_field')
+            ->toArray();
+
+        return [
+            'sid'   => $rows['sms_account_sid'] ?? null,
+            'token' => $rows['sms_auth_token']  ?? null,
+            'from'  => $rows['sms_number']       ?? null,
+        ];
+    }
+
     // POCOR-9509: Send via Twilio API with proper error handling
     private function sendViaTwilio(string $to, string $message): void
     {
-        if (!config('alerts.twilio.enabled')) {
-            throw new \RuntimeException('Twilio is not enabled. Set TWILIO_ENABLED=true in .env');
-        }
-
-        $sid = config('alerts.twilio.sid');
-        $token = config('alerts.twilio.token');
-        $from = config('alerts.twilio.from');
+        $credentials = $this->getTwilioCredentials();
+        $sid   = $credentials['sid'];
+        $token = $credentials['token'];
+        $from  = $credentials['from'];
 
         if (!$sid || !$token || !$from) {
-            throw new \RuntimeException('Twilio credentials missing. Check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER in .env');
+            throw new \RuntimeException('Twilio credentials missing. Configure them via Administration > System Configuration > External Alert Service SMS.');
         }
 
         $response = Http::asForm()
@@ -62,7 +76,7 @@ class SmsSender
                 "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json",
                 [
                     'From' => $from,
-                    'To' => $to,
+                    'To'   => $to,
                     'Body' => $message,
                 ]
             );
@@ -70,15 +84,15 @@ class SmsSender
         if (!$response->successful()) {
             $errorMessage = 'Twilio send failed: ' . $response->body();
             Log::error($errorMessage, [
-                'to' => $to,
+                'to'          => $to,
                 'status_code' => $response->status(),
-                'response' => $response->body(),
+                'response'    => $response->body(),
             ]);
             throw new \RuntimeException($errorMessage);
         }
 
         Log::info('SMS sent successfully', [
-            'to' => $to,
+            'to'             => $to,
             'message_length' => mb_strlen($message),
         ]);
     }
