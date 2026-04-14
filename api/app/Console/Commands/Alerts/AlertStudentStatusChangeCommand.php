@@ -54,7 +54,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
             return self::FAILURE;
         }
 
-        return $this->runFeatureAlert('StudentStatusChange');
+        return $this->runFeatureAlert('StudentStatus'); //POCOR-9509: match behavior feature key (was 'StudentStatusChange')
     }
 
     /**
