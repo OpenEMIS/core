@@ -49,15 +49,17 @@ trait StudentCreationCheckTrait
             return false;
         }
 
-        // Per-grade rule //POCOR-9385: check per-grade allow flag
-        $StudentCreationRules = TableRegistry::getTableLocator()->get('StudentCreationRules');
-        $rule = $StudentCreationRules->find()
-            ->select(['allow_student_creation'])
-            ->where(['education_grade_id' => $gradeId])
-            ->disableHydration()
+        // Calculate: is this grade order=1 in its programme? //POCOR-9385: entry grade = order 1, no table needed
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades'); //POCOR-9385: use Education.EducationGrades
+        $grade = $EducationGrades->find()
+            ->where([$EducationGrades->aliasField('id') => $gradeId]) //POCOR-9385: fetch grade by id
             ->first();
 
-        return $rule ? (bool)$rule['allow_student_creation'] : true; //POCOR-9385: missing row = allowed
+        if (!$grade) {
+            return true; //POCOR-9385: grade not found → allow (safe default)
+        }
+
+        return (int)$grade->order === 1; //POCOR-9385: first grade of programme = entry grade
     }
 
     /**
