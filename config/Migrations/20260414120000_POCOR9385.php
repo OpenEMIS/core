@@ -37,7 +37,7 @@ class POCOR9385 extends AbstractMigration
 
         // Insert config_items rows //POCOR-9385: toggle + excluded roles config items
         $this->execute("
-            INSERT INTO `config_items`
+            INSERT IGNORE INTO `config_items`
                 (`id`, `name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
             VALUES
                 (1357, 'Limit student addition to first grade only', 'restrict_student_creation', 'Add New Student', 'Restrict Student Creation', '0', '', '0', 1, 1, 'Dropdown', 'student_creation_toggle', NULL, NULL, 1, NOW()),
@@ -46,7 +46,7 @@ class POCOR9385 extends AbstractMigration
 
         // Insert config_item_options for the toggle //POCOR-9385: Enabled/Disabled options
         $this->execute("
-            INSERT INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`)
+            INSERT IGNORE INTO `config_item_options` (`option_type`, `option`, `value`, `order`, `visible`)
             VALUES
                 ('student_creation_toggle', 'Disabled', '0', 1, 1),
                 ('student_creation_toggle', 'Enabled', '1', 2, 1)
@@ -55,7 +55,7 @@ class POCOR9385 extends AbstractMigration
 
     public function down(): void
     {
-        $this->restoreTable(); //POCOR-9385: restore config backups
+        $this->restoreTables(); //POCOR-9385: restore config backups
         if ($this->hasTable('student_creation_rules')) {
             $this->table('student_creation_rules')->drop()->save(); //POCOR-9385: drop new table
         }
@@ -75,7 +75,7 @@ class POCOR9385 extends AbstractMigration
         }
     }
 
-    private function restoreTable(): void //POCOR-9385: restore from backup
+    private function restoreTables(): void //POCOR-9385: restore from backup
     {
         $tables = ['config_items', 'config_item_options'];
         foreach ($tables as $t) {
