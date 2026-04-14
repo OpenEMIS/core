@@ -78,10 +78,6 @@ class ConfigurationsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffTransfers']);
     }
-    public function StudentCreationRulesList() //POCOR-9385: per-grade allow/block matrix
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.StudentCreationRules']);
-    }
     public function StaffReleases()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigStaffReleases']);

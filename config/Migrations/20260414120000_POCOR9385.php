@@ -7,34 +7,6 @@ class POCOR9385 extends AbstractMigration
     {
         $this->backupTables();
 
-        // Create student_creation_rules table //POCOR-9385: new table for per-grade creation rules
-        $table = $this->table('student_creation_rules', ['id' => false, 'primary_key' => ['education_grade_id']]);
-        $table->addColumn('education_grade_id', 'integer', ['null' => false])
-              ->addColumn('allow_student_creation', 'boolean', ['null' => false, 'default' => true])
-              ->addColumn('modified_user_id', 'integer', ['null' => true, 'default' => null])
-              ->addColumn('modified', 'datetime', ['null' => true, 'default' => null])
-              ->addColumn('created_user_id', 'integer', ['null' => false])
-              ->addColumn('created', 'datetime', ['null' => false])
-              ->create();
-
-        // Seed one row per education_grade — all allowed by default //POCOR-9385: seed all grades as allowed
-        $now = date('Y-m-d H:i:s');
-        $grades = $this->fetchAll('SELECT id FROM education_grades ORDER BY id');
-        $rows = [];
-        foreach ($grades as $grade) {
-            $rows[] = [
-                'education_grade_id' => $grade['id'],
-                'allow_student_creation' => 1,
-                'modified_user_id' => null,
-                'modified' => null,
-                'created_user_id' => 1,
-                'created' => $now,
-            ];
-        }
-        if (!empty($rows)) {
-            $this->table('student_creation_rules')->insert($rows)->saveData();
-        }
-
         // Insert config_items rows //POCOR-9385: toggle + excluded roles config items
         $this->execute("
             INSERT IGNORE INTO `config_items`
@@ -56,9 +28,6 @@ class POCOR9385 extends AbstractMigration
     public function down(): void
     {
         $this->restoreTables(); //POCOR-9385: restore config backups
-        if ($this->hasTable('student_creation_rules')) {
-            $this->table('student_creation_rules')->drop()->save(); //POCOR-9385: drop new table
-        }
     }
 
     private function backupTables(): void //POCOR-9385: backup before changes
