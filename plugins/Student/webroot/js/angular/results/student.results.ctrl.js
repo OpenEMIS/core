@@ -7,6 +7,7 @@ StudentResultsController.$inject = ['$scope', '$location', '$filter', '$q', 'Uti
 function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, StudentResultsSvc) {
 	var vm = this;
 
+    //POCOR-9637
     var queryParams = $location.search();
     var decodedParams = {};
 
@@ -20,10 +21,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
 
     vm.studentId = decodedParams.student_id;
     vm.institutionId = decodedParams.institution_id;
-
-    console.log('Decoded Params:', decodedParams);
-    console.log('Student ID:', vm.studentId);
-    console.log('Institution ID:', vm.institutionId);
+    //POCOR-9637
 
     // Variables
     vm.gridOptions = {};
@@ -56,7 +54,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 var academicPeriodName = academicPeriod.name;
                 var academicPeriodOrder = academicPeriod.order;
 
-                StudentResultsSvc.getStudentResults(
+                StudentResultsSvc.getStudentResults( //POCOR-9637
                     academicPeriodId,
                     vm.studentId,
                     vm.institutionId
