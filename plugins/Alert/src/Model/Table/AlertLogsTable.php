@@ -953,8 +953,9 @@ class AlertLogsTable extends ControllerActionTable
         $status = $this->request->getQuery('status');
         $channel = $this->request->getQuery('channel');
 
+        //POCOR-9509: Convert status to integer for proper comparison with SMALLINT column
         if ($status !== null && $status !== '' && $status !== 'all') {
-            $query->where([$this->aliasField('status') => $status]);
+            $query->where([$this->aliasField('status') => (int)$status]);
         }
         if ($channel !== null && $channel !== '' && $channel !== 'all') {
             $query->where([$this->aliasField('method') => $channel]);
