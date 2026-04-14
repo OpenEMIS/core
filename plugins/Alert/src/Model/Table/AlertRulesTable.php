@@ -318,12 +318,13 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('enabled', ['type' => 'select']);
         //POCOR-8690[START]
         // $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        //POCOR-9509: start - fix method field required attribute — was nested incorrectly, now uses attr key
         $this->field('method', [
             'after' => 'threshold',
             'entity' => $entity,
-            'required' => 'required',
-            ['attr' => ['required' => 'required']]
+            'attr' => ['required' => true],
         ]);
+        //POCOR-9509: end
         //POCOR-8690[END]
         $this->field('security_roles', ['after' => 'method',
             'entity' => $entity,
@@ -439,6 +440,9 @@ class AlertRulesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
+            //POCOR-9509: start - always mark method as required for add/edit
+            $attr['attr']['required'] = true;
+            //POCOR-9509: end
             // POCOR-8286 start
             if ($entity->feature) {
                 $methods = $this->getMethod($entity->feature);
