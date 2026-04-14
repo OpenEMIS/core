@@ -16,6 +16,8 @@ use DateTime; // POCOR-8683
 
 class ImportUsersTable extends AppTable
 {
+    use \Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     const IS_STAFF = "is_staff";
     const IS_STUDENT = "is_student";
     private $Users;
@@ -438,6 +440,15 @@ class ImportUsersTable extends AppTable
         $tempRow['record_source'] = 'import_user';
         if (0 == $rowInvalidCodeCols->count()) {
             if ($isStudent) {
+                //POCOR-9385: start — student creation restriction (no institution/grade context)
+                if (!isset($tempRow['institution_code']) || empty($tempRow['institution_code'])) {
+                    if (!$this->isStudentCreationAllowed(null)) { //POCOR-9385: no grade = blanket block
+                        $rowInvalidCodeCols['is_student'] = $this->studentCreationBlockMessageNoGrade();
+                        return false;
+                    }
+                }
+                //POCOR-9385: end — student creation restriction (no institution/grade context)
+
                 if (!$have_error) {
 
                     list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
@@ -1682,6 +1693,16 @@ class ImportUsersTable extends AppTable
 //                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
 
             if (!empty($education_grade_id)) {
+                //POCOR-9385: start — student creation restriction check with grade context
+                if (!$this->isStudentCreationAllowed((int)$education_grade_id)) {
+                    $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                    $grade = $EducationGrades->find()->select(['name'])->where(['id' => $education_grade_id])->first();
+                    $gradeName = $grade ? $grade->name : '';
+                    $rowInvalidCodeCols['education_grade_id'] = $this->studentCreationBlockMessage($gradeName); //POCOR-9385: grade-specific block message
+                    return array($tempRow, $rowInvalidCodeCols, true);
+                }
+                //POCOR-9385: end — student creation restriction check with grade context
+
                 $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
 
 
