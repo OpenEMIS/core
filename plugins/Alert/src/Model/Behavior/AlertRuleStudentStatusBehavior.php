@@ -78,19 +78,18 @@ class AlertRuleStudentStatusBehavior extends AlertRuleBehavior
 //        }
 //    }
 
-    public function onStudentStatusSetupFields(Event $event, Entity $entity)
+    public function onStudentStatusSetupFields(EventInterface $event, Entity $entity) //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
-
         $this->onAlertRuleSetupFields($event, $entity);
-
     }
 
-    public function onGetStudentStatusThreshold(Event $event, Entity $entity)
+    public function onGetStudentStatusThreshold(EventInterface $event, Entity $entity) //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];
     }
-    public function onGetStatusThreshold(Event $event, Entity $entity)
+
+    public function onGetStatusThreshold(EventInterface $event, Entity $entity) //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];
