@@ -332,8 +332,12 @@ class InstitutionsProfileTable extends ControllerActionTable
     //POCOR-9593: start - stale profile banner
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
+        $reportCardId = $this->request->getQuery('report_card_id'); //POCOR-9593
+        if (empty($reportCardId)) {
+            return; //POCOR-9593: no template selected — skip, avoid null WHERE clause exception
+        }
         $staleTemplate = $this->ReportCards->find()
-            ->where([$this->ReportCards->aliasField('id') => $this->request->getQuery('report_card_id')])
+            ->where([$this->ReportCards->aliasField('id') => $reportCardId])
             ->first();
         // $showNotEnabledFallback=true: InstitutionsProfileTable has no separate POCOR-9598 "not enabled" alert
         $this->showStaleProfileBanner($data, $staleTemplate, 'report_card_completed_on', 'report_card_status', true);
