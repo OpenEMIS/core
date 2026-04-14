@@ -23,7 +23,8 @@ class AlertRuleStudentStatusBehavior extends AlertRuleBehavior
                 'type' => 'chosenSelect',
                 'select' => false,
                 'after' => 'security_roles',
-                'lookupModel' => 'Student.StudentStatuses'
+                'lookupModel' => 'Student.StudentStatuses',
+                'attr' => ['required' => true], //POCOR-9509: mark statuses as required
             ],
         ],
         'placeholder' => [
@@ -77,6 +78,24 @@ class AlertRuleStudentStatusBehavior extends AlertRuleBehavior
 //            }
 //        }
 //    }
+
+    //POCOR-9509: start - validate statuses is required non-empty array
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        $model = $this->_table;
+        if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
+                $statusIds = $data['statuses']['_ids'] ?? [];
+                if (empty($statusIds)) {
+                    $data['statuses'] = null;
+                }
+                $validator = $model->getValidator();
+                $validator->notEmptyString('statuses', __('Statuses cannot be empty'));
+                $model->setValidator('forSave', $validator);
+            }
+        }
+    }
+    //POCOR-9509: end
 
     public function onStudentStatusSetupFields(EventInterface $event, Entity $entity) //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
