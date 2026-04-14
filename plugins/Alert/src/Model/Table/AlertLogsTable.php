@@ -596,8 +596,8 @@ class AlertLogsTable extends ControllerActionTable
             //Log::debug('[TEMP-LOG] @AlertLogsTable::insertAlertLog() Existing log: id=' . $log->id . ', destination=' . $log->destination . ', status=' . $log->status); //[TEMP-LOG]
 
             // POCOR-9509: Queue unsent alerts for async processing
-            if ($log->status === 0) {
-                //Log::debug('[TEMP-LOG] @AlertLogsTable::insertAlertLog() Found unsent alert (status=0), queueing for async'); //[TEMP-LOG]
+            if ($log->status === self::STATUS_PENDING) {
+                //Log::debug('[TEMP-LOG] @AlertLogsTable::insertAlertLog() Found unsent alert (STATUS_PENDING), queueing for async'); //[TEMP-LOG]
                 $this->queueAlertForAsyncSending(
                     $log,
                     $log->method,
@@ -1002,9 +1002,9 @@ class AlertLogsTable extends ControllerActionTable
     {
         return [
             'all' => __('All Statuses'),
-            0 => __('Pending'),
-            1 => __('Success'),
-            -1 => __('Failed')
+            self::STATUS_PENDING => __('Pending'),
+            self::STATUS_SENT => __('Success'),
+            self::STATUS_FAILED => __('Failed')
         ];
     }
 
