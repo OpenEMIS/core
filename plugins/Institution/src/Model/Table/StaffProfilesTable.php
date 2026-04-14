@@ -399,10 +399,10 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->getQuery['staff_profile_template_id'];
+        $reportCardId = $this->request->getQuery('staff_profile_template_id'); //POCOR-9593: fix array syntax → method call
         //POCOR-6654 - taking institution id from session as request query doesn't contain it
         $institutionId = $this->getInstitutionID();
-        $academicPeriodId = $this->request->getQuery['academic_period_id'];
+        $academicPeriodId = $this->request->getQuery('academic_period_id'); //POCOR-9593: fix array syntax → method call
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
             $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId]);

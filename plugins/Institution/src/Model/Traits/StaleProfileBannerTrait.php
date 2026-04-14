@@ -104,7 +104,6 @@ trait StaleProfileBannerTrait
         $stats      = $this->getStaleProfileStats($data, $completedOnField, $statusField);
         $maxDays    = $stats['maxDays'];
         $staleCount = $stats['staleCount'];
-
         if ($maxDays >= 30 && $windowOpen) {
             $message = ($staleCount === 1)
                 ? sprintf(__('This report was generated %d days ago. To ensure this report reflects the most recent data updates, please regenerate the report before viewing or downloading.'), $maxDays)
