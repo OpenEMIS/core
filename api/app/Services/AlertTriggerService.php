@@ -49,7 +49,7 @@ class AlertTriggerService
      * @param string $featureName Feature name (e.g., 'StudentAttendance', 'StaffType')
      * @param int $userId User ID triggering the alert
      * @param int $ruleId Alert rule ID
-     * @param int|null $entityId Entity ID (student_id, staff_id, etc.)
+     * @param int|string|null $entityId Entity ID (student_id, staff_id, institution_students.id, etc.)
      * @param array $context Additional context for deduplication and placeholder replacement
      * @param string $entityType Optional entity type (defaults to processName)
      * @param string $triggerType Optional trigger type (defaults to 'threshold_alert')
@@ -60,7 +60,7 @@ class AlertTriggerService
         string $featureName,
         int    $userId,
         int    $ruleId,
-        ?int   $entityId = null,
+        int|string|null $entityId = null,
         array  $context = [],
         string $entityType = '',
         string $triggerType = 'threshold_alert'
@@ -132,7 +132,7 @@ class AlertTriggerService
 
             // POCOR-9509: Trigger Laravel alert command (Phase 3 - remove duplicate logic)
             //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() About to call triggerAlertCommand()'); //[TEMP-LOG]
-            self::triggerAlertCommand($processName, $userId, $ruleId, $processId, $entityId);
+            self::triggerAlertCommand($processName, $userId, $ruleId, $processId, $entityId, $context);
             //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlert() triggerAlertCommand() returned'); //[TEMP-LOG]
 
             return [
@@ -165,7 +165,7 @@ class AlertTriggerService
      * Mirrors CakePHP's AlertLogsTable::triggerAlertSystemProcess() params format.
      *
      * @param int $ruleId Alert rule ID
-     * @param int|null $entityId Entity ID
+     * @param int|string|null $entityId Entity ID
      * @param string $entityType Entity type
      * @param string $triggerType Trigger type
      * @param array $context Additional context
@@ -174,7 +174,7 @@ class AlertTriggerService
      */
     private static function buildParams(
         int    $ruleId,
-        ?int   $entityId,
+        int|string|null $entityId,
         string $entityType,
         string $triggerType,
         array  $context,
@@ -408,7 +408,8 @@ class AlertTriggerService
         int    $userId,
         int    $ruleId,
         int    $processId,
-        ?int   $entityId
+        int|string|null $entityId,
+        array  $context
     ): void {
         //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() ENTRY'); //[TEMP-LOG]
         //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() params: processName=' . $processName . ', userId=' . $userId . ', ruleId=' . $ruleId . ', processId=' . $processId . ', entityId=' . ($entityId ?? 'null')); //[TEMP-LOG]
@@ -420,6 +421,8 @@ class AlertTriggerService
             'AlertStaffEmployment' => 'alerts:staff-employment',
             'AlertStudentAdmission' => 'alerts:student-admission',
             'AlertStudentEnrolment' => 'alerts:student-enrolment',
+            'AlertStudentStatusChange' => 'alerts:student-status-change',
+            'AlertStudentStatus' => 'alerts:student-status-change',
             'AlertRetirementWarning' => 'alerts:retirement-warning',
             'AlertStaffType' => 'alerts:staff-type',
             'AlertSystemUpdates' => 'alerts:system-updates',
@@ -441,19 +444,30 @@ class AlertTriggerService
         //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Command mapped successfully: ' . $commandName); //[TEMP-LOG]
 
         // POCOR-9509: Build command arguments
-        // Only pass entity_id (not context fields) - commands will query what they need
+        // Event commands rely on query-backed placeholders, so pass the full context they expect.
         $arguments = [
             '--user_id' => $userId,
             '--rule_id' => $ruleId,
             '--process_id' => $processId,
         ];
 
-        //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Base arguments: ' . json_encode($arguments)); //[TEMP-LOG]
+        if ($commandName === 'alerts:student-absence') {
+            // POCOR-9509: Absence alerts depend on the same ids the command query uses.
+            $requiredKeys = ['student_id', 'academic_period_id'];
+            foreach ($requiredKeys as $key) {
+                if (!array_key_exists($key, $context) || $context[$key] === null || $context[$key] === '') {
+                    throw new \InvalidArgumentException('Missing required alert context: ' . $key);
+                }
+            }
 
-        // Add entity_id if provided (admission_id, enrolment_id, student_id, etc.)
-        if ($entityId !== null) {
+            foreach (['student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'period', 'subject_id', 'date'] as $key) {
+                if (array_key_exists($key, $context) && $context[$key] !== null && $context[$key] !== '') {
+                    $arguments['--' . $key] = $context[$key];
+                }
+            }
+        } elseif ($entityId !== null) {
+            // POCOR-9509: Admission, enrolment and status commands all use a single entity id.
             $arguments['--entity_id'] = $entityId;
-            //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Added entity_id: ' . $entityId); //[TEMP-LOG]
         }
 
         //Log::debug('[TEMP-LOG] @AlertTriggerService::triggerAlertCommand() Final arguments: ' . json_encode($arguments)); //[TEMP-LOG]

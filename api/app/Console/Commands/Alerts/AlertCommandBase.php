@@ -56,9 +56,9 @@ abstract class AlertCommandBase extends Command
     protected int $statusId = 0;
 
     /**
-     * @var object Alert rule entity
+     * @var object|null Alert rule entity
      */
-    protected object $rule;
+    protected ?object $rule = null;
 
     /**
      * @var array Contact list [email => [...], phone => [...]]
@@ -164,6 +164,8 @@ abstract class AlertCommandBase extends Command
      */
     protected function runFeatureAlert(string $featureKey): int
     {
+        $this->featureName = $featureKey; // POCOR-9509: use the explicit feature key so queue/completeProcess match alerts.name
+
         //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
 
         try {

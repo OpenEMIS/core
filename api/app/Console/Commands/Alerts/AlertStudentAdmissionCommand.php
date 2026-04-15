@@ -145,6 +145,7 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
                 'Users.last_name as student_last_name',
                 'Users.preferred_name as student_preferred_name',
                 'Users.email as student_email',
+                'Users.address as student_address',
                 'Users.postal_code as student_postal_code',
                 'Users.date_of_birth as student_date_of_birth',
                 'Institutions.name as institution_name',

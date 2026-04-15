@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: use AlertLogsTable trigger helper instead of DashboardController trigger
 use App\Model\Table\AppTable;
 use ArrayObject;
 use Cake\Event\EventInterface;
@@ -290,6 +291,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             'subject_id' => (int) $entity->subject_id,
         ];
 
+        //POCOR-9509: start - move absence alert triggering onto AlertLogsTable helper path
         foreach ($activeRules as $rule) {
 //            Log::debug(print_r([
 //                'Absence Alert Triggering' => $extraOptions,
@@ -297,7 +299,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 //                'alert' => $alert->toArray()
 //            ], true));
 
-            DashboardController::triggerSystemProcess(
+            AlertLogsTable::triggerAlertSystemProcess(
                 $systemProcessesTable,
                 is_array($rule) ? $rule : $rule->toArray(),
                 $alert->process_name,
@@ -305,6 +307,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 $extraOptions
             );
         }
+        //POCOR-9509: end - move absence alert triggering onto AlertLogsTable helper path
     }
 
 

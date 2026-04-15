@@ -15,6 +15,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        //POCOR-9509: schedule alert discovery separately so scheduled rules are queued without Dashboard traffic
+        $schedule->command('alerts:check-and-queue')
+            ->everyMinute()
+            ->withoutOverlapping();
+
         // POCOR-9257: Webhook queue processing
         $schedule->command('webhooks:process', ['--once'])
             ->everyMinute()

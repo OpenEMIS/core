@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Alerts;
 
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -74,7 +75,8 @@ class AlertStaffLeaveCommand extends AlertCommandBase
         $approvedStepIds = $this->getApprovedStepIds();
 
         if (empty($approvedStepIds)) {
-            // $this->info("No approved workflow steps found"); //POCOR-9509: commented out per CLAUDE.md            return [];
+            // $this->info("No approved workflow steps found"); //POCOR-9509: commented out per CLAUDE.md
+            return [];
         }
 
         // Check if user is super admin
@@ -130,7 +132,7 @@ class AlertStaffLeaveCommand extends AlertCommandBase
                     ->pluck('institution_id')
                     ->toArray();
 
-                $query->whereIn('Staff.institution_id', $institutionIds);
+                $query->whereIn('StaffLeave.institution_id', $institutionIds);
             } else {
                 // No institutions accessible
                 return [];

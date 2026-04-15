@@ -16,71 +16,241 @@ use Illuminate\Support\Facades\Log;
  */
 class RecipientResolver
 {
+    const GUARDIAN = 9;
+    const STUDENT = 8;
+
     /**
      * POCOR-9509: Get contact list for users with specific security roles
      *
-     * If institutionId is provided, only users associated with that institution are included.
-     * Users can be associated directly (institution.security_group_id) or indirectly
-     * (via security_group_institutions table).
+     * Supports filtering by institution and institution class.
      *
      * @param array $securityRoles Array of role objects/arrays with 'id' field
      * @param int|null $institutionId Optional institution ID to filter by
+     * @param int|null $institutionClassId Optional institution class ID to filter by
      * @return array Contact list ['email' => [...], 'phone' => [...]]
      */
-    public function getRoleAssociatedContactList(array $securityRoles, ?int $institutionId = null): array
-    {
+    public function getRoleAssociatedContactList(
+        array $securityRoles,
+        ?int $institutionId = null,
+        ?int $institutionClassId = null
+    ): array {
         $contactList = ['email' => [], 'phone' => []];
+        $securityUserIds = $this->collectSecurityUserIds($securityRoles, $institutionId, $institutionClassId);
+
+        if (empty($securityUserIds)) {
+            return $contactList;
+        }
+
+        $users = $this->fetchActiveUsers($securityUserIds);
+
+        return $this->getContactsFromUsers($users, $contactList);
+    }
+
+    /**
+     * Collect all security user IDs based on roles and filtering criteria.
+     *
+     * @param array $securityRoles
+     * @param int|null $institutionId
+     * @param int|null $institutionClassId
+     * @return array
+     */
+    private function collectSecurityUserIds(array $securityRoles, ?int $institutionId, ?int $institutionClassId): array
+    {
         $allSecurityUserIds = [];
 
         foreach ($securityRoles as $role) {
             $roleId = is_array($role) ? $role['id'] : $role->id;
-
-            if ($institutionId === null) {
-                // Global: all users with this role
-                $ids = DB::table('security_group_users')
-                    ->select('security_user_id')
-                    ->distinct()
-                    ->where('security_role_id', $roleId)
-                    ->pluck('security_user_id')
-                    ->toArray();
-            } else {
-                // Institution-specific: direct + indirect associations
-
-                // Direct: institution.security_group_id matches
-                $directIds = DB::table('security_group_users')
-                    ->join('institutions', function ($join) use ($institutionId) {
-                        $join->on('institutions.security_group_id', '=', 'security_group_users.security_group_id')
-                            ->where('institutions.id', '=', $institutionId);
-                    })
-                    ->where('security_group_users.security_role_id', $roleId)
-                    ->distinct()
-                    ->pluck('security_group_users.security_user_id')
-                    ->toArray();
-
-                // Indirect: via security_group_institutions table
-                $indirectIds = DB::table('security_group_users')
-                    ->join('security_group_institutions', function ($join) use ($institutionId) {
-                        $join->on('security_group_institutions.security_group_id', '=', 'security_group_users.security_group_id')
-                            ->where('security_group_institutions.institution_id', '=', $institutionId);
-                    })
-                    ->where('security_group_users.security_role_id', $roleId)
-                    ->distinct()
-                    ->pluck('security_group_users.security_user_id')
-                    ->toArray();
-
-                $ids = array_merge($directIds, $indirectIds);
-            }
-
-            // Merge and deduplicate
-            $allSecurityUserIds = array_unique(array_merge($allSecurityUserIds, $ids));
+            $allSecurityUserIds = array_merge($allSecurityUserIds, $this->getUserIdsByContext($roleId, $institutionId, $institutionClassId));
         }
 
-        if (empty($allSecurityUserIds)) {
-            return $contactList;
+        return array_values(array_unique($allSecurityUserIds));
+    }
+
+    /**
+     * Get user IDs based on the filtering context.
+     *
+     * @param int $roleId
+     * @param int|null $institutionId
+     * @param int|null $institutionClassId
+     * @return array
+     */
+    private function getUserIdsByContext(int $roleId, ?int $institutionId, ?int $institutionClassId): array
+    {
+        if ($institutionClassId !== null) {
+            return $this->getUserIdsByClass($institutionClassId);
         }
 
-        // Get user contact information
-        $users = DB::table('security_users')
+        if ($institutionId !== null) {
+            return $this->getUserIdsByInstitution($roleId, $institutionId);
+        }
+
+        return $this->getAllUserIdsForRole($roleId);
+    }
+
+    /**
+     * Get all user IDs for a role (no institution filtering).
+     *
+     * @param int $roleId
+     * @return array
+     */
+    private function getAllUserIdsForRole(int $roleId): array
+    {
+        return DB::table('security_group_users')
+            ->select('security_user_id')
+            ->distinct()
+            ->where('security_role_id', $roleId)
+            ->pluck('security_user_id')
+            ->toArray();
+    }
+
+    /**
+     * Get user IDs associated with an institution.
+     *
+     * @param int $roleId
+     * @param int $institutionId
+     * @return array
+     */
+    private function getUserIdsByInstitution(int $roleId, int $institutionId): array
+    {
+        $directUserIds = $this->getDirectInstitutionUserIds($roleId, $institutionId);
+        $indirectUserIds = $this->getIndirectInstitutionUserIds($roleId, $institutionId);
+        $allUserIds = array_merge($directUserIds, $indirectUserIds);
+
+        if ($this->isAcademicInstitution($institutionId)) {
+            $allUserIds = array_merge($allUserIds, $this->getEducationHeadquartersUserIds($roleId, $institutionId));
+        }
+
+        return array_values(array_unique($allUserIds));
+    }
+
+    /**
+     * Get user IDs directly associated with an institution.
+     *
+     * @param int $roleId
+     * @param int $institutionId
+     * @return array
+     */
+    private function getDirectInstitutionUserIds(int $roleId, int $institutionId): array
+    {
+        return DB::table('security_group_users')
+            ->join('institutions', function ($join) use ($institutionId) {
+                $join->on('institutions.security_group_id', '=', 'security_group_users.security_group_id')
+                    ->where('institutions.id', '=', $institutionId);
+            })
+            ->where('security_group_users.security_role_id', $roleId)
+            ->distinct()
+            ->pluck('security_group_users.security_user_id')
+            ->toArray();
+    }
+
+    /**
+     * Get user IDs indirectly associated with an institution.
+     *
+     * @param int $roleId
+     * @param int $institutionId
+     * @return array
+     */
+    private function getIndirectInstitutionUserIds(int $roleId, int $institutionId): array
+    {
+        return DB::table('security_group_users')
+            ->join('security_group_institutions', function ($join) use ($institutionId) {
+                $join->on('security_group_institutions.security_group_id', '=', 'security_group_users.security_group_id')
+                    ->where('security_group_institutions.institution_id', '=', $institutionId);
+            })
+            ->where('security_group_users.security_role_id', $roleId)
+            ->distinct()
+            ->pluck('security_group_users.security_user_id')
+            ->toArray();
+    }
+
+    /**
+     * Get users from the education headquarters for the area of an academic institution.
+     *
+     * @param int $roleId
+     * @param int $institutionId
+     * @return array
+     */
+    private function getEducationHeadquartersUserIds(int $roleId, int $institutionId): array
+    {
+        $areaId = DB::table('institutions')
+            ->where('id', $institutionId)
+            ->value('area_id');
+
+        if (!$areaId) {
+            return [];
+        }
+
+        $headquartersIds = DB::table('institutions')
+            ->where('area_id', $areaId)
+            ->where('classification', '!=', 1)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($headquartersIds)) {
+            return [];
+        }
+
+        $allHeadquartersUserIds = [];
+
+        foreach ($headquartersIds as $hqId) {
+            $allHeadquartersUserIds = array_merge(
+                $allHeadquartersUserIds,
+                $this->getDirectInstitutionUserIds($roleId, $hqId),
+                $this->getIndirectInstitutionUserIds($roleId, $hqId)
+            );
+        }
+
+        return array_values(array_unique($allHeadquartersUserIds));
+    }
+
+    /**
+     * Get user IDs associated with an institution class.
+     *
+     * @param int $institutionClassId
+     * @return array
+     */
+    private function getUserIdsByClass(int $institutionClassId): array
+    {
+        $primaryStaffIds = DB::table('institution_classes')
+            ->where('id', $institutionClassId)
+            ->distinct()
+            ->pluck('staff_id')
+            ->toArray();
+
+        $secondaryStaffIds = DB::table('institution_classes_secondary_staff')
+            ->where('institution_class_id', $institutionClassId)
+            ->distinct()
+            ->pluck('secondary_staff_id')
+            ->toArray();
+
+        return array_values(array_unique(array_merge($primaryStaffIds, $secondaryStaffIds)));
+    }
+
+    /**
+     * Check if an institution is academic.
+     *
+     * @param int $institutionId
+     * @return bool
+     */
+    private function isAcademicInstitution(int $institutionId): bool
+    {
+        $institution = DB::table('institutions')
+            ->select('classification')
+            ->where('id', $institutionId)
+            ->first();
+
+        return $institution && (int) $institution->classification === 1;
+    }
+
+    /**
+     * Fetch active users by their security user IDs.
+     *
+     * @param array $securityUserIds
+     * @return \Illuminate\Support\Collection
+     */
+    private function fetchActiveUsers(array $securityUserIds)
+    {
+        return DB::table('security_users')
             ->select([
                 'id',
                 'openemis_no',
@@ -92,11 +262,9 @@ class RecipientResolver
                 'email',
                 'mobile_number',
             ])
-            ->whereIn('id', $allSecurityUserIds)
-            ->where('status', 1) // Only active users
+            ->whereIn('id', array_unique($securityUserIds))
+            ->where('status', 1)
             ->get();
-
-        return $this->getContactsFromUsers($users, $contactList);
     }
 
     /**
@@ -117,7 +285,7 @@ class RecipientResolver
         }
 
         // Get guardians if ROLE_GUARDIAN is in the list
-        if (in_array(9, $securityRoleIds, true)) { // ROLE_GUARDIAN = 9
+        if (in_array(self::GUARDIAN, $securityRoleIds, true)) {
             $guardians = DB::table('student_guardians')
                 ->where('student_id', $studentUserId)
                 ->pluck('guardian_id')
@@ -131,7 +299,7 @@ class RecipientResolver
         }
 
         // Include student if ROLE_STUDENT is in the list
-        if (in_array(8, $securityRoleIds, true)) { // ROLE_STUDENT = 8
+        if (in_array(self::STUDENT, $securityRoleIds, true)) {
             $recipients[] = $studentUserId;
         }
 
