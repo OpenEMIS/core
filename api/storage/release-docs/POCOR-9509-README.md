@@ -73,6 +73,27 @@ Removed:  1 file  (src/Model/Table/AlertsQueueTable.php)
    - Institution-level roles (Principal, Administrator, etc.) no longer appear for class/subject scope
    - Institution scope warning added: users without security group link to institution won't receive message
 
+### Post-release Fixes (2026-04-15)
+
+9. **StudentAttendance alert — role-gated, class-scoped recipient resolution**
+
+   Previously the alert went to whoever was in `alerts_roles` looked up generically by institution. Now two distinct groups are resolved:
+
+   - **Class staff** (primary teacher from `institution_classes.staff_id` + secondary teachers from `institution_classes_secondary_staff.secondary_staff_id`): notified only if role **Homeroom Teacher (5)** or **Teacher (6)** is present in `alerts_roles` for that rule
+   - **Institution management** (Principal + Deputy Principal found via the institution's security group): notified only if role **Principal (4)** or **Deputy Principal (11)** is present in `alerts_roles` for that rule
+
+   **Why role-based gating matters:**
+   A class teacher and a principal may need to take different actions on the same absence. For example:
+   - A teacher's alert message might say: *"Student ${student.name} has been absent ${total_days} days — please contact the parents."*
+   - A principal's alert message might say: *"Student ${student.name} has been absent ${total_days} days — please escalate to the welfare office or contact the police if safeguarding is a concern."*
+   
+   By controlling which roles receive the alert via `alerts_roles`, the system administrator can configure one rule that notifies teachers only, another that notifies principals only, or both — each with its own tailored message and threshold. If a role is removed from `alerts_roles` in the UI, that group stops receiving the alert immediately with no code change.
+
+10. **AlertRulesTable — role dropdown restricted for StudentAttendance**
+    - Added `assignToClassStaffOnly()` method: filters the roles dropdown to **Principal, Deputy Principal, Homeroom Teacher, Teacher** only
+    - StudentAttendance feature now routes to this method instead of `assignToAllRoles()`
+    - Prevents accidental assignment of irrelevant roles (Administrator, Guardian, Student, etc.) to attendance alerts
+
 ### Database Migrations
 
 None required. The AlertQueue table structure is unchanged; only the ORM location is consolidated.

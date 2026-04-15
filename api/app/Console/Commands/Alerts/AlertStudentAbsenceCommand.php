@@ -66,13 +66,13 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             return self::FAILURE;
         }
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() prepareContext() succeeded'); //[TEMP-LOG];
+        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() prepareContext() succeeded'); //[TEMP-LOG]
 
         // Validate student-specific parameters
         $studentId = (int) $this->option('student_id');
         $academicPeriodId = (int) $this->option('academic_period_id');
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() Validated IDs: studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId); //[TEMP-LOG]
 
         if (!$studentId || !$academicPeriodId) {
             $this->error("Missing required options: student_id, academic_period_id");
@@ -102,7 +102,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         $academicPeriodId = (int) $this->option('academic_period_id');
         $threshold = (int) ($this->rule->threshold ?? 1);
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Query params: studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId . ', threshold=' . $threshold); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId . ', threshold=' . $threshold); //[TEMP-LOG]
 
         // Query absences for this student
         //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Executing DB query...'); //[TEMP-LOG]
@@ -226,23 +226,45 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
     protected function resolveRecipients(array $item): array
     {
         //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() ENTRY'); //[TEMP-LOG]
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() item: ' . json_encode($item)); //[TEMP-LOG]
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() rule->security_roles: ' . json_encode($this->rule->security_roles)); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() institution_id=' . ($item['institution_id'] ?? 'null') . ', institution_class_id=' . ($item['institution_class_id'] ?? 'null')); //[TEMP-LOG]
 
-        $institutionId = $item['institution_id'] ?? null;
-        $institutionClassId = $item['institution_class_id'] ?? null;
+        $institutionId    = (int) ($item['institution_id'] ?? 0);
+        $institutionClassId = (int) ($item['institution_class_id'] ?? 0);
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() Resolved IDs: institutionId=' . $institutionId . ', institutionClassId=' . $institutionClassId); //[TEMP-LOG]
-
-        $recipients = $this->recipientResolver->getRoleAssociatedContactList(
+        // POCOR-9509: StudentAttendance recipients = this class's staff only + Principal/Deputy Principal at this institution only
+        // Step 1: class teachers (primary + secondary) — only if Teacher(6) or Homeroom Teacher(5) is in alerts_roles
+        $classStaffRoleIds = [5, 6]; // Homeroom Teacher, Teacher
+        $hasClassStaffRole = !empty(array_filter(
             $this->rule->security_roles,
-            $institutionId,
-            $institutionClassId
-        );
+            fn($r) => in_array((int)(is_array($r) ? $r['id'] : $r->id), $classStaffRoleIds, true)
+        ));
+        $classContacts = ['email' => [], 'phone' => []];
+        if ($institutionClassId && $hasClassStaffRole) {
+            $classContacts = $this->recipientResolver->getClassTeacherContactList($institutionClassId);
+        }
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() Got ' . count($recipients) . ' recipients: ' . json_encode($recipients)); //[TEMP-LOG]
+        // Step 2: Principal (4) + Deputy Principal (11) at this institution — only if present in alerts_roles
+        $managementRoleIds = [4, 11]; // Principal, Deputy Principal
+        $managementRoles = array_values(array_filter(
+            $this->rule->security_roles,
+            fn($r) => in_array((int)(is_array($r) ? $r['id'] : $r->id), $managementRoleIds, true)
+        ));
+        $principalContacts = ['email' => [], 'phone' => []];
+        if ($institutionId && !empty($managementRoles)) {
+            $principalContacts = $this->recipientResolver->getRoleAssociatedContactList(
+                $managementRoles,
+                $institutionId
+            );
+        }
+
+        $contacts = [
+            'email' => array_values(array_unique(array_merge($classContacts['email'], $principalContacts['email']))),
+            'phone' => array_values(array_unique(array_merge($classContacts['phone'], $principalContacts['phone']))),
+        ];
+
+        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() TOTAL: email=' . count($contacts['email']) . ', phone=' . count($contacts['phone'])); //[TEMP-LOG]
         //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() EXIT'); //[TEMP-LOG]
-        return $recipients;
+        return $contacts;
     }
 
     /**
