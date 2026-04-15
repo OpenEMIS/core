@@ -137,12 +137,13 @@ class ImportResultsTable extends AppTable
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 4;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading Type'), $translatedCol, __('Grading Type Id')];
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading ID'),  __('Grading Type'),__('Grading Type Id')]; //POCOR-9236
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
                     $row->code,
+                    $row->{$lookupColumn}, //POCOR-9236
                     $row->{$lookupColumn},
                     $row->_matchingData[$ExaminationGradingTypes->getAlias()]->name,
                     $row->_matchingData[$ExaminationGradingTypes->getAlias()]->id
