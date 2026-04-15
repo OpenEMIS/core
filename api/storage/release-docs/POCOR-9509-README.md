@@ -1,255 +1,134 @@
-# POCOR-9509 Release Notes: Alert System and Queue Consolidation
+# POCOR-9509 — Alerts Infrastructure Port and New Alert Types
 
-**Release date:** 2026-03-15
+**Release date:** 2026-04-15 · **Audience:** Ministry IT staff, deployment engineers.
 
----
-
-## What is the Task?
-
-This release consolidates the CakePHP alert architecture: all Shell daemons have been ported to Laravel artisan commands, AlertQueue has been merged into the Alert plugin (removing the duplicate in `src/`), and NON_IMPLEMENTED_ALERTS has been cleaned to reflect current state. Event-based alerts (StudentAbsence, StudentAdmission, StudentEnrolment, StudentStatusChange) now dispatch immediately via Laravel; scheduled alerts (RetirementWarning, StaffEmployment, etc.) run via the `alerts:check-and-queue` cron task.
+This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scripts to Laravel artisan commands, adds five new alert types, and introduces an Alert Queue screen with mass-delete support. Follow the deployment checklist below to have alerts running safely within 15 minutes.
 
 ---
 
-## Situation Before
+## 1. What Changed
 
-- Alert system split between CakePHP Shells (legacy, no longer invoked) and partially-ported Laravel commands
-- `AlertQueueTable` duplicated in both `src/Model/Table/` and `plugins/Alert/src/Model/Table/`
-- References to AlertQueue split between `AlertQueue` and `Alert.AlertQueue` aliases
-- NON_IMPLEMENTED_ALERTS contained entries for features now implemented (CaseEscalation, LicenseValidity, LicenseRenewal, ScholarshipApplication, ScholarshipDisbursement) and missing entry for StaffAttendance
-- Alert queue state not centralized; no unified method to check queue stats
+- **Five new alert types** — Case Escalation, License Validity, License Renewal, Scholarship Application, Scholarship Disbursement. Each ships with a dedicated artisan command and default recipient-resolver logic.
+- **New Alert Queue screen** and **mass-delete** on both Alert Queue and Alert Logs. Administrators can monitor pending/sent/failed messages and bulk-delete entries produced by a misconfigured rule.
+- **Laravel runtime with working-hours throttling** — all 14 alert commands live under `api/app/Console/Commands/Alerts/`. The `ALERTS_PROCESS_LIMIT` environment variable caps messages per scheduler tick, and `Kernel.php` restricts dispatch to weekdays and working hours.
 
 ---
 
-## What Was Implemented
+## 2. Deployment Checklist
 
-### Core Changes
-
-1. **Consolidated AlertQueue into plugin**
-   - Moved `src/Model/Table/AlertQueueTable.php` → `plugins/Alert/src/Model/Table/AlertQueueTable.php`
-   - Added `validationDefault()` method for queue record validation
-   - Added `queueAlert()` — wraps single alert into a queue entry
-   - Added `queueEmail()`, `queueSms()` — specialized queue methods for message types
-   - Added `getQueueStats()` — returns `['total' => N, 'queued' => N, 'sent' => N, 'failed' => N]`
-
-2. **Updated all references**
-   - `src/Model/Behavior/AlertQueueBehavior.php`: `fetchTable('AlertQueue')` → `fetchTable('Alert.AlertQueue')`
-   - `plugins/Alert/src/Model/Table/AlertLogsTable.php`: `get('AlertQueue')` → `get('Alert.AlertQueue')`
-
-3. **Cleaned up NON_IMPLEMENTED_ALERTS**
-   - Removed: CaseEscalation, LicenseValidity, LicenseRenewal, ScholarshipApplication, ScholarshipDisbursement (all now implemented)
-   - Now contains only: StaffAttendance (no shell ever existed, no Laravel command created)
-
-### Files Changed Summary
-
-```
-Added:    1 file  (plugins/Alert/src/Model/Table/AlertQueueTable.php)
-Modified: 2 files (src/Model/Behavior/AlertQueueBehavior.php, plugins/Alert/src/Model/Table/AlertLogsTable.php)
-Removed:  1 file  (src/Model/Table/AlertsQueueTable.php)
-```
-
-### Post-release Fixes (2026-04-09)
-
-4. **SystemUpdates alert — extended placeholders**
-   - Added `${new_version}`, `${release_date}`, `${current_version}` placeholders
-   - `${version}` kept as legacy alias (not shown in UI, still works in saved templates)
-   - `current_version` sourced from `config_items.db_version`
-   - Behavior updated so all 3 placeholders appear in the alert rule edit window
-
-5. **Event-based alerts — frequency corrected**
-   - `AlertStudentStatus` and `AlertStaffType` added to `$oneTimeProcesses` (UI now shows Never/Once only)
-   - DB corrected: StudentAbsence, StudentAdmission, StudentEnrolment, StudentStatus, StaffType set to `Once`
-
-6. **Alert logs — status column display fixed**
-   - `beforeAction` field declaration missing `'type' => 'select'` — `onGetStatus` was never called, Status column blank
-
-7. **Alert queue throttle — `ALERTS_PROCESS_LIMIT` env var**
-   - Default changed from 50 → 20 (safe for free-tier providers ~20 msg/min)
-   - `config/alerts.php` exposes `ALERTS_PROCESS_LIMIT`; `Kernel.php` reads it at runtime
-   - Set to `0` to pause queue without disabling cron
-
-8. **Institution Messaging — class/subject scope role filter**
-   - Added `HOMEROOM_TEACHER_ROLE (5)`, `TEACHER_ROLE (6)`, `STAFF_ROLE (7)` constants
-   - Class and Subject scopes now only show: Homeroom Teacher, Teacher, Staff, Student, Guardian
-   - Institution-level roles (Principal, Administrator, etc.) no longer appear for class/subject scope
-   - Institution scope warning added: users without security group link to institution won't receive message
-
-### Post-release Fixes (2026-04-15)
-
-9. **StudentAttendance alert — role-gated, class-scoped recipient resolution**
-
-   Previously the alert went to whoever was in `alerts_roles` looked up generically by institution. Now two distinct groups are resolved:
-
-   - **Class staff** (primary teacher from `institution_classes.staff_id` + secondary teachers from `institution_classes_secondary_staff.secondary_staff_id`): notified only if role **Homeroom Teacher (5)** or **Teacher (6)** is present in `alerts_roles` for that rule
-   - **Institution management** (Principal + Deputy Principal found via the institution's security group): notified only if role **Principal (4)** or **Deputy Principal (11)** is present in `alerts_roles` for that rule
-
-   **Why role-based gating matters:**
-   A class teacher and a principal may need to take different actions on the same absence. For example:
-   - A teacher's alert message might say: *"Student ${student.name} has been absent ${total_days} days — please contact the parents."*
-   - A principal's alert message might say: *"Student ${student.name} has been absent ${total_days} days — please escalate to the welfare office or contact the police if safeguarding is a concern."*
-   
-   By controlling which roles receive the alert via `alerts_roles`, the system administrator can configure one rule that notifies teachers only, another that notifies principals only, or both — each with its own tailored message and threshold. If a role is removed from `alerts_roles` in the UI, that group stops receiving the alert immediately with no code change.
-
-10. **AlertRulesTable — role dropdown restricted for StudentAttendance**
-    - Added `assignToClassStaffOnly()` method: filters the roles dropdown to **Principal, Deputy Principal, Homeroom Teacher, Teacher** only
-    - StudentAttendance feature now routes to this method instead of `assignToAllRoles()`
-    - Prevents accidental assignment of irrelevant roles (Administrator, Guardian, Student, etc.) to attendance alerts
-
-### Database Migrations
-
-None required. The AlertQueue table structure is unchanged; only the ORM location is consolidated.
-
----
-
-## Deployment Instructions
-
-1. **Git pull** the latest changes:
+1. **Pull the branch:**
    ```bash
    git pull origin POCOR-9509
    ```
-
-2. **Clear Laravel cache** (AlertQueue is loaded via Cake plugin discovery):
+2. **Run migrations** (adds the POCOR-9509 migration file; no schema change to `alert_queue`):
    ```bash
-   php artisan config:cache
-   php artisan cache:clear
+   docker exec poe-application /bin/sh -c \
+     "cd /var/www/html/emis/core && php bin/cake.php migrations migrate"
    ```
-
-3. **Verify alert table access** (no structural changes, but confirm plugin alias works):
+3. **Clear caches** for both frameworks:
    ```bash
-   php artisan tinker
-   >>> \App\Models\AlertQueue::first();  // or via CakePHP Table locator
-   >>> exit
+   docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core && php bin/cake.php cache clear_all"
+   docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php artisan config:cache && php artisan cache:clear"
    ```
-
-4. **Prepare test data** (dev/test databases only — never production):
-
-   Many users on fresh or anonymised databases have no email or mobile number, causing zero recipients to be resolved. Fill them with fake-but-unique values that the built-in sender blockers will silently discard (`.comz` blocks email delivery, `zz` blocks SMS delivery):
-
-   ```sql
-   -- Fill missing or invalid emails
-   UPDATE security_users
-   SET email = CONCAT(
-           IF(REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '') = '', id, REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '')),
-           '@gmail.comz'
-               )
-   WHERE email IS NULL OR email NOT LIKE '%@%';
-
-   -- Fill missing mobile numbers
-   UPDATE security_users
-   SET mobile_number = CONCAT(
-           IF(REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '') = '', id, REGEXP_REPLACE(openemis_no, '[^a-zA-Z0-9]', '')),
-           'zz'
-                       )
-   WHERE mobile_number IS NULL OR mobile_number = '';
-   ```
-
-   This lets the entire pipeline run (queuing → recipient resolution → placeholder replacement → sender) without sending any real email or SMS.
-
-   > ⚠️ **If the anonymised database still contains real email addresses or phone numbers**, it is the tester's or deployer's responsibility to verify this before running any alert command — a single test run can send a large volume of messages to real people. Check with:
-   > ```sql
-   > SELECT COUNT(*) FROM security_users WHERE email NOT LIKE '%@%.comz' AND email LIKE '%@%';
-   > SELECT COUNT(*) FROM security_users WHERE mobile_number IS NOT NULL AND mobile_number NOT LIKE '%zz';
-   > ```
-   > If either returns non-zero, anonymise those rows first or disconnect the mail/SMS provider.
-
-5. **Set cron to working hours** before enabling the scheduler. The alert queue is cron-driven — a misconfigured schedule will deliver messages at 3 am on a Monday or on a Saturday. Restrict to working hours and weekdays only:
-
-   ```cron
-   ```cron
-   # Standard Laravel scheduler entry (every minute, all day)
-   * * * * *  cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
-   ```
-
-   Restrict to working hours in `Kernel.php` with `->weekdays()->between('08:00', '17:00')`. Adjust the window to the target country's working hours and weekend definition.
-
-   **To throttle sending speed**, set `ALERTS_PROCESS_LIMIT` in `.env` — no code change needed:
+4. **Set throttle** in `api/.env` (start conservative — free-tier mail providers often cap at 20 msg/min):
    ```env
-   # Default 20 — safe for free-tier mail/SMS providers (e.g. 20 msg/min limit)
    ALERTS_PROCESS_LIMIT=20
    ```
-   Then run `php artisan config:cache`. Setting it to `0` pauses processing entirely (queue accumulates, resumes when raised).
-
-6. **Run smoke tests** for alert commands:
+   Then rerun `php artisan config:cache`. Use `0` to pause dispatch without disabling the cron job.
+5. **Install the host crontab** (every minute; the Laravel scheduler handles the rest):
+   ```cron
+   * * * * *  cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
+   ```
+6. **Restrict to working hours** in `api/app/Console/Kernel.php` using `->weekdays()->between('08:00', '17:00')`. Adjust the window to local working hours; swap `weekdays()` for `->days([0,1,2,3,4])` where the weekend falls on Friday–Saturday.
+7. **Verify anonymisation** before enabling on production-copy data. See [Manual §14.4](POCOR-9509/MANUAL.md#14-testing-and-dry-run-procedures) and run the two `SELECT COUNT(*)` queries.
+8. **Smoke-test** one scheduled alert on a dev/test database:
    ```bash
-   # Test queue stats retrieval
-   php artisan tinker
-   >>> $table = \Cake\ORM\TableRegistry::getTableLocator()->get('Alert.AlertQueue');
-   >>> $stats = $table->getQueueStats();
-   >>> dump($stats);
-   >>> exit
-
-   # Test a direct alert (example: RetirementWarning)
    docker exec poe-application /bin/sh -c \
-     "cd /var/www/html/emis/core/api && php artisan alerts:retirement-warning \
-      --user_id=1 --rule_id=1 --process_id=0"
+     "cd /var/www/html/emis/core/api && php artisan alerts:check-and-queue --user_id=1 --sync"
    ```
 
-6. **Verify queue is populated**:
-   ```sql
-   SELECT COUNT(*) as queued_alerts FROM alerts_queue WHERE is_read = 0;
-   ```
+> **Warning:** Never run step 8 on a database containing real contact data unless you have completed step 7. One misconfigured rule can dispatch thousands of real emails or SMS messages.
 
 ---
 
-## System Administrator Guide
+## 3. Getting Started
 
-### Queue Stats and Monitoring
+| Topic | Manual Section | Language |
+|-------|----------------|----------|
+| Enable or disable an alert type | §4 Managing Alert Schedules | [EN](POCOR-9509/MANUAL.md#4-managing-alert-schedules) · [RU](POCOR-9509/MANUAL_RU.md#4-managing-alert-schedules) · [HI](POCOR-9509/MANUAL_HI.md#4-managing-alert-schedules) · [AR](POCOR-9509/MANUAL_AR.md#4-managing-alert-schedules) |
+| Create an alert rule | §5 Alert Rules | [EN](POCOR-9509/MANUAL.md#alert-rules-configuring-what-to-send) · [RU](POCOR-9509/MANUAL_RU.md#5-alert-rules--configuring-what-to-send) · [HI](POCOR-9509/MANUAL_HI.md#5-alert-rules--configuring-what-to-send) · [AR](POCOR-9509/MANUAL_AR.md#5-alert-rules--configuring-what-to-send) |
+| Look up a placeholder | §6 Placeholders | [EN](POCOR-9509/MANUAL.md#6-placeholders) · [RU](POCOR-9509/MANUAL_RU.md#6-placeholders) · [HI](POCOR-9509/MANUAL_HI.md#6-placeholders) · [AR](POCOR-9509/MANUAL_AR.md#6-العناصر-النائبة) |
+| Configure a threshold | §7 Thresholds | [EN](POCOR-9509/MANUAL.md#7-thresholds) · [RU](POCOR-9509/MANUAL_RU.md#7-thresholds) · [HI](POCOR-9509/MANUAL_HI.md#7-thresholds) · [AR](POCOR-9509/MANUAL_AR.md#7-الحدود-الدنيا) |
+| Reference an alert type | §8 Alert Types Reference | [EN](POCOR-9509/MANUAL.md#8-alert-types-reference) · [RU](POCOR-9509/MANUAL_RU.md#8-alert-types-reference) · [HI](POCOR-9509/MANUAL_HI.md#8-alert-types-reference) · [AR](POCOR-9509/MANUAL_AR.md#8-مرجع-أنواع-التنبيهات) |
+| Throttle sending rate | §13.2 `ALERTS_PROCESS_LIMIT` | [EN](POCOR-9509/MANUAL.md#13-operational-configuration) |
+| Safe dev-DB testing | §14.3 Safe-Suffix Trick | [EN](POCOR-9509/MANUAL.md#14-testing-and-dry-run-procedures) |
+| Troubleshoot a missing email | §15 Troubleshooting | [EN](POCOR-9509/MANUAL.md#15-troubleshooting) · [RU](POCOR-9509/MANUAL_RU.md#15-troubleshooting) |
 
-Check alert queue health:
-```php
-$alertQueueTable = TableRegistry::getTableLocator()->get('Alert.AlertQueue');
-$stats = $alertQueueTable->getQueueStats();
-// Returns: ['total' => 150, 'queued' => 45, 'sent' => 100, 'failed' => 5]
+---
+
+## 4. Key Configuration
+
+| Key | Location | Purpose |
+|-----|----------|---------|
+| `ALERTS_PROCESS_LIMIT` | `api/.env` | Max messages per scheduler tick. Default `20`. Set `0` to pause. |
+| `->weekdays()->between(...)` | `api/app/Console/Kernel.php` | Restrict dispatch to working hours. Required for production. |
+| `* * * * * php artisan schedule:run` | Host crontab | Drives the Laravel scheduler. Every minute. |
+| `Alert.AlertQueue` | CakePHP Table Registry | Plugin alias for queue access. Not `AlertQueue`. |
+| `NON_IMPLEMENTED_ALERTS` | `plugins/Alert/src/Model/Table/AlertsTable.php` | Contains only `StaffAttendance` after this release. |
+
+---
+
+## 5. Files Changed
+
+| Area | Path | Summary |
+|------|------|---------|
+| Artisan commands | `api/app/Console/Commands/Alerts/` | 14 commands covering every alert type |
+| Recipient resolver | `api/app/Services/AlertProcessor/` | Role-based plus assignee resolution logic |
+| CakePHP Alert plugin | `plugins/Alert/src/Model/Table/` | Consolidated `AlertQueueTable`; cleaned `NON_IMPLEMENTED_ALERTS` |
+| Behaviors | `src/Model/Behavior/AlertQueueBehavior.php` | Uses plugin alias `Alert.AlertQueue` |
+| Angular frontend | `frontend/src/` → `webroot/js/angular/dist/` | Alert Queue screen, mass-delete controls |
+| Migration | `config/Migrations/20260415030200_POCOR9509.php` | Backup tables for `institution_students_report_cards`, `security_functions` |
+| Removed | `src/Model/Table/AlertsQueueTable.php` | Duplicate replaced by plugin table |
+
+---
+
+## 6. Troubleshooting Quick Reference
+
+| Symptom | One-line Fix |
+|---------|--------------|
+| `Table 'Alert.AlertQueue' not found` | Verify `plugins/Alert/src/Model/Table/AlertQueueTable.php` exists; clear caches. |
+| Alert rule enabled but never fires | Check that at least one role is assigned and the alert type frequency is not `Never`. |
+| Placeholder tokens appear literally in sent emails | Confirm the token spelling against [Manual §6](POCOR-9509/MANUAL.md#6-placeholders) — tokens are case-sensitive. |
+| Queue backing up, messages not sending | Inspect `ALERTS_PROCESS_LIMIT`; if `0`, restore a positive value and rerun `php artisan config:cache`. |
+| Duplicate alerts in queue | Expected when multiple rules match the same record. See [Manual §5.4](POCOR-9509/MANUAL.md#alert-rules-configuring-what-to-send). |
+
+Advanced diagnostics: `api/storage/logs/laravel.log`, `logs/hin-debug.log`, `logs/alert_<command>.log`, `logs/system_processes/<id>.log`.
+
+To pause all dispatch immediately:
+```bash
+# .env → ALERTS_PROCESS_LIMIT=0
+docker exec poe-application /bin/sh -c \
+  "cd /var/www/html/emis/core/api && php artisan config:cache"
 ```
 
-### Log Locations
-
-- **Laravel alert command output:** `api/storage/logs/laravel.log`
-- **CakePHP debug log:** `logs/hin-debug.log`
-- **Queue errors:** Logged via `alert_logs` table with `status = FAILED`
-
-### Rollback
-
-If AlertQueue consolidation causes issues:
-
-1. Restore the backup table (if one exists):
-   ```sql
-   DROP TABLE IF EXISTS alerts_queue;
-   RENAME TABLE z_9509_alerts_queue TO alerts_queue;
-   ```
-
-2. Revert code to prior commit:
-   ```bash
-   git reset --hard HEAD~1
-   php artisan config:cache
-   ```
-
-### Troubleshooting
-
-**Problem:** `Table 'Alert.AlertQueue' not found`
-- **Cause:** Plugin discovery failed; AlertQueue not in plugin namespace
-- **Fix:** Verify `plugins/Alert/src/Model/Table/AlertQueueTable.php` exists and class name is `AlertQueueTable` (not with alias suffix)
-- **Check:** `php artisan tinker` → `\Cake\ORM\TableRegistry::getTableLocator()->get('Alert.AlertQueue')->getTable();`
-
-**Problem:** Queue methods undefined (`queueAlert()`, `getQueueStats()`)
-- **Cause:** Using old `src/Model/Table/AlertQueueTable.php` or class not loaded
-- **Fix:** Confirm `plugins/Alert/src/Model/Table/AlertQueueTable.php` has all methods; clear Cake registry and re-fetch
-
-**Problem:** Alert commands fail with `AlertQueue reference error`
-- **Cause:** Stale cached table references in Laravel bootstrap
-- **Fix:** Run `php artisan config:cache && php artisan cache:clear`
-
-### Alert Queue Structure
-
+To purge a runaway queue (use with care):
 ```sql
-DESCRIBE alerts_queue;
+DELETE FROM alert_queue WHERE status = 0;
 ```
 
-Common columns:
-- `id` — primary key
-- `alert_rule_id` — foreign key to alert_rules
-- `institution_id` — institution context (if applicable)
-- `user_id` — recipient user
-- `security_role_id` — role recipient
-- `subject`, `body`, `message_type` — template output
-- `is_read` — delivery status flag
-- `created`, `modified` — timestamps
+---
+
+## 7. Full Documentation
+
+| Document | Path |
+|----------|------|
+| Administrator Manual (English) | [POCOR-9509/MANUAL.md](POCOR-9509/MANUAL.md) |
+| Руководство администратора (Russian) | [POCOR-9509/MANUAL_RU.md](POCOR-9509/MANUAL_RU.md) |
+| प्रशासक मैनुअल (Hindi) | [POCOR-9509/MANUAL_HI.md](POCOR-9509/MANUAL_HI.md) |
+| دليل المسؤول (Arabic) | [POCOR-9509/MANUAL_AR.md](POCOR-9509/MANUAL_AR.md) |
+| Technical Implementation Guide | [POCOR-9509/ALERTS_GUIDE.md](POCOR-9509/ALERTS_GUIDE.md) |
+| Threshold Configuration Reference | [POCOR-9509/thresholds.md](POCOR-9509/thresholds.md) |
+
+---
+
+*POCOR-9509 · 2026-04-15*
