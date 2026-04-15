@@ -1839,12 +1839,6 @@ class StudentsTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        //POCOR-9509: fire StudentStatus alert when student_status_id changes
-        if ($entity->isDirty('student_status_id')) {
-            Log::debug('[TEMP-LOG] @StudentsTable::afterSave() student_status_id dirty — triggering StudentStatus alert entity_id=' . ($entity->id ?? 'null') . ' student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
-            $this->sendStudentStatusAlert($entity);
-        }
-
         $listeners = [
             TableRegistry::getTableLocator()->get('Institution.StudentUser'), // POCOR-8917
             TableRegistry::getTableLocator()->get('Institution.StudentAdmission'),
@@ -1855,6 +1849,12 @@ class StudentsTable extends ControllerActionTable
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
+
+        //POCOR-9509: fire StudentStatus alert when student is new or student_status_id changes
+        if ($entity->isNew() || $entity->isDirty('student_status_id')) {
+            Log::debug('[TEMP-LOG] @StudentsTable::afterSave() student_status_id dirty or new — triggering StudentStatus alert entity_id=' . ($entity->id ?? 'null') . ' student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
+            $this->sendStudentStatusAlert($entity);
+        }
 
         //if new record has no previous_institution_student_id value yet, then try to update it.
         if (!$entity->has('previous_institution_student_id')) {
@@ -1880,20 +1880,45 @@ class StudentsTable extends ControllerActionTable
     }
 
     /**
-     * POCOR-9509: Fire StudentStatus alert when student_status_id changes
+     * POCOR-9509: Sends an alert for student status changes.
+     *
+     * @param \Cake\ORM\Entity $institutionStudent The InstitutionStudent entity.
+     * @return void
      */
-    private function sendStudentStatusAlert($entity)
+    public function sendStudentStatusAlert($institutionStudent): void
     {
-        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
-        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
-            $userId = $entity->modified_user_id;
-        } else {
-            $userId = $entity->created_user_id ?? 1;
+        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($institutionStudent->id ?? 'null') . ', student_status_id=' . ($institutionStudent->student_status_id ?? 'null')); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($institutionStudent->toArray())); //[TEMP-LOG]
+
+        if (empty($institutionStudent->student_id)
+            && empty($institutionStudent->institution_id)
+            && empty($institutionStudent->id)
+            && empty($institutionStudent->created_user_id)) {
+            Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, missing required fields'); //[TEMP-LOG]
+            return;
         }
-        //POCOR-9509: delegate student status alert triggering to AlertLogsTable helper
-        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $entity, $userId);
-        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - triggerLaravelAlertFromCakePHP called'); //[TEMP-LOG]
+
+        try {
+            // Determine the user ID for the alert
+            $userId = null;
+            if (is_numeric($institutionStudent->modified_user_id)) {
+                $userId = $institutionStudent->modified_user_id;
+            } elseif (is_numeric($institutionStudent->created_user_id)) {
+                $userId = $institutionStudent->created_user_id;
+            }
+
+            Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() userId=' . $userId); //[TEMP-LOG]
+
+            if ($userId) {
+                //POCOR-9509: delegate student status alert triggering to AlertLogsTable helper
+                AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $institutionStudent, $userId);
+                Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - triggerLaravelAlertFromCakePHP called'); //[TEMP-LOG]
+            } else {
+                Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, no userId found'); //[TEMP-LOG]
+            }
+        } catch (\Throwable $e) {
+            Log::error('[POCOR-9509] sendStudentStatusAlert exception: ' . $e->getMessage() . ' entity_id=' . ($institutionStudent->id ?? 'null'));
+        }
     }
 
     public function onGetStudentId(EventInterface $event, Entity $entity)
