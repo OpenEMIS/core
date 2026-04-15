@@ -23,6 +23,7 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate student status alerts through AlertLogsTable helper
 
 class StudentsTable extends ControllerActionTable
 {
@@ -1838,6 +1839,12 @@ class StudentsTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-9509: fire StudentStatus alert when student_status_id changes
+        if ($entity->isDirty('student_status_id')) {
+            Log::debug('[TEMP-LOG] @StudentsTable::afterSave() student_status_id dirty — triggering StudentStatus alert entity_id=' . ($entity->id ?? 'null') . ' student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
+            $this->sendStudentStatusAlert($entity);
+        }
+
         $listeners = [
             TableRegistry::getTableLocator()->get('Institution.StudentUser'), // POCOR-8917
             TableRegistry::getTableLocator()->get('Institution.StudentAdmission'),
@@ -1870,6 +1877,23 @@ class StudentsTable extends ControllerActionTable
                 );
             }
         }
+    }
+
+    /**
+     * POCOR-9509: Fire StudentStatus alert when student_status_id changes
+     */
+    private function sendStudentStatusAlert($entity)
+    {
+        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
+        if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
+            $userId = $entity->modified_user_id;
+        } else {
+            $userId = $entity->created_user_id ?? 1;
+        }
+        //POCOR-9509: delegate student status alert triggering to AlertLogsTable helper
+        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $entity, $userId);
+        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - triggerLaravelAlertFromCakePHP called'); //[TEMP-LOG]
     }
 
     public function onGetStudentId(EventInterface $event, Entity $entity)

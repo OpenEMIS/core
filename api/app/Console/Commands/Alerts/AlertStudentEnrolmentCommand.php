@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Console\Commands\Alerts;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * POCOR-9509: Laravel port of CakePHP's AlertStudentEnrolmentCommand
@@ -53,11 +54,15 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
      */
     public function handle(): int
     {
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::handle() ENTRY options: ' . json_encode($this->options())); //[TEMP-LOG]
         if (!$this->prepareContext()) {
+            Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::handle() EXIT EARLY - prepareContext failed'); //[TEMP-LOG]
             return self::FAILURE;
         }
-
-        return $this->runFeatureAlert('StudentEnrolment');
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::handle() calling runFeatureAlert(StudentEnrolment)'); //[TEMP-LOG]
+        $result = $this->runFeatureAlert('StudentEnrolment');
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::handle() EXIT result=' . $result); //[TEMP-LOG]
+        return $result;
     }
 
     /**
@@ -67,17 +72,20 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
      */
     protected function prepareContext(): bool
     {
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::prepareContext() ENTRY'); //[TEMP-LOG]
         // Call parent prepareContext first
         if (!parent::prepareContext()) {
+            Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::prepareContext() EXIT FALSE - parent failed'); //[TEMP-LOG]
             return false;
         }
 
         // Get and validate enrolment_id
         $this->entityId = (int) $this->option('entity_id');
-
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::prepareContext() entityId=' . $this->entityId); //[TEMP-LOG]
 
         if (!$this->entityId) {
             $this->error("Missing required --entity_id option");
+            Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::prepareContext() EXIT FALSE - no entity_id'); //[TEMP-LOG]
             return false;
         }
 
@@ -85,14 +93,16 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         $enrolment = DB::table('institution_student_enrolment')
             ->where('id', $this->entityId)
             ->first();
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::prepareContext() enrolment row: ' . json_encode($enrolment)); //[TEMP-LOG]
 
         if (!$enrolment) {
             $this->error("Enrolment with ID {$this->entityId} not found");
+            Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::prepareContext() EXIT FALSE - enrolment not found'); //[TEMP-LOG]
             return false;
         }
 
         $this->studentId = $enrolment->student_id;
-
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::prepareContext() EXIT TRUE studentId=' . $this->studentId); //[TEMP-LOG]
         return true;
     }
 
@@ -106,12 +116,16 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::getPendingItems() ENTRY featureKey=' . $featureKey); //[TEMP-LOG]
         // Parse threshold (workflow step IDs)
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
         $workflowStepIds = $threshold['workflow_steps'] ?? [];
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::getPendingItems() threshold raw: ' . $this->rule->threshold . ' => workflowStepIds: ' . json_encode($workflowStepIds)); //[TEMP-LOG]
 
         if (empty($workflowStepIds)) {
-            // $this->info("No workflow steps configured in threshold"); //POCOR-9509: commented out per CLAUDE.md            return [];
+            // $this->info("No workflow steps configured in threshold"); //POCOR-9509: commented out per CLAUDE.md
+            Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::getPendingItems() EXIT [] - no workflow steps configured'); //[TEMP-LOG]
+            return []; //POCOR-9509: no workflow steps = nothing to alert on
         }
 
         // Query enrolment with all related data including guardians
@@ -165,9 +179,15 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         $results = $query->get()->map(function ($item) {
             return (array) $item;
         })->toArray();
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::getPendingItems() query returned ' . count($results) . ' rows, entityId=' . $this->entityId . ', workflowStepIds=' . json_encode($workflowStepIds)); //[TEMP-LOG]
+        if (!empty($results)) {
+            Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::getPendingItems() first row: ' . json_encode($results[0])); //[TEMP-LOG]
+        }
 
         // Take first record (deduplicate multiple guardian rows)
-        return !empty($results) ? [$results[0]] : [];
+        $ret = !empty($results) ? [$results[0]] : [];
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::getPendingItems() EXIT returning ' . count($ret) . ' item(s)'); //[TEMP-LOG]
+        return $ret;
     }
 
     /**
@@ -181,34 +201,19 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
     protected function resolveRecipients(array $item): array
     {
         $studentId = $item['student_id'] ?? null;
-
-        // POCOR-9509: Debug logging
-        // \Illuminate\Support\Facades\Log::debug('[POCOR-9509] AlertStudentEnrolmentCommand resolveRecipients', [
-        //     'item_keys' => array_keys($item),
-        //     'student_id_from_item' => $studentId,
-        //     'enrolment_id' => $item['id'] ?? 'N/A',
-        // ]);
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::resolveRecipients() ENTRY studentId=' . $studentId . ' enrolment_id=' . ($item['id'] ?? 'N/A')); //[TEMP-LOG]
 
         if (!$studentId) {
-            \Illuminate\Support\Facades\Log::error('[POCOR-9509] student_id not found in item array!', [
-                'item' => $item,
-            ]);
+            Log::error('[POCOR-9509] student_id not found in item array! item=' . json_encode($item));
             return ['email' => [], 'phone' => []];
         }
 
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::resolveRecipients() roles: ' . json_encode($this->rule->security_roles)); //[TEMP-LOG]
         $contacts = $this->recipientResolver->getStudentAssociatedContactList(
             $this->rule->security_roles,
             $studentId
         );
-
-        // POCOR-9509: Debug what contacts were returned
-        // \Illuminate\Support\Facades\Log::debug('[POCOR-9509] AlertStudentEnrolmentCommand contacts resolved', [
-        //     'student_id' => $studentId,
-        //     'email_count' => count($contacts['email'] ?? []),
-        //     'phone_count' => count($contacts['phone'] ?? []),
-        //     'emails' => $contacts['email'] ?? [],
-        //     'phones' => $contacts['phone'] ?? [],
-        // ]);
+        Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::resolveRecipients() EXIT email_count=' . count($contacts['email'] ?? []) . ' phone_count=' . count($contacts['phone'] ?? []) . ' emails=' . json_encode($contacts['email'] ?? [])); //[TEMP-LOG]
 
         return $contacts;
     }
