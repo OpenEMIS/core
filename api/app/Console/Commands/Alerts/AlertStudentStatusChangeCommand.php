@@ -16,14 +16,14 @@ use Illuminate\Support\Facades\Log;
  *       --user_id=1
  *       --rule_id=5
  *       --process_id=123
- *       --entity_id=456
+ *       --entity_id=550e8400-e29b-41d4-a716-446655440000
  *
  * @package App\Console\Commands\Alerts
  */
 class AlertStudentStatusChangeCommand extends AlertCommandBase
 {
-    /** @var int */
-    protected $entityId = 0;
+    /** @var string */
+    protected $entityId = '';
 
     /**
      * The name and signature of the console command.
@@ -34,7 +34,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
                             {--user_id= : User ID triggering the alert}
                             {--rule_id= : Alert rule ID}
                             {--process_id= : System process ID}
-                            {--entity_id= : Entity ID (Student User ID)}';
+                            {--entity_id= : Entity ID (institution_students.id UUID)}';
 
     /**
      * The console command description.
@@ -58,7 +58,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
     }
 
     /**
-     * POCOR-9509: Override prepareContext to validate entity_id (Student User ID)
+     * POCOR-9509: Override prepareContext to validate entity_id (institution_students.id)
      *
      * @return bool
      */
@@ -72,8 +72,8 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
         // Get and validate entity_id
         $this->entityId = (string) $this->option('entity_id');
 
-        if (!$this->entityId) {
-            $this->error("Missing required --entity_id option (Student ID)");
+        if ($this->entityId === '') {
+            $this->error("Missing required --entity_id option (institution_students.id)");
             return false;
         }
 
@@ -86,7 +86,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
     /**
      * POCOR-9509: Get pending student records to alert on for status changes
      *
-     * Queries security_users for the specific student with workflow status.
+     * Queries institution_students for the specific student status record.
      *
      * @param string $featureKey Feature identifier
      * @return array List of student data items
@@ -195,8 +195,8 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
             '${student.preferred_name}' => $data->student_preferred_name ?? '',
             '${student.email}' => $data->student_email ?? '',
             '${student.address}' => $data->student_address ?? '',
-            '${student.postal_code}' => $data->postal_code ?? '',
-            '${student.date_of_birth}' => $data->date_of_birth ?? '',
+            '${student.postal_code}' => $data->student_postal_code ?? '',
+            '${student.date_of_birth}' => $data->student_date_of_birth ?? '',
             '${institution.name}' => $data->institution_name ?? '',
             '${institution.code}' => $data->institution_code ?? '',
             '${institution.address}' => $data->institution_address ?? '',

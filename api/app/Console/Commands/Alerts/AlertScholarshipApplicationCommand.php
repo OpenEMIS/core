@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Alerts;
 
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 

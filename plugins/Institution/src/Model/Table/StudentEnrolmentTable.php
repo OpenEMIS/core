@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate enrolment alerts through AlertLogsTable helper
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -447,37 +448,8 @@ class StudentEnrolmentTable extends ControllerActionTable
         } else {
             $userId = $entity->created_user_id;
         }
-        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
-        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
-        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
-
-
-        $alert = $alertsTable
-            ->find()
-            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentEnrolment',
-                $alertsTable->aliasField('frequency') => 'once'])
-            ->first();
-        if(!$alert){
-            Log::debug('No Alerts for AlertStudentEnrolment');
-            return;
-        }
-        if(!is_array($alert)){
-            $alert = $alert->toArray();
-        }
-        $activeRules = $alertRulesTable->find()
-            ->where([
-                $alertRulesTable->aliasField('feature') => $alert['name'],
-                $alertRulesTable->aliasField('enabled') => 1
-            ])
-            ->toArray();
-
-        foreach ($activeRules as $rule) {
-            if(!is_array($rule)){
-                $rule = $rule->toArray();
-            }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['enrolment_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
-        }
-
+        //POCOR-9509: delegate enrolment alert triggering to AlertLogsTable helper
+        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentEnrolment', $entity, $userId);
     }
 
     public function studentsAfterSave(EventInterface $event, $student)
@@ -968,7 +940,10 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-9509: only fire enrolment alert for new rows or status changes
+        if ($entity->isNew() || $entity->isDirty('status_id')) {
             $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
+        }
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = self::getDynamicTableInstance('Workflow.WorkflowActions');

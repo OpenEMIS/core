@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Alerts;
 
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -72,7 +73,8 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
 
         // Validate threshold
         if (!$statusTypeId || !$value || !in_array($condition, [self::CONDITION_DAYS_BEFORE, self::CONDITION_DAYS_AFTER], true)) {
-            // $this->info("Invalid threshold configuration"); //POCOR-9509: commented out per CLAUDE.md            return [];
+            // $this->info("Invalid threshold configuration"); //POCOR-9509: commented out per CLAUDE.md
+            return [];
         }
 
         // Build date condition
@@ -142,7 +144,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
                     ->pluck('institution_id')
                     ->toArray();
 
-                $query->whereIn('Staff.institution_id', $institutionIds);
+                $query->whereIn('InstitutionStaff.institution_id', $institutionIds);
             } else {
                 // No institutions accessible
                 return [];
