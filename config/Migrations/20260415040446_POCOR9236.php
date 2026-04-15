@@ -27,7 +27,12 @@ class POCOR9236 extends AbstractMigration
             AND column_name = 'examination_item_id'
             AND lookup_model = 'ExaminationItems';
         ");
-
+        $result = $this->fetchAll("
+            SELECT MAX(`order`) AS max_order
+            FROM `import_mapping`
+            WHERE `model` = 'Examination.ExaminationStudentSubjectResults'
+        ");
+        $maxOrder = $result[0]['max_order'] ?? 0;
         // Step 3: Insert new mapping for 'examination_item_id' with lookup_model 'ExaminationItems'
         $this->execute("
             INSERT INTO import_mapping (
@@ -45,7 +50,7 @@ class POCOR9236 extends AbstractMigration
                 'Examination.ExaminationStudentSubjectResults',
                 'examination_subject_id',
                 Id,
-                4,
+                " . ($maxOrder + 1) . ",
                 0,
                 2,
                 'Examination',
@@ -70,7 +75,7 @@ class POCOR9236 extends AbstractMigration
                 'Examination.ExaminationStudentSubjectResults',
                 'examination_grading_option_id',
                 Id,
-                5,
+                " . ($maxOrder + 2) . ",
                 0,
                 1,
                 'Examination',
