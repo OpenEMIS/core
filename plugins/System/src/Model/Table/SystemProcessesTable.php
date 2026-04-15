@@ -16,7 +16,16 @@ use Cake\Http\Response;
 use Cake\Mailer\Mailer;
 use App\Model\Table\ControllerActionTable;
 
-//POCOR-9396
+/**
+ * System Processes Table
+ * 
+ * Manages system background processes, their status tracking, and execution monitoring.
+ * Provides functionality to view and filter system processes by status and feature type.
+ * 
+ * @category  Model/Table
+ * @author    divya.vishwakarma@dataforall.org
+ * @property \Cake\ORM\Association\BelongsTo $CreatedUsers
+ */
 class SystemProcessesTable extends ControllerActionTable
 {
     protected $statusMap = [
