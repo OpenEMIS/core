@@ -50,11 +50,15 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
      */
     public function handle(): int
     {
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::handle() ENTRY options: ' . json_encode($this->options())); //[TEMP-LOG]
         if (!$this->prepareContext()) {
+            Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::handle() EXIT EARLY - prepareContext failed'); //[TEMP-LOG]
             return self::FAILURE;
         }
-
-        return $this->runFeatureAlert('StudentStatus'); //POCOR-9509: match behavior feature key (was 'StudentStatusChange')
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::handle() calling runFeatureAlert(StudentStatus)'); //[TEMP-LOG]
+        $result = $this->runFeatureAlert('StudentStatus'); //POCOR-9509: match behavior feature key (was 'StudentStatusChange')
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::handle() EXIT result=' . $result); //[TEMP-LOG]
+        return $result;
     }
 
     /**
@@ -64,22 +68,24 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
      */
     protected function prepareContext(): bool
     {
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::prepareContext() ENTRY'); //[TEMP-LOG]
         // Call parent prepareContext first
         if (!parent::prepareContext()) {
+            Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::prepareContext() EXIT FALSE - parent failed'); //[TEMP-LOG]
             return false;
         }
 
         // Get and validate entity_id
         $this->entityId = (string) $this->option('entity_id');
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::prepareContext() entityId=' . $this->entityId); //[TEMP-LOG]
 
         if ($this->entityId === '') {
             $this->error("Missing required --entity_id option (institution_students.id)");
+            Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::prepareContext() EXIT FALSE - no entity_id'); //[TEMP-LOG]
             return false;
         }
 
-        // Load student record
-
-
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::prepareContext() EXIT TRUE'); //[TEMP-LOG]
         return true;
     }
 
@@ -93,12 +99,16 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::getPendingItems() ENTRY featureKey=' . $featureKey . ' entityId=' . $this->entityId); //[TEMP-LOG]
         // Parse threshold (workflow step IDs)
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
         $studentStatusIds = $threshold['statuses'] ?? [];
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::getPendingItems() threshold raw: ' . $this->rule->threshold . ' => studentStatusIds: ' . json_encode($studentStatusIds)); //[TEMP-LOG]
 
         if (empty($studentStatusIds)) {
-            // $this->info("No statuses configured in threshold"); //POCOR-9509: commented out per CLAUDE.md            return [];
+            // $this->info("No statuses configured in threshold"); //POCOR-9509: commented out per CLAUDE.md
+            Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::getPendingItems() EXIT [] - no statuses configured'); //[TEMP-LOG]
+            return []; //POCOR-9509: no status IDs = nothing to alert on
         }
 
         // Query student with all related data including guardians
@@ -141,10 +151,10 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
             ])
             ->first(); // We will get the student details once
 
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::getPendingItems() query result: ' . json_encode($data)); //[TEMP-LOG]
         if (!$data) {
-            $this->error('[POCOR-9509] No relevant student status data found for placeholders', [
-                'institution_student_id' => $this->entityId,
-            ]);
+            $this->error('[POCOR-9509] No relevant student status data found for placeholders institution_student_id=' . $this->entityId . ' studentStatusIds=' . json_encode($studentStatusIds));
+            Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::getPendingItems() EXIT [] - no data found for entityId=' . $this->entityId . ' statusIds=' . json_encode($studentStatusIds)); //[TEMP-LOG]
             return [];
         }
 
@@ -211,6 +221,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
             '${guardian.contact}' => implode(', ', $guardianContacts),
         ];
 
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::getPendingItems() EXIT returning 1 item student_id=' . ($student['student_id'] ?? 'null')); //[TEMP-LOG]
         return [$student]; // Return as indexed array
     }
 
@@ -224,13 +235,16 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
      */
     protected function resolveRecipients(array $item): array
     {
-
         $studentId = $item['student_id']; // Use 'id' from Users table
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() ENTRY studentId=' . $studentId); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() roles: ' . json_encode($this->rule->security_roles)); //[TEMP-LOG]
 
-        return $this->recipientResolver->getStudentAssociatedContactList(
+        $contacts = $this->recipientResolver->getStudentAssociatedContactList(
             $this->rule->security_roles,
             $studentId
         );
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() EXIT email_count=' . count($contacts['email'] ?? []) . ' phone_count=' . count($contacts['phone'] ?? []) . ' emails=' . json_encode($contacts['email'] ?? [])); //[TEMP-LOG]
+        return $contacts;
     }
 
     /**
