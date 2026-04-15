@@ -113,12 +113,12 @@ class ReportCardsTable extends ControllerActionTable
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->setupNewTabElements();
+        $this->fields['excel_template_name']['visible'] = false;
         $this->field('start_date', ['type' => 'date']);
         $this->field('end_date', ['type' => 'date']);
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
-        $this->field('excel_template_name', ['visible' => false]);
-        $this->field('excel_template', ['visible' => false]);
+        $this->field('excel_template');
     }
 
     private function setupNewTabElements()
