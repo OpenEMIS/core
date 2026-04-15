@@ -62,6 +62,7 @@ class AlertLogsTable extends ControllerActionTable
             'AlertLicenseRenewal' => 'alerts:license-renewal', // POCOR-9509
             'AlertScholarshipApplication' => 'alerts:scholarship-application', // POCOR-9509
             'AlertScholarshipDisbursement' => 'alerts:scholarship-disbursement', // POCOR-9509
+            'AlertStaffType' => 'alerts:staff-type', // POCOR-9509
         ];
 
         $commandName = $commandMap[$processName] ?? null;
