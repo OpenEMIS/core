@@ -204,6 +204,32 @@ class RecipientResolver
     }
 
     /**
+     * POCOR-9509: Get contact list for teachers of a specific class (primary + secondary staff).
+     *
+     * Used by StudentAttendance to notify only the teachers of the absent student's class.
+     *
+     * @param int $institutionClassId
+     * @return array Contact list ['email' => [...], 'phone' => [...]]
+     */
+    public function getClassTeacherContactList(int $institutionClassId): array
+    {
+        $contactList = ['email' => [], 'phone' => []];
+
+        if (!$institutionClassId) {
+            return $contactList;
+        }
+
+        $staffIds = $this->getUserIdsByClass($institutionClassId);
+
+        if (empty($staffIds)) {
+            return $contactList;
+        }
+
+        $users = $this->fetchActiveUsers($staffIds);
+        return $this->getContactsFromUsers($users, $contactList);
+    }
+
+    /**
      * Get user IDs associated with an institution class.
      *
      * @param int $institutionClassId

@@ -531,6 +531,10 @@ class AlertRulesTable extends ControllerActionTable
             return $this->assignToGuardianOnly($attr);
         }
 
+        if ($feature === 'StudentAttendance') { //POCOR-9509: restrict to class staff roles only
+            return $this->assignToClassStaffOnly($attr);
+        }
+
         return $this->assignToAllRoles($attr);
     }
 
@@ -562,6 +566,26 @@ class AlertRulesTable extends ControllerActionTable
 
         return $attr;
     }
+
+    //POCOR-9509: start - restrict StudentAttendance alert roles to class staff only
+    private function assignToClassStaffOnly(array $attr): array
+    {
+        $roleOptions = $this->getVisibleSecurityRoles();
+
+        $filteredRoles = array_filter($roleOptions, function ($roleName) {
+            return in_array($roleName, ['Principal', 'Deputy Principal', 'Homeroom Teacher', 'Teacher'], true);
+        });
+
+        $translatedRoles = array_map(function ($roleName) {
+            return __($roleName);
+        }, $filteredRoles);
+
+        $attr['type'] = 'chosenSelect';
+        $attr['options'] = $translatedRoles;
+
+        return $attr;
+    }
+    //POCOR-9509: end
 
     private function getVisibleSecurityRoles(): array
     {
