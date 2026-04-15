@@ -6,6 +6,7 @@ namespace App\Console\Commands\Alerts;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * POCOR-9509: Laravel port of CakePHP's AlertSystemUpdatesCommand
@@ -64,6 +65,11 @@ class AlertSystemUpdatesCommand extends AlertCommandBase
     protected function getPendingItems(string $featureKey): array
     {
         try {
+            // POCOR-9509: Guard against missing table in sparse/dev databases
+            if (!Schema::hasTable('system_updates')) {
+                return [];
+            }
+
             // Get latest local version ID and current installed version
             $latestVersion = DB::table('system_updates')
                 ->orderByDesc('id')
