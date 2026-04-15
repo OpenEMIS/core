@@ -579,7 +579,7 @@ class ReportCardsTable extends ControllerActionTable
 
         //POCOR-7860 :: Start
         $string = $data['ReportCards']['name'];
-        if (preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $string))
+        if (preg_match('/[\'\^£$%&*()}{@#~?><>,|=_+¬-]/u', $string))
         {
             // one or more of the 'special characters' found in $string
             $this->Alert->error('Templates.specialCharr', ['reset' => true]);
