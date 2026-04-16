@@ -17,6 +17,7 @@ class POCOR9509 extends AbstractMigration
     public function up(): void
     {
         $this->backupTables();
+        $this->addAlertsUniqueIndexes(); //POCOR-9509
         $this->insertAlerts();
         $this->createAlertQueue();
         $this->createJobsTable();
@@ -65,6 +66,28 @@ class POCOR9509 extends AbstractMigration
         $this->execute('DROP TABLE IF EXISTS `jobs`');
         $this->execute('DROP TABLE IF EXISTS `failed_jobs`');
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
+    }
+
+    private function addAlertsUniqueIndexes(): void //POCOR-9509
+    {
+        if (!$this->hasTable('alerts')) {
+            return;
+        }
+        $db = $this->getAdapter()->getOption('name');
+        $nameExists = $this->fetchRow(
+            "SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = '$db' AND TABLE_NAME = 'alerts' AND INDEX_NAME = 'alerts_name_unique'"
+        );
+        if (!$nameExists) {
+            $this->execute("ALTER TABLE `alerts` ADD UNIQUE INDEX `alerts_name_unique` (`name`)");
+        }
+        $processExists = $this->fetchRow(
+            "SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = '$db' AND TABLE_NAME = 'alerts' AND INDEX_NAME = 'alerts_process_name_unique'"
+        );
+        if (!$processExists) {
+            $this->execute("ALTER TABLE `alerts` ADD UNIQUE INDEX `alerts_process_name_unique` (`process_name`)");
+        }
     }
 
     private function insertAlerts(): void //POCOR-9509
