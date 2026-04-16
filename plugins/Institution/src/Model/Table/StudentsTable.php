@@ -864,8 +864,10 @@ class StudentsTable extends ControllerActionTable
             return;
         }
 
-        $gradeId = !empty($entity->education_grade_id) ? (int)$entity->education_grade_id : null;
-        if (!$this->isStudentCreationAllowed($gradeId)) { //POCOR-9385: check if grade allows creation
+        $gradeId          = !empty($entity->education_grade_id)    ? (int)$entity->education_grade_id    : null;
+        $academicPeriodId = !empty($entity->academic_period_id)    ? (int)$entity->academic_period_id    : null;
+        $institutionId    = method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: null) : null;
+        if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
             $gradeName = '';
             if (!empty($gradeId)) {
                 $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
