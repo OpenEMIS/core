@@ -3003,87 +3003,7 @@ class InstitutionsController extends AppController
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
-        //for api purpose POCOR-5672 starts
-        if ($this->request->getParam('action') == 'getEducationGrade') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getEducationGrade';
-        }
-        if ($this->request->getParam('action') == 'getClassOptions') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getClassOptions';
-        }
-        if ($this->request->getParam('action') == 'getPositionType') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositionType';
-        }
-        if ($this->request->getParam('action') == 'getFTE') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getFTE';
-        }
-        if ($this->request->getParam('action') == 'getShifts') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getShifts';
-        }
-        if ($this->request->getParam('action') == 'getPositions') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getPositions';
-        }
-        if ($this->request->getParam('action') == 'getStaffType') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStaffType';
-        }
-        if ($this->request->getParam('action') == 'studentCustomFields') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'studentCustomFields';
-        }
-        //POCOR-8538 start
-        if ($this->request->getParam('action') == 'classCustomFields') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'classCustomFields';
-        }
-        //POCOR-8538 end
-        if ($this->request->getParam('action') == 'staffCustomFields') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'staffCustomFields';
-        }
-        if ($this->request->getParam('action') == 'saveStudentData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveStudentData';
-        }
-        if ($this->request->getParam('action') == 'saveStaffData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveStaffData';
-        }
-        if ($this->request->getParam('action') == 'saveGuardianData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveGuardianData';
-        }
-        if ($this->request->getParam('action') == 'saveDirectoryData') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveDirectoryData';
-        }
-        if ($this->request->getParam('action') == 'getStudentTransferReason') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentTransferReason';
-        }
-        if ($this->request->getParam('action') == 'checkStudentAdmissionAgeValidation') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkStudentAdmissionAgeValidation';
-        }
-        if ($this->request->getParam('action') == 'getStartDateFromAcademicPeriod') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStartDateFromAcademicPeriod';
-        }
-        if ($this->request->getParam('action') == 'checkUserAlreadyExistByIdentity') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkUserAlreadyExistByIdentity';
-        }
-        if ($this->request->getParam('action') == 'checkConfigurationForExternalSearch') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'checkConfigurationForExternalSearch';
-        }
-        if ($this->request->getParam('action') == 'getStaffPosititonGrades') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStaffPosititonGrades';
-        }
-        if ($this->request->getParam('action') == 'getCspdData') { //POCOR-6930 starts
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getCspdData';
-        }
-        if ($this->request->getParam('action') == 'getConfigurationForExternalSourceData') { //POCOR-6930 starts
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getConfigurationForExternalSourceData';
-        }
-        //POCOR-6930 ends
-        if ($this->request->getParam('action') == 'getStudentAdmissionStatus') {//POCOR-7716
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'getStudentAdmissionStatus';
-        }
-        // POCOR-8224 start
-        if ($this->request->getParam('action') == 'saveAssessmentItemExemptions') {
-            $events['Controller.SecurityAuthorize.isActionIgnored'] = 'saveAssessmentItemExemptions';
-        }
-        // POCOR-8224 end
-
-        //for api purpose POCOR-5672 ends
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-9385: fixed POCOR-5672 bug — action methods must never be registered as security event handlers
 
         return $events;
     }
@@ -3092,6 +3012,37 @@ class InstitutionsController extends AppController
     {
         $pass = $this->request->getParam('pass');
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
+            return true;
+        }
+
+        //POCOR-9385: fix POCOR-5672 bug — these AJAX endpoints must bypass security without re-running the action method
+        $ajaxActions = [
+            'getEducationGrade',                    //POCOR-5672
+            'getClassOptions',                      //POCOR-5672
+            'getPositionType',                      //POCOR-5672
+            'getFTE',                               //POCOR-5672
+            'getShifts',                            //POCOR-5672
+            'getPositions',                         //POCOR-5672
+            'getStaffType',                         //POCOR-5672
+            'studentCustomFields',                  //POCOR-5672
+            'classCustomFields',                    //POCOR-8538
+            'staffCustomFields',                    //POCOR-5672
+            'saveStudentData',                      //POCOR-5672
+            'saveStaffData',                        //POCOR-5672
+            'saveGuardianData',                     //POCOR-5672
+            'saveDirectoryData',                    //POCOR-5672
+            'getStudentTransferReason',             //POCOR-5672
+            'checkStudentAdmissionAgeValidation',   //POCOR-5672
+            'getStartDateFromAcademicPeriod',       //POCOR-5672
+            'checkUserAlreadyExistByIdentity',      //POCOR-5672
+            'checkConfigurationForExternalSearch',  //POCOR-5672
+            'getStaffPosititonGrades',              //POCOR-5672
+            'getCspdData',                          //POCOR-6930
+            'getConfigurationForExternalSourceData',//POCOR-6930
+            'getStudentAdmissionStatus',            //POCOR-7716
+            'saveAssessmentItemExemptions',         //POCOR-8224
+        ];
+        if (in_array($this->request->getParam('action'), $ajaxActions, true)) {
             return true;
         }
     }
@@ -5696,7 +5647,7 @@ class InstitutionsController extends AppController
     public function getEducationGrade()
     {
         $requestData = $this->getRequestData();
-        Log::debug('[TEMP-LOG] getEducationGrade requestData=' . json_encode($requestData)); //POCOR-9385
+        ////Log::debug('[TEMP-LOG] getEducationGrade requestData=' . json_encode($requestData)); //POCOR-9385
         if (isset($requestData['institution_id'])) {
             $institutionId = $requestData['institution_id'];
         } else {
@@ -5733,15 +5684,18 @@ class InstitutionsController extends AppController
         $endDate = date('Y-m-d', strtotime($academicPeriodResult->end_date));
 
         $institutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
+        $educationGrades   = self::getDynamicTableInstance('Education.EducationGrades'); //POCOR-9385: for aliasField
         $institutionGradesResult = $institutionGrades
             ->find()
             ->select([
-                'id' => $institutionGrades->aliasField('id'),
-                'academic_period_id' => $institutionGrades->aliasField('academic_period_id'),
-                'EducationGrades.id',
-                'EducationGrades.name',
-                'end_date' => $institutionGrades->aliasField('end_date'),
-                'start_date' => $institutionGrades->aliasField('start_date'),
+                'id'                => $institutionGrades->aliasField('id'),
+                'academic_period_id'=> $institutionGrades->aliasField('academic_period_id'),
+                'eg_id'             => $educationGrades->aliasField('id'),
+                'eg_name'           => $educationGrades->aliasField('name'),
+                'eg_order'          => $educationGrades->aliasField('order'),                      //POCOR-9385: entry-grade filter
+                'eg_programme_id'   => $educationGrades->aliasField('education_programme_id'),     //POCOR-9385: entry-grade filter
+                'end_date'          => $institutionGrades->aliasField('end_date'),
+                'start_date'        => $institutionGrades->aliasField('start_date'),
             ])
             ->innerJoin(['EducationGrades' => 'education_grades'], [
                 'EducationGrades.id = ' . $institutionGrades->aliasField('education_grade_id')
@@ -5790,15 +5744,64 @@ class InstitutionsController extends AppController
         $resultArray = [];
         foreach ($institutionGradesResult as $result) {
             $resultArray[] = [
-                'id' => $result['id'],
-                'education_grade_id' => $result['EducationGrades']['id'],
-                'name' => $result['EducationGrades']['name'],
-                'start_date' => $result['start_date'],
-                'end_date' => $result['end_date'],
-                'academic_period_id' => $result['academic_period_id']
+                'id'                  => $result['id'],
+                'education_grade_id'  => $result['eg_id'],
+                'name'                => $result['eg_name'],
+                'start_date'          => $result['start_date'],
+                'end_date'            => $result['end_date'],
+                'academic_period_id'  => $result['academic_period_id'],
+                '_grade_order'        => (int)$result['eg_order'],        //POCOR-9385: internal, stripped before response
+                '_programme_id'       => (int)$result['eg_programme_id'], //POCOR-9385: internal
             ];
         }
-        Log::debug('[TEMP-LOG] getEducationGrade institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId) . ' grades_returned=' . json_encode(array_column($resultArray, 'name'))); //POCOR-9385
+
+        //POCOR-9385: start — filter to entry grades when student creation restriction is active
+        $ConfigItems        = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $restrictionEnabled = ($ConfigItems->value('restrict_student_creation') == 1); //POCOR-9385
+        $isSuperAdmin       = ($this->Auth->user('super_admin') == 1);                 //POCOR-9385
+        //\Cake\Log\Log::debug('[TEMP-LOG] getEducationGrade restrictionEnabled=' . json_encode($restrictionEnabled) . ' isSuperAdmin=' . json_encode($isSuperAdmin) . ' institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId)); //[TEMP-LOG]
+
+        if ($restrictionEnabled && !$isSuperAdmin) { //POCOR-9385: super_admin sees all grades
+            $excludedRaw = $ConfigItems->value('student_creation_excluded_roles');
+            $userId = (int)$this->request->getSession()->read('Auth.User.id');
+            $Institutions = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $userRoles = $Institutions->getInstitutionRoles($userId, (int)$institutionId);
+            //\Cake\Log\Log::debug('[TEMP-LOG] getEducationGrade userId=' . $userId . ' userRoles=' . json_encode($userRoles) . ' excludedRaw=' . json_encode($excludedRaw)); //[TEMP-LOG]
+
+            $roleExcluded = false;
+            if (!empty($excludedRaw)) {
+                $excludedIds = array_filter(explode(',', $excludedRaw));
+                foreach ($userRoles as $roleId) {
+                    if (in_array((string)$roleId, $excludedIds, true)) {
+                        $roleExcluded = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$roleExcluded) {
+                //POCOR-9385: user is restricted — keep only the lowest-order grade per programme
+                $minOrderByProgramme = [];
+                foreach ($resultArray as $row) {
+                    $progId = $row['_programme_id'];
+                    if (!isset($minOrderByProgramme[$progId]) || $row['_grade_order'] < $minOrderByProgramme[$progId]) {
+                        $minOrderByProgramme[$progId] = $row['_grade_order'];
+                    }
+                }
+                $resultArray = array_values(array_filter($resultArray, function ($row) use ($minOrderByProgramme) {
+                    return $row['_grade_order'] === $minOrderByProgramme[$row['_programme_id']];
+                }));
+            }
+        }
+        //POCOR-9385: end
+
+        //POCOR-9385: strip internal fields before sending response
+        foreach ($resultArray as &$row) {
+            unset($row['_grade_order'], $row['_programme_id']);
+        }
+        unset($row);
+
+        //\Cake\Log\Log::debug('[TEMP-LOG] getEducationGrade grades_returned=' . json_encode(array_column($resultArray, 'name'))); //[TEMP-LOG]
         $this->sendJsonResponse($resultArray);
 
     }
@@ -6954,7 +6957,7 @@ class InstitutionsController extends AppController
         $this->savingStudentData = $this->savingStudentData + 1;
 
         $requestData = $this->getRequestData();
-        Log::debug('[TEMP-LOG] saveStudentData requestData keys=' . json_encode(array_keys($requestData ?? [])) . ' education_grade_id=' . json_encode($requestData['education_grade_id'] ?? 'MISSING') . ' academic_period_id=' . json_encode($requestData['academic_period_id'] ?? 'MISSING')); //POCOR-9385
+        ////Log::debug('[TEMP-LOG] saveStudentData requestData keys=' . json_encode(array_keys($requestData ?? [])) . ' education_grade_id=' . json_encode($requestData['education_grade_id'] ?? 'MISSING') . ' academic_period_id=' . json_encode($requestData['academic_period_id'] ?? 'MISSING')); //POCOR-9385
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
@@ -6962,8 +6965,10 @@ class InstitutionsController extends AppController
 
         //POCOR-9385: start — student creation restriction check for Angular add form
         if (empty($requestData['is_diff_school'])) { //POCOR-9385: transfers bypass grade restriction
-            $ConfigItems = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-            if ($ConfigItems->value('restrict_student_creation') == 1) {
+            $ConfigItems            = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $restrictionEnabled     = ($ConfigItems->value('restrict_student_creation') == 1); //POCOR-9385
+            $isSuperAdmin           = ($this->Auth->user('super_admin') == 1);                 //POCOR-9385
+            if ($restrictionEnabled && !$isSuperAdmin) {                                       //POCOR-9385: super_admin bypasses restriction
                 $gradeId          = !empty($requestData['education_grade_id']) ? (int)$requestData['education_grade_id'] : null;
                 $academicPeriodId = !empty($requestData['academic_period_id']) ? (int)$requestData['academic_period_id'] : null;
                 $institutionId    = $this->getInstitutionID(__FUNCTION__ . ':POCOR-9385');
@@ -6994,7 +6999,7 @@ class InstitutionsController extends AppController
                             ->where(['InstitutionGrades.institution_id' => $institutionId, 'InstitutionGrades.academic_period_id' => $academicPeriodId, 'EducationGrades.education_programme_id' => $grade->education_programme_id])
                             ->disableHydration()->first();
                         $minOrderValue = $minOrder['min_order'] ?? null;
-                        Log::debug('[TEMP-LOG] saveStudentData restriction check gradeId=' . $gradeId . ' gradeOrder=' . $grade->order . ' minOrderValue=' . json_encode($minOrderValue) . ' institutionId=' . $institutionId . ' academicPeriodId=' . $academicPeriodId); //POCOR-9385
+                        ////Log::debug('[TEMP-LOG] saveStudentData restriction check gradeId=' . $gradeId . ' gradeOrder=' . $grade->order . ' minOrderValue=' . json_encode($minOrderValue) . ' institutionId=' . $institutionId . ' academicPeriodId=' . $academicPeriodId); //POCOR-9385
                         if ($minOrderValue !== null && (int)$grade->order !== (int)$minOrderValue) {
                             return $this->sendJsonResponse(['message' => __('Student creation is not permitted for {0}. Only authorised entry grades may create new students.', $grade->name)], 422); //POCOR-9385: block
                         }
