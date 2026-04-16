@@ -347,7 +347,7 @@ class ConfigItemsTable extends AppTable
                 //POCOR-9385: for student creation config items — use DB label as field label, hide redundant Label row
                 if (in_array($entity->code, ['restrict_student_creation', 'student_creation_excluded_roles'], true)) {
                     $attr['label'] = __($entity->label); //POCOR-9385: use DB label column as field label
-                    $this->field('label', ['visible' => false]); //POCOR-9385: hide redundant Label readonly row
+                    $this->ControllerAction->field('label', ['visible' => false]); //POCOR-9385: hide redundant Label readonly row
                 }
                 //POCOR-9385: toggle — remove -- Select -- null option
                 if ($entity->code === 'restrict_student_creation') {
@@ -474,6 +474,22 @@ class ConfigItemsTable extends AppTable
 
     public function onGetValue(EventInterface $event, Entity $entity)
     {
+        //POCOR-9385: hide label row and show role names in view mode for student creation config items
+        if (in_array($entity->code, ['restrict_student_creation', 'student_creation_excluded_roles'], true)) {
+            $this->ControllerAction->field('label', ['visible' => false]); //POCOR-9385: hide redundant Label row in view too
+        }
+        if ($entity->code === 'student_creation_excluded_roles') { //POCOR-9385: display role names instead of blank/IDs
+            $raw = !empty($entity->value) ? $entity->value : $entity->default_value;
+            if (!empty($raw)) {
+                $roleIds = array_filter(explode(',', $raw));
+                if (!empty($roleIds)) {
+                    $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+                    $names = $SecurityRoles->find('list')->where(['id IN' => $roleIds])->toArray();
+                    return implode(', ', $names);
+                }
+            }
+            return '';
+        }
         if ($entity->type == 'Custom Validation') {
             $attr['type'] = 'string';
             $event->getSubject()->HtmlField->includes['configItems'] = [
@@ -509,6 +525,14 @@ class ConfigItemsTable extends AppTable
 
     public function onGetDefaultValue(EventInterface $event, Entity $entity)
     {
+        //POCOR-9385: show human-readable option label for student creation toggle default value
+        if ($entity->code === 'restrict_student_creation') {
+            $ConfigItemOptions = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
+            $option = $ConfigItemOptions->find()
+                ->where(['option_type' => 'student_creation_toggle', 'value' => $entity->default_value])
+                ->first();
+            return $option ? __($option->option) : $entity->default_value;
+        }
         return $this->recordValueForView('default_value', $entity);
     }
 
