@@ -20,7 +20,7 @@ Staff had no way to export a colour-coded weekly attendance grid per class.
 ### Report features
 - Required inputs: Academic Period, Education Grade (required), Institution Class (required), Week (required — dropdown of weeks within the academic period).
 - Output: one Excel row per student; one column per school day (Mon–Fri) × attendance slot.
-- Cell colours: PRESENT (green `#92D050`), LATE (amber `#FFC000`), EXCUSED (yellow `#FFFF00`), UNEXCUSED (red `#FF0000`), NOTMARKED (light gray `#D3D3D3`), NO CLASS (dark gray `#808080`).
+- Cell status values: PRESENT, LATE, EXCUSED, UNEXCUSED, NOTMARKED, NO CLASS.
 - Totals columns: Total present (LATE counted as present), Total late, Total absent.
 - Attendance By column shows the mark type name matching the class's actual mode (period or subject), not the most recently enabled type globally.
 
@@ -76,13 +76,13 @@ Select feature **Students Weekly Attendance**.
 Choose Academic Period, Education Grade, Institution Class, and Week, then click Generate.
 The report downloads as an `.xlsx` file with colour-coded attendance cells.
 
-**Colour legend:**
+**Status values:**
 
-| Status | Colour |
-|--------|--------|
-| PRESENT | Green (#92D050) |
-| LATE | Amber (#FFC000) — also counted in Total present |
-| EXCUSED | Yellow (#FFFF00) |
-| UNEXCUSED | Red (#FF0000) |
-| NOTMARKED | Light gray (#D3D3D3) |
-| NO CLASS | Dark gray (#808080) — excluded from all totals |
+| Status | Meaning |
+|--------|---------|
+| PRESENT | Student was present |
+| LATE | Student was late — also counted in Total present |
+| EXCUSED | Excused absence |
+| UNEXCUSED | Unexcused absence |
+| NOTMARKED | Attendance not recorded for this slot |
+| NO CLASS | No class scheduled — excluded from all totals |

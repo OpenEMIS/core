@@ -185,8 +185,9 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             'NO CLASS'  => '#808080', // dark gray
         ];
 
+        //POCOR-9611: XLSXWriter uses 'fill' (hex string) — not 'fill_color'/'fill_pattern_type' (PhpSpreadsheet keys)
         $style = isset($colors[$value])
-            ? ['fill_pattern_type' => 'solid', 'fill_color' => $colors[$value], 'halign' => 'center']
+            ? ['fill' => $colors[$value], 'halign' => 'center']
             : ['halign' => 'center'];
 
         return ['value' => $value, 'style' => $style];
