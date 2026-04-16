@@ -11,6 +11,7 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 - **Five new alert types** — Case Escalation, License Validity, License Renewal, Scholarship Application, Scholarship Disbursement. Each ships with a dedicated artisan command and default recipient-resolver logic.
 - **New Alert Queue screen** and **mass-delete** on both Alert Queue and Alert Logs. Administrators can monitor pending/sent/failed messages and bulk-delete entries produced by a misconfigured rule.
 - **Laravel runtime with working-hours throttling** — all 14 alert commands live under `api/app/Console/Commands/Alerts/`. The `ALERTS_PROCESS_LIMIT` environment variable caps messages per scheduler tick, and `Kernel.php` restricts dispatch to weekdays and working hours.
+- **Critical fixes (2026-04-16):** Fixed `self::FAILURE`/`self::SUCCESS` constant usage across all 13 alert commands (removed redundant `use Illuminate\Console\Command` imports from subclasses); standardized all alert templates to dot-notation placeholders (`${student.name}` etc.) — updated `alert_rules` DB template for StudentStatus from the old underscore format; fixed `AlertRetirementWarningCommand` fatal error (`Command::FAILURE` without import); enabled RetirementWarning in migration with `INSERT IGNORE`; added `UNIQUE` indexes on `alerts.name` and `alerts.process_name` with automatic deduplication (keeps lowest id per duplicate); cleaned TEMP-LOG debug calls from all command classes.
 
 ---
 
@@ -80,14 +81,25 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 
 ## 5. Files Changed
 
+### Files Changed Summary
+- **Modified:** 14 files (13 alert commands + migration)
+- **Added:** 0 files
+- **Removed:** 0 files
+
+### Detailed Changes
+
 | Area | Path | Summary |
 |------|------|---------|
 | Artisan commands | `api/app/Console/Commands/Alerts/` | 14 commands covering every alert type |
-| Recipient resolver | `api/app/Services/AlertProcessor/` | Role-based plus assignee resolution logic |
+| Command fixes (2026-04-16) | 13 Alert*Command.php + AlertCommandBase | `self::FAILURE`/`self::SUCCESS` everywhere; removed redundant `use Illuminate\Console\Command` from subclasses |
+| StudentStatus placeholders | `AlertStudentStatusChangeCommand.php` + `alert_rules` DB | Standardized to dot notation — updated DB template from old underscore format |
+| RetirementWarning | `AlertRetirementWarningCommand.php` + migration | Fixed `Command::FAILURE` fatal error; `user.` prefix for placeholders; added to migration |
+| alerts table integrity | `config/Migrations/20260415030200_POCOR9509.php` | UNIQUE indexes on `alerts.name` and `alerts.process_name`; deduplication DELETE before indexing |
 | CakePHP Alert plugin | `plugins/Alert/src/Model/Table/` | Consolidated `AlertQueueTable`; cleaned `NON_IMPLEMENTED_ALERTS` |
 | Behaviors | `src/Model/Behavior/AlertQueueBehavior.php` | Uses plugin alias `Alert.AlertQueue` |
 | Angular frontend | `frontend/src/` → `webroot/js/angular/dist/` | Alert Queue screen, mass-delete controls |
-| Migration | `config/Migrations/20260415030200_POCOR9509.php` | Backup tables for `institution_students_report_cards`, `security_functions` |
+| Migration | `config/Migrations/20260415030200_POCOR9509.php` | Backup tables for `institution_students_report_cards`, `security_functions`; added RetirementWarning |
+| Debug cleanup | `plugins/Institution/src/Model/Table/StudentsTable.php` | Removed TEMP-LOG calls |
 | Removed | `src/Model/Table/AlertsQueueTable.php` | Duplicate replaced by plugin table |
 
 ---
