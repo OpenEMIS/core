@@ -59,10 +59,10 @@ Is grade.order == MIN(order) for this programme at this institution+period?
 ### Block Messages
 
 **With grade context:**
-> Student creation is not permitted for {Grade Name}. Only authorised entry grades may create new students. Please search for an existing student instead.
+> New students can only be enrolled in the entry grade. {Grade Name} is not an entry grade for this programme.
 
-**Without grade context (Directory):**
-> Student creation is currently restricted. Only authorised entry grades may create new students. Please search for an existing student instead.
+**Without grade context (Directory, no institution):**
+> New students can only be enrolled in the entry grade of their education programme.
 
 ### Files Changed
 
@@ -73,8 +73,8 @@ Is grade.order == MIN(order) for this programme at this institution+period?
 | `plugins/Institution/src/Model/Table/StudentsTable.php` | Added `addBeforeSave()` enforcement via trait |
 | `plugins/Institution/src/Model/Table/ImportStudentAdmissionTable.php` | Added row-level enforcement in `onImportModelSpecificValidation` |
 | `plugins/Directory/src/Model/Table/DirectoriesTable.php` | Added enforcement in `beforeSave` |
-| `plugins/Directory/src/Model/Table/ImportUsersTable.php` | Added blanket + grade-aware enforcement |
-| `plugins/Institution/src/Controller/InstitutionsController.php` | Grade dropdown filtering in `getEducationGrade`; super_admin bypass in `saveStudentData`; POCOR-5672 `implementedEvents` fix |
+| `plugins/Directory/src/Model/Table/ImportUsersTable.php` | Added blanket + grade-aware enforcement; institution+period context passed to entry-grade check |
+| `plugins/Institution/src/Controller/InstitutionsController.php` | Grade dropdown filtering in `getEducationGrade`; super_admin bypass in `saveStudentData`; POCOR-5672 `implementedEvents` fix; cleaner block message |
 | `plugins/Configuration/src/Controller/ConfigurationsController.php` | No changes — config items appear automatically on existing Add New Student page |
 
 ### Database Migrations
@@ -141,7 +141,7 @@ When the feature is **Enabled**:
 - Users in an excluded role always see all grades and can create students at any grade
 - All other users see only the entry grade(s) in the grade dropdown on the Add Student form
 - Attempts to save a non-entry grade (e.g. via import) are blocked with a validation error identifying the grade
-- The error message instructs users to search for an existing student instead
+- The error message names the blocked grade and states only the entry grade is permitted
 
 When the feature is **Disabled** (default):
 - No restrictions apply — all grades allow student creation as before
