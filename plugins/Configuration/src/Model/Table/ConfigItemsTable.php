@@ -291,7 +291,7 @@ class ConfigItemsTable extends AppTable
     }
     
     //POCOR-9385: pre-populate chosenSelect with saved role entities so CakePHP renders pre-selected checkboxes
-    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
+    public function editOnInitialize(EventInterface $event, Entity $entity) //POCOR-9385: 2 args only — ControllerAction fires with [$entity]
     {
         if ($entity->code === 'student_creation_excluded_roles' && !empty($entity->value)) {
             $roleIds = array_filter(explode(',', $entity->value));
