@@ -153,7 +153,7 @@ class ReportListBehavior extends Behavior {
 			//->where(['JSON_EXTRACT(params, "$.institution_id")=' . $institutionId,'module'=>'InstitutionStandards'])
 			//END:POCOR-6629
 			->where([
-				'JSON_UNQUOTE(JSON_EXTRACT(params, "$.institution_id")) =' => $institutionId,
+				"JSON_UNQUOTE(JSON_EXTRACT(params, '$.institution_id')) = '" . (int)$institutionId . "'", //POCOR-9611: numeric-key raw SQL — CakePHP 5 re-parsed associative key and stripped JSON_EXTRACT path arg, causing MySQL error 1582
 				'module' => 'InstitutionStandards'
 			]) //POCOR-8485
 			->order([
