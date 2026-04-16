@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Alerts;
 
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -59,7 +58,7 @@ class AlertScholarshipDisbursementCommand extends AlertCommandBase
     public function handle(): int
     {
         if (!$this->prepareContext()) {
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         return $this->runFeatureAlert('ScholarshipDisbursement');

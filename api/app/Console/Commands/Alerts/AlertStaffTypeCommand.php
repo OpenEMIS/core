@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Console\Commands\Alerts;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Console\Command;
 use Carbon\Carbon;
 
 /**
@@ -58,7 +57,7 @@ class AlertStaffTypeCommand extends AlertCommandBase
     public function handle(): int
     {
         if (!$this->prepareContext()) {
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         // POCOR-9509: Optional entity_id validation for filtering
@@ -71,7 +70,7 @@ class AlertStaffTypeCommand extends AlertCommandBase
 
             if (!$exists) {
                 $this->error("Institution staff record with ID {$entityId} not found.");
-                return Command::FAILURE;
+                return self::FAILURE;
             }
         }
 

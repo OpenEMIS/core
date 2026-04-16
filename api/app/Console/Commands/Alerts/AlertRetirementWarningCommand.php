@@ -45,8 +45,8 @@ class AlertRetirementWarningCommand extends AlertCommandBase
      */
     public function handle(): int
     {
-        if (!$this->prepareContext()) {
-            return Command::FAILURE;
+        if (!$this->prepareContext()) { //POCOR-9509: self::FAILURE — Command class not imported here
+            return self::FAILURE;
         }
 
         return $this->runFeatureAlert('RetirementWarning');
@@ -147,19 +147,20 @@ class AlertRetirementWarningCommand extends AlertCommandBase
         // Get threshold value
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
 
+        //POCOR-9509: use user. prefix for consistency with StaffEmployment/StaffLeave/StaffType/License commands
         return [
             '${threshold.value}' => (string) ($threshold['value'] ?? ''),
             '${age}' => (string) $age,
-            '${openemis_no}' => $item['openemis_no'] ?? '',
-            '${first_name}' => $item['first_name'] ?? '',
-            '${middle_name}' => $item['middle_name'] ?? '',
-            '${third_name}' => $item['third_name'] ?? '',
-            '${last_name}' => $item['last_name'] ?? '',
-            '${preferred_name}' => $item['preferred_name'] ?? '',
-            '${email}' => $item['email'] ?? '',
-            '${address}' => $item['address'] ?? '',
-            '${postal_code}' => $item['postal_code'] ?? '',
-            '${date_of_birth}' => $item['date_of_birth'] ?? '',
+            '${user.openemis_no}' => $item['openemis_no'] ?? '',
+            '${user.first_name}' => $item['first_name'] ?? '',
+            '${user.middle_name}' => $item['middle_name'] ?? '',
+            '${user.third_name}' => $item['third_name'] ?? '',
+            '${user.last_name}' => $item['last_name'] ?? '',
+            '${user.preferred_name}' => $item['preferred_name'] ?? '',
+            '${user.email}' => $item['email'] ?? '',
+            '${user.address}' => $item['address'] ?? '',
+            '${user.postal_code}' => $item['postal_code'] ?? '',
+            '${user.date_of_birth}' => $item['date_of_birth'] ?? '',
             '${institution.name}' => $item['institution_name'] ?? '',
             '${institution.code}' => $item['institution_code'] ?? '',
             '${institution.address}' => $item['institution_address'] ?? '',
