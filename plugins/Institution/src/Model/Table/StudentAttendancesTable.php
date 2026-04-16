@@ -1336,24 +1336,9 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function onExcelGetStudentStatuses(EventInterface $event, Entity $entity)
     {
-        // Get cached data for this student
-        static $absenceDataCache = null;
-        if ($absenceDataCache === null) {
-            $absenceDataCache = [];
-            $query = $this->_absenceData;
-            if ($query) {
-                $results = $query->all();
-                foreach ($results as $row) {
-                    $studentId = $row->student_id;
-                    $date = $row->date ?? '';
-                    $absenceDataCache[$studentId][$date] = $row;
-                }
-            }
-        }
-
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             return $row->student_status ?? '';
         }
         return '';
@@ -1375,10 +1360,9 @@ class StudentAttendancesTable extends ControllerActionTable
                 }
             }
         }
-
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             return $row->class_name ?? '';
         }
         return '';
