@@ -344,6 +344,10 @@ class ConfigItemsTable extends AppTable
             if (!empty($pass)) {
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);
+                //POCOR-9385: remove -- Select -- null option from toggle dropdown
+                if ($entity->code === 'restrict_student_creation') {
+                    $attr['select'] = false;
+                }
                 //POCOR-9385: multi-select chosenSelect for excluded security roles
                 if ($entity->code === 'student_creation_excluded_roles') {
                     $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
