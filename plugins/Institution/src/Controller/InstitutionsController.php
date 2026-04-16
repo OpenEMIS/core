@@ -5696,8 +5696,7 @@ class InstitutionsController extends AppController
     public function getEducationGrade()
     {
         $requestData = $this->getRequestData();
-//        Log::debug(__FUNCTION__);
-//        Log::debug(print_r($requestData, true));
+        Log::debug('[TEMP-LOG] getEducationGrade requestData=' . json_encode($requestData)); //POCOR-9385
         if (isset($requestData['institution_id'])) {
             $institutionId = $requestData['institution_id'];
         } else {
@@ -5799,7 +5798,7 @@ class InstitutionsController extends AppController
                 'academic_period_id' => $result['academic_period_id']
             ];
         }
-//        Log::debug(print_r($resultArray, true));
+        Log::debug('[TEMP-LOG] getEducationGrade institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId) . ' grades_returned=' . json_encode(array_column($resultArray, 'name'))); //POCOR-9385
         $this->sendJsonResponse($resultArray);
 
     }
@@ -6955,13 +6954,56 @@ class InstitutionsController extends AppController
         $this->savingStudentData = $this->savingStudentData + 1;
 
         $requestData = $this->getRequestData();
-//        Log::debug(__FUNCTION__);
-//        self::debug($requestData);
+        Log::debug('[TEMP-LOG] saveStudentData requestData keys=' . json_encode(array_keys($requestData ?? [])) . ' education_grade_id=' . json_encode($requestData['education_grade_id'] ?? 'MISSING') . ' academic_period_id=' . json_encode($requestData['academic_period_id'] ?? 'MISSING')); //POCOR-9385
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
-//        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
+
+        //POCOR-9385: start — student creation restriction check for Angular add form
+        if (empty($requestData['is_diff_school'])) { //POCOR-9385: transfers bypass grade restriction
+            $ConfigItems = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            if ($ConfigItems->value('restrict_student_creation') == 1) {
+                $gradeId          = !empty($requestData['education_grade_id']) ? (int)$requestData['education_grade_id'] : null;
+                $academicPeriodId = !empty($requestData['academic_period_id']) ? (int)$requestData['academic_period_id'] : null;
+                $institutionId    = $this->getInstitutionID(__FUNCTION__ . ':POCOR-9385');
+
+                $allowed = false;
+                // Check excluded roles — if user is excluded, always allow //POCOR-9385
+                $excludedRaw = $ConfigItems->value('student_creation_excluded_roles');
+                if (!empty($excludedRaw)) {
+                    $excludedIds = array_filter(explode(',', $excludedRaw));
+                    $Institutions = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.Institutions');
+                    $userRoles = $Institutions->getInstitutionRoles($userId, $institutionId);
+                    foreach ($userRoles as $roleId) {
+                        if (in_array((string)$roleId, $excludedIds, true)) {
+                            $allowed = true; //POCOR-9385: excluded role — bypass
+                            break;
+                        }
+                    }
+                }
+
+                if (!$allowed && !empty($gradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
+                    $EducationGrades  = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                    $grade = $EducationGrades->find()->where(['id' => $gradeId])->first();
+                    if ($grade) {
+                        $InstitutionGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+                        $minOrder = $InstitutionGrades->find()
+                            ->select(['min_order' => 'MIN(EducationGrades.order)'])
+                            ->join(['EducationGrades' => ['table' => 'education_grades', 'type' => 'INNER', 'conditions' => 'EducationGrades.id = InstitutionGrades.education_grade_id']])
+                            ->where(['InstitutionGrades.institution_id' => $institutionId, 'InstitutionGrades.academic_period_id' => $academicPeriodId, 'EducationGrades.education_programme_id' => $grade->education_programme_id])
+                            ->disableHydration()->first();
+                        $minOrderValue = $minOrder['min_order'] ?? null;
+                        Log::debug('[TEMP-LOG] saveStudentData restriction check gradeId=' . $gradeId . ' gradeOrder=' . $grade->order . ' minOrderValue=' . json_encode($minOrderValue) . ' institutionId=' . $institutionId . ' academicPeriodId=' . $academicPeriodId); //POCOR-9385
+                        if ($minOrderValue !== null && (int)$grade->order !== (int)$minOrderValue) {
+                            return $this->sendJsonResponse(['message' => __('Student creation is not permitted for {0}. Only authorised entry grades may create new students.', $grade->name)], 422); //POCOR-9385: block
+                        }
+                    }
+                }
+            }
+        }
+        //POCOR-9385: end — student creation restriction check
+
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
         if ($requestData['is_diff_school'] == 1) {
             $userRecordId = $requestData['student_id'];
