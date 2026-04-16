@@ -344,7 +344,12 @@ class ConfigItemsTable extends AppTable
             if (!empty($pass)) {
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);
-                //POCOR-9385: remove -- Select -- null option from toggle dropdown
+                //POCOR-9385: for student creation config items — use DB label as field label, hide redundant Label row
+                if (in_array($entity->code, ['restrict_student_creation', 'student_creation_excluded_roles'], true)) {
+                    $attr['label'] = __($entity->label); //POCOR-9385: use DB label column as field label
+                    $this->field('label', ['visible' => false]); //POCOR-9385: hide redundant Label readonly row
+                }
+                //POCOR-9385: toggle — remove -- Select -- null option
                 if ($entity->code === 'restrict_student_creation') {
                     $attr['select'] = false;
                 }
