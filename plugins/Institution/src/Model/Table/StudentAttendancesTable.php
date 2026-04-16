@@ -26,7 +26,6 @@ use Cake\ORM\Table;
 use Cake\Chronos\Chronos;
 
 // POCOR-9406
-
 class StudentAttendancesTable extends ControllerActionTable
 {
     private $allDayOptions = [];
@@ -1280,10 +1279,15 @@ class StudentAttendancesTable extends ControllerActionTable
         $date = $entity->date ?? null;
         if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
             $row = $this->_absenceDataCache[$entity->student_id][$date];
+            // marked_date is NULL when attendance was never marked for this day.
+            // Only show a status when the teacher actually submitted attendance.
+            if (empty($row->marked_date)) {
+                return '';
+            }
             $absenceTypeName = $row->absence_type_name ?? 'Present';
             return __($absenceTypeName);
         }
-        return 'Present';
+        return ''; // No record in cache — attendance not marked
     }
 
     // POCOR-9572: Excel export methods for flat field structure
@@ -1300,10 +1304,14 @@ class StudentAttendancesTable extends ControllerActionTable
         $date = $entity->date ?? null;
         if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
             $row = $this->_absenceDataCache[$entity->student_id][$date];
+            // POCOR-9643 return blank when attendance was never marked for this day
+            if (empty($row->marked_date)) {
+                return '';
+            }
             $period = $row->period ?? 1;
             return 'Period ' . $period;
         }
-        return 'Period 1';
+        return ''; // attendance not marked
     }
 
     public function onExcelGetSubject(EventInterface $event, Entity $entity)
