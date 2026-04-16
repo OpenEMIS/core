@@ -20,18 +20,27 @@ trait StudentCreationCheckTrait
      */
     private function isStudentCreationAllowed(?int $gradeId, ?int $institutionId = null, ?int $academicPeriodId = null): bool //POCOR-9385: student creation gate
     {
+        \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed input gradeId=' . json_encode($gradeId) . ' institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId)); //[TEMP-LOG]
+
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         // Feature disabled → always allow //POCOR-9385: feature toggle check
-        if ($ConfigItems->value('restrict_student_creation') != 1) {
+        $restrictStudentCreation = $ConfigItems->value('restrict_student_creation');
+        \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed restrict_student_creation=' . json_encode($restrictStudentCreation)); //[TEMP-LOG]
+
+        if ($restrictStudentCreation != 1) {
             return true;
         }
 
         // Excluded roles bypass //POCOR-9385: excluded roles check
         $excludedRaw = $ConfigItems->value('student_creation_excluded_roles');
+        \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed student_creation_excluded_roles=' . json_encode($excludedRaw)); //[TEMP-LOG]
+
         if (!empty($excludedRaw)) {
             $excludedIds = array_filter(explode(',', $excludedRaw));
             $userId = method_exists($this, 'getUserID') ? $this->getUserID() : (int)$this->request->getSession()->read('Auth.User.id');
+            \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed userId=' . json_encode($userId)); //[TEMP-LOG]
+
             $instId  = $institutionId ?? (method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: 0) : 0);
 
             if ($instId > 0) {
@@ -41,10 +50,20 @@ trait StudentCreationCheckTrait
                 $userRoles = $this->AccessControl->getRolesByUser($userId)->toArray(); //POCOR-9385: directory fallback
             }
 
+            \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed userRoles=' . json_encode($userRoles) . ' excludedIds=' . json_encode($excludedIds)); //[TEMP-LOG]
+
+            $roleExcluded = false;
             foreach ($userRoles as $roleId) {
                 if (in_array((string)$roleId, $excludedIds, true)) {
-                    return true; //POCOR-9385: role excluded — bypass restriction
+                    $roleExcluded = true;
+                    break;
                 }
+            }
+
+            \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed roleExcluded=' . json_encode($roleExcluded)); //[TEMP-LOG]
+
+            if ($roleExcluded) {
+                return true; //POCOR-9385: role excluded — bypass restriction
             }
         }
 
@@ -59,8 +78,11 @@ trait StudentCreationCheckTrait
             ->first();
 
         if (!$grade) {
+            \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed grade not found for gradeId=' . json_encode($gradeId)); //[TEMP-LOG]
             return true; //POCOR-9385: grade not found → allow (safe default)
         }
+
+        \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed grade->order=' . json_encode($grade->order) . ' grade->education_programme_id=' . json_encode($grade->education_programme_id)); //[TEMP-LOG]
 
         //POCOR-9385: when institution+period context is available, check against the lowest-order
         //grade of this programme that the institution actually runs for that period
@@ -85,15 +107,22 @@ trait StudentCreationCheckTrait
 
             $minOrderValue = $minOrder['min_order'] ?? null;
 
+            \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed minOrderValue=' . json_encode($minOrderValue) . ' (int)grade->order=' . json_encode((int)$grade->order)); //[TEMP-LOG]
+
             if ($minOrderValue === null) {
+                \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed institution has no grades for programme+period, allowing'); //[TEMP-LOG]
                 return true; //POCOR-9385: institution has no grades for this programme+period → allow (safe default)
             }
 
-            return (int)$grade->order === (int)$minOrderValue; //POCOR-9385: first in institution's programme for this period
+            $result = (int)$grade->order === (int)$minOrderValue;
+            \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed institutional context result=' . json_encode($result)); //[TEMP-LOG]
+            return $result; //POCOR-9385: first in institution's programme for this period
         }
 
         // Fallback: global order=1 check (no institution/period context e.g. import without full row data) //POCOR-9385
-        return (int)$grade->order === 1;
+        $result = (int)$grade->order === 1;
+        \Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed global fallback result (order===1)=' . json_encode($result)); //[TEMP-LOG]
+        return $result;
     }
 
     /**
