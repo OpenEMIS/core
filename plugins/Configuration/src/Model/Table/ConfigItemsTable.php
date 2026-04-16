@@ -346,7 +346,7 @@ class ConfigItemsTable extends AppTable
                 $entity = $this->get($ids);
                 //POCOR-9385: for student creation config items — use DB label as field label, hide redundant Label row
                 if (in_array($entity->code, ['restrict_student_creation', 'student_creation_excluded_roles'], true)) {
-                    $this->ControllerAction->field('value', ['label' => __($entity->label)]); //POCOR-9385: use DB label as the Value field label
+                    $attr['label'] = __($entity->label); //POCOR-9385: use DB label as the Value field label (via returned $attr)
                     $this->ControllerAction->field('label', ['visible' => false]); //POCOR-9385: hide redundant Label readonly row
                 }
                 //POCOR-9385: toggle — remove -- Select -- null option
