@@ -1693,15 +1693,17 @@ class ImportUsersTable extends AppTable
 //                    Log::debug(print_r(['$education_grade_id' => $tempRow], true));
 
             if (!empty($education_grade_id)) {
-                //POCOR-9385: start — student creation restriction check with grade context
-                if (!$this->isStudentCreationAllowed((int)$education_grade_id)) {
+                //POCOR-9385: start — student creation restriction check with institution-aware grade context
+                $importInstitutionId = !empty($tempRow['institution_id']) ? (int)$tempRow['institution_id'] : null; //POCOR-9385: use resolved institution id
+                $importPeriodId      = !empty($academic_period_id) ? (int)$academic_period_id : null;              //POCOR-9385: use resolved period id
+                if (!$this->isStudentCreationAllowed((int)$education_grade_id, $importInstitutionId, $importPeriodId)) {
                     $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
                     $grade = $EducationGrades->find()->select(['name'])->where(['id' => $education_grade_id])->first();
                     $gradeName = $grade ? $grade->name : '';
                     $rowInvalidCodeCols['education_grade_id'] = $this->studentCreationBlockMessage($gradeName); //POCOR-9385: grade-specific block message
                     return array($tempRow, $rowInvalidCodeCols, true);
                 }
-                //POCOR-9385: end — student creation restriction check with grade context
+                //POCOR-9385: end — student creation restriction check with institution-aware grade context
 
                 $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
 
