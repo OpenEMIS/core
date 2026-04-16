@@ -136,7 +136,7 @@ trait StudentCreationCheckTrait
     private function studentCreationBlockMessage(string $gradeName): string //POCOR-9385: block message with grade name
     {
         return sprintf(
-            __('Student creation is not permitted for %s. Only authorised entry grades may create new students. Please search for an existing student instead.'),
+            __('New students can only be enrolled in the entry grade. %s is not an entry grade for this programme.'), //POCOR-9385: cleaner message
             $gradeName
         );
     }
@@ -146,6 +146,6 @@ trait StudentCreationCheckTrait
      */
     private function studentCreationBlockMessageNoGrade(): string //POCOR-9385: directory block message
     {
-        return __('Student creation is currently restricted. Only authorised entry grades may create new students. Please search for an existing student instead.');
+        return __('New students can only be enrolled in the entry grade of their education programme.'); //POCOR-9385: cleaner message
     }
 }

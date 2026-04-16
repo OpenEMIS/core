@@ -7001,7 +7001,7 @@ class InstitutionsController extends AppController
                         $minOrderValue = $minOrder['min_order'] ?? null;
                         ////Log::debug('[TEMP-LOG] saveStudentData restriction check gradeId=' . $gradeId . ' gradeOrder=' . $grade->order . ' minOrderValue=' . json_encode($minOrderValue) . ' institutionId=' . $institutionId . ' academicPeriodId=' . $academicPeriodId); //POCOR-9385
                         if ($minOrderValue !== null && (int)$grade->order !== (int)$minOrderValue) {
-                            return $this->sendJsonResponse(['message' => __('Student creation is not permitted for {0}. Only authorised entry grades may create new students.', $grade->name)], 422); //POCOR-9385: block
+                            return $this->sendJsonResponse(['message' => __('New students can only be enrolled in the entry grade. {0} is not an entry grade for this programme.', $grade->name)], 422); //POCOR-9385: cleaner block message
                         }
                     }
                 }
