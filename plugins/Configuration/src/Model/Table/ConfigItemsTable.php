@@ -290,7 +290,31 @@ class ConfigItemsTable extends AppTable
         return $this->controller->redirect($action);
     }
     
-    public function viewBeforeAction() {    
+    //POCOR-9385: pre-populate chosenSelect with saved role entities so CakePHP renders pre-selected checkboxes
+    public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($entity->code === 'student_creation_excluded_roles' && !empty($entity->value)) {
+            $roleIds = array_filter(explode(',', $entity->value));
+            if (!empty($roleIds)) {
+                $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+                $entity->value = $SecurityRoles->find()->where(['id IN' => $roleIds])->all();
+            }
+        }
+    }
+
+    //POCOR-9385: convert chosenSelect _ids array back to comma-separated string for student_creation_excluded_roles
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (($data['code'] ?? '') === 'student_creation_excluded_roles') {
+            if (isset($data['value']['_ids'])) {
+                $data['value'] = implode(',', array_filter($data['value']['_ids']));
+            } else {
+                $data['value'] = '';
+            }
+        }
+    }
+
+    public function viewBeforeAction() {
         $session = $this->request->getSession();
         if($session->read('successAlert') === 'yes' && empty($session->read('_alert'))){
             $session->delete('successAlert');
@@ -320,6 +344,13 @@ class ConfigItemsTable extends AppTable
             if (!empty($pass)) {
                 $ids = $this->paramsDecode($pass[0]);
                 $entity = $this->get($ids);
+                //POCOR-9385: multi-select chosenSelect for excluded security roles
+                if ($entity->code === 'student_creation_excluded_roles') {
+                    $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+                    $attr['type'] = 'chosenSelect';
+                    $attr['options'] = $SecurityRoles->find('list')->toArray();
+                    return $attr;
+                }
                 if ($entity->field_type == 'Dropdown') {
                     //POCOR-7716 start
                     if ($entity->option_type == "admission_options") {
