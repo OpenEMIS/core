@@ -124,6 +124,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
             ->select([
                 'InstitutionStudents.id',
                 'InstitutionStudents.student_id as student_id',
+                'InstitutionStudents.institution_id as institution_id', //POCOR-9509: needed for staff-role recipient resolution
                 'InstitutionStudents.start_date',
                 'InstitutionStudents.end_date',
                 'AcademicPeriods.name as academic_period_name',
@@ -192,6 +193,7 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
 
         $student = [
             'student_id' => $data->student_id,
+            'institution_id' => $data->institution_id, //POCOR-9509: needed for staff-role recipient resolution
             '${academic_period.name}' => $data->academic_period_name ?? '',
             '${start_date}' => $data->start_date ?? '',
             '${end_date}' => $data->end_date ?? '',
@@ -235,15 +237,40 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
      */
     protected function resolveRecipients(array $item): array
     {
-        $studentId = $item['student_id']; // Use 'id' from Users table
-        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() ENTRY studentId=' . $studentId); //[TEMP-LOG]
+        $studentId    = (int) ($item['student_id'] ?? 0);
+        $institutionId = (int) ($item['institution_id'] ?? 0);
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() ENTRY studentId=' . $studentId . ' institutionId=' . $institutionId); //[TEMP-LOG]
         Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() roles: ' . json_encode($this->rule->security_roles)); //[TEMP-LOG]
 
-        $contacts = $this->recipientResolver->getStudentAssociatedContactList(
+        //POCOR-9509: split roles into student-associated (Guardian=9, Student=8) vs institution-staff (everything else)
+        $studentRoleIds = [self::ROLE_STUDENT, self::ROLE_GUARDIAN]; // 8, 9
+        $studentRoles = array_values(array_filter(
             $this->rule->security_roles,
-            $studentId
-        );
-        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() EXIT email_count=' . count($contacts['email'] ?? []) . ' phone_count=' . count($contacts['phone'] ?? []) . ' emails=' . json_encode($contacts['email'] ?? [])); //[TEMP-LOG]
+            fn($r) => in_array((int)(is_array($r) ? $r['id'] : $r->id), $studentRoleIds, true)
+        ));
+        $staffRoles = array_values(array_filter(
+            $this->rule->security_roles,
+            fn($r) => !in_array((int)(is_array($r) ? $r['id'] : $r->id), $studentRoleIds, true)
+        ));
+
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() studentRoles=' . count($studentRoles) . ' staffRoles=' . count($staffRoles)); //[TEMP-LOG]
+
+        $studentContacts = ['email' => [], 'phone' => []];
+        if (!empty($studentRoles) && $studentId) {
+            $studentContacts = $this->recipientResolver->getStudentAssociatedContactList($studentRoles, $studentId);
+        }
+
+        $staffContacts = ['email' => [], 'phone' => []];
+        if (!empty($staffRoles) && $institutionId) {
+            $staffContacts = $this->recipientResolver->getRoleAssociatedContactList($staffRoles, $institutionId);
+        }
+
+        $contacts = [
+            'email' => array_values(array_unique(array_merge($studentContacts['email'], $staffContacts['email']))),
+            'phone' => array_values(array_unique(array_merge($studentContacts['phone'], $staffContacts['phone']))),
+        ];
+
+        Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() EXIT email_count=' . count($contacts['email']) . ' phone_count=' . count($contacts['phone']) . ' emails=' . json_encode($contacts['email'])); //[TEMP-LOG]
         return $contacts;
     }
 
@@ -255,7 +282,8 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
      */
     protected function fillPlaceholders(array $item): array
     {
-        unset($item['student_id']); // Remove student_id as it's not a placeholder
+        unset($item['student_id']);     // Remove non-placeholder metadata keys
+        unset($item['institution_id']); //POCOR-9509: remove before returning as placeholder map
         return $item; // The rest of the keys are already in ${...} format for placeholders
     }
 }
