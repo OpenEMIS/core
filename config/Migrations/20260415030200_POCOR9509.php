@@ -73,6 +73,16 @@ class POCOR9509 extends AbstractMigration
         if (!$this->hasTable('alerts')) {
             return;
         }
+        // Remove duplicate name rows — keep lowest id per name
+        $this->execute(
+            "DELETE a FROM `alerts` a
+             INNER JOIN `alerts` b ON a.name = b.name AND a.id > b.id"
+        );
+        // Remove duplicate process_name rows — keep lowest id per process_name
+        $this->execute(
+            "DELETE a FROM `alerts` a
+             INNER JOIN `alerts` b ON a.process_name = b.process_name AND a.id > b.id"
+        );
         $db = $this->getAdapter()->getOption('name');
         $nameExists = $this->fetchRow(
             "SELECT 1 FROM INFORMATION_SCHEMA.STATISTICS
