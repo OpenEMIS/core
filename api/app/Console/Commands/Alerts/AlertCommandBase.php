@@ -99,37 +99,37 @@ abstract class AlertCommandBase extends Command
      */
     protected function prepareContext(): bool
     {
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() ENTRY'); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() options: ' . json_encode($this->options())); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() ENTRY'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() options: ' . json_encode($this->options())); //[TEMP-LOG]
 
         $this->userId = (int) $this->option('user_id');
         $this->ruleId = (int) $this->option('rule_id');
         $this->processId = (int) $this->option('process_id');
 
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Resolved IDs: userId=' . $this->userId . ', ruleId=' . $this->ruleId . ', processId=' . $this->processId); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Resolved IDs: userId=' . $this->userId . ', ruleId=' . $this->ruleId . ', processId=' . $this->processId); //[TEMP-LOG]
 
         if (!$this->userId || !$this->ruleId) {
             $this->error("Missing required --user_id or --rule_id.");
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - Missing required options'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - Missing required options'); //[TEMP-LOG]
             return false;
         }
 
         // Load alert rule with roles
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loading alert rule from DB...'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loading alert rule from DB...'); //[TEMP-LOG]
         $this->rule = DB::table('alert_rules')
             ->where('id', $this->ruleId)
             ->first();
 
         if (!$this->rule) {
             $this->error("Alert rule with ID {$this->ruleId} not found.");
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - Rule not found'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - Rule not found'); //[TEMP-LOG]
             return false;
         }
 
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Rule loaded: feature=' . $this->rule->feature . ', subject=' . $this->rule->subject . ', method=' . $this->rule->method); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Rule loaded: feature=' . $this->rule->feature . ', subject=' . $this->rule->subject . ', method=' . $this->rule->method); //[TEMP-LOG]
 
         // Load security roles for this rule
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loading security roles...'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loading security roles...'); //[TEMP-LOG]
         $roles = DB::table('alerts_roles')
             ->join('security_roles', 'security_roles.id', '=', 'alerts_roles.security_role_id')
             ->where('alerts_roles.alert_rule_id', $this->ruleId)
@@ -137,14 +137,14 @@ abstract class AlertCommandBase extends Command
             ->get();
 
         if ($roles->isEmpty()) {
-            // $this->info("No roles assigned to alert rule ID {$this->ruleId}. Skipping."); //POCOR-9509: commented out per CLAUDE.md            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - No roles assigned'); //[TEMP-LOG]
+            // $this->info("No roles assigned to alert rule ID {$this->ruleId}. Skipping."); //POCOR-9509: commented out per CLAUDE.md            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - No roles assigned'); //[TEMP-LOG]
             return false;
         }
 
         $this->rule->security_roles = $roles->toArray();
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loaded ' . count($this->rule->security_roles) . ' roles'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loaded ' . count($this->rule->security_roles) . ' roles'); //[TEMP-LOG]
 
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT TRUE'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT TRUE'); //[TEMP-LOG]
         return true;
     }
 
@@ -166,52 +166,52 @@ abstract class AlertCommandBase extends Command
     {
         $this->featureName = $featureKey; // POCOR-9509: use the explicit feature key so queue/completeProcess match alerts.name
 
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
 
         try {
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . $featureKey . '::runFeatureAlert() Calling getPendingItems()'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . $featureKey . '::runFeatureAlert() Calling getPendingItems()'); //[TEMP-LOG]
             $pendingItems = $this->getPendingItems($featureKey);
 
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() getPendingItems returned ' . count($pendingItems) . ' items'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() getPendingItems returned ' . count($pendingItems) . ' items'); //[TEMP-LOG]
 
             if (empty($pendingItems)) {
-                // $this->info("✅ Alert {$featureKey} has no pending items"); //POCOR-9509: commented out per CLAUDE.md                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXIT SUCCESS - No pending items'); //[TEMP-LOG]
-                return Command::SUCCESS;
+                // $this->info("✅ Alert {$featureKey} has no pending items"); //POCOR-9509: commented out per CLAUDE.md                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXIT SUCCESS - No pending items'); //[TEMP-LOG]
+                return self::SUCCESS;
             }
 
             // $this->info("Processing " . count($pendingItems) . " pending items for {$featureKey}");
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Starting loop over ' . count($pendingItems) . ' items'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Starting loop over ' . count($pendingItems) . ' items'); //[TEMP-LOG]
 
             $itemCount = 0;
             foreach ($pendingItems as $item) {
                 $itemCount++;
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Processing item ' . $itemCount . '/' . count($pendingItems)); //[TEMP-LOG]
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Item data: ' . json_encode($item)); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Processing item ' . $itemCount . '/' . count($pendingItems)); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Item data: ' . json_encode($item)); //[TEMP-LOG]
 
                 // Get recipients for this item
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling resolveRecipients()'); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling resolveRecipients()'); //[TEMP-LOG]
                 $this->contacts = $this->resolveRecipients($item);
 
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Recipients resolved: email_count=' . count($this->contacts['email'] ?? []) . ', phone_count=' . count($this->contacts['phone'] ?? [])); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Recipients resolved: email_count=' . count($this->contacts['email'] ?? []) . ', phone_count=' . count($this->contacts['phone'] ?? [])); //[TEMP-LOG]
 
                 if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
                     $this->warn("No contacts found for item " . print_r($item, true) . ", skipping");
-                    Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() SKIPPING item - No contacts'); //[TEMP-LOG]
+                    //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() SKIPPING item - No contacts'); //[TEMP-LOG]
                     continue;
                 }
 
                 // Fill placeholders with item data
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling fillPlaceholders()'); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling fillPlaceholders()'); //[TEMP-LOG]
                 $placeholders = $this->fillPlaceholders($item);
 
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Placeholders filled: ' . json_encode($placeholders)); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Placeholders filled: ' . json_encode($placeholders)); //[TEMP-LOG]
 
                 // Process contact list and queue alerts
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling processContactList()'); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling processContactList()'); //[TEMP-LOG]
                 $this->processContactList($placeholders);
             }
         } catch (\Throwable $e) {
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXCEPTION: ' . $e->getMessage()); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXCEPTION: ' . $e->getMessage()); //[TEMP-LOG]
             $this->failProcess($e);
             $this->error("[Process Error] " . $e->getMessage());
             Log::error("[POCOR-9509] Alert command failed", [
@@ -219,16 +219,16 @@ abstract class AlertCommandBase extends Command
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         if (!empty($this->processId)) {
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Completing processId=' . $this->processId); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Completing processId=' . $this->processId); //[TEMP-LOG]
             $this->completeProcess();
         }
 
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXIT SUCCESS'); //[TEMP-LOG]
-        return Command::SUCCESS;
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXIT SUCCESS'); //[TEMP-LOG]
+        return self::SUCCESS;
     }
 
     /**
@@ -306,10 +306,10 @@ abstract class AlertCommandBase extends Command
      */
     protected function queueAlert(string $method, string $recipient, string $subject, string $message): void
     {
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() ENTRY'); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() method=' . $method . ', recipient=' . $recipient); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() subject (truncated 100): ' . mb_strimwidth($subject, 0, 100, '...')); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() message (truncated 100): ' . mb_strimwidth($message, 0, 100, '...')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() ENTRY'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() method=' . $method . ', recipient=' . $recipient); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() subject (truncated 100): ' . mb_strimwidth($subject, 0, 100, '...')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() message (truncated 100): ' . mb_strimwidth($message, 0, 100, '...')); //[TEMP-LOG]
 
         try {
             // Queue via alert_queue table
@@ -331,14 +331,14 @@ abstract class AlertCommandBase extends Command
                 'modified' => now(),
             ];
 
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() Inserting into alert_queue: ' . json_encode($insertData)); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() Inserting into alert_queue: ' . json_encode($insertData)); //[TEMP-LOG]
 
             $queued = DB::table('alert_queue')->insert($insertData);
 
             if ($queued) {
                 $shortSubject = mb_strimwidth($subject, 0, 100, '...');
                 $shortMessage = mb_strimwidth($message, 0, 100, '...');
-                // $this->info("✅ Alert {$this->featureName} queued via {$method} to {$recipient}"); //POCOR-9509: commented out per CLAUDE.md                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() INSERT SUCCESS'); //[TEMP-LOG]
+                // $this->info("✅ Alert {$this->featureName} queued via {$method} to {$recipient}"); //POCOR-9509: commented out per CLAUDE.md                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() INSERT SUCCESS'); //[TEMP-LOG]
                 // Log::debug("[POCOR-9509] Alert queued", [
                 //     'feature' => $this->featureName,
                 //     'method' => $method,
@@ -346,10 +346,10 @@ abstract class AlertCommandBase extends Command
                 //     'subject' => $shortSubject,
                 // ]);
             } else {
-                Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() INSERT FAILED (returned false)'); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() INSERT FAILED (returned false)'); //[TEMP-LOG]
             }
         } catch (\Throwable $e) {
-            Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() EXCEPTION: ' . $e->getMessage()); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() EXCEPTION: ' . $e->getMessage()); //[TEMP-LOG]
             $this->error("Failed to queue alert: " . $e->getMessage());
             Log::error("[POCOR-9509] Failed to queue alert", [
                 'feature' => $this->featureName,
@@ -359,7 +359,7 @@ abstract class AlertCommandBase extends Command
             ]);
         }
 
-        Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() EXIT'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::queueAlert() EXIT'); //[TEMP-LOG]
     }
 
     /**

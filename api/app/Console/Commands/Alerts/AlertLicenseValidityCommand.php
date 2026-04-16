@@ -60,7 +60,7 @@ class AlertLicenseValidityCommand extends AlertCommandBase
     public function handle(): int
     {
         if (!$this->prepareContext()) {
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         return $this->runFeatureAlert('LicenseValidity');

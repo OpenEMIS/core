@@ -1852,7 +1852,7 @@ class StudentsTable extends ControllerActionTable
 
         //POCOR-9509: fire StudentStatus alert when student is new or student_status_id changes
         if ($entity->isNew() || $entity->isDirty('student_status_id')) {
-            Log::debug('[TEMP-LOG] @StudentsTable::afterSave() student_status_id dirty or new — triggering StudentStatus alert entity_id=' . ($entity->id ?? 'null') . ' student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @StudentsTable::afterSave() student_status_id dirty or new — triggering StudentStatus alert entity_id=' . ($entity->id ?? 'null') . ' student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
             $this->sendStudentStatusAlert($entity);
         }
 
@@ -1887,14 +1887,14 @@ class StudentsTable extends ControllerActionTable
      */
     public function sendStudentStatusAlert($institutionStudent): void
     {
-        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($institutionStudent->id ?? 'null') . ', student_status_id=' . ($institutionStudent->student_status_id ?? 'null')); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($institutionStudent->toArray())); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($institutionStudent->id ?? 'null') . ', student_status_id=' . ($institutionStudent->student_status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($institutionStudent->toArray())); //[TEMP-LOG]
 
         if (empty($institutionStudent->student_id)
             && empty($institutionStudent->institution_id)
             && empty($institutionStudent->id)
             && empty($institutionStudent->created_user_id)) {
-            Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, missing required fields'); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, missing required fields'); //[TEMP-LOG]
             return;
         }
 
@@ -1907,14 +1907,14 @@ class StudentsTable extends ControllerActionTable
                 $userId = $institutionStudent->created_user_id;
             }
 
-            Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() userId=' . $userId); //[TEMP-LOG]
+            //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() userId=' . $userId); //[TEMP-LOG]
 
             if ($userId) {
                 //POCOR-9509: delegate student status alert triggering to AlertLogsTable helper
                 AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $institutionStudent, $userId);
-                Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - triggerLaravelAlertFromCakePHP called'); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - triggerLaravelAlertFromCakePHP called'); //[TEMP-LOG]
             } else {
-                Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, no userId found'); //[TEMP-LOG]
+                //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, no userId found'); //[TEMP-LOG]
             }
         } catch (\Throwable $e) {
             Log::error('[POCOR-9509] sendStudentStatusAlert exception: ' . $e->getMessage() . ' entity_id=' . ($institutionStudent->id ?? 'null'));

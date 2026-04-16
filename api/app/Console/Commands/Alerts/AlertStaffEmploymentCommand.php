@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Console\Commands\Alerts;
 
-use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -49,7 +48,7 @@ class AlertStaffEmploymentCommand extends AlertCommandBase
     public function handle(): int
     {
         if (!$this->prepareContext()) {
-            return Command::FAILURE;
+            return self::FAILURE;
         }
 
         return $this->runFeatureAlert('StaffEmployment');
