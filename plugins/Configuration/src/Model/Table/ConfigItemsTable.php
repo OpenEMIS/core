@@ -523,6 +523,22 @@ class ConfigItemsTable extends AppTable
         return $value_selection;
     }//POCOR-6248 ends
 
+    //POCOR-9385: override label of the 'value' field to use the DB label column for student creation config items
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field === 'value') {
+            $pass = $this->request->getParam('pass');
+            if (!empty($pass)) {
+                $ids = $this->paramsDecode($pass[0]);
+                $entity = $this->get($ids);
+                if (in_array($entity->code, ['restrict_student_creation', 'student_creation_excluded_roles'], true)) {
+                    return __($entity->label); //POCOR-9385: return DB label column as the Value field label
+                }
+            }
+        }
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    }
+
     public function onGetDefaultValue(EventInterface $event, Entity $entity)
     {
         //POCOR-9385: show human-readable option label for student creation toggle default value
