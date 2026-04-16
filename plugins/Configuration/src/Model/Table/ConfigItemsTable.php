@@ -305,11 +305,19 @@ class ConfigItemsTable extends AppTable
     //POCOR-9385: convert chosenSelect _ids array back to comma-separated string for student_creation_excluded_roles
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
-        //POCOR-9385: POST does not include 'code'; detect by value shape — _ids array means chosenSelect submission
-        if (isset($data['value']['_ids'])) {
-            $data['value'] = implode(',', array_filter($data['value']['_ids']));
-        } elseif (is_array($data['value'] ?? null)) {
-            $data['value'] = ''; //POCOR-9385: chosenSelect with nothing selected submits no _ids key
+        //POCOR-9385: convert _ids array to comma-separated string only for student_creation_excluded_roles
+        //Code is not in POST data, so look it up from the request pass param
+        $pass = $this->request->getParam('pass');
+        if (!empty($pass)) {
+            $ids = $this->paramsDecode($pass[0]);
+            $entity = $this->get($ids);
+            if ($entity->code === 'student_creation_excluded_roles') {
+                if (isset($data['value']['_ids'])) {
+                    $data['value'] = implode(',', array_filter($data['value']['_ids']));
+                } else {
+                    $data['value'] = ''; //POCOR-9385: nothing selected — store empty string
+                }
+            }
         }
     }
 
