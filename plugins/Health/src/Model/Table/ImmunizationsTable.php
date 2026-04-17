@@ -42,8 +42,8 @@ class ImmunizationsTable extends ControllerActionTable
     //POCOR-5890 starts remain work
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'type' => 'select', 'before' => 'comment']);
-        $this->field('dosage',['visible' => false]);
+        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Type', 'required' => true], 'type' => 'select', 'before' => 'comment']); //POCOR-9507
+        $this->field('dosage', ['after' => 'health_immunization_type_id', 'attr' => ['required' => true]]); //POCOR-9507
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
@@ -53,15 +53,14 @@ class ImmunizationsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
-        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'before' => 'comment']);
-        $this->field('dosage',['visible' => false]);
+        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Type'], 'before' => 'comment']); //POCOR-9507
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'health_immunization_type_id':
-                return __('Vaccination Type');
+                return __('Type'); //POCOR-9507
             case 'file_content':
                 return __('Attachment');
             case 'date':
@@ -74,16 +73,16 @@ class ImmunizationsTable extends ControllerActionTable
     }
 
     public function addBeforeAction(EventInterface $event, ArrayObject $extra)
-    {   
-        $this->field('dosage', ['visible' => false]);
+    {
+        $this->field('dosage', ['after' => 'health_immunization_type_id', 'attr' => ['required' => true]]); //POCOR-9507
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function viewBeforeAction(EventInterface $event)
     {
-        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'before' => 'comment']);
-        $this->field('dosage', ['visible' => false]);
+        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Type'], 'before' => 'comment']); //POCOR-9507
+        $this->field('dosage', ['after' => 'health_immunization_type_id']); //POCOR-9507
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
@@ -109,7 +108,7 @@ class ImmunizationsTable extends ControllerActionTable
             'key'   => 'health_immunization_type_id',
             'field' => 'health_immunization_type_id',
             'type'  => 'string',
-            'label' => __('Vaccination Type')
+            'label' => __('Type') //POCOR-9507
         ];
 
         $extraField[] = [

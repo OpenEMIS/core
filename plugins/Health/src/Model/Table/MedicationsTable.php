@@ -45,6 +45,7 @@ class MedicationsTable extends ControllerActionTable
 
         return $validator
             ->allowEmpty('file_content')
+            ->notEmpty('name')
             ->allowEmpty('end_date');
             // ->add('end_date', 'ruleCompareDateReverse', [
             //     'rule' => ['compareDateReverse', 'start_date', true]
