@@ -120,6 +120,8 @@ class InsurancesTable extends ControllerActionTable
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', true]
             ])
+            ->notEmpty('insurance_type_id')
+            ->notEmpty('insurance_provider_id');
         ;
     }
 

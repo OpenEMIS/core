@@ -220,7 +220,9 @@ class HealthsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+            ->allowEmpty('file_content')
+            ->notEmpty('blood_type');
         return $validator;
     }
 

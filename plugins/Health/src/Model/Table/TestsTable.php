@@ -43,7 +43,7 @@ class TestsTable extends ControllerActionTable
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->field('health_test_type_id', ['type' => 'select', 'after' => 'comment']);
+        $this->field('health_test_type_id', ['type' => 'select', 'after' => 'date', 'attr' => ['required' => true]]); //POCOR-9507
         $this->field('file_name', ['visible' => false]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']); //POCOR-8293
@@ -183,7 +183,7 @@ class TestsTable extends ControllerActionTable
             'key'   => 'health_test_type_id',
             'field' => 'health_test_type_id',
             'type'  => 'string',
-            'label' => __('Health Test Type')
+            'label' => __('Type') //POCOR-9507
         ];
 
         $extraField[] = [
@@ -216,7 +216,7 @@ class TestsTable extends ControllerActionTable
         }elseif ($field == 'comment') {
             return __('Comment');
         }elseif ($field == 'health_test_type_id') {
-            return __('Health Test Type');
+            return __('Type'); //POCOR-9507
         }elseif ($field == 'file_content') {
             return __('Attachment');
         }elseif ($field == 'modified_user_id') {

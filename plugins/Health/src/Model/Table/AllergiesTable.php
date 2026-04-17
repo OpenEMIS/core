@@ -45,6 +45,7 @@ class AllergiesTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
+        $this->field('description', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
 
         // Start POCOR-5188
@@ -159,9 +160,11 @@ class AllergiesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
-        $this->field('severe', ['after' => 'description']);
-        $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
-        $this->field('file_content', ['after' => 'health_allergy_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('health_allergy_type_id', ['type' => 'select', 'before' => 'description']); //POCOR-9507
+        $this->field('severe', ['after' => 'health_allergy_type_id']); //POCOR-9507
+        $this->field('description', ['after' => 'severe']); //POCOR-9507
+        $this->field('comment', ['after' => 'description']); //POCOR-9507
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
@@ -169,7 +172,9 @@ class AllergiesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+            ->allowEmpty('file_content')
+            ->notEmpty('health_allergy_type_id');
         return $validator;
     }
 
