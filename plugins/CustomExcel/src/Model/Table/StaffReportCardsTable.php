@@ -45,7 +45,8 @@ class StaffReportCardsTable extends AppTable
                 'InstitutionStaff',//POCOR-9128
                 'StaffLeave',//POCOR-9128
                 'StaffTraining',//POCOR-9128
-                'StaffCareer'//POCOR-9007
+                'StaffCareer', //POCOR-9007
+                'StaffPosition' //POCOR-9007
             ]
         ]);
     }
@@ -73,6 +74,7 @@ class StaffReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffLeave'] = 'onExcelTemplateInitialiseStaffLeave';//POCOR-9128
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffTraining'] = 'onExcelTemplateInitialiseStaffTraining';//POCOR-9128
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffCareer'] = 'onExcelTemplateInitialiseStaffCareer'; //POCOR-9007
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStaffPosition'] = 'onExcelTemplateInitialiseStaffPosition'; //POCOR-9007
         return $events;
     }
 
@@ -785,48 +787,58 @@ class StaffReportCardsTable extends AppTable
     }
 
     //POCOR-9007
-    public function onExcelTemplateInitialiseStaffPosition(EventInterface $event, array $params, ArrayObject $extra) 
+    public function onExcelTemplateInitialiseStaffPosition(EventInterface $event, array $params, ArrayObject $extra)
     {
-        if (empty($params['staff_id'])) {
-            return [];
+        if (isset($params['staff_id'])) {
+            $InstitutionStaffPosition = TableRegistry::getTableLocator()->get('institution_staff_position');
+
+            $entity = $InstitutionStaffPosition->find()
+                ->select([
+                    'institution'    => 'Institutions.name',
+                    'institution_code' => 'Institutions.code',
+                    'position_no'    => 'InstitutionPositions.position_no',
+                    'position_title' => 'StaffPositionTitles.name',
+                    'staff_type'     => 'StaffTypes.name',
+                    'shift'          => 'Shifts.name',
+                    'start_date'     => $InstitutionStaffPosition->aliasField('start_date'),
+                    'end_date'       => $InstitutionStaffPosition->aliasField('end_date'),
+                    'staff_status'   => 'StaffStatuses.name',
+                ])
+                ->innerJoin(
+                    ['InstitutionStaff' => 'institution_staff'],
+                    ['InstitutionStaff.id = ' . $InstitutionStaffPosition->aliasField('institution_staff_id')]
+                )
+                ->innerJoin(
+                    ['Institutions' => 'institutions'],
+                    ['Institutions.id = ' . $InstitutionStaffPosition->aliasField('institution_id')]
+                )
+                ->innerJoin(
+                    ['InstitutionPositions' => 'institution_positions'],
+                    ['InstitutionPositions.id = ' . $InstitutionStaffPosition->aliasField('institution_position_id')]
+                )
+                ->leftJoin(
+                    ['StaffPositionTitles' => 'staff_position_titles'],
+                    ['StaffPositionTitles.id = InstitutionPositions.staff_position_title_id']
+                )
+                ->leftJoin(
+                    ['StaffTypes' => 'staff_types'],
+                    ['StaffTypes.id = ' . $InstitutionStaffPosition->aliasField('staff_type_id')]
+                )
+                ->leftJoin(
+                    ['Shifts' => 'shifts'],
+                    ['Shifts.id = ' . $InstitutionStaffPosition->aliasField('shift_id')]
+                )
+                ->leftJoin(
+                    ['StaffStatuses' => 'staff_statuses'],
+                    ['StaffStatuses.id = InstitutionStaff.staff_status_id']
+                )
+                ->where([
+                    'InstitutionStaff.staff_id' => $params['staff_id'],
+                ])
+                ->order([$InstitutionStaffPosition->aliasField('start_date') => 'DESC'])
+                ->toArray();
+
+            return $entity;
         }
-
-        $StaffEmploymentStatuses = TableRegistry::getTableLocator()->get('Staff.EmploymentStatuses');
-
-        $data = $StaffEmploymentStatuses->find()
-            ->select([
-                'status_type' => 'EmploymentStatusTypes.name',
-                'status_date' => $StaffEmploymentStatuses->aliasField('status_date'),
-                'comment'     => $StaffEmploymentStatuses->aliasField('comment'),
-            ])
-            ->leftJoin(
-                ['EmploymentStatusTypes' => 'employment_status_types'],
-                ['EmploymentStatusTypes.id = ' . $StaffEmploymentStatuses->aliasField('status_type_id')]
-            )
-            ->where([
-                $StaffEmploymentStatuses->aliasField('staff_id') => $params['staff_id'],
-            ])
-            ->order([
-                $StaffEmploymentStatuses->aliasField('status_date') => 'DESC'
-            ])
-            ->enableHydration(false)
-            ->toArray();
-
-        $entity = [];
-
-        if (!empty($data)) {
-            foreach ($data as $key => $row) {
-                $entity[] = [
-                    'id' => $key,
-                    'status_type' => !empty($row['status_type']) ? $row['status_type'] : '',
-                    'status_date' => !empty($row['status_date']) 
-                        ? $row['status_date']->format('Y-m-d') 
-                        : '',
-                    'comment' => !empty($row['comment']) ? $row['comment'] : ''
-                ];
-            }
-        }
-
-        return $entity;
     }
 }
