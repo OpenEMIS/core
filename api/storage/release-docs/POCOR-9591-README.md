@@ -30,34 +30,44 @@ Three core changes:
 | Category | Count | Details |
 |----------|-------|---------|
 | Added | 1 | Migration backing up security_users |
-| Modified | 5 | UsersController, UsersTable, DirectoriesTable, AuthenticateJwt, Api5\SecurityUsers |
-| **Total** | **6** | |
+| Modified | 8 | LoginController, App\Models\SecurityUsers, Api5\SecurityUsers, UsersController, UsersTable, DirectoriesTable, AuthenticateJwt |
+| **Total** | **9** | |
 
 ### Detailed Changes
 
-#### 1. plugins/Security/src/Model/Table/UsersTable.php
+#### 1. api/app/Http/Controllers/Authentication/LoginController.php
+- **Line ~70–76**: Before attempting `JWTAuth::attempt()`, check if user status is `STATUS_LOCKED` (2) or `STATUS_INACTIVE` (0) and return HTTP 403 with distinct error messages
+- **Line ~89–100**: On failed login attempt, read `config_items.login_attempts` threshold; increment `failed_logins`; when count reaches threshold, set `status = STATUS_LOCKED` and return HTTP 403
+- **Line ~105**: On successful login, reset `failed_logins = 0`
+
+#### 2. api/app/Models/SecurityUsers.php (App\Models, not Api5)
+- **Lines 21–24**: Added `const STATUS_ACTIVE = 1`, `const STATUS_INACTIVE = 0`, `const STATUS_LOCKED = 2`
+- **Line 29**: Added `'status' => 'integer'` to `$casts` array for type-safe integer comparison
+
+#### 3. api/app/Models/Api5/SecurityUsers.php
+- **Line 29**: Added `'status' => 'integer'` to `$casts` array (constants already present)
+
+#### 4. plugins/Security/src/Model/Table/UsersTable.php
 - Added `const STATUS_LOCKED = 2` alongside existing `ACTIVE = 1` and `INACTIVE = 0`
 - Updated `getCustomFilter()` to include Locked option in Advanced Search Status filter
 
-#### 2. plugins/User/src/Controller/UsersController.php
+#### 5. plugins/User/src/Controller/UsersController.php
 - **Line ~690** (POCOR-8680 block): Changed `status => 0` to `status => UsersTable::STATUS_LOCKED`
 - **Line ~943** (POCOR-2976 block): Changed `status => 0` to `status => UsersTable::STATUS_LOCKED`
 - Pre-login check now differentiates between Inactive and Locked with separate error messages
 
-#### 3. plugins/Directory/src/Model/Table/DirectoriesTable.php
+#### 6. plugins/Directory/src/Model/Table/DirectoriesTable.php
 - **Line ~1549** in `indexBeforeQuery()`: Changed `status = 1` filter to `status IN (1, 2)` so Locked users remain visible
 - Added Status filter to Directory Advanced Search with Locked option
 
-#### 4. api/app/Http/Middleware/AuthenticateJwt.php
+#### 7. api/app/Http/Middleware/AuthenticateJwt.php
 - Added status validation check: JWT tokens for users with `status = 0` (Inactive) or `status = 2` (Locked) are rejected with HTTP 401
 - Prevents locked users from accessing the API even with a valid token
 
-#### 5. api/app/Models/Api5/SecurityUsers.php
-- Added `const STATUS_ACTIVE = 1`, `const STATUS_INACTIVE = 0`, `const STATUS_LOCKED = 2`
-
-#### 6. config/Migrations/20260420000000_POCOR9591.php
+#### 8. config/Migrations/20260420000000_POCOR9591.php
 - Backs up `security_users` table as `z_9591_security_users` before any changes
-- No schema change needed (INT already supports value 2)
+- ALTER TABLE adds column comment: `'0=Inactive, 1=Active, 2=Locked'` to document valid status values
+- Migration down() restores from backup (idempotent, safe for reruns)
 
 ### Database Migrations
 
@@ -93,11 +103,15 @@ Three core changes:
 
 5. **Smoke test**
    - Log in as admin with valid credentials → expect success
-   - Attempt login with wrong password 5+ times → expect "Account is locked" message
+   - POST /api/v4/login with locked account (status=2) → expect HTTP 403 "Account is locked."
+   - POST /api/v4/login with inactive account (status=0) → expect HTTP 403 "Account is inactive."
+   - Attempt web login with wrong password 5+ times → expect "Account is locked" message
+   - Verify account locked (status=2) in DB: `SELECT id, username, status FROM security_users WHERE status=2 LIMIT 1`
    - Verify locked user does NOT appear in Institution Student/Staff lists (status=1 filter still applies)
    - Verify locked user DOES appear in Directory > List (status IN (1,2) now)
    - Edit locked user in Administration > Security > Users, set status back to Active
-   - Attempt login again → expect success
+   - Attempt login again (web and API) → expect success
+   - Verify failed_logins reset to 0 on successful login
 
 ---
 
@@ -139,9 +153,11 @@ The number of allowed failed login attempts before lockout is configured in:
 
 ### API Access for Locked Users
 
-- JWT tokens held by locked users are **rejected** with HTTP 401 "Account is locked"
-- The `AuthenticateJwt` middleware validates status on every API request
-- Unlocking the user in the admin panel allows API access on the next login
+- **Login endpoint** (`POST /api/v4/login`): Pre-login status check rejects locked (status=2) and inactive (status=0) accounts with HTTP 403 before password validation
+- **Failed attempts**: LoginController increments `security_users.failed_logins`; when count ≥ `config_items.login_attempts`, status is set to 2 and HTTP 403 returned
+- **Existing JWT tokens**: `AuthenticateJwt` middleware validates status on every API request; locked/inactive users are rejected with HTTP 401
+- **Successful login**: `failed_logins` counter is reset to 0
+- **Unlocking**: Edit user in Administration > Security > Users and change status back to Active; API access resumes on next login
 
 ### Rollback Plan
 

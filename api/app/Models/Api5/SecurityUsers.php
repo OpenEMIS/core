@@ -31,6 +31,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     public $timestamps = false;
     protected $casts = [
         'date_of_birth' => 'date:Y-m-d',
+        'status'        => 'integer', //POCOR-9591: ensure integer comparison works
     ];
     protected $table = "security_users";
 

@@ -17,9 +17,16 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     use Notifiable;
     use NumericId;
 
+    //POCOR-9591: start - account status constants
+    const STATUS_ACTIVE   = 1; // active account
+    const STATUS_INACTIVE = 0; // admin-disabled
+    const STATUS_LOCKED   = 2; // system-locked after exceeding login attempts
+    //POCOR-9591: end
+
     public $timestamps = false;
     protected $casts = [
         'date_of_birth' => 'date:Y-m-d',
+        'status'        => 'integer', //POCOR-9591: ensure integer comparison works
     ];
     protected $table = "security_users";
 
