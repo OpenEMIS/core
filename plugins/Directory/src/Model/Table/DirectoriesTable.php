@@ -1307,7 +1307,7 @@ class DirectoriesTable extends ControllerActionTable
             ],
             'order' => $advancedSearchFieldOrder,
             'showOnLoad' => 1,
-            'customFields' => ['user_type', 'status'] //POCOR-9591: added status
+            'customFields' => ['user_type']
         ]);
 
         $this->addBehavior('HighChart', [
@@ -1462,25 +1462,6 @@ class DirectoriesTable extends ControllerActionTable
             return $conditions;
         }
 
-        //POCOR-9591: start - status filter condition mapping
-        if ($key == 'status') {
-            $conditions = [];
-            switch ($value) {
-                case SecurityUsersTable::ACTIVE:
-                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_ACTIVE;
-                    break;
-
-                case SecurityUsersTable::INACTIVE:
-                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_INACTIVE;
-                    break;
-
-                case SecurityUsersTable::LOCKED:
-                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_LOCKED;
-                    break;
-            }
-            return $conditions;
-        }
-        //POCOR-9591: end
     }
 
 
@@ -1542,16 +1523,6 @@ class DirectoriesTable extends ControllerActionTable
                 self::OTHER    => __('Others')
             ]
         ];
-        //POCOR-9591: start - status filter with Active/Inactive/Locked options
-        $filters['status'] = [
-            'label' => __('Status'),
-            'options' => [
-                SecurityUsersTable::ACTIVE   => __('Active'),
-                SecurityUsersTable::INACTIVE => __('Inactive'),
-                SecurityUsersTable::LOCKED   => __('Locked'),
-            ]
-        ];
-        //POCOR-9591: end
         return $filters;
     }
 
