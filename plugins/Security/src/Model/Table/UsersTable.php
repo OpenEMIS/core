@@ -281,7 +281,11 @@ class UsersTable extends ControllerActionTable
             $this->fields['last_login']['visible'] = false;
         }
 
-        $this->field('status', ['visible' => true, 'options' => $this->getSelectOptions('general.active')]);
+        $this->field('status', ['visible' => true, 'options' => [ //POCOR-9591: include Locked option
+            self::STATUS_INACTIVE => __('Inactive'),
+            self::STATUS_ACTIVE   => __('Active'),
+            self::STATUS_LOCKED   => __('Locked'),
+        ]]);
         $this->setFieldOrder([
             'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'status', 'username', 'password'
         ]);
