@@ -13,6 +13,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Security\Model\Table\UsersTable as SecurityUsersTable; //POCOR-9591: status constants
 
 class DirectoriesTable extends ControllerActionTable
 {
@@ -27,6 +28,11 @@ class DirectoriesTable extends ControllerActionTable
     const OTHER = 4;
     const STUDENTNOTINSCHOOL = 5;
     const STAFFNOTINSCHOOL = 6;
+    //POCOR-9591: start - user account status constants (mirrors Security\UsersTable::STATUS_*)
+    const STATUS_ACTIVE   = 1; // active account
+    const STATUS_INACTIVE = 0; // admin-disabled
+    const STATUS_LOCKED   = 2; // system-locked after exceeding login attempts
+    //POCOR-9591: end
 
     private $dashboardQuery;
 
@@ -1291,7 +1297,7 @@ class DirectoriesTable extends ControllerActionTable
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
-            'user_type', 'first_name', 'middle_name', 'third_name', 'last_name',
+            'user_type', 'status', 'first_name', 'middle_name', 'third_name', 'last_name', //POCOR-9591: added status
             'openemis_no', 'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
@@ -1301,7 +1307,7 @@ class DirectoriesTable extends ControllerActionTable
             ],
             'order' => $advancedSearchFieldOrder,
             'showOnLoad' => 1,
-            'customFields' => ['user_type']
+            'customFields' => ['user_type', 'status'] //POCOR-9591: added status
         ]);
 
         $this->addBehavior('HighChart', [
@@ -1455,6 +1461,26 @@ class DirectoriesTable extends ControllerActionTable
             }
             return $conditions;
         }
+
+        //POCOR-9591: start - status filter condition mapping
+        if ($key == 'status') {
+            $conditions = [];
+            switch ($value) {
+                case SecurityUsersTable::ACTIVE:
+                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_ACTIVE;
+                    break;
+
+                case SecurityUsersTable::INACTIVE:
+                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_INACTIVE;
+                    break;
+
+                case SecurityUsersTable::LOCKED:
+                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_LOCKED;
+                    break;
+            }
+            return $conditions;
+        }
+        //POCOR-9591: end
     }
 
 
@@ -1510,12 +1536,22 @@ class DirectoriesTable extends ControllerActionTable
         $filters['user_type'] = [
             'label' => __('User Type'),
             'options' => [
-                self::STAFF => __('Staff'),
-                self::STUDENT => __('Students'),
+                self::STAFF    => __('Staff'),
+                self::STUDENT  => __('Students'),
                 self::GUARDIAN => __('Guardians'),
-                self::OTHER => __('Others')
+                self::OTHER    => __('Others')
             ]
         ];
+        //POCOR-9591: start - status filter with Active/Inactive/Locked options
+        $filters['status'] = [
+            'label' => __('Status'),
+            'options' => [
+                SecurityUsersTable::ACTIVE   => __('Active'),
+                SecurityUsersTable::INACTIVE => __('Inactive'),
+                SecurityUsersTable::LOCKED   => __('Locked'),
+            ]
+        ];
+        //POCOR-9591: end
         return $filters;
     }
 
@@ -1545,11 +1581,13 @@ class DirectoriesTable extends ControllerActionTable
         $notSuperAdminCondition = [
             $this->aliasField('super_admin') => 0
         ];
-        $onlyActive = [
-            $this->aliasField('status') => 1
+        //POCOR-9591: start - include Locked (2) alongside Active (1); Inactive (0) remains hidden
+        $visibleStatuses = [
+            $this->aliasField('status') . ' IN' => [self::STATUS_ACTIVE, self::STATUS_LOCKED]
         ];
+        //POCOR-9591: end
         $conditions = array_merge($conditions, $notSuperAdminCondition);
-        $conditions = array_merge($conditions, $onlyActive);
+        $conditions = array_merge($conditions, $visibleStatuses);
 
         // POCOR-2547 sort list of staff and student by name
         $orders = [];

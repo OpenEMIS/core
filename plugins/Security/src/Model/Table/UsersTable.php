@@ -26,7 +26,11 @@ class UsersTable extends ControllerActionTable
     const GUARDIAN = 3;
     const OTHER = 4;
     const ACTIVE = 1;
-    const INACTIVE = 2;//PCOOR-6922 Ends
+    const INACTIVE = 2; //PCOOR-6922 Ends
+    const LOCKED = 3; //POCOR-9591: Advanced Search dropdown key for Locked filter
+    const STATUS_ACTIVE   = 1; //POCOR-9591: DB value — active account
+    const STATUS_INACTIVE = 0; //POCOR-9591: DB value — inactive (admin-disabled)
+    const STATUS_LOCKED   = 2; //POCOR-9591: DB value — locked (system, exceeded login attempts)
     public function initialize(array $config): void
     {
         $this->setTable('security_users');
@@ -157,8 +161,9 @@ class UsersTable extends ControllerActionTable
         $filters['status'] = [
             'label' => __('Status'),
             'options' => [
-                self::ACTIVE => __('Active'),
-                self::INACTIVE => __('Inactive')
+                self::ACTIVE   => __('Active'),
+                self::INACTIVE => __('Inactive'),
+                self::LOCKED   => __('Locked'), //POCOR-9591
             ]
         ];
 
@@ -195,12 +200,16 @@ class UsersTable extends ControllerActionTable
 
         if ($key == 'status') {
             switch ($value) {
-                case self::ACTIVE:
-                    $conditions[] = $this->aliasField('status = 1');
+                case self::ACTIVE: //POCOR-9591: use STATUS_ constant, no magic numbers
+                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_ACTIVE;
                     break;
 
-                case self::INACTIVE:
-                    $conditions[] = $this->aliasField('status = 0');
+                case self::INACTIVE: //POCOR-9591
+                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_INACTIVE;
+                    break;
+
+                case self::LOCKED: //POCOR-9591: new Locked filter
+                    $conditions[] = $this->aliasField('status') . ' = ' . self::STATUS_LOCKED;
                     break;
             }
         }

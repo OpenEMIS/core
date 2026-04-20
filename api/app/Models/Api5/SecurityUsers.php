@@ -17,6 +17,12 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     use HasFactory;
     use WebhookQueueTrait;
 
+    //POCOR-9591: start - account status constants (mirrors Security\UsersTable)
+    const STATUS_ACTIVE   = 1; // active account
+    const STATUS_INACTIVE = 0; // admin-disabled account
+    const STATUS_LOCKED   = 2; // system-locked after exceeding login attempts
+    //POCOR-9591: end
+
     // POCOR-9257: Configure webhook events
     protected $webhookEvents = ['created', 'updated', 'deleted'];
     use Notifiable;
