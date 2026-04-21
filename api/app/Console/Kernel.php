@@ -15,11 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        //POCOR-9509: Checker — scans DB for due items and populates alert_queue. Runs at 2am nightly (low-load window).
-        //POCOR-9509: withoutOverlapping(360) — lock expires after 6h if process dies before releasing it
-        $schedule->command('alerts:check-and-queue')
-            ->dailyAt('02:00')
-            ->withoutOverlapping(360);
+        //POCOR-9509: alerts:check-and-queue and alerts:process are NOT scheduled here.
+        //POCOR-9509: They are controlled by direct cron entries on the server — see release README for DevOps instructions.
 
         // POCOR-9257: Webhook queue processing
         $schedule->command('webhooks:process', ['--once'])
@@ -32,14 +29,7 @@ class Kernel extends ConsoleKernel
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
 
-        //POCOR-9509: Sender — drains alert_queue and fires emails/SMS. Runs at 7am so recipients see alerts in the morning.
-        //POCOR-9509: withoutOverlapping(120) — lock expires after 2h if process dies before releasing it
-        $schedule->command('alerts:process', ['--limit=' . config('alerts.process_limit', 20)])
-            ->dailyAt('07:00')
-            ->withoutOverlapping(120)
-            ->onFailure(function () {
-                \Illuminate\Support\Facades\Log::error('[AlertScheduler] Alert queue processor failed');
-            });
+        //POCOR-9509: alerts:process is NOT scheduled here — controlled by cron on the server.
     }
 
     /**
