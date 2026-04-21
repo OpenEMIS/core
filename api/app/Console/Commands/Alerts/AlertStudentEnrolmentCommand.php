@@ -204,7 +204,7 @@ class AlertStudentEnrolmentCommand extends AlertCommandBase
         //Log::debug('[TEMP-LOG] @AlertStudentEnrolmentCommand::resolveRecipients() ENTRY studentId=' . $studentId . ' enrolment_id=' . ($item['id'] ?? 'N/A')); //[TEMP-LOG]
 
         if (!$studentId) {
-            Log::error('[POCOR-9509] student_id not found in item array! item=' . json_encode($item));
+            Log::error('[POCOR-9509] student_id not found in item id=' . ($item['id'] ?? '?')); //POCOR-9509
             return ['email' => [], 'phone' => []];
         }
 
