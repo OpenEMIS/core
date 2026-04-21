@@ -101,7 +101,13 @@ Three core changes:
    php artisan config:cache && php artisan route:clear && php artisan cache:clear
    ```
 
-5. **Smoke test**
+5. **Regenerate Swagger documentation**
+   ```bash
+   cd api
+   php artisan l5-swagger:generate
+   ```
+
+6. **Smoke test**
    - Log in as admin with valid credentials → expect success
    - POST /api/v4/login with locked account (status=2) → expect HTTP 403 "Account is locked."
    - POST /api/v4/login with inactive account (status=0) → expect HTTP 403 "Account is inactive."
