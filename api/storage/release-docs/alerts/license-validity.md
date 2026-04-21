@@ -21,7 +21,7 @@ Without automated tracking, license expiry dates must be monitored manually — 
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:license-validity` at the configured frequency.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:license-validity` at the configured frequency.
 
 The command queries `staff_licenses` filtered by the configured license type and applies the expiry window condition. For each license found, the system then checks `institution_staff` to find all institutions where the staff member is **actively assigned** (status = ASSIGNED). One notification is generated per institution assignment — so a staff member assigned to two schools triggers two separate alert notifications (one to each school's roles).
 

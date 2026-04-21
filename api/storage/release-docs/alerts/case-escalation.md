@@ -22,7 +22,7 @@ This alert creates that accountability. It fires specifically for cases that hav
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:case-escalation` at the configured frequency.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:case-escalation` at the configured frequency.
 
 The command queries `institution_cases` and applies all three conditions simultaneously:
 

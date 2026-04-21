@@ -19,8 +19,8 @@ class ProcessAlertQueue extends Command
     const QUEUE_STATUS_PROCESSING = 1;
     const QUEUE_STATUS_SENT = 2;
 
-    protected $signature = 'alerts:process {--limit=50}';
-    protected $description = 'Process pending alerts from alert_queue';
+    protected $signature = 'alerts:send {--limit=50}'; //POCOR-9509: renamed from alerts:process
+    protected $description = 'Send pending alerts from alert_queue'; //POCOR-9509
 
     public function handle(): int
     {

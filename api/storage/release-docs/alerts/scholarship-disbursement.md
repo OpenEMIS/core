@@ -22,7 +22,7 @@ Payment schedules are recorded in OpenEMIS as estimates, but executing the actua
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:scholarship-disbursement` at the configured frequency.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:scholarship-disbursement` at the configured frequency.
 
 The command queries `scholarship_recipient_payment_structure_estimates` and applies the configured date window condition:
 - **Condition 1** — disbursement date is in the **next** `value` days (upcoming)

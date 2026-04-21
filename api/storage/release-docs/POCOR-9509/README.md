@@ -33,7 +33,7 @@ OpenEMIS alerts follow a five-stage pipeline:
 ```
 1. TRIGGER
    Event-based  → a record is saved (admission, absence, status change)
-   Scheduled    → cron runs alerts:check-and-queue daily/weekly/monthly
+   Scheduled    → cron runs alerts:check daily/weekly/monthly
          ↓
 2. RULE MATCH
    Is there an enabled alert_rule for this feature?

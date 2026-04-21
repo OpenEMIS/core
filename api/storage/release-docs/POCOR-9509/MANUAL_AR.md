@@ -156,7 +156,7 @@
 └───────────────┘     └─────────────┘     └──────────────┘     └───────────┘     └──────────┘
 ```
 
-**المرحلة 1 — المُحفِّز:** يقع حدث مجالي (حفظ سجل في CakePHP) أو يستدعي المُجدوِل `alerts:check-and-queue` في دورة زمنية.
+**المرحلة 1 — المُحفِّز:** يقع حدث مجالي (حفظ سجل في CakePHP) أو يستدعي المُجدوِل `alerts:check` في دورة زمنية.
 
 **المرحلة 2 — مطابقة القاعدة:** يقوم النظام بتحميل كل سجلات `alert_rules` التي يطابق حقل `feature` فيها نوع التنبيه المُحفَّز. يتم تخطي القواعد المعلَّمة `Enabled = No`.
 
@@ -164,13 +164,13 @@
 
 **المرحلة 4 — قائمة الانتظار:** يستدعي الأمر `processContactList()` لكل مستلِم يتم تحديده. يتم حساب بصمة SHA-256 للعنوان ومحتوى الرسالة. إذا كانت بصمة متطابقة موجودة في `alert_logs` بحالة `PENDING`، يتم تخطي العنصر بصمت. خلاف ذلك، يُدرَج صف في `alert_queue`.
 
-**المرحلة 5 — الإرسال:** يقوم الأمر `alerts:process`، الذي يُشغَّل كل دقيقة بواسطة Laravel scheduler، بقراءة صفوف `alert_queue` ذات الحالة `PROCESSING` وإرسالها إلى خدمة البريد (SMTP) أو بوابة الرسائل القصيرة (Twilio). يتم تحديث الحالة إلى `SENT` أو `FAILED` عند الاكتمال.
+**المرحلة 5 — الإرسال:** يقوم الأمر `alerts:send`، الذي يُشغَّل كل دقيقة بواسطة Laravel scheduler، بقراءة صفوف `alert_queue` ذات الحالة `PROCESSING` وإرسالها إلى خدمة البريد (SMTP) أو بوابة الرسائل القصيرة (Twilio). يتم تحديث الحالة إلى `SENT` أو `FAILED` عند الاكتمال.
 
 ### 2.2 التنبيهات المستندة إلى الحدث مقابل التنبيهات المجدولة
 
 | الخاصية | مستند إلى الحدث | مجدول |
 |----------|-----------------|--------|
-| مصدر المُحفِّز | استدعاء CakePHP `afterSave()` على النموذج | أمر cron `alerts:check-and-queue` |
+| مصدر المُحفِّز | استدعاء CakePHP `afterSave()` على النموذج | أمر cron `alerts:check` |
 | التكرار في الواجهة | `Once` (يُطلَق مع كل حدث مُحفِّز) | `Daily` أو `Weekly` أو `Monthly` |
 | زمن الاستجابة | شبه فوري (ثوانٍ بعد الحفظ) | حتى دورة جدولة واحدة |
 | التحكم بالبدء/الإيقاف في الواجهة | غير متاح — يُطلَق من أحداث البيانات | يُتحكَّم به عبر إعداد التكرار |
@@ -181,7 +181,7 @@
 | المسار | المُحفِّز | الأوامر |
 |--------|---------|--------|
 | **مستند إلى الحدث** | CakePHP model `afterSave` → `AlertLogsTable::triggerLaravelAlertFromCakePHP()` | `alerts:student-absence`, `alerts:student-admission`, `alerts:student-enrolment`, `alerts:student-status-change` |
-| **مجدول** | `alerts:check-and-queue` (cron أو يدوي) | `alerts:retirement-warning`, `alerts:staff-employment`, `alerts:staff-leave`, `alerts:staff-type`, `alerts:system-updates`, `alerts:case-escalation`, `alerts:license-validity`, `alerts:license-renewal`, `alerts:scholarship-application`, `alerts:scholarship-disbursement` |
+| **مجدول** | `alerts:check` (cron أو يدوي) | `alerts:retirement-warning`, `alerts:staff-employment`, `alerts:staff-leave`, `alerts:staff-type`, `alerts:system-updates`, `alerts:case-escalation`, `alerts:license-validity`, `alerts:license-renewal`, `alerts:scholarship-application`, `alerts:scholarship-disbursement` |
 
 ### 2.4 جداول قاعدة البيانات المعنية
 
@@ -744,7 +744,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.5 تحذير التقاعد {#85-تحذير-التقاعد}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `RetirementWarning`
 **أمر Artisan:** `alerts:retirement-warning`
 **الحد:** JSON مع `value` يحدد عدد الأيام قبل تاريخ التقاعد المحسوب.
@@ -789,7 +789,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.6 انتهاء التوظيف {#86-انتهاء-التوظيف}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `StaffEmployment`
 **أمر Artisan:** `alerts:staff-employment`
 **الحد:** JSON مع `value` لنافذة اليوم و `condition` اختياري للاتجاه.
@@ -831,7 +831,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.7 انتهاء الإجازة {#87-انتهاء-الإجازة}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `StaffLeave`
 **أمر Artisan:** `alerts:staff-leave`
 **الحد:** JSON مع `value` و `staff_leave_type` اختياري للتصفية حسب نوع الإجازة.
@@ -873,7 +873,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.8 نوع الموظف {#88-نوع-الموظف}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `StaffType`
 **أمر Artisan:** `alerts:staff-type`
 **الحد:** JSON مع `value` و `staff_type_id` مطلوب.
@@ -897,7 +897,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.9 صحة الترخيص {#89-صحة-الترخيص}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `LicenseValidity`
 **أمر Artisan:** `alerts:license-validity`
 **الحد:** JSON مع `value` و `license_type` مطلوب و `condition` للاتجاه.
@@ -914,7 +914,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.10 تجديد الترخيص {#810-تجديد-الترخيص}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `LicenseRenewal`
 **أمر Artisan:** `alerts:license-renewal`
 **الحد:** JSON مع `value` و `license_type` مطلوب و `training_categories` مصفوفة و `hour` لمتطلبات CPD.
@@ -927,7 +927,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.11 طلب المنحة الدراسية {#811-طلب-المنحة-الدراسية}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `ScholarshipApplication`
 **أمر Artisan:** `alerts:scholarship-application`
 **الحد:** JSON مع `value` و `condition` و `category` مطلوب.
@@ -943,7 +943,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.12 صرف المنحة الدراسية {#812-صرف-المنحة-الدراسية}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `ScholarshipDisbursement`
 **أمر Artisan:** `alerts:scholarship-disbursement`
 **الحد:** JSON مع `value` و `condition`.
@@ -959,7 +959,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.13 تصعيد القضية {#813-تصعيد-القضية}
 
-**المُطلق:** مجدول — يعمل عبر `alerts:check-and-queue`.
+**المُطلق:** مجدول — يعمل عبر `alerts:check`.
 **مفتاح الميزة:** `CaseEscalation`
 **أمر Artisan:** `alerts:case-escalation`
 **الحد:** JSON مع `value` و `workflow_steps` مصفوفة.
@@ -1175,7 +1175,7 @@ SHA256(subject + "|" + message + "|" + recipient_email)
 
 ### 13.2 تقليل التدفق عبر ALERTS_PROCESS_LIMIT
 
-عند تشغيل `alerts:process-queue`، يتم معالجة **حد أقصى من عناصر الطابور** لكل تشغيل. السبب:
+عند تشغيل `alerts:send-queue`، يتم معالجة **حد أقصى من عناصر الطابور** لكل تشغيل. السبب:
 
 - **الأداء:** معالجة الآلاف من الرسائل مرة واحدة قد تثقل النظام.
 - **الاستقرار:** تقسيم العمل يمنع انقطاع الاتصال.
@@ -1221,13 +1221,13 @@ WHERE key = 'ALERTS_WEEKEND_DAYS'
 أضف سطراً إلى `crontab` المضيف:
 
 ```bash
-* * * * * cd /var/www/html/emis/core/api && php artisan alerts:check-and-queue >> /var/log/openemis-alerts.log 2>&1
-* * * * * cd /var/www/html/emis/core/api && php artisan alerts:process-queue >> /var/log/openemis-alerts.log 2>&1
+* * * * * cd /var/www/html/emis/core/api && php artisan alerts:check >> /var/log/openemis-alerts.log 2>&1
+* * * * * cd /var/www/html/emis/core/api && php artisan alerts:send-queue >> /var/log/openemis-alerts.log 2>&1
 ```
 
 **كل دقيقة:**
-1. `alerts:check-and-queue` — يفحص القواعس المجدولة ويضع البنود في الطابور.
-2. `alerts:process-queue` — يرسل عناصر الطابور.
+1. `alerts:check` — يفحص القواعس المجدولة ويضع البنود في الطابور.
+2. `alerts:send-queue` — يرسل عناصر الطابور.
 
 > **ملاحظة:** النظام **لا يتطلب** cron إذا كانت التنبيهات معتمدة على الحدث فقط (قاعدة واحدة في كل مرة). Cron مطلوب فقط للتنبيهات المجدولة.
 
@@ -1298,7 +1298,7 @@ mysql -h 127.0.0.1 -u root -prootpassword openemis_core_v5 -e \
 
 ```bash
 docker exec poe-application /bin/sh -c \
-  "cd /var/www/html/emis/core/api && php artisan alerts:check-and-queue --force"
+  "cd /var/www/html/emis/core/api && php artisan alerts:check --force"
 ```
 
 ---
@@ -1332,7 +1332,7 @@ docker exec poe-application /bin/sh -c \
    ```bash
    docker exec poe-application /bin/sh -c \
      "cd /var/www/html/emis/core/api && \
-      php artisan alerts:process-queue --limit=1"
+      php artisan alerts:send-queue --limit=1"
    ```
 
 ### 15.2 تم تفعيل قاعدة التنبيه ولكن لا تُطلق أبداً {#152-تم-تفعيل-قاعدة-التنبيه-ولكن-لا-تُطلق-أبدا}
@@ -1392,8 +1392,8 @@ docker exec poe-application /bin/sh -c \
 1. قلل `ALERTS_PROCESS_LIMIT` إلى 50-100 (من 300).
 2. قسّم معالجة الطابور إلى عدة Cron jobs:
    ```
-   * * * * * ... php artisan alerts:process-queue --limit=50
-   * * * * * ... php artisan alerts:process-queue --limit=50  # run again
+   * * * * * ... php artisan alerts:send-queue --limit=50
+   * * * * * ... php artisan alerts:send-queue --limit=50  # run again
    ```
 3. أضف فهرساً على `alert_queue(status, created_at)`.
 

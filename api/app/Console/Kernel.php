@@ -26,21 +26,33 @@ class Kernel extends ConsoleKernel
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
 
-        //POCOR-9509: Alert checker — daily at 02:00, weekdays only.
-        //POCOR-9509: withoutOverlapping(120) prevents stacking if a run takes longer than expected or cron is misconfigured.
-        //POCOR-9509: runInBackground() so schedule:run returns immediately and does not block other scheduled jobs.
-        $schedule->command('alerts:check-and-queue')
-            ->dailyAt('02:00')
-            ->weekdays()
-            ->withoutOverlapping(120)
-            ->runInBackground();
+        //POCOR-9509: alerts:check — ALERT_CHECK_DAILY=true → daily at ALERT_CHECK_DAILY_TIME, false → hourly
+        if (env('ALERT_CHECK_DAILY', true)) { //POCOR-9509
+            $schedule->command('alerts:check') //POCOR-9509: renamed from alerts:check-and-queue
+                ->dailyAt(env('ALERT_CHECK_DAILY_TIME', '02:00')) //POCOR-9509
+                ->weekdays()
+                ->withoutOverlapping(120)
+                ->runInBackground();
+        } else { //POCOR-9509: fallback — run every hour if daily schedule is disabled
+            $schedule->command('alerts:check')
+                ->hourly()
+                ->withoutOverlapping(120)
+                ->runInBackground();
+        }
 
-        //POCOR-9509: Alert sender — daily at 07:00, weekdays only.
-        $schedule->command('alerts:process', ['--limit' => 50])
-            ->dailyAt('07:00')
-            ->weekdays()
-            ->withoutOverlapping(60)
-            ->runInBackground();
+        //POCOR-9509: alerts:send — ALERT_SEND_DAILY=true → daily at ALERT_SEND_DAILY_TIME, false → hourly
+        if (env('ALERT_SEND_DAILY', true)) { //POCOR-9509
+            $schedule->command('alerts:send', ['--limit' => 50]) //POCOR-9509: renamed from alerts:process
+                ->dailyAt(env('ALERT_SEND_DAILY_TIME', '07:00')) //POCOR-9509
+                ->weekdays()
+                ->withoutOverlapping(60)
+                ->runInBackground();
+        } else { //POCOR-9509: fallback — run every hour if daily schedule is disabled
+            $schedule->command('alerts:send', ['--limit' => 50])
+                ->hourly()
+                ->withoutOverlapping(60)
+                ->runInBackground();
+        }
     }
 
     /**

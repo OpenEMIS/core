@@ -23,7 +23,7 @@ This alert converts passive date tracking into active advance notification, givi
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:staff-employment` at the configured frequency. The command queries `institution_staff` for records whose employment end date falls within the next `threshold.value` days.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:staff-employment` at the configured frequency. The command queries `institution_staff` for records whose employment end date falls within the next `threshold.value` days.
 
 Every eligible staff record generates a separate notification.
 

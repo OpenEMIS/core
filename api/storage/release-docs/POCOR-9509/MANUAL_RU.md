@@ -154,7 +154,7 @@ POCOR-9509 предоставляет следующие изменения в �
 └───────────────┘     └─────────────┘     └──────────────┘     └───────────┘     └──────────┘
 ```
 
-**Этап 1 — срабатывание**: событие домена активируется (запись сохраняется в CakePHP) или планировщик вызывает `alerts:check-and-queue` в установленном цикле.
+**Этап 1 — срабатывание**: событие домена активируется (запись сохраняется в CakePHP) или планировщик вызывает `alerts:check` в установленном цикле.
 
 **Этап 2 — сопоставление правил**: система загружает все записи `alert_rules`, у которых `feature` соответствует типу запущенного оповещения. Правила, отмеченные `Enabled = No`, пропускаются.
 
@@ -162,13 +162,13 @@ POCOR-9509 предоставляет следующие изменения в �
 
 **Этап 4 — очередь**: команда вызывает `processContactList()` для каждого разрешённого получателя. Вычисляется контрольная сумма SHA-256 строки темы и тела сообщения. Если идентичная контрольная сумма уже существует в `alert_logs` со статусом `PENDING`, элемент молча пропускается. В противном случае строка вставляется в `alert_queue`.
 
-**Этап 5 — доставка**: команда `alerts:process`, запускаемая каждую минуту планировщиком Laravel, читает строки `alert_queue` со статусом `PROCESSING` и распределяет их в почтовый сервис (SMTP) или SMS-шлюз (Twilio). Статус обновляется на `SENT` или `FAILED` при завершении.
+**Этап 5 — доставка**: команда `alerts:send`, запускаемая каждую минуту планировщиком Laravel, читает строки `alert_queue` со статусом `PROCESSING` и распределяет их в почтовый сервис (SMTP) или SMS-шлюз (Twilio). Статус обновляется на `SENT` или `FAILED` при завершении.
 
 ### 2.2 Оповещения, основанные на событиях, и плановые оповещения {#22-event-based-vs-scheduled-alerts}
 
 | Свойство | На основе событий | Плановые |
 |----------|-------------|-----------|
-| Источник срабатывания | Обратный вызов `afterSave()` модели CakePHP | Команда cron `alerts:check-and-queue` |
+| Источник срабатывания | Обратный вызов `afterSave()` модели CakePHP | Команда cron `alerts:check` |
 | Частота в пользовательском интерфейсе | `Once` (срабатывает по каждому событию) | `Daily`, `Weekly` или `Monthly` |
 | Задержка | Практически в реальном времени (секунды после сохранения) | До одного цикла планирования |
 | Запуск/остановка в ПИ | Неприменимо — срабатывает от событий данных | Управляется параметром частоты |
@@ -179,7 +179,7 @@ POCOR-9509 предоставляет следующие изменения в �
 | Путь | Срабатывание | Команды |
 |------|---------|---------|
 | **На основе событий** | CakePHP модель `afterSave` → `AlertLogsTable::triggerLaravelAlertFromCakePHP()` | `alerts:student-absence`, `alerts:student-admission`, `alerts:student-enrolment`, `alerts:student-status-change` |
-| **Плановые** | `alerts:check-and-queue` (cron или ручной вызов) | `alerts:retirement-warning`, `alerts:staff-employment`, `alerts:staff-leave`, `alerts:staff-type`, `alerts:system-updates`, `alerts:case-escalation`, `alerts:license-validity`, `alerts:license-renewal`, `alerts:scholarship-application`, `alerts:scholarship-disbursement` |
+| **Плановые** | `alerts:check` (cron или ручной вызов) | `alerts:retirement-warning`, `alerts:staff-employment`, `alerts:staff-leave`, `alerts:staff-type`, `alerts:system-updates`, `alerts:case-escalation`, `alerts:license-validity`, `alerts:license-renewal`, `alerts:scholarship-application`, `alerts:scholarship-disbursement` |
 
 ### 2.4 Задействованные таблицы базы данных {#24-database-tables-involved}
 
@@ -1157,7 +1157,7 @@ docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php ar
 | **1** | Sent | Элемент успешно доставлен; повторные попытки не предпринимаются |
 | **-1** | Failed | Элемент не доставлен; планировщик будет повторять попытку до 3 раз или пока не пройдёт 24 часа |
 
-Статус обновляется командой `alerts:process` каждую минуту. Для сбойных элементов система ждёт экспоненциального времени между повторными попытками перед окончательным отказом.
+Статус обновляется командой `alerts:send` каждую минуту. Для сбойных элементов система ждёт экспоненциального времени между повторными попытками перед окончательным отказом.
 
 ### 10.4 Массовое удаление элементов очереди {#104-mass-deleting-queue-items}
 
@@ -1183,7 +1183,7 @@ docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php ar
          ↓
     [Status: 0 PENDING]
          ↓
-   [alerts:process runs, attempts delivery]
+   [alerts:send runs, attempts delivery]
          ├─→ [SUCCESS] → [Status: 1 SENT] → [archived after 30d]
          │
          └─→ [FAILURE] → [Status: -1 FAILED]
@@ -1293,7 +1293,7 @@ docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php ar
 
 | Ключ | Тип | Значение по умолчанию | Описание |
 |-----|------|-----------|---------|
-| `ALERTS_PROCESS_LIMIT` | Integer | `100` | Макс. сообщений для обработки в одном цикле `alerts:process` |
+| `ALERTS_PROCESS_LIMIT` | Integer | `100` | Макс. сообщений для обработки в одном цикле `alerts:send` |
 | `ALERTS_RETRY_LIMIT` | Integer | `3` | Макс. попыток переотправки перед окончательным отказом |
 | `ALERTS_QUEUE_TTL_HOURS` | Integer | `24` | Часов для сохранения элементов очереди перед удалением |
 | `ALERTS_LOG_TTL_DAYS` | Integer | `365` | Дней для сохранения записей журнала перед удалением |
@@ -1334,7 +1334,7 @@ docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php ar
 
 ```php
 // api/app/Console/Kernel.php
-$schedule->command('alerts:process')
+$schedule->command('alerts:send')
     ->everyMinute()
     ->weekdays()
     ->between('08:00', '18:00');  // Send only 8 AM to 6 PM
@@ -1351,7 +1351,7 @@ docker compose up -d --build poe-application
 
 ```php
 // For Friday-Saturday weekend
-$schedule->command('alerts:process')
+$schedule->command('alerts:send')
     ->everyMinute()
     ->days(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']);
 ```
@@ -1366,7 +1366,7 @@ $schedule->command('alerts:process')
 * * * * * docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php artisan schedule:run >> /var/log/emis-schedule.log 2>&1"
 ```
 
-Эта строка запускает планировщик Laravel каждую минуту, который затем вызывает все зарегистрированные команды (включая `alerts:process`).
+Эта строка запускает планировщик Laravel каждую минуту, который затем вызывает все зарегистрированные команды (включая `alerts:send`).
 
 ---
 
@@ -1465,7 +1465,7 @@ WHERE mobile_number LIKE '+%' AND mobile_number NOT LIKE '%.zz';
 Чтобы запустить все плановые оповещения независимо от их расписания:
 
 ```bash
-docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php artisan alerts:check-and-queue --force --sync"
+docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php artisan alerts:check --force --sync"
 ```
 
 Флаги:
@@ -1686,8 +1686,8 @@ docker logs poe-application | grep 'schedule:run' | tail -10
 |--------|------------|
 | `alerts:student-absence` | `logs/alert_student_absence.log` |
 | `alerts:student-admission` | `logs/alert_student_admission.log` |
-| `alerts:check-and-queue` | `logs/alert_check_and_queue.log` |
-| `alerts:process` | `logs/alert_process.log` |
+| `alerts:check` | `logs/alert_check_and_queue.log` |
+| `alerts:send` | `logs/alert_process.log` |
 
 Для чтения журнала:
 
@@ -1719,8 +1719,8 @@ docker exec poe-application /bin/sh -c "tail -100 /var/www/html/emis/core/logs/a
 | `alerts:scholarship-disbursement` | Плановое | `ScholarshipDisbursement` | Нет | `--force` |
 | `alerts:case-escalation` | Плановое | `CaseEscalation` | Нет | `--force` |
 | `alerts:system-updates` | Плановое | `SystemUpdates` | Нет | `--force` |
-| `alerts:check-and-queue` | Планировщик | Все | Нет | `--force`, `--sync` |
-| `alerts:process` | Планировщик (каждую минуту) | Нет | Нет | `--limit=500` |
+| `alerts:check` | Планировщик | Все | Нет | `--force`, `--sync` |
+| `alerts:send` | Планировщик (каждую минуту) | Нет | Нет | `--limit=500` |
 
 ### B. Контрольный список трёх карт команд {#b-three-command-maps-checklist}
 
