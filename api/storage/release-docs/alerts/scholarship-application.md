@@ -22,7 +22,7 @@ This alert acts as a personal, direct reminder to the responsible individual —
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:scholarship-application` at the configured frequency.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:scholarship-application` at the configured frequency.
 
 The command queries `scholarship_applications` joined to `scholarships`, and applies two simultaneous filters:
 1. The scholarship's `application_close_date` is within `threshold.value` days

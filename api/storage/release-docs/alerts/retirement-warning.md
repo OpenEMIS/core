@@ -21,7 +21,7 @@ This alert provides a proactive, automated reminder at whatever lead time your d
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job runs on the configured frequency (daily, weekly, or monthly) and dispatches `alerts:retirement-warning` for every alert rule with feature `RetirementWarning` that is enabled.
+This is a **scheduled** alert. The `alerts:check` cron job runs on the configured frequency (daily, weekly, or monthly) and dispatches `alerts:retirement-warning` for every alert rule with feature `RetirementWarning` that is enabled.
 
 The command queries all staff whose calculated or recorded retirement date falls within the next `threshold.value` days. Every eligible staff member generates a separate notification.
 

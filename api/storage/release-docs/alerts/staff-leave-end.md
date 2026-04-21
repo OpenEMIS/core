@@ -23,7 +23,7 @@ When a staff member is on leave, a substitute or adjusted schedule is typically 
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:staff-leave` at the configured frequency. The command queries `institution_staff_leave` for records with an **approved** workflow status where `date_to` equals today + `threshold.value` days.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:staff-leave` at the configured frequency. The command queries `institution_staff_leave` for records with an **approved** workflow status where `date_to` equals today + `threshold.value` days.
 
 Only approved leave records are included — pending or rejected leave applications do not trigger this alert.
 

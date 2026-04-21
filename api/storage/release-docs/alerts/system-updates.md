@@ -26,7 +26,7 @@ Without automated notification, update awareness depends on individuals proactiv
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:system-updates` daily (or at whatever frequency is configured). The command queries system update records and sends a notification for each new item since the last run.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:system-updates` daily (or at whatever frequency is configured). The command queries system update records and sends a notification for each new item since the last run.
 
 This is the **only alert type that has `Daily` frequency enabled by default** in a fresh OpenEMIS installation. All other alerts default to `Never`.
 

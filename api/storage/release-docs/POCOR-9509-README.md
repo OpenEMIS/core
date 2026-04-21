@@ -36,26 +36,53 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
    ALERTS_PROCESS_LIMIT=20
    ```
    Then rerun `php artisan config:cache`. Use `0` to pause dispatch without disabling the cron job.
-5. **Install two direct cron entries** for the alert checker and sender. Run cron as the **same user as Apache** (`www-data` on Ubuntu/Debian, `apache` on CentOS) to avoid log file permission conflicts:
+5. **Install two direct cron entries** for the alert checker and sender.
+
+   > ### ⚠️ CRITICAL — Read before touching cron
+   >
+   > **Wrong user = broken logs and silent failures.**
+   > The cron job MUST run as the same OS user as the web server process.
+   > On Ubuntu/Debian that is `www-data`. On CentOS/RHEL it is `apache`.
+   > Running as `root` or your personal SSH user will create log files owned by the wrong user,
+   > causing subsequent web-triggered artisan calls to crash with permission errors that are
+   > nearly impossible to diagnose after the fact.
+   >
+   > **No `flock` = duplicate sends.**
+   > Without `flock -n`, if a run takes longer than the cron interval the next fire overlaps.
+   > Two simultaneous `alerts:send` processes will each claim the same pending rows and send
+   > duplicate emails/SMS to every recipient. `flock -n` skips the second run entirely.
+   >
+   > **No `timeout` = runaway process.**
+   > A DB deadlock or network hang in `alerts:check` can leave the process running for hours,
+   > holding the `flock` lock and blocking all subsequent runs until the server is rebooted.
+   > Always wrap with `timeout <seconds>` matching your overlap lock window.
+   >
+   > **Do NOT use `schedule:run` in the crontab for alerts.**
+   > If `ALERT_CHECK_DAILY` / `ALERT_SEND_DAILY` are both `true` in `.env` AND you also add
+   > a `* * * * * php artisan schedule:run` cron entry, every command fires twice — once from
+   > the Laravel scheduler and once from the direct cron entry. Use one or the other, never both.
+   >
+   > **Times are server OS timezone, not UTC.**
+   > Run `timedatectl` on the server to confirm the active timezone before setting times.
+
+   Create `/etc/cron.d/openemis-alerts` (requires root, file is owned by root, no `sudo crontab -e`):
    ```bash
-   sudo crontab -u www-data -e
-   ```
-   Add these two lines — adjust times to suit local off-peak hours and morning delivery window:
-   ```cron
-   # Alert checker — scans DB and populates alert_queue (run during off-peak, e.g. 02:00)
-   0 2 * * * flock -n /tmp/alert-checker.lock php /var/www/html/emis/core/api/artisan alerts:check-and-queue >> /var/www/html/emis/core/logs/alert-checker.log 2>&1
+   sudo tee /etc/cron.d/openemis-alerts << 'EOF'
+   # OpenEMIS alert checker — populates alert_queue (off-peak, weekdays)
+   0 2 * * 1-5 www-data timeout 21600 flock -n /tmp/alerts-check.lock bash -c "cd /var/www/html/emis/core/api && php artisan alerts:check --sync >> /var/log/alerts-check.log 2>&1"
 
-   # Alert sender — drains alert_queue and fires emails/SMS (run in morning, e.g. 07:00)
-   0 7 * * * flock -n /tmp/alert-sender.lock php /var/www/html/emis/core/api/artisan alerts:process --limit=50 >> /var/www/html/emis/core/logs/alert-sender.log 2>&1
+   # OpenEMIS alert sender — drains alert_queue and fires email/SMS (morning, weekdays)
+   0 7 * * 1-5 www-data timeout 7200 flock -n /tmp/alerts-send.lock bash -c "cd /var/www/html/emis/core/api && php artisan alerts:send --limit=50 >> /var/log/alerts-send.log 2>&1"
+   EOF
+   sudo chmod 644 /etc/cron.d/openemis-alerts
    ```
-   `flock -n` prevents double-starts if the previous run is still going. Times use the **server OS timezone** — run `timedatectl` to confirm. The `--limit` value controls how many queued messages are sent per run; increase for large deployments.
-
-   > **Why not `www-data` runs `schedule:run`?** Alert schedule timing is intentionally kept out of application code so DevOps controls it per deployment without a code change or redeploy.
+   Adjust `0 2` and `0 7` to local off-peak and morning hours. The `timeout` values are 6 hours for
+   the checker and 2 hours for the sender — size them to your largest expected run time.
 7. **Verify anonymisation** before enabling on production-copy data. See [Manual §14.4](POCOR-9509/MANUAL.md#14-testing-and-dry-run-procedures) and run the two `SELECT COUNT(*)` queries.
 8. **Smoke-test** one scheduled alert on a dev/test database:
    ```bash
    docker exec poe-application /bin/sh -c \
-     "cd /var/www/html/emis/core/api && php artisan alerts:check-and-queue --user_id=1 --sync"
+     "cd /var/www/html/emis/core/api && php artisan alerts:check --user_id=1 --sync"
    ```
 
 > **Warning:** Never run step 8 on a database containing real contact data unless you have completed step 7. One misconfigured rule can dispatch thousands of real emails or SMS messages.
@@ -82,10 +109,17 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 | Key | Location | Purpose |
 |-----|----------|---------|
 | `ALERTS_PROCESS_LIMIT` | `api/.env` | Max messages per sender run. Default `20`. Set `0` to pause sending. |
-| Checker cron time | Server crontab (`sudo crontab -u www-data -e`) | When `alerts:check-and-queue` runs. Set to local off-peak hour. |
-| Sender cron time | Server crontab (`sudo crontab -u www-data -e`) | When `alerts:process` runs. Set to local morning hour. |
+| `ALERT_CHECK_DAILY` | `api/.env` | `true` = run `alerts:check` once daily (default). `false` = run every hour. |
+| `ALERT_CHECK_DAILY_TIME` | `api/.env` | Time for daily check run in `HH:MM` format. Default `02:00`. Ignored when `ALERT_CHECK_DAILY=false`. |
+| `ALERT_SEND_DAILY` | `api/.env` | `true` = run `alerts:send` once daily (default). `false` = run every hour. |
+| `ALERT_SEND_DAILY_TIME` | `api/.env` | Time for daily send run in `HH:MM` format. Default `07:00`. Ignored when `ALERT_SEND_DAILY=false`. |
 | `Alert.AlertQueue` | CakePHP Table Registry | Plugin alias for queue access. Not `AlertQueue`. |
 | `NON_IMPLEMENTED_ALERTS` | `plugins/Alert/src/Model/Table/AlertsTable.php` | Contains only `StaffAttendance` after this release. |
+
+After changing any `.env` value always run:
+```bash
+cd /var/www/html/emis/core/api && php artisan config:cache
+```
 
 ---
 
@@ -150,6 +184,31 @@ DELETE FROM alert_queue WHERE status = 0;
 | دليل المسؤول (Arabic) | [POCOR-9509/MANUAL_AR.md](POCOR-9509/MANUAL_AR.md) |
 | Technical Implementation Guide | [POCOR-9509/ALERTS_GUIDE.md](POCOR-9509/ALERTS_GUIDE.md) |
 | Threshold Configuration Reference | [POCOR-9509/thresholds.md](POCOR-9509/thresholds.md) |
+
+---
+
+## 8. Future Improvements
+
+### RetirementWarning — per-staff deduplication
+Currently `AlertRetirementWarningCommand` re-queries all country staff on every daily run and re-queues
+anyone still above the retirement age threshold. The send-time checksum dedup in `ProcessAlertQueue`
+prevents re-sending identical messages, but the query still runs and `alert_queue` accumulates rows daily.
+
+**Recommended fix (next version):**
+Add a `subject_id` column (INT, nullable) to `alert_logs` to record which staff member triggered
+the alert. After sending, a `(feature, subject_id)` lookup can skip already-alerted staff entirely
+at query time — no re-queuing, no growing table.
+
+### RetirementWarning — scheduling
+Should run once per day at night (e.g. `02:00`), since it scans all institution staff across the
+country. Daytime runs waste PHP-FPM workers. Set `frequency = 'Daily'` in the `alerts` table and
+point the cron entry to run at `02:00`.
+
+### RetirementWarning — school-based pre-filter
+Recipients are resolved per institution (HR manager, principal — whoever holds the configured roles).
+Before scanning all staff, pre-select only institutions that have at least one staff member approaching
+retirement age, then resolve recipients only for those institutions. This avoids querying contacts for
+every school in the country when only a handful have retiring staff.
 
 ---
 

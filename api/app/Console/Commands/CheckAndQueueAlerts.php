@@ -13,8 +13,7 @@ use Carbon\Carbon;
  * This command replaces the synchronous shell-based alert triggering
  * in CakePHP with an async queue-based approach.
  *
- * Called by: DashboardController::callAlerts() via HTTP request
- * Or: Scheduled via: $schedule->command('alerts:check-and-queue')->hourly();
+ * Scheduled via: $schedule->command('alerts:check')->dailyAt('02:00');
  *
  * Behavior:
  * 1. Checks which alerts are enabled and have scheduled frequency
@@ -24,10 +23,10 @@ use Carbon\Carbon;
  */
 class CheckAndQueueAlerts extends Command
 {
-    protected $signature = 'alerts:check-and-queue
+    protected $signature = 'alerts:check
         {--user_id=1 : User ID triggering the check}
         {--force : Force trigger all alerts regardless of frequency}
-        {--sync : Run alerts synchronously (for cron) instead of queuing}';
+        {--sync : Run alerts synchronously (for cron) instead of queuing}'; //POCOR-9509: renamed from alerts:check-and-queue
 
     protected $description = 'Check alert frequency and trigger alert commands (POCOR-9509)';
 

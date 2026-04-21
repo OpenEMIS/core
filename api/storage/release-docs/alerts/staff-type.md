@@ -19,7 +19,7 @@ Probationary and temporary contracts serve specific HR purposes — they define 
 
 ## When and How It Fires
 
-This is a **scheduled** alert. The `alerts:check-and-queue` cron job dispatches `alerts:staff-type` at the configured frequency. The command scans `institution_staff` for records matching the configured `staff_type_id` and approaching the relevant date within `threshold.value` days.
+This is a **scheduled** alert. The `alerts:check` cron job dispatches `alerts:staff-type` at the configured frequency. The command scans `institution_staff` for records matching the configured `staff_type_id` and approaching the relevant date within `threshold.value` days.
 
 ---
 

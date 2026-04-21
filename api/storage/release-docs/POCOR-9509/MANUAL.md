@@ -154,7 +154,7 @@ All alert delivery passes through the following five stages, regardless of wheth
 └───────────────┘     └─────────────┘     └──────────────┘     └───────────┘     └──────────┘
 ```
 
-**Stage 1 — Trigger:** A domain event fires (a record is saved in CakePHP) or the scheduler invokes `alerts:check-and-queue` on a timed cycle.
+**Stage 1 — Trigger:** A domain event fires (a record is saved in CakePHP) or the scheduler invokes `alerts:check` on a timed cycle.
 
 **Stage 2 — Rule Match:** The system loads all `alert_rules` records whose `feature` matches the triggering alert type. Rules marked `Enabled = No` are skipped.
 
@@ -162,13 +162,13 @@ All alert delivery passes through the following five stages, regardless of wheth
 
 **Stage 4 — Queue:** The command calls `processContactList()` for each resolved recipient. A SHA-256 checksum of the subject and message body is computed. If an identical checksum already exists in `alert_logs` with status `PENDING`, the item is silently skipped. Otherwise, a row is inserted into `alert_queue`.
 
-**Stage 5 — Delivery:** The `alerts:process` command, run every minute by the Laravel scheduler, reads `alert_queue` rows with status `PROCESSING` and dispatches them to the mail service (SMTP) or SMS gateway (Twilio). Status is updated to `SENT` or `FAILED` on completion.
+**Stage 5 — Delivery:** The `alerts:send` command, run every minute by the Laravel scheduler, reads `alert_queue` rows with status `PROCESSING` and dispatches them to the mail service (SMTP) or SMS gateway (Twilio). Status is updated to `SENT` or `FAILED` on completion.
 
 ### 2.2 Event-Based vs. Scheduled Alerts
 
 | Property | Event-Based | Scheduled |
 |----------|-------------|-----------|
-| Trigger source | CakePHP model `afterSave()` callback | `alerts:check-and-queue` cron command |
+| Trigger source | CakePHP model `afterSave()` callback | `alerts:check` cron command |
 | Frequency in UI | `Once` (fires per triggering event) | `Daily`, `Weekly`, or `Monthly` |
 | Latency | Near-real-time (seconds after save) | Up to one scheduling cycle |
 | Start/Stop in UI | Not applicable — fires from data events | Controlled by frequency setting |
@@ -179,7 +179,7 @@ All alert delivery passes through the following five stages, regardless of wheth
 | Path | Trigger | Commands |
 |------|---------|---------|
 | **Event-based** | CakePHP model `afterSave` → `AlertLogsTable::triggerLaravelAlertFromCakePHP()` | `alerts:student-absence`, `alerts:student-admission`, `alerts:student-enrolment`, `alerts:student-status-change` |
-| **Scheduled** | `alerts:check-and-queue` (cron or manual) | `alerts:retirement-warning`, `alerts:staff-employment`, `alerts:staff-leave`, `alerts:staff-type`, `alerts:system-updates`, `alerts:case-escalation`, `alerts:license-validity`, `alerts:license-renewal`, `alerts:scholarship-application`, `alerts:scholarship-disbursement` |
+| **Scheduled** | `alerts:check` (cron or manual) | `alerts:retirement-warning`, `alerts:staff-employment`, `alerts:staff-leave`, `alerts:staff-type`, `alerts:system-updates`, `alerts:case-escalation`, `alerts:license-validity`, `alerts:license-renewal`, `alerts:scholarship-application`, `alerts:scholarship-disbursement` |
 
 ### 2.4 Database Tables Involved
 
@@ -742,7 +742,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.5 Retirement Warning
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `RetirementWarning`
 **Artisan Command:** `alerts:retirement-warning`
 **Threshold:** JSON with `value` specifying the number of days before the computed retirement date.
@@ -787,7 +787,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.6 Staff Employment End
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `StaffEmployment`
 **Artisan Command:** `alerts:staff-employment`
 **Threshold:** JSON with `value` for the day window and optional `condition` for direction.
@@ -829,7 +829,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.7 Staff Leave End
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `StaffLeave`
 **Artisan Command:** `alerts:staff-leave`
 **Threshold:** JSON with `value` and optional `staff_leave_type` to filter by leave type.
@@ -871,7 +871,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.8 Staff Type
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `StaffType`
 **Artisan Command:** `alerts:staff-type`
 **Threshold:** JSON with `value` for the day window and required `staff_type_id`.
@@ -913,7 +913,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.9 License Validity ⭐
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `LicenseValidity`
 **Artisan Command:** `alerts:license-validity`
 **Threshold:** JSON with `value`, `license_type`, and `condition`.
@@ -955,7 +955,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.10 License Renewal ⭐
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `LicenseRenewal`
 **Artisan Command:** `alerts:license-renewal`
 **Threshold:** JSON with `value`, `license_type`, `condition`, `training_categories` (array), and `hour`.
@@ -1009,7 +1009,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.11 Scholarship Application ⭐
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `ScholarshipApplication`
 **Artisan Command:** `alerts:scholarship-application`
 **Threshold:** JSON with `value`, `condition`, and `category`.
@@ -1051,7 +1051,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.12 Scholarship Disbursement ⭐
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `ScholarshipDisbursement`
 **Artisan Command:** `alerts:scholarship-disbursement`
 **Threshold:** JSON with `value` and `condition`.
@@ -1093,7 +1093,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.13 Case Escalation ⭐
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `CaseEscalation`
 **Artisan Command:** `alerts:case-escalation`
 **Threshold:** JSON with `value` (days the case must remain open) and `workflow_steps` (array of step IDs to monitor).
@@ -1135,7 +1135,7 @@ docker exec poe-application /bin/sh -c \
 
 ### 8.14 System Updates
 
-**Trigger:** Scheduled — runs via `alerts:check-and-queue`.
+**Trigger:** Scheduled — runs via `alerts:check`.
 **Feature Key:** `SystemUpdates`
 **Artisan Command:** `alerts:system-updates`
 **Threshold:** None — the threshold field is not used.
@@ -1235,7 +1235,7 @@ The Alert Queue screen provides real-time visibility into the delivery pipeline.
 
 | Code | Label | Meaning | Retry Behaviour |
 |------|-------|---------|-----------------|
-| `0` | Pending | Queued; awaiting processing by `alerts:process` | Will be processed on the next scheduler run |
+| `0` | Pending | Queued; awaiting processing by `alerts:send` | Will be processed on the next scheduler run |
 | `1` | Sent | Successfully delivered | No further action |
 | `-1` | Failed | Delivery error — SMTP refused, SMS gateway rejected, or network timeout | Does not retry automatically; requires manual investigation |
 
@@ -1270,7 +1270,7 @@ To prevent a misconfigured rule from dispatching a large volume of messages:
                           │    (status = 0)      │
                           └──────────┬──────────┘
                                      │
-                         alerts:process (every minute,
+                         alerts:send (every minute,
                          weekdays 08:00–17:00)
                                      │
                     ┌────────────────┴─────────────────┐
@@ -1373,7 +1373,7 @@ All alert configuration is stored in `api/config/alerts.php` and overridable via
 | Key | Default | Source | Purpose |
 |-----|---------|--------|---------|
 | `alerts.enabled` | `true` | `config/alerts.php` | Master switch; set `ALERTS_ENABLED=false` in `.env` to disable all alerts |
-| `alerts.process_limit` | `50` | `config/alerts.php` | Max messages per `alerts:process` run; override with `ALERTS_PROCESS_LIMIT` |
+| `alerts.process_limit` | `50` | `config/alerts.php` | Max messages per `alerts:send` run; override with `ALERTS_PROCESS_LIMIT` |
 | `alerts.batch_delay` | `2` seconds | `config/alerts.php` | Pause between batch sends for rate limiting |
 | `alerts.deduplication` | `true` | `config/alerts.php` | Enable SHA-256 deduplication (disable only for debugging) |
 | `alerts.email.enabled` | `true` | `config/alerts.php` | Enable email delivery |
@@ -1386,7 +1386,7 @@ After changing any `.env` key, run `php artisan config:cache` to apply it.
 
 ### 13.2 Throttling via ALERTS_PROCESS_LIMIT
 
-`alerts:process` processes a fixed number of queue rows per run, controlled by `ALERTS_PROCESS_LIMIT` in `.env`. The default is `50` per minute, equating to approximately 3,000 messages per hour at full load.
+`alerts:send` processes a fixed number of queue rows per run, controlled by `ALERTS_PROCESS_LIMIT` in `.env`. The default is `50` per minute, equating to approximately 3,000 messages per hour at full load.
 
 | `ALERTS_PROCESS_LIMIT` | Max messages per hour | Recommended use case |
 |------------------------|-----------------------|---------------------|
@@ -1419,7 +1419,7 @@ Alerts delivered outside working hours — at 3 am, or on a Saturday — damage 
 ```php
 // api/app/Console/Kernel.php
 // POCOR-9509: Alert queue processing — weekdays, working hours only
-$schedule->command('alerts:process', ['--limit=' . config('alerts.process_limit', 50)])
+$schedule->command('alerts:send', ['--limit=' . config('alerts.process_limit', 50)])
     ->everyMinute()
     ->weekdays()
     ->between('08:00', '17:00')
@@ -1442,7 +1442,7 @@ The Laravel task scheduler must be invoked every minute by the host system cron.
 * * * * *  cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Verify the crontab is active with `crontab -l`. Confirm the scheduler is running by checking `system_processes` for recent `alerts:process` entries.
+Verify the crontab is active with `crontab -l`. Confirm the scheduler is running by checking `system_processes` for recent `alerts:send` entries.
 
 ---
 
@@ -1452,7 +1452,7 @@ Verify the crontab is active with `crontab -l`. Confirm the scheduler is running
 
 ### 14.1 Running a Command Directly
 
-Any artisan alert command can be executed directly inside the Docker container, bypassing the scheduler and the `alerts:check-and-queue` intermediary:
+Any artisan alert command can be executed directly inside the Docker container, bypassing the scheduler and the `alerts:check` intermediary:
 
 ```bash
 docker exec poe-application /bin/sh -c \
@@ -1551,7 +1551,7 @@ To trigger all scheduled alert checks immediately, bypassing the frequency sched
 
 ```bash
 docker exec poe-application /bin/sh -c \
-  "cd /var/www/html/emis/core/api && php artisan alerts:check-and-queue \
+  "cd /var/www/html/emis/core/api && php artisan alerts:check \
    --user_id=1 --force --sync"
 ```
 
@@ -1567,7 +1567,7 @@ Check in this order:
 
 1. Verify the recipient's `email` in `security_users` is populated and contains `@`. An empty or malformed address silently skips delivery.
 2. Check `alert_queue` for the expected row. If it exists with `status = -1` (Failed), delivery was attempted and rejected — check SMTP configuration.
-3. Confirm `alerts:process` is running. Query `system_processes` for recent `AlertsProcess` entries. If none exist, the scheduler is not running — check the host crontab.
+3. Confirm `alerts:send` is running. Query `system_processes` for recent `AlertsProcess` entries. If none exist, the scheduler is not running — check the host crontab.
 4. Verify `ALERTS_PROCESS_LIMIT` is not set to `0` in `.env`. A value of `0` pauses all delivery.
 5. Check `->weekdays()->between('08:00', '17:00')` in `Kernel.php`. If the test is run outside working hours, delivery is intentionally paused.
 6. Check `logs/alert_<command>.log` for errors during the alert command execution phase.
@@ -1581,7 +1581,7 @@ Check in this order:
 3. Validate the threshold JSON. Paste it into a JSON validator. A malformed threshold causes the rule to be silently skipped.
 4. Verify the threshold IDs (e.g., `license_type`, `staff_type_id`, `workflow_steps`) exist in the database. Use the SQL queries in §C.
 5. Confirm at least one `security_users` record holds one of the configured Security Roles at the target institution and has a valid email or phone number.
-6. For scheduled alerts: verify `alerts:check-and-queue` has been run. Check `system_processes` for a recent entry with the relevant process name.
+6. For scheduled alerts: verify `alerts:check` has been run. Check `system_processes` for a recent entry with the relevant process name.
 
 ### 15.3 Workflow Alert Not Firing
 

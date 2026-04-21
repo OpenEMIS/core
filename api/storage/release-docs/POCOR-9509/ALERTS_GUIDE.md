@@ -54,7 +54,7 @@ CheckAndQueueAlerts (cron) ──────►        ▼
 | Path | Trigger | Commands |
 |------|---------|---------|
 | **Event-based** | CakePHP model `afterSave` → `AlertLogsTable::triggerLaravelAlertFromCakePHP()` | StudentAbsence, StudentAdmission, StudentEnrolment, StudentStatusChange |
-| **Scheduled** | `alerts:check-and-queue` (cron / hourly) | RetirementWarning, StaffEmployment, StaffLeave, StaffType, SystemUpdates, CaseEscalation, LicenseValidity, LicenseRenewal, ScholarshipApplication, ScholarshipDisbursement |
+| **Scheduled** | `alerts:check` (cron / hourly) | RetirementWarning, StaffEmployment, StaffLeave, StaffType, SystemUpdates, CaseEscalation, LicenseValidity, LicenseRenewal, ScholarshipApplication, ScholarshipDisbursement |
 
 ---
 
@@ -131,7 +131,7 @@ Maps process names for event-based commands triggered from the Laravel side. Onl
 
 ---
 
-### Dispatch: Scheduled (cron via `alerts:check-and-queue`)
+### Dispatch: Scheduled (cron via `alerts:check`)
 
 #### `alerts:retirement-warning`
 - **File:** `AlertRetirementWarningCommand.php`
@@ -328,11 +328,11 @@ To activate any scheduled alert:
 
 3. **Run scheduler** (cron calls this hourly):
    ```bash
-   php artisan alerts:check-and-queue --user_id=1 --sync
+   php artisan alerts:check --user_id=1 --sync
    ```
    Or force-run all now for immediate testing:
    ```bash
-   php artisan alerts:check-and-queue --user_id=1 --force --sync
+   php artisan alerts:check --user_id=1 --force --sync
    ```
 
 ---
@@ -404,7 +404,7 @@ After running these, re-run your alert command. Recipients will be resolved, the
 
 ### Cron Schedule — Respect Working Hours
 
-The alert queue is processed by `alerts:process` every minute via Laravel's scheduler. **The system scheduler itself should be restricted to working hours and working days.** A misconfigured schedule will deliver emails and SMS at 3 am on a Monday or on a Saturday — disruptive and damaging to user trust.
+The alert queue is processed by `alerts:send` every minute via Laravel's scheduler. **The system scheduler itself should be restricted to working hours and working days.** A misconfigured schedule will deliver emails and SMS at 3 am on a Monday or on a Saturday — disruptive and damaging to user trust.
 
 The standard Laravel scheduler cron entry (runs every minute, all day):
 ```cron
@@ -414,7 +414,7 @@ The standard Laravel scheduler cron entry (runs every minute, all day):
 To restrict to working hours in `Kernel.php`, add `->weekdays()->between('08:00', '17:00')`:
 ```php
 // POCOR-9509: Alert queue processing — weekdays, working hours only
-$schedule->command('alerts:process', ['--limit=' . config('alerts.process_limit', 50)])
+$schedule->command('alerts:send', ['--limit=' . config('alerts.process_limit', 50)])
     ->everyMinute()
     ->weekdays()
     ->between('08:00', '17:00')
@@ -425,7 +425,7 @@ Adjust the window to the target country's working hours and weekend definition (
 
 ### Throttling — Slow Down If Overspam Occurs
 
-`alerts:process` processes a fixed number of queue rows per run, controlled by `ALERTS_PROCESS_LIMIT` in `.env`. Default is `50` per minute run (~3,000/hour at full load).
+`alerts:send` processes a fixed number of queue rows per run, controlled by `ALERTS_PROCESS_LIMIT` in `.env`. Default is `50` per minute run (~3,000/hour at full load).
 
 If the system is sending too many messages too fast, **lower this value without touching code**:
 

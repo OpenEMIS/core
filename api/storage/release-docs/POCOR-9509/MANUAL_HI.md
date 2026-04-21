@@ -169,7 +169,7 @@ POCOR-9509 निम्नलिखित को पेश करता है:
 └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
 ```
 
-**Stage 1 — Event Trigger:** एक परिवर्तन (छात्र जोड़ा गया, कर्मचारी छुट्टी अंत) CakePHP `afterSave` hook को ट्रिगर करता है या निर्धारित `alerts:check-and-queue` कमांड चलता है।
+**Stage 1 — Event Trigger:** एक परिवर्तन (छात्र जोड़ा गया, कर्मचारी छुट्टी अंत) CakePHP `afterSave` hook को ट्रिगर करता है या निर्धारित `alerts:check` कमांड चलता है।
 
 **Stage 2 — Rule Match:** सिस्टम सभी सक्षम नियमों की जांच करता है जो इस ईवेंट को सुनते हैं। Threshold मान और शर्तें जाँच की जाती हैं। नियम disabled हैं, या threshold मान्य नहीं है, या कोई सुरक्षा भूमिका नहीं है → **कोई अलर्ट नहीं**।
 
@@ -177,14 +177,14 @@ POCOR-9509 निम्नलिखित को पेश करता है:
 
 **Stage 4 — Queue Item:** सिस्टम `alert_queue` में एक या अधिक rows डालता है, प्रत्येक recipient (ईमेल पते या फोन नंबर) के लिए एक। प्रत्येक item में status = "pending" होता है।
 
-**Stage 5 — Send Message:** एक background cron process (Laravel का `alerts:process` कमांड) queue से items को खींचता है और Email (SMTP के माध्यम से) या SMS (Twilio के माध्यम से) भेजता है। Success → status = "sent", Failure → status = "failed"।
+**Stage 5 — Send Message:** एक background cron process (Laravel का `alerts:send` कमांड) queue से items को खींचता है और Email (SMTP के माध्यम से) या SMS (Twilio के माध्यम से) भेजता है। Success → status = "sent", Failure → status = "failed"।
 
 ### 2.2 इवेंट-आधारित बनाम निर्धारित अलर्ट {#22-event-based-vs-scheduled-alerts}
 
 | पहलू | इवेंट-आधारित | निर्धारित |
 |------|--------------|-----------|
 | **कब ट्रिगर होता है** | जब कोई परिवर्तन होता है (छात्र जोड़ा, कर्मचारी अद्यतन) | दैनिक, साप्ताहिक, या कभी नहीं (frequency फ़ील्ड के आधार पर) |
-| **कमांड कहाँ चलता है** | CakePHP `afterSave` hook से तुरंत | निर्धारित `alerts:check-and-queue` (cron) से |
+| **कमांड कहाँ चलता है** | CakePHP `afterSave` hook से तुरंत | निर्धारित `alerts:check` (cron) से |
 | **उदाहरण अलर्ट** | StudentAbsence, StudentAdmission, StaffLeave | LicenseValidity, CaseEscalation, Scholarship Disbursement |
 | **Start/Stop बटन** | कोई नहीं (हमेशा सक्षम) | Alerts screen पर Yes (frequency को "Never" सेट करने के लिए) |
 
@@ -195,7 +195,7 @@ POCOR-9509 निम्नलिखित को पेश करता है:
 | Path | कहाँ से | कैसे |
 |------|--------|------|
 | **Event-based** | CakePHP `plugins/Alert/src/Model/Table/AlertLogsTable.php` में `afterSave` hook | `AlertLogsTable::triggerAlertCommand()` तुरंत Laravel में काम करता है |
-| **Scheduled** | कमांड लाइन से cron में `alerts:check-and-queue` | `CheckAndQueueAlerts::queueAlertCommand()` सभी pending scheduled alerts को खोजता है |
+| **Scheduled** | कमांड लाइन से cron में `alerts:check` | `CheckAndQueueAlerts::queueAlertCommand()` सभी pending scheduled alerts को खोजता है |
 
 **महत्वपूर्ण:** एक alert को **दोनों** maps में सूचीबद्ध नहीं किया जा सकता; यह डुप्लिकेट deliver करेगा।
 
@@ -1033,7 +1033,7 @@ Queue में items वे हैं जो:
 
 | स्थिति | अर्थ | अगला कदम |
 |--------|------|---------|
-| **pending** | Message queue में है, अभी नहीं भेजा गया। | `alerts:process` command run करें या next cron execution की प्रतीक्षा करें। |
+| **pending** | Message queue में है, अभी नहीं भेजा गया। | `alerts:send` command run करें या next cron execution की प्रतीक्षा करें। |
 | **sent** | Message successfully delivered। | कोई कार्य नहीं आवश्यक (item alert_logs में copy हो गया)। |
 | **failed** | Delivery attempt विफल (e.g., SMTP error, Twilio error)। | Error message को देखें, issue fix करें, फिर item को retry करें या manually delete करें। |
 
@@ -1071,7 +1071,7 @@ Queue में items वे हैं जो:
       │
       ▼
 ┌────────────────────────┐
-│3. alerts:process cron  │
+│3. alerts:send cron  │
 │   picks up items       │
 └─────┬──────────────────┘
       │
@@ -1199,7 +1199,7 @@ Large institutions पर, एक ही cron execution में 1000+ alerts s
 ALERTS_PROCESS_LIMIT=100
 ```
 
-**मतलब:** `alerts:process` cron एक बार में maximum 100 messages भेजता है, फिर पुनः restart होता है।
+**मतलब:** `alerts:send` cron एक बार में maximum 100 messages भेजता है, फिर पुनः restart होता है।
 
 **Setting recommendations:**
 
@@ -1217,8 +1217,8 @@ Alert commands को निम्नानुसार schedule किया �
 
 | कमांड | आवृत्ति | कॉन्फ़िगरेशन |
 |--------|---------|-------------|
-| `alerts:process` | Every 5 minutes | `*/5 * * * * cd /var/www/html/emis/core/api && php artisan alerts:process` |
-| `alerts:check-and-queue` | Every 24 hours | `0 2 * * * cd /var/www/html/emis/core/api && php artisan alerts:check-and-queue` (2 AM) |
+| `alerts:send` | Every 5 minutes | `*/5 * * * * cd /var/www/html/emis/core/api && php artisan alerts:send` |
+| `alerts:check` | Every 24 hours | `0 2 * * * cd /var/www/html/emis/core/api && php artisan alerts:check` (2 AM) |
 
 ### 13.3 अलर्ट लॉग को साफ़ करना {#133-cleaning-alert-logs}
 
@@ -1292,7 +1292,7 @@ Normally, scheduled alerts daily cron से चलते हैं। तुर
 
 ```bash
 cd /var/www/html/emis/core/api
-php artisan alerts:check-and-queue --force --sync
+php artisan alerts:check --force --sync
 ```
 
 | Option | मतलब |
@@ -1313,18 +1313,18 @@ php artisan alerts:check-and-queue --force --sync
    - नहीं → Alert rule match नहीं हुआ, या threshold शर्तें पूरी नहीं हुईं।
 
 2. Alert Queue में entry है?
-   - हाँ, status = "pending" → `alerts:process` cron नहीं चल रहा है। Cron schedule verify करें।
+   - हाँ, status = "pending" → `alerts:send` cron नहीं चल रहा है। Cron schedule verify करें।
    - हाँ, status = "failed" → Error column में failure reason देखें।
 
 **Fix Steps:**
 
 ```bash
 # Check if cron is running
-ps aux | grep "php artisan alerts:process"
+ps aux | grep "php artisan alerts:send"
 
 # Run manually
 cd /var/www/html/emis/core/api
-php artisan alerts:process
+php artisan alerts:send
 
 # Check logs
 tail -f /var/www/html/emis/core/logs/alert_process.log
@@ -1433,9 +1433,9 @@ mysql -h 127.0.0.1 -u root -prootpassword openemis_core_v5   "DELETE FROM alert_
 
 **Diagnosis:**
 
-1. `alerts:process` cron running है?
+1. `alerts:send` cron running है?
    ```bash
-   ps aux | grep "php artisan alerts:process"
+   ps aux | grep "php artisan alerts:send"
    ```
 
 2. SMTP server down है?
@@ -1453,7 +1453,7 @@ mysql -h 127.0.0.1 -u root -prootpassword openemis_core_v5   "DELETE FROM alert_
 ```bash
 # Manually run process with increased limit
 cd /var/www/html/emis/core/api
-php artisan alerts:process --force --limit=500
+php artisan alerts:send --force --limit=500
 
 # Check logs
 tail -100 /var/www/html/emis/core/logs/alert_process.log
@@ -1488,10 +1488,10 @@ cat /var/www/html/emis/core/logs/system_processes/12345.log
 Log format है:
 
 ```
-[2026-04-15 10:30:45] INFO: alerts:check-and-queue starting
+[2026-04-15 10:30:45] INFO: alerts:check starting
 [2026-04-15 10:30:46] INFO: Found 3 rules for StudentAbsence
 [2026-04-15 10:30:47] INFO: Queued 12 messages for delivery
-[2026-04-15 10:30:48] INFO: alerts:check-and-queue completed
+[2026-04-15 10:30:48] INFO: alerts:check completed
 ```
 
 ---

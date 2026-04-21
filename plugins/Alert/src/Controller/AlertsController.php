@@ -92,9 +92,9 @@ class AlertsController extends AppController
 
     public function processQueue()
     {
-        //POCOR-9509: Execute Laravel artisan command to process webhook queue
+        //POCOR-9509: Send enqueued alerts from alert_queue
         $apiPath = ROOT . DS . 'api';
-        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:process 2>&1';
+        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:send 2>&1'; //POCOR-9509: renamed from alerts:process
 
         exec($command, $output, $returnVar);
 
@@ -113,9 +113,9 @@ class AlertsController extends AppController
 
     public function processLogs()
     {
-        //POCOR-9509: Execute Laravel artisan command to process webhook queue
+        //POCOR-9509: Check alert rules and fill alert_queue
         $apiPath = ROOT . DS . 'api';
-        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:check-and-queue 2>&1';
+        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:check 2>&1'; //POCOR-9509: renamed from alerts:check-and-queue
 
         exec($command, $output, $returnVar);
 
