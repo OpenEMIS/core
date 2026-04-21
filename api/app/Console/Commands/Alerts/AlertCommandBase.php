@@ -183,14 +183,19 @@ abstract class AlertCommandBase extends Command
             //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Starting loop over ' . count($pendingItems) . ' items'); //[TEMP-LOG]
 
             $itemCount = 0;
+            $recipientsCache = []; //POCOR-9509: cache per institution_id — avoids N+1 queries on large deployments
             foreach ($pendingItems as $item) {
                 $itemCount++;
                 //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Processing item ' . $itemCount . '/' . count($pendingItems)); //[TEMP-LOG]
                 //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Item data: ' . json_encode($item)); //[TEMP-LOG]
 
-                // Get recipients for this item
+                // Get recipients for this item — cached per institution to avoid N+1 queries
                 //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Calling resolveRecipients()'); //[TEMP-LOG]
-                $this->contacts = $this->resolveRecipients($item);
+                $cacheKey = (string) ($item['institution_id'] ?? 'global'); //POCOR-9509: cache key
+                if (!isset($recipientsCache[$cacheKey])) { //POCOR-9509: resolve once per institution
+                    $recipientsCache[$cacheKey] = $this->resolveRecipients($item);
+                }
+                $this->contacts = $recipientsCache[$cacheKey]; //POCOR-9509: reuse cached result
 
                 //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Recipients resolved: email_count=' . count($this->contacts['email'] ?? []) . ', phone_count=' . count($this->contacts['phone'] ?? [])); //[TEMP-LOG]
 
@@ -283,7 +288,7 @@ abstract class AlertCommandBase extends Command
         if (in_array('email', $methods, true)) {
             foreach ($this->contacts['email'] ?? [] as $email) {
                 $this->queueAlert('email', $email, $subject, $message);
-                usleep(500000); // 0.5 second delay between alerts
+                //POCOR-9509: removed usleep(500000) — was exhausting PHP workers on large deployments
             }
         }
 
@@ -291,7 +296,7 @@ abstract class AlertCommandBase extends Command
         if (in_array('sms', $methods, true)) {
             foreach ($this->contacts['phone'] ?? [] as $phone) {
                 $this->queueAlert('sms', $phone, $subject, $message);
-                usleep(500000); // 0.5 second delay between alerts
+                //POCOR-9509: removed usleep(500000) — was exhausting PHP workers on large deployments
             }
         }
     }
