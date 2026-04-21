@@ -443,8 +443,8 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     private function sendStudentEnrolmentAlert($entity): void
     {
-        Log::debug('[TEMP-LOG] @StudentEnrolmentTable::sendStudentEnrolmentAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', status_id=' . ($entity->status_id ?? 'null')); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @StudentEnrolmentTable::sendStudentEnrolmentAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentEnrolmentTable::sendStudentEnrolmentAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', status_id=' . ($entity->status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentEnrolmentTable::sendStudentEnrolmentAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
         if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
             $userId = $entity->modified_user_id;
         } else {
@@ -942,7 +942,7 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        Log::debug('[TEMP-LOG] @StudentEnrolmentTable::afterSave() About to call sendStudentEnrolmentAlert()'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentEnrolmentTable::afterSave() About to call sendStudentEnrolmentAlert()'); //[TEMP-LOG]
         //POCOR-9509: only fire enrolment alert for new rows or status changes
         if ($entity->isNew() || $entity->isDirty('status_id')) {
             $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
