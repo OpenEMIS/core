@@ -16,8 +16,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //POCOR-9509: schedule alert discovery separately so scheduled rules are queued without Dashboard traffic
+        //POCOR-9509: between() prevents overnight queuing — alerts are daily/weekly, no value dispatching at 2am
         $schedule->command('alerts:check-and-queue')
             ->everyMinute()
+            ->between('06:00', '22:00')
             ->withoutOverlapping();
 
         // POCOR-9257: Webhook queue processing
