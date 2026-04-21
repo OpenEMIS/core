@@ -36,11 +36,21 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
    ALERTS_PROCESS_LIMIT=20
    ```
    Then rerun `php artisan config:cache`. Use `0` to pause dispatch without disabling the cron job.
-5. **Install the host crontab** (every minute; the Laravel scheduler handles the rest):
-   ```cron
-   * * * * *  cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
+5. **Install two direct cron entries** for the alert checker and sender. Run cron as the **same user as Apache** (`www-data` on Ubuntu/Debian, `apache` on CentOS) to avoid log file permission conflicts:
+   ```bash
+   sudo crontab -u www-data -e
    ```
-6. **Restrict to working hours** in `api/app/Console/Kernel.php` using `->weekdays()->between('08:00', '17:00')`. Adjust the window to local working hours; swap `weekdays()` for `->days([0,1,2,3,4])` where the weekend falls on Friday–Saturday.
+   Add these two lines — adjust times to suit local off-peak hours and morning delivery window:
+   ```cron
+   # Alert checker — scans DB and populates alert_queue (run during off-peak, e.g. 02:00)
+   0 2 * * * flock -n /tmp/alert-checker.lock php /var/www/html/emis/core/api/artisan alerts:check-and-queue >> /var/www/html/emis/core/logs/alert-checker.log 2>&1
+
+   # Alert sender — drains alert_queue and fires emails/SMS (run in morning, e.g. 07:00)
+   0 7 * * * flock -n /tmp/alert-sender.lock php /var/www/html/emis/core/api/artisan alerts:process --limit=50 >> /var/www/html/emis/core/logs/alert-sender.log 2>&1
+   ```
+   `flock -n` prevents double-starts if the previous run is still going. Times use the **server OS timezone** — run `timedatectl` to confirm. The `--limit` value controls how many queued messages are sent per run; increase for large deployments.
+
+   > **Why not `www-data` runs `schedule:run`?** Alert schedule timing is intentionally kept out of application code so DevOps controls it per deployment without a code change or redeploy.
 7. **Verify anonymisation** before enabling on production-copy data. See [Manual §14.4](POCOR-9509/MANUAL.md#14-testing-and-dry-run-procedures) and run the two `SELECT COUNT(*)` queries.
 8. **Smoke-test** one scheduled alert on a dev/test database:
    ```bash
@@ -71,9 +81,9 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 
 | Key | Location | Purpose |
 |-----|----------|---------|
-| `ALERTS_PROCESS_LIMIT` | `api/.env` | Max messages per scheduler tick. Default `20`. Set `0` to pause. |
-| `->weekdays()->between(...)` | `api/app/Console/Kernel.php` | Restrict dispatch to working hours. Required for production. |
-| `* * * * * php artisan schedule:run` | Host crontab | Drives the Laravel scheduler. Every minute. |
+| `ALERTS_PROCESS_LIMIT` | `api/.env` | Max messages per sender run. Default `20`. Set `0` to pause sending. |
+| Checker cron time | Server crontab (`sudo crontab -u www-data -e`) | When `alerts:check-and-queue` runs. Set to local off-peak hour. |
+| Sender cron time | Server crontab (`sudo crontab -u www-data -e`) | When `alerts:process` runs. Set to local morning hour. |
 | `Alert.AlertQueue` | CakePHP Table Registry | Plugin alias for queue access. Not `AlertQueue`. |
 | `NON_IMPLEMENTED_ALERTS` | `plugins/Alert/src/Model/Table/AlertsTable.php` | Contains only `StaffAttendance` after this release. |
 
