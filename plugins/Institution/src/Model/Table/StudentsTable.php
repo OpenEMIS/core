@@ -47,6 +47,9 @@ class StudentsTable extends ControllerActionTable
     private $student_status_codes_array;
     private $student_status_names_array;
     private $previousStudents;
+    //POCOR-9509: refreshed every 10 min — admin change takes effect within 10 min on each worker
+    private static ?bool $studentStatusAlertEnabled = null;
+    private static int $studentStatusAlertCachedAt = 0;
 
     public function initialize(array $config): void
     {
@@ -1889,6 +1892,28 @@ class StudentsTable extends ControllerActionTable
     {
         //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($institutionStudent->id ?? 'null') . ', student_status_id=' . ($institutionStudent->student_status_id ?? 'null')); //[TEMP-LOG]
         //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($institutionStudent->toArray())); //[TEMP-LOG]
+
+        //POCOR-9509: re-query at most every 10 min — admin change takes effect within 10 min
+        if (self::$studentStatusAlertEnabled === null || (time() - self::$studentStatusAlertCachedAt) > 600) {
+            $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+            $alert = $alertsTable->find()
+                ->select(['name'])
+                ->where(['process_name' => 'AlertStudentStatus'])
+                ->first();
+            if (!$alert) {
+                self::$studentStatusAlertEnabled = false;
+            } else {
+                self::$studentStatusAlertEnabled = (bool) TableRegistry::getTableLocator()
+                    ->get('Alert.AlertRules')
+                    ->find()
+                    ->where(['feature' => $alert->name, 'enabled' => 1])
+                    ->count();
+            }
+            self::$studentStatusAlertCachedAt = time();
+        }
+        if (!self::$studentStatusAlertEnabled) {
+            return;
+        }
 
         if (empty($institutionStudent->student_id)
             && empty($institutionStudent->institution_id)
