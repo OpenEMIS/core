@@ -142,7 +142,7 @@ class AlertCaseEscalationCommand extends AlertCommandBase
     protected function fillPlaceholders(array $item): array
     {
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
-        Log::debug("Placeholders sent at " . json_encode($item));
+        // Log::debug("Placeholders sent at " . json_encode($item)); //POCOR-9509: commented out — full item dump not needed in production
         return [
             // Case fields
             '${case.case_number}'      => $item['case_number'] ?? '',

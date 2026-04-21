@@ -200,7 +200,7 @@ abstract class AlertCommandBase extends Command
                 //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() Recipients resolved: email_count=' . count($this->contacts['email'] ?? []) . ', phone_count=' . count($this->contacts['phone'] ?? [])); //[TEMP-LOG]
 
                 if (empty($this->contacts['email']) && empty($this->contacts['phone'])) {
-                    $this->warn("No contacts found for item " . print_r($item, true) . ", skipping");
+                    $this->warn("No contacts found for item id=" . ($item['id'] ?? '?') . ", skipping"); //POCOR-9509
                     //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() SKIPPING item - No contacts'); //[TEMP-LOG]
                     continue;
                 }
