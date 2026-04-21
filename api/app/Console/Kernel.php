@@ -15,9 +15,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        //POCOR-9509: alerts:check-and-queue and alerts:process are NOT scheduled here.
-        //POCOR-9509: They are controlled by direct cron entries on the server — see release README for DevOps instructions.
-
         // POCOR-9257: Webhook queue processing
         $schedule->command('webhooks:process', ['--once'])
             ->everyMinute()
@@ -29,7 +26,21 @@ class Kernel extends ConsoleKernel
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
 
-        //POCOR-9509: alerts:process is NOT scheduled here — controlled by cron on the server.
+        //POCOR-9509: Alert checker — daily at 02:00, weekdays only.
+        //POCOR-9509: withoutOverlapping(120) prevents stacking if a run takes longer than expected or cron is misconfigured.
+        //POCOR-9509: runInBackground() so schedule:run returns immediately and does not block other scheduled jobs.
+        $schedule->command('alerts:check-and-queue')
+            ->dailyAt('02:00')
+            ->weekdays()
+            ->withoutOverlapping(120)
+            ->runInBackground();
+
+        //POCOR-9509: Alert sender — daily at 07:00, weekdays only.
+        $schedule->command('alerts:process', ['--limit' => 50])
+            ->dailyAt('07:00')
+            ->weekdays()
+            ->withoutOverlapping(60)
+            ->runInBackground();
     }
 
     /**
