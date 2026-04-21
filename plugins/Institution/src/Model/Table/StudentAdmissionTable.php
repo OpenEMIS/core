@@ -1545,7 +1545,7 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9313 start: made a little safer
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
-        Log::debug('[TEMP-LOG] @StudentAdmissionTable::afterSave() About to call sendStudentAdmissionAlert()'); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::afterSave() About to call sendStudentAdmissionAlert()'); //[TEMP-LOG]
         if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
             $this->sendStudentAdmissionAlert($entity);
         }
@@ -1628,8 +1628,8 @@ class StudentAdmissionTable extends ControllerActionTable
 
     private function sendStudentAdmissionAlert($entity)
     {
-        Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', status_id=' . ($entity->status_id ?? 'null')); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', status_id=' . ($entity->status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
         if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
             $userId = $entity->modified_user_id;
         } else {
