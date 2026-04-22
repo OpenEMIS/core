@@ -239,7 +239,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
+        $this->field('age', ['type' => 'string', 'label' => '']); //POCOR-9593: age indicator — no column header
         $this->fields['institution_class_id']['visible'] = false;
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
