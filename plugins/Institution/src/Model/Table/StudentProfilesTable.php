@@ -273,7 +273,7 @@ class StudentProfilesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         $this->field('email_status');
-        $this->field('age', ['type' => 'string', 'label' => '']); //POCOR-9593: age indicator — no column header
+        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -1390,7 +1390,9 @@ class StudentProfilesTable extends ControllerActionTable
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'openemis_no') {
+        if ($field == 'age') {
+            return ''; //POCOR-9593: age indicator column has no header
+        } else if ($field == 'openemis_no') {
             return __('OpenEMIS ID');
         } else if ($field == 'student_id') {
             return  __('Student');

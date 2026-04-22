@@ -209,7 +209,7 @@ class InstitutionsProfileTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
-        $this->field('age', ['type' => 'string', 'label' => '']); //POCOR-9593: age indicator — no column header
+        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['student_status_id']['visible'] = false;
@@ -960,7 +960,10 @@ class InstitutionsProfileTable extends ControllerActionTable
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
-        if ($field == 'institution_name') {
+        if ($field == 'age') {
+            return ''; //POCOR-9593: age indicator column has no header
+        }
+        else if ($field == 'institution_name') {
             return __('Institution Name');
         }
         else if ($field == 'institution_code') {
