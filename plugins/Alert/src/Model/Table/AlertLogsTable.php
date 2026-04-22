@@ -839,15 +839,6 @@ class AlertLogsTable extends ControllerActionTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        // POCOR-9509: Add checkbox column for multiselect
-        $this->field('_select', [
-            'type' => 'element',
-            'element' => 'Alert/select_checkbox',
-            'tableHeaderClass' => 'checkbox-column',
-            'tableColumnClass' => 'checkbox-column',
-            'label' => ''
-        ]);
-
         $this->field('message', ['visible' => false]);
         $this->field('method', ['after' => 'feature', 'sort' => true]);
         $this->field('destination', ['after' => 'method', 'visible' => true]);
@@ -908,7 +899,7 @@ class AlertLogsTable extends ControllerActionTable
         //POCOR-9509: Trigger Alert Check — checks frequency rules and fills alert_queue
         $checkButton = [
             'type' => 'button',
-            'label' => '<i class="fa fa-search"></i>',
+            'label' => '<i class="fa fa-refresh"></i>',
             'attr' => [
                 'class' => 'btn btn-xs btn-default',
                 'data-toggle' => 'tooltip',
@@ -1102,8 +1093,6 @@ class AlertLogsTable extends ControllerActionTable
                 return __('Created By');
             case 'created_user_id':
                 return __('Created On');
-            case '_select':
-                return '';
             default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

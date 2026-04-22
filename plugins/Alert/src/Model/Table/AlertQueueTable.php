@@ -92,7 +92,7 @@ class AlertQueueTable extends ControllerActionTable
         //POCOR-9509: Trigger Alert Check — checks frequency rules and fills alert_queue
         $checkButton = [
             'type' => 'button',
-            'label' => '<i class="fa fa-search"></i>',
+            'label' => '<i class="fa fa-refresh"></i>',
             'attr' => [
                 'class' => 'btn btn-xs btn-default',
                 'data-toggle' => 'tooltip',
