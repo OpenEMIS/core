@@ -356,15 +356,31 @@ class StaffReportCardsTable extends AppTable
         if (isset($params['institution_id']) && isset($params['academic_period_id']) && isset($params['staff_id'])) {
             $StaffSalaries = TableRegistry::getTableLocator()->get('staff_salaries');
 
-            $entity = $StaffSalaries
+            $staffSalaryData = $StaffSalaries
                 ->find()
                 ->select([
+                    'salary_date'  => $StaffSalaries->aliasField('salary_date'),
                     'gross_salary' => $StaffSalaries->aliasField('gross_salary'),
+                    'net_salary'   => $StaffSalaries->aliasField('net_salary'),
                 ])
                 ->where([
                     $StaffSalaries->aliasField('staff_id') => $params['staff_id'],
                 ])
-                ->first();
+                ->order([$StaffSalaries->aliasField('salary_date') => 'DESC'])
+                ->toArray();
+
+            $entity = $result = [];
+            if (!empty($staffSalaryData)) {
+                foreach ($staffSalaryData as $key => $data) {
+                    $result = [
+                        'id'           => $key,
+                        'salary_date'  => !empty($data['salary_date']) ? $data['salary_date'] : '',
+                        'gross_salary' => !empty($data['gross_salary']) ? $data['gross_salary'] : '',
+                        'net_salary'   => !empty($data['net_salary']) ? $data['net_salary'] : '',
+                    ];
+                    $entity[] = $result;
+                }
+            }
             return $entity;
         }
     }
@@ -672,7 +688,7 @@ class StaffReportCardsTable extends AppTable
         return $entity;
     }
 
-    public function onExcelTemplateInitialiseStaffLeave(EventInterface $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStaffLeavbkpe(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (empty($params['staff_id'])) {
             return [];
@@ -789,56 +805,107 @@ class StaffReportCardsTable extends AppTable
     //POCOR-9007
     public function onExcelTemplateInitialiseStaffPosition(EventInterface $event, array $params, ArrayObject $extra)
     {
-        if (isset($params['staff_id'])) {
-            $InstitutionStaffPosition = TableRegistry::getTableLocator()->get('institution_staff_position');
-
-            $entity = $InstitutionStaffPosition->find()
-                ->select([
-                    'institution'    => 'Institutions.name',
-                    'institution_code' => 'Institutions.code',
-                    'position_no'    => 'InstitutionPositions.position_no',
-                    'position_title' => 'StaffPositionTitles.name',
-                    'staff_type'     => 'StaffTypes.name',
-                    'shift'          => 'Shifts.name',
-                    'start_date'     => $InstitutionStaffPosition->aliasField('start_date'),
-                    'end_date'       => $InstitutionStaffPosition->aliasField('end_date'),
-                    'staff_status'   => 'StaffStatuses.name',
-                ])
-                ->innerJoin(
-                    ['InstitutionStaff' => 'institution_staff'],
-                    ['InstitutionStaff.id = ' . $InstitutionStaffPosition->aliasField('institution_staff_id')]
-                )
-                ->innerJoin(
-                    ['Institutions' => 'institutions'],
-                    ['Institutions.id = ' . $InstitutionStaffPosition->aliasField('institution_id')]
-                )
-                ->innerJoin(
-                    ['InstitutionPositions' => 'institution_positions'],
-                    ['InstitutionPositions.id = ' . $InstitutionStaffPosition->aliasField('institution_position_id')]
-                )
-                ->leftJoin(
-                    ['StaffPositionTitles' => 'staff_position_titles'],
-                    ['StaffPositionTitles.id = InstitutionPositions.staff_position_title_id']
-                )
-                ->leftJoin(
-                    ['StaffTypes' => 'staff_types'],
-                    ['StaffTypes.id = ' . $InstitutionStaffPosition->aliasField('staff_type_id')]
-                )
-                ->leftJoin(
-                    ['Shifts' => 'shifts'],
-                    ['Shifts.id = ' . $InstitutionStaffPosition->aliasField('shift_id')]
-                )
-                ->leftJoin(
-                    ['StaffStatuses' => 'staff_statuses'],
-                    ['StaffStatuses.id = InstitutionStaff.staff_status_id']
-                )
-                ->where([
-                    'InstitutionStaff.staff_id' => $params['staff_id'],
-                ])
-                ->order([$InstitutionStaffPosition->aliasField('start_date') => 'DESC'])
-                ->toArray();
-
-            return $entity;
+        if (empty($params['staff_id'])) {
+            return [];
         }
+        $staffId = $params['staff_id'];
+        $connection = ConnectionManager::get('default');
+        $staffPositionData = $connection->execute("SELECT institutions.name institution_name
+                                                        ,institutions.code institution_code
+                                                        ,institution_positions.position_no position_no
+                                                        ,staff_position_titles.name position_title
+                                                        ,staff_types.name staff_type
+                                                        ,shifts.name shift_name
+                                                        ,institution_staff.start_date
+                                                        ,institution_staff.end_date
+                                                        ,staff_statuses.name staff_status
+                                                    FROM institution_staff
+                                                    INNER JOIN institution_positions
+                                                    ON institution_positions.id = institution_staff.institution_position_id
+                                                    INNER JOIN institutions
+                                                    ON institutions.id = institution_staff.institution_id
+                                                    LEFT JOIN staff_position_titles
+                                                    ON staff_position_titles.id = institution_positions.staff_position_title_id
+                                                    LEFT JOIN staff_types
+                                                    ON staff_types.id = institution_staff.staff_type_id
+                                                    LEFT JOIN shifts
+                                                    ON shifts.id = institution_positions.shift_id
+                                                    LEFT JOIN staff_statuses
+                                                    ON staff_statuses.id = institution_staff.staff_status_id
+                                                    WHERE institution_staff.staff_id = " . $staffId . "
+                                                    ORDER BY institution_staff.start_date DESC")->fetchAll(\PDO::FETCH_ASSOC);
+
+        $entity = $result = [];
+        if (!empty($staffPositionData)) {
+            foreach ($staffPositionData as $key => $data) {
+                $result = [
+                    'id'               => $key,
+                    'institution'      => !empty($data['institution_name']) ? $data['institution_name'] : '',
+                    'institution_code' => !empty($data['institution_code']) ? $data['institution_code'] : '',
+                    'position_no'      => !empty($data['position_no']) ? $data['position_no'] : '',
+                    'position_title'   => !empty($data['position_title']) ? $data['position_title'] : '',
+                    'staff_type'       => !empty($data['staff_type']) ? $data['staff_type'] : '',
+                    'shift'            => !empty($data['shift_name']) ? $data['shift_name'] : '',
+                    'start_date'       => !empty($data['start_date']) ? $data['start_date'] : '',
+                    'end_date'         => !empty($data['end_date']) ? $data['end_date'] : '',
+                    'staff_status'     => !empty($data['staff_status']) ? $data['staff_status'] : '',
+                ];
+                $entity[] = $result;
+            }
+        }
+        return $entity;
+    }
+
+    //POCOR-9007
+    public function onExcelTemplateInitialiseStaffLeave(EventInterface $event, array $params, ArrayObject $extra)
+    {
+        if (empty($params['staff_id'])) {
+            return [];
+        }
+        $staffId = $params['staff_id'];
+        $connection = ConnectionManager::get('default');
+        $staffLeaveData = $connection->execute("SELECT workflow_steps.name status_name
+                                                        ,CONCAT(IFNULL(security_users.first_name,''), ' ', IFNULL(security_users.last_name,'')) assignee_name
+                                                        ,staff_leave_types.name staff_leave_type
+                                                        ,institution_staff_leave.date_from
+                                                        ,institution_staff_leave.date_to
+                                                        ,institution_staff_leave.start_time
+                                                        ,institution_staff_leave.end_time
+                                                        ,institution_staff_leave.full_day
+                                                        ,(DATEDIFF(institution_staff_leave.date_to, institution_staff_leave.date_from) + 1) number_of_days
+                                                        ,institution_staff_leave.comments
+                                                        ,academic_periods.name academic_period_name
+                                                    FROM institution_staff_leave
+                                                    INNER JOIN staff_leave_types
+                                                    ON staff_leave_types.id = institution_staff_leave.staff_leave_type_id
+                                                    LEFT JOIN workflow_steps
+                                                    ON workflow_steps.id = institution_staff_leave.status_id
+                                                    LEFT JOIN security_users
+                                                    ON security_users.id = institution_staff_leave.assignee_id
+                                                    LEFT JOIN academic_periods
+                                                    ON academic_periods.id = institution_staff_leave.academic_period_id
+                                                    WHERE institution_staff_leave.staff_id = " . $staffId . "
+                                                    ORDER BY institution_staff_leave.date_from DESC")->fetchAll(\PDO::FETCH_ASSOC);
+
+        $entity = $result = [];
+        if (!empty($staffLeaveData)) {
+            foreach ($staffLeaveData as $key => $data) {
+                $time = !empty($data['full_day']) ? __('All Day') : (!empty($data['start_time']) ? $data['start_time'] : '') . (!empty($data['end_time']) ? ' - ' . $data['end_time'] : '');
+                $result = [
+                    'id'             => $key,
+                    'status'         => !empty($data['status_name']) ? $data['status_name'] : '',
+                    'assignee'       => !empty($data['assignee_name']) ? trim($data['assignee_name']) : '',
+                    'type'           => !empty($data['staff_leave_type']) ? $data['staff_leave_type'] : '',
+                    'date_from'      => !empty($data['date_from']) ? $data['date_from'] : '',
+                    'date_to'        => !empty($data['date_to']) ? $data['date_to'] : '',
+                    'time'           => $time,
+                    'number_of_days' => !empty($data['number_of_days']) ? $data['number_of_days'] : '',
+                    'comments'       => !empty($data['comments']) ? $data['comments'] : '',
+                    'academic_period'=> !empty($data['academic_period_name']) ? $data['academic_period_name'] : '',
+                ];
+                $entity[] = $result;
+            }
+        }
+        return $entity;
     }
 }
