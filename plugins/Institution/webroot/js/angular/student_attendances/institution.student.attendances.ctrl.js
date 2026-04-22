@@ -1469,6 +1469,11 @@ function InstitutionStudentAttendancesController(
                 UtilsSvc.isAppendLoader(false);
             });
     };
+    //POCOR-9652: returns true when the currently selected day is flagged as No Scheduled Classes
+    vm.isNoScheduledDay = function () {
+        return vm.classStudentList.length > 0 && vm.classStudentList[0].no_scheduled_class == 1;
+    };
+
     vm.onNoScheduledClick = function () {
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
