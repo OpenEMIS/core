@@ -374,7 +374,9 @@ class StaffReportCardsTable extends AppTable
                 foreach ($staffSalaryData as $key => $data) {
                     $result = [
                         'id'           => $key,
-                        'salary_date'  => !empty($data['salary_date']) ? $data['salary_date'] : '',
+                        'salary_date'  => !empty($data['salary_date']) 
+                            ? $data['salary_date']->format('d-m-Y') 
+                            : '',
                         'gross_salary' => !empty($data['gross_salary']) ? $data['gross_salary'] : '',
                         'net_salary'   => !empty($data['net_salary']) ? $data['net_salary'] : '',
                     ];
@@ -688,30 +690,51 @@ class StaffReportCardsTable extends AppTable
         return $entity;
     }
 
-    public function onExcelTemplateInitialiseStaffLeavbkpe(EventInterface $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseStaffLeave(EventInterface $event, array $params, ArrayObject $extra)
     {
         if (empty($params['staff_id'])) {
             return [];
         }
         $staffId = $params['staff_id'];
         $connection = ConnectionManager::get('default');
-        $staffLeaveData = $connection->execute("SELECT staff_leave_types.name staff_leave_type
+        $staffLeaveData = $connection->execute("SELECT workflow_steps.name status_name
+                                                        ,CONCAT(IFNULL(security_users.first_name,''), ' ', IFNULL(security_users.last_name,'')) assignee_name
+                                                        ,staff_leave_types.name staff_leave_type
                                                         ,institution_staff_leave.date_from
                                                         ,institution_staff_leave.date_to
+                                                        ,institution_staff_leave.start_time
+                                                        ,institution_staff_leave.end_time
+                                                        ,institution_staff_leave.full_day
+                                                        ,(DATEDIFF(institution_staff_leave.date_to, institution_staff_leave.date_from) + 1) number_of_days
+                                                        ,institution_staff_leave.comments
+                                                        ,academic_periods.name academic_period_name
                                                     FROM institution_staff_leave
                                                     INNER JOIN staff_leave_types
                                                     ON staff_leave_types.id = institution_staff_leave.staff_leave_type_id
-                                                    WHERE institution_staff_leave.staff_id = " . $staffId . " 
+                                                    LEFT JOIN workflow_steps
+                                                    ON workflow_steps.id = institution_staff_leave.status_id
+                                                    LEFT JOIN security_users
+                                                    ON security_users.id = institution_staff_leave.assignee_id
+                                                    LEFT JOIN academic_periods
+                                                    ON academic_periods.id = institution_staff_leave.academic_period_id
+                                                    WHERE institution_staff_leave.staff_id = " . $staffId . "
                                                     ORDER BY institution_staff_leave.date_from DESC")->fetchAll(\PDO::FETCH_ASSOC);
-        
+
         $entity = $result = [];
         if (!empty($staffLeaveData)) {
             foreach ($staffLeaveData as $key => $data) {
+                $time = !empty($data['full_day']) ? __('All Day') : (!empty($data['start_time']) ? $data['start_time'] : '') . (!empty($data['end_time']) ? ' - ' . $data['end_time'] : '');
                 $result = [
-                    'id' => $key,
-                    'type' => !empty($data['staff_leave_type']) ? $data['staff_leave_type'] : '',
-                    'date_from' => !empty($data['date_from']) ? $data['date_from'] : '',
-                    'date_to' => !empty($data['date_to']) ? $data['date_to'] : ''
+                    'id'             => $key,
+                    'status'         => !empty($data['status_name']) ? $data['status_name'] : '',
+                    'assignee'       => !empty($data['assignee_name']) ? trim($data['assignee_name']) : '',
+                    'type'           => !empty($data['staff_leave_type']) ? $data['staff_leave_type'] : '',
+                    'date_from'      => !empty($data['date_from']) ? $data['date_from'] : '',
+                    'date_to'        => !empty($data['date_to']) ? $data['date_to'] : '',
+                    'time'           => $time,
+                    'number_of_days' => !empty($data['number_of_days']) ? $data['number_of_days'] : '',
+                    'comments'       => !empty($data['comments']) ? $data['comments'] : '',
+                    'academic_period'=> !empty($data['academic_period_name']) ? $data['academic_period_name'] : '',
                 ];
                 $entity[] = $result;
             }
@@ -808,104 +831,73 @@ class StaffReportCardsTable extends AppTable
         if (empty($params['staff_id'])) {
             return [];
         }
-        $staffId = $params['staff_id'];
+        $staffId = (int)$params['staff_id'];
         $connection = ConnectionManager::get('default');
-        $staffPositionData = $connection->execute("SELECT institutions.name institution_name
-                                                        ,institutions.code institution_code
-                                                        ,institution_positions.position_no position_no
-                                                        ,staff_position_titles.name position_title
-                                                        ,staff_types.name staff_type
-                                                        ,shifts.name shift_name
-                                                        ,institution_staff.start_date
-                                                        ,institution_staff.end_date
-                                                        ,staff_statuses.name staff_status
-                                                    FROM institution_staff
-                                                    INNER JOIN institution_positions
-                                                    ON institution_positions.id = institution_staff.institution_position_id
-                                                    INNER JOIN institutions
-                                                    ON institutions.id = institution_staff.institution_id
-                                                    LEFT JOIN staff_position_titles
-                                                    ON staff_position_titles.id = institution_positions.staff_position_title_id
-                                                    LEFT JOIN staff_types
-                                                    ON staff_types.id = institution_staff.staff_type_id
-                                                    LEFT JOIN shifts
-                                                    ON shifts.id = institution_positions.shift_id
-                                                    LEFT JOIN staff_statuses
-                                                    ON staff_statuses.id = institution_staff.staff_status_id
-                                                    WHERE institution_staff.staff_id = " . $staffId . "
-                                                    ORDER BY institution_staff.start_date DESC")->fetchAll(\PDO::FETCH_ASSOC);
+        $staffPositionData = $connection->execute(
+            "SELECT 
+                i.name AS institution_name,
+                i.code AS institution_code,
+                ip.position_no,
+                spt.name AS position_title,
+                st.name AS staff_type,
+                so.name AS shift_name,
+                ish.start_time AS shift_start_time,
+                ish.end_time AS shift_end_time,
+                ist.start_date,
+                ist.end_date,
+                ss.name AS staff_status
 
-        $entity = $result = [];
+            FROM institution_staff ist
+
+            LEFT JOIN institution_positions ip 
+                ON ip.id = ist.institution_position_id
+
+            LEFT JOIN institutions i 
+                ON i.id = ist.institution_id
+
+            LEFT JOIN staff_position_titles spt 
+                ON spt.id = ip.staff_position_title_id
+
+            LEFT JOIN staff_types st 
+                ON st.id = ist.staff_type_id
+
+            LEFT JOIN institution_shifts ish 
+                ON ish.id = ip.shift_id
+
+            LEFT JOIN shift_options so 
+                ON so.id = ish.shift_option_id
+
+            LEFT JOIN staff_statuses ss 
+                ON ss.id = ist.staff_status_id
+
+            WHERE ist.staff_id = :staff_id
+
+            ORDER BY ist.start_date DESC",
+            ['staff_id' => $staffId]
+        )->fetchAll('assoc');
+        $entity = [];
         if (!empty($staffPositionData)) {
             foreach ($staffPositionData as $key => $data) {
-                $result = [
-                    'id'               => $key,
-                    'institution'      => !empty($data['institution_name']) ? $data['institution_name'] : '',
-                    'institution_code' => !empty($data['institution_code']) ? $data['institution_code'] : '',
-                    'position_no'      => !empty($data['position_no']) ? $data['position_no'] : '',
-                    'position_title'   => !empty($data['position_title']) ? $data['position_title'] : '',
-                    'staff_type'       => !empty($data['staff_type']) ? $data['staff_type'] : '',
-                    'shift'            => !empty($data['shift_name']) ? $data['shift_name'] : '',
-                    'start_date'       => !empty($data['start_date']) ? $data['start_date'] : '',
-                    'end_date'         => !empty($data['end_date']) ? $data['end_date'] : '',
-                    'staff_status'     => !empty($data['staff_status']) ? $data['staff_status'] : '',
+
+                $entity[] = [
+                    'id'               => $key + 1,
+                    'institution' => ($data['institution_code'] ?? '') . ' - ' . ($data['institution_name'] ?? ''),
+                    'position_no'      => $data['position_no'] ?? '',
+                    'position_title'   => $data['position_title'] ?? '',
+                    'staff_type'       => $data['staff_type'] ?? '',
+                    'shift'            => $data['shift_name'] ?? '',
+                    'shift_time'       => (!empty($data['shift_start_time']) && !empty($data['shift_end_time']))
+                                            ? $data['shift_start_time'] . ' - ' . $data['shift_end_time']
+                                            : '',
+                    'start_date'       => !empty($data['start_date']) ? date('d-m-Y', strtotime($data['start_date'])) : '',
+                    'end_date'         => !empty($data['end_date']) ? date('d-m-Y', strtotime($data['end_date'])) : '',
+                    'staff_status'     => $data['staff_status'] ?? '',
                 ];
-                $entity[] = $result;
             }
         }
+
         return $entity;
     }
 
-    //POCOR-9007
-    public function onExcelTemplateInitialiseStaffLeave(EventInterface $event, array $params, ArrayObject $extra)
-    {
-        if (empty($params['staff_id'])) {
-            return [];
-        }
-        $staffId = $params['staff_id'];
-        $connection = ConnectionManager::get('default');
-        $staffLeaveData = $connection->execute("SELECT workflow_steps.name status_name
-                                                        ,CONCAT(IFNULL(security_users.first_name,''), ' ', IFNULL(security_users.last_name,'')) assignee_name
-                                                        ,staff_leave_types.name staff_leave_type
-                                                        ,institution_staff_leave.date_from
-                                                        ,institution_staff_leave.date_to
-                                                        ,institution_staff_leave.start_time
-                                                        ,institution_staff_leave.end_time
-                                                        ,institution_staff_leave.full_day
-                                                        ,(DATEDIFF(institution_staff_leave.date_to, institution_staff_leave.date_from) + 1) number_of_days
-                                                        ,institution_staff_leave.comments
-                                                        ,academic_periods.name academic_period_name
-                                                    FROM institution_staff_leave
-                                                    INNER JOIN staff_leave_types
-                                                    ON staff_leave_types.id = institution_staff_leave.staff_leave_type_id
-                                                    LEFT JOIN workflow_steps
-                                                    ON workflow_steps.id = institution_staff_leave.status_id
-                                                    LEFT JOIN security_users
-                                                    ON security_users.id = institution_staff_leave.assignee_id
-                                                    LEFT JOIN academic_periods
-                                                    ON academic_periods.id = institution_staff_leave.academic_period_id
-                                                    WHERE institution_staff_leave.staff_id = " . $staffId . "
-                                                    ORDER BY institution_staff_leave.date_from DESC")->fetchAll(\PDO::FETCH_ASSOC);
-
-        $entity = $result = [];
-        if (!empty($staffLeaveData)) {
-            foreach ($staffLeaveData as $key => $data) {
-                $time = !empty($data['full_day']) ? __('All Day') : (!empty($data['start_time']) ? $data['start_time'] : '') . (!empty($data['end_time']) ? ' - ' . $data['end_time'] : '');
-                $result = [
-                    'id'             => $key,
-                    'status'         => !empty($data['status_name']) ? $data['status_name'] : '',
-                    'assignee'       => !empty($data['assignee_name']) ? trim($data['assignee_name']) : '',
-                    'type'           => !empty($data['staff_leave_type']) ? $data['staff_leave_type'] : '',
-                    'date_from'      => !empty($data['date_from']) ? $data['date_from'] : '',
-                    'date_to'        => !empty($data['date_to']) ? $data['date_to'] : '',
-                    'time'           => $time,
-                    'number_of_days' => !empty($data['number_of_days']) ? $data['number_of_days'] : '',
-                    'comments'       => !empty($data['comments']) ? $data['comments'] : '',
-                    'academic_period'=> !empty($data['academic_period_name']) ? $data['academic_period_name'] : '',
-                ];
-                $entity[] = $result;
-            }
-        }
-        return $entity;
-    }
+    
 }
