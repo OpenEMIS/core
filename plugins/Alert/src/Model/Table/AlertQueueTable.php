@@ -10,7 +10,6 @@ use Cake\Log\Log;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
-use Cake\Routing\Router;
 use DateTime;
 use DateTimeInterface;
 
@@ -48,15 +47,6 @@ class AlertQueueTable extends ControllerActionTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        // POCOR-9509: Add checkbox column for multiselect
-        $this->field('_select', [
-            'type' => 'element',
-            'element' => 'Alert/select_checkbox',
-            'tableHeaderClass' => 'checkbox-column',
-            'tableColumnClass' => 'checkbox-column',
-            'label' => ''
-        ]);
-
         // Configure which fields to show and their order
         $this->field('alert_type', ['after' => 'id']);
         $this->field('channel', ['after' => 'alert_type']);
@@ -278,8 +268,6 @@ class AlertQueueTable extends ControllerActionTable
                 return __('Created');
             case 'message_body':
                 return __('Message');
-            case '_select':
-                return '';
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
