@@ -19,19 +19,26 @@ class ProcessAlertQueue extends Command
     const QUEUE_STATUS_PROCESSING = 1;
     const QUEUE_STATUS_SENT = 2;
 
-    protected $signature = 'alerts:send {--limit=50}'; //POCOR-9509: renamed from alerts:process
+    protected $signature = 'alerts:send {--limit=}'; //POCOR-9509: renamed from alerts:process; default resolved from ALERT_SEND_LIMIT env
     protected $description = 'Send pending alerts from alert_queue'; //POCOR-9509
 
     public function handle(): int
     {
-        $limit = (int)$this->option('limit');
+        //POCOR-9509: resolve limit — CLI option overrides env; 0 means no limit (send all)
+        $limit = $this->option('limit') !== null
+            ? (int)$this->option('limit')
+            : (int)env('ALERT_SEND_LIMIT', 50);
 
-        $alerts = DB::table('alert_queue')
+        $query = DB::table('alert_queue')
             ->where('status', AlertLogs::STATUS_PENDING) //POCOR-9509: use constant
             ->where('available_at', '<=', now())
-            ->orderBy('id')
-            ->limit($limit)
-            ->get();
+            ->orderBy('id');
+
+        if ($limit > 0) {
+            $query->limit($limit); //POCOR-9509: limit=0 skips this — sends all pending
+        }
+
+        $alerts = $query->get();
 
         if ($alerts->isEmpty()) {
             return Command::SUCCESS;
