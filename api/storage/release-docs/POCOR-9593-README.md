@@ -54,6 +54,19 @@ X is the number of days since the oldest stale `completed_on` in the current vie
 | `plugins/Institution/src/Model/Table/InstitutionsProfileTable.php` | Same + new `indexAfterAction` method + plain "not enabled" banner when window closed and no stale data |
 | `plugins/Institution/src/Model/Table/ClassesProfilesTable.php` | Same (stale banner added inside existing `indexAfterAction`); `institution_id` fallback to `getInstitutionID()` |
 
+### Bug Fix: `BadMethodCallException: Unknown method formatDateTime` (404 on profile pages)
+
+All profile index pages threw a `BadMethodCallException` when rendering rows with non-empty `started_on` / `completed_on` dates, causing CakePHP to serve a 404. Root cause: `formatDateTime()` is defined in `AppTable` via POCOR-9510, which is not merged into this branch. POCOR-9639 added `!empty()` guards but left the method call intact, so rows with actual dates still failed.
+
+Fix: replaced `$this->formatDateTime($value)` with `$value->format('Y-m-d H:i:s')` directly on the FrozenTime / Time object in **11 profile table files** across 4 plugins:
+
+| Plugin | Files |
+|--------|-------|
+| `plugins/Institution/` | `StudentProfilesTable`, `StaffProfilesTable`, `InstitutionsProfileTable`, `ClassesProfilesTable` |
+| `plugins/ProfileTemplate/` | `StudentProfilesTable`, `StaffProfilesTable`, `ClassesProfilesTable` |
+| `plugins/Profile/` | `StudentProfilesTable`, `StaffProfilesTable` |
+| `plugins/Directory/` | `StudentProfilesTable`, `StaffProfilesTable` |
+
 ### Database Migrations
 
 None. No database changes required.
