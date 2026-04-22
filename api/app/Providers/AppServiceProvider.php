@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Carbon\Carbon;
@@ -39,11 +40,10 @@ class AppServiceProvider extends ServiceProvider
     private function applySystemTimezone(): void
     {
         try {
-            $row = DB::table('config_items')
-                ->where('code', 'time_zone')
-                ->value('value');
-
-            $tz = ($row && @timezone_open($row) !== false) ? $row : 'UTC'; //POCOR-9509: invalid/missing → Greenwich (UTC)
+            $tz = Cache::remember('system_timezone', 600, function () { //POCOR-9509: cache 10 min — avoid per-request DB hit
+                $row = DB::table('config_items')->where('code', 'time_zone')->value('value');
+                return ($row && @timezone_open($row) !== false) ? $row : 'UTC'; //POCOR-9509: invalid/missing → Greenwich (UTC)
+            });
             config(['app.timezone' => $tz]);
             date_default_timezone_set($tz);
             Carbon::setTimezone($tz);
