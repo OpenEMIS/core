@@ -185,8 +185,9 @@ class DashboardController extends AppController
         }
 
         /*POCOR-6395 ends*/
-        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
-        $StudentStatusUpdates->checkRequireUpdate();
+        //POCOR-9509: checkRequireUpdate does nothing (triggerUpdateStudentStatusShell is commented out) but scans student_status_updates on every dashboard load — skip it
+//        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
+//        $StudentStatusUpdates->checkRequireUpdate();
 
         $this->set('ngController', 'DashboardCtrl as DashboardController');
         if ($this->AccessControl->isAdmin()) {
