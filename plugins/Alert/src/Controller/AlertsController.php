@@ -111,6 +111,30 @@ class AlertsController extends AppController
         return $this->redirect(['action' => 'Logs']);
     }
 
+    public function triggerAlerts()
+    {
+        //POCOR-9509: Combined one-click trigger — check alert rules then immediately send pending queue
+        $apiPath = ROOT . DS . 'api';
+
+        // Step 1: Check frequency and fill alert_queue for scheduled alert types
+        $checkCommand = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:check --sync 2>&1';
+        exec($checkCommand, $checkOutput, $checkReturn);
+
+        // Step 2: Send everything pending in alert_queue (including event-based alerts already queued)
+        $sendCommand = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:send 2>&1';
+        exec($sendCommand, $sendOutput, $sendReturn);
+
+        if ($checkReturn === 0 && $sendReturn === 0) {
+            $this->Alert->success(__('Alerts triggered and sent successfully.'), ['type' => 'string', 'reset' => true]);
+        } else {
+            $errorText = implode("\n", array_merge($checkOutput, $sendOutput));
+            $this->Alert->error(__('Alert trigger failed. Output: ') . $errorText, ['type' => 'string', 'reset' => true]);
+            Log::error('[Alerts] triggerAlerts failed. Output: ' . $errorText);
+        }
+
+        return $this->redirect(['action' => 'Queue']);
+    }
+
     public function processLogs()
     {
         //POCOR-9509: Check alert rules and fill alert_queue

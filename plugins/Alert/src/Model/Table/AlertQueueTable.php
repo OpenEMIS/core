@@ -99,61 +99,41 @@ class AlertQueueTable extends ControllerActionTable
             'order' => 3,
         ];
 
-        // POCOR-9509: Add bulk delete toolbar button
-        $extra['toolbarButtons']['deleteSelected'] = [
-            'type' => 'element',
-            'element' => 'Alert/delete_selected_button',
-            'data' => [
-                'id' => 'delete-selected-btn',
-                'classes' => 'btn btn-xs btn-default icon-big',
-                'disabled' => true
-            ],
-            'options' => []
-        ];
-
-        // Add bulk actions JS
-        $extra['elements']['bulkActionsJs'] = [
-            'name' => 'Alert/bulk_actions_js',
-            'data' => [
-                'deleteUrl' => Router::Url(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'queueDeleteSelected'])
-            ],
-            'options' => [],
-            'order' => 4
-        ];
-        //POCOR-9257: Add Process Queue toolbar button
-        $processButton = [
+        //POCOR-9509: Trigger Alert Check — checks frequency rules and fills alert_queue
+        $checkButton = [
             'type' => 'button',
-            'label' => '<i class="fa fa-play"></i> Process Queue',
-            'class' => 'btn btn-primary',
-            'url' => ['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'processQueue'],
-            'attr' => [
-                'title' => 'Manually process pending alerts',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom'
-            ],
-            'order' => 1
-        ];
-        $toolbarButton = [
-            'type' => 'button',
-            'label' => '<i class="fa fa-refresh"></i>',
+            'label' => '<i class="fa fa-search"></i>',
             'attr' => [
                 'class' => 'btn btn-xs btn-default',
                 'data-toggle' => 'tooltip',
                 'data-placement' => 'bottom',
                 'escape' => false,
-                'title' => __('Synchronisation')
+                'title' => __('Trigger Alert Check')
+            ],
+            'url' => [
+                'plugin' => 'Alert', 'controller' => 'Alerts',
+                'action' => 'processLogs',
+            ]
+        ];
+        //POCOR-9509: Trigger Alert Send — sends all pending items from alert_queue
+        $sendButton = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-paper-plane"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Trigger Alert Send')
             ],
             'url' => [
                 'plugin' => 'Alert', 'controller' => 'Alerts',
                 'action' => 'processQueue',
-
             ]
         ];
-        // Properly modify the ArrayObject toolbarButtons
-//        dd($extra['toolbarButtons']);
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarButtonsArray['process'] = $processButton;
-        $toolbarButtonsArray['access'] = $toolbarButton;
+        $toolbarButtonsArray['alertCheck'] = $checkButton;
+        $toolbarButtonsArray['alertSend'] = $sendButton;
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
