@@ -41,7 +41,7 @@ return [
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => env('MAIL_TIMEOUT', 30), //POCOR-9509: 30s SMTP timeout prevents hung workers when mail server is unreachable
             'auth_mode' => null,
         ],
 
