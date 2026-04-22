@@ -26,7 +26,7 @@ $this->start('toolbar');
         data-placement="bottom"
         data-container="body"
         title="<?= __('Edit'); ?>"
-        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
+        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1 && !$ctrl.isNoScheduledDay()"
         ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
