@@ -812,14 +812,26 @@ class StaffProfilesTable extends ControllerActionTable
 
         if ($hasTemplate) {
             $StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
+
+            //POCOR-9593: start — purge stuck RUNNING records before the inProgress gate
+            // Without this, a crashed background process leaves RUNNING rows that block generateAll forever.
+            // 2h is generous — a full institution's staff generation completes in minutes.
+            $cutoff2h = FrozenTime::now()->subHours(2);
+            $StaffReportCardProcesses->deleteAll([
+                $StaffReportCardProcesses->aliasField('institution_id') => $institutionId,
+                $StaffReportCardProcesses->aliasField('status') => $StaffReportCardProcesses::RUNNING,
+                $StaffReportCardProcesses->aliasField('created') . ' <' => $cutoff2h->format('Y-m-d H:i:s'),
+            ]);
+            //POCOR-9593: end
+
             $inProgress = $StaffReportCardProcesses->find()
                 ->where([
                     $StaffReportCardProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
                     $StaffReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StaffReportCardProcesses->aliasField('institution_id') => $institutionId,
-                ]) //POCOR-9593: removed staff_id condition — generateAll has no specific staff_id (would be null → CakePHP 5 InvalidArgumentException)
+                    $StaffReportCardProcesses->aliasField('status IN') => [$StaffReportCardProcesses::NEW_PROCESS, $StaffReportCardProcesses::RUNNING],
+                ]) //POCOR-9593: status filter — COMPLETED rows must not block a new generation run
                 ->count();
-
 
             if (!$inProgress) {
                 $this->addReportCardsToProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
