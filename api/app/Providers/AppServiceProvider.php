@@ -43,11 +43,10 @@ class AppServiceProvider extends ServiceProvider
                 ->where('code', 'time_zone')
                 ->value('value');
 
-            if ($row && @timezone_open($row) !== false) {
-                config(['app.timezone' => $row]);
-                date_default_timezone_set($row);
-                Carbon::setTimezone($row);
-            }
+            $tz = ($row && @timezone_open($row) !== false) ? $row : 'UTC'; //POCOR-9509: invalid/missing → Greenwich (UTC)
+            config(['app.timezone' => $tz]);
+            date_default_timezone_set($tz);
+            Carbon::setTimezone($tz);
         } catch (\Throwable $e) {
             // DB not ready (e.g. during migrations) — stay on default timezone
         }
