@@ -605,7 +605,7 @@ class StudentProfilesTable extends ControllerActionTable
 
         if ($entity->has('report_card_started_on') && !empty($entity->report_card_started_on)) {
             $startedOnValue = new FrozenTime($entity->report_card_started_on);
-            $value = $this->formatDateTime($startedOnValue);
+            $value = $startedOnValue->format('Y-m-d H:i:s'); //POCOR-9593: direct format — formatDateTime() not available on this branch
         }
 
         return $value;
@@ -617,7 +617,7 @@ class StudentProfilesTable extends ControllerActionTable
 
         if ($entity->has('report_card_completed_on') && !empty($entity->report_card_completed_on)) {
             $completedOnValue = new FrozenTime($entity->report_card_completed_on);
-            $value = $this->formatDateTime($completedOnValue);
+            $value = $completedOnValue->format('Y-m-d H:i:s'); //POCOR-9593: direct format — formatDateTime() not available on this branch
         }
 
         return $value;
