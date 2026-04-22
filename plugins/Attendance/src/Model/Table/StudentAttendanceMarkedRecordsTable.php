@@ -359,11 +359,47 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $period = $options['attendance_period_id']; //POCOR-8383
         $subjectId = isset($options['subject_id']) ? (int)$options['subject_id'] : 0; //POCOR-9617
 
+        Log::debug('[TEMP-LOG] findNoScheduledClass: START class=' . $institutionClassId . ' date=' . $day . ' period=' . $period . ' subject=' . $subjectId);
+
         //POCOR-9617: start
         //POCOR-9617: raw SQL existence check — bypasses ORM, zero entity hydration, safe on large datasets
         $connection = ConnectionManager::get('default');
         $tableName = $this->getTable();
         $periodSql = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+
+        //POCOR-9652: start - toggle: if no_scheduled_class=1 already exists for this period, delete it (undo)
+        // Scoped to the specific period so undoing period-1 does not affect period-2 on the same day
+        $periodCheckSql = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+        $alreadySetSql = "SELECT 1 FROM `{$tableName}`
+            WHERE institution_class_id = {$institutionClassId}
+              AND education_grade_id = {$educationGradeId}
+              AND institution_id = {$institutionId}
+              AND academic_period_id = {$academicPeriodId}
+              AND `date` = '{$day}'
+              AND {$periodCheckSql}
+              AND no_scheduled_class = 1
+            LIMIT 1";
+        $alreadySet = !empty($connection->execute($alreadySetSql)->fetchAll('assoc'));
+        Log::debug('[TEMP-LOG] findNoScheduledClass: period=' . $period . ' alreadySet=' . ($alreadySet ? 'YES — will UNDO' : 'NO — will SET'));
+
+        if ($alreadySet) {
+            $deleteConditions = [
+                'institution_id'       => $institutionId,
+                'academic_period_id'   => $academicPeriodId,
+                'institution_class_id' => $institutionClassId,
+                'education_grade_id'   => $educationGradeId,
+                'date'                 => $day,
+                'no_scheduled_class'   => 1,
+            ];
+            if ($period !== null) {
+                $deleteConditions['period'] = (int)$period; //POCOR-9652: scope to this period only — stored rows always have subject_id=0 so period is the subject discriminator too
+            }
+            $deleted = $this->deleteAll($deleteConditions);
+            Log::debug('[TEMP-LOG] findNoScheduledClass: UNDO complete — deleted=' . $deleted . ' rows for period=' . $period . ' (subject=' . $subjectId . ' scoped via period)');
+            return $query->where(['1 = 0'])->limit(1); // total=0 → JS clears the marked state
+        }
+        //POCOR-9652: end
+
         $existsSql = "SELECT 1 FROM `{$tableName}`
             WHERE institution_class_id = {$institutionClassId}
               AND education_grade_id = {$educationGradeId}
@@ -374,6 +410,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             LIMIT 1";
         $existsResult = $connection->execute($existsSql)->fetchAll('assoc');
         $existsCount = count($existsResult);
+
+        Log::debug('[TEMP-LOG] findNoScheduledClass: markerRowExists=' . $existsCount);
 
         if ($existsCount > 0) {
             $updateQuery = $this->query();
@@ -388,6 +426,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                     $this->aliasField('period') => $period //POCOR-8383
                 ])
                 ->execute();
+            Log::debug('[TEMP-LOG] findNoScheduledClass: SET via UPDATE');
         } else {
             $newRecord = $this->newEntity([
                 'institution_class_id' => $institutionClassId,
@@ -400,6 +439,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 'no_scheduled_class' => 1
             ]);
             $this->save($newRecord);
+            Log::debug('[TEMP-LOG] findNoScheduledClass: SET via INSERT');
         }
 
         $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
@@ -413,7 +453,8 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         if ($subjectId > 0) {
             $absenceConditions[$InstitutionStudentAbsenceDetails->aliasField('subject_id')] = $subjectId;
         }
-        $InstitutionStudentAbsenceDetails->deleteAll($absenceConditions);
+        $deleted = $InstitutionStudentAbsenceDetails->deleteAll($absenceConditions);
+        Log::debug('[TEMP-LOG] findNoScheduledClass: cleared absence details=' . $deleted . ' rows');
         //POCOR-9617: end
 
         //POCOR-7143[START]
@@ -443,6 +484,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                     $ClassAttendanceRecords->aliasField('month') => $month
                 ]
             );
+            Log::debug('[TEMP-LOG] findNoScheduledClass: updated ClassAttendanceRecords day=' . $daydata);
         }
         //POCOR-7143[END]
 
@@ -457,9 +499,11 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             $this->aliasField('period IS') => $period,
             $this->aliasField('no_scheduled_class') => 1,
         ])->limit(1);
+        Log::debug('[TEMP-LOG] findNoScheduledClass: END — returning confirmation query');
         //POCOR-9617: end
 
         return $query;
     }
     /*POCOR-6021 ends*/
+
 }
