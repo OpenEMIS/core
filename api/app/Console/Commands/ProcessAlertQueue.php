@@ -121,12 +121,13 @@ class ProcessAlertQueue extends Command
                 }
 
                 // Mark as sent
+                $nowLocal = Carbon::now(date_default_timezone_get()); //POCOR-9509: use PHP system timezone so CakePHP display matches
                 DB::table('alert_queue')
                     ->where('id', $alert->id)
                     ->update([
                         'status' => self::QUEUE_STATUS_SENT, //POCOR-9509: alert_queue STATUS_SENT=2 (queue has extra PROCESSING state)
-                        'sent_at' => now(),
-                        'modified' => now(),
+                        'sent_at' => $nowLocal,
+                        'modified' => $nowLocal,
                     ]);
 
                 DB::table('alert_logs')
@@ -137,7 +138,7 @@ class ProcessAlertQueue extends Command
                     ->where('status', '=', AlertLogs::STATUS_PENDING)
                     ->update([
                         'status' => AlertLogs::STATUS_SENT, //POCOR-9509: use constant
-                        'processed_date' => now(),
+                        'processed_date' => $nowLocal,
                     ]);
 
 //                Log::info('Alert sent successfully', [

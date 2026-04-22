@@ -235,6 +235,17 @@ class AlertLogsTable extends ControllerActionTable
 
         // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() No duplicate found, proceeding to create system_processes'); //[TEMP-LOG]
 
+        //POCOR-9509: Limit concurrent background processes per alert type to prevent PHP-FPM / DB connection exhaustion
+        $activeCount = $systemProcessesTable->find()
+            ->where(['model' => $processName, 'status' => 1])
+            ->count();
+        if ($activeCount >= 2) {
+            Log::info('[POCOR-9509] Alert spawn skipped — max concurrent instances reached', [
+                'process' => $processName, 'active' => $activeCount
+            ]);
+            return;
+        }
+
         // POCOR-9509: Create system_processes record
         $processValues = [
             'name' => $feature,
@@ -874,27 +885,7 @@ class AlertLogsTable extends ControllerActionTable
             ]
         );
 
-        // POCOR-9509: Add bulk delete toolbar button and JS
-        $extra['toolbarButtons']['deleteSelected'] = [
-            'type' => 'element',
-            'element' => 'Alert/delete_selected_button',
-            'data' => [
-                'id' => 'delete-selected-btn',
-                'classes' => 'btn btn-xs btn-default icon-big',
-                'disabled' => true
-            ],
-            'options' => []
-        ];
-
-
-        $extra['elements']['bulkActionsJs'] = [
-            'name' => 'Alert/bulk_actions_js',
-            'data' => [
-                'deleteUrl' => Router::Url(['plugin' => 'Alert', 'controller' => 'Alerts', 'action' => 'logsDeleteSelected', true])
-            ],
-            'options' => [],
-            'order' => 4
-        ];
+        //POCOR-9509: bulk delete removed per request
 
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Logs','Communications');
@@ -915,26 +906,41 @@ class AlertLogsTable extends ControllerActionTable
 			$extra['toolbarButtons']['help'] = $helpBtn;
 		}
 		// End POCOR-5188
-        $toolbarButton = [
+        //POCOR-9509: Trigger Alert Check — checks frequency rules and fills alert_queue
+        $checkButton = [
             'type' => 'button',
-            'label' => '<i class="fa fa-refresh"></i>',
+            'label' => '<i class="fa fa-search"></i>',
             'attr' => [
                 'class' => 'btn btn-xs btn-default',
                 'data-toggle' => 'tooltip',
                 'data-placement' => 'bottom',
                 'escape' => false,
-                'title' => __('Synchronisation')
+                'title' => __('Trigger Alert Check')
             ],
             'url' => [
                 'plugin' => 'Alert', 'controller' => 'Alerts',
                 'action' => 'processLogs',
-
             ]
         ];
-        // Properly modify the ArrayObject toolbarButtons
-//        dd($extra['toolbarButtons']);
+        //POCOR-9509: Trigger Alert Send — sends all pending items from alert_queue
+        $sendButton = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-paper-plane"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Trigger Alert Send')
+            ],
+            'url' => [
+                'plugin' => 'Alert', 'controller' => 'Alerts',
+                'action' => 'processQueue',
+            ]
+        ];
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarButtonsArray['access'] = $toolbarButton;
+        $toolbarButtonsArray['alertCheck'] = $checkButton;
+        $toolbarButtonsArray['alertSend'] = $sendButton;
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         $this->controller->set('toolbarButtons', $extra['toolbarButtons']);

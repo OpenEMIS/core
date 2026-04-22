@@ -133,7 +133,7 @@ class CheckAndQueueAlerts extends Command
             return false;
         }
 
-        $shouldRun = Carbon::now()->format('Y-m-d') >= $nextRun;
+        $shouldRun = Carbon::now(config('app.timezone'))->format('Y-m-d') >= $nextRun; //POCOR-9509: use app timezone so daily boundary matches server date
 
         // Log::debug('[POCOR-9509] Frequency check result', [
         //     'feature' => $alert->name,
@@ -296,7 +296,7 @@ class CheckAndQueueAlerts extends Command
             }
 
             // POCOR-9509: Build params for tracking and deduplication
-            $triggeredAt = Carbon::now()->format('Y-m-d H:i:s');
+            $triggeredAt = Carbon::now(config('app.timezone'))->format('Y-m-d H:i:s'); //POCOR-9509: use app timezone
             $params = [
                 'rule_id' => $rule->id,
                 'trigger_type' => 'scheduled',
