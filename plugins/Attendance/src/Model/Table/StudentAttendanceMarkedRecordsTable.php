@@ -10,6 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Datasource\ConnectionManager; //POCOR-7023
+use Cake\Log\Log; //POCOR-9652
 
 class StudentAttendanceMarkedRecordsTable extends AppTable
 {
@@ -359,7 +360,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $period = $options['attendance_period_id']; //POCOR-8383
         $subjectId = isset($options['subject_id']) ? (int)$options['subject_id'] : 0; //POCOR-9617
 
-        Log::debug('[TEMP-LOG] findNoScheduledClass: START class=' . $institutionClassId . ' date=' . $day . ' period=' . $period . ' subject=' . $subjectId);
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: START class=' . $institutionClassId . ' date=' . $day . ' period=' . $period . ' subject=' . $subjectId);
 
         //POCOR-9617: start
         //POCOR-9617: raw SQL existence check — bypasses ORM, zero entity hydration, safe on large datasets
@@ -370,7 +371,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         //POCOR-9652: start - enforce XOR rule: period-based → period=X,subject_id=0; subject-based → period=0,subject_id=X
         $storedPeriod    = ($subjectId > 0) ? 0          : (int)$period;
         $storedSubjectId = ($subjectId > 0) ? $subjectId : 0;
-        Log::debug('[TEMP-LOG] findNoScheduledClass: storedPeriod=' . $storedPeriod . ' storedSubjectId=' . $storedSubjectId);
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: storedPeriod=' . $storedPeriod . ' storedSubjectId=' . $storedSubjectId);
 
         // Toggle: if no_scheduled_class=1 already exists for this period/subject, delete it (undo)
         $alreadySetSql = "SELECT 1 FROM `{$tableName}`
@@ -384,7 +385,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
               AND no_scheduled_class = 1
             LIMIT 1";
         $alreadySet = !empty($connection->execute($alreadySetSql)->fetchAll('assoc'));
-        Log::debug('[TEMP-LOG] findNoScheduledClass: alreadySet=' . ($alreadySet ? 'YES — will UNDO' : 'NO — will SET'));
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: alreadySet=' . ($alreadySet ? 'YES — will UNDO' : 'NO — will SET'));
 
         if ($alreadySet) {
             $deleted = $this->deleteAll([
@@ -397,8 +398,16 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 'subject_id'           => $storedSubjectId,
                 'no_scheduled_class'   => 1,
             ]);
-            Log::debug('[TEMP-LOG] findNoScheduledClass: UNDO complete — deleted=' . $deleted . ' rows');
-            return $query->where(['1 = 0'])->limit(1); // total=0 → JS clears the marked state
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: UNDO complete — deleted=' . $deleted . ' rows');
+            return $this->find()->where([
+                $this->aliasField('institution_class_id') => $institutionClassId,
+                $this->aliasField('institution_id')       => $institutionId,
+                $this->aliasField('academic_period_id')   => $academicPeriodId,
+                $this->aliasField('date')                 => $day,
+                $this->aliasField('period')               => $storedPeriod,
+                $this->aliasField('subject_id')           => $storedSubjectId,
+                $this->aliasField('no_scheduled_class')   => 1,
+            ])->limit(1); //POCOR-9652: row was just deleted, so this returns 0 rows → total=0 → JS clears state
         }
         //POCOR-9652: end
 
@@ -414,7 +423,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $existsResult = $connection->execute($existsSql)->fetchAll('assoc');
         $existsCount = count($existsResult);
 
-        Log::debug('[TEMP-LOG] findNoScheduledClass: markerRowExists=' . $existsCount);
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: markerRowExists=' . $existsCount);
 
         if ($existsCount > 0) {
             //POCOR-9652: use storedPeriod/storedSubjectId so subject-based rows store period=0,subject_id=X
@@ -431,7 +440,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                     $this->aliasField('subject_id')           => $storedSubjectId,
                 ])
                 ->execute();
-            Log::debug('[TEMP-LOG] findNoScheduledClass: SET via UPDATE');
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: SET via UPDATE');
         } else {
             //POCOR-9652: use storedPeriod/storedSubjectId so subject-based rows store period=0,subject_id=X
             $newRecord = $this->newEntity([
@@ -445,7 +454,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                 'no_scheduled_class'   => 1,
             ]);
             $this->save($newRecord);
-            Log::debug('[TEMP-LOG] findNoScheduledClass: SET via INSERT');
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: SET via INSERT');
         }
 
         $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
@@ -460,7 +469,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             $absenceConditions[$InstitutionStudentAbsenceDetails->aliasField('subject_id')] = $subjectId;
         }
         $deleted = $InstitutionStudentAbsenceDetails->deleteAll($absenceConditions);
-        Log::debug('[TEMP-LOG] findNoScheduledClass: cleared absence details=' . $deleted . ' rows');
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: cleared absence details=' . $deleted . ' rows');
         //POCOR-9617: end
 
         //POCOR-7143[START]
@@ -491,7 +500,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                     $ClassAttendanceRecords->aliasField('month') => $month
                 ]
             );
-            Log::debug('[TEMP-LOG] findNoScheduledClass: updated ClassAttendanceRecords day=' . $daydata);
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: updated ClassAttendanceRecords day=' . $daydata);
         }
         //POCOR-7143[END]
 
@@ -508,7 +517,7 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
             $this->aliasField('subject_id')           => $storedSubjectId,
             $this->aliasField('no_scheduled_class')   => 1,
         ])->limit(1);
-        Log::debug('[TEMP-LOG] findNoScheduledClass: END — returning confirmation query');
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: END — returning confirmation query');
         //POCOR-9617: end
 
         return $query;

@@ -518,7 +518,7 @@ function InstitutionStudentAttendancesSvc(
     }
 
     function getNoScheduledClassMarked(params) {
-        console.log('[TEMP-LOG] getNoScheduledClassMarked: called', params); //POCOR-9652
+        // console.log('[TEMP-LOG] getNoScheduledClassMarked: called', params); //POCOR-9652
         var extra = {
             institution_id: params.institution_id,
             institution_class_id: params.institution_class_id,
@@ -535,13 +535,13 @@ function InstitutionStudentAttendancesSvc(
 
         var success = function (response, deferred) {
             var count = response.data.total;
-            console.log('[TEMP-LOG] getNoScheduledClassMarked: response total=' + count); //POCOR-9652
+            // console.log('[TEMP-LOG] getNoScheduledClassMarked: response total=' + count); //POCOR-9652
             if (angular.isDefined(count)) {
                 var isMarked = count > 0;
-                console.log('[TEMP-LOG] getNoScheduledClassMarked: isMarked=' + isMarked + ' (0=undo, 1=set)'); //POCOR-9652
+                // console.log('[TEMP-LOG] getNoScheduledClassMarked: isMarked=' + isMarked + ' (0=undo, 1=set)'); //POCOR-9652
                 deferred.resolve(isMarked);
             } else {
-                console.log('[TEMP-LOG] getNoScheduledClassMarked: ERROR — count undefined'); //POCOR-9652
+                // console.log('[TEMP-LOG] getNoScheduledClassMarked: ERROR — count undefined'); //POCOR-9652
                 deferred.reject(
                     "There was an error when retrieving the is_marked record"
                 );
