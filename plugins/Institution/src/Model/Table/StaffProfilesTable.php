@@ -266,7 +266,7 @@ class StaffProfilesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         $this->field('email_status');
-        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
+        $this->field('age', ['type' => 'string', 'label' => '']); //POCOR-9593: age indicator — no column header
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
