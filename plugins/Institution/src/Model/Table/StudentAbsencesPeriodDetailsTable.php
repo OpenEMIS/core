@@ -314,8 +314,9 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     private function clearNoScheduledClass(Entity $entity): void
     {
         $date = is_object($entity->date) ? $entity->date->format('Y-m-d') : (string)$entity->date;
+        Log::debug('[TEMP-LOG] clearNoScheduledClass: START student=' . $entity->student_id . ' class=' . $entity->institution_class_id . ' date=' . $date);
         $MarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
-        $MarkedRecords->updateAll(
+        $updated = $MarkedRecords->updateAll(
             ['no_scheduled_class' => 0],
             [
                 'institution_id'       => (int)$entity->institution_id,
@@ -325,6 +326,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
                 'no_scheduled_class'   => 1,
             ]
         );
+        Log::debug('[TEMP-LOG] clearNoScheduledClass: updated=' . $updated . ' rows');
     }
     //POCOR-9652: end
 

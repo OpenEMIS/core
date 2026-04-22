@@ -1475,6 +1475,8 @@ function InstitutionStudentAttendancesController(
     };
 
     vm.onNoScheduledClick = function () {
+        var alreadySet = vm.isNoScheduledDay();
+        console.log('[TEMP-LOG] onNoScheduledClick: alreadySet=' + alreadySet + ' (true=UNDO, false=SET)'); //POCOR-9652
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
         vm.noScheduledSaving = true; //POCOR-9617: block any concurrent in-flight changeClass from overwriting
@@ -1487,6 +1489,7 @@ function InstitutionStudentAttendancesController(
                 //even if PHP returned 500, the INSERT/UPDATE may have committed before the crash
                 vm.noScheduledSaving = false;
                 UtilsSvc.isAppendLoader(false);
+                console.log('[TEMP-LOG] onNoScheduledClick: reloading class data after toggle'); //POCOR-9652
                 vm.changeClass();
             });
     };
