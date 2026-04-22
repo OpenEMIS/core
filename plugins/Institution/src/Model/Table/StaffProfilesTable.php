@@ -815,10 +815,9 @@ class StaffProfilesTable extends ControllerActionTable
             $inProgress = $StaffReportCardProcesses->find()
                 ->where([
                     $StaffReportCardProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
-                    $StaffReportCardProcesses->aliasField('staff_id') => $params['staff_id'],
                     $StaffReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StaffReportCardProcesses->aliasField('institution_id') => $institutionId,
-                ])
+                ]) //POCOR-9593: removed staff_id condition — generateAll has no specific staff_id (would be null → CakePHP 5 InvalidArgumentException)
                 ->count();
 
 
