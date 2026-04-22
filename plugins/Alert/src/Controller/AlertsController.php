@@ -108,7 +108,7 @@ class AlertsController extends AppController
             Log::error('[Alerts] Queue process failed with exit code ' . $returnVar . '. Output: ' . $outputText);
         }
 
-        return $this->redirect(['action' => 'Logs']);
+        return $this->redirect($this->referer()); //POCOR-9509: stay on whichever page the user clicked from
     }
 
     public function triggerAlerts()
@@ -132,7 +132,7 @@ class AlertsController extends AppController
             Log::error('[Alerts] triggerAlerts failed. Output: ' . $errorText);
         }
 
-        return $this->redirect(['action' => 'Queue']);
+        return $this->redirect($this->referer()); //POCOR-9509: stay on whichever page the user clicked from
     }
 
     public function processLogs()
@@ -153,6 +153,6 @@ class AlertsController extends AppController
             Log::error('[Alerts] Queue filling failed with exit code ' . $returnVar . '. Output: ' . $outputText);
         }
 
-        return $this->redirect(['action' => 'Queue']);
+        return $this->redirect($this->referer()); //POCOR-9509: stay on whichever page the user clicked from
     }
 }
