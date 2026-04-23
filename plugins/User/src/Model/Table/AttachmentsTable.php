@@ -20,7 +20,7 @@ class AttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload',
-            ['size' => '2MB',
+            ['size' => '20MB',
                 'contentEditable' => false,
                 'allowable_file_types' => 'all',
                 'useDefaultName' => true]
@@ -58,20 +58,46 @@ class AttachmentsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
-        $userId = $this->getUserID();
-        $user = $UserTable->find()->where(['id' => $userId])->first();
+        $userId    = $this->getUserID();
+        $user      = $UserTable->find()->where(['id' => $userId])->first();
+
         if ($user->is_staff == 1) {
-            $validator->setProvider('custom', $this)->requirePresence('staff_attachment_type_id', 'create')->notEmpty('staff_attachment_type_id');
+            $validator
+                ->setProvider('custom', $this)
+                ->requirePresence('staff_attachment_type_id', 'create')
+                ->notEmpty('staff_attachment_type_id');
         } elseif ($user->is_student == 1) {
-            $validator->setProvider('custom', $this)->requirePresence('student_attachment_type_id', 'create')->notEmpty('student_attachment_type_id');
+            $validator
+                ->setProvider('custom', $this)
+                ->requirePresence('student_attachment_type_id', 'create')
+                ->notEmpty('student_attachment_type_id');
         }
-        // POCOR-9584: Require file during creation
-        $validator->requirePresence('file_content', 'create')->notEmpty('file_content', __('Please select a file to upload'));
+
+        // POCOR-9463
+        $validator->add('file_content', 'fileSize', [
+            'rule' => function ($value, $context) {
+                // Uploaded file
+                if ($value instanceof \Psr\Http\Message\UploadedFileInterface) {
+                    if ($value->getError() !== UPLOAD_ERR_OK) {
+                        return false;
+                    }
+                    return $value->getSize() <= 10 * 1024 * 1024;
+                }
+                if (is_array($value) && isset($value['size'])) {
+                    return $value['size'] <= 10 * 1024 * 1024;
+                }
+                if (is_string($value)) {
+                    return strlen($value) <= 10 * 1024 * 1024;
+                }
+                return false;
+            },
+            'message' => __('File Size must be <= 10MB')
+        ]);
+
         return $validator;
     }
-
+    
     //END:POCOR-5067
-
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
@@ -506,6 +532,8 @@ class AttachmentsTable extends ControllerActionTable
 
         return $buttons;
     }
+
+
 
 
 }

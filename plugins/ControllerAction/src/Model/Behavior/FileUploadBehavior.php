@@ -193,11 +193,18 @@ class FileUploadBehavior extends Behavior
                         $session->write($model->getRegistryAlias().'.parseUpload', $parseUploadData);
                         $data = $this->parseUploadInput($data, $parseUploadData);
                     } else {
-                        $entity->errors($fileContentField, [sprintf(__('File size should not be larger than %s.'), $this->getConfig('size'))]);
+                        $entity->setErrors([
+                            $fileContentField => [
+                                sprintf(__('File size should not be larger than %s'), $this->config('size'))
+                            ]
+                        ]);
                         unset($data[$model->getAlias()][$fileContentField]);
                     }
                 } else {
-                    $entity->getErrors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView() . ', check the type of the file please.']);
+                    $entity->setError(
+                        $fileContentField,
+                        'Only the following formats are allowed: ' . $this->fileTypesForView() . ', check the type of the file please.'
+                    );
                     unset($data[$model->getAlias()][$fileContentField]);
                 }
             } elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file)) {
@@ -218,7 +225,7 @@ class FileUploadBehavior extends Behavior
             } else {
                 // pr('should throw an error here');
                 $session->delete($model->getRegistryAlias().'.parseUpload');
-                $entity->getErrors($fileContentField, ['File attachment is required']);
+                $entity->setErrors([$fileContentField => ['File attachment is required']]);
                 unset($data[$model->getAlias()][$fileContentField]);
             }
         } else {
@@ -231,11 +238,17 @@ class FileUploadBehavior extends Behavior
                             $session->write($model->getRegistryAlias().'.parseUpload', $parseUploadData);
                             $data = $this->parseUploadInput($data, $parseUploadData);
                         } else {
-                            $entity->getErrors($fileContentField, [sprintf(__('File size should not be larger than '), $this->config('size'))]);
+                            $entity->setError(
+                                $fileContentField,
+                                sprintf(__('File size should not be larger than %s'), $this->config('size'))
+                            );
                             unset($data[$model->getAlias()][$fileContentField]);
                         }
                     } else {
-                        $entity->getErrors($fileContentField, ['Only the following formats are allowed: ' . $this->fileTypesForView()]);
+                        $entity->setError(
+                            $fileContentField,
+                            'Only the following formats are allowed: ' . $this->fileTypesForView()
+                        );
                         unset($data[$model->getAlias()][$fileContentField]);
                     }
                 } elseif ($fileContentFieldRules->isEmptyAllowed() && !empty($file)) {
