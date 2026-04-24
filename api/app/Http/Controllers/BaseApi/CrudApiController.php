@@ -1012,7 +1012,7 @@ class CrudApiController extends Controller
         // POCOR-9633: skip params starting with '_' — reserved for scope-consumed params (e.g., _date, _meal_programmes_id)
         foreach ($request->all() as $key => $value) {
             if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) {
-                $filters[$key] = $value;
+                $filters[$key] = $this->normalizeGetFilterValue($key, $value);
             }
         }
 
@@ -1032,7 +1032,7 @@ class CrudApiController extends Controller
                     $i -= 2;
                 } else {
                     if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) { //POCOR-9633: skip _ prefixed scope-consumed params
-                        $filters[$key] = $value;
+                        $filters[$key] = $this->normalizeGetFilterValue($key, $value);
                     }
                 }
             }
@@ -1067,11 +1067,59 @@ class CrudApiController extends Controller
         foreach ($pairs as $pair) {
             $parts = explode(':', $pair, 2);
             if (count($parts) === 2) {
-                $conditions[$parts[0]] = $parts[1];
+                $field = trim($parts[0]);
+                $value = trim($parts[1]);
+
+                if (strpos($value, 'IN') === 0) {
+                    $conditions[$field] = $this->parseInConditionValues(substr($value, 2));
+                } else {
+                    $conditions[$field] = $this->normalizeGetFilterValue($field, $value);
+                }
             }
         }
 
         return $conditions;
+    }
+
+    /**
+     * Normalize GET filter values before they are applied to the query.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return mixed
+     */
+    private function normalizeGetFilterValue($field, $value)
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $value = trim($value);
+
+        if (($field === 'id' || substr($field, -3) === '_id') && strpos($value, ',') !== false) {
+            $values = array_values(array_filter(array_map('trim', explode(',', $value)), function ($item) {
+                return $item !== '';
+            }));
+
+            if (!empty($values) && count(array_filter($values, [$this, 'isValidIdentifier'])) === count($values)) {
+                return $values;
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Parse IN operator values from _conditions.
+     *
+     * @param string $value
+     * @return array
+     */
+    private function parseInConditionValues($value)
+    {
+        return array_values(array_filter(array_map('trim', explode(',', $value)), function ($item) {
+            return $item !== '';
+        }));
     }
 
     /**
