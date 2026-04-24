@@ -810,11 +810,19 @@ class CrudApiController extends Controller
 
         $pagination = $this->getPaginationParams($request, $segments);
         $filters = $this->parseFilters($request, $segments);
-        $order = $this->parseOrderParams($request, $segments);
+        try {
+            $order = $this->parseOrderParams($request, $segments);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
 
         $query = $this->parseSelectParams($request, $segments, $query, $model);
         $query = $this->applyFilters($query, $filters);
-        $query = $this->applyOrder($query, $order, $model);
+        try {
+            $query = $this->applyOrder($query, $order, $model);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
         $query = $this->applyInstitutionFilter($query, $model);
 
         return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
@@ -1214,14 +1222,24 @@ class CrudApiController extends Controller
         if (is_string($model)) {
             $model = new $model;
         }
+
+        $allowedColumns = $this->getAllowedOrderColumns($model);
         $hasOrderParam = !empty($order['columns']);
 
-        if (!$hasOrderParam && in_array('order', $model->getFillable())) {
+        if (!$hasOrderParam && in_array('order', $allowedColumns, true)) {
             // Default ordering by 'order' field if no order params are provided
             $query->orderBy('order', 'asc');
         } else {
             foreach ($order['columns'] as $index => $column) {
-                $direction = $order['directions'][$index] ?? 'asc';
+                if (!in_array($column, $allowedColumns, true)) {
+                    throw new \InvalidArgumentException("Invalid orderby column: {$column}");
+                }
+
+                $direction = strtolower($order['directions'][$index] ?? 'asc');
+                if (!in_array($direction, ['asc', 'desc'], true)) {
+                    throw new \InvalidArgumentException("Invalid order direction: {$direction}");
+                }
+
                 $query->orderBy($column, $direction);
             }
         }
@@ -1282,10 +1300,45 @@ class CrudApiController extends Controller
             }
         }
 
+        $orderColumns = array_values(array_filter(array_map('trim', $orderColumns), function ($column) {
+            return $column !== '';
+        }));
+        $orderDirections = array_values(array_filter(array_map(function ($direction) {
+            return strtolower(trim($direction));
+        }, $orderDirections), function ($direction) {
+            return $direction !== '';
+        }));
+
         return [
             'columns' => $orderColumns,
             'directions' => $orderDirections,
         ];
+    }
+
+    /**
+     * Resolve the list of columns that may be used for ordering.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return array
+     */
+    private function getAllowedOrderColumns($model)
+    {
+        $defaultColumns = ['id', 'order', 'created', 'modified', 'created_at', 'updated_at'];
+        $fillableColumns = $model->getFillable();
+
+        try {
+            $schemaColumns = $model->getConnection()
+                ->getSchemaBuilder()
+                ->getColumnListing($model->getTable());
+        } catch (\Exception $e) {
+            $schemaColumns = [];
+        }
+
+        $allowedColumns = array_unique(array_merge($schemaColumns, $fillableColumns, $defaultColumns));
+
+        return array_values(array_filter($allowedColumns, function ($column) {
+            return is_string($column) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column);
+        }));
     }
 
 
