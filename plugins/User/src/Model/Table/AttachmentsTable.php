@@ -20,7 +20,7 @@ class AttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload',
-            ['size' => '20MB',
+            ['size' => '10MB',
                 'contentEditable' => false,
                 'allowable_file_types' => 'all',
                 'useDefaultName' => true]
@@ -72,14 +72,23 @@ class AttachmentsTable extends ControllerActionTable
                 ->requirePresence('student_attachment_type_id', 'create')
                 ->notEmpty('student_attachment_type_id');
         }
+        $validator
+        ->requirePresence('file_content', 'create')
+        ->notEmptyFile('file_content', __('File attachment is required check file size'));
 
         // POCOR-9463
         $validator->add('file_content', 'fileSize', [
             'rule' => function ($value, $context) {
+
+            if (empty($value)) {
+                return true;
+            }
+
+            try {
                 // Uploaded file
                 if ($value instanceof \Psr\Http\Message\UploadedFileInterface) {
                     if ($value->getError() !== UPLOAD_ERR_OK) {
-                        return false;
+                        return true;
                     }
                     return $value->getSize() <= 10 * 1024 * 1024;
                 }
@@ -89,10 +98,15 @@ class AttachmentsTable extends ControllerActionTable
                 if (is_string($value)) {
                     return strlen($value) <= 10 * 1024 * 1024;
                 }
-                return false;
-            },
-            'message' => __('File Size must be <= 10MB')
-        ]);
+
+            } catch (\Exception $e) {
+                return true;
+            }
+
+            return true; 
+                },
+                'message' => __('File Size must be <= 10MB')
+            ]);
 
         return $validator;
     }
@@ -100,7 +114,6 @@ class AttachmentsTable extends ControllerActionTable
     //END:POCOR-5067
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
-
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
         $this->field('security_roles', [
