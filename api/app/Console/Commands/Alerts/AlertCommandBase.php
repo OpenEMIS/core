@@ -176,6 +176,9 @@ abstract class AlertCommandBase extends Command
 
             if (empty($pendingItems)) {
                 // $this->info("✅ Alert {$featureKey} has no pending items"); //POCOR-9509: commented out per CLAUDE.md                //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::runFeatureAlert() EXIT SUCCESS - No pending items'); //[TEMP-LOG]
+                if (!empty($this->processId)) { //POCOR-9509: always complete the process even when no items found — prevents system_processes stuck at status=1
+                    $this->completeProcess();
+                }
                 return self::SUCCESS;
             }
 
