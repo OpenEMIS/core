@@ -1375,20 +1375,15 @@ class CrudApiController extends Controller
         $cacheKey = 'crud_api_sortable_columns:' . get_class($model) . ':' . $model->getTable();
 
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($model) {
-            $defaultColumns = ['id', 'order', 'created', 'modified', 'created_at', 'updated_at'];
-            $fillableColumns = $model->getFillable();
-
             try {
                 $schemaColumns = $model->getConnection()
                     ->getSchemaBuilder()
                     ->getColumnListing($model->getTable());
             } catch (\Exception $e) {
-                $schemaColumns = [];
+                $schemaColumns = $model->getFillable();
             }
 
-            $allowedColumns = array_unique(array_merge($schemaColumns, $fillableColumns, $defaultColumns));
-
-            return array_values(array_filter($allowedColumns, function ($column) {
+            return array_values(array_filter(array_unique($schemaColumns), function ($column) {
                 return is_string($column) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column);
             }));
         });
