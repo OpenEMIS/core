@@ -1372,7 +1372,7 @@ class CrudApiController extends Controller
      */
     private function getAllowedOrderColumns($model)
     {
-        $cacheKey = 'crud_api_sortable_columns:' . get_class($model) . ':' . $model->getTable();
+        $cacheKey = 'crud_api_sortable_columns:v2:' . get_class($model) . ':' . $model->getTable();
 
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($model) {
             try {
