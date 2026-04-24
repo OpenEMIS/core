@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class CrudApiController extends Controller
 {
@@ -1371,22 +1372,26 @@ class CrudApiController extends Controller
      */
     private function getAllowedOrderColumns($model)
     {
-        $defaultColumns = ['id', 'order', 'created', 'modified', 'created_at', 'updated_at'];
-        $fillableColumns = $model->getFillable();
+        $cacheKey = 'crud_api_sortable_columns:' . get_class($model) . ':' . $model->getTable();
 
-        try {
-            $schemaColumns = $model->getConnection()
-                ->getSchemaBuilder()
-                ->getColumnListing($model->getTable());
-        } catch (\Exception $e) {
-            $schemaColumns = [];
-        }
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($model) {
+            $defaultColumns = ['id', 'order', 'created', 'modified', 'created_at', 'updated_at'];
+            $fillableColumns = $model->getFillable();
 
-        $allowedColumns = array_unique(array_merge($schemaColumns, $fillableColumns, $defaultColumns));
+            try {
+                $schemaColumns = $model->getConnection()
+                    ->getSchemaBuilder()
+                    ->getColumnListing($model->getTable());
+            } catch (\Exception $e) {
+                $schemaColumns = [];
+            }
 
-        return array_values(array_filter($allowedColumns, function ($column) {
-            return is_string($column) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column);
-        }));
+            $allowedColumns = array_unique(array_merge($schemaColumns, $fillableColumns, $defaultColumns));
+
+            return array_values(array_filter($allowedColumns, function ($column) {
+                return is_string($column) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column);
+            }));
+        });
     }
 
 
