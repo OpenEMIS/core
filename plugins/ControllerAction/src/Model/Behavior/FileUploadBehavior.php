@@ -195,7 +195,7 @@ class FileUploadBehavior extends Behavior
                     } else {
                         $entity->setErrors([
                             $fileContentField => [
-                                sprintf(__('File size should not be larger than %s'), $this->config('size'))
+                                sprintf(__('File size should not be larger than %s'), $this->getConfig('size'))
                             ]
                         ]);
                         unset($data[$model->getAlias()][$fileContentField]);
@@ -240,7 +240,7 @@ class FileUploadBehavior extends Behavior
                         } else {
                             $entity->setError(
                                 $fileContentField,
-                                sprintf(__('File size should not be larger than %s'), $this->config('size'))
+                                sprintf(__('File size should not be larger than %s'), $this->getConfig('size'))
                             );
                             unset($data[$model->getAlias()][$fileContentField]);
                         }
@@ -404,6 +404,7 @@ class FileUploadBehavior extends Behavior
         if (isset($fileType) && ($fileSize > $restrictedSize)) {
             $isValid = false;
         }
+        
         return $isValid;
     }
 
