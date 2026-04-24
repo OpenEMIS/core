@@ -12,6 +12,7 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 - **New Alert Queue screen** and **mass-delete** on both Alert Queue and Alert Logs. Administrators can monitor pending/sent/failed messages and bulk-delete entries produced by a misconfigured rule.
 - **Laravel runtime with working-hours throttling** — all 14 alert commands live under `api/app/Console/Commands/Alerts/`. The `ALERTS_PROCESS_LIMIT` environment variable caps messages per scheduler tick, and `Kernel.php` restricts dispatch to weekdays and working hours.
 - **Critical fixes (2026-04-16):** Fixed `self::FAILURE`/`self::SUCCESS` constant usage across all 13 alert commands (removed redundant `use Illuminate\Console\Command` imports from subclasses); standardized all alert templates to dot-notation placeholders (`${student.name}` etc.) — updated `alert_rules` DB template for StudentStatus from the old underscore format; fixed `AlertRetirementWarningCommand` fatal error (`Command::FAILURE` without import); enabled RetirementWarning in migration with `INSERT IGNORE`; added `UNIQUE` indexes on `alerts.name` and `alerts.process_name` with automatic deduplication (keeps lowest id per duplicate); cleaned TEMP-LOG debug calls from all command classes.
+- **Process completion fix (2026-04-24):** Fixed `system_processes` rows getting stuck at `status=1` when a second artisan command spawns for the same alert and finds no pending items — now always calls `completeProcess()` even when `getPendingItems()` returns empty (prevents concurrency guard `activeCount >= 2` from silently blocking all future alert spawns).
 
 ---
 
@@ -126,7 +127,7 @@ cd /var/www/html/emis/core/api && php artisan config:cache
 ## 5. Files Changed
 
 ### Files Changed Summary
-- **Modified:** 14 files (13 alert commands + migration)
+- **Modified:** 15 files (14 alert commands + migration)
 - **Added:** 0 files
 - **Removed:** 0 files
 
@@ -144,6 +145,7 @@ cd /var/www/html/emis/core/api && php artisan config:cache
 | Angular frontend | `frontend/src/` → `webroot/js/angular/dist/` | Alert Queue screen, mass-delete controls |
 | Migration | `config/Migrations/20260415030200_POCOR9509.php` | Backup tables for `institution_students_report_cards`, `security_functions`; added RetirementWarning |
 | Debug cleanup | `plugins/Institution/src/Model/Table/StudentsTable.php` | Removed TEMP-LOG calls |
+| Process completion fix (2026-04-24) | `api/app/Console/Commands/Alerts/AlertCommandBase.php` | Call `completeProcess()` even when `getPendingItems()` is empty — prevents `system_processes` rows stuck at status=1 |
 | Removed | `src/Model/Table/AlertsQueueTable.php` | Duplicate replaced by plugin table |
 
 ---
