@@ -811,6 +811,10 @@ class CrudApiController extends Controller
 
         $pagination = $this->getPaginationParams($request, $segments);
         $filters = $this->parseFilters($request, $segments);
+        $implicitIdFilter = $this->parseImplicitIdFilter($model, $segments);
+        if (!empty($implicitIdFilter)) {
+            $filters = array_merge($filters, $implicitIdFilter);
+        }
         try {
             $order = $this->parseOrderParams($request, $segments);
         } catch (\InvalidArgumentException $e) {
@@ -1121,6 +1125,37 @@ class CrudApiController extends Controller
         return array_values(array_filter(array_map('trim', explode(',', $value)), function ($item) {
             return $item !== '';
         }));
+    }
+
+    /**
+     * Parse an implicit GET identifier segment such as "4,5,6".
+     *
+     * @param string $model Fully qualified model class.
+     * @param array $segments Remaining URL segments.
+     * @return array
+     */
+    private function parseImplicitIdFilter($model, array &$segments)
+    {
+        if (count($segments) !== 1 || strpos($segments[0], ',') === false) {
+            return [];
+        }
+
+        $idField = $this->getPossibleIdField($model);
+        if (!$idField) {
+            return [];
+        }
+
+        $values = array_values(array_filter(array_map('trim', explode(',', $segments[0])), function ($item) {
+            return $item !== '';
+        }));
+
+        if (empty($values) || count(array_filter($values, [$this, 'isValidIdentifier'])) !== count($values)) {
+            return [];
+        }
+
+        $segments = [];
+
+        return [$idField => $values];
     }
 
     /**
