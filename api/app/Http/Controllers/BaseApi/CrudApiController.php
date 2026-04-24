@@ -811,9 +811,13 @@ class CrudApiController extends Controller
 
         $pagination = $this->getPaginationParams($request, $segments);
         $filters = $this->parseFilters($request, $segments);
-        $implicitIdFilter = $this->parseImplicitIdFilter($model, $segments);
-        if (!empty($implicitIdFilter)) {
-            $filters = array_merge($filters, $implicitIdFilter);
+        try {
+            $implicitIdFilter = $this->parseImplicitIdFilter($model, $segments);
+            if (!empty($implicitIdFilter)) {
+                $filters = array_merge($filters, $implicitIdFilter);
+            }
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
         }
         try {
             $order = $this->parseOrderParams($request, $segments);
@@ -1075,8 +1079,9 @@ class CrudApiController extends Controller
                 $field = trim($parts[0]);
                 $value = trim($parts[1]);
 
-                if (strpos($value, 'IN') === 0) {
-                    $conditions[$field] = $this->parseInConditionValues(substr($value, 2));
+                $inValues = $this->parseInConditionValues($value);
+                if ($inValues !== null) {
+                    $conditions[$field] = $inValues;
                 } else {
                     $conditions[$field] = $this->normalizeGetFilterValue($field, $value);
                 }
@@ -1118,13 +1123,27 @@ class CrudApiController extends Controller
      * Parse IN operator values from _conditions.
      *
      * @param string $value
-     * @return array
+     * @return array|null
      */
     private function parseInConditionValues($value)
     {
-        return array_values(array_filter(array_map('trim', explode(',', $value)), function ($item) {
+        if (strpos($value, 'IN') !== 0) {
+            return null;
+        }
+
+        $listValue = substr($value, 2);
+        if (strlen($listValue) >= 2 && $listValue[0] === '(' && substr($listValue, -1) === ')') {
+            $listValue = substr($listValue, 1, -1);
+        } elseif ($listValue === '' || preg_match('/^[A-Za-z]/', $listValue)) {
+            return null;
+        }
+
+        $rawValues = array_map('trim', explode(',', $listValue));
+        $values = array_values(array_filter($rawValues, function ($item) {
             return $item !== '';
         }));
+
+        return count($values) > 1 && count($values) === count($rawValues) ? $values : null;
     }
 
     /**
@@ -1145,12 +1164,13 @@ class CrudApiController extends Controller
             return [];
         }
 
-        $values = array_values(array_filter(array_map('trim', explode(',', $segments[0])), function ($item) {
+        $rawValues = array_map('trim', explode(',', $segments[0]));
+        $values = array_values(array_filter($rawValues, function ($item) {
             return $item !== '';
         }));
 
-        if (empty($values) || count(array_filter($values, [$this, 'isValidIdentifier'])) !== count($values)) {
-            return [];
+        if (count($values) < 2 || count($values) !== count($rawValues) || count(array_filter($values, [$this, 'isValidIdentifier'])) !== count($values)) {
+            throw new \InvalidArgumentException('Invalid identifier list.');
         }
 
         $segments = [];
