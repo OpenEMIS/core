@@ -1132,9 +1132,13 @@ class CrudApiController extends Controller
         }
 
         $listValue = substr($value, 2);
-        if (strlen($listValue) >= 2 && $listValue[0] === '(' && substr($listValue, -1) === ')') {
-            $listValue = substr($listValue, 1, -1);
-        } elseif ($listValue === '' || preg_match('/^[A-Za-z]/', $listValue)) {
+        if ($listValue !== '' && $listValue[0] === '(') {
+            $listValue = substr($listValue, 1);
+        }
+        if ($listValue !== '' && substr($listValue, -1) === ')') {
+            $listValue = substr($listValue, 0, -1);
+        }
+        if ($listValue === '' || preg_match('/^[A-Za-z]/', $listValue)) {
             return null;
         }
 
