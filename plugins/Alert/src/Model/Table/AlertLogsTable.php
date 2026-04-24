@@ -218,6 +218,7 @@ class AlertLogsTable extends ControllerActionTable
                 'model' => $processName,
                 'name' => $feature,
                 'created_user_id' => $userId,
+                'status' => 1, //POCOR-9509: only block on active processes — completed (3) or failed (-2) rows must not suppress future triggers
             ])
             ->where(function ($exp, $q) use ($checksum) {
                 // POCOR-9509: Check if params contains this checksum
