@@ -13,6 +13,7 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 - **Laravel runtime with working-hours throttling** — all 14 alert commands live under `api/app/Console/Commands/Alerts/`. The `ALERTS_PROCESS_LIMIT` environment variable caps messages per scheduler tick, and `Kernel.php` restricts dispatch to weekdays and working hours.
 - **Critical fixes (2026-04-16):** Fixed `self::FAILURE`/`self::SUCCESS` constant usage across all 13 alert commands (removed redundant `use Illuminate\Console\Command` imports from subclasses); standardized all alert templates to dot-notation placeholders (`${student.name}` etc.) — updated `alert_rules` DB template for StudentStatus from the old underscore format; fixed `AlertRetirementWarningCommand` fatal error (`Command::FAILURE` without import); enabled RetirementWarning in migration with `INSERT IGNORE`; added `UNIQUE` indexes on `alerts.name` and `alerts.process_name` with automatic deduplication (keeps lowest id per duplicate); cleaned TEMP-LOG debug calls from all command classes.
 - **Process completion fix (2026-04-24):** Fixed `system_processes` rows getting stuck at `status=1` when a second artisan command spawns for the same alert and finds no pending items — now always calls `completeProcess()` even when `getPendingItems()` returns empty (prevents concurrency guard `activeCount >= 2` from silently blocking all future alert spawns).
+- **Duplicate-check status filter (2026-04-24):** Added `status=1` filter to the duplicate-check query in `triggerAlertSystemProcess()` — now only active (status=1) processes block new triggers. Previously, completed (status=3) and failed (status=-2) rows also matched the checksum, which prevented each new absence from triggering its own alert.
 
 ---
 
@@ -127,7 +128,7 @@ cd /var/www/html/emis/core/api && php artisan config:cache
 ## 5. Files Changed
 
 ### Files Changed Summary
-- **Modified:** 15 files (14 alert commands + migration)
+- **Modified:** 16 files (14 alert commands + migration + AlertLogsTable)
 - **Added:** 0 files
 - **Removed:** 0 files
 
@@ -146,6 +147,7 @@ cd /var/www/html/emis/core/api && php artisan config:cache
 | Migration | `config/Migrations/20260415030200_POCOR9509.php` | Backup tables for `institution_students_report_cards`, `security_functions`; added RetirementWarning |
 | Debug cleanup | `plugins/Institution/src/Model/Table/StudentsTable.php` | Removed TEMP-LOG calls |
 | Process completion fix (2026-04-24) | `api/app/Console/Commands/Alerts/AlertCommandBase.php` | Call `completeProcess()` even when `getPendingItems()` is empty — prevents `system_processes` rows stuck at status=1 |
+| Duplicate-check status filter (2026-04-24) | `plugins/Alert/src/Model/Table/AlertLogsTable.php` | Added `status=1` filter to `triggerAlertSystemProcess()` duplicate-check query — only active processes block new triggers |
 | Removed | `src/Model/Table/AlertsQueueTable.php` | Duplicate replaced by plugin table |
 
 ---
