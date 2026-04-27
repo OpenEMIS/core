@@ -70,6 +70,8 @@ class AlertStaffTypeCommand extends AlertCommandBase
 
             if (!$exists) {
                 $this->error("Institution staff record with ID {$entityId} not found.");
+                //POCOR-9509: mark process failed so system_processes never hangs at status=1
+                $this->markProcessFailed("Institution staff record with ID {$entityId} not found");
                 return self::FAILURE;
             }
         }
