@@ -4,6 +4,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan; //POCOR-9509: needed for inline queue:work drain
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -24,6 +25,24 @@ class ProcessAlertQueue extends Command
 
     public function handle(): int
     {
+        //POCOR-9509: Drain the Laravel `alerts` queue (jobs table) before sending.
+        //Bridges the gap between attendance-driven RunAlertJob enqueues and alert_queue.
+        //Removes the need for a separate queue:work daemon — every 10-min alerts:send cron
+        //tick now does: jobs → alert_queue → SMTP/SMS in a single run.
+        //Latency: up to 10 min (matches the alerts:send cron cadence). For sub-minute
+        //dispatch, install the systemd queue worker instead.
+        try {
+            Artisan::call('queue:work', [
+                '--queue'           => 'alerts',
+                '--once'            => true,
+                '--stop-when-empty' => true,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('[POCOR-9509] alerts:send queue drain threw — continuing with alert_queue send', [
+                'exception' => $e->getMessage(),
+            ]);
+        }
+
         //POCOR-9509: resolve limit — CLI option overrides env; 0 means no limit (send all)
         $limit = $this->option('limit') !== null
             ? (int)$this->option('limit')
