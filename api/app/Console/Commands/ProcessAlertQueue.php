@@ -25,28 +25,44 @@ class ProcessAlertQueue extends Command
 
     public function handle(): int
     {
+        Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() ENTRY'); //[TEMP-LOG]
+
         //POCOR-9509: Drain the Laravel `alerts` queue (jobs table) before sending.
         //Bridges the gap between attendance-driven RunAlertJob enqueues and alert_queue.
         //Removes the need for a separate queue:work daemon — every 10-min alerts:send cron
         //tick now does: jobs → alert_queue → SMTP/SMS in a single run.
         //Latency: up to 10 min (matches the alerts:send cron cadence). For sub-minute
         //dispatch, install the systemd queue worker instead.
+        $jobsBefore = DB::table('jobs')->where('queue', 'alerts')->count(); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() jobs(queue=alerts) BEFORE drain=' . $jobsBefore); //[TEMP-LOG]
+
         try {
-            Artisan::call('queue:work', [
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() calling Artisan::queue:work --queue=alerts --stop-when-empty'); //[TEMP-LOG]
+            $drainExit = Artisan::call('queue:work', [
                 '--queue'           => 'alerts',
-                '--once'            => true,
                 '--stop-when-empty' => true,
             ]);
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() queue:work returned exit=' . $drainExit); //[TEMP-LOG]
+
+            $drainOutput = Artisan::output(); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() queue:work stdout (truncated 4KB):' . PHP_EOL . substr($drainOutput, 0, 4096)); //[TEMP-LOG]
         } catch (\Throwable $e) {
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() queue:work threw: ' . $e->getMessage()); //[TEMP-LOG]
             Log::warning('[POCOR-9509] alerts:send queue drain threw — continuing with alert_queue send', [
                 'exception' => $e->getMessage(),
+                'trace'     => $e->getTraceAsString(), //[TEMP-LOG]
             ]);
         }
+
+        $jobsAfter = DB::table('jobs')->where('queue', 'alerts')->count(); //[TEMP-LOG]
+        $failedCount = DB::table('failed_jobs')->count(); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() jobs(queue=alerts) AFTER drain=' . $jobsAfter . ', failed_jobs=' . $failedCount . ', drained=' . ($jobsBefore - $jobsAfter)); //[TEMP-LOG]
 
         //POCOR-9509: resolve limit — CLI option overrides env; 0 means no limit (send all)
         $limit = $this->option('limit') !== null
             ? (int)$this->option('limit')
             : (int)env('ALERT_SEND_LIMIT', 50);
+        Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() resolved limit=' . $limit); //[TEMP-LOG]
 
         $query = DB::table('alert_queue')
             ->where('status', AlertLogs::STATUS_PENDING) //POCOR-9509: use constant
@@ -59,17 +75,22 @@ class ProcessAlertQueue extends Command
 
         $alerts = $query->get();
 
+        Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() alert_queue pending due now count=' . $alerts->count()); //[TEMP-LOG]
+
         if ($alerts->isEmpty()) {
-            return Command::SUCCESS;
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() EXIT - nothing pending'); //[TEMP-LOG]
+            return self::SUCCESS;
         }
 
         // $this->info("Processing {$alerts->count()} alerts..."); //POCOR-9509: commented out per CLAUDE.md
 
         foreach ($alerts as $alert) {
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() processSingleAlert id=' . $alert->id . ', channel=' . $alert->channel . ', recipient=' . $alert->recipient . ', alert_type=' . $alert->alert_type); //[TEMP-LOG]
             $this->processSingleAlert($alert);
         }
 
-        return Command::SUCCESS;
+        Log::debug('[TEMP-LOG] @ProcessAlertQueue::handle() EXIT - processed ' . $alerts->count() . ' alerts'); //[TEMP-LOG]
+        return self::SUCCESS;
     }
 
     // POCOR-9509: Process a single alert with optimistic locking and transactions
@@ -112,9 +133,11 @@ class ProcessAlertQueue extends Command
                 ]);
 
             if ($updated === 0) {
+                Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' SKIPPED - another worker grabbed it (status changed)'); //[TEMP-LOG]
                 // Another worker picked it up
                 return;
             }
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' LOCKED status=PROCESSING'); //[TEMP-LOG]
 
             // Send the alert within a transaction
             DB::transaction(function () use ($alert,
@@ -125,6 +148,8 @@ class ProcessAlertQueue extends Command
                 $emailSender = app(EmailSender::class);
                 $smsSender = app(SmsSender::class);
 
+                Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' DISPATCH channel=' . $channel . ' to=' . $recipient); //[TEMP-LOG]
+
                 // Dispatch by channel
                 switch ($channel) {
                     case 'email':
@@ -133,6 +158,7 @@ class ProcessAlertQueue extends Command
                             $alert->subject,
                             $alert->message_body
                         );
+                        Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' EmailSender->send() returned'); //[TEMP-LOG]
                         break;
 
                     case 'sms':
@@ -140,6 +166,7 @@ class ProcessAlertQueue extends Command
                             $recipient,
                             MessageSanitizer::sanitize($alert->message_body)
                         );
+                        Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' SmsSender->send() returned'); //[TEMP-LOG]
                         break;
 
                     default:
@@ -167,14 +194,11 @@ class ProcessAlertQueue extends Command
                         'processed_date' => $nowLocal,
                     ]);
 
-//                Log::info('Alert sent successfully', [
-//                    'alert_id' => $alert->id,
-//                    'channel' => $channel,
-//                    'alert_type' => $alertType,
-//                ]);
+                Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' MARKED SENT (alert_queue + alert_logs)'); //[TEMP-LOG]
             });
 
         } catch (Throwable $e) {
+            Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' THREW: ' . $e->getMessage()); //[TEMP-LOG]
             $this->markFailed($alert, $e);
         }
     }

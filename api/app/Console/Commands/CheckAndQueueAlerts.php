@@ -74,7 +74,7 @@ class CheckAndQueueAlerts extends Command
 
             if ($alerts->isEmpty()) {
                 // Log::info('[POCOR-9509] No alerts configured with frequency');
-                return Command::SUCCESS;
+                return self::SUCCESS;
             }
 
             $triggeredCount = 0;
@@ -109,13 +109,13 @@ class CheckAndQueueAlerts extends Command
             //     'total' => $alerts->count(),
             // ]);
 
-            return Command::SUCCESS;
+            return self::SUCCESS;
         } catch (\Throwable $e) {
             Log::error('[POCOR-9509] CheckAndQueueAlerts failed', [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return Command::FAILURE;
+            return self::FAILURE;
         }
     }
 
