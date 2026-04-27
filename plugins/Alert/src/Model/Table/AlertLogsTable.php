@@ -235,13 +235,22 @@ class AlertLogsTable extends ControllerActionTable
 
         // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() No duplicate found, proceeding to create system_processes'); //[TEMP-LOG]
 
-        //POCOR-9509: Limit concurrent background processes per alert type to prevent PHP-FPM / DB connection exhaustion
+        //POCOR-9509: Limit concurrent background processes per alert type to prevent PHP-FPM / DB exhaustion.
+        //Count only RECENT status=1 rows (last 5 min) — without the time bound, stale rows poison the count
+        //permanently and silently block all new alerts. Limit is env-configurable; default 5 ≈ half of typical
+        //pm.max_children=10. Operators should tune ALERT_MAX_CONCURRENT against their own pm.max_children.
+        $maxConcurrent = (int) (env('ALERT_MAX_CONCURRENT') ?: 5);
+        $freshSince = date('Y-m-d H:i:s', strtotime('-5 minutes'));
         $activeCount = $systemProcessesTable->find()
-            ->where(['model' => $processName, 'status' => 1])
+            ->where([
+                'model' => $processName,
+                'status' => 1,
+                'created >=' => $freshSince,
+            ])
             ->count();
-        if ($activeCount >= 2) {
+        if ($activeCount >= $maxConcurrent) {
             Log::info('[POCOR-9509] Alert spawn skipped — max concurrent instances reached', [
-                'process' => $processName, 'active' => $activeCount
+                'process' => $processName, 'active' => $activeCount, 'limit' => $maxConcurrent
             ]);
             return;
         }
