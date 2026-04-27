@@ -863,9 +863,12 @@ class StaffReportCardsTable extends AppTable
 
             LEFT JOIN institution_shifts ish 
                 ON ish.id = ip.shift_id
-
+                
             LEFT JOIN shift_options so 
-                ON so.id = ish.shift_option_id
+            ON so.id = ip.shift_id
+
+           /* LEFT JOIN shift_options so 
+                ON so.id = ish.shift_option_id*/
 
             LEFT JOIN staff_statuses ss 
                 ON ss.id = ist.staff_status_id
