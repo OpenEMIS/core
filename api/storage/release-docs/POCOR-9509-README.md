@@ -14,6 +14,9 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 - **Critical fixes (2026-04-16):** Fixed `self::FAILURE`/`self::SUCCESS` constant usage across all 13 alert commands (removed redundant `use Illuminate\Console\Command` imports from subclasses); standardized all alert templates to dot-notation placeholders (`${student.name}` etc.) — updated `alert_rules` DB template for StudentStatus from the old underscore format; fixed `AlertRetirementWarningCommand` fatal error (`Command::FAILURE` without import); enabled RetirementWarning in migration with `INSERT IGNORE`; added `UNIQUE` indexes on `alerts.name` and `alerts.process_name` with automatic deduplication (keeps lowest id per duplicate); cleaned TEMP-LOG debug calls from all command classes.
 - **Process completion fix (2026-04-24):** Fixed `system_processes` rows getting stuck at `status=1` when a second artisan command spawns for the same alert and finds no pending items — now always calls `completeProcess()` even when `getPendingItems()` returns empty (prevents concurrency guard `activeCount >= 2` from silently blocking all future alert spawns).
 - **Duplicate-check status filter (2026-04-24):** Added `status=1` filter to the duplicate-check query in `triggerAlertSystemProcess()` — now only active (status=1) processes block new triggers. Previously, completed (status=3) and failed (status=-2) rows also matched the checksum, which prevented each new absence from triggering its own alert.
+- **Early-return remnants fix (2026-04-27):** `AlertCommandBase::prepareContext()` and per-command `handle()` had five paths that returned `FAILURE` *before* `completeProcess()` or `failProcess()` was ever called (missing `--user_id`/`--rule_id`, rule not found, no roles assigned, missing `--student_id`/`--academic_period_id`, staff record not found). All five now route through a new `markProcessFailed(string $reason)` helper that sets `status=-2`, fills `end_date`, and writes a `system_errors` row with `code='ALERT_FAIL'` for forensic inspection. The "no roles assigned" path calls `completeProcess()` instead — misconfiguration is not an error.
+- **Global stale-process sweep (2026-04-27):** `CheckAndQueueAlerts::handle()` now opens with a global `UPDATE system_processes SET status=-1 WHERE status IN (1,2) AND created <= NOW()-INTERVAL 1 DAY`. The 10-minute `alerts:check` cron means any stale row gets reaped within ~24h10m worst case, regardless of which features are still active. Defence in depth against any uncaught path that escapes the per-command terminal write.
+- **Laravel queue refactor (2026-04-27):** Replaced per-trigger `exec("php artisan alerts:<feature> …")` with a queue-mediated flow. `AlertLogsTable::triggerAlertCommand()` now calls a new thin `alerts:enqueue` artisan command (~150ms boot+dispatch+exit), which enqueues a `RunAlertJob` queueable. A `php artisan queue:work --queue=alerts` daemon drains the `jobs` table at controlled rate, calling the existing per-feature artisan command via `Artisan::call`. The hardcoded `>= 2` (later `>= 5`) concurrency cap was removed — backpressure now comes from queue depth + worker count, not row counting. Why: at country scale (5k schools × 30 students × N rules in a 90-min window) the previous design exhausted the PHP-FPM pool. Full rationale in `tmp/POCOR-9509/laravel-queue-rationale.{md,jira.md}`.
 
 ---
 
@@ -28,17 +31,70 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
    docker exec poe-application /bin/sh -c \
      "cd /var/www/html/emis/core && php bin/cake.php migrations migrate"
    ```
-3. **Clear caches** for both frameworks:
+3. **Clear caches** for both frameworks (and **reload PHP-FPM / restart container** so OPcache drops the old bytecode — without this, the early-return / queue fixes from 2026-04-27 will not run even though the files on disk are correct):
    ```bash
    docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core && php bin/cake.php cache clear_all"
-   docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php artisan config:cache && php artisan cache:clear"
+   docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core/api && php artisan optimize:clear"
+   # On the host or inside the container, reload PHP-FPM (or restart the container)
+   sudo systemctl reload php-fpm   # or:  docker compose restart poe-application
    ```
 4. **Set throttle** in `api/.env` (start conservative — free-tier mail providers often cap at 20 msg/min):
    ```env
    ALERTS_PROCESS_LIMIT=20
    ```
    Then rerun `php artisan config:cache`. Use `0` to pause dispatch without disabling the cron job.
-5. **Install two direct cron entries** for the alert checker and sender.
+5. **Set up the Laravel queue (NEW — 2026-04-27).** Alerts now dispatch via Laravel's queue (`jobs` / `failed_jobs` tables — already created by stock Laravel migrations, no new schema). Without this step `jobs` rows pile up forever and no alerts are sent.
+
+   ```env
+   # api/.env
+   QUEUE_CONNECTION=database
+   ```
+
+   Then start a long-running queue worker as a daemon. The simplest production setup is a systemd unit:
+
+   ```ini
+   # /etc/systemd/system/openemis-queue.service
+   [Unit]
+   Description=OpenEMIS Laravel Queue Worker (alerts queue)
+   After=mysql.service php-fpm.service
+
+   [Service]
+   User=www-data
+   Group=www-data
+   Restart=always
+   RestartSec=5
+   ExecStart=/usr/bin/php /var/www/html/emis/core/api/artisan queue:work --queue=alerts --tries=3 --timeout=120 --sleep=3
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now openemis-queue
+   sudo systemctl status openemis-queue
+   ```
+
+   Inspect:
+   ```sql
+   SELECT COUNT(*) FROM jobs WHERE queue='alerts';   -- pending
+   SELECT id, exception FROM failed_jobs ORDER BY failed_at DESC LIMIT 10;
+   ```
+
+   Retry failed jobs after fixing the underlying issue:
+   ```bash
+   php artisan queue:retry all
+   ```
+
+6. **One-time cleanup of pre-existing stuck rows** (run once after the deploy):
+   ```sql
+   UPDATE system_processes
+      SET status = -1, end_date = NOW(), modified = NOW()
+    WHERE status = 1 AND end_date IS NULL;
+   ```
+   The 1-day stale-process sweep would catch them on the next `alerts:check` tick anyway, but no need to wait.
+
+7. **Install two direct cron entries** for the alert checker and sender.
 
    > ### ⚠️ CRITICAL — Read before touching cron
    >
@@ -80,14 +136,17 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
    ```
    Adjust `0 2` and `0 7` to local off-peak and morning hours. The `timeout` values are 6 hours for
    the checker and 2 hours for the sender — size them to your largest expected run time.
-7. **Verify anonymisation** before enabling on production-copy data. See [Manual §14.4](POCOR-9509/MANUAL.md#14-testing-and-dry-run-procedures) and run the two `SELECT COUNT(*)` queries.
-8. **Smoke-test** one scheduled alert on a dev/test database:
+8. **Verify anonymisation** before enabling on production-copy data. See [Manual §14.4](POCOR-9509/MANUAL.md#14-testing-and-dry-run-procedures) and run the two `SELECT COUNT(*)` queries.
+9. **Smoke-test** one scheduled alert on a dev/test database, then drain the queue with a one-shot worker to confirm the new path works end-to-end:
    ```bash
    docker exec poe-application /bin/sh -c \
      "cd /var/www/html/emis/core/api && php artisan alerts:check --user_id=1 --sync"
+   docker exec poe-application /bin/sh -c \
+     "cd /var/www/html/emis/core/api && php artisan queue:work --queue=alerts --once --stop-when-empty"
    ```
+   Then check `system_processes` rows transitioned to `status=3` and `failed_jobs` is empty.
 
-> **Warning:** Never run step 8 on a database containing real contact data unless you have completed step 7. One misconfigured rule can dispatch thousands of real emails or SMS messages.
+> **Warning:** Never run step 9 on a database containing real contact data unless you have completed step 8. One misconfigured rule can dispatch thousands of real emails or SMS messages.
 
 ---
 
@@ -117,6 +176,7 @@ This release ports the OpenEMIS alerts subsystem from legacy CakePHP shell scrip
 | `ALERT_SEND_DAILY_TIME` | `api/.env` | Time for daily send run in `HH:MM` format. Default `07:00`. Ignored when `ALERT_SEND_DAILY=false`. |
 | `Alert.AlertQueue` | CakePHP Table Registry | Plugin alias for queue access. Not `AlertQueue`. |
 | `NON_IMPLEMENTED_ALERTS` | `plugins/Alert/src/Model/Table/AlertsTable.php` | Contains only `StaffAttendance` after this release. |
+| `QUEUE_CONNECTION` | `api/.env` | **Must be `database`** after the 2026-04-27 queue refactor (was `sync`). Without this, `RunAlertJob::dispatch()` runs inline in the trigger path and blocks. |
 
 After changing any `.env` value always run:
 ```bash
@@ -148,6 +208,9 @@ cd /var/www/html/emis/core/api && php artisan config:cache
 | Debug cleanup | `plugins/Institution/src/Model/Table/StudentsTable.php` | Removed TEMP-LOG calls |
 | Process completion fix (2026-04-24) | `api/app/Console/Commands/Alerts/AlertCommandBase.php` | Call `completeProcess()` even when `getPendingItems()` is empty — prevents `system_processes` rows stuck at status=1 |
 | Duplicate-check status filter (2026-04-24) | `plugins/Alert/src/Model/Table/AlertLogsTable.php` | Added `status=1` filter to `triggerAlertSystemProcess()` duplicate-check query — only active processes block new triggers |
+| Early-return remnants fix (2026-04-27) | `api/app/Console/Commands/Alerts/AlertCommandBase.php` + `AlertStudentAbsenceCommand.php` + `AlertStaffTypeCommand.php` | New `markProcessFailed(string $reason)` helper called from all five early-return paths; "no roles assigned" routes to `completeProcess()` instead of leaking. Forensic SQL for finding remaining stale rows lives in the same memo as the rationale. |
+| Global stale-process sweep (2026-04-27) | `api/app/Console/Commands/CheckAndQueueAlerts.php` | Aborts any `system_processes` row at status 1/2 older than 1 day at the top of every `alerts:check` run; ~24h10m worst case for stuck rows. |
+| Queue refactor (2026-04-27) | NEW `api/app/Jobs/RunAlertJob.php` (76 LOC) + NEW `api/app/Console/Commands/Alerts/EnqueueAlertCommand.php` (46 LOC) + `plugins/Alert/src/Model/Table/AlertLogsTable.php` (-44/+20) + `api/.env` + `api/.env.example` | Trigger path now enqueues to Laravel's `jobs` table (~150ms exec); `queue:work --queue=alerts` daemon drains. Concurrency cap removed. Per-feature artisan commands kept — `RunAlertJob` invokes them via `Artisan::call`, so all recipient/placeholder/`alert_queue` logic and the `system_processes` 1→2→3/-2 lifecycle stay untouched. |
 | Removed | `src/Model/Table/AlertsQueueTable.php` | Duplicate replaced by plugin table |
 
 ---
@@ -161,6 +224,9 @@ cd /var/www/html/emis/core/api && php artisan config:cache
 | Placeholder tokens appear literally in sent emails | Confirm the token spelling against [Manual §6](POCOR-9509/MANUAL.md#6-placeholders) — tokens are case-sensitive. |
 | Queue backing up, messages not sending | Inspect `ALERTS_PROCESS_LIMIT`; if `0`, restore a positive value and rerun `php artisan config:cache`. |
 | Duplicate alerts in queue | Expected when multiple rules match the same record. See [Manual §5.4](POCOR-9509/MANUAL.md#alert-rules-configuring-what-to-send). |
+| Markings happen but no alerts dispatched (2026-04-27 onward) | `queue:work --queue=alerts` daemon is not running. Check `systemctl status openemis-queue` and `SELECT COUNT(*) FROM jobs WHERE queue='alerts'`. If the count is climbing, the worker is down. |
+| `system_processes` rows stuck at `status=1` after deploy | OPcache still holds old bytecode. Run `php artisan optimize:clear` and reload PHP-FPM (or restart the container). The 2026-04-27 `markProcessFailed` fix only applies to newly spawned PHP processes. |
+| Repeated rule (e.g. id=1) keeps creating stuck rows | Rule has identical text across recipients (no `${student.name}` etc.) — alert dedup at `alert_logs` insert silently skips. Either disable the rule (`UPDATE alert_rules SET enabled=0 WHERE id=1`) or add per-recipient placeholders to its subject + message. |
 
 Advanced diagnostics: `api/storage/logs/laravel.log`, `logs/hin-debug.log`, `logs/alert_<command>.log`, `logs/system_processes/<id>.log`.
 
@@ -188,6 +254,7 @@ DELETE FROM alert_queue WHERE status = 0;
 | دليل المسؤول (Arabic) | [POCOR-9509/MANUAL_AR.md](POCOR-9509/MANUAL_AR.md) |
 | Technical Implementation Guide | [POCOR-9509/ALERTS_GUIDE.md](POCOR-9509/ALERTS_GUIDE.md) |
 | Threshold Configuration Reference | [POCOR-9509/thresholds.md](POCOR-9509/thresholds.md) |
+| Laravel Queue Rationale (2026-04-27) | `tmp/POCOR-9509/laravel-queue-rationale.md` (Markdown) · `.jira.md` (Jira wiki) — explains why we routed alert dispatch through Laravel's existing `jobs` table at country scale |
 
 ---
 
@@ -214,6 +281,24 @@ Before scanning all staff, pre-select only institutions that have at least one s
 retirement age, then resolve recipients only for those institutions. This avoids querying contacts for
 every school in the country when only a handful have retiring staff.
 
+### Direct INSERT into Laravel `jobs` table (queue path optimization)
+The 2026-04-27 queue refactor still spawns one fast PHP-FPM process per trigger to call
+`alerts:enqueue` (~150ms each). At very high burst (5k+ markings within a few seconds) those quick
+processes still accumulate. A v2 ticket can replace the `exec()` in
+`AlertLogsTable::triggerAlertCommand()` with a direct `INSERT INTO jobs` from CakePHP, eliminating
+the PHP-FPM hop entirely. ~50 LOC of Laravel-payload-format helper code with minor coupling to
+Laravel queue internals (mitigatable with a round-trip unit test). Only worth doing once we observe
+real burst loads above a few hundred triggers/second.
+
+### Laravel Horizon dashboard
+If the deployment moves to Redis as the queue driver, Laravel Horizon gives a live worker UI,
+metrics, and per-queue throughput without any code changes.
+
+### Per-priority queues
+`alerts:high` / `alerts:bulk` named queues if there's ever a need to prioritise some rules over
+others. The current refactor uses a single `alerts` queue; splitting is a one-line change in
+`RunAlertJob::__construct` plus an additional `queue:work --queue=alerts:high,alerts` daemon.
+
 ---
 
-*POCOR-9509 · 2026-04-15*
+*POCOR-9509 · 2026-04-15 (initial) · 2026-04-27 (queue refactor + early-return + stale-sweep)*
