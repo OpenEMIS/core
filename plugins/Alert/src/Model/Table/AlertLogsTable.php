@@ -94,36 +94,28 @@ class AlertLogsTable extends ControllerActionTable
             return;
         }
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() Laravel command mapped: ' . $commandName); //[TEMP-LOG]
-
-        // POCOR-9509: Build Laravel artisan command
-        $argsArray = [
-            '--user_id=' . $userId,
-            '--rule_id=' . $ruleId,
-            '--process_id=' . $processId
+        //POCOR-9509: Route through Laravel's queue (jobs / failed_jobs tables). The trigger path
+        //becomes a fast enqueue (~150ms) — no per-feature alert work runs here. Heavy work
+        //(recipient resolution, placeholder fill, queueAlert into alert_queue) happens inside
+        //`php artisan queue:work --queue=alerts`. See tmp/POCOR-9509/laravel-queue-rationale.md.
+        $jobOptions = [
+            '--user_id' => (string) $userId,
+            '--rule_id' => (string) $ruleId,
+            '--process_id' => (string) $processId,
         ];
-
         foreach ($extraOptions as $key => $value) {
-            $argsArray[] = '--' . $key . '=' . escapeshellarg($value);
+            $jobOptions['--' . $key] = (string) $value;
         }
 
-        $args = implode(' ', $argsArray);
-
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() Laravel artisan args: ' . $args); //[TEMP-LOG]
-
-        // POCOR-9509: Execute Laravel artisan command in background
         $artisanPath = ROOT . DS . 'api' . DS . 'artisan';
-        $cmd = 'php ' . $artisanPath . ' ' . $commandName . ' ' . $args;
-        $logPath = ROOT . DS . 'logs' . DS . 'alert_' . str_replace(':', '_', $commandName) . '.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logPath;
-
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() Full shell command: ' . $shellCmd); //[TEMP-LOG]
-
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() Calling exec() to dispatch command'); //[TEMP-LOG]
+        $shellCmd = sprintf(
+            'php %s alerts:enqueue --command=%s --options=%s > /dev/null 2>&1 &',
+            escapeshellarg($artisanPath),
+            escapeshellarg($commandName),
+            escapeshellarg(json_encode($jobOptions))
+        );
         exec($shellCmd);
-        Log::write('debug', '[POCOR-9509] Laravel Artisan: ' . $shellCmd);
-
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() EXIT - command dispatched'); //[TEMP-LOG]
+        Log::write('debug', '[POCOR-9509] Enqueue: ' . $commandName);
     }
 
     /**
@@ -235,25 +227,9 @@ class AlertLogsTable extends ControllerActionTable
 
         // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() No duplicate found, proceeding to create system_processes'); //[TEMP-LOG]
 
-        //POCOR-9509: Limit concurrent background processes per alert type to prevent PHP-FPM / DB exhaustion.
-        //Count only RECENT status=1 rows (last 5 min) — without the time bound, stale rows poison the count
-        //permanently and silently block all new alerts. Limit is env-configurable; default 5 ≈ half of typical
-        //pm.max_children=10. Operators should tune ALERT_MAX_CONCURRENT against their own pm.max_children.
-        $maxConcurrent = (int) (env('ALERT_MAX_CONCURRENT') ?: 5);
-        $freshSince = date('Y-m-d H:i:s', strtotime('-5 minutes'));
-        $activeCount = $systemProcessesTable->find()
-            ->where([
-                'model' => $processName,
-                'status' => 1,
-                'created >=' => $freshSince,
-            ])
-            ->count();
-        if ($activeCount >= $maxConcurrent) {
-            Log::info('[POCOR-9509] Alert spawn skipped — max concurrent instances reached', [
-                'process' => $processName, 'active' => $activeCount, 'limit' => $maxConcurrent
-            ]);
-            return;
-        }
+        //POCOR-9509: Concurrency cap removed — Laravel queue (`queue:work --queue=alerts`)
+        //provides natural backpressure now. Number of concurrent workers = number of running
+        //queue:work daemons, set by ops (systemd / Supervisor / Horizon), not by row counting.
 
         // POCOR-9509: Create system_processes record
         $processValues = [
