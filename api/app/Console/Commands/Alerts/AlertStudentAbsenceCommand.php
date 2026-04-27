@@ -58,21 +58,21 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     public function handle(): int
     {
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() ENTRY'); //[TEMP-LOG]
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() options: ' . json_encode($this->options())); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() ENTRY'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() options: ' . json_encode($this->options())); //[TEMP-LOG]
 
         if (!$this->prepareContext()) {
-            //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() EXIT EARLY - prepareContext() failed'); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() EXIT EARLY - prepareContext() failed'); //[TEMP-LOG]
             return self::FAILURE;
         }
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() prepareContext() succeeded'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() prepareContext() succeeded'); //[TEMP-LOG]
 
         // Validate student-specific parameters
         $studentId = (int) $this->option('student_id');
         $academicPeriodId = (int) $this->option('academic_period_id');
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId); //[TEMP-LOG]
 
         if (!$studentId || !$academicPeriodId) {
             $this->error("Missing required options: student_id, academic_period_id");
@@ -81,9 +81,9 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             return self::FAILURE;
         }
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() About to call runFeatureAlert()'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() About to call runFeatureAlert()'); //[TEMP-LOG]
         $result = $this->runFeatureAlert('StudentAttendance');
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() EXIT - result=' . $result); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() EXIT - result=' . $result); //[TEMP-LOG]
         return $result;
     }
 
@@ -97,16 +97,16 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() ENTRY - featureKey=' . $featureKey); //[TEMP-LOG]
 
         $studentId = (int) $this->option('student_id');
         $academicPeriodId = (int) $this->option('academic_period_id');
         $threshold = (int) ($this->rule->threshold ?? 1);
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId . ', threshold=' . $threshold); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() studentId=' . $studentId . ', academicPeriodId=' . $academicPeriodId . ', threshold=' . $threshold); //[TEMP-LOG]
 
         // Query absences for this student
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Executing DB query...'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Executing DB query...'); //[TEMP-LOG]
         $absences = DB::table('institution_student_absence_details as absences')
             ->join('security_users as users', 'users.id', '=', 'absences.student_id')
             ->join('institutions', 'institutions.id', '=', 'absences.institution_id')
@@ -148,15 +148,15 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             ->get()
             ->toArray();
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Query returned ' . count($absences) . ' rows'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Query returned ' . count($absences) . ' rows'); //[TEMP-LOG]
 
         if (empty($absences)) {
-            //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - No absences found'); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - No absences found'); //[TEMP-LOG]
             return [];
         }
 
         // Log first few absence records for debugging
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Sample data (first 3): ' . json_encode(array_slice($absences, 0, 3))); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Sample data (first 3): ' . json_encode(array_slice($absences, 0, 3))); //[TEMP-LOG]
 
         // Count unique absence dates
         $uniqueDates = [];
@@ -168,15 +168,16 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
 
         $totalDays = count($uniqueDates);
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Unique dates count: ' . $totalDays . ', Total records: ' . count($absences)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Unique dates count: ' . $totalDays . ', Total records: ' . count($absences)); //[TEMP-LOG]
 
         // Check against threshold
         if ($totalDays < $threshold) {
-            // $this->info("Student has {$totalDays} absence days, below threshold of {$threshold}"); //POCOR-9509: commented out per CLAUDE.md            //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - Below threshold'); //[TEMP-LOG]
+            // $this->info("Student has {$totalDays} absence days, below threshold of {$threshold}"); //POCOR-9509: commented out per CLAUDE.md
+            Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - Below threshold'); //[TEMP-LOG]
             return [];
         }
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Threshold met, building result'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Threshold met, building result'); //[TEMP-LOG]
 
         // Build result from first absence record (all have same student/institution data)
         $first = $absences[0];
@@ -212,7 +213,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             'total_times' => count($absences),
         ]];
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - returning 1 pending item with total_days=' . $totalDays); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() EXIT - returning 1 pending item with total_days=' . $totalDays); //[TEMP-LOG]
         return $result;
     }
 
@@ -226,8 +227,8 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
      */
     protected function resolveRecipients(array $item): array
     {
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() ENTRY'); //[TEMP-LOG]
-        //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() institution_id=' . ($item['institution_id'] ?? 'null') . ', institution_class_id=' . ($item['institution_class_id'] ?? 'null')); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() ENTRY'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() institution_id=' . ($item['institution_id'] ?? 'null') . ', institution_class_id=' . ($item['institution_class_id'] ?? 'null')); //[TEMP-LOG]
 
         $institutionId    = (int) ($item['institution_id'] ?? 0);
         $institutionClassId = (int) ($item['institution_class_id'] ?? 0);

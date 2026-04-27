@@ -40,9 +40,9 @@ class AlertLogsTable extends ControllerActionTable
     // POCOR-9509: Updated to trigger Laravel artisan commands instead of CakePHP shells
     public static function triggerAlertCommand(string $processName, int $userId, int $ruleId, int $processId, array $extraOptions = []): void
     {
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() ENTRY'); //[TEMP-LOG]
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() params: processName=' . $processName . ', userId=' . $userId . ', ruleId=' . $ruleId . ', processId=' . $processId); //[TEMP-LOG]
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() extraOptions: ' . json_encode($extraOptions)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() ENTRY'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() params: processName=' . $processName . ', userId=' . $userId . ', ruleId=' . $ruleId . ', processId=' . $processId); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() extraOptions: ' . json_encode($extraOptions)); //[TEMP-LOG]
 
         // POCOR-9509: Map CakePHP process names to Laravel artisan commands
         // Log::debug("Triggering alert command for process: {$processName} with extra options: " . json_encode($extraOptions));
@@ -66,10 +66,10 @@ class AlertLogsTable extends ControllerActionTable
 
         $commandName = $commandMap[$processName] ?? null;
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() Command mapping result: commandName=' . ($commandName ?? 'null')); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() Command mapping result: commandName=' . ($commandName ?? 'null')); //[TEMP-LOG]
 
         if (!$commandName) {
-            // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() No Laravel command mapped, attempting CakePHP shell fallback'); //[TEMP-LOG];
+            Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() No Laravel command mapped, attempting CakePHP shell fallback'); //[TEMP-LOG]
             // Fallback to old CakePHP shell command for unmapped processes
             $command = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $processName));
             $argsArray = [
@@ -87,10 +87,10 @@ class AlertLogsTable extends ControllerActionTable
             $logPath = ROOT . DS . 'logs' . DS . $command . '.log & echo $!';
             $shellCmd = $cmd . ' >> ' . $logPath;
 
-            // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() CakePHP shell command: ' . $shellCmd); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() CakePHP shell command: ' . $shellCmd); //[TEMP-LOG]
             exec($shellCmd);
             Log::write('debug', '[AlertCommand] CakePHP Shell: ' . $shellCmd);
-            // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() EXIT (CakePHP shell fallback used)'); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertCommand() EXIT (CakePHP shell fallback used)'); //[TEMP-LOG]
             return;
         }
 
@@ -152,9 +152,9 @@ class AlertLogsTable extends ControllerActionTable
      */
     public static function triggerAlertSystemProcess($systemProcessesTable, $rule, string $processName, int $userId, array $extraOptions = []): void
     {
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() ENTRY'); //[TEMP-LOG]
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() params: processName=' . $processName . ', userId=' . $userId . ', rule_id=' . ($rule['id'] ?? 'N/A') . ', feature=' . ($rule['feature'] ?? 'N/A')); //[TEMP-LOG]
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() extraOptions: ' . json_encode($extraOptions)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() ENTRY'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() params: processName=' . $processName . ', userId=' . $userId . ', rule_id=' . ($rule['id'] ?? 'N/A') . ', feature=' . ($rule['feature'] ?? 'N/A')); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() extraOptions: ' . json_encode($extraOptions)); //[TEMP-LOG]
 
         $now = FrozenTime::now();
 
@@ -163,7 +163,7 @@ class AlertLogsTable extends ControllerActionTable
         $entityType = $extraOptions['entity_type'] ?? 'Unknown';
         $triggerType = $extraOptions['trigger_type'] ?? 'manual';
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() context=' . json_encode($context) . ', entityType=' . $entityType . ', triggerType=' . $triggerType); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() context=' . json_encode($context) . ', entityType=' . $entityType . ', triggerType=' . $triggerType); //[TEMP-LOG]
 
         // POCOR-9509: Generate checksum for deduplication
         // Hash the context to detect true duplicates vs. different changes to same entity
@@ -178,7 +178,7 @@ class AlertLogsTable extends ControllerActionTable
         }
         $checksum = hash('sha256', json_encode($checksumData));
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() checksumData=' . json_encode($checksumData) . ', computed_checksum=' . $checksum); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() checksumData=' . json_encode($checksumData) . ', computed_checksum=' . $checksum); //[TEMP-LOG]
 
         // POCOR-9509: Build params JSON with enhanced structure
         $params = [
@@ -200,11 +200,11 @@ class AlertLogsTable extends ControllerActionTable
         $paramsJson = json_encode($params);
         $feature = $rule['feature'];
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() Final params JSON: ' . $paramsJson); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() Final params JSON: ' . $paramsJson); //[TEMP-LOG]
 
         // POCOR-9509: Deduplication check using checksum (Phase 2)
         // Check for existing process with same checksum (prevents true duplicates)
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() Checking for duplicate with checksum: ' . $checksum); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() Checking for duplicate with checksum: ' . $checksum); //[TEMP-LOG]
         $existing = $systemProcessesTable->find()
             ->where([
                 'model' => $processName,
@@ -220,12 +220,12 @@ class AlertLogsTable extends ControllerActionTable
 
         if ($existing) {
             // POCOR-9509: Skip creating duplicate process (same entity + same context)
-            // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() DUPLICATE FOUND - Skipping. Existing process ID: ' . $existing->id); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() DUPLICATE FOUND - Skipping. Existing process ID: ' . $existing->id); //[TEMP-LOG]
             // Log::debug('[POCOR-9509] Duplicate alert skipped (checksum match)',
             return;
         }
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() No duplicate found, proceeding to create system_processes'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() No duplicate found, proceeding to create system_processes'); //[TEMP-LOG]
 
         //POCOR-9509: Concurrency cap removed — Laravel queue (`queue:work --queue=alerts`)
         //provides natural backpressure now. Number of concurrent workers = number of running
@@ -241,7 +241,7 @@ class AlertLogsTable extends ControllerActionTable
             'params' => $paramsJson
         ];
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() system_processes values prepared: ' . json_encode($processValues)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() system_processes values prepared: ' . json_encode($processValues)); //[TEMP-LOG]
 
         // POCOR-9509: Prepare extraOptions for Laravel command (remove context, keep IDs)
         $commandOptions = $extraOptions;
@@ -251,26 +251,26 @@ class AlertLogsTable extends ControllerActionTable
         unset($commandOptions['status_id']); // Remove to avoid confusion with student_status_id
         unset($commandOptions['student_status_id']); // Remove, already in context
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() commandOptions (cleaned): ' . json_encode($commandOptions)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() commandOptions (cleaned): ' . json_encode($commandOptions)); //[TEMP-LOG]
 
         $process = $systemProcessesTable->newEntity($processValues);
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() Created system_processes entity, about to save'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() Created system_processes entity, about to save'); //[TEMP-LOG]
 
         if ($systemProcessesTable->save($process)) {
             $processId = $process->id;
-            // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() system_processes saved successfully - process_id=' . $processId); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() system_processes saved successfully - process_id=' . $processId); //[TEMP-LOG]
             // Log::debug('[POCOR-9509] Alert process created',
             self::triggerAlertCommand($processName, $userId, $rule['id'], $processId, $commandOptions);
-            // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() triggerAlertCommand() returned'); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() triggerAlertCommand() returned'); //[TEMP-LOG]
         } else {
-            // Log::error('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() FAILED to save system_processes - errors: ' . json_encode($process->getErrors())); //[TEMP-LOG]
+            Log::error('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() FAILED to save system_processes - errors: ' . json_encode($process->getErrors())); //[TEMP-LOG]
             Log::error('[POCOR-9509] Failed to create alert process', [
                 'feature' => $feature,
                 'errors' => $process->getErrors(),
             ]);
         }
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() EXIT'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() EXIT'); //[TEMP-LOG]
     }
 
     /**
@@ -310,15 +310,15 @@ class AlertLogsTable extends ControllerActionTable
         int $userId,
         array $context = []
     ): void {
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() ENTRY'); //[TEMP-LOG]
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() alertProcessName=' . $alertProcessName . ', userId=' . $userId . ', context=' . json_encode($context)); //[TEMP-LOG]
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() entity - id=' . $entity->id . ', class=' . get_class($entity)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() ENTRY'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() alertProcessName=' . $alertProcessName . ', userId=' . $userId . ', context=' . json_encode($context)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() entity - id=' . $entity->id . ', class=' . get_class($entity)); //[TEMP-LOG]
 
         $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
         $alertRulesTable = TableRegistry::getTableLocator()->get('Alert.AlertRules');
         $systemProcessesTable = TableRegistry::getTableLocator()->get('SystemProcesses');
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() Tables loaded: Alerts, AlertRules, SystemProcesses'); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() Tables loaded: Alerts, AlertRules, SystemProcesses'); //[TEMP-LOG]
 
         $alert = $alertsTable
             ->find()
@@ -328,10 +328,10 @@ class AlertLogsTable extends ControllerActionTable
             ])
             ->first();
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() Alert lookup: ' . ($alert ? 'found (id=' . $alert->id . ', name=' . $alert->name . ')' : 'NOT FOUND')); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() Alert lookup: ' . ($alert ? 'found (id=' . $alert->id . ', name=' . $alert->name . ')' : 'NOT FOUND')); //[TEMP-LOG]
 
         if (!$alert) {
-            //Log::error("[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() EXIT EARLY - No alert configured for process: {$alertProcessName}"); //[TEMP-LOG]
+            Log::error("[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() EXIT EARLY - No alert configured for process: {$alertProcessName}"); //[TEMP-LOG]
             Log::error("[POCOR-9509] No Alerts configured for process: {$alertProcessName}");
             return;
         }
@@ -343,10 +343,10 @@ class AlertLogsTable extends ControllerActionTable
             ])
             ->toArray();
 
-        // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() Active rules query: feature=' . $alert->name . ', enabled=1, found=' . count($activeRules)); //[TEMP-LOG]
+        Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() Active rules query: feature=' . $alert->name . ', enabled=1, found=' . count($activeRules)); //[TEMP-LOG]
 
         if (empty($activeRules)) {
-            // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() EXIT EARLY - No active alert rules for feature: ' . $alert->name); //[TEMP-LOG]
+            Log::debug('[TEMP-LOG] @AlertLogsTable::triggerLaravelAlertFromCakePHP() EXIT EARLY - No active alert rules for feature: ' . $alert->name); //[TEMP-LOG]
             // Log::debug("[POCOR-9509] No active alert rules found for feature: {$alert->name}");
             return;
         }

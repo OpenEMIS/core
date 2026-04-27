@@ -5,6 +5,7 @@ namespace App\Console\Commands\Alerts;
 
 use App\Jobs\RunAlertJob;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 /**
  * POCOR-9509: Bridge command — CakePHP fires this, Laravel enqueues a queueable
@@ -26,21 +27,27 @@ class EnqueueAlertCommand extends Command
 
     public function handle(): int
     {
+        Log::debug('[TEMP-LOG] @EnqueueAlertCommand::handle() ENTRY'); //[TEMP-LOG]
         $command = (string) $this->option('command');
         $optionsJson = (string) $this->option('options');
+        Log::debug('[TEMP-LOG] @EnqueueAlertCommand::handle() command=' . $command . ', options_json_length=' . strlen($optionsJson)); //[TEMP-LOG]
 
         if ($command === '') {
             $this->error('--command is required');
+            Log::debug('[TEMP-LOG] @EnqueueAlertCommand::handle() EXIT EARLY - command empty'); //[TEMP-LOG]
             return self::INVALID;
         }
 
         $options = $optionsJson === '' ? [] : json_decode($optionsJson, true);
         if (!is_array($options)) {
             $this->error('--options must be a JSON-encoded object');
+            Log::debug('[TEMP-LOG] @EnqueueAlertCommand::handle() EXIT EARLY - options not JSON array'); //[TEMP-LOG]
             return self::INVALID;
         }
 
+        Log::debug('[TEMP-LOG] @EnqueueAlertCommand::handle() Calling RunAlertJob::dispatch()'); //[TEMP-LOG]
         RunAlertJob::dispatch($command, $options);
+        Log::debug('[TEMP-LOG] @EnqueueAlertCommand::handle() EXIT SUCCESS'); //[TEMP-LOG]
         return self::SUCCESS;
     }
 }
