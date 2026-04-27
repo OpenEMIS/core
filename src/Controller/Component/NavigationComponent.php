@@ -4343,6 +4343,13 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
+            
+            'Systems.StaffPolicies' => [
+                'title' => 'Leaves',
+                'parent' => 'Administration.Staff',
+                'params' => ['plugin' => 'System'], // POCOR-9584
+                'link' => true,
+            ],
             // POCOR-8211 Start
             'Systems.StaffSalaries' => [
                 'title' => 'Salaries',
@@ -4351,12 +4358,6 @@ class NavigationComponent extends Component
                 'link' => true,
             ],
             // POCOR-8211 End
-            'Systems.StaffPolicies' => [
-                'title' => 'Leaves',
-                'parent' => 'Administration.Staff',
-                'params' => ['plugin' => 'System'], // POCOR-9584
-                'link' => true,
-            ],
             'Systems.StaffEntitlements' => [
                 'title' => 'Entitlements',
                 'parent' => 'Administration.Staff',
