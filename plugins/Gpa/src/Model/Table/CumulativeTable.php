@@ -26,7 +26,7 @@ class CumulativeTable extends ControllerActionTable {
         $this->belongsTo('GpaEducationGrades', ['className' => 'Education.EducationGrades','foreignKey' => 'main_education_grade_id']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades','foreignKey' => 'main_education_grade_id']);
         $this->AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-
+        $this->setDeleteStrategy('restrict'); //POCOR-9078
     }
 
     public function validationDefault(Validator $validator): Validator {
@@ -470,33 +470,49 @@ class CumulativeTable extends ControllerActionTable {
 
     public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        // populate 'to be deleted' field
-        $grade = $this->GpaEducationGrades->get($entity->education_grade_id);
-        $entity->showDeletedValueAs = $grade->name;
+        $InstitutionStudentsGpa = TableRegistry::getTableLocator()
+            ->get('Institution.InstitutionStudentsGpa');
+
+        // Get grade -- Display issue
+        $gradeToBeDeleted = $this->GpaEducationGrades->get($entity->main_education_grade_id);
+        $entity->showDeletedValueAs = $gradeToBeDeleted->name;
+
+        // Student count for grenerated cgpa
+        $count = $InstitutionStudentsGpa->find()
+            ->where([
+                'education_grade_id' => $entity->main_education_grade_id
+            ])
+            ->count();
+
+        // Attach to extra for use in delete confirmation message
+        $extra['associatedRecords']['InstitutionStudentsGpa'] = [
+            'model' => 'InstitutionStudentsGpa',
+            'count' => $count
+        ];
     }
 
     public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        
-        $this->InstitutionStudentsGpa = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsGpa');
-        // Check if any associated records exist in any related tables.
-        $associatedRecordsExist = 
-            $this->InstitutionStudentsGpa->exists([
-                'education_grade_id' => $entity->education_grade_id,
-                'cumulative_gpa IS NOT' => null
-            ]);
+        $this->InstitutionStudentsGpa = TableRegistry::get('Institution.InstitutionStudentsGpa');
 
-            
-        // If associated records exist, show alert message and abort deletion
-        if ($associatedRecordsExist) {
-            $message = __('Delete operation is not allowed as there are other information linked to this record.');
-            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-            
-            $url = $this->request->referer();
+        if ($this->checkGpaRecords($entity)) {
+
+            $this->Alert->error(__('Delete operation is not allowed as there are other information linked to this record.'), [
+                'type' => 'string',
+                'reset' => true
+            ]);
             $event->stopPropagation();
-            //return $this->controller->redirect($url);
-            return $entity;
         }
+    }
+
+    public function checkGpaRecords($entity): bool
+    {
+        return $this->InstitutionStudentsGpa->find()
+            ->where([
+                'education_grade_id' => $entity->main_education_grade_id,
+                'cumulative_gpa IS NOT' => null
+            ])
+            ->count() > 0;
     }
 
     //POCOR-8962
