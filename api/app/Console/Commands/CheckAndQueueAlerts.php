@@ -46,6 +46,25 @@ class CheckAndQueueAlerts extends Command
         // ]);
 
         try {
+            //POCOR-9509: global stale-process sweep — abort any system_processes row stuck at status 1/2 for >= 1 day,
+            //regardless of feature. The per-feature sweep in getLastRunDate() only covers features that get scheduled
+            //in this run, so rows for misconfigured / disabled / never-rescheduled features used to hang forever.
+            $aborted = DB::table('system_processes')
+                ->whereIn('status', [1, 2])
+                ->where('created', '<=', Carbon::now()->subDay())
+                ->update([
+                    'status' => -1, // ABORT
+                    'end_date' => Carbon::now(),
+                    'modified' => Carbon::now(),
+                    'modified_user_id' => $userId,
+                ]);
+
+            if ($aborted > 0) {
+                Log::warning('[POCOR-9509] Aborted stale system_processes (>= 1 day old)', [
+                    'aborted_count' => $aborted,
+                ]);
+            }
+
             // Get all enabled alerts with valid frequency
             $alerts = DB::table('alerts')
                 ->where('frequency', '!=', 'Never')
