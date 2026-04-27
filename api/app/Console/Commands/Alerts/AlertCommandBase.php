@@ -99,37 +99,29 @@ abstract class AlertCommandBase extends Command
      */
     protected function prepareContext(): bool
     {
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() ENTRY'); //[TEMP-LOG]
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() options: ' . json_encode($this->options())); //[TEMP-LOG]
-
+        //POCOR-9509: capture processId FIRST so early-return paths can mark system_processes failed
+        $this->processId = (int) $this->option('process_id');
         $this->userId = (int) $this->option('user_id');
         $this->ruleId = (int) $this->option('rule_id');
-        $this->processId = (int) $this->option('process_id');
-
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Resolved IDs: userId=' . $this->userId . ', ruleId=' . $this->ruleId . ', processId=' . $this->processId); //[TEMP-LOG]
 
         if (!$this->userId || !$this->ruleId) {
             $this->error("Missing required --user_id or --rule_id.");
-            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - Missing required options'); //[TEMP-LOG]
+            //POCOR-9509: mark process failed so system_processes never hangs at status=1
+            $this->markProcessFailed('Missing required --user_id or --rule_id');
             return false;
         }
 
-        // Load alert rule with roles
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loading alert rule from DB...'); //[TEMP-LOG]
         $this->rule = DB::table('alert_rules')
             ->where('id', $this->ruleId)
             ->first();
 
         if (!$this->rule) {
             $this->error("Alert rule with ID {$this->ruleId} not found.");
-            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - Rule not found'); //[TEMP-LOG]
+            //POCOR-9509: mark process failed
+            $this->markProcessFailed("Alert rule with ID {$this->ruleId} not found");
             return false;
         }
 
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Rule loaded: feature=' . $this->rule->feature . ', subject=' . $this->rule->subject . ', method=' . $this->rule->method); //[TEMP-LOG]
-
-        // Load security roles for this rule
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loading security roles...'); //[TEMP-LOG]
         $roles = DB::table('alerts_roles')
             ->join('security_roles', 'security_roles.id', '=', 'alerts_roles.security_role_id')
             ->where('alerts_roles.alert_rule_id', $this->ruleId)
@@ -137,15 +129,73 @@ abstract class AlertCommandBase extends Command
             ->get();
 
         if ($roles->isEmpty()) {
-            // $this->info("No roles assigned to alert rule ID {$this->ruleId}. Skipping."); //POCOR-9509: commented out per CLAUDE.md            //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT FALSE - No roles assigned'); //[TEMP-LOG]
+            //POCOR-9509: rule with no roles is a misconfiguration — complete (not fail) so it doesn't pile up errors but doesn't hang either
+            $this->completeProcess();
             return false;
         }
 
         $this->rule->security_roles = $roles->toArray();
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() Loaded ' . count($this->rule->security_roles) . ' roles'); //[TEMP-LOG]
-
-        //Log::debug('[TEMP-LOG] @' . class_basename($this) . '::prepareContext() EXIT TRUE'); //[TEMP-LOG]
         return true;
+    }
+
+    /**
+     * POCOR-9509: Mark system process as failed without an exception
+     *
+     * Used by prepareContext() and subclass handle() early-return paths where
+     * validation fails before runFeatureAlert() runs — prevents system_processes
+     * row from hanging at status=1 forever.
+     *
+     * @param string $reason Short human-readable reason (logged + stored in system_errors)
+     */
+    protected function markProcessFailed(string $reason): void
+    {
+        if (empty($this->processId)) {
+            return;
+        }
+
+        DB::table('system_processes')
+            ->where('id', $this->processId)
+            ->update([
+                'status' => -2, // Error
+                'end_date' => now(),
+                'modified' => now(),
+                'modified_user_id' => $this->userId ?: 1,
+            ]);
+
+        try {
+            DB::table('system_errors')->insert([
+                'id' => \Illuminate\Support\Str::uuid()->toString(),
+                'code' => 'ALERT_FAIL',
+                'error_message' => $reason,
+                'request_method' => 'CLI',
+                'request_url' => $this->signature ?? '',
+                'referrer_url' => '',
+                'client_ip' => '127.0.0.1',
+                'client_browser' => 'artisan',
+                'triggered_from' => static::class,
+                'stack_trace' => '',
+                'server_info' => json_encode([
+                    'process_id' => $this->processId,
+                    'feature' => $this->featureName,
+                    'rule_id' => $this->ruleId,
+                    'user_id' => $this->userId,
+                ]),
+                'created_user_id' => $this->userId ?: 1,
+                'created' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("[POCOR-9509] markProcessFailed: failed to insert system_errors", [
+                'process_id' => $this->processId,
+                'reason' => $reason,
+                'logging_error' => $e->getMessage(),
+            ]);
+        }
+
+        Log::warning("[POCOR-9509] Alert process marked failed (no exception)", [
+            'process_id' => $this->processId,
+            'feature' => $this->featureName,
+            'reason' => $reason,
+        ]);
     }
 
     /**

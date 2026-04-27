@@ -76,7 +76,8 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
 
         if (!$studentId || !$academicPeriodId) {
             $this->error("Missing required options: student_id, academic_period_id");
-            //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::handle() EXIT EARLY - Missing required parameters'); //[TEMP-LOG]
+            //POCOR-9509: mark process failed so system_processes never hangs at status=1
+            $this->markProcessFailed('Missing required options: student_id, academic_period_id');
             return self::FAILURE;
         }
 
