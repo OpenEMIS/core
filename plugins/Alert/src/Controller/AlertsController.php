@@ -94,11 +94,15 @@ class AlertsController extends AppController
     {
         //POCOR-9509: Send enqueued alerts from alert_queue
         $apiPath = ROOT . DS . 'api';
-        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:send 2>&1'; //POCOR-9509: renamed from alerts:process
 
+        //POCOR-9509: Drain Laravel queue first so any RunAlertJob rows produced by
+        //recent attendance markings/etc. land into alert_queue before alerts:send runs.
+        $drainOutput = $this->drainAlertJobsQueue($apiPath);
+
+        $command = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:send 2>&1'; //POCOR-9509: renamed from alerts:process
         exec($command, $output, $returnVar);
 
-        $outputText = implode("\n", $output);
+        $outputText = implode("\n", array_merge($drainOutput, $output));
 
         if ($returnVar === 0) {
             $this->Alert->success(__('Alert queue processed successfully.'), ['type' => 'string', 'reset' => true]);
@@ -120,6 +124,10 @@ class AlertsController extends AppController
         $checkCommand = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:check --sync 2>&1';
         exec($checkCommand, $checkOutput, $checkReturn);
 
+        //POCOR-9509: Drain Laravel queue between check (which enqueues RunAlertJob into jobs)
+        //and send (which drains alert_queue) so the click flows end-to-end in one request.
+        $drainOutput = $this->drainAlertJobsQueue($apiPath);
+
         // Step 2: Send everything pending in alert_queue (including event-based alerts already queued)
         $sendCommand = 'cd ' . escapeshellarg($apiPath) . ' && php artisan alerts:send 2>&1';
         exec($sendCommand, $sendOutput, $sendReturn);
@@ -127,7 +135,7 @@ class AlertsController extends AppController
         if ($checkReturn === 0 && $sendReturn === 0) {
             $this->Alert->success(__('Alerts triggered and sent successfully.'), ['type' => 'string', 'reset' => true]);
         } else {
-            $errorText = implode("\n", array_merge($checkOutput, $sendOutput));
+            $errorText = implode("\n", array_merge($checkOutput, $drainOutput, $sendOutput));
             $this->Alert->error(__('Alert trigger failed. Output: ') . $errorText, ['type' => 'string', 'reset' => true]);
             Log::error('[Alerts] triggerAlerts failed. Output: ' . $errorText);
         }
@@ -143,7 +151,12 @@ class AlertsController extends AppController
 
         exec($command, $output, $returnVar);
 
-        $outputText = implode("\n", $output);
+        //POCOR-9509: Drain Laravel queue after alerts:check so RunAlertJob rows it produced
+        //flow through into alert_queue in this same request — otherwise nothing visibly happens
+        //until the systemd queue:work daemon picks them up.
+        $drainOutput = $this->drainAlertJobsQueue($apiPath);
+
+        $outputText = implode("\n", array_merge($output, $drainOutput));
 
         if ($returnVar === 0) {
             $this->Alert->success(__('Alert queue filled successfully.'), ['type' => 'string', 'reset' => true]);
@@ -154,5 +167,24 @@ class AlertsController extends AppController
         }
 
         return $this->redirect($this->referer()); //POCOR-9509: stay on whichever page the user clicked from
+    }
+
+    /**
+     * POCOR-9509: Drain Laravel `alerts` queue once. Used by the three button handlers above
+     * so user-initiated trigger/process/send buttons flow end-to-end without waiting for the
+     * background `queue:work` daemon. Safe to call even when the daemon is also running —
+     * Laravel claims jobs atomically via `reserved_at`, so two workers can't grab the same row.
+     *
+     * @param string $apiPath Absolute path to the Laravel api/ directory
+     * @return array Captured stdout/stderr lines, returned for inclusion in user-visible output
+     */
+    private function drainAlertJobsQueue(string $apiPath): array
+    {
+        $cmd = 'cd ' . escapeshellarg($apiPath) . ' && php artisan queue:work --queue=alerts --once --stop-when-empty 2>&1';
+        exec($cmd, $output, $returnVar);
+        if ($returnVar !== 0) {
+            Log::warning('[Alerts] queue:work drain returned non-zero exit code ' . $returnVar . '. Output: ' . implode("\n", $output));
+        }
+        return $output;
     }
 }
