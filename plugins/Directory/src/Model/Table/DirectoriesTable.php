@@ -2583,45 +2583,7 @@ public function getIdentityTypeData($value_selection)
         $toolbarButtons['sync'] = $syncButton;
     }
 
-    //POCOR-9590: a user is sync-eligible iff they have a preferred user_identities row whose identity_type_id matches the active external data source's identity_type_id
-    private function isSyncEligibleUser($securityUserId): bool
-    {
-        $activeIdentityTypeId = $this->getActiveExternalSourceIdentityTypeId();
-        if ($activeIdentityTypeId === null) {
-            return false;
-        }
-        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-        return $UserIdentities->find()
-            ->where([
-                'security_user_id' => $securityUserId,
-                'identity_type_id' => $activeIdentityTypeId,
-                'preferred' => 1,
-            ])
-            ->count() > 0;
-    }
-
-    //POCOR-9590: returns identity_type_id of the active external data source, or null if none configured
-    private function getActiveExternalSourceIdentityTypeId()
-    {
-        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $activeItem = $ConfigItems->find()
-            ->where(['code' => 'external_data_source_type'])
-            ->where(['value IS NOT' => null])
-            ->where(['value !=' => ''])
-            ->where(['value !=' => 'None'])
-            ->first();
-        if (!$activeItem) {
-            return null;
-        }
-        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
-        $row = $ExternalAttrs->find()
-            ->where([
-                'external_data_source_type' => $activeItem->name,
-                'attribute_field' => 'identity_type_id',
-            ])
-            ->first();
-        return ($row && !empty($row->value)) ? (int)$row->value : null;
-    }
+    //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
