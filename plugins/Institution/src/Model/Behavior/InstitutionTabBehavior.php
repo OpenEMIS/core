@@ -386,6 +386,7 @@ class InstitutionTabBehavior extends Behavior
             return;
         }
         $model = $this->_table;
+        //POCOR-9661
         if (method_exists($model, 'url')) {
             $url = $model->url('index');
         } else {
@@ -396,6 +397,7 @@ class InstitutionTabBehavior extends Behavior
                 'action' => $request ? $request->getParam('action') : 'index',
             ];
         }
+        //POCOR-9661
         $institutionID = $this->getInstitutionID();
         $queryString = method_exists($model, 'getQueryString') ? $model->getQueryString() : [];
         if (!is_array($queryString)) {
