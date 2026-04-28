@@ -3164,7 +3164,8 @@ class NavigationComponent extends Component
                             'selected' => [
                                 'LocaleContents.index',
                                 'LocaleContents.view',
-                                'LocaleContents.edit'
+                                'LocaleContents.edit',
+                                
                             ]
                         ],
 
