@@ -170,8 +170,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'academic_period' => 'AcademicPeriods.name',
                 'academic_id' => 'AcademicPeriods.id',
                 'is_home' => $this->aliasField('is_homeroom'),
-                'staff_position_grade' => $this->aliasField('staff_position_grade_id'),
-                'start_date' => $this->aliasField('start_date')
+                'staff_position_grade' => $this->aliasField('staff_position_grade_id'),//POCOR-8211
+                'start_date' => $this->aliasField('start_date') //POCOR-8211
                // 'absences_day' => $this->find()->func()->sum('InstitutionStaffLeave.number_of_days'),
             ])
             ->contain([
@@ -386,13 +386,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'type'  => 'integer',
             'label' => __('Absences'),
         ];
+        //POCOR-8211 Start
         $newFields[] = [
             'key' => 'staff_position_salary',
             'field' => 'staff_position_salary',
             'type' => 'string',
             'label' => __('Staff Position Salary')
         ];
-
+        //POCOR-8211 End
         $fields->exchangeArray($newFields);
     }
 
