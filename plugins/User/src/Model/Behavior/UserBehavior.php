@@ -456,9 +456,10 @@ class UserBehavior extends Behavior
             return null;
         }
         $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        //POCOR-9590: external_data_source_attributes.external_data_source_type matches config_items.VALUE (active source name like "Seychelles Civil Status"), not config_items.name (which is the form-field label "Type"). Same convention PullBehavior uses.
         $row = $ExternalAttrs->find()
             ->where([
-                'external_data_source_type' => $activeItem->name,
+                'external_data_source_type' => $activeItem->value,
                 'attribute_field' => 'identity_type_id',
             ])
             ->first();
