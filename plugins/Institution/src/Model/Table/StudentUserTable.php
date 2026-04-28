@@ -550,14 +550,7 @@ class StudentUserTable extends ControllerActionTable
             }
         }
 
-        //POCOR-9590: if any identity field is manually edited, reset sync_status to 0
-        $syncFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
-        foreach ($syncFields as $field) {
-            if ($entity->isDirty($field)) {
-                $entity->sync_status = 0;
-                break;
-            }
-        }
+        //POCOR-9590: drift detection now lives in UserBehavior::beforeSave (1→2 on dirty general field). Removed older reset-to-0 rule which contradicted the 3-state model.
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
