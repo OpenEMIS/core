@@ -11,6 +11,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use Cake\Http\Client; //POCOR-9590: external identity source HTTP client
 
 class StaffController extends AppController
 {
@@ -1173,4 +1174,167 @@ class StaffController extends AppController
             $this->set('contentHeader', $header);
         }
     }
+
+    //POCOR-9590: start - Sync staff identity from external data source with review/diff page
+    public function syncUser()
+    {
+        //POCOR-9590: user_id is passed as encoded pass param (positional), decode it the standard way
+        $pass = $this->request->getAttribute('params')['pass'] ?? [];
+        $decoded = !empty($pass[0]) ? $this->ControllerAction->paramsDecode($pass[0]) : [];
+        $userId = $decoded['user_id'] ?? null;
+
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $ConfigItems   = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $Genders       = TableRegistry::getTableLocator()->get('User.Genders');
+
+        $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
+
+        //POCOR-9590: resolve active external data source dynamically (Seychelles Civil Status, OpenEMIS Identity, etc.)
+        $activeItem = $ConfigItems->find()
+            ->where(['code' => 'external_data_source_type'])
+            ->where(['value IS NOT' => null])
+            ->where(['value !=' => ''])
+            ->where(['value !=' => 'None'])
+            ->first();
+        if (!$activeItem) {
+            $this->Flash->error(__('No active external identity source is configured.'));
+            return $this->redirect($this->referer());
+        }
+        $activeSourceType = $activeItem->name;
+
+        // Load field mapping config for the active source
+        $configs = $ExternalAttrs->find()
+            ->where(['external_data_source_type' => $activeSourceType])
+            ->all()
+            ->combine('attribute_field', 'value')
+            ->toArray();
+
+        $tokenUrl     = $configs['token_uri'] ?? null;
+        $userEndpoint = $configs['user_endpoint_uri'] ?? null;
+        $clientId     = $configs['client_id'] ?? null;
+        $privateKey   = $configs['private_key'] ?? null;
+
+        if (!$tokenUrl || !$userEndpoint) {
+            $this->Flash->error(__('External identity source is not configured.'));
+            return $this->redirect($this->referer());
+        }
+
+        $http = new Client();
+
+        // Step 1: get Bearer token
+        $tokenResponse = $http->post($tokenUrl, json_encode([
+            'client_id'     => $clientId,
+            'client_secret' => $privateKey,
+            'grant_type'    => 'client_credentials',
+        ]), ['type' => 'json']);
+
+        if (!$tokenResponse->isOk()) {
+            $this->Flash->error(__('Failed to authenticate with external identity source.'));
+            return $this->redirect($this->referer());
+        }
+
+        $accessToken = $tokenResponse->getJson()['access_token'] ?? null;
+        if (!$accessToken) {
+            $this->Flash->error(__('External identity source did not return a valid token.'));
+            return $this->redirect($this->referer());
+        }
+
+        // Step 2: fetch user data from external API
+        $apiUrl      = str_replace('{external_reference}', $user->external_reference, $userEndpoint);
+        $apiResponse = $http->get($apiUrl, [], ['headers' => ['Authorization' => 'Bearer ' . $accessToken]]);
+
+        if (!$apiResponse->isOk()) {
+            $this->Flash->error(__('Failed to retrieve data from external identity source.'));
+            return $this->redirect($this->referer());
+        }
+
+        $apiData = $apiResponse->getJson();
+
+        // Step 3: resolve mapped field values from API response
+        $mappingKeys = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender', 'date_of_birth'];
+        $externalValues = [];
+        foreach ($mappingKeys as $field) {
+            $path = $configs[$field . '_mapping'] ?? null;
+            if ($path) {
+                $externalValues[$field] = $this->resolveMappingPath($apiData, $path);
+            }
+        }
+
+        // Step 4: resolve gender name → gender_id
+        $externalGenderId = null;
+        if (!empty($externalValues['gender'])) {
+            $genderRow = $Genders->find()->where(['name' => $externalValues['gender']])->first();
+            $externalGenderId = $genderRow ? $genderRow->id : null;
+        }
+
+        // Step 5: build diff (only fields that would actually change)
+        $diff = [];
+        $textFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth'];
+        foreach ($textFields as $field) {
+            if (isset($externalValues[$field]) && (string)$externalValues[$field] !== (string)$user->$field) {
+                $diff[$field] = ['current' => $user->$field, 'external' => $externalValues[$field]];
+            }
+        }
+        if ($externalGenderId && $externalGenderId !== $user->gender_id) {
+            $diff['gender'] = [
+                'current'  => $user->has('gender') ? $user->gender->name : '',
+                'external' => $externalValues['gender'],
+            ];
+        }
+
+        //POCOR-9590: no-diff fast path — registry data already matches OE Core, just confirm and exit
+        if (empty($diff) && !$this->request->is('post')) {
+            //POCOR-9590: bump status to 1 in case it had drifted to 2 but actually matches now
+            if ((int)$user->sync_status !== 1) {
+                $user->sync_status = 1;
+                $SecurityUsers->save($user);
+            }
+            $this->Flash->success(__('Already in sync — registry data matches.'));
+            return $this->redirect($this->referer());
+        }
+
+        if ($this->request->is('post')) {
+            // Apply all mapped fields
+            foreach ($textFields as $field) {
+                if (isset($externalValues[$field])) {
+                    $user->$field = $externalValues[$field];
+                }
+            }
+            if ($externalGenderId) {
+                $user->gender_id = $externalGenderId;
+            }
+            $user->sync_status = 1; //POCOR-9590: mark as synced
+
+            if ($SecurityUsers->save($user)) {
+                $this->Flash->success(__('User synced successfully.'));
+            } else {
+                $this->Flash->error(__('Failed to save synced data.'));
+            }
+
+            $originUrl = $this->request->getSession()->read('Sync.origin_url');
+            $this->request->getSession()->delete('Sync.origin_url');
+            return $this->redirect($originUrl ?: $this->referer());
+        }
+
+        // GET: store origin referer and show review page
+        $this->request->getSession()->write('Sync.origin_url', $this->referer());
+        //POCOR-9590: pass encoded param back to view so form can POST to same encoded URL
+        $encodedParams = !empty($pass[0]) ? $pass[0] : '';
+        $this->set(compact('user', 'diff', 'externalValues', 'encodedParams'));
+    }
+
+    //POCOR-9590: resolve dot-notation path from nested array (e.g. "gender.name" → $data['gender']['name'])
+    private function resolveMappingPath(array $data, string $path)
+    {
+        $value = $data;
+        foreach (explode('.', $path) as $key) {
+            if (!is_array($value) || !array_key_exists($key, $value)) {
+                return null;
+            }
+            $value = $value[$key];
+        }
+        return $value;
+    }
+    //POCOR-9590: end
 }
