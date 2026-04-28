@@ -437,7 +437,13 @@ class StaffUserTable extends ControllerActionTable
             return;
         }
         $toolbarButtons = $extra['toolbarButtons'];
-        $encodedParams = $this->paramsEncode(['user_id' => $securityUserId]);
+        //POCOR-9590: encode full context so syncUser can redirect back to the same view
+        $encodedParams = $this->paramsEncode([
+            'user_id'              => $securityUserId,
+            'staff_id'             => $securityUserId,
+            'institution_id'       => $this->getInstitutionID(),
+            'institution_staff_id' => $entity->id,
+        ]);
         $syncButton = $toolbarButtons['back'];
         $syncButton['type']          = 'button';
         $syncButton['label']         = '<i class="fa fa-refresh"></i>';

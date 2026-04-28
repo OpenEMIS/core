@@ -2547,11 +2547,12 @@ class DirectoriesController extends AppController
     }
 
     //POCOR-9590: start - Sync directory user identity from external data source with review/diff page
-    public function syncUser()
+    //POCOR-9590: PascalCase to match URL ('action' => 'SyncUser') and existing controller convention
+    public function SyncUser()
     {
         //POCOR-9590: gate the action itself — the button is hidden by addSyncButton's AccessControl check, but a forged URL could otherwise reach this action without a security_functions row
         if (!$this->AccessControl->check(['Directories', 'ImportUsers', 'add'])) {
-            $this->Flash->error(__('You do not have permission to sync this user.'));
+            $this->Alert->error('You do not have permission to sync this user.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
         //POCOR-9590: user_id is passed as encoded pass param (positional), decode it the standard way
@@ -2574,10 +2575,11 @@ class DirectoriesController extends AppController
             ->where(['value !=' => 'None'])
             ->first();
         if (!$activeItem) {
-            $this->Flash->error(__('No active external identity source is configured.'));
+            $this->Alert->error('No active external identity source is configured.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
-        $activeSourceType = $activeItem->name;
+        //POCOR-9590: read .value (active source name like "Seychelles Civil Status"), not .name (form-field label "Type")
+        $activeSourceType = $activeItem->value;
 
         // Load field mapping config for the active source
         $configs = $ExternalAttrs->find()
@@ -2592,7 +2594,7 @@ class DirectoriesController extends AppController
         $privateKey   = $configs['private_key'] ?? null;
 
         if (!$tokenUrl || !$userEndpoint) {
-            $this->Flash->error(__('External identity source is not configured.'));
+            $this->Alert->error('External identity source is not configured.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
 
@@ -2606,13 +2608,13 @@ class DirectoriesController extends AppController
         ]), ['type' => 'json']);
 
         if (!$tokenResponse->isOk()) {
-            $this->Flash->error(__('Failed to authenticate with external identity source.'));
+            $this->Alert->error('Failed to authenticate with external identity source.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
 
         $accessToken = $tokenResponse->getJson()['access_token'] ?? null;
         if (!$accessToken) {
-            $this->Flash->error(__('External identity source did not return a valid token.'));
+            $this->Alert->error('External identity source did not return a valid token.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
 
@@ -2621,7 +2623,7 @@ class DirectoriesController extends AppController
         $apiResponse = $http->get($apiUrl, [], ['headers' => ['Authorization' => 'Bearer ' . $accessToken]]);
 
         if (!$apiResponse->isOk()) {
-            $this->Flash->error(__('Failed to retrieve data from external identity source.'));
+            $this->Alert->error('Failed to retrieve data from external identity source.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
 
@@ -2666,7 +2668,7 @@ class DirectoriesController extends AppController
                 $user->sync_status = 1;
                 $SecurityUsers->save($user);
             }
-            $this->Flash->success(__('Already in sync — registry data matches.'));
+            $this->Alert->ok('Already in sync — registry data matches.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
 
@@ -2683,9 +2685,9 @@ class DirectoriesController extends AppController
             $user->sync_status = 1; //POCOR-9590: mark as synced
 
             if ($SecurityUsers->save($user)) {
-                $this->Flash->success(__('User synced successfully.'));
+                $this->Alert->ok('User synced successfully.', ['type' => 'string', 'reset' => true]);
             } else {
-                $this->Flash->error(__('Failed to save synced data.'));
+                $this->Alert->error('Failed to save synced data.', ['type' => 'string', 'reset' => true]);
             }
 
             $originUrl = $this->request->getSession()->read('Sync.origin_url');
