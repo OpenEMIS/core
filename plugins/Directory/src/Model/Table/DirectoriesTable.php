@@ -2551,6 +2551,72 @@ public function getIdentityTypeData($value_selection)
         }
 
         $this->setupTabElements($entity);
+        $this->addSyncButton($entity, $extra); //POCOR-9590
+    }
+
+    //POCOR-9590: Sync button on the directory General view toolbar
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        if (!$this->isSyncEligibleUser($entity->id)) {
+            return;
+        }
+        $toolbarButtons = $extra['toolbarButtons'] ?? null;
+        if (!$toolbarButtons || !isset($toolbarButtons['back'])) {
+            return;
+        }
+        $encodedParams = $this->paramsEncode(['user_id' => $entity->id]);
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Directory',
+            'controller' => 'Directories',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
+    }
+
+    //POCOR-9590: a user is sync-eligible iff they have a preferred user_identities row whose identity_type_id matches the active external data source's identity_type_id
+    private function isSyncEligibleUser($securityUserId): bool
+    {
+        $activeIdentityTypeId = $this->getActiveExternalSourceIdentityTypeId();
+        if ($activeIdentityTypeId === null) {
+            return false;
+        }
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        return $UserIdentities->find()
+            ->where([
+                'security_user_id' => $securityUserId,
+                'identity_type_id' => $activeIdentityTypeId,
+                'preferred' => 1,
+            ])
+            ->count() > 0;
+    }
+
+    //POCOR-9590: returns identity_type_id of the active external data source, or null if none configured
+    private function getActiveExternalSourceIdentityTypeId()
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $activeItem = $ConfigItems->find()
+            ->where(['code' => 'external_data_source_type'])
+            ->where(['value IS NOT' => null])
+            ->where(['value !=' => ''])
+            ->where(['value !=' => 'None'])
+            ->first();
+        if (!$activeItem) {
+            return null;
+        }
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $row = $ExternalAttrs->find()
+            ->where([
+                'external_data_source_type' => $activeItem->name,
+                'attribute_field' => 'identity_type_id',
+            ])
+            ->first();
+        return ($row && !empty($row->value)) ? (int)$row->value : null;
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
