@@ -1455,14 +1455,16 @@ class StudentUserTable extends ControllerActionTable
         if (!$this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add'])) {
             return;
         }
-        if (!$this->isSyncEligibleUser($entity->id)) {
+        //POCOR-9590: institution_students.id is a UUID — the security_user_id lives under student_id
+        $securityUserId = $entity->student_id ?? $entity->id;
+        if (!$this->isSyncEligibleUser($securityUserId)) {
             return; //POCOR-9590: hide button for Local users (no preferred external identity, or no active source)
         }
 
         $toolbarButtons = $extra['toolbarButtons'];
 
         //POCOR-9590: encode user_id via paramsEncode so URL cannot be tampered with
-        $encodedParams = $this->paramsEncode(['user_id' => $entity->id]);
+        $encodedParams = $this->paramsEncode(['user_id' => $securityUserId]);
 
         $syncButton = $toolbarButtons['back'];
         $syncButton['type']          = 'button';

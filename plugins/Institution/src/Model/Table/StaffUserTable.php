@@ -431,11 +431,13 @@ class StaffUserTable extends ControllerActionTable
         if (!$this->AccessControl->check(['Institutions', 'ImportStaff', 'add'])) {
             return;
         }
-        if (!$this->isSyncEligibleUser($entity->id)) {
+        //POCOR-9590: institution_staff.id is a UUID — the security_user_id lives under staff_id
+        $securityUserId = $entity->staff_id ?? $entity->id;
+        if (!$this->isSyncEligibleUser($securityUserId)) {
             return;
         }
         $toolbarButtons = $extra['toolbarButtons'];
-        $encodedParams = $this->paramsEncode(['user_id' => $entity->id]);
+        $encodedParams = $this->paramsEncode(['user_id' => $securityUserId]);
         $syncButton = $toolbarButtons['back'];
         $syncButton['type']          = 'button';
         $syncButton['label']         = '<i class="fa fa-refresh"></i>';
