@@ -203,10 +203,19 @@ class StudentUserTable extends ControllerActionTable
                     return (!empty($context['data']['class']) && $context['newRecord']);
                 }
             ])
-            ->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
-                'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
-                'on' => 'create'
-            ])
+            
+            //POCOR-9607
+            // ->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+            //     'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+            //     'on' => 'create'
+            // ])
+             ->add('date_of_birth', [
+                'ruleCheckAdmissionAge' => [
+                    'rule' => 'checkAdmissionAge',
+                ]
+             ])
+             //POCOR-9607
+
             // ->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
             //     'rule' => ['compareStudentGenderWithInstitution']
             // ])

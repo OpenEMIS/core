@@ -3,10 +3,10 @@
 	vertical-align: top !important;
 }
 </style>
-<?php 
-	//echo "<pre>"; print_r($_SESSION['Directory']); 
-	//echo "<pre>"; print_r($attr['data']); 
-	
+<?php
+	//echo "<pre>"; print_r($_SESSION['Directory']);
+	//echo "<pre>"; print_r($attr['data']);
+
 ?>
 
 <?php

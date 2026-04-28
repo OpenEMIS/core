@@ -50,6 +50,7 @@ trait MessagesTrait
             'f' => 'Female'
         ],
         'general' => [
+            'externalSourceDataErr' => 'The record is not added due to errors encountered.', //POCOR-9606
             'notAccess' => 'You are not authorized to access this page.',//POCOR-7520
             'notExists' => 'The record does not exist.',
             'notEditable' => 'This record is not editable',

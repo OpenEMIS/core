@@ -12,7 +12,7 @@ class EmailProcessesTable extends AppTable
 	private $emailFolder = 'export';
 	private $emailSubfolder = 'email';
 
-	public function initialize(array $config)
+	public function initialize(array $config):void
     {
 		parent::initialize($config);
 
@@ -40,12 +40,12 @@ class EmailProcessesTable extends AppTable
 	 		$message = $entity->message;
 
 	        $email
-	        	->to($recipients)
-	            ->subject($subject);
+	        	->setTo($recipients)
+	            ->setSubject($subject);
 			
 			$attachments = $this->getAttachments($entity);
 			if (!empty($attachments)) {
-				$email->attachments($attachments);
+				$email->setAttachments($attachments);
 			}
 
 	        if ($email->send($message)) {

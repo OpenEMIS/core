@@ -28,6 +28,14 @@ class AssetModelsTable extends ControllerActionTable
         ]);
     }
 
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator->setProvider('custom', $this);
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->requirePresence('asset_make_id');
+    }
+
     public function afterAction(EventInterface $event, ArrayObject $extra) 
     {
         $this->field('asset_make_id', [
