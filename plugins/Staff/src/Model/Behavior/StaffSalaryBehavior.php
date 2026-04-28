@@ -5,8 +5,25 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\I18n\FrozenDate;
 
+/**
+ * Staff Salary Behavior
+ *
+ * Handles salary calculation for staff positions
+ * based on base salary, FTE, and yearly increments.
+ *
+ * @author shikha.sahu@dataforall.org
+ */
 class StaffSalaryBehavior extends Behavior
 {
+    /**
+     * Calculate staff position salary.
+     *
+     * Formula:
+     * (Total Increment % / 100) * Base Salary * (FTE / 100)
+     *
+     *  @param object $entity Staff position entity with properties:
+     * @return float Calculated salary rounded to 2 decimal places
+     */
     public function calculateStaffPositionSalary($entity)
     {
         // Safety checks
@@ -22,7 +39,7 @@ class StaffSalaryBehavior extends Behavior
 
         $grade = $gradesTable->get($entity->staff_position_grade);
         $baseSalary = $grade->salary ?? 0;
-        
+
         // 2. FTE
         $fte = 100;
         if ($entity->FTE < 1) {
@@ -61,6 +78,15 @@ class StaffSalaryBehavior extends Behavior
         return round($salary, 2);
     }
 
+    /**
+     * Get academic period ID by year.
+     *
+     * Finds the academic period where the start_date
+     * belongs to the given year.
+     *
+     * @param int $year Academic year
+     * @return int|null Academic period ID or null if not found
+     */
     private function getAcademicPeriodId($year)
     {
         $row = $this->_table->getConnection()->execute(
