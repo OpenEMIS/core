@@ -23,13 +23,13 @@ class POCOR9590 extends AbstractMigration
         //POCOR-9590: Insert sync_mode and missing field mappings for Seychelles Civil Status
         $now = date('Y-m-d H:i:s');
         $rows = [
-            //POCOR-9590: sync_mode=readonly means fields are locked after sync (Seychelles behaviour)
+            //POCOR-9590: sync_mode=hide means Synced indicator is hidden (Seychelles behaviour)
             [
                 'id' => $this->newUuid(),
                 'external_data_source_type' => 'Seychelles Civil Status',
                 'attribute_field' => 'sync_mode',
                 'attribute_name' => 'Sync Mode',
-                'value' => 'readonly',
+                'value' => 'hide',
                 'created' => $now,
                 'created_user_id' => 1,
             ],
@@ -69,13 +69,13 @@ class POCOR9590 extends AbstractMigration
                 'created' => $now,
                 'created_user_id' => 1,
             ],
-            //POCOR-9590: sync_mode=editable means fields stay editable after sync (Jamaica/OpenEMIS Identity behaviour)
+            //POCOR-9590: sync_mode=hide means Synced indicator is hidden (Jamaica/OpenEMIS Identity behaviour)
             [
                 'id' => $this->newUuid(),
                 'external_data_source_type' => 'OpenEMIS Identity',
                 'attribute_field' => 'sync_mode',
                 'attribute_name' => 'Sync Mode',
-                'value' => 'editable',
+                'value' => 'hide',
                 'created' => $now,
                 'created_user_id' => 1,
             ],
