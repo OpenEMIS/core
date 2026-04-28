@@ -60,6 +60,11 @@ class IdentitiesTable extends ControllerActionTable
         //$this->log('beforeSave', 'debug');
         //$this->log($entity, 'debug');
         //POCOR-8243
+        $duplicateMessage = $this->checkDuplicateIdentity($entity);
+        if ($duplicateMessage != "") {
+            $entity->setError('number', $duplicateMessage);
+            return false; // stop save
+        }
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;
@@ -296,7 +301,7 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function validationDefault(Validator $validator): Validator
+    public function validationDefaultbkp(Validator $validator): Validator
     {
         //POCOR-9404 start
         $requestData = $_REQUEST;
@@ -364,6 +369,57 @@ class IdentitiesTable extends ControllerActionTable
             ->notEmpty('nationality_id');
         //POCOR-5987 ends
 
+        }
+
+        return $validator;
+    }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $requestData = $_REQUEST;
+        $isImport = false;
+
+        if (isset($requestData['ImportStudentAdmission'])) {
+            $feature = $requestData['ImportStudentAdmission']['feature'] ?? '';
+            $featureParts = explode('.', $feature);
+            $featureName = end($featureParts);
+
+            if ($featureName === 'ImportStudentAdmission') {
+                $isImport = true;
+            }
+        }
+        $validator
+            ->add('issue_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'expiry_date', false],
+            ])
+            ->allowEmptyDate('issue_date')
+            ->allowEmptyDate('expiry_date')
+
+            ->add('identity_type_id', 'ruleCustomIdentityType', [
+                'rule' => ['validateCustomIdentityType'],
+                'provider' => 'table',
+            ])
+
+            ->add('number', 'ruleCustomIdentityNumber', [
+                'rule' => ['validateCustomIdentityNumber'],
+                'provider' => 'table',
+                'last' => true
+            ])
+
+            ->add('number', [
+                'ruleUnique' => [
+                    'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
+                    'provider' => 'table'
+                ]
+            ]);
+        if ($isImport) {
+            $validator->allowEmptyString('nationality_id');
+        } else {
+            $validator
+                ->requirePresence('nationality_id', 'create')
+                ->notEmptyString('nationality_id', __('Nationality is required'));
         }
 
         return $validator;
@@ -527,5 +583,29 @@ class IdentitiesTable extends ControllerActionTable
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
+    }
+
+    private function checkDuplicateIdentity($entity)
+    {
+        if (empty($entity->number) || empty($entity->nationality_id)) {
+            return "";
+        }
+        $conditions = [
+            'number' => $entity->number,
+            'nationality_id' => $entity->nationality_id
+        ];
+
+        if (!$entity->isNew() && !empty($entity->id)) {
+            $conditions['id !='] = $entity->id;
+        }
+        $existing = $this->find()
+            ->where($conditions)
+            ->first();
+
+        if ($existing) {
+            return __("This identity number already exists for the  nationality.");
+        }
+
+        return "";
     }
 }
