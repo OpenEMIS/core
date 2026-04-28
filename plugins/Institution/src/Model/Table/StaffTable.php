@@ -406,7 +406,7 @@ class StaffTable extends ControllerActionTable
                     $this->aliasField('is_homeroom'),
                     $this->aliasField('start_date'),
                     $this->aliasField('end_date'),
-                   'staff_position_grade' => $this->aliasField('staff_position_grade_id')
+                   'staff_position_grade' => $this->aliasField('staff_position_grade_id') //POCOR-8211
                 ]
             )
             ->where([
@@ -5002,7 +5002,7 @@ class StaffTable extends ControllerActionTable
     public function onGetStaffPositionGradeId(EventInterface $event, Entity $entity)
     {
         $value = '';
-        $entity->staff_position_grade = $entity->staff_position_grade_id;
+        $entity->staff_position_grade = $entity->staff_position_grade_id;//POCOR-8211
         if ($entity->staff_position_grade_id) {
             $StaffPositionGradesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
             $StaffPositionGrades = $StaffPositionGradesTable->get($entity->staff_position_grade_id);
