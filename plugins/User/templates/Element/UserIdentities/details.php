@@ -3,18 +3,28 @@
 	vertical-align: top !important;
 }
 </style>
-<?php
-	//echo "<pre>"; print_r($_SESSION['Directory']);
-	//echo "<pre>"; print_r($attr['data']);
-
-?>
 
 <?php
-//POCOR-9590: getViewUserIdentities now returns ['data' => [...], 'sync_status' => N, 'sync_mode' => 'show'|'hide']
-$identityRows = !empty($attr['data']['data']) ? $attr['data']['data'] : [];
-$syncStatus   = isset($attr['data']['sync_status']) ? $attr['data']['sync_status'] : 0;
-$syncMode     = isset($attr['data']['sync_mode']) ? $attr['data']['sync_mode'] : 'hide'; //POCOR-9590: default hide
-$showSynced   = ($syncMode === 'show'); //POCOR-9590: only render Synced column when admin enabled it
+//POCOR-9590: getViewUserIdentities returns ['data' => [...], 'sync_status' => 0|1|2, 'active_source_identity_type_id' => int|null]
+$identityRows  = !empty($attr['data']['data']) ? $attr['data']['data'] : [];
+$syncStatus    = isset($attr['data']['sync_status']) ? (int)$attr['data']['sync_status'] : 0;
+$activeTypeId  = isset($attr['data']['active_source_identity_type_id']) ? $attr['data']['active_source_identity_type_id'] : null;
+
+//POCOR-9590: per-row badge — Synced/Not Synced only when row is sync-eligible (preferred + identity-type matches active source); otherwise Local
+$renderStatusBadge = function ($row) use ($syncStatus, $activeTypeId) {
+    $rowTypeId = isset($row['identity_types']['id']) ? (int)$row['identity_types']['id'] : null;
+    $eligible  = ($row['preferred'] == 1) && ($activeTypeId !== null) && ($rowTypeId === $activeTypeId);
+    if (!$eligible) {
+        return '<span class="label label-default">' . __('Local') . '</span>'; //POCOR-9590: grey
+    }
+    if ($syncStatus === 1) {
+        return '<span class="label label-success">' . __('Synced') . '</span>'; //POCOR-9590: green
+    }
+    if ($syncStatus === 2) {
+        return '<span class="label label-warning">' . __('Not Synced') . '</span>'; //POCOR-9590: orange
+    }
+    return '<span class="label label-default">' . __('Local') . '</span>'; //POCOR-9590: fallback grey when stored = 0
+};
 ?>
 <?php if (!empty($identityRows)) { ?>
 	<div class="form-input table-full-width">
@@ -27,10 +37,7 @@ $showSynced   = ($syncMode === 'show'); //POCOR-9590: only render Synced column 
 							<th><?= __('Identity Number'); ?></th>
 							<th><?= __('Nationality'); ?></th>
 							<th><?= __('Preferred'); ?></th>
-							<?php //POCOR-9590: Synced header only when sync_mode=show ?>
-							<?php if ($showSynced): ?>
-								<th><?= __('Synced'); ?></th>
-							<?php endif; ?>
+							<th><?= __('Status'); ?></th>
 						</tr>
 					</thead>
 
@@ -41,10 +48,7 @@ $showSynced   = ($syncMode === 'show'); //POCOR-9590: only render Synced column 
 							<td class="vertical-align-top"><?php echo !empty($index['number']) ? $index['number'] : ''; ?></td>
 							<td class="vertical-align-top"><?php if(isset($index['nationalities']) && !empty($index['nationalities']['name'])) { echo $index['nationalities']['name']; } else { echo ''; } ?></td>
 							<td class="vertical-align-top"><?php if($index['preferred'] == 1){ echo 'Yes'; } else{ echo 'No'; } ?></td>
-							<?php //POCOR-9590: Synced cell only when sync_mode=show. Synced = preferred identity AND user has been synced. ?>
-							<?php if ($showSynced): ?>
-								<td class="vertical-align-top"><?php if($index['preferred'] == 1 && !empty($syncStatus)){ echo '<span class="label label-success">Yes</span>'; } else { echo '<span class="label label-default">No</span>'; } ?></td>
-							<?php endif; ?>
+							<td class="vertical-align-top"><?= $renderStatusBadge($index); ?></td>
 						</tr>
 						<?php } ?>
 					</tbody>
