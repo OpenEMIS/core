@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Cache; //POCOR-9660: cache allowed orderby columns
 
 class CrudApiController extends Controller
 {
@@ -811,6 +811,7 @@ class CrudApiController extends Controller
 
         $pagination = $this->getPaginationParams($request, $segments);
         $filters = $this->parseFilters($request, $segments);
+        //POCOR-9660: start - implicit id-list segment (e.g. /resource/4,5,6) → filter
         try {
             $implicitIdFilter = $this->parseImplicitIdFilter($model, $segments);
             if (!empty($implicitIdFilter)) {
@@ -819,19 +820,24 @@ class CrudApiController extends Controller
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         }
+        //POCOR-9660: end
+        //POCOR-9660: start - surface invalid orderby as 400 instead of 500
         try {
             $order = $this->parseOrderParams($request, $segments);
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         }
+        //POCOR-9660: end
 
         $query = $this->parseSelectParams($request, $segments, $query, $model);
         $query = $this->applyFilters($query, $filters);
+        //POCOR-9660: start - surface invalid order column/direction as 400
         try {
             $query = $this->applyOrder($query, $order, $model);
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         }
+        //POCOR-9660: end
         $query = $this->applyInstitutionFilter($query, $model);
 
         return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
@@ -1021,7 +1027,7 @@ class CrudApiController extends Controller
         // POCOR-9633: skip params starting with '_' — reserved for scope-consumed params (e.g., _date, _meal_programmes_id)
         foreach ($request->all() as $key => $value) {
             if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) {
-                $filters[$key] = $this->normalizeGetFilterValue($key, $value);
+                $filters[$key] = $this->normalizeGetFilterValue($key, $value); //POCOR-9660: normalize comma-separated id values
             }
         }
 
@@ -1041,7 +1047,7 @@ class CrudApiController extends Controller
                     $i -= 2;
                 } else {
                     if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) { //POCOR-9633: skip _ prefixed scope-consumed params
-                        $filters[$key] = $this->normalizeGetFilterValue($key, $value);
+                        $filters[$key] = $this->normalizeGetFilterValue($key, $value); //POCOR-9660: normalize comma-separated id values
                     }
                 }
             }
@@ -1076,6 +1082,7 @@ class CrudApiController extends Controller
         foreach ($pairs as $pair) {
             $parts = explode(':', $pair, 2);
             if (count($parts) === 2) {
+                //POCOR-9660: start - support IN(a,b,c) and comma-separated id lists in _conditions
                 $field = trim($parts[0]);
                 $value = trim($parts[1]);
 
@@ -1085,12 +1092,14 @@ class CrudApiController extends Controller
                 } else {
                     $conditions[$field] = $this->normalizeGetFilterValue($field, $value);
                 }
+                //POCOR-9660: end
             }
         }
 
         return $conditions;
     }
 
+    //POCOR-9660: start - new helper - normalize GET filter values (split id-lists into arrays)
     /**
      * Normalize GET filter values before they are applied to the query.
      *
@@ -1106,7 +1115,7 @@ class CrudApiController extends Controller
 
         $value = trim($value);
 
-        if (($field === 'id' || substr($field, -3) === '_id') && strpos($value, ',') !== false) {
+        if (($field === 'id' || str_ends_with($field, '_id')) && strpos($value, ',') !== false) { //POCOR-9660: match bare 'id' and any '*_id' field for multi-value filter
             $values = array_values(array_filter(array_map('trim', explode(',', $value)), function ($item) {
                 return $item !== '';
             }));
@@ -1118,7 +1127,9 @@ class CrudApiController extends Controller
 
         return $value;
     }
+    //POCOR-9660: end
 
+    //POCOR-9660: start - new helper - parse IN(a,b,c) operator from _conditions value
     /**
      * Parse IN operator values from _conditions.
      *
@@ -1149,7 +1160,9 @@ class CrudApiController extends Controller
 
         return count($values) > 1 && count($values) === count($rawValues) ? $values : null;
     }
+    //POCOR-9660: end
 
+    //POCOR-9660: start - new helper - parse implicit id-list segment "/resource/4,5,6"
     /**
      * Parse an implicit GET identifier segment such as "4,5,6".
      *
@@ -1181,6 +1194,7 @@ class CrudApiController extends Controller
 
         return [$idField => $values];
     }
+    //POCOR-9660: end
 
     /**
      * Parse select parameters from the request and segments.
@@ -1331,6 +1345,7 @@ class CrudApiController extends Controller
             $model = new $model;
         }
 
+        //POCOR-9660: start - validate orderby column + direction against schema-derived allowlist
         $allowedColumns = $this->getAllowedOrderColumns($model);
         $hasOrderParam = !empty($order['columns']);
 
@@ -1351,6 +1366,7 @@ class CrudApiController extends Controller
                 $query->orderBy($column, $direction);
             }
         }
+        //POCOR-9660: end
 
         return $query;
     }
@@ -1408,6 +1424,7 @@ class CrudApiController extends Controller
             }
         }
 
+        //POCOR-9660: start - trim/normalize order columns and directions before validation
         $orderColumns = array_values(array_filter(array_map('trim', $orderColumns), function ($column) {
             return $column !== '';
         }));
@@ -1416,6 +1433,7 @@ class CrudApiController extends Controller
         }, $orderDirections), function ($direction) {
             return $direction !== '';
         }));
+        //POCOR-9660: end
 
         return [
             'columns' => $orderColumns,
@@ -1423,6 +1441,7 @@ class CrudApiController extends Controller
         ];
     }
 
+    //POCOR-9660: start - new helper - cached schema-derived allowlist of sortable columns
     /**
      * Resolve the list of columns that may be used for ordering.
      *
@@ -1447,6 +1466,7 @@ class CrudApiController extends Controller
             }));
         });
     }
+    //POCOR-9660: end
 
 
     /**
