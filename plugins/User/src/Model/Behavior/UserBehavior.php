@@ -137,6 +137,10 @@ class UserBehavior extends Behavior
 
     public function beforeAction(EventInterface $event)
     {
+        //POCOR-9590: hide system-managed sync_status from view/edit/add — the visual indicator lives in the Identities-tab badge
+        if (isset($this->_table->fields['sync_status'])) {
+            $this->_table->fields['sync_status']['visible'] = false;
+        }
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configData = $ConfigItems->find('all', ['conditions' => ['name LIKE' => '%' . 'Date of Death' . '%']])->first();
         $schema = $this->_table->getSchema();
