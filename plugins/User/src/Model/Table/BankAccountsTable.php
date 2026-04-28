@@ -154,9 +154,22 @@ class BankAccountsTable extends ControllerActionTable
 
     public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $bankId = $this->BankBranches->get($entity->bank_branch_id)->bank_id;
-        //POCOR-9584: $request is immutable in CakePHP5; bank_option pre-population handled via query param on redirect
-        // original CakePHP3 code: $this->request->getQuery['bank_option'] = $bankId;
+        if (empty($entity->bank_branch_id)) {
+            return;
+        }
+
+        $branch = $this->BankBranches->find()
+            ->select(['bank_id'])
+            ->where([$this->BankBranches->aliasField('id') => $entity->bank_branch_id])
+            ->first();
+        if (!$branch || empty($branch->bank_id)) {
+            return;
+        }
+
+        // CakePHP5 request is immutable; set bank_option explicitly for dependent dropdowns.
+        $query = $this->request->getQueryParams();
+        $query['bank_option'] = $branch->bank_id;
+        $this->request = $this->request->withQueryParams($query);
     }
 
 
