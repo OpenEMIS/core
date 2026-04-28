@@ -26,9 +26,9 @@ class StaffLeaveArchivedTable extends ControllerActionTable
     const IN_PROGRESS = 2;
     const DONE = 3;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
-        $this->table('institution_staff_leave_archived');
+        $this->setTable('institution_staff_leave_archived');
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
