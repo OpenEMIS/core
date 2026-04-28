@@ -1451,6 +1451,10 @@ class StudentUserTable extends ControllerActionTable
     //POCOR-9590: Sync button on the student General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
+        //POCOR-9590: gate by Import-Users-equivalent permission — only roles allowed to bring in users from outside should sync identities
+        if (!$this->AccessControl->check(['Institutions', 'ImportStudentAdmission', 'add'])) {
+            return;
+        }
         if (!$this->isSyncEligibleUser($entity->id)) {
             return; //POCOR-9590: hide button for Local users (no preferred external identity, or no active source)
         }
