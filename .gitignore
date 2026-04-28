@@ -81,9 +81,4 @@ frontend/out-tsc
 frontend/bazel-out
 frontend/node_modules
 api/storage/api-docs
-
-# Claude Code — auto-generated / personal
-.claude/settings.local.json
-.claude/PRE_COMPACT_STATE.md
-.claude/scheduled_tasks.lock
-.claude/.DS_Store
+/.claude/
