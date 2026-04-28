@@ -16,7 +16,7 @@ class POCOR9590 extends AbstractMigration
                 'null' => false,
                 'limit' => 1,
                 'after' => 'external_reference',
-                'comment' => 'POCOR-9590: 0=Local, 1=Synced, 2=Not Synced',
+                'comment' => '0=Local, 1=Synced, 2=Not Synced',
             ])
             ->update();
     }
