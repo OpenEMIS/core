@@ -123,6 +123,11 @@ class UserBehavior extends Behavior
                 }
             }
         }
+
+        //POCOR-9590: inception sync — new user created from external search (external_reference populated) starts as Synced (1)
+        if ($this->_table->getTable() === 'security_users' && $entity->isNew() && !empty($entity->external_reference)) {
+            $entity->sync_status = 1;
+        }
     }
 
     private function isCAv4()
