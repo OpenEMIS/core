@@ -1188,18 +1188,27 @@ class StudentsController extends AppController
 
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
         $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $ConfigItems   = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $Genders       = TableRegistry::getTableLocator()->get('User.Genders');
 
         $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
 
-        if (empty($user->external_reference)) {
-            $this->Flash->error(__('User is not linked to an external identity source.'));
+        //POCOR-9590: resolve active external data source dynamically (Seychelles Civil Status, OpenEMIS Identity, etc.)
+        $activeItem = $ConfigItems->find()
+            ->where(['code' => 'external_data_source_type'])
+            ->where(['value IS NOT' => null])
+            ->where(['value !=' => ''])
+            ->where(['value !=' => 'None'])
+            ->first();
+        if (!$activeItem) {
+            $this->Flash->error(__('No active external identity source is configured.'));
             return $this->redirect($this->referer());
         }
+        $activeSourceType = $activeItem->name;
 
-        // Load field mapping config
+        // Load field mapping config for the active source
         $configs = $ExternalAttrs->find()
-            ->where(['external_data_source_type' => 'OpenEMIS Identity'])
+            ->where(['external_data_source_type' => $activeSourceType])
             ->all()
             ->combine('attribute_field', 'value')
             ->toArray();
@@ -1275,6 +1284,17 @@ class StudentsController extends AppController
                 'current'  => $user->has('gender') ? $user->gender->name : '',
                 'external' => $externalValues['gender'],
             ];
+        }
+
+        //POCOR-9590: no-diff fast path — registry data already matches OE Core, just confirm and exit
+        if (empty($diff) && !$this->request->is('post')) {
+            //POCOR-9590: bump status to 1 in case it had drifted to 2 but actually matches now
+            if ((int)$user->sync_status !== 1) {
+                $user->sync_status = 1;
+                $SecurityUsers->save($user);
+            }
+            $this->Flash->success(__('Already in sync — registry data matches.'));
+            return $this->redirect($this->referer());
         }
 
         if ($this->request->is('post')) {
