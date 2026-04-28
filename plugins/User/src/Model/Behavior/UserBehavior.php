@@ -438,7 +438,8 @@ class UserBehavior extends Behavior
     }
 
     //POCOR-9590: returns identity_type_id of the active external data source, or null if no source is active or no identity_type configured
-    private function getActiveExternalSourceIdentityTypeId()
+    //POCOR-9590: public so 3 user-tables (StudentUser/StaffUser/Directories) can call it via behavior __call proxy
+    public function getActiveExternalSourceIdentityTypeId()
     {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $activeItem = $ConfigItems->find()
@@ -458,6 +459,23 @@ class UserBehavior extends Behavior
             ])
             ->first();
         return ($row && !empty($row->value)) ? (int)$row->value : null;
+    }
+
+    //POCOR-9590: a user is sync-eligible iff they have a preferred user_identities row whose identity_type_id matches the active external data source's identity_type_id
+    public function isSyncEligibleUser($securityUserId): bool
+    {
+        $activeIdentityTypeId = $this->getActiveExternalSourceIdentityTypeId();
+        if ($activeIdentityTypeId === null) {
+            return false;
+        }
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        return $UserIdentities->find()
+            ->where([
+                'security_user_id' => $securityUserId,
+                'identity_type_id' => $activeIdentityTypeId,
+                'preferred' => 1,
+            ])
+            ->count() > 0;
     }
     //POCOR-5668 add identity section ends
 
