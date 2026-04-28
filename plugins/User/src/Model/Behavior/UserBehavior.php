@@ -112,6 +112,17 @@ class UserBehavior extends Behavior
                 $entity->dod_range = "greater";
             }
         }
+
+        //POCOR-9590: drift detection — Synced (1) → Not Synced (2) when any General field changes. Local (0) and Not Synced (2) stay where they are.
+        if ($this->_table->getTable() === 'security_users' && !$entity->isNew() && (int)$entity->sync_status === 1) {
+            $generalFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
+            foreach ($generalFields as $f) {
+                if ($entity->isDirty($f)) {
+                    $entity->sync_status = 2;
+                    break;
+                }
+            }
+        }
     }
 
     private function isCAv4()
