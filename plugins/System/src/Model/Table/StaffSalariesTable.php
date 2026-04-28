@@ -59,10 +59,14 @@ class StaffSalariesTable extends ControllerActionTable
         }
 
     }
-
-    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
+    
+    public function onGetIncrement(EventInterface $event, Entity $entity)
     {
-
+        $value = '';
+        if ($entity->has('increment')) {
+            $value = number_format($entity->increment, 2) . '%';
+        }
+        return $value;
     }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
@@ -99,8 +103,6 @@ class StaffSalariesTable extends ControllerActionTable
         $this->field('created', ['visible' => true, 'sort' => true]);
         $this->field('modified_user_id', ['visible' => true, 'enable' => false]);
         $this->field('modified', ['visible' => true, 'sort' => true]);
-
-        $action = 'view';
     }
 
     public function validationDefault(Validator $validator): Validator
