@@ -41,6 +41,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         'gender_id', 'date_of_birth',
         'date_of_death', 'nationality_id',  'identity_type_id',
         'identity_number', 'external_reference',
+        'sync_status', //POCOR-9590: 0=Local, 1=Synced, 2=Not Synced
         'super_admin', 'status', 'last_login',
         'failed_logins', 'photo_name',
         'photo_content', 'preferred_language',
@@ -59,6 +60,20 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     {
         parent::boot();
         self::bootNumericId();
+
+        //POCOR-9590: drift detection — Synced (1) → Not Synced (2) on General-field edit; inception sync — new user with external_reference → 1
+        self::saving(function ($user) {
+            $generalFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
+            if ($user->exists && (int)$user->sync_status === 1) {
+                $dirty = $user->getDirty();
+                if (array_intersect_key($dirty, array_flip($generalFields))) {
+                    $user->sync_status = 2;
+                }
+            }
+            if (!$user->exists && !empty($user->external_reference)) {
+                $user->sync_status = 1;
+            }
+        });
     }
 
 
@@ -146,6 +161,7 @@ public function _swaggerPath() {}
                           @OA\Property(property="identity_type_id", type="integer", example=null),
                           @OA\Property(property="identity_number", type="string", example=null),
                           @OA\Property(property="external_reference", type="string", example=null),
+                          @OA\Property(property="sync_status", type="integer", enum={0,1,2}, example=0, description="POCOR-9590: 0=Local, 1=Synced, 2=Not Synced. Set to 1 on external-search import or confirmed Sync action; auto-resets to 2 when first_name/middle_name/third_name/last_name/gender_id/date_of_birth changes."),
                           @OA\Property(property="super_admin", type="integer", example=null),
                           @OA\Property(property="status", type="integer", example=null),
                           @OA\Property(property="last_login", type="string", format="date-time", example=null),
@@ -203,6 +219,7 @@ public function _swaggerList() {}
                      @OA\Property(property="identity_type_id", type="integer", example=null),
                      @OA\Property(property="identity_number", type="string", example=null),
                      @OA\Property(property="external_reference", type="string", example=null),
+                     @OA\Property(property="sync_status", type="integer", enum={0,1,2}, example=0, description="POCOR-9590: 0=Local, 1=Synced, 2=Not Synced. Set to 1 on external-search import or confirmed Sync action; auto-resets to 2 when first_name/middle_name/third_name/last_name/gender_id/date_of_birth changes."),
                      @OA\Property(property="super_admin", type="integer", example=null),
                      @OA\Property(property="status", type="integer", example=null),
                      @OA\Property(property="last_login", type="string", format="date-time", example=null),
@@ -298,6 +315,7 @@ public function _swaggerView() {}
                      @OA\Property(property="identity_type_id", type="integer", example=null),
                      @OA\Property(property="identity_number", type="string", example=null),
                      @OA\Property(property="external_reference", type="string", example=null),
+                     @OA\Property(property="sync_status", type="integer", enum={0,1,2}, example=0, description="POCOR-9590: 0=Local, 1=Synced, 2=Not Synced. Set to 1 on external-search import or confirmed Sync action; auto-resets to 2 when first_name/middle_name/third_name/last_name/gender_id/date_of_birth changes."),
                      @OA\Property(property="super_admin", type="integer", example=null),
                      @OA\Property(property="status", type="integer", example=null),
                      @OA\Property(property="last_login", type="string", format="date-time", example=null),
