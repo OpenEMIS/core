@@ -2549,6 +2549,11 @@ class DirectoriesController extends AppController
     //POCOR-9590: start - Sync directory user identity from external data source with review/diff page
     public function syncUser()
     {
+        //POCOR-9590: gate the action itself — the button is hidden by addSyncButton's AccessControl check, but a forged URL could otherwise reach this action without a security_functions row
+        if (!$this->AccessControl->check(['Directories', 'ImportUsers', 'add'])) {
+            $this->Flash->error(__('You do not have permission to sync this user.'));
+            return $this->redirect($this->referer());
+        }
         //POCOR-9590: user_id is passed as encoded pass param (positional), decode it the standard way
         $pass = $this->request->getAttribute('params')['pass'] ?? [];
         $decoded = !empty($pass[0]) ? $this->ControllerAction->paramsDecode($pass[0]) : [];
