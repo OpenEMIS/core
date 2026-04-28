@@ -1233,12 +1233,14 @@ class StudentsController extends AppController
 
         $http = new Client();
 
-        // Step 1: get Bearer token
-        $tokenResponse = $http->post($tokenUrl, json_encode([
+        // Step 1: get Bearer token (OAuth2 client_credentials — form-encoded with scope)
+        //POCOR-9590: form-encoded + scope required by Seychelles Civil Status (and standard OAuth2). Same shape as getSeychellesData() reference impl.
+        $tokenResponse = $http->post($tokenUrl, [
+            'grant_type'    => 'client_credentials',
             'client_id'     => $clientId,
             'client_secret' => $privateKey,
-            'grant_type'    => 'client_credentials',
-        ]), ['type' => 'json']);
+            'scope'         => $configs['scope'] ?? ($configs['scopes'] ?? ''),
+        ], ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
 
         if (!$tokenResponse->isOk()) {
             $this->Alert->error('Failed to authenticate with external identity source.', ['type' => 'string', 'reset' => true]);
@@ -1251,8 +1253,21 @@ class StudentsController extends AppController
             return $this->redirect($this->referer());
         }
 
+        //POCOR-9590: resolve external reference. security_users.external_reference is set when a user is created via External Search; for users with only a preferred identity row matching the active source, fall back to that identity number (e.g. NIN).
+        $externalRef = $user->external_reference;
+        if (empty($externalRef)) {
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+            $idRow = $UserIdentities->find()
+                ->where(['security_user_id' => $userId, 'identity_type_id' => $configs['identity_type_id'] ?? 0, 'preferred' => 1])
+                ->first();
+            $externalRef = $idRow ? $idRow->number : null;
+        }
+        if (empty($externalRef)) {
+            $this->Alert->error('No external reference found for this user.', ['type' => 'string', 'reset' => true]);
+            return $this->redirect($this->referer());
+        }
         // Step 2: fetch user data from external API
-        $apiUrl      = str_replace('{external_reference}', $user->external_reference, $userEndpoint);
+        $apiUrl      = str_replace('{external_reference}', $externalRef, $userEndpoint);
         $apiResponse = $http->get($apiUrl, [], ['headers' => ['Authorization' => 'Bearer ' . $accessToken]]);
 
         if (!$apiResponse->isOk()) {
@@ -1279,13 +1294,26 @@ class StudentsController extends AppController
             $externalGenderId = $genderRow ? $genderRow->id : null;
         }
 
+        //POCOR-9590: normalize date_of_birth on both sides — registry returns ISO ("2010-06-15T00:00:00"), OE Core stores FrozenDate; compare canonical Y-m-d
+        if (isset($externalValues['date_of_birth'])) {
+            $externalValues['date_of_birth'] = substr((string)$externalValues['date_of_birth'], 0, 10);
+        }
+        $userDob = $user->date_of_birth;
+        if ($userDob instanceof \DateTimeInterface) {
+            $userDob = $userDob->format('Y-m-d');
+        } else {
+            $userDob = (string)$userDob;
+        }
         // Step 5: build diff (only fields that would actually change)
         $diff = [];
-        $textFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth'];
+        $textFields = ['first_name', 'middle_name', 'third_name', 'last_name'];
         foreach ($textFields as $field) {
             if (isset($externalValues[$field]) && (string)$externalValues[$field] !== (string)$user->$field) {
                 $diff[$field] = ['current' => $user->$field, 'external' => $externalValues[$field]];
             }
+        }
+        if (isset($externalValues['date_of_birth']) && $externalValues['date_of_birth'] !== '' && $externalValues['date_of_birth'] !== $userDob) {
+            $diff['date_of_birth'] = ['current' => $userDob, 'external' => $externalValues['date_of_birth']];
         }
         if ($externalGenderId && $externalGenderId !== $user->gender_id) {
             $diff['gender'] = [
@@ -1311,6 +1339,10 @@ class StudentsController extends AppController
                 if (isset($externalValues[$field])) {
                     $user->$field = $externalValues[$field];
                 }
+            }
+            //POCOR-9590: apply date_of_birth (already normalized to Y-m-d above; not in $textFields anymore)
+            if (!empty($externalValues['date_of_birth'])) {
+                $user->date_of_birth = $externalValues['date_of_birth'];
             }
             if ($externalGenderId) {
                 $user->gender_id = $externalGenderId;

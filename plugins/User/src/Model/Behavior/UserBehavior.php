@@ -114,7 +114,8 @@ class UserBehavior extends Behavior
         }
 
         //POCOR-9590: drift detection — Synced (1) → Not Synced (2) when any General field changes. Local (0) and Not Synced (2) stay where they are.
-        if ($this->_table->getTable() === 'security_users' && !$entity->isNew() && (int)$entity->sync_status === 1) {
+        //POCOR-9590: skip when sync_status itself is dirty — that means the SyncUser action just set it to 1, the field changes ARE the sync, don't immediately flip back to 2
+        if ($this->_table->getTable() === 'security_users' && !$entity->isNew() && (int)$entity->sync_status === 1 && !$entity->isDirty('sync_status')) {
             $generalFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
             foreach ($generalFields as $f) {
                 if ($entity->isDirty($f)) {
