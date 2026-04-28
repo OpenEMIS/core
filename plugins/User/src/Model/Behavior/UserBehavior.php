@@ -411,7 +411,17 @@ class UserBehavior extends Behavior
         $userRow = $SecurityUsers->find()->select(['sync_status'])->where(['id' => $security_users_id])->first();
         $syncStatus = $userRow ? $userRow->sync_status : 0;
 
-        return ['data' => $data, 'sync_status' => $syncStatus];
+        //POCOR-9590: fetch sync_mode from external_data_source_attributes to control Synced column visibility
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $syncModeRow = $ConfigItems->find()
+            ->where([
+                'ConfigItems.external_data_source_type' => 'Seychelles Civil Status',
+                'ConfigItems.attribute_field' => 'sync_mode'
+            ])
+            ->first();
+        $syncMode = ($syncModeRow && isset($syncModeRow->value)) ? $syncModeRow->value : 'hide'; //POCOR-9590: default hide
+
+        return ['data' => $data, 'sync_status' => $syncStatus, 'sync_mode' => $syncMode];
     }
     //POCOR-5668 add identity section ends
 

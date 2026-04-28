@@ -1451,6 +1451,19 @@ class StudentUserTable extends ControllerActionTable
     //POCOR-9590: Sync button on the student General view toolbar
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
+        //POCOR-9590: check sync_mode — if not 'show', do not render the button
+        $ConfigItems = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $syncModeRow = $ConfigItems->find()
+            ->where([
+                'ConfigItems.external_data_source_type' => 'Seychelles Civil Status', // or OpenEMIS Identity
+                'ConfigItems.attribute_field' => 'sync_mode'
+            ])
+            ->first();
+        $syncMode = ($syncModeRow && isset($syncModeRow->value)) ? $syncModeRow->value : 'hide'; //POCOR-9590: default hide
+        if ($syncMode !== 'show') {
+            return; //POCOR-9590: sync button hidden if sync_mode is not 'show'
+        }
+
         $toolbarButtons = $extra['toolbarButtons'];
 
         //POCOR-9590: encode user_id via paramsEncode so URL cannot be tampered with

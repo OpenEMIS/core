@@ -287,9 +287,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 unset($attributes['public_key']);
                 //POCOR-9590: show sync_mode as human-readable label
                 if (isset($attributes['sync_mode'])) {
-                    $attributes['sync_mode'] = $attributes['sync_mode'] === 'readonly'
-                        ? __('Readonly (fields locked after sync)')
-                        : __('Editable (fields can be changed after sync)');
+                    $attributes['sync_mode'] = $attributes['sync_mode'] === 'show'
+                        ? __('Show (Synced column displayed)')
+                        : __('Hide (Synced column not displayed)');
                 }
                 // POCOR-9118 end
             }
@@ -509,10 +509,10 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('address_mapping', ['type' => 'hidden']);
                 $this->field('postal_mapping', ['type' => 'hidden']);
                 $this->field('user_endpoint_uri', ['type' => 'string', 'attr' => []]);
-                //POCOR-9590: sync_mode controls whether synced users are locked (readonly) or editable
+                //POCOR-9590: sync_mode controls visibility of Synced indicator only
                 $this->field('sync_mode', [
                     'type'    => 'select',
-                    'options' => ['readonly' => __('Readonly (fields locked after sync)'), 'editable' => __('Editable (fields can be changed after sync)')],
+                    'options' => ['hide' => __('Hide (Synced column not displayed)'), 'show' => __('Show (Synced column displayed)')],
                     'attr'    => [],
                 ]);
 
