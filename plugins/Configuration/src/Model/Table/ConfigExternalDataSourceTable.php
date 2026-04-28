@@ -285,12 +285,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 unset($attributes['address_mapping']);
                 unset($attributes['postal_mapping']);
                 unset($attributes['public_key']);
-                //POCOR-9590: show sync_mode as human-readable label
-                if (isset($attributes['sync_mode'])) {
-                    $attributes['sync_mode'] = $attributes['sync_mode'] === 'show'
-                        ? __('Show (Synced column displayed)')
-                        : __('Hide (Synced column not displayed)');
-                }
                 // POCOR-9118 end
             }
             foreach ($attributes as $key => $obj) {
@@ -509,12 +503,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('address_mapping', ['type' => 'hidden']);
                 $this->field('postal_mapping', ['type' => 'hidden']);
                 $this->field('user_endpoint_uri', ['type' => 'string', 'attr' => []]);
-                //POCOR-9590: sync_mode controls visibility of Synced indicator only
-                $this->field('sync_mode', [
-                    'type'    => 'select',
-                    'options' => ['hide' => __('Hide (Synced column not displayed)'), 'show' => __('Show (Synced column displayed)')],
-                    'attr'    => [],
-                ]);
 
                 break;
             // POCOR-7981
@@ -769,8 +757,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
             'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping', 'external_reference_mapping',
             'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping',
             'address_mapping', 'postal_mapping', 'private_key', 'public_key', 'secret_code', 'application_id',
-            'gender_id_mapping', 'openemis_no_mapping', 'scopes', 'client_secret', 'grant_type', // POCOR-9481
-            'sync_mode', 'user_endpoint_uri' //POCOR-9590: sync_mode and user_endpoint_uri
+            'gender_id_mapping', 'openemis_no_mapping', 'scopes', 'client_secret', 'grant_type' // POCOR-9481
         ];
 
         foreach ($fields as $field) {
