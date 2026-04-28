@@ -2557,6 +2557,10 @@ public function getIdentityTypeData($value_selection)
     //POCOR-9590: Sync button on the directory General view toolbar
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
+        //POCOR-9590: gate by Import-Users permission — only roles allowed to bring in users from outside should sync identities
+        if (!$this->AccessControl->check(['Directories', 'ImportUsers', 'add'])) {
+            return;
+        }
         if (!$this->isSyncEligibleUser($entity->id)) {
             return;
         }
