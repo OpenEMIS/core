@@ -406,22 +406,42 @@ class UserBehavior extends Behavior
             ])
             ->toArray();
 
-        //POCOR-9590: fetch sync_status from security_users to show Synced column in Identities tab
+        //POCOR-9590: stored sync_status on the user (0=Local, 1=Synced, 2=Not Synced)
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
         $userRow = $SecurityUsers->find()->select(['sync_status'])->where(['id' => $security_users_id])->first();
-        $syncStatus = $userRow ? $userRow->sync_status : 0;
+        $syncStatus = $userRow ? (int)$userRow->sync_status : 0;
 
-        //POCOR-9590: fetch sync_mode from external_data_source_attributes to control Synced column visibility
+        //POCOR-9590: identity_type_id of the currently active external data source — used to decide which row in the Identities table is sync-eligible
+        $activeIdentityTypeId = $this->getActiveExternalSourceIdentityTypeId();
+
+        return [
+            'data' => $data,
+            'sync_status' => $syncStatus,
+            'active_source_identity_type_id' => $activeIdentityTypeId,
+        ];
+    }
+
+    //POCOR-9590: returns identity_type_id of the active external data source, or null if no source is active or no identity_type configured
+    private function getActiveExternalSourceIdentityTypeId()
+    {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $syncModeRow = $ConfigItems->find()
+        $activeItem = $ConfigItems->find()
+            ->where(['code' => 'external_data_source_type'])
+            ->where(['value IS NOT' => null])
+            ->where(['value !=' => ''])
+            ->where(['value !=' => 'None'])
+            ->first();
+        if (!$activeItem) {
+            return null;
+        }
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $row = $ExternalAttrs->find()
             ->where([
-                'ConfigItems.external_data_source_type' => 'Seychelles Civil Status',
-                'ConfigItems.attribute_field' => 'sync_mode'
+                'external_data_source_type' => $activeItem->name,
+                'attribute_field' => 'identity_type_id',
             ])
             ->first();
-        $syncMode = ($syncModeRow && isset($syncModeRow->value)) ? $syncModeRow->value : 'hide'; //POCOR-9590: default hide
-
-        return ['data' => $data, 'sync_status' => $syncStatus, 'sync_mode' => $syncMode];
+        return ($row && !empty($row->value)) ? (int)$row->value : null;
     }
     //POCOR-5668 add identity section ends
 
