@@ -301,67 +301,6 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
-    public function validationDefaultbkp(Validator $validator): Validator
-    {
-        //POCOR-9404 start
-        $requestData = $_REQUEST;
-        if (isset($requestData['ImportStudentAdmission'])) {
-            $importStudentAdmission = $requestData['ImportStudentAdmission'];
-            if (!empty($importStudentAdmission['feature'])) {
-                $feature = $importStudentAdmission['feature'];
-                $featureParts = explode('.', $feature);
-                $featureName = end($featureParts);
-                // Apply this validation ONLY if not ImportStudentAdmission
-                if ($featureName !== 'ImportStudentAdmission') { //POCOR-9404 end
-                    $validator = parent::validationDefault($validator);
-                    $validator->setProvider('custom', $this);
-                    $validator
-                        ->add('issue_date', 'ruleCompareDate', [
-                            'rule' => ['compareDate', 'expiry_date', false],
-                            'on' => 'create',
-                        ])
-                        ->allowEmptyDate('issue_date')
-                        ->allowEmptyDate('expiry_date')
-                        ->add('identity_type_id', 'ruleCustomIdentityType', [
-                            'rule' => ['validateCustomIdentityType'],
-                            'provider' => 'table',
-                        ])
-                        ->add('number', 'ruleCustomIdentityNumber', [
-                            'rule' => ['validateCustomIdentityNumber'],
-                            'provider' => 'table',
-                            'last' => true
-                        ])
-                        //POCOR-5987 starts
-                        ->notEmpty('nationality_id');//POCOR-5987 ends
-                }
-            }
-        }elseif(!empty($requestData['Identities'])){ //POCOR-9404
-            $validator = parent::validationDefault($validator);
-            $validator->setProvider('custom', $this);
-            return $validator
-                ->add('issue_date', 'ruleCompareDate', [
-                    'rule' => ['compareDate', 'expiry_date', false]
-                ])
-                ->add('expiry_date', [
-                ])
-                ->add('identity_type_id', 'ruleCustomIdentityType', [
-                    'rule' => ['validateCustomIdentityType'],
-                    'provider' => 'table',
-                ])
-                ->add('number', 'ruleCustomIdentityNumber', [
-                    'rule' => ['validateCustomIdentityNumber'],
-                    'provider' => 'table',
-                    'last' => true
-                ])
-                
-                //POCOR-5987 starts
-            ->notEmpty('nationality_id');
-        //POCOR-5987 ends
-
-        }
-
-        return $validator;
-    }
 
     public function validationDefault(Validator $validator): Validator
     {
