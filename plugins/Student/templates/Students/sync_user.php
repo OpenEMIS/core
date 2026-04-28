@@ -59,10 +59,9 @@ $fieldLabels = [
                             'method' => 'post',
                         ]) ?>
                             <div class="form-actions">
-                                <?= $this->Form->button(
-                                    '<i class="fa fa-refresh"></i> ' . __('Apply Sync'),
-                                    ['type' => 'submit', 'class' => 'btn btn-primary', 'escape' => false]
-                                ) ?>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa fa-refresh"></i> <?= __('Apply Sync') ?>
+                                </button>
                                 <a href="javascript:history.back()" class="btn btn-default" style="margin-left:8px;">
                                     <i class="fa fa-times"></i> <?= __('Cancel') ?>
                                 </a>
