@@ -59,12 +59,12 @@ class IdentitiesTable extends ControllerActionTable
     {
         //$this->log('beforeSave', 'debug');
         //$this->log($entity, 'debug');
-        //POCOR-8243
+        //POCOR-9663 start
         $duplicateMessage = $this->checkDuplicateIdentity($entity);
         if ($duplicateMessage != "") {
             $entity->setError('number', $duplicateMessage);
             return false; // stop save
-        }
+        }  //POCOR-9663 end
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;
@@ -331,12 +331,6 @@ class IdentitiesTable extends ControllerActionTable
                             'provider' => 'table',
                             'last' => true
                         ])
-                        ->add('number', [
-                            'ruleUnique' => [
-                                'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
-                                'provider' => 'table'
-                            ]
-                        ])
                         //POCOR-5987 starts
                         ->notEmpty('nationality_id');//POCOR-5987 ends
                 }
@@ -359,12 +353,7 @@ class IdentitiesTable extends ControllerActionTable
                     'provider' => 'table',
                     'last' => true
                 ])
-                ->add('number', [
-                    'ruleUnique' => [
-                        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
-                        'provider' => 'table'
-                    ]
-                ])
+                
                 //POCOR-5987 starts
             ->notEmpty('nationality_id');
         //POCOR-5987 ends
@@ -376,54 +365,90 @@ class IdentitiesTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
-        $validator = parent::validationDefault($validator);
-        $validator->setProvider('custom', $this);
         $requestData = $_REQUEST;
-        $isImport = false;
 
+        // POCOR-9404 start
         if (isset($requestData['ImportStudentAdmission'])) {
-            $feature = $requestData['ImportStudentAdmission']['feature'] ?? '';
-            $featureParts = explode('.', $feature);
-            $featureName = end($featureParts);
+            $importStudentAdmission = $requestData['ImportStudentAdmission'];
 
-            if ($featureName === 'ImportStudentAdmission') {
-                $isImport = true;
+            if (!empty($importStudentAdmission['feature'])) {
+                $feature      = $importStudentAdmission['feature'];
+                $featureParts = explode('.', $feature);
+                $featureName  = end($featureParts);
+
+                // Apply this validation ONLY if not ImportStudentAdmission
+                if ($featureName !== 'ImportStudentAdmission') {
+                    $validator = parent::validationDefault($validator);
+                    $validator->setProvider('custom', $this);
+
+                    $validator
+                        ->add('issue_date', 'ruleCompareDate', [
+                            'rule' => ['compareDate', 'expiry_date', false],
+                            'on'   => 'create',
+                        ])
+                        ->allowEmptyDate('issue_date')
+                        ->allowEmptyDate('expiry_date')
+                        ->add('identity_type_id', 'ruleCustomIdentityType', [
+                            'rule'     => ['validateCustomIdentityType'],
+                            'provider' => 'table',
+                        ])
+                        ->add('number', 'ruleCustomIdentityNumber', [
+                            'rule'     => ['validateCustomIdentityNumber'],
+                            'provider' => 'table',
+                            'last'     => true,
+                        ])
+                        
+                        // POCOR-5987 starts
+                        ->notEmpty('nationality_id'); // POCOR-5987 ends
+                }
             }
-        }
-        $validator
-            ->add('issue_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'expiry_date', false],
-            ])
-            ->allowEmptyDate('issue_date')
-            ->allowEmptyDate('expiry_date')
+        } elseif (!empty($requestData['Identities'])) { // POCOR-9404
+            $validator = parent::validationDefault($validator);
+            $validator->setProvider('custom', $this);
 
-            ->add('identity_type_id', 'ruleCustomIdentityType', [
-                'rule' => ['validateCustomIdentityType'],
-                'provider' => 'table',
-            ])
+            return $validator
+                ->add('issue_date', 'ruleCompareDate', [
+                    'rule' => ['compareDate', 'expiry_date', false],
+                ])
+                ->add('expiry_date', [])
+                ->add('identity_type_id', 'ruleCustomIdentityType', [
+                    'rule'     => ['validateCustomIdentityType'],
+                    'provider' => 'table',
+                ])
+                ->add('number', 'ruleCustomIdentityNumber', [
+                    'rule'     => ['validateCustomIdentityNumber'],
+                    'provider' => 'table',
+                    'last'     => true,
+                ])
+               
+                // POCOR-5987 starts
+                ->notEmpty('nationality_id'); // POCOR-5987 ends
 
-            ->add('number', 'ruleCustomIdentityNumber', [
-                'rule' => ['validateCustomIdentityNumber'],
-                'provider' => 'table',
-                'last' => true
-            ])
+        } else { //POCOR-9663
+            $validator = parent::validationDefault($validator);
+            $validator->setProvider('custom', $this);
 
-            ->add('number', [
-                'ruleUnique' => [
-                    'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
-                    'provider' => 'table'
-                ]
-            ]);
-        if ($isImport) {
-            $validator->allowEmptyString('nationality_id');
-        } else {
-            $validator
-                ->requirePresence('nationality_id', 'create')
-                ->notEmptyString('nationality_id', __('Nationality is required'));
+            return $validator
+                ->add('issue_date', 'ruleCompareDate', [
+                    'rule' => ['compareDate', 'expiry_date', false],
+                ])
+                ->add('expiry_date', [])
+                ->add('identity_type_id', 'ruleCustomIdentityType', [
+                    'rule'     => ['validateCustomIdentityType'],
+                    'provider' => 'table',
+                ])
+                ->add('number', 'ruleCustomIdentityNumber', [
+                    'rule'     => ['validateCustomIdentityNumber'],
+                    'provider' => 'table',
+                    'last'     => true,
+                ])
+                // POCOR-5987 starts
+                ->notEmpty('nationality_id'); // POCOR-5987 ends
         }
 
         return $validator;
     }
+
 
     public function validationAddByAssociation(Validator $validator)
     {
@@ -585,6 +610,7 @@ class IdentitiesTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9663
     private function checkDuplicateIdentity($entity)
     {
         if (empty($entity->number) || empty($entity->nationality_id)) {
@@ -605,7 +631,6 @@ class IdentitiesTable extends ControllerActionTable
         if ($existing) {
             return __("This identity number already exists for the  nationality.");
         }
-
         return "";
     }
 }
