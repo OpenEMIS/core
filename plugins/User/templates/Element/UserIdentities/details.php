@@ -12,7 +12,7 @@ $activeTypeId  = isset($attr['data']['active_source_identity_type_id']) ? $attr[
 
 //POCOR-9590: per-row badge — Synced/Not Synced only when row is sync-eligible (preferred + identity-type matches active source); otherwise Local
 $renderStatusBadge = function ($row) use ($syncStatus, $activeTypeId) {
-    $rowTypeId = isset($row['identity_types']['id']) ? (int)$row['identity_types']['id'] : null;
+    $rowTypeId = isset($row['identity_type_id']) ? (int)$row['identity_type_id'] : null; //POCOR-9590: read user_identities.identity_type_id (selected) instead of identity_types.id (not selected)
     $eligible  = ($row['preferred'] == 1) && ($activeTypeId !== null) && ($rowTypeId === $activeTypeId);
     if (!$eligible) {
         return '<span class="label label-default">' . __('Local') . '</span>'; //POCOR-9590: grey
