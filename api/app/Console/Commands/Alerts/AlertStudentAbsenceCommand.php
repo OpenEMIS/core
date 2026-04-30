@@ -158,13 +158,60 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         // Log first few absence records for debugging
         Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Sample data (first 3): ' . json_encode(array_slice($absences, 0, 3))); //[TEMP-LOG]
 
-        // Count unique absence dates
+        //POCOR-9509: start - Honor system config `calculate_daily_attendance` (config_items.code).
+        //  value=1 → "Mark absent if one or more records absent": ANY absent record on a date
+        //           counts the date as a fully-absent day (default current behaviour).
+        //  value=2 → "Mark present if one or more records present": a date is a fully-absent day
+        //           only when EVERY scheduled period that day has an absent row. If at least one
+        //           period was not marked absent (i.e. the student was present in some period),
+        //           the date is NOT a fully-absent day.
+        //Detection: compare per-date absent-row count vs the count of marked periods for the
+        //student's class on that date (`student_attendance_marked_records.no_scheduled_class=0`).
+        //If absent_count < marked_count → the day is partial-absent → drop from total_days.
+        //
+        //IMPORTANT: This only adjusts `total_days`. `total_times` (count of absence rows) is
+        //unchanged — the message text reads "X times absent, Y days absent" and both numbers
+        //should stay accurate.
+        //
+        //Reference for the rule semantics: plugins/Institution/src/Model/Table/StudentsTable.php
+        //lines 2703-2807 (CakePHP-side split per rule, identical schema).
+        $attendanceRule = (int) (DB::table('config_items')
+            ->where('code', 'calculate_daily_attendance')
+            ->value('value') ?? 1);
+
+        // Count unique absence dates (rule 1 default — every distinct date counts)
         $uniqueDates = [];
+        $absentCountByDate = [];
+        $classIdByDate = [];
         foreach ($absences as $absence) {
             if (!empty($absence->date)) {
-                $uniqueDates[$absence->date] = true;
+                $dateKey = (string) $absence->date;
+                $uniqueDates[$dateKey] = true;
+                $absentCountByDate[$dateKey] = ($absentCountByDate[$dateKey] ?? 0) + 1;
+                $classIdByDate[$dateKey] = (int) $absence->institution_class_id;
             }
         }
+
+        if ($attendanceRule === 2 && !empty($uniqueDates)) {
+            $droppedDates = [];
+            foreach ($uniqueDates as $date => $_) {
+                $expectedPeriods = (int) DB::table('student_attendance_marked_records')
+                    ->where('institution_class_id', $classIdByDate[$date])
+                    ->where('date', $date)
+                    ->where('no_scheduled_class', 0)
+                    ->count();
+                // If the class had more marked periods than absent rows, the student was
+                // present in at least one period → the date is not a fully-absent day.
+                if ($expectedPeriods > 0 && $absentCountByDate[$date] < $expectedPeriods) {
+                    unset($uniqueDates[$date]);
+                    $droppedDates[] = $date;
+                }
+            }
+            if (!empty($droppedDates)) {
+                Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Rule=2 dropped ' . count($droppedDates) . ' partial-absent dates: ' . implode(',', $droppedDates)); //[TEMP-LOG]
+            }
+        }
+        //POCOR-9509: end
 
         $totalDays = count($uniqueDates);
 
