@@ -13,6 +13,9 @@ class SystemsController extends AppController
 {
 	public function initialize(): void {
 		parent::initialize();
+		$this->ControllerAction->models = [
+			'ImportLocaleContentsLanguage' => ['className' => 'System.ImportLocaleContentsLanguage', 'actions' => ['add']],
+			];
     }
 
     public function beforeFilter(EventInterface $event) {

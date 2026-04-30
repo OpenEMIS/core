@@ -21,7 +21,6 @@ class LocaleContentsTable extends AppTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        $this->addBehavior('Import.ImportLink');
     }
 
     public function validationDefault(Validator $validator): Validator

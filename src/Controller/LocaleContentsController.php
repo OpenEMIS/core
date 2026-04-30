@@ -8,18 +8,16 @@ class LocaleContentsController extends AppController
 {
     public function initialize(): void
     {
-
         parent::initialize();
         $this->loadComponent('Paginator');
         $this->Locales = $this->fetchTable('Locales');
         $this->LocaleContents = $this->fetchTable('LocaleContents');
         $this->LocaleContentTranslations = $this->fetchTable('LocaleContentTranslations');
-
         // POCOR-3673: v3 model routing for import (import tables extend AppTable, not ControllerActionTable)
         $this->ControllerAction->models = [
             'ImportLocaleContentsLanguage' => [
                 'className' => 'System.ImportLocaleContentsLanguage',
-                'actions'   => ['add'],
+                'action'   => ['add'],
             ],
         ];
 
@@ -27,7 +25,6 @@ class LocaleContentsController extends AppController
 
     public function beforeFilter(EventInterface $event)
     {
-
         parent::beforeFilter($event);
         $name = $this->name;
         $action  = $this->request->getParam('action');
