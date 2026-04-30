@@ -22,6 +22,7 @@ class AlertQueueTable extends ControllerActionTable
     const STATUS_PROCESSING = 1;
     const STATUS_SENT = 2;
     const STATUS_FAILED = -1;
+    const STATUS_DEDUPED = 4; //POCOR-9509: queue row was a same-(feature,method,destination,checksum) duplicate — hidden from listing
 
     private array $statusTypes = [
         self::STATUS_PENDING => 'Pending',
@@ -134,6 +135,10 @@ class AlertQueueTable extends ControllerActionTable
         $status = $this->request->getQuery('status');
         $channel = $this->request->getQuery('channel');
         $alertType = $this->request->getQuery('alert_type');
+
+        //POCOR-9509: Hide DEDUPED rows from the listing — they are kept in the table
+        //for audit but are not part of the active queue.
+        $query->where([$this->aliasField('status') . ' !=' => self::STATUS_DEDUPED]);
 
         //POCOR-9509: Convert status to integer for proper comparison with SMALLINT column
         if ($status !== null && $status !== '' && $status !== 'all') {
