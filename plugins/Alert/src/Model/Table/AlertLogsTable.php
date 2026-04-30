@@ -567,6 +567,15 @@ class AlertLogsTable extends ControllerActionTable
             return;
         }
 
+        //POCOR-9509: Messaging is admin-triggered with explicit intent — every Send
+        //click must deliver, even if the same subject/message/recipient was sent
+        //earlier. Skip the same-checksum dedup entirely for that feature; double-click
+        //protection belongs in the UI, not in the checksum.
+        if ($feature === 'Messaging') {
+            $this->createAndSendAlertLog($method, $feature, [$recipient], $subject, $message, $checksum);
+            return;
+        }
+
         // Find any logs (sent, sending, or unsent) with the same checksum
         $existingLogs = $this->find()
             ->where([

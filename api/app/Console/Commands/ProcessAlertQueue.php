@@ -117,7 +117,14 @@ class ProcessAlertQueue extends Command
             //row is PENDING, it was pre-inserted by the CakePHP path (e.g. Messaging) and
             //THIS queue row owns the send — skip the insert below and let the post-send
             //UPDATE flip that PENDING row to SENT.
-            $logAlreadySent = $existingRecord && (int)$existingRecord->status === AlertLogs::STATUS_SENT;
+            //
+            //Messaging is admin-triggered with explicit intent (each Send click must
+            //deliver, even if the same subject/message/recipient was sent earlier).
+            //Skip DEDUPED entirely for that feature.
+            $isMessaging = $alertType === 'Messaging';
+            $logAlreadySent = !$isMessaging
+                && $existingRecord
+                && (int)$existingRecord->status === AlertLogs::STATUS_SENT;
             if ($logAlreadySent) {
                 DB::table('alert_queue')
                     ->where('id', $alert->id)
