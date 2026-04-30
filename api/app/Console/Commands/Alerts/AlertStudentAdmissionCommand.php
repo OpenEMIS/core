@@ -54,14 +54,14 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     public function handle(): int
     {
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() ENTRY options: ' . json_encode($this->options())); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() ENTRY options: ' . json_encode($this->options())); //[TEMP-LOG]
         if (!$this->prepareContext()) {
-            //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() EXIT EARLY - prepareContext failed'); //[TEMP-LOG]
+            // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() EXIT EARLY - prepareContext failed'); //[TEMP-LOG]
             return self::FAILURE;
         }
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() calling runFeatureAlert(StudentAdmission)'); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() calling runFeatureAlert(StudentAdmission)'); //[TEMP-LOG]
         $result = $this->runFeatureAlert('StudentAdmission');
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() EXIT result=' . $result); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::handle() EXIT result=' . $result); //[TEMP-LOG]
         return $result;
     }
 
@@ -72,20 +72,20 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     protected function prepareContext(): bool
     {
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() ENTRY'); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() ENTRY'); //[TEMP-LOG]
         // Call parent prepareContext first
         if (!parent::prepareContext()) {
-            //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT FALSE - parent failed'); //[TEMP-LOG]
+            // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT FALSE - parent failed'); //[TEMP-LOG]
             return false;
         }
 
         // Get and validate admission_id
         $this->entityId = (int) $this->option('entity_id');
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() entityId=' . $this->entityId); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() entityId=' . $this->entityId); //[TEMP-LOG]
 
         if (!$this->entityId) {
             $this->error("Missing required --entity_id option");
-            //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT FALSE - no entity_id'); //[TEMP-LOG]
+            // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT FALSE - no entity_id'); //[TEMP-LOG]
             return false;
         }
 
@@ -93,16 +93,16 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         $admission = DB::table('institution_student_admission')
             ->where('id', $this->entityId)
             ->first();
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() admission row: ' . json_encode($admission)); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() admission row: ' . json_encode($admission)); //[TEMP-LOG]
 
         if (!$admission) {
             $this->error("Admission with ID {$this->entityId} not found");
-            //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT FALSE - admission not found'); //[TEMP-LOG]
+            // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT FALSE - admission not found'); //[TEMP-LOG]
             return false;
         }
 
         $this->studentId = $admission->student_id;
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT TRUE studentId=' . $this->studentId); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::prepareContext() EXIT TRUE studentId=' . $this->studentId); //[TEMP-LOG]
         return true;
     }
 
@@ -116,15 +116,15 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
      */
     protected function getPendingItems(string $featureKey): array
     {
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() ENTRY featureKey=' . $featureKey); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() ENTRY featureKey=' . $featureKey); //[TEMP-LOG]
         // Parse threshold (workflow step IDs)
         $threshold = json_decode($this->rule->threshold ?? '{}', true);
         $workflowStepIds = $threshold['workflow_steps'] ?? [];
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() threshold raw: ' . $this->rule->threshold . ' => workflowStepIds: ' . json_encode($workflowStepIds)); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() threshold raw: ' . $this->rule->threshold . ' => workflowStepIds: ' . json_encode($workflowStepIds)); //[TEMP-LOG]
 
         if (empty($workflowStepIds)) {
             // $this->info("No workflow steps configured in threshold"); //POCOR-9509: commented out per CLAUDE.md
-            //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() EXIT [] - no workflow steps configured'); //[TEMP-LOG]
+            // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() EXIT [] - no workflow steps configured'); //[TEMP-LOG]
             return []; //POCOR-9509: no workflow steps = nothing to alert on
         }
 
@@ -179,14 +179,14 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
         $results = $query->get()->map(function ($item) {
             return (array) $item;
         })->toArray();
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() query returned ' . count($results) . ' rows, entityId=' . $this->entityId . ', workflowStepIds=' . json_encode($workflowStepIds)); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() query returned ' . count($results) . ' rows, entityId=' . $this->entityId . ', workflowStepIds=' . json_encode($workflowStepIds)); //[TEMP-LOG]
         if (!empty($results)) {
-            //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() first row: ' . json_encode($results[0])); //[TEMP-LOG]
+            // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() first row: ' . json_encode($results[0])); //[TEMP-LOG]
         }
 
         // Take first record (deduplicate multiple guardian rows)
         $ret = !empty($results) ? [$results[0]] : [];
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() EXIT returning ' . count($ret) . ' item(s)'); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::getPendingItems() EXIT returning ' . count($ret) . ' item(s)'); //[TEMP-LOG]
         return $ret;
     }
 
@@ -201,19 +201,19 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
     protected function resolveRecipients(array $item): array
     {
         $studentId = $item['student_id'] ?? null;
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::resolveRecipients() ENTRY studentId=' . $studentId . ' admission_id=' . ($item['id'] ?? 'N/A')); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::resolveRecipients() ENTRY studentId=' . $studentId . ' admission_id=' . ($item['id'] ?? 'N/A')); //[TEMP-LOG]
 
         if (!$studentId) {
             Log::error('[POCOR-9509] student_id not found in item id=' . ($item['id'] ?? '?')); //POCOR-9509
             return ['email' => [], 'phone' => []];
         }
 
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::resolveRecipients() roles: ' . json_encode($this->rule->security_roles)); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::resolveRecipients() roles: ' . json_encode($this->rule->security_roles)); //[TEMP-LOG]
         $contacts = $this->recipientResolver->getStudentAssociatedContactList(
             $this->rule->security_roles,
             $studentId
         );
-        //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::resolveRecipients() EXIT email_count=' . count($contacts['email'] ?? []) . ' phone_count=' . count($contacts['phone'] ?? []) . ' emails=' . json_encode($contacts['email'] ?? [])); //[TEMP-LOG]
+        // //Log::debug('[TEMP-LOG] @AlertStudentAdmissionCommand::resolveRecipients() EXIT email_count=' . count($contacts['email'] ?? []) . ' phone_count=' . count($contacts['phone'] ?? []) . ' emails=' . json_encode($contacts['email'] ?? [])); //[TEMP-LOG]
 
         return $contacts;
     }
