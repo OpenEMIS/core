@@ -16,9 +16,10 @@ use App\Models\Api5\AlertLogs;
 
 class ProcessAlertQueue extends Command
 {
-    //POCOR-9509: alert_queue has 4 states (AlertLogs only has 3 — no PROCESSING state)
+    //POCOR-9509: alert_queue states (AlertLogs only has 3 — no PROCESSING / DEDUPED states)
     const QUEUE_STATUS_PROCESSING = 1;
     const QUEUE_STATUS_SENT = 2;
+    const QUEUE_STATUS_DEDUPED = 4; //POCOR-9509: row was a same-(feature,method,destination,checksum) duplicate — hidden from queue listing
 
     protected $signature = 'alerts:send {--limit=}'; //POCOR-9509: renamed from alerts:process; default resolved from ALERT_SEND_LIMIT env
     protected $description = 'Send pending alerts from alert_queue'; //POCOR-9509
@@ -110,19 +111,35 @@ class ProcessAlertQueue extends Command
                 ->where('checksum', $checksum)
                 ->first();
 
-            if (!$existingRecord) {
-                DB::table('alert_logs')->insert([
-                    'feature' => $alertType,
-                    'method' => $channel,
-                    'destination' => $recipient,
-                    'status' => AlertLogs::STATUS_PENDING, //POCOR-9509: use constant
-                    'subject' => $subject,
-                    'message' => $message,
-                    'checksum' => $checksum,
-                    'created_user_id' => 2, //POCOR-9509: system user (NOT NULL, no default)
-                    'created' => now(),
-                ]);
+            //POCOR-9509: start - If an alert_logs row already exists for this identity,
+            //this queue row is a duplicate (multi-period same-day enqueue, etc.). Mark it
+            //as DEDUPED and return — don't send, don't insert log. First queue row in the
+            //batch creates the alert_logs row and performs the send; every subsequent
+            //duplicate gets stamped DEDUPED here so it stays auditable but is excluded
+            //from the active queue listing.
+            if ($existingRecord) {
+                DB::table('alert_queue')
+                    ->where('id', $alert->id)
+                    ->update([
+                        'status' => self::QUEUE_STATUS_DEDUPED,
+                        'modified' => now(),
+                    ]);
+                Log::debug('[TEMP-LOG] @ProcessAlertQueue::processSingleAlert() id=' . $alert->id . ' DUPLICATE — alert_logs already exists, queue row marked DEDUPED'); //[TEMP-LOG]
+                return;
             }
+            //POCOR-9509: end
+
+            DB::table('alert_logs')->insert([
+                'feature' => $alertType,
+                'method' => $channel,
+                'destination' => $recipient,
+                'status' => AlertLogs::STATUS_PENDING, //POCOR-9509: use constant
+                'subject' => $subject,
+                'message' => $message,
+                'checksum' => $checksum,
+                'created_user_id' => 2, //POCOR-9509: system user (NOT NULL, no default)
+                'created' => now(),
+            ]);
             // Lock the row using optimistic locking
             $updated = DB::table('alert_queue')
                 ->where('id', $alert->id)
