@@ -40,12 +40,12 @@ class RunAlertJob implements ShouldQueue
 
     public function handle(): void
     {
-        Log::debug('[TEMP-LOG] @RunAlertJob::handle() ENTRY'); //[TEMP-LOG]
-        Log::debug('[TEMP-LOG] @RunAlertJob::handle() commandName=' . $this->commandName . ', options=' . json_encode($this->options)); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @RunAlertJob::handle() ENTRY'); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @RunAlertJob::handle() commandName=' . $this->commandName . ', options=' . json_encode($this->options)); //[TEMP-LOG]
 
         $exitCode = Artisan::call($this->commandName, $this->options);
 
-        Log::debug('[TEMP-LOG] @RunAlertJob::handle() Artisan::call() returned exitCode=' . $exitCode); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @RunAlertJob::handle() Artisan::call() returned exitCode=' . $exitCode); //[TEMP-LOG]
 
         if ($exitCode !== 0) {
             Log::warning('[POCOR-9509] RunAlertJob: command exited non-zero', [
@@ -55,12 +55,12 @@ class RunAlertJob implements ShouldQueue
             ]);
         }
 
-        Log::debug('[TEMP-LOG] @RunAlertJob::handle() EXIT'); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @RunAlertJob::handle() EXIT'); //[TEMP-LOG]
     }
 
     public function failed(\Throwable $e): void
     {
-        Log::debug('[TEMP-LOG] @RunAlertJob::failed() ENTRY - exception=' . $e->getMessage()); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @RunAlertJob::failed() ENTRY - exception=' . $e->getMessage()); //[TEMP-LOG]
         Log::error('[POCOR-9509] RunAlertJob exhausted retries', [
             'command' => $this->commandName,
             'options' => $this->options,
@@ -80,8 +80,8 @@ class RunAlertJob implements ShouldQueue
                     'end_date' => now(),
                     'modified' => now(),
                 ]);
-            Log::debug('[TEMP-LOG] @RunAlertJob::failed() Updated system_processes status to -2'); //[TEMP-LOG]
+            // Log::debug('[TEMP-LOG] @RunAlertJob::failed() Updated system_processes status to -2'); //[TEMP-LOG]
         }
-        Log::debug('[TEMP-LOG] @RunAlertJob::failed() EXIT'); //[TEMP-LOG]
+        // Log::debug('[TEMP-LOG] @RunAlertJob::failed() EXIT'); //[TEMP-LOG]
     }
 }
