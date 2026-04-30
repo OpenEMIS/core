@@ -535,16 +535,9 @@ class WorkflowBehavior extends Behavior
                     $filterOptions = $newEvent->getResult();
                 }
                 // End
-                //POCOR-7263::Start
                 $filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
-                $url = $_SERVER['QUERY_STRING'];
-                $data = explode('=', $url);
-                $filterOne = $data[1];
-                // $filterTwo = $data[2];
-                $firstVal = preg_replace('/\D/', '', $filterOne);
-                $selectedFilter = $firstVal;
-                //POCOR-7263::End
-               // $selectedFilter = $this->_table->queryString('filter', $filterOptions);
+                // Use request query + valid options (QUERY_STRING parsing breaks when institution_id and other params precede filter).
+                $selectedFilter = $this->_table->queryString('filter', $filterOptions);
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
@@ -636,6 +629,9 @@ class WorkflowBehavior extends Behavior
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
+            if ($selectedFilter === null || $selectedFilter === '') {
+                $selectedFilter = $this->_table->request->getQuery('filter');
+            }
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
