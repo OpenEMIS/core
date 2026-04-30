@@ -172,23 +172,10 @@ class AlertLogsTable extends ControllerActionTable
             'context' => $context,
             'trigger_type' => $triggerType,
         ];
-        //POCOR-9509: start - Narrow checksum identity for AlertStudentAbsence so multi-period
-        //absences on the same day collapse to ONE system_processes row. Previously the checksum
-        //included period / subject_id / institution_class_id, so 3 absent periods on one day
-        //produced 3 different checksums → 3 jobs → 3 alert_queue rows. Send-time dedup masked
-        //this in alert_logs but the queue still over-counted. Identity is now (rule, student,
-        //institution, academic_period, date) — first row of the day wins, rest short-circuit
-        //at the existing duplicate check below.
-        if ($processName == 'AlertStudentAbsence') {
-            $checksumData = [
-                'rule_id'            => $rule['id'],
-                'student_id'         => $extraOptions['student_id']         ?? null,
-                'institution_id'     => $extraOptions['institution_id']     ?? null,
-                'academic_period_id' => $extraOptions['academic_period_id'] ?? null,
-                'date'               => $extraOptions['date']               ?? null,
-            ];
+        if($processName=='AlertStudentAbsence'){
+            $extraOptions['rule_id'] = $rule['id'];
+            $checksumData = $extraOptions;
         }
-        //POCOR-9509: end
         $checksum = hash('sha256', json_encode($checksumData));
 
         // Log::debug('[TEMP-LOG] @AlertLogsTable::triggerAlertSystemProcess() checksumData=' . json_encode($checksumData) . ', computed_checksum=' . $checksum); //[TEMP-LOG]
