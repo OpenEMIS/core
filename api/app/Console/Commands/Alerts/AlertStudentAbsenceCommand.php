@@ -161,20 +161,22 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         //POCOR-9509: start - Honor system config `calculate_daily_attendance` (config_items.code).
         //  value=1 → "Mark absent if one or more records absent": ANY absent record on a date
         //           counts the date as a fully-absent day (default current behaviour).
-        //  value=2 → "Mark present if one or more records present": a date is a fully-absent day
-        //           only when EVERY scheduled period that day has an absent row. If at least one
-        //           period was not marked absent (i.e. the student was present in some period),
-        //           the date is NOT a fully-absent day.
-        //Detection: compare per-date absent-row count vs the count of marked periods for the
-        //student's class on that date (`student_attendance_marked_records.no_scheduled_class=0`).
-        //If absent_count < marked_count → the day is partial-absent → drop from total_days.
+        //  value=2 → "Mark present if one or more records present": a date is a fully-absent
+        //           day only when EVERY EXPECTED period for that class+date has an absent
+        //           row. If marking is incomplete (P1 saved, P2 not yet opened) the date is
+        //           NOT counted — incomplete data must not produce a false-positive alert.
+        //
+        //Resolution: per (class, date), look up `student_attendance_mark_types.attendance_per_day`
+        //via institution_class_grades → student_mark_type_status_grades → student_mark_type_statuses
+        //(same chain AttendanceRepository::getAttendancePerDayOptionsByClass uses). For
+        //SUBJECT-only mode (attendance_type.code = 'SUBJECT', attendance_per_day=0) there is no
+        //expected count — fall back to comparing absent_count vs marked-so-far records (handles
+        //"5 of 20 subjects taught today" sparse scheduling on a best-effort basis pending
+        //design clarification on subject-mode semantics).
         //
         //IMPORTANT: This only adjusts `total_days`. `total_times` (count of absence rows) is
-        //unchanged — the message text reads "X times absent, Y days absent" and both numbers
-        //should stay accurate.
-        //
-        //Reference for the rule semantics: plugins/Institution/src/Model/Table/StudentsTable.php
-        //lines 2703-2807 (CakePHP-side split per rule, identical schema).
+        //unchanged — the message text reads "X times absent, Y days absent" and both stay
+        //accurate.
         $attendanceRule = (int) (DB::table('config_items')
             ->where('code', 'calculate_daily_attendance')
             ->value('value') ?? 1);
@@ -195,20 +197,44 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         if ($attendanceRule === 2 && !empty($uniqueDates)) {
             $droppedDates = [];
             foreach ($uniqueDates as $date => $_) {
-                $expectedPeriods = (int) DB::table('student_attendance_marked_records')
-                    ->where('institution_class_id', $classIdByDate[$date])
-                    ->where('date', $date)
-                    ->where('no_scheduled_class', 0)
-                    ->count();
-                // If the class had more marked periods than absent rows, the student was
-                // present in at least one period → the date is not a fully-absent day.
-                if ($expectedPeriods > 0 && $absentCountByDate[$date] < $expectedPeriods) {
-                    unset($uniqueDates[$date]);
-                    $droppedDates[] = $date;
+                $classId = $classIdByDate[$date];
+                // Resolve mark-type for THIS class on THIS date.
+                $markTypeRow = DB::table('student_attendance_mark_types as mt')
+                    ->leftJoin('student_attendance_types as t', 't.id', '=', 'mt.student_attendance_type_id')
+                    ->leftJoin('student_mark_type_statuses as s', 's.student_attendance_mark_type_id', '=', 'mt.id')
+                    ->leftJoin('student_mark_type_status_grades as sg', 'sg.student_mark_type_status_id', '=', 's.id')
+                    ->join('institution_class_grades as cg', 'cg.education_grade_id', '=', 'sg.education_grade_id')
+                    ->where('cg.institution_class_id', $classId)
+                    ->where('s.academic_period_id', $academicPeriodId)
+                    ->where('s.date_enabled', '<=', $date)
+                    ->where('s.date_disabled', '>=', $date)
+                    ->select('mt.attendance_per_day', 't.code as type_code')
+                    ->first();
+
+                $typeCode      = $markTypeRow->type_code ?? '';
+                $expectedPerDay = (int) ($markTypeRow->attendance_per_day ?? 0);
+
+                if ($typeCode !== 'SUBJECT' && $expectedPerDay > 0) {
+                    // DAY or DAY_AND_SUBJECT: incomplete marking ⇒ don't count.
+                    if ($absentCountByDate[$date] < $expectedPerDay) {
+                        unset($uniqueDates[$date]);
+                        $droppedDates[] = $date . '(absent=' . $absentCountByDate[$date] . '/expected=' . $expectedPerDay . ')';
+                    }
+                } else {
+                    // SUBJECT-only: no expected count — fall back to marked-records comparison.
+                    $markedCount = (int) DB::table('student_attendance_marked_records')
+                        ->where('institution_class_id', $classId)
+                        ->where('date', $date)
+                        ->where('no_scheduled_class', 0)
+                        ->count();
+                    if ($markedCount > 0 && $absentCountByDate[$date] < $markedCount) {
+                        unset($uniqueDates[$date]);
+                        $droppedDates[] = $date . '(SUBJECT,absent=' . $absentCountByDate[$date] . '/marked=' . $markedCount . ')';
+                    }
                 }
             }
             if (!empty($droppedDates)) {
-                Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Rule=2 dropped ' . count($droppedDates) . ' partial-absent dates: ' . implode(',', $droppedDates)); //[TEMP-LOG]
+                Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::getPendingItems() Rule=2 dropped ' . count($droppedDates) . ' incomplete/partial dates: ' . implode(',', $droppedDates)); //[TEMP-LOG]
             }
         }
         //POCOR-9509: end
