@@ -16,7 +16,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
     private $fieldsOrder = ['created', 'message'];
     public function initialize(array $config): void
     {
-        $this->setTable('locale_contents');
+       $this->setTable('locale_contents');
        parent::initialize($config);
        $this->toggle('view', true);
        $this->toggle('edit', true);
