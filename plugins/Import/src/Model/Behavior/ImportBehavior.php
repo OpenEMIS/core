@@ -217,7 +217,9 @@ class ImportBehavior extends Behavior
         $downloadUrl = $toolbarButtons['back']['url'];
 
         $downloadUrl[0] = 'template';
-
+        if ($buttons['add']['url']['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673
+            $downloadUrl[1] = 'template';
+        }
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
             $downloadUrl[1] = $buttons['add']['url'][1];
         } else {
