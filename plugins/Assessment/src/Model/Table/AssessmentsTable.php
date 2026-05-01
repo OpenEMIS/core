@@ -71,6 +71,7 @@ class AssessmentsTable extends ControllerActionTable {
                 ]
             ])
             ->requirePresence('assessment_items')
+            ->requirePresence('education_programme_id')
             ->add('education_grade_id', [
                 'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
                     'rule' => ['assessmentExistByGradeAcademicPeriod'],

@@ -72,7 +72,9 @@ class WorkflowStepsTable extends AppTable {
 			->requirePresence('category')
 			->requirePresence('is_editable')
 			->requirePresence('is_removable')
-			->requirePresence('is_system_defined');
+			->requirePresence('is_system_defined')
+			->requirePresence('workflow_model_id')
+			->requirePresence('workflow_id');
 	}
 
 	public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {

@@ -118,6 +118,7 @@ class ScholarshipsTable extends ControllerActionTable
             ->requirePresence('scholarship_financial_assistance_type_id')
             ->requirePresence('bond')
             ->requirePresence('duration')
+            ->requirePresence('academic_period_id')
             ->add('field_of_studies', 'notEmpty', [
                 'rule' => function ($value, $context) {
                     return isset($value['_ids']) ? !empty($value['_ids']) : true;
