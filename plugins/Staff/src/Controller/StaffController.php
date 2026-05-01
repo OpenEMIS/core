@@ -11,7 +11,6 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
-use Cake\Http\Client; //POCOR-9590: external identity source HTTP client
 
 class StaffController extends AppController
 {
@@ -1176,151 +1175,28 @@ class StaffController extends AppController
     }
 
     //POCOR-9590: start - Sync staff identity from external data source with review/diff page
-    //POCOR-9590: PascalCase to match URL ('action' => 'SyncUser') and existing controller convention
+    //POCOR-9590: PascalCase matches controller URL convention
     public function SyncUser()
     {
-        //POCOR-9590: gate the action itself — the button is hidden by addSyncButton's AccessControl check, but a forged URL could otherwise reach this action without a security_functions row
+        //POCOR-9590: gate — forged URL could bypass the button-level AccessControl check
         if (!$this->AccessControl->check(['Institutions', 'ImportStaff', 'add'])) {
             $this->Alert->error('You do not have permission to sync this user.', ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
-        //POCOR-9590: user_id is passed as encoded pass param (positional), decode it the standard way
-        $pass = $this->request->getAttribute('params')['pass'] ?? [];
-        $decoded = !empty($pass[0]) ? $this->ControllerAction->paramsDecode($pass[0]) : [];
-        $userId = $decoded['user_id'] ?? null;
 
+        $pass          = $this->request->getAttribute('params')['pass'] ?? [];
+        $decoded       = !empty($pass[0]) ? $this->ControllerAction->paramsDecode($pass[0]) : [];
+        $userId        = $decoded['user_id'] ?? null;
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
-        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
-        $ConfigItems   = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $Genders       = TableRegistry::getTableLocator()->get('User.Genders');
 
-        $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
-
-        //POCOR-9590: resolve active external data source dynamically (Seychelles Civil Status, OpenEMIS Identity, etc.)
-        $activeItem = $ConfigItems->find()
-            ->where(['code' => 'external_data_source_type'])
-            ->where(['value IS NOT' => null])
-            ->where(['value !=' => ''])
-            ->where(['value !=' => 'None'])
-            ->first();
-        if (!$activeItem) {
-            $this->Alert->error('No active external identity source is configured.', ['type' => 'string', 'reset' => true]);
+        $result = $SecurityUsers->buildExternalUserDiff($userId); //POCOR-9590: OAuth + API + diff in one call
+        if (is_string($result)) {
+            $this->Alert->error($result, ['type' => 'string', 'reset' => true]);
             return $this->redirect($this->referer());
         }
-        //POCOR-9590: read .value (active source name like "Seychelles Civil Status"), not .name (form-field label "Type")
-        $activeSourceType = $activeItem->value;
+        ['user' => $user, 'externalValues' => $externalValues, 'externalGenderId' => $externalGenderId, 'diff' => $diff] = $result;
 
-        // Load field mapping config for the active source
-        $configs = $ExternalAttrs->find()
-            ->where(['external_data_source_type' => $activeSourceType])
-            ->all()
-            ->combine('attribute_field', 'value')
-            ->toArray();
-
-        $tokenUrl     = $configs['token_uri'] ?? null;
-        $userEndpoint = $configs['user_endpoint_uri'] ?? null;
-        $clientId     = $configs['client_id'] ?? null;
-        $privateKey   = $configs['private_key'] ?? null;
-
-        if (!$tokenUrl || !$userEndpoint) {
-            $this->Alert->error('External identity source is not configured.', ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-
-        $http = new Client();
-
-        // Step 1: get Bearer token (OAuth2 client_credentials — form-encoded with scope)
-        //POCOR-9590: form-encoded + scope required by Seychelles Civil Status (and standard OAuth2). Same shape as getSeychellesData() reference impl.
-        $tokenResponse = $http->post($tokenUrl, [
-            'grant_type'    => 'client_credentials',
-            'client_id'     => $clientId,
-            'client_secret' => $privateKey,
-            'scope'         => $configs['scope'] ?? ($configs['scopes'] ?? ''),
-        ], ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
-
-        if (!$tokenResponse->isOk()) {
-            $this->Alert->error('Failed to authenticate with external identity source.', ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-
-        $accessToken = $tokenResponse->getJson()['access_token'] ?? null;
-        if (!$accessToken) {
-            $this->Alert->error('External identity source did not return a valid token.', ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-
-        //POCOR-9590: resolve external reference (see StudentsController for full rationale)
-        $externalRef = $user->external_reference;
-        if (empty($externalRef)) {
-            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
-            $idRow = $UserIdentities->find()
-                ->where(['security_user_id' => $userId, 'identity_type_id' => $configs['identity_type_id'] ?? 0, 'preferred' => 1])
-                ->first();
-            $externalRef = $idRow ? $idRow->number : null;
-        }
-        if (empty($externalRef)) {
-            $this->Alert->error('No external reference found for this user.', ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-        // Step 2: fetch user data from external API
-        $apiUrl      = str_replace('{external_reference}', $externalRef, $userEndpoint);
-        $apiResponse = $http->get($apiUrl, [], ['headers' => ['Authorization' => 'Bearer ' . $accessToken]]);
-
-        if (!$apiResponse->isOk()) {
-            $this->Alert->error('Failed to retrieve data from external identity source.', ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-
-        $apiData = $apiResponse->getJson();
-
-        // Step 3: resolve mapped field values from API response
-        $mappingKeys = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender', 'date_of_birth'];
-        $externalValues = [];
-        foreach ($mappingKeys as $field) {
-            $path = $configs[$field . '_mapping'] ?? null;
-            if ($path) {
-                $externalValues[$field] = $this->resolveMappingPath($apiData, $path);
-            }
-        }
-
-        // Step 4: resolve gender name → gender_id
-        $externalGenderId = null;
-        if (!empty($externalValues['gender'])) {
-            $genderRow = $Genders->find()->where(['name' => $externalValues['gender']])->first();
-            $externalGenderId = $genderRow ? $genderRow->id : null;
-        }
-
-        //POCOR-9590: normalize date_of_birth on both sides (registry ISO vs OE Core FrozenDate) — compare canonical Y-m-d
-        if (isset($externalValues['date_of_birth'])) {
-            $externalValues['date_of_birth'] = substr((string)$externalValues['date_of_birth'], 0, 10);
-        }
-        $userDob = $user->date_of_birth;
-        if ($userDob instanceof \DateTimeInterface) {
-            $userDob = $userDob->format('Y-m-d');
-        } else {
-            $userDob = (string)$userDob;
-        }
-        // Step 5: build diff (only fields that would actually change)
-        $diff = [];
-        $textFields = ['first_name', 'middle_name', 'third_name', 'last_name'];
-        foreach ($textFields as $field) {
-            if (isset($externalValues[$field]) && (string)$externalValues[$field] !== (string)$user->$field) {
-                $diff[$field] = ['current' => $user->$field, 'external' => $externalValues[$field]];
-            }
-        }
-        if (isset($externalValues['date_of_birth']) && $externalValues['date_of_birth'] !== '' && $externalValues['date_of_birth'] !== $userDob) {
-            $diff['date_of_birth'] = ['current' => $userDob, 'external' => $externalValues['date_of_birth']];
-        }
-        if ($externalGenderId && $externalGenderId !== $user->gender_id) {
-            $diff['gender'] = [
-                'current'  => $user->has('gender') ? $user->gender->name : '',
-                'external' => $externalValues['gender'],
-            ];
-        }
-
-        //POCOR-9590: no-diff fast path — registry data already matches OE Core, just confirm and exit
         if (empty($diff) && !$this->request->is('post')) {
-            //POCOR-9590: bump status to 1 in case it had drifted to 2 but actually matches now
             if ((int)$user->sync_status !== 1) {
                 $user->sync_status = 1;
                 $SecurityUsers->save($user);
@@ -1330,50 +1206,19 @@ class StaffController extends AppController
         }
 
         if ($this->request->is('post')) {
-            // Apply all mapped fields
-            foreach ($textFields as $field) {
-                if (isset($externalValues[$field])) {
-                    $user->$field = $externalValues[$field];
-                }
-            }
-            //POCOR-9590: apply date_of_birth (already normalized to Y-m-d above; not in $textFields anymore)
-            if (!empty($externalValues['date_of_birth'])) {
-                $user->date_of_birth = $externalValues['date_of_birth'];
-            }
-            if ($externalGenderId) {
-                $user->gender_id = $externalGenderId;
-            }
-            $user->sync_status = 1; //POCOR-9590: mark as synced
-
+            $SecurityUsers->applySyncToUser($user, $externalValues, $externalGenderId); //POCOR-9590
             if ($SecurityUsers->save($user)) {
                 $this->Alert->ok('User synced successfully.', ['type' => 'string', 'reset' => true]);
             } else {
                 $this->Alert->error('Failed to save synced data.', ['type' => 'string', 'reset' => true]);
             }
-
             $originUrl = $this->request->getSession()->read('Sync.origin_url');
             $this->request->getSession()->delete('Sync.origin_url');
             return $this->redirect($originUrl ?: $this->referer());
         }
 
-        // GET: store origin referer and show review page
         $this->request->getSession()->write('Sync.origin_url', $this->referer());
-        //POCOR-9590: pass encoded param back to view so form can POST to same encoded URL
         $encodedParams = !empty($pass[0]) ? $pass[0] : '';
         $this->set(compact('user', 'diff', 'externalValues', 'encodedParams'));
     }
-
-    //POCOR-9590: resolve dot-notation path from nested array (e.g. "gender.name" → $data['gender']['name'])
-    private function resolveMappingPath(array $data, string $path)
-    {
-        $value = $data;
-        foreach (explode('.', $path) as $key) {
-            if (!is_array($value) || !array_key_exists($key, $value)) {
-                return null;
-            }
-            $value = $value[$key];
-        }
-        return $value;
-    }
-    //POCOR-9590: end
 }
