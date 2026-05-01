@@ -53,6 +53,9 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         'password', 'remember_token',
     ];
 
+    //POCOR-9590: mirrors UserBehavior::GENERAL_SYNC_FIELDS — keep in sync if either list changes
+    const GENERAL_SYNC_FIELDS = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
+
     protected $primaryKey = 'id';
     public $incrementing = false;
 
@@ -61,12 +64,11 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         parent::boot();
         self::bootNumericId();
 
-        //POCOR-9590: drift detection — Synced (1) → Not Synced (2) on General-field edit; inception sync — new user with external_reference → 1
+        //POCOR-9590: Synced→Not-Synced on General-field drift; inception sync for external-search users
         self::saving(function ($user) {
-            $generalFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
             if ($user->exists && (int)$user->sync_status === 1) {
                 $dirty = $user->getDirty();
-                if (array_intersect_key($dirty, array_flip($generalFields))) {
+                if (array_intersect_key($dirty, array_flip(self::GENERAL_SYNC_FIELDS))) {
                     $user->sync_status = 2;
                 }
             }

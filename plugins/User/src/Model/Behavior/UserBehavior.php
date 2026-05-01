@@ -16,10 +16,14 @@ use Cake\Routing\Router;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Chronos\Chronos;
 use Cake\Log\Log;
+use Cake\Http\Client;
 
 
 class UserBehavior extends Behavior
 {
+    //POCOR-9590: General-tab fields that, when edited, signal drift from the external registry
+    const GENERAL_SYNC_FIELDS = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
+
     private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
     private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
     private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-guardian'></i></div></div>";
@@ -116,8 +120,7 @@ class UserBehavior extends Behavior
         //POCOR-9590: drift detection — Synced (1) → Not Synced (2) when any General field changes. Local (0) and Not Synced (2) stay where they are.
         //POCOR-9590: skip when sync_status itself is dirty — that means the SyncUser action just set it to 1, the field changes ARE the sync, don't immediately flip back to 2
         if ($this->_table->getTable() === 'security_users' && !$entity->isNew() && (int)$entity->sync_status === 1 && !$entity->isDirty('sync_status')) {
-            $generalFields = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
-            foreach ($generalFields as $f) {
+            foreach (self::GENERAL_SYNC_FIELDS as $f) { //POCOR-9590
                 if ($entity->isDirty($f)) {
                     $entity->sync_status = 2;
                     break;
@@ -483,6 +486,149 @@ class UserBehavior extends Behavior
             ])
             ->count() > 0;
     }
+    //POCOR-9590: fetches and diffs a user against the active external identity source.
+    //Returns an array on success or a plain-string error message on failure — callers check is_string($result).
+    public function buildExternalUserDiff(int $userId): array|string
+    {
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $ConfigItems   = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $Genders       = TableRegistry::getTableLocator()->get('User.Genders');
+
+        $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
+
+        $activeItem = $ConfigItems->find()
+            ->where(['code' => 'external_data_source_type'])
+            ->where(['value IS NOT' => null])
+            ->where(['value !=' => ''])
+            ->where(['value !=' => 'None'])
+            ->first();
+        if (!$activeItem) {
+            return 'No active external identity source is configured.';
+        }
+
+        $configs = $ExternalAttrs->find()
+            ->where(['external_data_source_type' => $activeItem->value])
+            ->all()
+            ->combine('attribute_field', 'value')
+            ->toArray();
+
+        $tokenUrl     = $configs['token_uri'] ?? null;
+        $userEndpoint = $configs['user_endpoint_uri'] ?? null;
+        $clientId     = $configs['client_id'] ?? null;
+        $privateKey   = $configs['private_key'] ?? null;
+
+        if (!$tokenUrl || !$userEndpoint) {
+            return 'External identity source is not configured.';
+        }
+
+        //POCOR-9590: OAuth2 client_credentials — form-encoded + scope required by Seychelles Civil Status
+        $http          = new Client();
+        $tokenResponse = $http->post($tokenUrl, [
+            'grant_type'    => 'client_credentials',
+            'client_id'     => $clientId,
+            'client_secret' => $privateKey,
+            'scope'         => $configs['scope'] ?? ($configs['scopes'] ?? ''),
+        ], ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
+
+        if (!$tokenResponse->isOk()) {
+            return 'Failed to authenticate with external identity source.';
+        }
+        $accessToken = $tokenResponse->getJson()['access_token'] ?? null;
+        if (!$accessToken) {
+            return 'External identity source did not return a valid token.';
+        }
+
+        //POCOR-9590: external_reference is set on users created via External Search; fall back to preferred identity number for users added manually
+        $externalRef = $user->external_reference;
+        if (empty($externalRef)) {
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+            $idRow = $UserIdentities->find()
+                ->where(['security_user_id' => $userId, 'identity_type_id' => $configs['identity_type_id'] ?? 0, 'preferred' => 1])
+                ->first();
+            $externalRef = $idRow ? $idRow->number : null;
+        }
+        if (empty($externalRef)) {
+            return 'No external reference found for this user.';
+        }
+
+        $apiUrl      = str_replace('{external_reference}', $externalRef, $userEndpoint);
+        $apiResponse = $http->get($apiUrl, [], ['headers' => ['Authorization' => 'Bearer ' . $accessToken]]);
+        if (!$apiResponse->isOk()) {
+            return 'Failed to retrieve data from external identity source.';
+        }
+
+        $apiData        = $apiResponse->getJson();
+        $externalValues = [];
+        foreach (['first_name', 'middle_name', 'third_name', 'last_name', 'gender', 'date_of_birth'] as $field) {
+            $path = $configs[$field . '_mapping'] ?? null;
+            if ($path) {
+                $externalValues[$field] = $this->resolveMappingPath($apiData, $path);
+            }
+        }
+
+        $externalGenderId = null;
+        if (!empty($externalValues['gender'])) {
+            $genderRow        = $Genders->find()->where(['name' => $externalValues['gender']])->first();
+            $externalGenderId = $genderRow ? $genderRow->id : null;
+        }
+
+        //POCOR-9590: normalize both sides to Y-m-d — registry returns ISO datetime, OE Core stores FrozenDate
+        if (isset($externalValues['date_of_birth'])) {
+            $externalValues['date_of_birth'] = substr((string)$externalValues['date_of_birth'], 0, 10);
+        }
+        $userDob = $user->date_of_birth instanceof \DateTimeInterface
+            ? $user->date_of_birth->format('Y-m-d')
+            : (string)$user->date_of_birth;
+
+        $diff = [];
+        foreach (['first_name', 'middle_name', 'third_name', 'last_name'] as $field) {
+            if (isset($externalValues[$field]) && (string)$externalValues[$field] !== (string)$user->$field) {
+                $diff[$field] = ['current' => $user->$field, 'external' => $externalValues[$field]];
+            }
+        }
+        if (isset($externalValues['date_of_birth']) && $externalValues['date_of_birth'] !== '' && $externalValues['date_of_birth'] !== $userDob) {
+            $diff['date_of_birth'] = ['current' => $userDob, 'external' => $externalValues['date_of_birth']];
+        }
+        if ($externalGenderId && $externalGenderId !== $user->gender_id) {
+            $diff['gender'] = [
+                'current'  => $user->has('gender') ? $user->gender->name : '',
+                'external' => $externalValues['gender'],
+            ];
+        }
+
+        return compact('user', 'configs', 'externalValues', 'externalGenderId', 'diff');
+    }
+
+    //POCOR-9590: applies external values onto $user and marks sync_status=1; caller is responsible for saving
+    public function applySyncToUser(Entity $user, array $externalValues, ?int $externalGenderId): void
+    {
+        foreach (['first_name', 'middle_name', 'third_name', 'last_name'] as $field) {
+            if (isset($externalValues[$field])) {
+                $user->$field = $externalValues[$field];
+            }
+        }
+        if (!empty($externalValues['date_of_birth'])) {
+            $user->date_of_birth = $externalValues['date_of_birth'];
+        }
+        if ($externalGenderId) {
+            $user->gender_id = $externalGenderId;
+        }
+        $user->sync_status = 1;
+    }
+
+    private function resolveMappingPath(array $data, string $path)
+    {
+        $value = $data;
+        foreach (explode('.', $path) as $key) {
+            if (!is_array($value) || !array_key_exists($key, $value)) {
+                return null;
+            }
+            $value = $value[$key];
+        }
+        return $value;
+    }
+
     //POCOR-5668 add identity section ends
 
     public function addBeforeAction(EventInterface $event)
