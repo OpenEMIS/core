@@ -514,9 +514,14 @@ class UserBehavior extends Behavior
             ->toArray();
 
         $tokenUrl     = $configs['token_uri'] ?? null;
-        $userEndpoint = $configs['user_endpoint_uri'] ?? null;
-        $clientId     = $configs['client_id'] ?? null;
-        $privateKey   = $configs['private_key'] ?? null;
+        //POCOR-9590: fall back to api_url for sources (e.g. Seychelles) that store the endpoint there instead of user_endpoint_uri
+        $userEndpoint = $configs['user_endpoint_uri'] ?: ($configs['api_url'] ?? null);
+        if ($userEndpoint && strpos($userEndpoint, '{external_reference}') === false) {
+            $userEndpoint = rtrim($userEndpoint, '/') . '/{external_reference}';
+        }
+        $clientId   = $configs['client_id'] ?? null;
+        //POCOR-9590: Seychelles uses client_secret; other sources use private_key — accept both
+        $privateKey = $configs['private_key'] ?? ($configs['client_secret'] ?? null);
 
         if (!$tokenUrl || !$userEndpoint) {
             return 'External identity source is not configured.';
