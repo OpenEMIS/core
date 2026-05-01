@@ -53,7 +53,9 @@ class CompetencyPeriodsTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
                 ])
-            ->requirePresence('competency_items', 'create');
+            ->requirePresence('competency_items', 'create')
+            ->requirePresence('academic_period_id')
+            ->requirePresence('competency_template_id');
             // ->add('start_date', 'ruleCompareDate', [
             //     'rule' => ['compareDate', 'end_date', true]
             // ])
