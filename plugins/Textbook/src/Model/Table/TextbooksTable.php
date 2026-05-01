@@ -2,17 +2,14 @@
 namespace Textbook\Model\Table;
 
 use ArrayObject;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Validation\Validator;
 use Cake\View\Helper\UrlHelper;
 use Cake\I18n\Time;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
@@ -54,7 +51,12 @@ class TextbooksTable extends ControllerActionTable {
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
-            ]);
+            ])
+            ->requirePresence('academic_period_id')
+            ->requirePresence('education_level_id')
+            ->requirePresence('education_programme_id')
+            ->requirePresence('education_grade_id')
+            ->requirePresence('education_subject_id');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)

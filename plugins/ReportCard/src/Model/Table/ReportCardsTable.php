@@ -101,6 +101,7 @@ class ReportCardsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
             ])
+            ->requirePresence('education_programme_id')
             ->allowEmpty('excel_template');
     }
 

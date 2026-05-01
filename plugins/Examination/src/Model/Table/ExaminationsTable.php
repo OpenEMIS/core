@@ -61,7 +61,10 @@ class ExaminationsTable extends ControllerActionTable {
             // ->add('registration_end_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             // ])
-            ->requirePresence('examination_subjects');
+            ->requirePresence('examination_subjects')
+            ->requirePresence('academic_period_id')
+            ->requirePresence('education_programme_id')
+            ->requirePresence('education_grade_id');
     }
 
     public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)

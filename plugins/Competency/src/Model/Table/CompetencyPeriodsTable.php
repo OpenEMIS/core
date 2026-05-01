@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
@@ -229,35 +228,47 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
     public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
-                $attr['default'] = !empty($this->request->getQuery('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
-                if (!$request->getData($this->aliasField('academic_period_id'))) {
-                    $request->getData[$this->getAlias()]['academic_period_id'] = $attr['default'];
+        if ($action === 'add' || $action === 'edit') {
+            if ($action === 'add') {
+                $period = $request->getQuery('period');
+                $attr['default'] = !empty($period) ? $period : $this->AcademicPeriods->getCurrent();
+                $data = $request->getData();
+                if (empty($data[$this->getAlias()]['academic_period_id'])) {
+                    $data[$this->getAlias()]['academic_period_id'] = $attr['default'];
+                    // Reassign modified data back into request (immutable)
+                    $request = $request->withData($this->getAlias() . '.academic_period_id', $attr['default']);
                 }
                 $attr['options'] = $this->AcademicPeriods->getYearList();
                 $attr['onChangeReload'] = 'changeAcademicPeriod';
-            } else if ($action == 'edit') {
+            } elseif ($action === 'edit') {
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $this->AcademicPeriods->get([$attr['entity']->academic_period_id])->name;
+                $attr['attr']['value'] = $this->AcademicPeriods
+                    ->get([$attr['entity']->academic_period_id])
+                    ->name;
                 $attr['value'] = $attr['entity']->academic_period_id;
             }
         }
+
         return $attr;
     }
 
-    public function addEditOnChangeAcademicPeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    //POCOR-9665
+    public function addEditOnChangeAcademicPeriod(EventInterface $event,Entity $entity,ArrayObject $data,
+        ArrayObject $options,ArrayObject $extra)
     {
         $request = $this->request;
-        $request->getQuery['template'] = '-1';
-        $request->getQuery['item'] = '-1';
+        $queryParams = $request->getQueryParams();
+        $queryParams['template'] = '-1';
+        $queryParams['item'] = '-1';
         if ($request->is(['post', 'put'])) {
-            if (array_key_exists($this->getAlias(), $request->getData)) {
-                if (array_key_exists('academic_period_id', $request->getData[$this->alias()])) {
-                    $request->query['period'] = $request->getData[$this->getAlias()]['academic_period_id'];
+            $data = $request->getData();
+            if (array_key_exists($this->getAlias(), $data)) {
+                if (array_key_exists('academic_period_id', $data['CompetencyPeriods'])) {
+                    $queryParams['period'] = $data[$this->getAlias()]['academic_period_id'];
                 }
             }
         }
+        $this->request = $request->withQueryParams($queryParams);
     }
 
     public function onUpdateFieldCompetencyTemplateId(EventInterface $event, array $attr, $action, ServerRequest $request)

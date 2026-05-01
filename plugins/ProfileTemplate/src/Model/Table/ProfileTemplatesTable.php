@@ -79,7 +79,8 @@ class ProfileTemplatesTable extends ControllerActionTable
             //         'rule' => ['compareDateReverse', 'generate_start_date', false]
             //     ]
             // ])
-            ->allowEmpty('excel_template');
+            ->allowEmpty('excel_template')
+            ->notEmptyString('academic_period_id');
     }
 
     public function validationSubjects(Validator $validator) {
