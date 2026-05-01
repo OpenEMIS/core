@@ -47,7 +47,10 @@ class CompetencyTemplatesTable extends ControllerActionTable
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
-            ]);
+            ])
+            ->requirePresence('name')
+            ->requirePresence('education_programme_id')
+            ->requirePresence('education_grade_id');
     }
 
 

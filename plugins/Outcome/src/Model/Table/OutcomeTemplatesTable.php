@@ -64,6 +64,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
+            ->notEmptyString('academic_period_id')
             ->notEmptyString('education_programme_id')
             ->notEmptyString('education_grade_id');
     }
