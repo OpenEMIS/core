@@ -201,7 +201,12 @@ class ConfigurationsController extends AppController
             return $this->response;
         }
 
-        $sourceType = $activeItem->name; //POCOR-9590: name field holds the human-readable source name
+        //POCOR-9590: read .value (active source name like "Seychelles Civil Status"), not .name (form-field label "Type"). Same convention UserBehavior + PullBehavior use.
+        $sourceType = $activeItem->value;
+        //POCOR-9590: 'Seychellois' is an alias for 'Seychelles Civil Status' in some deployments — normalize early so DB lookups and routing both work
+        if ($sourceType === 'Seychellois') {
+            $sourceType = 'Seychelles Civil Status';
+        }
 
         $attrs = $ExternalAttrs->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
             ->where(['external_data_source_type' => $sourceType])
