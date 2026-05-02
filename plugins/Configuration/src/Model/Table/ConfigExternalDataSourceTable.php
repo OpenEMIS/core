@@ -64,7 +64,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('url')
                 ->requirePresence('application_id')
                 ->requirePresence('secret_code');
-        } elseif ($source == 'Seychelles Civil Status') { // POCOR-9481
+        } elseif ($source == 'Seychelles Civil Status' || $source == 'Seychellois') { // POCOR-9481 //POCOR-9590
             return $validator
                 ->requirePresence('client_id')->notEmptyString('client_id')
                 ->requirePresence('token_uri')->notEmptyString('token_uri')
@@ -273,7 +273,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 unset($attributes['user_endpoint_uri']);
                 // POCOR-9118 end
             }
-            if ($source == 'Seychelles Civil Status') { // POCOR-9481
+            if ($source == 'Seychelles Civil Status' || $source == 'Seychellois') { // POCOR-9481 //POCOR-9590
                 if (isset($attributes['client_secret'])) {
                     $attributes['client_secret'] = '*****';
                 }
@@ -285,6 +285,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 unset($attributes['address_mapping']);
                 unset($attributes['postal_mapping']);
                 unset($attributes['public_key']);
+                unset($attributes['user_endpoint_uri']); //POCOR-9590: hidden — Seychelles uses api_url, not user_endpoint_uri
                 // POCOR-9118 end
             }
             foreach ($attributes as $key => $obj) {
@@ -483,6 +484,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
                 break;
             // POCOR-9481
+            case 'Seychellois': //POCOR-9590
             case 'Seychelles Civil Status': // POCOR-9481 start
                 $this->field('client_id', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('token_uri', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
@@ -502,7 +504,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('nationality_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('address_mapping', ['type' => 'hidden']);
                 $this->field('postal_mapping', ['type' => 'hidden']);
-                $this->field('user_endpoint_uri', ['type' => 'string', 'attr' => []]);
+                $this->field('user_endpoint_uri', ['type' => 'hidden']); //POCOR-9590: hidden — api_url is the Seychelles endpoint field
 
                 break;
             // POCOR-7981
