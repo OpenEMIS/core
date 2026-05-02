@@ -52,6 +52,23 @@ Add a visual sync status indicator (badge) on user General pages (Students, Staf
 - Swagger `@OA\Property` documented on `/api/v5/security-users` list, create, update, and show endpoints
 - All 10 feature tests passing: state-machine transitions, no-diff fast path, field locking semantics
 
+### Code Cleanup & DRY Refactoring
+- Extracted shared **SyncUser** logic (OAuth + API query + diff calculation) from 3 controllers (Students, Staff, Directory) into **UserBehavior::buildExternalUserDiff()**
+- Consolidated POST save logic (field mapping, external reference handling) into **UserBehavior::applySyncToUser()**
+- Moved **resolveMappingPath()** helper from 3 controllers into UserBehavior for centralized path resolution
+- Added **GENERAL_SYNC_FIELDS** constant to UserBehavior (matching Laravel SecurityUsers model) to ensure field lists stay in sync
+- Net result: **−312 lines**, improved maintainability, eliminated 3-way code duplication
+
+### Seychelles Civil Status Integration Fix
+- **UserBehavior::buildExternalUserDiff()** now falls back to `api_url` when `user_endpoint_uri` is empty
+- Auto-appends `/{external_reference}` to the URL if no placeholder (`{external_reference}`) exists in the endpoint
+- Falls back to `client_secret` when `private_key` is absent (Seychelles naming convention differs from OpenEMIS defaults)
+- **Pre-configured endpoint:** migration includes direct INSERT/UPDATE to set Seychelles Civil Status `user_endpoint_uri` to `http://flask-seychelles:5000/NPDService/api/v1/NIN/NINExt/{external_reference}` if not already present
+- **Form preservation:** Seychelles Civil Status form matches master exactly:
+  - `user_endpoint_uri` remains hidden in edit forms (off the form inputs)
+  - Field is unset before rendering the view table (field doesn't leak into view data)
+  - Seychelles uses `api_url` in production; `buildExternalUserDiff()` auto-discovers and falls back correctly
+
 ---
 
 ## Files Changed Summary
@@ -59,19 +76,32 @@ Add a visual sync status indicator (badge) on user General pages (Students, Staf
 **Added:**
 - `config/Migrations/20260428120000_POCOR9590.php` — slim migration (backup + restore only)
 - `plugins/Student/templates/Students/sync_user.php` — sync confirmation modal template
+- `plugins/Staff/templates/Staff/sync_user.php` — sync confirmation modal template
+- `plugins/Directory/templates/Directories/sync_user.php` — sync confirmation modal template
 
-**Modified:**
-- `.gitignore` — ignore untracked test/temp files
+**Modified (by drift fix commit):**
+- `config/Migrations/20260428120000_POCOR9590.php` — now includes direct INSERT/UPDATE for Seychelles Civil Status pre-configuration
+- `plugins/Configuration/src/Controller/ConfigurationsController.php` — no changes
+- `plugins/Configuration/src/Model/Table/ConfigExternalDataSourceTable.php` — no changes
+- `plugins/Directory/src/Controller/DirectoriesController.php` — no changes
+- `plugins/User/src/Model/Behavior/UserBehavior.php` — enhanced `buildExternalUserDiff()` with fallback logic for api_url + client_secret + auto-append external_reference
+
+**Also modified (earlier commits):**
 - `api/app/Models/Api5/SecurityUsers.php` — Swagger + $fillable
 - `api/tests/Feature/SecurityUsersApiTest.php` — 10 new feature tests
-- `plugins/Configuration/src/Model/Table/ConfigExternalDataSourceTable.php` — sync eligibility helpers
+- `plugins/Configuration/src/Model/Behavior/PullBehavior.php` — sync field mapping support
 - `plugins/Configuration/templates/Element/external_data_source.php` — admin UI for data source config
 - `plugins/Directory/src/Model/Table/DirectoriesTable.php` — addSyncButton helper
 - `plugins/Institution/src/Model/Table/StaffUserTable.php` — addSyncButton helper
 - `plugins/Institution/src/Model/Table/StudentUserTable.php` — addSyncButton helper + sync eligibility check
-- `plugins/Student/src/Controller/StudentsController.php` — syncUser action + drift detection wiring
-- `plugins/User/src/Model/Behavior/UserBehavior.php` — drift detection in beforeSave
+- `plugins/Staff/src/Controller/StaffController.php` — syncUser action (uses UserBehavior)
+- `plugins/Student/src/Controller/StudentsController.php` — syncUser action (uses UserBehavior)
 - `plugins/User/templates/Element/UserIdentities/details.php` — 3-state status badge rendering
+
+**Current totals (branch-wide):**
+- Added: 4 files (templates + 1 migration with pre-config)
+- Modified: 14 files (including Seychelles fallback fixes)
+- Removed: 0 files
 
 ---
 
@@ -179,6 +209,12 @@ When a user edits civil-status fields (`first_name`, `middle_name`, `third_name`
 
 **Per-Environment Isolation:**
 Each environment (dev/staging/prod) can have its own data source config. When syncing, the **active** source is determined by `System Configuration > External Data Source` settings for that environment.
+
+**Seychelles Civil Status Pre-Configuration:**
+If using Seychelles Civil Status source, the migration automatically pre-configures the `user_endpoint_uri` to `http://flask-seychelles:5000/NPDService/api/v1/NIN/NINExt/{external_reference}` (only if the field is currently empty). The sync logic also provides fallbacks:
+- Falls back to `api_url` when `user_endpoint_uri` is absent (for sources that don't define a dedicated search endpoint)
+- Falls back to `client_secret` when `private_key` is missing (Seychelles naming convention)
+- Automatically appends `/{external_reference}` if the URL has no placeholder
 
 ### Monitoring & Troubleshooting
 
