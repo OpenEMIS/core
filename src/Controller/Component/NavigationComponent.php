@@ -2820,6 +2820,12 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'selected' => ['Calendars.Calendars']
             ],
+            'Systems.SystemProcesses' => [
+                'title' => 'Processes',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'System'],
+                'selected' => ['Systems.SystemProcesses']
+            ], //POCOR-9396
 
         ];
 
