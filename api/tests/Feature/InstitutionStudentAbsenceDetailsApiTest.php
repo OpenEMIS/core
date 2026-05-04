@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 use Tests\Traits\PrimaryKeyStringTrait;
+use Tests\Feature\Concerns\BootstrapsPocor9509AlertApiData;
 
 
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\Models\Api5\InstitutionStudentAbsenceDetails;
 use App\Models\Api5\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -15,13 +15,16 @@ use Carbon\Carbon;
 class InstitutionStudentAbsenceDetailsApiTest extends TestCase
 {
     use PrimaryKeyStringTrait;
-    use DatabaseTransactions, WithFaker;
+    use BootstrapsPocor9509AlertApiData;
+    use WithFaker;
 
     protected $token;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->bootPocor9509AlertApiData(); //POCOR-9509: bootstrap minimal schema/data for alert-related API tests
 
         $user = TestSecurityUser::where('id', 2)->first();
         if (!$user) {
@@ -33,10 +36,6 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
 
     public function test_can_list_InstitutionStudentAbsenceDetails()
     {
-        if (InstitutionStudentAbsenceDetails::count() === 0) {
-            InstitutionStudentAbsenceDetails::factory()->count(1)->create();
-        }
-
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/institution-student-absence-details');
@@ -46,8 +45,9 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
 
     public function test_can_create_InstitutionStudentAbsenceDetails()
     {
-        $record = InstitutionStudentAbsenceDetails::factory()->make();
-        $data = $record->toArray();
+        $data = $this->pocor9509AbsencePayload([
+            'date' => '2026-04-16',
+        ]); //POCOR-9509: avoid deep factory dependencies in sparse test DB
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
@@ -58,7 +58,7 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
 
     public function test_can_view_InstitutionStudentAbsenceDetails()
     {
-        $record = InstitutionStudentAbsenceDetails::factory()->create();
+        $record = InstitutionStudentAbsenceDetails::create($this->pocor9509AbsencePayload()); //POCOR-9509: create a deterministic record without factory-only dependencies
 
         $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
@@ -71,10 +71,12 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
 
     public function test_can_update_InstitutionStudentAbsenceDetails()
     {
-        $record = InstitutionStudentAbsenceDetails::factory()->create();
+        $record = InstitutionStudentAbsenceDetails::create($this->pocor9509AbsencePayload([
+            'date' => '2026-04-17',
+        ])); //POCOR-9509: create a deterministic record without factory-only dependencies
         $updatedData = [
             'student_id' => $record->student_id,
-            // Add at least one field from schema to update
+            'comment' => 'POCOR-9509 updated absence test',
         ];
 
         $keyString = $this->getPrimaryKeyString($record);
@@ -87,7 +89,9 @@ class InstitutionStudentAbsenceDetailsApiTest extends TestCase
 
     public function test_can_delete_InstitutionStudentAbsenceDetails()
     {
-        $record = InstitutionStudentAbsenceDetails::factory()->create();
+        $record = InstitutionStudentAbsenceDetails::create($this->pocor9509AbsencePayload([
+            'date' => '2026-04-18',
+        ])); //POCOR-9509: create a deterministic record without factory-only dependencies
 
         $keyString = $this->getPrimaryKeyString($record);
         $response = $this->withHeaders([
