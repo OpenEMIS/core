@@ -1064,14 +1064,13 @@ class MessagingTable extends ControllerActionTable
         }
 
 
-        $student_ids = array_column($allRecipients, 'student_id');
-        $security_user_ids = array_column($allRecipients, 'security_user_id');
-        $guardian_ids = array_column($allRecipients, 'guardian_id');
+        $student_ids = array_values(array_filter(array_column($allRecipients, 'student_id')));
+        $security_user_ids = array_values(array_filter(array_column($allRecipients, 'security_user_id')));
+        $guardian_ids = array_values(array_filter(array_column($allRecipients, 'guardian_id'))); //POCOR-9509: filter NULLs from leftJoin when student has no guardian
 
         $recipient_ids = array_unique(array_merge($student_ids, $security_user_ids, $guardian_ids));
         // otherwise assume staff
         sort($recipient_ids);
-        Log::debug('[TEMP-LOG] getRoleRecipientList: student_ids=' . json_encode($student_ids) . ' guardian_ids=' . json_encode($guardian_ids) . ' security_user_ids=' . json_encode($security_user_ids) . ' merged=' . json_encode($recipient_ids));
 
         return [$role_ids, $recipient_ids];
     }
@@ -1172,6 +1171,7 @@ class MessagingTable extends ControllerActionTable
             ->innerJoin(['SGU' => 'security_group_users'],
                 ['SGI.security_group_id = SGU.security_group_id',
                     'SGU.security_user_id = ' . $SubjectStaff->aliasField('staff_id')])
+            ->innerJoin(['SU' => 'security_users'], ['SU.id = ' . $SubjectStaff->aliasField('staff_id')]) //POCOR-9509: skip orphaned security_group_users rows
             ->where([$SubjectStaff->aliasField('institution_subject_id = ') . $subject_id,
                 'SGU.security_role_id = ' . $role_id]);
 
@@ -1189,6 +1189,7 @@ class MessagingTable extends ControllerActionTable
             ->innerJoin(['SGU' => 'security_group_users'],
                 ['SGI.security_group_id = SGU.security_group_id',
                     'SGU.security_user_id = ' . $Classes->aliasField('staff_id')])
+            ->innerJoin(['SU' => 'security_users'], ['SU.id = ' . $Classes->aliasField('staff_id')]) //POCOR-9509: skip orphaned security_group_users rows
             ->where([$Classes->aliasField('id = ') . $e->recipient_group_id,
                 'SGU.security_role_id = ' . $role_id]);
 
@@ -1203,6 +1204,7 @@ class MessagingTable extends ControllerActionTable
             ->innerJoin(['SGU' => 'security_group_users'],
                 ['SGI.security_group_id = SGU.security_group_id',
                     'SGU.security_user_id = ' . $Secondary->aliasField('secondary_staff_id')])
+            ->innerJoin(['SU' => 'security_users'], ['SU.id = ' . $Secondary->aliasField('secondary_staff_id')]) //POCOR-9509: skip orphaned security_group_users rows
             ->where([$Secondary->aliasField('institution_class_id') => $e->recipient_group_id,
                 'SGU.security_role_id' => $role_id]);
         return $primary->union($secondary)
@@ -1216,11 +1218,11 @@ class MessagingTable extends ControllerActionTable
             ->select([
                 'security_user_id'    => $SGU->aliasField('security_user_id'),
             ])
-            // ensure they belong to our institution
             ->innerJoin(
                 ['SGI'=>'security_group_institutions'],
                 ['SGI.security_group_id = ' . $SGU->aliasField('security_group_id')]
             )
+            ->innerJoin(['SU' => 'security_users'], ['SU.id = ' . $SGU->aliasField('security_user_id')]) //POCOR-9509: skip orphaned security_group_users rows
             ->where([
                 $SGU->aliasField('security_role_id') => $role_id,
                 'SGI.institution_id' => $e->institution_id,
