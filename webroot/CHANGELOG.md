@@ -1,3 +1,13 @@
+### [5.8.0] - 2026-05-04
+- Implemented: Develop an asynchronous alerts queue in laravel
+- Implemented: Develop a page that allows user to confirm if merge is successful
+- Implemented: Export Institution, Student and Staff history as PDF
+- Bug Fixed: Administration>Performance>Report Cards>Add: Unable to add report card
+- Bug Fixed: Administration>Security>Users: Remove password column
+- Bug Fixed: Remove .claude folders
+- Bug Fixed: Institutions>Attendance>Students>Export: The Student Attendance Export when generated on a day for which no attendance was marked the file shows all students to be present.
+- Bug Fixed: Institutions>Students>Academic>Competencies>Import: User is not able to import
+
 ### [5.7.0] - 2026-04-09
 - Implemented: Develop webhooks in Laravel
 - Bug Fixed: Institutions>Academic>Classes>Add: User gets a error 404 when adding a class on clicking Save.
@@ -95,6 +105,17 @@
 - Implemented: Develop changes to existing webhooks in OpenEMIS Core to integrate with OpenEMIS Exams 
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Urgent issues)
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5
+
+### [4.51.4] - 2026-04-23
+- Bug Fixed: Institutions>Performance>GPA: The GPA & CGPA in the generated report card is empty for the student Jimmy Olbrice (1600991587) at C. I. Gibson
+
+### [4.51.3] - 2026-04-09
+- Bug Fixed: Institutions > Students > GPA tab: The system calculates the Cumulative GPA based on all available GPA values for the configured education grades.
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting same user when error is occured for one of the users
+
+### [4.51.2] - 2026-02-27
+- Bug Fixed: Institutions>Attendance>Staff: System checks the Timezone configuration before applying the validation on marking Student/Staff attendance
+- Bug Fixed: Administration>Performance>Report Cards: When calculating Cumulative GPA, use the latest GPA for that term
 
 ### [4.51.1] - 2026-02-02
 - Bug Fixed: Institutions>Performance>Assessment: Exempt button is missing for non admin roles
