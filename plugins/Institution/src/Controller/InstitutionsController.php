@@ -7081,6 +7081,10 @@ class InstitutionsController extends AppController
         if ($is_guardian) {
             $userData['is_guardian'] = 1;
         }
+        //POCOR-9590: sync_status sent by JS (1 = came from External Search, 0 = manual add)
+        if (isset($requestData['sync_status'])) {
+            $userData['sync_status'] = (int)$requestData['sync_status'];
+        }
         return $userData;
     }
 

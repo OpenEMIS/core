@@ -1423,6 +1423,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             student_admission_status_value: userCtrl.studentAdmissionStatusValue,//POCOR-7716
             photo_base_64: userCtrl.selectedUserData.photo_base_64,
             photo_name: userCtrl.selectedUserData.photo_name,
+            sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             is_diff_school: userCtrl.userData && userCtrl.userData.is_diff_school ? userCtrl.userData.is_diff_school : 0,
             student_id: userCtrl.userData && userCtrl.userData.id ? userCtrl.userData.id : null,
             previous_institution_id: previousInstitutionId,

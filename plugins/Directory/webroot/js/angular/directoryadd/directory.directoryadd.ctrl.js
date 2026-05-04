@@ -1177,6 +1177,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
+            sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             custom: [],
         };
         if(scope.selectedUserData.user_type_id === USER_TYPES.STUDENT) { // POCOR-9427
