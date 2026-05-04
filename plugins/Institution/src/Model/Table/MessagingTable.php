@@ -1104,6 +1104,7 @@ class MessagingTable extends ControllerActionTable
                 ['AcademicPeriods' => 'academic_periods'],
                 ['AcademicPeriods.id = ' . $aliasPrefix . '.academic_period_id']
             )
+            ->innerJoin(['SU' => 'security_users'], ['SU.id = ' . $aliasPrefix . '.student_id']) //POCOR-9509: skip students deleted from security_users
             ->leftJoin(
                 ['StudentGuardians' => 'student_guardians'],
                 ['StudentGuardians.student_id = ' . $aliasPrefix . '.student_id']
