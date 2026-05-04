@@ -1078,7 +1078,7 @@ class MessagingTable extends ControllerActionTable
         //POCOR-9509: validate against security_users to avoid FK violations from orphaned/deleted accounts
         $recipient_ids = [];
         if (!empty($merged)) {
-            $SecurityUsers = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
+            $SecurityUsers = TableRegistry::getTableLocator()->get('User.Users');
             $recipient_ids = $SecurityUsers->find()
                 ->where(['id IN' => $merged])
                 ->extract('id')
