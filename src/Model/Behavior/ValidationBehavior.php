@@ -3873,4 +3873,41 @@ class ValidationBehavior extends Behavior
 
         return true;
     }
+
+    //POCOR-9680
+    public static function checkEmailValidation($value, array $context)
+    {
+        $email = $value;
+        $contactType = strtoupper(trim($contactType)) ?? 'Email'; 
+        $contactTypes = TableRegistry::getTableLocator()
+            ->get('User.ContactTypes');
+        $pattern = null;
+        $result = $contactTypes->find()
+            ->select([
+                'ContactTypes.validation_pattern'
+            ])
+            ->join([
+                'ContactOptions' => [
+                    'table' => 'contact_options',
+                    'type' => 'INNER',
+                    'conditions' => 'ContactOptions.id = ContactTypes.contact_option_id'
+                ]
+            ])
+            ->where([
+                'ContactOptions.name' => $contactType,
+                'ContactTypes.visible' => 1
+            ])
+            ->first(); 
+        //Apply DB vaidation pattern if exists
+        if (!empty($result->validation_pattern)) {
+            $pattern = '/' . $result->validation_pattern . '/';
+        }
+        //Fallback regex
+        if (empty($pattern)) {
+            $pattern = '/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/';
+        }
+
+        return (bool) preg_match($pattern, $email);
+    }
+    
 }
