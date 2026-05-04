@@ -5,11 +5,13 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
+use App\Services\AlertTriggerService;
+use Illuminate\Support\Facades\Log;
 
 class InstitutionStudentEnrolment extends Model
 {
     use HasFactory;
-use InstitutionScope;
+    use InstitutionScope;
 
     protected $table = 'institution_student_enrolment';
 
@@ -23,6 +25,65 @@ use InstitutionScope;
     protected $dates = ['modified', 'created'];
 
     // ✅ Define the primary key
+
+    /**
+     * POCOR-9509: Trigger enrolment alerts when the record is created or the workflow status changes.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saved(function (self $enrolment) {
+            if (!$enrolment->wasRecentlyCreated && !$enrolment->wasChanged('status_id')) {
+                return;
+            }
+
+            if (!$enrolment->student_id || !$enrolment->institution_id || !$enrolment->status_id) {
+                // POCOR-9509: Keep production resilient when required event data is missing.
+                return;
+            }
+
+            try {
+                $enrolment->processEnrolmentAlert();
+            } catch (\Throwable $e) {
+                Log::error('[POCOR-9509] Enrolment alert processing failed in saved event', [
+                    'enrolment_id' => $enrolment->id,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        });
+    }
+
+    /**
+     * POCOR-9509: Dispatch the Laravel alert command for enrolment events.
+     */
+    protected function processEnrolmentAlert(): bool
+    {
+        $alertRule = AlertTriggerService::getActiveAlertRule('StudentEnrolment', (int) $this->institution_id);
+
+        if (!$alertRule) {
+            return false;
+        }
+
+        $result = AlertTriggerService::triggerAlert(
+            processName: 'AlertStudentEnrolment',
+            featureName: 'StudentEnrolment',
+            userId: (int) ($this->created_user_id ?: 1),
+            ruleId: (int) $alertRule->id,
+            entityId: (int) $this->id,
+            context: [
+                'student_id' => (int) $this->student_id,
+                'status_id' => (int) $this->status_id,
+                'academic_period_id' => (int) $this->academic_period_id,
+                'institution_id' => (int) $this->institution_id,
+                'change_date' => $this->modified ?? $this->created,
+            ],
+            entityType: 'StudentEnrolment',
+            triggerType: 'status_changed'
+        );
+
+        return (bool) ($result['success'] ?? false) || (bool) ($result['duplicate'] ?? false);
+    }
 
 
      // Override getKeyForSaveQuery to handle composite keys
