@@ -290,7 +290,7 @@ class AppTable extends Table
                 return (new FrozenTime($dateInput))->format($displayFormat);
             }
         } catch (\Throwable $e) {
-            Log::error('formatDateTime error: ' . $e->getMessage());
+            Log::warning('formatDateTime: unparseable input (' . gettype($dateInput) . '): ' . substr((string)$dateInput, 0, 50)); //POCOR-9509: single-line warning, suppress verbose Chronos parse errors
         }
 
         return '';
