@@ -2820,6 +2820,12 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'selected' => ['Calendars.Calendars']
             ],
+            'Systems.SystemProcesses' => [
+                'title' => 'Processes',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'System'],
+                'selected' => ['Systems.SystemProcesses']
+            ], //POCOR-9396
 
         ];
 
@@ -3843,19 +3849,23 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Alerts']
                     ],
-
                     'Alerts.AlertRules' => [
                         'title' => 'Alert Rules',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.AlertRules']
                     ],
-
                     'Alerts.Logs' => [
                         'title' => 'Logs',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
+                    ],
+                    'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
+                        'title' => 'Queue',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Queue']
                     ],
                     'Alerts.Notices' => [
                         'title' => 'Notices',
@@ -3892,6 +3902,12 @@ class NavigationComponent extends Component
                     'parent' => 'Administration.Communications',
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
+                ],
+                'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
+                    'title' => 'Queue',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Queue']
                 ],
                 'Alerts.Notices' => [
                     'title' => 'Notices',
