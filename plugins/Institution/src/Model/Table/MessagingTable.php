@@ -1064,12 +1064,26 @@ class MessagingTable extends ControllerActionTable
         }
 
 
-        $student_ids = array_column($allRecipients, 'student_id');
-        $security_user_ids = array_column($allRecipients, 'security_user_id');
-        $guardian_ids = array_column($allRecipients, 'guardian_id');
+        //POCOR-9509: filter out nulls/zeros before merging — leftJoin on student_guardians yields null guardian_id for students with no guardian
+        $student_ids = array_filter(array_column($allRecipients, 'student_id'));
+        $security_user_ids = array_filter(array_column($allRecipients, 'security_user_id'));
+        $guardian_ids = array_filter(array_column($allRecipients, 'guardian_id'));
 
-        $recipient_ids = array_unique(array_merge($student_ids, $security_user_ids, $guardian_ids));
-        // otherwise assume staff
+        $merged = array_unique(array_merge(
+            array_values($student_ids),
+            array_values($security_user_ids),
+            array_values($guardian_ids)
+        ));
+
+        //POCOR-9509: validate against security_users to avoid FK violations from orphaned/deleted accounts
+        $recipient_ids = [];
+        if (!empty($merged)) {
+            $SecurityUsers = TableRegistry::getTableLocator()->get('Security.SecurityUsers');
+            $recipient_ids = $SecurityUsers->find()
+                ->where(['id IN' => $merged])
+                ->extract('id')
+                ->toArray();
+        }
         sort($recipient_ids);
 
         return [$role_ids, $recipient_ids];
