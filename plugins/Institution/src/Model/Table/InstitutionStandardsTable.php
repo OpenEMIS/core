@@ -1016,11 +1016,12 @@ class InstitutionStandardsTable extends AppTable
             if (($data['feature'] ?? '') === 'Institution.InstitutionStudentMonthlyAttendance') {
                 $attr['attr']['required'] = true;
             }
-            //POCOR-9611: Default to current month — inject into request so ControllerAction renders it selected
+            //POCOR-9611: Default to current month — attr.attr.value is merged into Form->input options, overriding POST/entity (month not in POST on first render)
             if (empty($data['month'])) {
                 $data['month'] = date('m');
                 $this->request = $this->request->withData($alias, $data);
             }
+            $attr['attr']['value'] = $data['month'];
             return $attr;
         }
     }
@@ -1108,10 +1109,13 @@ class InstitutionStandardsTable extends AppTable
         $attr['select']           = false;
         $attr['onChangeReload']   = false;
         $attr['attr']['required'] = true; //POCOR-9611: week is required for this report
-        //POCOR-9611: Default to current/latest past week — inject into request so ControllerAction renders it selected
+        //POCOR-9611: Default to current/latest past week
         if (empty($data['week_start_day']) && $currentWeekKey !== null) {
             $data['week_start_day'] = $currentWeekKey;
             $this->request = $this->request->withData($alias, $data);
+        }
+        if (!empty($data['week_start_day'])) {
+            $attr['attr']['value'] = $data['week_start_day']; //POCOR-9611: attr.attr.value overrides POST/entity for first render
         }
         return $attr;
     }
