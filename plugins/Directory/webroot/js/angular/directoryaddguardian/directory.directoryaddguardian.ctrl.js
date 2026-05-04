@@ -708,6 +708,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             identity_type_name: userCtrl.selectedUserData.identity_type_name,
             photo_name: userCtrl.selectedUserData.photo_name,
             photo_content: userCtrl.selectedUserData.photo_base_64,
+            sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             contact_type: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
             email: userCtrl.selectedUserData.email,
