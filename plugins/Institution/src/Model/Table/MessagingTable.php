@@ -1064,13 +1064,14 @@ class MessagingTable extends ControllerActionTable
         }
 
 
-        //POCOR-9509: filter out nulls/zeros — leftJoin on student_guardians yields null guardian_id for students with no guardian
-        $student_ids = array_values(array_filter(array_column($allRecipients, 'student_id')));
-        $security_user_ids = array_values(array_filter(array_column($allRecipients, 'security_user_id')));
-        $guardian_ids = array_values(array_filter(array_column($allRecipients, 'guardian_id')));
+        $student_ids = array_column($allRecipients, 'student_id');
+        $security_user_ids = array_column($allRecipients, 'security_user_id');
+        $guardian_ids = array_column($allRecipients, 'guardian_id');
 
         $recipient_ids = array_unique(array_merge($student_ids, $security_user_ids, $guardian_ids));
+        // otherwise assume staff
         sort($recipient_ids);
+        Log::debug('[TEMP-LOG] getRoleRecipientList: student_ids=' . json_encode($student_ids) . ' guardian_ids=' . json_encode($guardian_ids) . ' security_user_ids=' . json_encode($security_user_ids) . ' merged=' . json_encode($recipient_ids));
 
         return [$role_ids, $recipient_ids];
     }
