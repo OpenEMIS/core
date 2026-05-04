@@ -146,8 +146,8 @@ trait WebhookQueueTrait
 
         } catch (\Throwable $e) {
             // POCOR-9257: Graceful degradation - don't break model operations
-            Log::error("[WebhookQueueTrait] ✗ Failed to queue webhook for {$tableName}#{$modelId}: " . $e->getMessage());
-            Log::error("[WebhookQueueTrait] Stack trace: " . $e->getTraceAsString());
+            // Log::error("[WebhookQueueTrait] ✗ Failed to queue webhook for {$tableName}#{$modelId}: " . $e->getMessage());
+            // Log::error("[WebhookQueueTrait] Stack trace: " . $e->getTraceAsString());
         }
     }
 
@@ -160,15 +160,15 @@ trait WebhookQueueTrait
     protected function queueWebhook(string $eventKey, array $body): void
     {
         if (empty($eventKey)) {
-            Log::warning("[WebhookQueueTrait] Empty event_key provided, skipping");
+            // Log::warning("[WebhookQueueTrait] Empty event_key provided, skipping");
             return;
         }
 
-        Log::debug("[WebhookQueueTrait] START queueWebhook for event_key: {$eventKey}");
+        // Log::debug("[WebhookQueueTrait] START queueWebhook for event_key: {$eventKey}");
 
         try {
             // Fetch active webhooks for this event_key
-            Log::debug("[WebhookQueueTrait] Querying database for active webhooks matching event_key: {$eventKey}");
+            // Log::debug("[WebhookQueueTrait] Querying database for active webhooks matching event_key: {$eventKey}");
             $webhooks = DB::table('webhooks as w')
                 ->join('config_items as ci', 'w.external_data_source_id', '=', 'ci.id')
                 ->where('w.event_key', trim($eventKey))
@@ -185,33 +185,33 @@ trait WebhookQueueTrait
                 ])
                 ->get();
 
-            Log::debug("[WebhookQueueTrait] Found " . $webhooks->count() . " active webhook(s) for event_key: {$eventKey}");
+            // Log::debug("[WebhookQueueTrait] Found " . $webhooks->count() . " active webhook(s) for event_key: {$eventKey}");
 
             if ($webhooks->isEmpty()) {
                 // No active webhooks for this event - not an error
-                Log::debug("[WebhookQueueTrait] No active webhooks configured for event_key: {$eventKey}, skipping");
+                // Log::debug("[WebhookQueueTrait] No active webhooks configured for event_key: {$eventKey}, skipping");
                 return;
             }
 
             $queuedCount = 0;
             foreach ($webhooks as $webhookConfig) {
-                Log::debug("[WebhookQueueTrait] Processing webhook ID: {$webhookConfig->webhook_id}, URL: {$webhookConfig->url}");
+                // Log::debug("[WebhookQueueTrait] Processing webhook ID: {$webhookConfig->webhook_id}, URL: {$webhookConfig->url}");
 
                 // Validate URL
                 $url = trim($webhookConfig->url);
                 if (empty($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
-                    Log::warning("[WebhookQueueTrait] ✗ Invalid URL for webhook [{$eventKey}]: {$url}");
+                    // Log::warning("[WebhookQueueTrait] ✗ Invalid URL for webhook [{$eventKey}]: {$url}");
                     continue;
                 }
 
                 // Build final URL with query parameters (POCOR-9403 placeholder replacement)
                 $finalUrl = $this->buildWebhookUrl($url, $webhookConfig->query_template ?? '', $body);
-                Log::debug("[WebhookQueueTrait] Built final URL: {$finalUrl}");
+                // Log::debug("[WebhookQueueTrait] Built final URL: {$finalUrl}");
 
                 // Build final body (POCOR-9403 template system)
                 $finalBody = $this->buildWebhookBody($webhookConfig->body_template ?? '', $body);
-                $payloadSize = strlen(is_string($finalBody) ? $finalBody : json_encode($finalBody));
-                Log::debug("[WebhookQueueTrait] Built payload, size: {$payloadSize} bytes");
+                // $payloadSize = strlen(is_string($finalBody) ? $finalBody : json_encode($finalBody));
+                // Log::debug("[WebhookQueueTrait] Built payload, size: {$payloadSize} bytes");
 
                 // Insert into webhook_queue
                 $queueData = [
@@ -235,19 +235,19 @@ trait WebhookQueueTrait
                     'created_user_id' => auth()->id(),
                 ];
 
-                Log::debug("[WebhookQueueTrait] Inserting into webhook_queue table...");
+                // Log::debug("[WebhookQueueTrait] Inserting into webhook_queue table...");
                 $queueId = DB::table('webhook_queue')->insertGetId($queueData);
                 $queuedCount++;
 
-                Log::info("[WebhookQueueTrait] ✓ Queued webhook #{$queueId} for event_key: {$eventKey}, webhook_id: {$webhookConfig->webhook_id}");
+                // Log::info("[WebhookQueueTrait] ✓ Queued webhook #{$queueId} for event_key: {$eventKey}, webhook_id: {$webhookConfig->webhook_id}");
             }
 
-            Log::info("[WebhookQueueTrait] ✓ Successfully queued {$queuedCount} webhook(s) for event_key: {$eventKey}");
+            // Log::info("[WebhookQueueTrait] ✓ Successfully queued {$queuedCount} webhook(s) for event_key: {$eventKey}");
 
         } catch (\Throwable $e) {
-            Log::error("[WebhookQueueTrait] ✗ Exception in queueWebhook for event_key: {$eventKey}");
-            Log::error("[WebhookQueueTrait] Error message: " . $e->getMessage());
-            Log::error("[WebhookQueueTrait] Stack trace: " . $e->getTraceAsString());
+            // Log::error("[WebhookQueueTrait] ✗ Exception in queueWebhook for event_key: {$eventKey}");
+            // Log::error("[WebhookQueueTrait] Error message: " . $e->getMessage());
+            // Log::error("[WebhookQueueTrait] Stack trace: " . $e->getTraceAsString());
         }
     }
 
