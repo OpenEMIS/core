@@ -1,5 +1,5 @@
 <?php
-//POCOR-9611: Students Weekly Attendance — InstitutionStandards feature template
+//POCOR-9611: Students Monthly Attendance — parallel to InstitutionStudentWeeklyAttendance
 namespace Institution\Model\Table;
 
 use ArrayObject;
@@ -13,23 +13,21 @@ use Cake\ORM\Entity;
 use DateTime;
 
 /**
- * Students Weekly Attendance report.
+ * Students Monthly Attendance report.
  *
  * Registered as a feature under Institution > Statistics > Standard.
  * Generates one Excel row per student showing PRESENT/LATE/EXCUSED/UNEXCUSED/NOTMARKED/NO CLASS
- * status for each school day × attendance slot (period or subject) within the selected week.
+ * status for each school day (Mon-Fri) × attendance slot within the selected month.
  *
- * Supports attendance modes:
- *   DAY (type 1)            — period slots, subject_id=0
- *   SUBJECT (type 2)        — subject slots, period=0 in absence_details / period=1 in mark_records
- *   DAY_AND_SUBJECT (type 3)— both sets of columns
+ * Subjects are sourced from the timetable (institution_schedule_timetables chain) when one
+ * exists for the class; falls back to institution_subjects when no timetable is configured.
  *
  * Input params (stored as JSON in report_progress.params by ReportListBehavior):
- *   institution_id, academic_period_id, education_grade_id, institution_class_id, week_start_day (Y-m-d)
+ *   institution_id, academic_period_id, education_grade_id, institution_class_id, month (2-digit '01'-'12')
  *
  * @ticket POCOR-9611
  */
-class InstitutionStudentWeeklyAttendanceTable extends AppTable
+class InstitutionStudentMonthlyAttendanceTable extends AppTable
 {
     public function initialize(array $config): void
     {
@@ -57,23 +55,23 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
 
     public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets): void
     {
-        //POCOR-9611: Pre-compute slots and week dates; store in $settings for the other two events
+        //POCOR-9611: Pre-compute slots and month dates; store in $settings for the other events
         $requestData      = json_decode($settings['process']['params']);
         $academicPeriodId = (int)$requestData->academic_period_id;
         $institutionId    = (int)$requestData->institution_id;
-        $weekStartDay     = $requestData->week_start_day ?? '';
+        $monthNum         = $requestData->month ?? '';
         $gradeId = isset($requestData->education_grade_id) ? (int)$requestData->education_grade_id : null;
         $classId = isset($requestData->institution_class_id) ? (int)$requestData->institution_class_id : null;
 
-        //POCOR-9611: Compute dates FIRST so slot detection is scoped to the actual report week
-        $week         = $this->_getWeekDays($weekStartDay);
-        $reportDates  = array_values($week['days'] ?? []);
+        //POCOR-9611: Compute dates FIRST so slot detection is scoped to the actual report month
+        $month        = $this->_getMonthDays($monthNum, $academicPeriodId);
+        $reportDates  = array_values($month['days'] ?? []);
         $slots        = $this->_getAttendanceSlots($academicPeriodId, $institutionId, $classId, $gradeId, $reportDates);
         $markTypeName = $this->_getMarkTypeName($academicPeriodId, $institutionId, $classId, $gradeId, $reportDates);
-        $colDefs      = $this->_buildColDefs($slots, $week);
+        $colDefs      = $this->_buildColDefs($slots, $month);
 
         $settings['_slots']          = $slots;
-        $settings['_week']           = $week;
+        $settings['_month']          = $month;
         $settings['_col_defs']       = $colDefs;
         $settings['_mark_type_name'] = $markTypeName;
 
@@ -93,9 +91,9 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         $newFields = [
             ['key' => 'openemis_no',   'field' => 'openemis_no',   'type' => 'string', 'label' => __('OpenEMIS ID')],
             ['key' => 'student_name',  'field' => 'student_name',  'type' => 'string', 'label' => __('Name')],
-            ['key' => 'class_name',    'field' => 'class_name',    'type' => 'string', 'label' => __('Class')], //POCOR-9611: class not required, always show
+            ['key' => 'class_name',    'field' => 'class_name',    'type' => 'string', 'label' => __('Class')],
             ['key' => 'attendance_by', 'field' => 'attendance_by', 'type' => 'string', 'label' => __('Attendance By')],
-            ['key' => 'week_label',    'field' => 'week_label',    'type' => 'string', 'label' => __('Current Week')],
+            ['key' => 'month_label',   'field' => 'month_label',   'type' => 'string', 'label' => __('Month')],
         ];
 
         //POCOR-9611: attendance_status type triggers onExcelRenderAttendanceStatus for cell colouring
@@ -117,25 +115,24 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query): void
     {
-        //POCOR-9611: Build single-week query and wrap as CakePHP ORM subquery
+        //POCOR-9611: Build single-month query and wrap as CakePHP ORM subquery
         $requestData      = json_decode($settings['process']['params']);
         $institutionId    = (int)$requestData->institution_id;
         $academicPeriodId = (int)$requestData->academic_period_id;
-        //POCOR-9611: null or <1 means "All"
         $gradeId = isset($requestData->education_grade_id) ? (int)$requestData->education_grade_id : null;
         $classId = isset($requestData->institution_class_id) ? (int)$requestData->institution_class_id : null;
 
         $slots        = $settings['_slots'];
-        $week         = $settings['_week'];
+        $month        = $settings['_month'];
         $markTypeName = $settings['_mark_type_name'];
 
-        if (empty($week) || empty($slots)) {
+        if (empty($month) || empty($month['days']) || empty($slots)) {
             $query->where(['1 = 0']); //POCOR-9611: nothing to show
             return;
         }
 
-        $weekSql = $this->_buildWeekSQL(
-            $week,
+        $monthSql = $this->_buildMonthSQL(
+            $month,
             $slots,
             $institutionId,
             $academicPeriodId,
@@ -144,9 +141,9 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             $markTypeName
         );
 
-        //POCOR-9611: Build SELECT list matching all aliases produced by _buildWeekSQL
-        $selectList = ['openemis_no', 'student_name', 'class_name', 'attendance_by', 'week_label'];
-        foreach ($week['days'] as $dayKey => $_) {
+        //POCOR-9611: Build SELECT list matching all aliases produced by _buildMonthSQL
+        $selectList = ['openemis_no', 'student_name', 'class_name', 'attendance_by', 'month_label'];
+        foreach ($month['days'] as $dayKey => $_) {
             foreach ($slots as $slot) {
                 $selectList[] = "col_{$dayKey}_{$slot['key']}";
             }
@@ -157,13 +154,13 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
 
         $selectExpr = [];
         foreach ($selectList as $col) {
-            $selectExpr[$col] = "wd.{$col}";
+            $selectExpr[$col] = "md.{$col}";
         }
 
         $query
             ->select($selectExpr)
-            ->from(['wd' => "({$weekSql})"])
-            ->order(['wd.student_name']);
+            ->from(['md' => "({$monthSql})"])
+            ->order(['md.student_name']);
     }
 
     /**
@@ -176,15 +173,15 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         $value = $entity->has($attr['field']) ? $entity->{$attr['field']} : '';
 
         $colors = [
-            'PRESENT'   => '#92D050', // green
-            'LATE'      => '#FFC000', // amber
-            'EXCUSED'   => '#FFFF00', // yellow
-            'UNEXCUSED' => '#FF0000', // red
-            'NOTMARKED' => '#D3D3D3', // light gray
-            'NO CLASS'  => '#808080', // dark gray
+            'PRESENT'   => '#92D050',
+            'LATE'      => '#FFC000',
+            'EXCUSED'   => '#FFFF00',
+            'UNEXCUSED' => '#FF0000',
+            'NOTMARKED' => '#D3D3D3',
+            'NO CLASS'  => '#808080',
         ];
 
-        //POCOR-9611: XLSXWriter uses 'fill' (hex string) — not 'fill_color'/'fill_pattern_type' (PhpSpreadsheet keys)
+        //POCOR-9611: XLSXWriter uses 'fill' (hex string) — not 'fill_color'/'fill_pattern_type'
         $style = isset($colors[$value])
             ? ['fill' => $colors[$value], 'halign' => 'center']
             : ['halign' => 'center'];
@@ -199,21 +196,9 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
     /**
      * Resolve attendance slots for this report context.
      *
-     * Each slot represents one column dimension (a period or a subject):
-     *   key           — unique suffix used in SQL alias, e.g. "p1" or "s4984"
-     *   label         — column header label
-     *   mr_period     — period value in student_attendance_marked_records
-     *   mr_subject_id — subject_id  in student_attendance_marked_records
-     *   abd_period    — period value in institution_student_absence_details
-     *   abd_subject_id— subject_id  in institution_student_absence_details
-     *
-     * Detection strategy (most reliable — works per-class):
-     *   1. Inspect actual student_attendance_marked_records for the given scope.
-     *      subject_id = 0  → period-based records exist.
-     *      subject_id > 0  → subject-based records exist.
-     *   2. Fallback when nothing is marked yet: check all currently active
-     *      student_mark_type_statuses rows (not just the most recently enabled one,
-     *      because multiple types can be active simultaneously for different classes).
+     * For period slots: same logic as weekly — detect from mark records, fallback to mark type statuses.
+     * For subject slots: prefer timetable subjects (institution_schedule_timetables chain) when a
+     *   timetable exists for the class; falls back to institution_subjects otherwise.
      *
      * @return array[]
      */
@@ -225,9 +210,7 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         $hasPeriods  = false;
         $hasSubjects = false;
 
-        //POCOR-9611: Step 1 — detect from mark records scoped to the report date range + class
-        //            Prevents marks from other periods (e.g. January "3 Periods and Subjects")
-        //            bleeding into a report for a different month/week.
+        //POCOR-9611: Step 1 — detect from mark records scoped to report dates + class
         if (!empty($reportDates)) {
             $dateList = "'" . implode("','", $reportDates) . "'";
             $stmt = $conn->execute(
@@ -244,7 +227,7 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             $hasSubjects = $modes ? (bool)$modes['has_subjects'] : false;
         }
 
-        //POCOR-9611: Step 2 — widen to full period for same class (dates not yet marked for this range)
+        //POCOR-9611: Step 2 — widen to full period for same class
         if (!$hasPeriods && !$hasSubjects) {
             $stmt = $conn->execute(
                 "SELECT MAX(CASE WHEN subject_id = 0 THEN 1 ELSE 0 END) AS has_periods,
@@ -259,8 +242,7 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             $hasSubjects = $modes ? (bool)$modes['has_subjects'] : false;
         }
 
-        //POCOR-9611: Step 3 — last resort: mark type statuses (institution-wide, no class filter available)
-        //            Only fires when this class has zero mark records in the entire academic period.
+        //POCOR-9611: Step 3 — last resort: mark type statuses (institution-wide, date-range aware)
         if (!$hasPeriods && !$hasSubjects) {
             $dateRangeWhere = '';
             if (!empty($reportDates)) {
@@ -286,7 +268,7 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
 
         $slots = [];
 
-        //POCOR-9611: Period slots — look up mark type active during the report dates
+        //POCOR-9611: Period slots — look up the mark type active during the report dates
         if ($hasPeriods) {
             $periodDateWhere = '';
             if (!empty($reportDates)) {
@@ -327,50 +309,84 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             }
         }
 
-        //POCOR-9611: Subject slots — present when SUBJECT (2) or DAY_AND_SUBJECT (3) records exist
+        //POCOR-9611: Subject slots — prefer timetable subjects when a timetable exists for this class
         if ($hasSubjects) {
-            $subjectWhere = "isub.institution_id = {$institutionId}"
-                . " AND isub.academic_period_id = {$academicPeriodId}";
-            if ($gradeId !== null && $gradeId >= 1) {
-                $subjectWhere .= " AND isub.education_grade_id = {$gradeId}";
-            }
+            $timetableSubjects = [];
 
             if ($classId !== null && $classId >= 1) {
-                //POCOR-9611: Narrow to subjects assigned to this specific class
+                //POCOR-9611: Timetable chain: timetables → lesson_details → curriculum_lessons → institution_subjects
                 $stmt = $conn->execute(
                     "SELECT DISTINCT isub.id, isub.name
-                     FROM institution_subjects isub
-                     JOIN institution_class_subjects ics2
-                       ON ics2.institution_subject_id = isub.id
-                      AND ics2.institution_class_id = {$classId}
-                     WHERE {$subjectWhere}
+                     FROM institution_schedule_timetables ist
+                     JOIN institution_schedule_lesson_details isld
+                       ON isld.institution_schedule_timetable_id = ist.id
+                     JOIN institution_schedule_curriculum_lessons iscl
+                       ON iscl.institution_schedule_lesson_detail_id = isld.id
+                     JOIN institution_subjects isub
+                       ON isub.id = iscl.institution_subject_id
+                     WHERE ist.institution_id    = {$institutionId}
+                       AND ist.academic_period_id = {$academicPeriodId}
+                       AND ist.institution_class_id = {$classId}
                      ORDER BY isub.name"
                 );
-            } else {
-                $stmt = $conn->execute(
-                    "SELECT DISTINCT isub.id, isub.name
-                     FROM institution_subjects isub
-                     WHERE {$subjectWhere}
-                     ORDER BY isub.name"
-                );
+                $timetableSubjects = $stmt->fetchAll('assoc');
             }
 
-            foreach ($stmt->fetchAll('assoc') as $r) {
-                $sid     = (int)$r['id'];
-                //POCOR-9611: mark_records: period=1, subject_id=sid
-                //            absence_details: period=0, subject_id=sid
-                $slots[] = [
-                    'key'            => "s{$sid}",
-                    'label'          => $r['name'],
-                    'mr_period'      => 1,
-                    'mr_subject_id'  => $sid,
-                    'abd_period'     => 0,
-                    'abd_subject_id' => $sid,
-                ];
+            if (!empty($timetableSubjects)) {
+                //POCOR-9611: Timetable found — restrict columns to scheduled subjects only
+                foreach ($timetableSubjects as $r) {
+                    $sid     = (int)$r['id'];
+                    $slots[] = [
+                        'key'            => "s{$sid}",
+                        'label'          => $r['name'],
+                        'mr_period'      => 1,
+                        'mr_subject_id'  => $sid,
+                        'abd_period'     => 0,
+                        'abd_subject_id' => $sid,
+                    ];
+                }
+            } else {
+                //POCOR-9611: No timetable — fall back to all institution_subjects for the scope
+                $subjectWhere = "isub.institution_id = {$institutionId}"
+                    . " AND isub.academic_period_id = {$academicPeriodId}";
+                if ($gradeId !== null && $gradeId >= 1) {
+                    $subjectWhere .= " AND isub.education_grade_id = {$gradeId}";
+                }
+
+                if ($classId !== null && $classId >= 1) {
+                    $stmt = $conn->execute(
+                        "SELECT DISTINCT isub.id, isub.name
+                         FROM institution_subjects isub
+                         JOIN institution_class_subjects ics2
+                           ON ics2.institution_subject_id = isub.id
+                          AND ics2.institution_class_id = {$classId}
+                         WHERE {$subjectWhere}
+                         ORDER BY isub.name"
+                    );
+                } else {
+                    $stmt = $conn->execute(
+                        "SELECT DISTINCT isub.id, isub.name
+                         FROM institution_subjects isub
+                         WHERE {$subjectWhere}
+                         ORDER BY isub.name"
+                    );
+                }
+
+                foreach ($stmt->fetchAll('assoc') as $r) {
+                    $sid     = (int)$r['id'];
+                    $slots[] = [
+                        'key'            => "s{$sid}",
+                        'label'          => $r['name'],
+                        'mr_period'      => 1,
+                        'mr_subject_id'  => $sid,
+                        'abd_period'     => 0,
+                        'abd_subject_id' => $sid,
+                    ];
+                }
             }
         }
 
-        //POCOR-9611: Fallback — should not happen in a properly configured system
+        //POCOR-9611: Fallback
         return $slots ?: [[
             'key'            => 'p1',
             'label'          => 'Period 1',
@@ -383,10 +399,6 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
 
     /**
      * Return the mark type display name for the "Attendance By" column.
-     *
-     * Detects the actual mark type from mark records for the specific class/grade scope
-     * (same strategy as _getAttendanceSlots) so the label matches the real attendance mode.
-     * Falls back to the most recently enabled type when no records exist yet.
      */
     private function _getMarkTypeName(int $academicPeriodId, int $institutionId, ?int $classId, ?int $gradeId, array $reportDates = []): string
     {
@@ -396,7 +408,7 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         $hasPeriods  = false;
         $hasSubjects = false;
 
-        //POCOR-9611: Step 1 — detect from mark records scoped to the report date range + class
+        //POCOR-9611: Step 1 — detect from mark records scoped to the report dates + class
         if (!empty($reportDates)) {
             $dateList = "'" . implode("','", $reportDates) . "'";
             $stmt = $conn->execute(
@@ -455,64 +467,101 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
     }
 
     /**
-     * Return the Mon-Fri date array for the week containing week_start_day.
+     * Return all Mon-Fri dates within the selected month that fall inside the academic period.
      *
-     * @return array  ['label' => '...', 'days' => ['mon'=>Y-m-d, ..., 'fri'=>Y-m-d]]
+     * @param string $monthNum  Two-digit month ('01'–'12')
+     * @param int    $academicPeriodId
+     * @return array ['label' => 'April 2026', 'days' => ['d20260401' => '2026-04-01', ...]]
      */
-    private function _getWeekDays(string $weekStartDay): array
+    private function _getMonthDays(string $monthNum, int $academicPeriodId): array
     {
-        //POCOR-9611: week_start_day IS the week's first day; shift to Monday for school-day columns
-        if (empty($weekStartDay)) {
+        if (empty($monthNum)) {
             return [];
         }
 
-        $start = new DateTime($weekStartDay);
-        $dow   = (int)$start->format('N');
-        if ($dow > 1) {
-            $start->modify('-' . ($dow - 1) . ' days');
+        $conn = ConnectionManager::get('default');
+        $stmt = $conn->execute(
+            'SELECT start_date, end_date FROM academic_periods WHERE id = ? LIMIT 1',
+            [$academicPeriodId]
+        );
+        $period = $stmt->fetch('assoc');
+        if (!$period) {
+            return [];
         }
 
-        $mon = clone $start;
-        $tue = (clone $start)->modify('+1 day');
-        $wed = (clone $start)->modify('+2 days');
-        $thu = (clone $start)->modify('+3 days');
-        $fri = (clone $start)->modify('+4 days');
+        $periodStart    = new DateTime($period['start_date']);
+        $periodEnd      = new DateTime($period['end_date']);
+        $startYear      = (int)$periodStart->format('Y');
+        $endYear        = (int)$periodEnd->format('Y');
+        $monthInt       = (int)$monthNum;
+        $startMonthInt  = (int)$periodStart->format('m');
 
-        return [
-            'label' => $mon->format('d/m/Y') . ' - ' . $fri->format('d/m/Y'),
-            'days'  => [
-                'mon' => $mon->format('Y-m-d'),
-                'tue' => $tue->format('Y-m-d'),
-                'wed' => $wed->format('Y-m-d'),
-                'thu' => $thu->format('Y-m-d'),
-                'fri' => $fri->format('Y-m-d'),
-            ],
-        ];
+        //POCOR-9611: Determine year for this month — use start year if the month falls in the first half of the period
+        $year = ($monthInt >= $startMonthInt) ? $startYear : $endYear;
+
+        $firstOfMonth = new DateTime(sprintf('%04d-%02d-01', $year, $monthInt));
+        $lastOfMonth  = new DateTime($firstOfMonth->format('Y-m-t'));
+
+        //POCOR-9611: Clamp to academic period boundaries
+        $rangeStart = ($firstOfMonth < $periodStart) ? clone $periodStart : clone $firstOfMonth;
+        $rangeEnd   = ($lastOfMonth  > $periodEnd)   ? clone $periodEnd   : clone $lastOfMonth;
+
+        //POCOR-9611: Resolve school working days from config (first_day_of_week + days_per_week)
+        $cfgStmt = $conn->execute(
+            "SELECT code, value FROM config_items WHERE code IN ('first_day_of_week', 'days_per_week')"
+        );
+        $cfgMap = array_column($cfgStmt->fetchAll('assoc'), 'value', 'code');
+
+        $firstDayOfWeek = (isset($cfgMap['first_day_of_week']) && $cfgMap['first_day_of_week'] !== '')
+            ? (int)$cfgMap['first_day_of_week'] : 1; // default: Monday
+        $daysPerWeek = (isset($cfgMap['days_per_week']) && $cfgMap['days_per_week'] !== '')
+            ? (int)$cfgMap['days_per_week'] : 5;     // default: 5 days
+
+        // Config 0=Sun → ISO 7; 1=Mon → ISO 1; ...; 6=Sat → ISO 6
+        $firstDayIso = $firstDayOfWeek === 0 ? 7 : $firstDayOfWeek;
+
+        // Build ISO-weekday hash-set for school days (e.g. Mon-Fri = {1,2,3,4,5})
+        $schoolDaySet = [];
+        for ($i = 0; $i < $daysPerWeek; $i++) {
+            $isoDay = (($firstDayIso - 1 + $i) % 7) + 1;
+            $schoolDaySet[$isoDay] = true;
+        }
+
+        $label = $firstOfMonth->format('F Y'); // "April 2026"
+        $days  = [];
+        $cur   = clone $rangeStart;
+
+        while ($cur <= $rangeEnd) {
+            $dow = (int)$cur->format('N'); // 1=Mon … 7=Sun
+            if (isset($schoolDaySet[$dow])) {
+                $key        = 'd' . $cur->format('Ymd');
+                $days[$key] = $cur->format('Y-m-d');
+            }
+            $cur->modify('+1 day');
+        }
+
+        //POCOR-9611: Guarantee chronological order — dYYYYMMDD keys sort lexicographically = by date
+        ksort($days);
+
+        return ['label' => $label, 'days' => $days];
     }
 
     /**
      * Build column definitions for each day × slot combination.
-     * Label: "Monday (13.04.2026) - Morning Session" or "Monday (13.04.2026) - Mathematics".
+     * Label: "Mon (01.04.2026) - Morning Session" or "Mon (01.04.2026) - Mathematics".
      *
-     * @return array  [['key'=>'col_mon_p1', 'label'=>'...'], ...]
+     * @return array [['key'=>'col_d20260401_p1', 'label'=>'...'], ...]
      */
-    private function _buildColDefs(array $slots, array $week = []): array
+    private function _buildColDefs(array $slots, array $month = []): array
     {
-        //POCOR-9611: One column per day per slot (period or subject), date included in header
-        $dayLabels = [
-            'mon' => 'Monday',
-            'tue' => 'Tuesday',
-            'wed' => 'Wednesday',
-            'thu' => 'Thursday',
-            'fri' => 'Friday',
-        ];
-        $days    = $week['days'] ?? [];
+        $days    = $month['days'] ?? [];
         $colDefs = [];
-        foreach ($dayLabels as $dayKey => $dayName) {
-            $dateSuffix = '';
-            if (!empty($days[$dayKey])) {
-                $dateSuffix = ' (' . (new DateTime($days[$dayKey]))->format('d.m.Y') . ')';
-            }
+
+        foreach ($days as $dayKey => $dateStr) {
+            $d          = new DateTime($dateStr);
+            $dayName    = $d->format('D'); // "Mon", "Tue", ...
+            $dateSuffix = ' (' . $d->format('d.m.Y') . ')';
+
             foreach ($slots as $slot) {
                 $colDefs[] = [
                     'key'   => "col_{$dayKey}_{$slot['key']}",
@@ -520,28 +569,25 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
                 ];
             }
         }
+
         return $colDefs;
     }
 
     /**
-     * Build the single-week result SQL using three targeted queries + PHP assembly.
+     * Build the full-month result SQL using three targeted queries + PHP assembly.
      *
-     * Replaces the old per-slot LEFT JOIN approach which hit MySQL's 61-table hard limit
-     * when a class has many subjects (e.g. 8 subjects × 5 days × 2 JOINs = 80 tables).
-     *
-     * Strategy:
-     *   Query 1 — all students for the scope (institution_class_students + names + class)
-     *   Query 2 — all mark records for the week (student_attendance_marked_records)
-     *   Query 3 — all absence details for the week (institution_student_absence_details)
-     *   PHP     — assemble each cell from indexed lookup maps; no per-cell DB round-trips
+     * Same strategy as _buildWeekSQL in InstitutionStudentWeeklyAttendanceTable:
+     *   Query 1 — all students for the scope
+     *   Query 2 — all mark records for the month
+     *   Query 3 — all absence details for the month
+     *   PHP     — assemble each cell from indexed lookup maps
      *
      * Returns a UNION ALL SELECT … literal SQL suitable for use as a subquery.
-     * Column aliases appear only in the first SELECT; MySQL inherits them for the rest.
      *
-     * @return string SQL (UNION ALL of literal rows, or empty-result SQL when no students)
+     * @return string
      */
-    private function _buildWeekSQL(
-        array $week,
+    private function _buildMonthSQL(
+        array $month,
         array $slots,
         int $institutionId,
         int $academicPeriodId,
@@ -549,12 +595,11 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         ?int $gradeId,
         string $markTypeName
     ): string {
-        $conn         = ConnectionManager::get('default');
-        $weekLabel    = addslashes($week['label']);
-        $markTypeSafe = addslashes($markTypeName);
-        $days         = $week['days'];
+        $conn          = ConnectionManager::get('default');
+        $monthLabel    = addslashes($month['label']);
+        $markTypeSafe  = addslashes($markTypeName);
+        $days          = $month['days'];
 
-        //POCOR-9611: WHERE fragments reused across all three queries
         $whereClass = ($classId !== null && $classId >= 1) ? "AND institution_class_id = {$classId}" : '';
         $whereGrade = ($gradeId !== null && $gradeId >= 1) ? "AND education_grade_id = {$gradeId}"  : '';
         $dateList   = "'" . implode("','", array_values($days)) . "'";
@@ -579,13 +624,12 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
              ORDER BY full_name"
         )->fetchAll('assoc');
 
-        //POCOR-9611: No students → return empty-result SQL with correct column aliases
         if (empty($students)) {
-            return $this->_buildEmptySQL($week, $slots);
+            return $this->_buildEmptySQL($month, $slots);
         }
 
         // ---------------------------------------------------------------
-        // Query 2: mark records for the entire week (indexed by date|period|subject_id)
+        // Query 2: mark records for the entire month
         // ---------------------------------------------------------------
         $markRows = $conn->execute(
             "SELECT date, period, subject_id, no_scheduled_class, institution_class_id, education_grade_id
@@ -596,14 +640,13 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
                AND date IN ({$dateList})"
         )->fetchAll('assoc');
 
-        //POCOR-9611: Index by "date|period|subject_id" (class/grade identical within scope)
         $mrIndex = [];
         foreach ($markRows as $mr) {
             $mrIndex["{$mr['date']}|{$mr['period']}|{$mr['subject_id']}"] = $mr;
         }
 
         // ---------------------------------------------------------------
-        // Query 3: absence details for the entire week (indexed by student_id|date|period|subject_id)
+        // Query 3: absence details for the entire month
         // ---------------------------------------------------------------
         $absenceRows = $conn->execute(
             "SELECT student_id, date, period, subject_id, absence_type_id
@@ -620,14 +663,11 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         }
 
         // ---------------------------------------------------------------
-        // PHP assembly: build one SELECT literal row per student
+        // PHP assembly
         // ---------------------------------------------------------------
-
-        //POCOR-9611: absence_type_id → status label
         $absenceTypeMap = [1 => 'EXCUSED', 2 => 'UNEXCUSED', 3 => 'LATE'];
-
-        $unionParts  = [];
-        $firstRow    = true;
+        $unionParts     = [];
+        $firstRow       = true;
 
         foreach ($students as $student) {
             $studentId = $student['student_id'];
@@ -635,17 +675,16 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             $fullName  = addslashes($student['openemis_no'] . ' - ' . $student['full_name']);
             $className = addslashes($student['class_name']);
 
-            //POCOR-9611: Aliases only on the first SELECT; MySQL inherits them for UNION ALL members
             if ($firstRow) {
                 $cols = [
                     "'{$displayNo}'    AS openemis_no",
                     "'{$fullName}'     AS student_name",
                     "'{$className}'    AS class_name",
                     "'{$markTypeSafe}' AS attendance_by",
-                    "'{$weekLabel}'    AS week_label",
+                    "'{$monthLabel}'   AS month_label",
                 ];
             } else {
-                $cols = ["'{$displayNo}'", "'{$fullName}'", "'{$className}'", "'{$markTypeSafe}'", "'{$weekLabel}'"];
+                $cols = ["'{$displayNo}'", "'{$fullName}'", "'{$className}'", "'{$markTypeSafe}'", "'{$monthLabel}'"];
             }
 
             $totalPresent = 0;
@@ -653,14 +692,14 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             $totalAbsent  = 0;
 
             foreach ($days as $dayKey => $date) {
-                $firstSlot     = true;
-                $dayFirstStatus = 'NOTMARKED'; //POCOR-9611: default when nothing marked
+                $firstSlot      = true;
+                $dayFirstStatus = 'NOTMARKED';
 
                 foreach ($slots as $slot) {
                     $mrKey  = "{$date}|{$slot['mr_period']}|{$slot['mr_subject_id']}";
                     $abKey  = "{$studentId}|{$date}|{$slot['abd_period']}|{$slot['abd_subject_id']}";
-                    $mr     = $mrIndex[$mrKey]  ?? null;
-                    $ab     = $abIndex[$abKey]  ?? null;
+                    $mr     = $mrIndex[$mrKey] ?? null;
+                    $ab     = $abIndex[$abKey] ?? null;
 
                     if ($mr === null) {
                         $status = 'NOTMARKED';
@@ -681,9 +720,7 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
                     }
                 }
 
-                //POCOR-9611: Totals use first slot of each day as the day indicator.
-                //            LATE counts as present (user requirement) + also increments total_late.
-                //            NO CLASS and NOTMARKED days are excluded from all totals.
+                //POCOR-9611: Totals based on first slot of each day; LATE counts as present too
                 if (in_array($dayFirstStatus, ['PRESENT', 'LATE'], true)) {
                     $totalPresent++;
                 }
@@ -695,13 +732,9 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
                 }
             }
 
-            $totalPresentAlias = $firstRow ? "{$totalPresent} AS total_present" : (string)$totalPresent;
-            $totalLateAlias    = $firstRow ? "{$totalLate}    AS total_late"    : (string)$totalLate;
-            $totalAbsentAlias  = $firstRow ? "{$totalAbsent}  AS total_absent"  : (string)$totalAbsent;
-
-            $cols[] = $totalPresentAlias;
-            $cols[] = $totalLateAlias;
-            $cols[] = $totalAbsentAlias;
+            $cols[] = $firstRow ? "{$totalPresent} AS total_present" : (string)$totalPresent;
+            $cols[] = $firstRow ? "{$totalLate}    AS total_late"    : (string)$totalLate;
+            $cols[] = $firstRow ? "{$totalAbsent}  AS total_absent"  : (string)$totalAbsent;
 
             $unionParts[] = 'SELECT ' . implode(', ', $cols);
             $firstRow = false;
@@ -712,14 +745,13 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
 
     /**
      * Returns an empty-result SQL with the correct column aliases when there are no students.
-     * The outer wrapper selects from this subquery, so the aliases must exist even for zero rows.
      */
-    private function _buildEmptySQL(array $week, array $slots): string
+    private function _buildEmptySQL(array $month, array $slots): string
     {
-        //POCOR-9611: NULL literals give the correct alias set; WHERE 1=0 ensures zero rows
+        //POCOR-9611: NULL literals with correct aliases; WHERE 1=0 ensures zero rows
         $cols = ['NULL AS openemis_no', 'NULL AS student_name', 'NULL AS class_name',
-                 'NULL AS attendance_by', 'NULL AS week_label'];
-        foreach ($week['days'] as $dayKey => $_) {
+                 'NULL AS attendance_by', 'NULL AS month_label'];
+        foreach ($month['days'] ?? [] as $dayKey => $_) {
             foreach ($slots as $slot) {
                 $cols[] = "NULL AS col_{$dayKey}_{$slot['key']}";
             }

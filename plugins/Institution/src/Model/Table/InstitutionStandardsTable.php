@@ -31,15 +31,18 @@ class InstitutionStandardsTable extends AppTable
         'Institution.InstitutionStandardStudentAbsences',
         'Institution.InstitutionStandardStudentAbsenceType',
         'Institution.InstitutionStudentWeeklyAttendance',
+        'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
     ];
     private const FEATURES_WITH_CLASS = [
         'Institution.InstitutionStandardStudentAbsences',
         'Institution.InstitutionStandardStudentAbsenceType',
         'Institution.InstitutionStudentWeeklyAttendance',
+        'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
     ];
     private const FEATURES_WITH_MONTH = [
         'Institution.InstitutionStandardStudentAbsences',
         'Institution.StudentAttendanceSummary',
+        'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
     ];
 
     /**
@@ -245,8 +248,8 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
-            //POCOR-9611: Weekly Attendance requires a specific grade — no "All Grades" option
-            if ($report === 'Institution.InstitutionStudentWeeklyAttendance') {
+            //POCOR-9611: Weekly/Monthly Attendance requires a specific grade — no "All Grades" option
+            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
                 $attr['options']          = $gradeOptions;
                 $attr['attr']['required'] = true;
             } else {
@@ -323,9 +326,8 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']   = 'select';
             $attr['select'] = false;
             $attr['onChangeReload'] = true;
-            //POCOR-9611: Weekly Attendance requires a specific class — mixed modes (period vs subject)
-            //            would produce incoherent column headings across classes
-            if ($report === 'Institution.InstitutionStudentWeeklyAttendance') {
+            //POCOR-9611: Weekly/Monthly Attendance requires a specific class — mixed modes per class
+            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
                 $attr['options']          = $classes;
                 $attr['attr']['required'] = true;
             } else {
@@ -1010,6 +1012,15 @@ class InstitutionStandardsTable extends AppTable
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
+            //POCOR-9611: Monthly Attendance requires a specific month
+            if (($data['feature'] ?? '') === 'Institution.InstitutionStudentMonthlyAttendance') {
+                $attr['attr']['required'] = true;
+            }
+            //POCOR-9611: Default to current month — inject into request so ControllerAction renders it selected
+            if (empty($data['month'])) {
+                $data['month'] = date('m');
+                $this->request = $this->request->withData($alias, $data);
+            }
             return $attr;
         }
     }
@@ -1023,7 +1034,8 @@ class InstitutionStandardsTable extends AppTable
         }
 
         $academicPeriodId = (int)($data['academic_period_id'] ?? 0);
-        $weekOptions = [];
+        $weekOptions    = [];
+        $currentWeekKey = null; //POCOR-9611: declared at function scope so the default-inject below always sees it
 
         if ($academicPeriodId > 0) {
             $conn = ConnectionManager::get('default');
@@ -1073,6 +1085,10 @@ class InstitutionStandardsTable extends AppTable
 
                     if ($todayStr >= $startStr && $todayStr <= $endStr) {
                         $label = sprintf(__('Current Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
+                        $currentWeekKey = $startStr; //POCOR-9611: today falls in this week
+                    } elseif ($todayStr > $endStr) {
+                        $currentWeekKey = $startStr; //POCOR-9611: keep advancing — last past week becomes default when today is beyond the period
+                        $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
                     } else {
                         $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
                     }
@@ -1087,11 +1103,16 @@ class InstitutionStandardsTable extends AppTable
             }
         }
 
-        $attr['options']              = $weekOptions;
-        $attr['type']                 = 'select';
-        $attr['select']               = false;
-        $attr['onChangeReload']       = false;
-        $attr['attr']['required']     = true; //POCOR-9611: week is required for this report
+        $attr['options']          = $weekOptions;
+        $attr['type']             = 'select';
+        $attr['select']           = false;
+        $attr['onChangeReload']   = false;
+        $attr['attr']['required'] = true; //POCOR-9611: week is required for this report
+        //POCOR-9611: Default to current/latest past week — inject into request so ControllerAction renders it selected
+        if (empty($data['week_start_day']) && $currentWeekKey !== null) {
+            $data['week_start_day'] = $currentWeekKey;
+            $this->request = $this->request->withData($alias, $data);
+        }
         return $attr;
     }
 
