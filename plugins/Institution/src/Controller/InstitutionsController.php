@@ -3321,7 +3321,8 @@ class InstitutionsController extends AppController
 
             'checkConfigurationForExternalSearch',
             'studentCustomFields',
-            'staffCustomFields'
+            'staffCustomFields',
+            'HistoryPdf',
         ];
 
         $furtherActions = [
@@ -10092,6 +10093,106 @@ class InstitutionsController extends AppController
     public function InfrastructureTelephonesHistory()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureTelephonesHistory']);
+    }
+
+    //POCOR-4681
+    public function HistoryPdf()
+    {
+        $this->autoRender = false;
+        $pass   = $this->request->getParam('pass');
+        $params = !empty($pass[0]) ? $this->paramsDecode($pass[0]) : [];
+
+        $modelType = $params['model'] ?? 'Institution';
+
+        // Config per model type: which ORM table to use, which FK to filter, to build the label
+        $modelConfig = [
+            'Institution' => [
+                'tableClass'   => 'Institution.InstitutionHistories',
+                'filterField'  => 'institution_id',
+                'filterId'     => $params['institution_id'] ?? null,
+                'entityTable'  => 'Institution.Institutions',
+                'entityFields' => ['id', 'name', 'code'],
+                'subjectLabel' => function ($e) {
+                    return h($e->name) . ' (' . h($e->code) . ')';
+                },
+                'title'        => __('Institution History'),
+                'filePrefix'   => 'institution_history',
+            ],
+            'User' => [
+                'tableClass'   => 'User.UserHistories',
+                'filterField'  => 'security_user_id',
+                'filterId'     => $params['security_user_id'] ?? null,
+                'entityTable'  => 'User.Users',
+                'entityFields' => ['id', 'first_name', 'last_name'],
+                'subjectLabel' => function ($e) {
+                    return h(trim($e->first_name . ' ' . $e->last_name));
+                },
+                'title'        => __('User History'),
+                'filePrefix'   => 'user_history',
+            ],
+        ];
+
+        $cfg = $modelConfig[$modelType] ?? $modelConfig['Institution'];
+
+        // Fetch subject entity (institution or user) for the PDF header
+        $entityTable = TableRegistry::getTableLocator()->get($cfg['entityTable']);
+        $entity      = $entityTable->get($cfg['filterId'], ['fields' => $cfg['entityFields']]);
+        $subjectName = ($cfg['subjectLabel'])($entity);
+
+        // Fetch history rows with created_user join
+        $HistoriesTable = TableRegistry::getTableLocator()->get($cfg['tableClass']);
+        $histories = $HistoriesTable->find()
+            ->contain(['CreatedUser' => ['fields' => ['id', 'first_name', 'last_name']]])
+            ->where([$HistoriesTable->aliasField($cfg['filterField']) => $cfg['filterId']])
+            ->order([$HistoriesTable->aliasField('created') => 'DESC'])
+            ->all();
+
+        // Build PDF HTML
+        $html  = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+        $html .= '<style>
+            body { font-family: Arial, sans-serif; font-size: 11px; }
+            h2   { font-size: 14px; margin-bottom: 4px; }
+            p.subtitle { font-size: 11px; color: #555; margin-top: 0; margin-bottom: 12px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { background-color: #4a90d9; color: #fff; padding: 6px 8px; text-align: left; font-size: 11px; }
+            td { padding: 5px 8px; border-bottom: 1px solid #ddd; font-size: 11px; vertical-align: top; }
+            tr:nth-child(even) td { background-color: #f5f5f5; }
+        </style></head><body>';
+        $html .= '<h2>' . $cfg['title'] . '</h2>';
+        $html .= '<p class="subtitle">' . $subjectName . '</p>';
+        $html .= '<table><thead><tr>';
+        $html .= '<th>' . __('Model') . '</th>';
+        $html .= '<th>' . __('Field') . '</th>';
+        $html .= '<th>' . __('Old Value') . '</th>';
+        $html .= '<th>' . __('New Value') . '</th>';
+        $html .= '<th>' . __('Modified By') . '</th>';
+        $html .= '<th>' . __('Modified On') . '</th>';
+        $html .= '</tr></thead><tbody>';
+
+        foreach ($histories as $row) {
+            $modifiedBy = '';
+            if (!empty($row->created_user)) {
+                $modifiedBy = h(trim($row->created_user->first_name . ' ' . $row->created_user->last_name));
+            }
+            $modifiedOn = !empty($row->created) ? $row->created->format('Y-m-d H:i') : '';
+            $html .= '<tr>';
+            $html .= '<td>' . h($row->model) . '</td>';
+            $html .= '<td>' . h($row->field) . '</td>';
+            $html .= '<td>' . h($row->old_value) . '</td>';
+            $html .= '<td>' . h($row->new_value) . '</td>';
+            $html .= '<td>' . $modifiedBy . '</td>';
+            $html .= '<td>' . $modifiedOn . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody></table></body></html>';
+
+        $mpdf = new \Mpdf\Mpdf(['orientation' => 'L']);
+        $mpdf->WriteHTML($html);
+
+        $filename = $cfg['filePrefix'] . '_' . $cfg['filterId'] . '_' . date('Ymd') . '.pdf';
+        $mpdf->Output($filename, 'D');
+        exit;
     }
 
 }

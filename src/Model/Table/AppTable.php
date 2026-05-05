@@ -258,7 +258,7 @@ class AppTable extends Table
      * @return [type]             [description]
      * POCOR-9415, POCOR-9510 more error-save
      */
-    public function formatDateTime($dateInput): string
+    public function formatDateTime($dateInput): string //POCOR-9509: public — called from child tables and view files
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
@@ -271,7 +271,6 @@ class AppTable extends Table
         $inputFormat   = $displayFormat;
 
         try {
-            // Case 1: Already a DateTime object
             if ($dateInput instanceof \DateTimeInterface) {
                 //POCOR-9565[START]
                 return FrozenTime::createFromTimestamp($dateInput->getTimestamp(), $utcTimezone)
@@ -280,7 +279,6 @@ class AppTable extends Table
                 //POCOR-9565[END]
             }
 
-            // Case 2: String input
             if (is_string($dateInput) && trim($dateInput) !== '') {
 
                 // Try parsing EXACT expected format first
@@ -301,12 +299,12 @@ class AppTable extends Table
                     ->format($displayFormat);
                 //POCOR-9565
             }
-
         } catch (\Throwable $e) {
-            Log::error(
-                'formatDateTime error: ' . $e->getMessage(),
-                ['input' => $dateInput]
-            );
+            //POCOR-9509: parsing failed — return a simple readable fallback rather than empty string
+            if ($dateInput instanceof \DateTimeInterface) {
+                return $dateInput->format('d M Y H:i:s');
+            }
+            return is_string($dateInput) ? $dateInput : '';
         }
 
         return '';

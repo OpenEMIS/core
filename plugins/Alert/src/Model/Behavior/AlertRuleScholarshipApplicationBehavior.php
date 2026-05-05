@@ -51,8 +51,6 @@ class AlertRuleScholarshipApplicationBehavior extends AlertRuleBehavior
         'placeholder' => [
             '${threshold.value}' => 'Threshold value.',
             '${day_difference}' => 'Days difference between today and expiry date.',
-            '${requested_amount}' => 'Scholarship application requested amount',
-            '${comments}' => 'Scholarship application comments.',
             '${applicant.first_name}' => 'Applicant first name.',
             '${applicant.middle_name}' => 'Applicant middle name.',
             '${applicant.third_name}' => 'Applicant third name.',
@@ -71,11 +69,8 @@ class AlertRuleScholarshipApplicationBehavior extends AlertRuleBehavior
             '${scholarship.total_amount}' => 'Scholarship total award amount',
             '${scholarship.duration}' => 'Scholarship duration (years)',
             '${scholarship.bond}' => 'Scholarship bond (years)',
-            '${assignee.first_name}' => 'Assignee first name.',
-            '${assignee.middle_name}' => 'Assignee middle name.',
-            '${assignee.third_name}' => 'Assignee third name.',
-            '${assignee.last_name}' => 'Assignee last name.',
-            '${assignee.preferred_name}' => 'Assignee preferred name.'
+            '${assignee.name}' => 'Assignee full name.',
+            '${assignee.email}' => 'Assignee email.'
         ]
     ];
 
