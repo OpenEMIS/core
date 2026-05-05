@@ -2820,6 +2820,12 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'selected' => ['Calendars.Calendars']
             ],
+            'Systems.SystemProcesses' => [
+                'title' => 'Processes',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'System'],
+                'selected' => ['Systems.SystemProcesses']
+            ], //POCOR-9396
 
         ];
 
@@ -2934,7 +2940,7 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Configuration'],
                     'selected' => [
                         'Configurations.Themes',
-                        'Configurations.Webhooks',
+                        //POCOR-9257: Configurations.Webhooks removed — webhooks now live at Webhooks.Webhooks
                         'Configurations.add',
                         'Configurations.view',
                         'Configurations.edit',
@@ -2983,6 +2989,33 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Risk'],
                     'selected' => ['Risks.Risks']
                 ],
+
+                //POCOR-9257: start - Add Webhooks submenu under System Setup
+                'SystemSetup.Webhooks' => [
+                    'title' => 'Webhooks',
+                    'parent' => 'SystemSetup',
+                    'link' => false,
+                ],
+                //POCOR-9257: Setup points to new independent WebhooksController
+                'Webhooks.Webhooks' => [
+                    'title' => 'Setup',
+                    'parent' => 'SystemSetup.Webhooks',
+                    'params' => ['plugin' => 'Configuration', 'controller' => 'Webhooks'], //POCOR-9257
+                    'selected' => ['Webhooks.Webhooks'] //POCOR-9257
+                ],
+                'Webhook.WebhookQueue' => [
+                    'title' => 'Queue',
+                    'parent' => 'SystemSetup.Webhooks',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Webhook.WebhookQueue']
+                ],
+                'Webhook.WebhookLogs' => [
+                    'title' => 'Log',
+                    'parent' => 'SystemSetup.Webhooks',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Webhook.WebhookLogs']
+                ],
+                //POCOR-9257: end
             ];
             $menuNavigation = array_merge($navigations, $getDropdownMenu);
             return $menuNavigation;
@@ -3816,19 +3849,23 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Alerts']
                     ],
-
                     'Alerts.AlertRules' => [
                         'title' => 'Alert Rules',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.AlertRules']
                     ],
-
                     'Alerts.Logs' => [
                         'title' => 'Logs',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
+                    ],
+                    'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
+                        'title' => 'Queue',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Queue']
                     ],
                     'Alerts.Notices' => [
                         'title' => 'Notices',
@@ -3836,6 +3873,7 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Notices']
                     ],
+
                 ];
             }
         } else {
@@ -3865,12 +3903,19 @@ class NavigationComponent extends Component
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
                 ],
+                'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
+                    'title' => 'Queue',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Queue']
+                ],
                 'Alerts.Notices' => [
                     'title' => 'Notices',
                     'parent' => 'Administration.Communications',
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Notices']
                 ],
+
             ];
         }
         return $navfour;

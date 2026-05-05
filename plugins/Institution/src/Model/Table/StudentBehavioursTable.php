@@ -5,17 +5,16 @@ use ArrayObject;
 
 use Cake\Datasource\ResultSetInterface;
 use Cake\I18n\Date;
+use Cake\I18n\FrozenDate;
+use Cake\I18n\FrozenTime;
 use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Core\Configure;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
-
 // use Page\Traits\EncodingTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Http\ServerRequest;
@@ -63,22 +62,25 @@ class StudentBehavioursTable extends ControllerActionTable
 
         //if ($this->AccessControl->check(['Institutions', 'StudentBehaviours', 'Excel'])) { // to check execute permission
         ///}
-        $roles = [1,2,3,4,5,6,7,8,9,10,11];
-        $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
-                ->leftJoin(['SecurityFunctions' => 'security_functions'], [
-                    [
-                        'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
-                    ]
-                ])
-                ->where([
-                    'SecurityRoleFunctions.security_role_id IN'=>$roles,
-                    'SecurityFunctions._execute'=>'StaffBehaviours.excel',
-                    'SecurityRoleFunctions._execute' => 1
-                ])
-                ->toArray();
-        if(!empty($QueryResult)){
-            $this->addBehavior('Excel', ['pages' => ['index']]);
-        }
+        //POCOR-9632[START] This code need to verify again commented based on releted ticket
+        // $roles = [1,2,3,4,5,6,7,8,9,10,11];
+        // $QueryResult = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions')->find()
+        //         ->leftJoin(['SecurityFunctions' => 'security_functions'], [
+        //             [
+        //                 'SecurityFunctions.id = SecurityRoleFunctions.security_function_id',
+        //             ]
+        //         ])
+        //         ->where([
+        //             'SecurityRoleFunctions.security_role_id IN'=>$roles,
+        //             'SecurityFunctions._execute'=>'StaffBehaviours.excel',
+        //             'SecurityRoleFunctions._execute' => 1
+        //         ])
+        //         ->toArray();
+        // if(!empty($QueryResult)){
+        //     $this->addBehavior('Excel', ['pages' => ['index']]);
+        // }
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        //POCOR-9632[END]
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['StudentBehaviours' =>['id']
             ]
@@ -350,10 +352,16 @@ class StudentBehavioursTable extends ControllerActionTable
 
         $selectedCategories = $this->queryString('category_id', $categories);
         $this->advancedSelectOptions($categories, $selectedCategories);
-        // End setup class
+        $selectedCategories = $this->queryString('category_id', $categories);
+        $this->advancedSelectOptions($categories, $selectedCategories);
+        //POCOR-9652 start
+        $query->contain(['Statuses']);
+        if(!empty($this->request->getQuery('category_id')))
+        {
+            $query->where(['Statuses.category' => $this->request->getQuery('category_id') ]);
+        }//POCOR-9652 end
 
         $this->controller->set(compact('periodOptions', 'classOptions','categories'));
-
         if ($selectedClass > 0) {
             $query->innerJoin(
                 ['class_student' => 'institution_class_students'],
@@ -363,7 +371,6 @@ class StudentBehavioursTable extends ControllerActionTable
                 ]
             );
         }
-
         // will need to check for search by name: AdvancedNameSearchBehavior
 
         // POCOR-2547 Adding sortWhiteList to $options
@@ -909,6 +916,7 @@ class StudentBehavioursTable extends ControllerActionTable
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
+        $extraField = [];
 
         $extraField[] = [
             'key' => 'Students.openemis_no',
@@ -925,18 +933,20 @@ class StudentBehavioursTable extends ControllerActionTable
         ];
 
         $extraField[] = [
-            'key' => 'StudentBehaviour.date_of_behaviour',
+            'key' => 'StudentBehaviours.date_of_behaviour',
             'field' => 'date_of_behaviour',
             'type' => 'date',
             'label' => __('Date Of Behaviour')
         ];
 
-        $extraField[] = [
-            'key' => 'StudentBehaviour.title',
-            'field' => 'title',
-            'type' => 'string',
-            'label' => __('Title')
-        ];
+        //POCOR-9630
+        // $extraField[] = [
+        //     'key' => 'StudentBehaviours.title',
+        //     'field' => 'title',
+        //     'type' => 'string',
+        //     'label' => __('Title')
+        // ];
+        //POCOR-9630
 
         $extraField[] = [
             'key' => 'StudentBehaviourCategories.name',
@@ -945,49 +955,74 @@ class StudentBehavioursTable extends ControllerActionTable
             'label' => __('Category')// POCOR 6154
         ];
 
-
         $fields->exchangeArray($extraField);
     }
 
+    //POCOR-9630 ** Some changes in query
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $institutionId = $this->getInstitutionID();
-        // POCOR 6154
-        $academicPeriod = ($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent() ;
-        // POCOR 6154
-        $User = TableRegistry::getTableLocator()->get('security_users');
+        $academicPeriodId = $this->request->getQuery('academic_period_id');
+        if ($academicPeriodId === null || $academicPeriodId === '') {
+            $academicPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+        $academicPeriodId = (int)$academicPeriodId;
 
-        // POCOR 6154
+        // Match index list: filter by date_of_behaviour within the selected academic period, not only academic_period_id
+        // (records can appear on the grid while FK academic_period_id is null or stale).
         $query
-        ->select([
-            'title' => 'StudentBehaviours.title',
-            'category_name' => 'StudentBehaviourCategories.name',
-            'date_of_behaviour' => 'StudentBehaviours.date_of_behaviour',
-            'openemis_no' => 'Students.openemis_no',
-            'student_name' => $User->find()->func()->concat([
-                'first_name' => 'literal',
-                " ",
-                'last_name' => 'literal'
+            ->select([
+                'category_name' => 'StudentBehaviourCategories.name',
+                'date_of_behaviour' => 'StudentBehaviours.date_of_behaviour',
+                // 'title' => 'StudentBehaviours.title',
+                'openemis_no' => 'Students.openemis_no',
+                'student_name' => $query->func()->concat([
+                    'Students.first_name' => 'literal',
+                    ' ',
+                    'Students.last_name' => 'literal',
+                ]),
             ])
-        ])
-        ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()],[
-            $this->AcademicPeriods->aliasField('id').' = ' . 'StudentBehaviours.academic_period_id'
-        ])
-        ->LeftJoin([$this->Students->getAlias() => $this->Students->getTable()],[
-            $this->Students->aliasField('id').' = ' . 'StudentBehaviours.student_id'
-        ])
-        ->LeftJoin([$this->Institutions->getAlias() => $this->Institutions->getTable()],[
-            $this->Institutions->aliasField('id').' = ' . 'StudentBehaviours.institution_id'
-        ])
-        ->LeftJoin([$this->StudentBehaviourCategories->getAlias() => $this->StudentBehaviourCategories->getTable()],[
-            $this->StudentBehaviourCategories->aliasField('id').' = ' . 'StudentBehaviours.student_behaviour_category_id'
-        ])
-        ->where([
-            'StudentBehaviours.academic_period_id' =>  $academicPeriod,
-            'StudentBehaviours.institution_id' =>  $institutionId
-        ]);
-        // POCOR 6154
+            ->LeftJoin([$this->AcademicPeriods->getAlias() => $this->AcademicPeriods->getTable()], [
+                $this->AcademicPeriods->aliasField('id') . ' = ' . 'StudentBehaviours.academic_period_id',
+            ])
+            ->LeftJoin([$this->Students->getAlias() => $this->Students->getTable()], [
+                $this->Students->aliasField('id') . ' = ' . 'StudentBehaviours.student_id',
+            ])
+            ->LeftJoin([$this->Institutions->getAlias() => $this->Institutions->getTable()], [
+                $this->Institutions->aliasField('id') . ' = ' . 'StudentBehaviours.institution_id',
+            ])
+            ->LeftJoin([$this->StudentBehaviourCategories->getAlias() => $this->StudentBehaviourCategories->getTable()], [
+                $this->StudentBehaviourCategories->aliasField('id') . ' = ' . 'StudentBehaviours.student_behaviour_category_id',
+            ])
+            ->where([$this->aliasField('institution_id') => $institutionId]);
+
+        if ($academicPeriodId > 0) {
+            $query->find('inPeriod', [
+                'field' => 'date_of_behaviour',
+                'academic_period_id' => $academicPeriodId,
+            ]);
+        }
     }
+
+    //POCOR-9630
+    /**
+     * ExcelBehavior getValue() routes type "date" here; without this, the Date Of Behaviour column is blank.
+     */
+    public function onExcelRenderDate(EventInterface $event, Entity $entity, $attr)
+    {
+        $field = $entity->{$attr['field']} ?? null;
+
+        if ($field === null || $field === '') {
+            return '';
+        }
+        if ($field instanceof FrozenTime || $field instanceof FrozenDate) {
+            return $this->formatDate($field);
+        }
+        $date = new FrozenTime($field);
+
+        return $this->formatDate($date);
+    }
+    //POCOR-9630
 
     /*POCOR-5177 starts*/
     public function deleteBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -1258,6 +1293,35 @@ class StudentBehavioursTable extends ControllerActionTable
         return $attr;
     }
     //POCOR-8665 End
+
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        // populate 'to be deleted' field
+        $student = TableRegistry::getTableLocator()->get('Security.Users')->get($entity->student_id);
+        $entity->showDeletedValueAs = $student['first_name'] . ' ' . $student['last_name'];
+    }
+
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        
+        $this->StudentBehaviourAttachments = TableRegistry::getTableLocator()->get('Institution.StudentBehaviourAttachments');
+        // Check if any associated records exist in any related tables.
+        $associatedRecordsExist = 
+            $this->StudentBehaviourAttachments->exists([
+                'student_behaviour_id' => $entity->id
+            ]);
+
+            
+        // If associated records exist, show alert message and abort deletion
+        if ($associatedRecordsExist) {
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            
+            $url = $this->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        }
+    }
 }
 
 

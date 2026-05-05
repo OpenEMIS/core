@@ -26,7 +26,6 @@ use Cake\ORM\Table;
 use Cake\Chronos\Chronos;
 
 // POCOR-9406
-
 class StudentAttendancesTable extends ControllerActionTable
 {
     private $allDayOptions = [];
@@ -1172,7 +1171,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
                             $newArray[] = [
                                 'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
-                                'field' => 'week_attendance_status_' . $options[$value] . '-' . $PeriodData['name'],
+                                'field' => 'week_attendance_status_' . $options[$value] . '-' . $PeriodData['id'],
                                 'type' => 'string',
                                 'label' => $options[$value] . '-' . $PeriodData['name']
                             ];
@@ -1181,7 +1180,7 @@ class StudentAttendancesTable extends ControllerActionTable
                     } else {
                         $newArray[] = [
                             'key' => 'StudentAttendances.week_attendance_status_' . $options[$value] . '-' . $getSubject->name,
-                            'field' => 'week_attendance_status_' . $options[$value] . '-' . $getSubject->name,
+                            'field' => 'week_attendance_status_' . $options[$value] . '-' . $getSubject->id,
                             'type' => 'string',
                             'label' => $options[$value] . '-' . $getSubject->name
                         ];
@@ -1265,6 +1264,7 @@ class StudentAttendancesTable extends ControllerActionTable
 
         if ($query) {
             $results = $query->all();
+
             foreach ($results as $row) {
                 $studentId = $row->student_id;
                 $date = $row->date ?? '';
@@ -1279,10 +1279,15 @@ class StudentAttendancesTable extends ControllerActionTable
         $date = $entity->date ?? null;
         if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
             $row = $this->_absenceDataCache[$entity->student_id][$date];
+            // marked_date is NULL when attendance was never marked for this day.
+            // Only show a status when the teacher actually submitted attendance.
+            if (empty($row->marked_date)) {
+                return '';
+            }
             $absenceTypeName = $row->absence_type_name ?? 'Present';
             return __($absenceTypeName);
         }
-        return 'Present';
+        return ''; // No record in cache — attendance not marked
     }
 
     // POCOR-9572: Excel export methods for flat field structure
@@ -1299,10 +1304,14 @@ class StudentAttendancesTable extends ControllerActionTable
         $date = $entity->date ?? null;
         if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
             $row = $this->_absenceDataCache[$entity->student_id][$date];
+            // POCOR-9643 return blank when attendance was never marked for this day
+            if (empty($row->marked_date)) {
+                return '';
+            }
             $period = $row->period ?? 1;
             return 'Period ' . $period;
         }
-        return 'Period 1';
+        return ''; // attendance not marked
     }
 
     public function onExcelGetSubject(EventInterface $event, Entity $entity)
@@ -1327,24 +1336,9 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function onExcelGetStudentStatuses(EventInterface $event, Entity $entity)
     {
-        // Get cached data for this student
-        static $absenceDataCache = null;
-        if ($absenceDataCache === null) {
-            $absenceDataCache = [];
-            $query = $this->_absenceData;
-            if ($query) {
-                $results = $query->all();
-                foreach ($results as $row) {
-                    $studentId = $row->student_id;
-                    $date = $row->date ?? '';
-                    $absenceDataCache[$studentId][$date] = $row;
-                }
-            }
-        }
-
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             return $row->student_status ?? '';
         }
         return '';
@@ -1366,10 +1360,9 @@ class StudentAttendancesTable extends ControllerActionTable
                 }
             }
         }
-
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             return $row->class_name ?? '';
         }
         return '';
@@ -1443,7 +1436,7 @@ class StudentAttendancesTable extends ControllerActionTable
 //                $date = Chronos::createFromFormat($systemDateFormat, $rawDate);
                 $normalizedDate = $date->format('Y-m-d');
             } catch (\Exception $e) {
-                Log::warning("Invalid date format in Attendance params: '$rawDate' using format '$systemDateFormat'");
+//                Log::warning("Invalid date format in Attendance params: '$rawDate' using format '$systemDateFormat'");
                 $normalizedDate = $rawDate; // fallback — still use raw string, but might fail later
             }
         }
@@ -2455,7 +2448,6 @@ SQL;
                     },
                 ])
                     ->toArray();
-                //                    $this->log($wideQueryResult,'debug');
                 foreach ($wideQueryResult as $student => $markday) {
                     if (isset($WeekDaysAbsenceArray[$student])) {
                         $WeekDaysAbsenceArray[$student][$weekday][$periodId] = $markday[$date][$periodId];
@@ -2466,6 +2458,8 @@ SQL;
                 }
             }
         }
+        $sampleKeys = array_slice(array_keys($WeekDaysAbsenceArray), 0, 2);
+        $sample = array_intersect_key($WeekDaysAbsenceArray, array_flip($sampleKeys));
         return $WeekDaysAbsenceArray;
     }
 
@@ -2605,22 +2599,18 @@ SQL;
                     if (isset($WeekDaysAbsenceArray[$studentId])) {
                         $row->week_attendance = $WeekDaysAbsenceArray[$studentId];
                         $row->current = date("d/m/Y", strtotime($weekStartDay)) . ' - ' . date("d/m/Y", strtotime($weekEndDay));
-
-                        if (isset($this->request) && ('excel' === $this->request->pass[0])) {
-                            foreach ($WeekDaysAbsenceArray[$studentId] as $key => $value) {
-                                $day_value = "";
-                                if (sizeof($value) == 1) {
-                                    $day_value = $value[1];
+                        foreach ($WeekDaysAbsenceArray[$studentId] as $key => $value) {
+                            foreach ($value as $period_key => $period_value) {
+                                if ($period_value == 'NOTMARKED') {
+                                    $period_value = '';
                                 } else {
-                                    foreach ($value as $period_key => $period_value) {
-                                        $day_value = $day_value . "; $period_key: " . $period_value;
-                                    }
-                                    $day_value = trim($day_value, '; ');
+
                                 }
-                                $row->{'week_attendance_status_' . $key} = $day_value;
+                                $row->{'week_attendance_status_' . $key . '-' . $period_key} = $period_value;
                             }
                         }
                     }
+
                     return $row;
                 });
             });

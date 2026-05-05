@@ -38,22 +38,24 @@ class DashboardController extends AppController
         //$this->triggerAutomatedStudentWithdrawalShell();
         //$this->triggerInstitutionClassSubjectsShell(); // By Anand Stop the InstitutionClassSubjects shell
 
-        $user = $this->Auth->user();
-        if(!$user){
-            return;
-        }
-        $userId = $user['id'];
-        $isSuperAdmin = !empty($user['super_admin']);
-        if (!$this->useCacheInCallAlerts) {
-            $this->callAlerts($userId, $isSuperAdmin);
-            return;
-        }
-
-        $cacheKey = 'alerts_triggered_' . $userId . '_' . FrozenTime::now()->format('Y-m-d-H'); // e.g. every hour
-        if (!Cache::read($cacheKey)) {
-            $this->callAlerts($userId, $isSuperAdmin);
-            Cache::write($cacheKey, true, 'default');
-        }
+        //POCOR-9509: start - stop triggering alerts from Dashboard and rely on scheduled Laravel commands instead
+//        $user = $this->Auth->user();
+//        if(!$user){
+//            return;
+//        }
+//        $userId = $user['id'];
+//        $isSuperAdmin = !empty($user['super_admin']);
+//        if (!$this->useCacheInCallAlerts) {
+//            $this->callAlerts($userId, $isSuperAdmin);
+//            return;
+//        }
+//
+//        $cacheKey = 'alerts_triggered_' . $userId . '_' . FrozenTime::now()->format('Y-m-d-H'); // e.g. every hour
+//        if (!Cache::read($cacheKey)) {
+//            $this->callAlerts($userId, $isSuperAdmin);
+//            Cache::write($cacheKey, true, 'default');
+//        }
+        //POCOR-9509: end - stop triggering alerts from Dashboard and rely on scheduled Laravel commands instead
 
     }
 
@@ -183,8 +185,9 @@ class DashboardController extends AppController
         }
 
         /*POCOR-6395 ends*/
-        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
-        $StudentStatusUpdates->checkRequireUpdate();
+        //POCOR-9509: checkRequireUpdate does nothing (triggerUpdateStudentStatusShell is commented out) but scans student_status_updates on every dashboard load — skip it
+//        $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
+//        $StudentStatusUpdates->checkRequireUpdate();
 
         $this->set('ngController', 'DashboardCtrl as DashboardController');
         if ($this->AccessControl->isAdmin()) {
@@ -727,8 +730,8 @@ class DashboardController extends AppController
         if(empty($userRoleIds)){
             return [];
         }
-        //POCOR-9429 end 
-           
+        //POCOR-9429 end
+
         return $alertsTable->find()
             ->distinct(['Alerts.id'])
             ->matching('AlertRules.SecurityRoles', function ($q) use ($userRoleIds) {
