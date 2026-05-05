@@ -317,7 +317,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
         this.callPostMealAPI(item);
         this.setDashboard();
       } else if (indexInArray2.index != -1 && indexInArray2.data == null) {
-        item.meal_received_id = 1;
+        item.meal_received_id = item.default_meal_receive_id ?? 1; //POCOR-9633: use API-supplied default instead of hardcoded Received
         item.meal_benefit_id = 1;
         this.callPostMealAPI(item);
         this.setDashboard();
@@ -869,7 +869,7 @@ export class StudentMealsComponent extends KdPageBase implements OnInit {
     // console.log(this.selected_meal_program, "selected_meal_program");
 
     if (this.academic_Period && this.academic_period_day && this.selected_academic_class && this.selected_meal_program) {
-      this.Rest.getWithToken(`institutions/${this.institution_id}/meal-students?academic_period_id=${this.academic_Period}&day_id=${this.academic_period_day}&institution_class_id=${this.selected_academic_class}&meal_program_id=${this.selected_meal_program}`).subscribe({
+      this.Rest.getWithToken(`institution-class-students?_scope=withMeals&_conditions=institution_class_students.institution_id:${this.institution_id};institution_class_students.academic_period_id:${this.academic_Period};institution_class_students.institution_class_id:${this.selected_academic_class}&_date=${this.academic_period_day}&_meal_programmes_id=${this.selected_meal_program}`, true).subscribe({ //POCOR-9633: use v5 institution-class-students with withMeals scope; qualified table.column in _conditions to avoid ambiguity
         next: (response: any) => {
           if (response && response?.data?.data?.length > 0) {
             let newDataRow = [];

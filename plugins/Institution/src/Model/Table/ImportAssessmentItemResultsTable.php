@@ -94,7 +94,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         //POCOR-9584: buttons visible only when selection is complete
         $alias = $this->getAlias();
         $educationSubjectId = $request->getData($alias . '.education_subject_id') 
-            ?? $this->ControllerAction->getQueryString('education_subject_id');
+            ?? $this->request->getQuery('education_subject_id'); 
 
         if (empty($educationSubjectId)) {
             unset($buttons[0]);
@@ -107,7 +107,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         $request = $this->request;
         // Intellectual clear: only on fresh GET without selection
         $classId = $request->getData($this->getAlias() . '.institution_class_id')
-            ?? $this->ControllerAction->getQueryString('institution_class_id');
+            ?? $this->request->getQuery('institution_class_id');
 
         if ($request->is('post') || ($request->is('get') && $classId)) {
             return;
@@ -192,7 +192,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
 
             $alias = $this->getAlias();
             $academicPeriodId = $request->getData($alias . '.academic_period_id')
-                ?? $this->ControllerAction->getQueryString('academic_period_id')
+                ?? $request->getQuery('academic_period_id')
                 ?? $this->AcademicPeriods->getCurrent();
 
             $classNameOption = $this->InstitutionClasses->find('list', ['keyField' => 'id', 'valueField' => 'name'])
@@ -216,7 +216,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
         if ($action == 'add') {
             $alias = $this->getAlias();
             $classId = $request->getData($alias . '.institution_class_id')
-                ?? $this->ControllerAction->getQueryString('institution_class_id');
+                ?? $request->getQuery('institution_class_id');
 
             if (empty($classId)) {
                 $attr['options'] = [];
@@ -224,7 +224,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
             }
 
             $academicPeriodId = $request->getData($alias . '.academic_period_id')
-                ?? $this->ControllerAction->getQueryString('academic_period_id')
+                ?? $request->getQuery('academic_period_id')
                 ?? $this->AcademicPeriods->getCurrent();
             
             $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
@@ -265,7 +265,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
     {
         $alias = $this->getAlias();
         $subjectId = $this->request->getData($alias . '.education_subject_id') 
-            ?? $this->ControllerAction->getQueryString('education_subject_id');
+            ?? $this->request->getQuery('education_subject_id');
 
         $EducationSubjectsResults = $this->EducationSubjects->find()
                         ->select(['id', 'code', 'name'])
@@ -282,11 +282,10 @@ class ImportAssessmentItemResultsTable extends AppTable {
     {
         $alias = $this->getAlias();
         $classId = $this->request->getData($alias . '.institution_class_id') 
-            ?? $this->ControllerAction->getQueryString('institution_class_id');
+            ?? $this->request->getQuery('institution_class_id');
         $academicPeriodId = $this->request->getData($alias . '.academic_period_id') 
-            ?? $this->ControllerAction->getQueryString('academic_period_id') 
+            ?? $this->request->getQuery('academic_period_id') 
             ?? $this->AcademicPeriods->getCurrent();
-
         $educationData = $this->InstitutionClassGrades->find()
                         ->where(['institution_class_id' => $classId])
                         ->first();
@@ -311,7 +310,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
     {
         $alias = $this->getAlias();
         $classId = $this->request->getData($alias . '.institution_class_id') 
-            ?? $this->ControllerAction->getQueryString('institution_class_id');
+            ?? $this->request->getQuery('institution_class_id');
 
         $classData = $this->InstitutionClasses->find()
                         ->select(['id', 'name'])
@@ -358,9 +357,9 @@ class ImportAssessmentItemResultsTable extends AppTable {
     {
         $alias = $this->getAlias();
         $classId = $this->request->getData($alias . '.institution_class_id') 
-            ?? $this->ControllerAction->getQueryString('institution_class_id');
+            ??  $this->request->getQuery('institution_class_id');
         $academicPeriodId = $this->request->getData($alias . '.academic_period_id') 
-            ?? $this->ControllerAction->getQueryString('academic_period_id') 
+            ??  $this->request->getQuery('academic_period_id') 
             ?? $this->AcademicPeriods->getCurrent();
 
         $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
@@ -404,7 +403,7 @@ class ImportAssessmentItemResultsTable extends AppTable {
                         ->first();
         $tempRow['assessment_id'] = $assessment->assessment_id;
 
-        $maxvalue = TableRegistry::getTableLocator()->get('Assessment.Assessments')->find()
+        /*$maxvalue = TableRegistry::getTableLocator()->get('Assessment.Assessments')->find()
             ->select(['maximumvalue' => 'AssessmentGradingTypes.max'])
             ->innerJoin(['AssessmentItems' => 'assessment_items'], ['AssessmentItems.assessment_id = Assessments.id'])
             ->innerJoin(['AssessmentItemsGradingTypes' => 'assessment_items_grading_types'], [
@@ -423,8 +422,39 @@ class ImportAssessmentItemResultsTable extends AppTable {
                 'InstitutionClassGrades.institution_class_id' => $classId,
                 'AssessmentItems.education_subject_id' => $tempRow['education_subject_id'],
                 'AssessmentItemsGradingTypes.assessment_period_id' => $tempRow['assessment_period_id']
-            ])->first();
+            ])->first();*/
+            $this->AssessmentItemsGradingTypes = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemsGradingTypes');
+		$this->AssessmentGradingTypes = TableRegistry::getTableLocator()->get('Assessment.AssessmentGradingTypes');
+        $maxvalue = $this->Assessments->find()
+		->select(['maximumvalue' => 'AssessmentGradingTypes.max'])
+		 ->InnerJoin([$this->AssessmentItems->getAlias() => $this->AssessmentItems->getTable()],[
+                                    $this->AssessmentItems->aliasField('assessment_id = ') . $this->Assessments->aliasField('id')
+                                ])
+		->InnerJoin([$this->AssessmentItemsGradingTypes->getAlias() => $this->AssessmentItemsGradingTypes->getTable()],[
+                                    $this->AssessmentItemsGradingTypes->aliasField('assessment_id = ') . $this->AssessmentItems->aliasField('assessment_id'),
+									
+                                    $this->AssessmentItemsGradingTypes->aliasField('education_subject_id = ') . $this->AssessmentItems->aliasField('education_subject_id')
+                                ])
+        //START:POCOR-6640
+		// ->InnerJoin([$this->AssessmentGradingTypes->getAlias() => $this->AssessmentGradingTypes->getTable()],[
+        //                             $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
+        ->InnerJoin([$this->AssessmentGradingTypes->getAlias() => $this->AssessmentGradingTypes->getTable()],[
+                                   $this->AssessmentGradingTypes->aliasField('id =') . $this->AssessmentItemsGradingTypes->aliasField('assessment_grading_type_id')
+                                ])// starts POCOR-6682 i've replace to code to ID because wrong code id pick
+        //END:POCOR-6640
+		->InnerJoin([$this->AssessmentPeriods->getAlias() => $this->AssessmentPeriods->getTable()],[
+                                    $this->AssessmentPeriods->aliasField('assessment_id =') . $this->Assessments->aliasField('id'),
 
+                                    $this->AssessmentPeriods->aliasField('id = ') . $this->AssessmentItemsGradingTypes->aliasField('assessment_period_id')	// starts POCOR-6682
+                                ])									
+		->InnerJoin([$this->InstitutionClassGrades->getAlias() => $this->InstitutionClassGrades->getTable()],[
+                                    $this->InstitutionClassGrades->aliasField('education_grade_id =') . $this->Assessments->aliasField('education_grade_id')
+                                ])
+		->where([$this->InstitutionClassGrades->aliasField('institution_class_id') => $classId,
+                    $this->AssessmentItems->aliasField('education_subject_id') => $tempRow['education_subject_id'],// starts POCOR-6682
+                    $this->AssessmentItemsGradingTypes->aliasField('assessment_period_id') => $tempRow['assessment_period_id']// starts POCOR-6682
+                ])
+		->first();
         if ($assessment && strtotime(date('Y-m-d')) > strtotime($assessment->date_disabled)) {
             $rowInvalidCodeCols['marks'] = __('Date of assessment period is expired.');
             return false;

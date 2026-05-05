@@ -242,6 +242,12 @@ $institutionId = $paramsQuery['institution_id'];
                             <h1 class="data-header">{{$ctrl.allLeaveCount}}</h1>
                         </div>
                     </div>
+                    <div class="data-section"> <?php //POCOR-8135 ?>
+                        <div class="data-field">
+                            <h4><?= __('No. of Staff Absent') ?></h4>
+                            <h1 class="data-header">{{$ctrl.allAbsentCount}}</h1>
+                        </div>
+                    </div>
 <!--                    <div class="data-section">-->
 <!--                        <div class="data-field">-->
 <!--                            <h4>--><?php //= __('No. of Staff on Late') ?><!--</h4>-->

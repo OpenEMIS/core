@@ -114,8 +114,10 @@ class StaffSubjectsTable extends ControllerActionTable {
         $institutionId = $data[0]['institution_id'];
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $AcademicPeriods->getCurrent();
-        $query->contain([
-            'InstitutionSubjects'
+        $query->contain([ //POCOR-9621[START]
+            'InstitutionSubjects' => [
+                'EducationSubjects',
+            ],
         ]);
         //start:POCOR-5274
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $academicPeriodId]);
@@ -146,6 +148,23 @@ class StaffSubjectsTable extends ControllerActionTable {
             $query->where(['InstitutionSubjects.academic_period_id' => $academicPeriodId]);
         }
         //end:POCOR-5274
+        //POCOR-9621[START]
+        // Main table has no string columns, so SearchBehavior never adds conditions; search Name + Education Subject via joins.
+        $search = isset($extra['config']['search']) ? trim((string) $extra['config']['search']) : '';
+        if ($search !== '') {
+            $like = '%' . $search . '%';
+            $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+            $EducationSubjects = TableRegistry::getTableLocator()->get('Education.EducationSubjects');
+            $searchOr = [
+                $InstitutionSubjects->aliasField('name') . ' LIKE' => $like,
+                $EducationSubjects->aliasField('name') . ' LIKE' => $like,
+            ];
+            if ($extra->offsetExists('OR')) {
+                $searchOr = array_merge((array) $extra['OR'], $searchOr);
+            }
+            $extra['OR'] = $searchOr;
+        }
+        //POCOR-9621[END]
         $this->controller->set(compact('academicPeriodOptions','academicPeriodId'));
 
 

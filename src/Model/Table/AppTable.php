@@ -257,44 +257,44 @@ class AppTable extends Table
      * @return [type]             [description]
      * POCOR-9415, POCOR-9510 more error-save
      */
-    public function formatDateTime($dateInput): string
+    public function formatDateTime($dateInput): string //POCOR-9509: public — called from child tables and view files
     {
-        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-
-        $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
-        $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
-
-        $displayFormat = $dateFormat . ' - ' . $timeFormat;
-        $inputFormat   = $displayFormat;
+        try {
+            $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
+            $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
+            $displayFormat = $dateFormat . ' ' . $timeFormat;
+        } catch (\Throwable $e) {
+            $displayFormat = 'd M Y H:i:s'; //POCOR-9509: config unavailable, use safe fallback
+        }
 
         try {
-            // Case 1: Already a DateTime object
             if ($dateInput instanceof \DateTimeInterface) {
                 return FrozenTime::instance($dateInput)->format($displayFormat);
             }
 
-            // Case 2: String input
             if (is_string($dateInput) && trim($dateInput) !== '') {
-
-                // Try parsing EXACT expected format first
-                $date = FrozenTime::createFromFormat(
-                    $inputFormat,
-                    $dateInput
-                );
-
+                $date = FrozenTime::createFromFormat($displayFormat, $dateInput);
                 if ($date !== false) {
                     return $date->format($displayFormat);
                 }
 
-                // Fallback: try ISO / DB formats
+                $formats = ['Y-m-d H:i:s', 'Y-m-d H:i', 'Y-m-d', 'd/m/Y', 'm/d/Y', 'Ymd', 'd M Y'];
+                foreach ($formats as $format) {
+                    $date = FrozenTime::createFromFormat($format, $dateInput);
+                    if ($date !== false) {
+                        return $date->format($displayFormat);
+                    }
+                }
+
                 return (new FrozenTime($dateInput))->format($displayFormat);
             }
-
         } catch (\Throwable $e) {
-            Log::error(
-                'formatDateTime error: ' . $e->getMessage(),
-                ['input' => $dateInput]
-            );
+            //POCOR-9509: parsing failed — return a simple readable fallback rather than empty string
+            if ($dateInput instanceof \DateTimeInterface) {
+                return $dateInput->format('d M Y H:i:s');
+            }
+            return is_string($dateInput) ? $dateInput : '';
         }
 
         return '';
@@ -387,11 +387,7 @@ class AppTable extends Table
     public function onInitializeButtons(EventInterface $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
 
-        // echo '<pre>';
-        // print_r($this->request->params);
-        // echo $this->request->url;
-        // die;
-        // needs clean up
+//         needs clean up
         $controller = $event->getSubject()->_registry->getController();
         $access = $controller->AccessControl;
 
@@ -1002,10 +998,16 @@ class AppTable extends Table
 
     public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons START (table: ' . $this->getAlias() . ')');
+        //Log::debug('[TEMP-LOG] Incoming buttons: ' . print_r($buttons, true));
+
         $id = $this->getEncodedKeys($entity);
+        //Log::debug('[TEMP-LOG] Encoded key: ' . $id);
 
         if (isset($buttons['view'])) {
+            //Log::debug('[TEMP-LOG] View button URL before append: ' . print_r($buttons['view']['url'], true));
             $buttons['view']['url'][] = $id;
+            //Log::debug('[TEMP-LOG] View button URL after append: ' . print_r($buttons['view']['url'], true));
         }
         if (isset($buttons['edit'])) {
             $buttons['edit']['url'][] = $id;
@@ -1021,6 +1023,10 @@ class AppTable extends Table
                 $buttons['remove']['url'][] = $id;
             }
         }
+
+        //Log::debug('[TEMP-LOG] AppTable final buttons: ' . print_r($buttons, true));
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons END');
+
         return $buttons;
     }
 
