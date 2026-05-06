@@ -39,4 +39,7 @@ class SystemsController extends AppController
 
     public function SystemNotices() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.Notices']); }
 
+    //POCOR-9396
+    public function SystemProcesses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.SystemProcesses']); }
+
 }
