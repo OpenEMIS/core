@@ -18,8 +18,8 @@ class DirectoriesController extends AppController
 {
     use SyncUserTrait; //POCOR-9590
 
-    //POCOR-9590: gate for SyncUser — directory import permission
-    protected function syncUserPermission(): array
+    //POCOR-9590: public — also called by DirectoriesTable::addSyncButton to avoid duplicating the ACL triple
+    public function syncUserPermission(): array
     {
         return ['Directories', 'ImportUsers', 'add'];
     }
