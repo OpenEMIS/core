@@ -7,8 +7,8 @@ use User\Model\Behavior\UserBehavior;
 
 trait SyncUserTrait
 {
-    //POCOR-9590: each consuming controller returns the ACL triple that guards its sync action
-    abstract protected function syncUserPermission(): array;
+    //POCOR-9590: public so Table::addSyncButton can delegate here instead of duplicating the triple
+    abstract public function syncUserPermission(): array;
 
     //POCOR-9590: start - review/confirm sync of a user's General-tab fields from the external registry
     public function SyncUser()

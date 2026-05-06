@@ -17,8 +17,8 @@ class StaffController extends AppController
 {
     use SyncUserTrait; //POCOR-9590
 
-    //POCOR-9590: gate for SyncUser — institution staff import permission
-    protected function syncUserPermission(): array
+    //POCOR-9590: public — also called by StaffUserTable::addSyncButton to avoid duplicating the ACL triple
+    public function syncUserPermission(): array
     {
         return ['Institutions', 'ImportStaff', 'add'];
     }
