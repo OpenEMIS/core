@@ -21,6 +21,14 @@ use Cake\Datasource\Exception\RecordNotFoundException; // POCOR-9118
 
 class ConfigExternalDataSourceTable extends ControllerActionTable
 {
+    //POCOR-9590: external data source type names — DB values from config_items.value; never change these without a DB migration
+    const SOURCE_JORDAN_CSPD = 'Jordan CSPD';
+    const SOURCE_UNHCR       = 'UNHCR';
+    const SOURCE_SEYCHELLES  = 'Seychelles Civil Status';
+    const SOURCE_SEYCHELLOIS = 'Seychellois'; //POCOR-9590: alias used in some deployments — always normalise to SOURCE_SEYCHELLES
+    const SOURCE_OPENEMIS    = 'OpenEMIS Core';
+    const SOURCE_CUSTOM      = 'Custom';
+
     public $id;
     public $authenticationType;
 
@@ -49,7 +57,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $alias = $this->getAlias(); // POCOR-8849
         $data = $requestData[$alias];
         $source = $data['label'];
-        if ($source == 'Jordan CSPD') {
+        if ($source == self::SOURCE_JORDAN_CSPD) {
             return $validator
                 ->requirePresence('url')
                 ->requirePresence('username')
@@ -57,14 +65,14 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('first_name_mapping')
                 ->requirePresence('last_name_mapping')
                 ->requirePresence('gender_mapping');
-        } elseif ($source == 'UNHCR') {
+        } elseif ($source == self::SOURCE_UNHCR) {
             return $validator
 //                ->requirePresence('username')
 //                ->requirePresence('password')
                 ->requirePresence('url')
                 ->requirePresence('application_id')
                 ->requirePresence('secret_code');
-        } elseif ($source == 'Seychelles Civil Status' || $source == 'Seychellois') { // POCOR-9481 //POCOR-9590
+        } elseif ($source == self::SOURCE_SEYCHELLES || $source == self::SOURCE_SEYCHELLOIS) { // POCOR-9481 //POCOR-9590
             return $validator
                 ->requirePresence('client_id')->notEmptyString('client_id')
                 ->requirePresence('token_uri')->notEmptyString('token_uri')
@@ -80,7 +88,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->requirePresence('date_of_birth_mapping')->notEmptyString('date_of_birth_mapping')
                 ->requirePresence('gender_mapping')->notEmptyString('gender_mapping')
                 ->requirePresence('nationality_mapping')->notEmptyString('nationality_mapping');
-        } elseif ($source == 'OpenEMIS Core') {
+        } elseif ($source == self::SOURCE_OPENEMIS) {
             // POCOR-9118 start: refactor validation
             // username, api_url, identity_type_id as before
             $validator
@@ -252,7 +260,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         } // POCOR-8849
         if ($action == 'view') { //  POCOR-9118 start
 
-            if ($source == 'OpenEMIS Core') {
+            if ($source == self::SOURCE_OPENEMIS) {
                 if (isset($attributes['api_key'])) {
                     $attributes['api_key'] = '*****';
                 }
@@ -273,7 +281,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 unset($attributes['user_endpoint_uri']);
                 // POCOR-9118 end
             }
-            if ($source == 'Seychelles Civil Status' || $source == 'Seychellois') { // POCOR-9481 //POCOR-9590
+            if ($source == self::SOURCE_SEYCHELLES || $source == self::SOURCE_SEYCHELLOIS) { // POCOR-9481 //POCOR-9590
                 if (isset($attributes['client_secret'])) {
                     $attributes['client_secret'] = '*****';
                 }
@@ -368,20 +376,20 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $data = $requestData[$alias];
         $source = $entity['name'];
 
-        if ($source == 'UNHCR') {
+        if ($source == self::SOURCE_UNHCR) {
             $patchOption['validate'] = true;
             return;
         }
 
-        if ($source == 'Custom') {
+        if ($source == self::SOURCE_CUSTOM) {
             $patchOption['validate'] = 'Custom';
         }
 
-        if ($source == 'Jordan CSPD') {//POCOR-6930
+        if ($source == self::SOURCE_JORDAN_CSPD) {//POCOR-6930
             $patchOption['validate'] = 'JordanCSPD';
         }
 
-        if ($data['value'] != 'Jordan CSPD') {//POCOR-6930 add if condition
+        if ($data['value'] != self::SOURCE_JORDAN_CSPD) {//POCOR-6930 add if condition
             if (empty($data['private_key'])) {
                 $newKey = openssl_pkey_new([
                     "digest_alg" => "sha256",
@@ -457,7 +465,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         $this->field('value', ['visible' => true, 'entity' => $entity]); // POCOR-7981
         $this->field('value_selection', ['visible' => false]); //POCOR-7981 not used field
         switch ($source) {
-            case 'OpenEMIS Core': // POCOR-9118 start
+            case self::SOURCE_OPENEMIS: // POCOR-9118 start
                 $this->field('api_url', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('username', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('password', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => '', 'required' => 'required'], 'autocomplete' => 'off']);
@@ -484,8 +492,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
                 break;
             // POCOR-9481
-            case 'Seychellois': //POCOR-9590
-            case 'Seychelles Civil Status': // POCOR-9481 start
+            case self::SOURCE_SEYCHELLOIS: //POCOR-9590
+            case self::SOURCE_SEYCHELLES: // POCOR-9481 start
                 $this->field('client_id', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('token_uri', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('api_url', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
@@ -508,7 +516,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
 
                 break;
             // POCOR-7981
-            case 'Custom':
+            case self::SOURCE_CUSTOM:
                 $this->field('token_uri');
                 $this->field('record_uri');
                 $this->field('client_id');
@@ -530,7 +538,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('public_key', ['type' => 'text']);
                 break;
             //POCOR-6930 Starts
-            case 'Jordan CSPD':
+            case self::SOURCE_JORDAN_CSPD:
                 $this->field('url');
                 $this->field('username', ['type' => 'string', 'required' => 'required']);
                 $this->field('password', ['type' => 'string', 'required' => 'required']);
@@ -548,7 +556,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 break;//POCOR-6930 Ends
             // POCOR-7981 END
             // POCOR-7981 START
-            case 'UNHCR':
+            case self::SOURCE_UNHCR:
                 $this->field('secret_code');
                 $this->field('url');
                 $this->field('application_id');
