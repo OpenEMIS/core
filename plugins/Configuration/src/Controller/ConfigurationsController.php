@@ -8,6 +8,7 @@ use Cake\Http\Client;
 use Cake\Http\ServerRequest;
 use Page\Traits\EncodingTrait;
 use Cake\Event\EventInterface;
+use Configuration\Model\Table\ConfigExternalDataSourceTable; //POCOR-9590: source name constants
 
 class ConfigurationsController extends AppController
 {
@@ -204,8 +205,8 @@ class ConfigurationsController extends AppController
         //POCOR-9590: read .value (active source name like "Seychelles Civil Status"), not .name (form-field label "Type"). Same convention UserBehavior + PullBehavior use.
         $sourceType = $activeItem->value;
         //POCOR-9590: 'Seychellois' is an alias for 'Seychelles Civil Status' in some deployments — normalize early so DB lookups and routing both work
-        if ($sourceType === 'Seychellois') {
-            $sourceType = 'Seychelles Civil Status';
+        if ($sourceType === ConfigExternalDataSourceTable::SOURCE_SEYCHELLOIS) {
+            $sourceType = ConfigExternalDataSourceTable::SOURCE_SEYCHELLES;
         }
 
         $attrs = $ExternalAttrs->find('list', ['keyField' => 'attribute_field', 'valueField' => 'value'])
@@ -223,7 +224,7 @@ class ConfigurationsController extends AppController
         try {
             $client = new Client(['timeout' => 5, 'ssl_verify_peer' => false, 'ssl_verify_host' => false]);
 
-            if ($sourceType === 'Seychelles Civil Status') {
+            if ($sourceType === ConfigExternalDataSourceTable::SOURCE_SEYCHELLES) {
                 //POCOR-9590: Seychelles uses client_credentials OAuth2 - test by posting to token URI
                 $clientId     = $attrs['client_id'] ?? '';
                 $clientSecret = $attrs['client_secret'] ?? '';
