@@ -11,9 +11,18 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use User\Controller\SyncUserTrait; //POCOR-9590
 
 class StaffController extends AppController
 {
+    use SyncUserTrait; //POCOR-9590
+
+    //POCOR-9590: gate for SyncUser — institution staff import permission
+    protected function syncUserPermission(): array
+    {
+        return ['Institutions', 'ImportStaff', 'add'];
+    }
+
     const APPROVED = 1;
     private $features = [
         // General
@@ -1175,50 +1184,4 @@ class StaffController extends AppController
     }
 
     //POCOR-9590: start - Sync staff identity from external data source with review/diff page
-    //POCOR-9590: PascalCase matches controller URL convention
-    public function SyncUser()
-    {
-        //POCOR-9590: gate — forged URL could bypass the button-level AccessControl check
-        if (!$this->AccessControl->check(['Institutions', 'ImportStaff', 'add'])) {
-            $this->Alert->error('You do not have permission to sync this user.', ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-
-        $pass          = $this->request->getAttribute('params')['pass'] ?? [];
-        $decoded       = !empty($pass[0]) ? $this->ControllerAction->paramsDecode($pass[0]) : [];
-        $userId        = $decoded['user_id'] ?? null;
-        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
-
-        $result = $SecurityUsers->buildExternalUserDiff($userId); //POCOR-9590: OAuth + API + diff in one call
-        if (is_string($result)) {
-            $this->Alert->error($result, ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-        ['user' => $user, 'externalValues' => $externalValues, 'externalGenderId' => $externalGenderId, 'diff' => $diff] = $result;
-
-        if (empty($diff) && !$this->request->is('post')) {
-            if ((int)$user->sync_status !== 1) {
-                $user->sync_status = 1;
-                $SecurityUsers->save($user);
-            }
-            $this->Alert->ok('Already in sync — registry data matches.', ['type' => 'string', 'reset' => true]);
-            return $this->redirect($this->referer());
-        }
-
-        if ($this->request->is('post')) {
-            $SecurityUsers->applySyncToUser($user, $externalValues, $externalGenderId); //POCOR-9590
-            if ($SecurityUsers->save($user)) {
-                $this->Alert->ok('User synced successfully.', ['type' => 'string', 'reset' => true]);
-            } else {
-                $this->Alert->error('Failed to save synced data.', ['type' => 'string', 'reset' => true]);
-            }
-            $originUrl = $this->request->getSession()->read('Sync.origin_url');
-            $this->request->getSession()->delete('Sync.origin_url');
-            return $this->redirect($originUrl ?: $this->referer());
-        }
-
-        $this->request->getSession()->write('Sync.origin_url', $this->referer());
-        $encodedParams = !empty($pass[0]) ? $pass[0] : '';
-        $this->set(compact('user', 'diff', 'externalValues', 'encodedParams'));
-    }
 }
