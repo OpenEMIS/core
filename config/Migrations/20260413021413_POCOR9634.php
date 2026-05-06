@@ -19,7 +19,7 @@ class POCOR9634 extends AbstractMigration
         // update for permission 
         $this->execute("UPDATE security_functions SET _view = 'Filters.index|Filters.view', _edit = 'Filters.edit', _add = 'Filters.add', _delete = 'Filters.remove' WHERE name = 'Filters' AND controller = 'Surveys' AND module = 'Administration' AND category = 'Survey'");
 
-        $this->execute("UPDATE security_functions SET _view = 'Recipients.index|Recipients.view', _edit = NULL, _add = NULL, _delete = NULL WHERE name = 'Recipients' AND controller = 'Surveys' AND module = 'Administration' AND category = 'Survey'");
+        $this->execute("UPDATE security_functions SET _view = 'Recipients.index|Recipients.view', _edit = '', _add = '', _delete = '' WHERE name = 'Recipients' AND controller = 'Surveys' AND module = 'Administration' AND category = 'Survey'");
     }
 
 
