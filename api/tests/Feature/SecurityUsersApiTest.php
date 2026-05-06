@@ -92,7 +92,8 @@ class SecurityUsersApiTest extends TestCase
     public function test_sync_status_drifts_from_1_to_2_on_general_field_edit()
     {
         $record = SecurityUsers::factory()->create([
-            'sync_status' => 1,
+            'sync_status' => SecurityUsers::SYNC_STATUS_SYNCED,
+            'external_reference' => null, //POCOR-9590: prevent inception-sync from overriding status
             'first_name' => 'OldName',
         ]);
 
@@ -104,15 +105,15 @@ class SecurityUsersApiTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertSame(2, (int)$record->fresh()->sync_status);
+        $this->assertSame(SecurityUsers::SYNC_STATUS_DRIFTED, (int)$record->fresh()->sync_status);
     }
 
     //POCOR-9590: Local user editing themselves stays Local
     public function test_sync_status_stays_0_when_local_user_edited()
     {
         $record = SecurityUsers::factory()->create([
-            'sync_status' => 0,
-            'external_reference' => null, //POCOR-9590: avoid the inception-sync rule overriding to 1
+            'sync_status' => SecurityUsers::SYNC_STATUS_LOCAL,
+            'external_reference' => null, //POCOR-9590: prevent inception-sync from overriding status
             'first_name' => 'OldName',
         ]);
 
@@ -124,14 +125,15 @@ class SecurityUsersApiTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertSame(0, (int)$record->fresh()->sync_status);
+        $this->assertSame(SecurityUsers::SYNC_STATUS_LOCAL, (int)$record->fresh()->sync_status);
     }
 
     //POCOR-9590: Not Synced (drifted) stays Not Synced on further edits
     public function test_sync_status_stays_2_when_not_synced_user_edited()
     {
         $record = SecurityUsers::factory()->create([
-            'sync_status' => 2,
+            'sync_status' => SecurityUsers::SYNC_STATUS_DRIFTED,
+            'external_reference' => null, //POCOR-9590: prevent inception-sync from overriding status to 1
             'first_name' => 'OldName',
         ]);
 
@@ -143,14 +145,15 @@ class SecurityUsersApiTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertSame(2, (int)$record->fresh()->sync_status);
+        $this->assertSame(SecurityUsers::SYNC_STATUS_DRIFTED, (int)$record->fresh()->sync_status);
     }
 
     //POCOR-9590: Synced user edited in a non-General field (e.g. email) keeps status at 1
     public function test_sync_status_stays_1_when_non_general_field_edited()
     {
         $record = SecurityUsers::factory()->create([
-            'sync_status' => 1,
+            'sync_status' => SecurityUsers::SYNC_STATUS_SYNCED,
+            'external_reference' => null, //POCOR-9590: prevent inception-sync from overriding status
             'email' => 'old@example.com',
         ]);
 
@@ -162,15 +165,15 @@ class SecurityUsersApiTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $this->assertSame(1, (int)$record->fresh()->sync_status);
+        $this->assertSame(SecurityUsers::SYNC_STATUS_SYNCED, (int)$record->fresh()->sync_status);
     }
 
-    //POCOR-9590: inception sync — new user created with external_reference starts at 1
+    //POCOR-9590: inception sync — new user created with external_reference starts at SYNCED
     public function test_sync_status_set_to_1_on_create_with_external_reference()
     {
         $record = SecurityUsers::factory()->make([
             'external_reference' => 'EXT-' . $this->faker->uuid,
-            'sync_status' => 0, // factory default; saving event should override
+            'sync_status' => SecurityUsers::SYNC_STATUS_LOCAL, //POCOR-9590: saving event overrides to SYNCED
         ]);
 
         $response = $this->withHeaders([
@@ -180,6 +183,6 @@ class SecurityUsersApiTest extends TestCase
         $response->assertStatus(201);
         $created = SecurityUsers::where('external_reference', $record->external_reference)->first();
         $this->assertNotNull($created);
-        $this->assertSame(1, (int)$created->sync_status);
+        $this->assertSame(SecurityUsers::SYNC_STATUS_SYNCED, (int)$created->sync_status);
     }
 }

@@ -24,6 +24,11 @@ class UserBehavior extends Behavior
     //POCOR-9590: General-tab fields that, when edited, signal drift from the external registry
     const GENERAL_SYNC_FIELDS = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
 
+    //POCOR-9590: sync_status values — single source of truth for CakePHP layer
+    const SYNC_STATUS_LOCAL   = 0; //POCOR-9590: never been synced with an external registry
+    const SYNC_STATUS_SYNCED  = 1; //POCOR-9590: confirmed match with external registry
+    const SYNC_STATUS_DRIFTED = 2; //POCOR-9590: was synced; General fields have changed since
+
     private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
     private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
     private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-guardian'></i></div></div>";
@@ -119,18 +124,18 @@ class UserBehavior extends Behavior
 
         //POCOR-9590: drift detection — Synced (1) → Not Synced (2) when any General field changes. Local (0) and Not Synced (2) stay where they are.
         //POCOR-9590: skip when sync_status itself is dirty — that means the SyncUser action just set it to 1, the field changes ARE the sync, don't immediately flip back to 2
-        if ($this->_table->getTable() === 'security_users' && !$entity->isNew() && (int)$entity->sync_status === 1 && !$entity->isDirty('sync_status')) {
+        if ($this->_table->getTable() === 'security_users' && !$entity->isNew() && (int)$entity->sync_status === self::SYNC_STATUS_SYNCED && !$entity->isDirty('sync_status')) {
             foreach (self::GENERAL_SYNC_FIELDS as $f) { //POCOR-9590
                 if ($entity->isDirty($f)) {
-                    $entity->sync_status = 2;
+                    $entity->sync_status = self::SYNC_STATUS_DRIFTED;
                     break;
                 }
             }
         }
 
-        //POCOR-9590: inception sync — new user created from external search (external_reference populated) starts as Synced (1)
+        //POCOR-9590: inception sync — new user created from external search (external_reference populated) starts as Synced
         if ($this->_table->getTable() === 'security_users' && $entity->isNew() && !empty($entity->external_reference)) {
-            $entity->sync_status = 1;
+            $entity->sync_status = self::SYNC_STATUS_SYNCED;
         }
     }
 
@@ -433,7 +438,7 @@ class UserBehavior extends Behavior
         //POCOR-9590: stored sync_status on the user (0=Local, 1=Synced, 2=Not Synced)
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
         $userRow = $SecurityUsers->find()->select(['sync_status'])->where(['id' => $security_users_id])->first();
-        $syncStatus = $userRow ? (int)$userRow->sync_status : 0;
+        $syncStatus = $userRow ? (int)$userRow->sync_status : self::SYNC_STATUS_LOCAL;
 
         //POCOR-9590: identity_type_id of the currently active external data source — used to decide which row in the Identities table is sync-eligible
         $activeIdentityTypeId = $this->getActiveExternalSourceIdentityTypeId();
@@ -605,7 +610,7 @@ class UserBehavior extends Behavior
         return compact('user', 'configs', 'externalValues', 'externalGenderId', 'diff');
     }
 
-    //POCOR-9590: applies external values onto $user and marks sync_status=1; caller is responsible for saving
+    //POCOR-9590: applies external values onto $user and marks sync_status=SYNCED; caller is responsible for saving
     public function applySyncToUser(Entity $user, array $externalValues, ?int $externalGenderId): void
     {
         foreach (['first_name', 'middle_name', 'third_name', 'last_name'] as $field) {
@@ -619,7 +624,7 @@ class UserBehavior extends Behavior
         if ($externalGenderId) {
             $user->gender_id = $externalGenderId;
         }
-        $user->sync_status = 1;
+        $user->sync_status = self::SYNC_STATUS_SYNCED;
     }
 
     private function resolveMappingPath(array $data, string $path)

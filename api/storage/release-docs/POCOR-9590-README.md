@@ -59,6 +59,12 @@ Add a visual sync status indicator (badge) on user General pages (Students, Staf
 - Added **GENERAL_SYNC_FIELDS** constant to UserBehavior (matching Laravel SecurityUsers model) to ensure field lists stay in sync
 - Net result: **−312 lines**, improved maintainability, eliminated 3-way code duplication
 
+### Constants & Further DRY Refactoring (code review fixes)
+- Added **SYNC_STATUS_LOCAL = 0**, **SYNC_STATUS_SYNCED = 1**, **SYNC_STATUS_DRIFTED = 2** constants to `UserBehavior` (CakePHP single source of truth) and mirrored in `SecurityUsers` (Laravel layer) — all magic-number `0/1/2` comparisons replaced throughout
+- Extracted **SyncUserTrait** (`plugins/User/src/Controller/SyncUserTrait.php`) — the identical `SyncUser()` action from StudentsController, StaffController, and DirectoriesController is now a single shared trait; each controller only declares `syncUserPermission()` returning its ACL triple
+- All Alert static strings wrapped in `__()` for i18n compliance
+- `UserIdentities/details.php` template references constants via FQN (`\User\Model\Behavior\UserBehavior::SYNC_STATUS_*`) — no bare integers in display logic
+
 ### Seychelles Civil Status Integration Fix
 - **UserBehavior::buildExternalUserDiff()** now falls back to `api_url` when `user_endpoint_uri` is empty
 - Auto-appends `/{external_reference}` to the URL if no placeholder (`{external_reference}`) exists in the endpoint
@@ -74,13 +80,14 @@ Add a visual sync status indicator (badge) on user General pages (Students, Staf
 ## Files Changed Summary
 
 **Added:**
-- `config/Migrations/20260428120000_POCOR9590.php` — slim migration (backup + restore only)
+- `config/Migrations/20260506120000_POCOR9590.php` — migration: adds `sync_status` column + Seychelles pre-configuration
+- `plugins/User/src/Controller/SyncUserTrait.php` — shared `SyncUser()` action with i18n + SYNC_STATUS constants
 - `plugins/Student/templates/Students/sync_user.php` — sync confirmation modal template
 - `plugins/Staff/templates/Staff/sync_user.php` — sync confirmation modal template
 - `plugins/Directory/templates/Directories/sync_user.php` — sync confirmation modal template
 
 **Modified (by drift fix commit):**
-- `config/Migrations/20260428120000_POCOR9590.php` — now includes direct INSERT/UPDATE for Seychelles Civil Status pre-configuration
+- `config/Migrations/20260506120000_POCOR9590.php` — now includes direct INSERT/UPDATE for Seychelles Civil Status pre-configuration
 - `plugins/Configuration/src/Controller/ConfigurationsController.php` — no changes
 - `plugins/Configuration/src/Model/Table/ConfigExternalDataSourceTable.php` — no changes
 - `plugins/Directory/src/Controller/DirectoriesController.php` — no changes
@@ -94,20 +101,23 @@ Add a visual sync status indicator (badge) on user General pages (Students, Staf
 - `plugins/Directory/src/Model/Table/DirectoriesTable.php` — addSyncButton helper
 - `plugins/Institution/src/Model/Table/StaffUserTable.php` — addSyncButton helper
 - `plugins/Institution/src/Model/Table/StudentUserTable.php` — addSyncButton helper + sync eligibility check
-- `plugins/Staff/src/Controller/StaffController.php` — syncUser action (uses UserBehavior)
-- `plugins/Student/src/Controller/StudentsController.php` — syncUser action (uses UserBehavior)
-- `plugins/User/templates/Element/UserIdentities/details.php` — 3-state status badge rendering
+- `plugins/Directory/src/Controller/DirectoriesController.php` — uses SyncUserTrait; declares syncUserPermission()
+- `plugins/Staff/src/Controller/StaffController.php` — uses SyncUserTrait; declares syncUserPermission()
+- `plugins/Student/src/Controller/StudentsController.php` — uses SyncUserTrait; declares syncUserPermission()
+- `plugins/User/src/Model/Behavior/UserBehavior.php` — SYNC_STATUS_* constants; applySyncToUser(); buildExternalUserDiff()
+- `plugins/User/templates/Element/UserIdentities/details.php` — 3-state badge; FQN constants; i18n strings
+- `api/app/Models/Api5/SecurityUsers.php` — SYNC_STATUS_* constants; boot() saving hook; Swagger + $fillable
 
 **Current totals (branch-wide):**
-- Added: 4 files (templates + 1 migration with pre-config)
-- Modified: 14 files (including Seychelles fallback fixes)
+- Added: 5 files (4 templates + 1 migration + SyncUserTrait)
+- Modified: 14 files
 - Removed: 0 files
 
 ---
 
 ## Database Migrations
 
-**File:** `config/Migrations/20260428120000_POCOR9590.php`
+**File:** `config/Migrations/20260506120000_POCOR9590.php`
 
 **Schema Change:**
 ```sql
@@ -188,6 +198,35 @@ Per-environment config matches v4 workflow (dev/staging/prod can have different 
 4. **On Confirm:** Writes all fetched fields to `security_users`, then sets `sync_status=1`
 5. **Field Locking:** No fields are locked during or after sync — users can always edit (which triggers drift to sync_status=2)
 
+### Required Permissions for the Sync Button
+
+The Sync button has **two independent gates** — both must pass for the button to appear and the action to execute:
+
+#### 1. Role-based permission (ACL)
+
+The button is visible only to roles that have the relevant Import permission. Assign these via **Administration > Roles and Permissions**:
+
+| Context | Required permission |
+|---------|-------------------|
+| Students (Institution > Students) | `Institutions > ImportStudentAdmission > Add` |
+| Staff (Institution > Staff) | `Institutions > ImportStaff > Add` |
+| Directory | `Directories > ImportUsers > Add` |
+
+Super-admin users always have access. The action also enforces this check server-side on every request — a forged URL cannot bypass it.
+
+#### 2. Data eligibility (sync-eligible identity)
+
+Even with the correct role, the Sync button only appears when:
+- The user has at least one row in `user_identities` marked as **preferred** (`preferred = 1`), AND
+- The `identity_type_id` of that preferred row matches the `identity_type_id` configured in **System > External Data Source**
+
+If either condition is false, the button is hidden regardless of role. This prevents syncing users who have no external reference linked.
+
+**Setup checklist for the button to appear:**
+1. Role has the relevant Import permission (see table above)
+2. External Data Source is fully configured with a valid `identity_type_id`
+3. The user being viewed has a preferred identity of that identity type
+
 ### Drift Detection Logic
 
 When a user edits civil-status fields (`first_name`, `middle_name`, `third_name`, `last_name`, `gender_id`, `date_of_birth`):
@@ -219,8 +258,9 @@ If using Seychelles Civil Status source, the migration automatically pre-configu
 ### Monitoring & Troubleshooting
 
 **Sync Button Not Showing?**
-- Verify user has a `user_identities` row with `identity_type_id` matching the configured data source
-- Check External Data Source configuration is complete (all fields filled in)
+- Check the logged-in user's **role has the Import permission** for the relevant context (ImportStudentAdmission / ImportStaff / ImportUsers) — see "Required Permissions" section above
+- Verify the user being viewed has a `user_identities` row with `preferred=1` and `identity_type_id` matching the configured data source
+- Check External Data Source configuration is complete (all fields filled in, especially `identity_type_id`)
 - Verify `identity_type_id` on the configuration matches a real row in `user_identity_types`
 
 **"Already in sync" Message Appears But Badge Says "Not Synced"?**
@@ -262,9 +302,8 @@ If the feature causes issues:
 
 ## Known Limitations & Follow-Ups
 
-- **StaffController::syncUser** and **DirectoriesController::syncUser** actions not yet implemented — Sync button on Staff and Directory pages currently returns 404 if clicked (button visibility gated but action missing)
 - **Profile/Personal plugin** user General pages do not yet display the Sync button (badge renders correctly via shared element)
-- **Helper refactoring:** `addSyncButton` logic duplicated in StudentUserTable / StaffUserTable / DirectoriesTable — candidate for extraction to a shared concern
+- **addSyncButton helper** logic remains duplicated in StudentUserTable / StaffUserTable / DirectoriesTable — candidate for extraction to a shared Table concern in a follow-up ticket
 - **Future:** Consider locking civil-status fields during an in-progress sync to prevent concurrent edits; currently no field locking is implemented
 
 ---

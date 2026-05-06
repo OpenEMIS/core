@@ -7,7 +7,7 @@
 <?php
 //POCOR-9590: getViewUserIdentities returns ['data' => [...], 'sync_status' => 0|1|2, 'active_source_identity_type_id' => int|null]
 $identityRows  = !empty($attr['data']['data']) ? $attr['data']['data'] : [];
-$syncStatus    = isset($attr['data']['sync_status']) ? (int)$attr['data']['sync_status'] : 0;
+$syncStatus    = isset($attr['data']['sync_status']) ? (int)$attr['data']['sync_status'] : \User\Model\Behavior\UserBehavior::SYNC_STATUS_LOCAL;
 $activeTypeId  = isset($attr['data']['active_source_identity_type_id']) ? $attr['data']['active_source_identity_type_id'] : null;
 
 //POCOR-9590: per-row badge — Synced/Not Synced only when row is sync-eligible (preferred + identity-type matches active source); otherwise Local
@@ -17,10 +17,10 @@ $renderStatusBadge = function ($row) use ($syncStatus, $activeTypeId) {
     if (!$eligible) {
         return '<span class="label label-default">' . __('Local') . '</span>'; //POCOR-9590: grey
     }
-    if ($syncStatus === 1) {
+    if ($syncStatus === \User\Model\Behavior\UserBehavior::SYNC_STATUS_SYNCED) {
         return '<span class="label label-success">' . __('Synced') . '</span>'; //POCOR-9590: green
     }
-    if ($syncStatus === 2) {
+    if ($syncStatus === \User\Model\Behavior\UserBehavior::SYNC_STATUS_DRIFTED) {
         return '<span class="label label-warning">' . __('Not Synced') . '</span>'; //POCOR-9590: orange
     }
     return '<span class="label label-default">' . __('Local') . '</span>'; //POCOR-9590: fallback grey when stored = 0

@@ -56,6 +56,11 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     //POCOR-9590: mirrors UserBehavior::GENERAL_SYNC_FIELDS — keep in sync if either list changes
     const GENERAL_SYNC_FIELDS = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
 
+    //POCOR-9590: sync_status values — mirrors UserBehavior constants for the Laravel layer
+    const SYNC_STATUS_LOCAL   = 0; //POCOR-9590: never been synced with an external registry
+    const SYNC_STATUS_SYNCED  = 1; //POCOR-9590: confirmed match with external registry
+    const SYNC_STATUS_DRIFTED = 2; //POCOR-9590: was synced; General fields have changed since
+
     protected $primaryKey = 'id';
     public $incrementing = false;
 
@@ -66,14 +71,14 @@ class SecurityUsers extends Authenticatable implements JWTSubject
 
         //POCOR-9590: Synced→Not-Synced on General-field drift; inception sync for external-search users
         self::saving(function ($user) {
-            if ($user->exists && (int)$user->sync_status === 1) {
+            if ($user->exists && (int)$user->sync_status === self::SYNC_STATUS_SYNCED) {
                 $dirty = $user->getDirty();
                 if (array_intersect_key($dirty, array_flip(self::GENERAL_SYNC_FIELDS))) {
-                    $user->sync_status = 2;
+                    $user->sync_status = self::SYNC_STATUS_DRIFTED;
                 }
             }
             if (!$user->exists && !empty($user->external_reference)) {
-                $user->sync_status = 1;
+                $user->sync_status = self::SYNC_STATUS_SYNCED;
             }
         });
     }
