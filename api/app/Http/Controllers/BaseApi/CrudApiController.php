@@ -1438,7 +1438,7 @@ class CrudApiController extends Controller
      */
     private function getAllowedOrderColumns($model)
     {
-        $cacheKey = 'crud_api_sortable_columns:v2:' . get_class($model) . ':' . $model->getTable();
+        $cacheKey = 'crud_api_sortable_columns:v3:' . get_class($model) . ':' . $model->getTable(); //POCOR-9660: v3 excludes hidden columns
 
         return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($model) {
             try {
@@ -1449,8 +1449,12 @@ class CrudApiController extends Controller
                 $schemaColumns = $model->getFillable();
             }
 
-            return array_values(array_filter(array_unique($schemaColumns), function ($column) {
-                return is_string($column) && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column);
+            $hidden = $model->getHidden(); //POCOR-9660: never reveal hidden columns (e.g. password) via sort order
+
+            return array_values(array_filter(array_unique($schemaColumns), function ($column) use ($hidden) {
+                return is_string($column)
+                    && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column)
+                    && !in_array($column, $hidden, true); //POCOR-9660: exclude $hidden fields — sort order exposes values even when field is not returned
             }));
         });
     }
