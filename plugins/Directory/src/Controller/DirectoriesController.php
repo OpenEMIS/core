@@ -21,7 +21,7 @@ class DirectoriesController extends AppController
     //POCOR-9590: public — also called by DirectoriesTable::addSyncButton to avoid duplicating the ACL triple
     public function syncUserPermission(): array
     {
-        return ['Directories', 'ImportUsers', 'add'];
+        return ['Directories', 'Directories', 'add'];
     }
 
     const STUDENT = 1;

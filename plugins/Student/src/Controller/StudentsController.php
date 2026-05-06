@@ -20,7 +20,7 @@ class StudentsController extends AppController
     //POCOR-9590: public — also called by StudentUserTable::addSyncButton to avoid duplicating the ACL triple
     public function syncUserPermission(): array
     {
-        return ['Institutions', 'ImportStudentAdmission', 'add'];
+        return ['Institutions', 'Students', 'add'];
     }
 
     private $features = [

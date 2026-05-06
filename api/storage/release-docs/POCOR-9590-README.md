@@ -208,9 +208,9 @@ The button is visible only to roles that have the relevant Import permission. As
 
 | Context | Required permission |
 |---------|-------------------|
-| Students (Institution > Students) | `Institutions > ImportStudentAdmission > Add` |
-| Staff (Institution > Staff) | `Institutions > ImportStaff > Add` |
-| Directory | `Directories > ImportUsers > Add` |
+| Students (Institution > Students) | `Institutions > Students > Add` |
+| Staff (Institution > Staff) | `Institutions > Staff > Add` |
+| Directory | `Directories > Directories > Add` |
 
 Super-admin users always have access. The action also enforces this check server-side on every request — a forged URL cannot bypass it.
 
