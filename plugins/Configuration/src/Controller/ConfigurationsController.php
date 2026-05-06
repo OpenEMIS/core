@@ -153,7 +153,7 @@ class ConfigurationsController extends AppController
         }
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action) //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
         if (in_array($action, ['generateServerAuthorisationToken', 'getExternalUsers'])) {
             return true;
