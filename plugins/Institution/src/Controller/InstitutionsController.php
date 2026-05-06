@@ -934,6 +934,9 @@ class InstitutionsController extends AppController
             if(empty($institution_id)){
                 $institution_id = $session->read('Institution.Institutions.primaryKey.id');
             }
+            if(empty($institution_id)){
+                $institution_id = $session->read('Institution.Institutions.primaryKey.institution_id');
+            }
             //POCOR-9691[END]
         }
         // StaffBehaviours view: if still missing, decode pass[1] or load behaviour by id so view does not redirect to Dashboard
