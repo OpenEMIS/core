@@ -2557,8 +2557,11 @@ public function getIdentityTypeData($value_selection)
     //POCOR-9590: Sync button on the directory General view toolbar
     private function addSyncButton(Entity $entity, ArrayObject $extra)
     {
-        //POCOR-9590: delegate to controller so the triple is defined once (DirectoriesController::syncUserPermission)
-        if (!$this->AccessControl->check($this->controller->syncUserPermission())) {
+        //POCOR-9590: delegate to controller when it supports the method (DirectoriesController); fall back for any other controller
+        $permission = method_exists($this->controller, 'syncUserPermission')
+            ? $this->controller->syncUserPermission()
+            : ['Directories', 'Directories', 'add'];
+        if (!$this->AccessControl->check($permission)) {
             return;
         }
         if (!$this->isSyncEligibleUser($entity->id)) {
