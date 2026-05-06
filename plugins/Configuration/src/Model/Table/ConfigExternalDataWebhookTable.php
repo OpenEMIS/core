@@ -3,7 +3,6 @@
 namespace Configuration\Model\Table;
 
 use ArrayObject;
-use Cake\Event\Event; //POCOR-9509: kept for reference; method signatures updated to EventInterface
 use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
@@ -385,7 +384,7 @@ class ConfigExternalDataWebhookTable extends ControllerActionTable
 
         return $value;
     }
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true) //POCOR-9509: fix incompatible type hint (Event → EventInterface)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'value') {
             return __('Status');

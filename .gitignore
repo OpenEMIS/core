@@ -30,7 +30,7 @@ webroot/css/themes/layout.min.css
 *.mo
 *.po
 frontend/src/environments/environment.prod.ts
-frontend/src/environments/environment.ts 
+frontend/src/environments/environment.ts
 
 
 # IDE and editor specific files #
@@ -81,4 +81,4 @@ frontend/out-tsc
 frontend/bazel-out
 frontend/node_modules
 api/storage/api-docs
-.worktrees/
+/.claude/
