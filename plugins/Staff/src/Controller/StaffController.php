@@ -1182,6 +1182,4 @@ class StaffController extends AppController
             $this->set('contentHeader', $header);
         }
     }
-
-    //POCOR-9590: start - Sync staff identity from external data source with review/diff page
 }
