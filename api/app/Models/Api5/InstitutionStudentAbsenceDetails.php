@@ -5,11 +5,13 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
+use App\Services\AlertTriggerService;
+use Illuminate\Support\Facades\Log;
 
 class InstitutionStudentAbsenceDetails extends Model
 {
     use HasFactory;
-use InstitutionScope;
+    use InstitutionScope;
 
     // ✅ Allow mass assignment
     protected $fillable = ['student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'date', 'period', 'comment', 'absence_type_id', 'student_absence_reason_id', 'subject_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'student_id', 'institution_id', 'academic_period_id', 'institution_class_id', 'education_grade_id', 'absence_type_id', 'student_absence_reason_id', 'subject_id', 'modified_user_id', 'created_user_id'];
@@ -23,6 +25,68 @@ use InstitutionScope;
     // ✅ Define the primary key
     protected $dates = ['modified', 'created'];
     protected $primaryKey = ["student_id","institution_id","academic_period_id","institution_class_id","date","period","subject_id"];
+
+    /**
+     * POCOR-9509: Trigger absence alerts only when a new absence record is created.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saved(function (self $attendance) {
+            if (!$attendance->wasRecentlyCreated) {
+                return;
+            }
+
+            if (!$attendance->student_id || !$attendance->institution_id || !$attendance->academic_period_id) {
+                // POCOR-9509: Keep production resilient when required event data is missing.
+                return;
+            }
+
+            try {
+                $attendance->processAbsenceAlert();
+            } catch (\Throwable $e) {
+                Log::error('[POCOR-9509] Absence alert processing failed in saved event', [
+                    'student_id' => $attendance->student_id,
+                    'institution_id' => $attendance->institution_id,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        });
+    }
+
+    /**
+     * POCOR-9509: Dispatch the Laravel alert command for student absence events.
+     */
+    protected function processAbsenceAlert(): bool
+    {
+        $alertRule = AlertTriggerService::getActiveAlertRule('StudentAttendance', (int) $this->institution_id);
+
+        if (!$alertRule) {
+            return false;
+        }
+
+        $result = AlertTriggerService::triggerAlert(
+            processName: 'AlertStudentAbsence',
+            featureName: 'StudentAttendance',
+            userId: (int) ($this->created_user_id ?: 1),
+            ruleId: (int) $alertRule->id,
+            entityId: null,
+            context: [
+                'student_id' => (int) $this->student_id,
+                'institution_id' => (int) $this->institution_id,
+                'academic_period_id' => (int) $this->academic_period_id,
+                'institution_class_id' => $this->institution_class_id ? (int) $this->institution_class_id : null,
+                'period' => $this->period,
+                'subject_id' => $this->subject_id,
+                'date' => $this->date,
+            ],
+            entityType: 'StudentAttendance',
+            triggerType: 'threshold_exceeded'
+        );
+
+        return (bool) ($result['success'] ?? false) || (bool) ($result['duplicate'] ?? false);
+    }
 
 
 /**
