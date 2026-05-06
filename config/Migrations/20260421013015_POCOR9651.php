@@ -11,7 +11,7 @@ class POCOR9651 extends AbstractMigration
         $this->execute('INSERT INTO `zz_9651_security_functions` SELECT * FROM `security_functions`');
 
         // update for permission 
-        $this->execute("UPDATE security_functions SET _view = 'Recipients.index|Recipients.view', _edit = NULL, _add = NULL, _delete = 'Recipients.remove' WHERE name = 'Recipients' AND controller = 'Surveys' AND module = 'Administration' AND category = 'Survey'");
+        $this->execute("UPDATE security_functions SET _view = 'Recipients.index|Recipients.view', _edit = '', _add = '', _delete = 'Recipients.remove' WHERE name = 'Recipients' AND controller = 'Surveys' AND module = 'Administration' AND category = 'Survey'");
     }
 
 
