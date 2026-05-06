@@ -15,7 +15,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-
         // POCOR-9257: Webhook queue processing
         $schedule->command('webhooks:process', ['--once'])
             ->everyMinute()
@@ -27,6 +26,33 @@ class Kernel extends ConsoleKernel
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
 
+        //POCOR-9509: alerts:check — ALERT_CHECK_DAILY=true → daily at ALERT_CHECK_DAILY_TIME, false → hourly
+        if (env('ALERT_CHECK_DAILY', true)) { //POCOR-9509
+            $schedule->command('alerts:check') //POCOR-9509: renamed from alerts:check-and-queue
+                ->dailyAt(env('ALERT_CHECK_DAILY_TIME', '02:00')) //POCOR-9509
+                ->weekdays()
+                ->withoutOverlapping(120)
+                ->runInBackground();
+        } else { //POCOR-9509: fallback — run every 10 min if daily schedule is disabled
+            $schedule->command('alerts:check')
+                ->everyTenMinutes()
+                ->withoutOverlapping(120)
+                ->runInBackground();
+        }
+
+        //POCOR-9509: alerts:send — ALERT_SEND_DAILY=true → daily at ALERT_SEND_DAILY_TIME; false/missing → every 10 min
+        if (env('ALERT_SEND_DAILY', false)) { //POCOR-9509: default false — event-based alerts (attendance, admission) need prompt sending
+            $schedule->command('alerts:send', ['--limit' => env('ALERT_SEND_LIMIT', 50)]) //POCOR-9509: ALERT_SEND_LIMIT=0 sends all
+                ->dailyAt(env('ALERT_SEND_DAILY_TIME', '07:00')) //POCOR-9509
+                ->weekdays()
+                ->withoutOverlapping(60)
+                ->runInBackground();
+        } else { //POCOR-9509: default — run every 10 minutes
+            $schedule->command('alerts:send', ['--limit' => env('ALERT_SEND_LIMIT', 50)]) //POCOR-9509: ALERT_SEND_LIMIT=0 sends all
+                ->everyTenMinutes()
+                ->withoutOverlapping(60)
+                ->runInBackground();
+        }
     }
 
     /**
