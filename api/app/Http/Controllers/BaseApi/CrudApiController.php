@@ -821,18 +821,11 @@ class CrudApiController extends Controller
             return $this->errorResponse($e->getMessage(), 400);
         }
         //POCOR-9660: end
-        //POCOR-9660: start - surface invalid orderby as 400 instead of 500
+        //POCOR-9660: start - surface invalid orderby column/direction as 400 instead of 500
         try {
             $order = $this->parseOrderParams($request, $segments);
-        } catch (\InvalidArgumentException $e) {
-            return $this->errorResponse($e->getMessage(), 400);
-        }
-        //POCOR-9660: end
-
-        $query = $this->parseSelectParams($request, $segments, $query, $model);
-        $query = $this->applyFilters($query, $filters);
-        //POCOR-9660: start - surface invalid order column/direction as 400
-        try {
+            $query = $this->parseSelectParams($request, $segments, $query, $model);
+            $query = $this->applyFilters($query, $filters);
             $query = $this->applyOrder($query, $order, $model);
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
@@ -1116,9 +1109,7 @@ class CrudApiController extends Controller
         $value = trim($value);
 
         if (($field === 'id' || str_ends_with($field, '_id')) && strpos($value, ',') !== false) { //POCOR-9660: match bare 'id' and any '*_id' field for multi-value filter
-            $values = array_values(array_filter(array_map('trim', explode(',', $value)), function ($item) {
-                return $item !== '';
-            }));
+            $values = $this->splitAndTrimValues($value);
 
             if (!empty($values) && count(array_filter($values, [$this, 'isValidIdentifier'])) === count($values)) {
                 return $values;
@@ -1126,6 +1117,13 @@ class CrudApiController extends Controller
         }
 
         return $value;
+    }
+    //POCOR-9660: end
+
+    //POCOR-9660: start - new helper - split a CSV string, trim each item, and drop empty entries
+    private function splitAndTrimValues(string $csv): array
+    {
+        return array_values(array_filter(array_map('trim', explode(',', $csv)), fn ($v) => $v !== ''));
     }
     //POCOR-9660: end
 
@@ -1138,25 +1136,17 @@ class CrudApiController extends Controller
      */
     private function parseInConditionValues($value)
     {
-        if (strpos($value, 'IN') !== 0) {
+        if (!str_starts_with($value, 'IN')) {
             return null;
         }
 
-        $listValue = substr($value, 2);
-        if ($listValue !== '' && $listValue[0] === '(') {
-            $listValue = substr($listValue, 1);
-        }
-        if ($listValue !== '' && substr($listValue, -1) === ')') {
-            $listValue = substr($listValue, 0, -1);
-        }
+        $listValue = trim(substr($value, 2), '()');
         if ($listValue === '' || preg_match('/^[A-Za-z]/', $listValue)) {
             return null;
         }
 
         $rawValues = array_map('trim', explode(',', $listValue));
-        $values = array_values(array_filter($rawValues, function ($item) {
-            return $item !== '';
-        }));
+        $values = $this->splitAndTrimValues($listValue);
 
         return count($values) > 1 && count($values) === count($rawValues) ? $values : null;
     }
@@ -1182,9 +1172,7 @@ class CrudApiController extends Controller
         }
 
         $rawValues = array_map('trim', explode(',', $segments[0]));
-        $values = array_values(array_filter($rawValues, function ($item) {
-            return $item !== '';
-        }));
+        $values = $this->splitAndTrimValues($segments[0]);
 
         if (count($values) < 2 || count($values) !== count($rawValues) || count(array_filter($values, [$this, 'isValidIdentifier'])) !== count($values)) {
             throw new \InvalidArgumentException('Invalid identifier list.');
@@ -1358,7 +1346,7 @@ class CrudApiController extends Controller
                     throw new \InvalidArgumentException("Invalid orderby column: {$column}");
                 }
 
-                $direction = strtolower($order['directions'][$index] ?? 'asc');
+                $direction = $order['directions'][$index] ?? 'asc'; //POCOR-9660: already lowercased by parseOrderParams
                 if (!in_array($direction, ['asc', 'desc'], true)) {
                     throw new \InvalidArgumentException("Invalid order direction: {$direction}");
                 }
