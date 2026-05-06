@@ -20,7 +20,7 @@ class StaffController extends AppController
     //POCOR-9590: public — also called by StaffUserTable::addSyncButton to avoid duplicating the ACL triple
     public function syncUserPermission(): array
     {
-        return ['Institutions', 'ImportStaff', 'add'];
+        return ['Institutions', 'Staff', 'add'];
     }
 
     const APPROVED = 1;
