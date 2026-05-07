@@ -249,6 +249,51 @@ class ProgrammesTable extends ControllerActionTable
 		$extra['auto_contain_fields'] = ['Institutions' => ['code']];
 	}
 
+	//POCOR-9689[START]
+	/**
+	 * Editing depends on the programme date range, not the student status code.
+	 */
+	private function programmeEditAllowedByDateRange(Entity $entity): bool
+	{
+		$today = strtotime(date('Y-m-d'));
+
+		$start = null;
+		$end = null;
+
+		if ($entity->has('start_date') && !empty($entity->start_date)) {
+			$start = strtotime((string)$entity->start_date);
+		}
+		if ($entity->has('end_date') && !empty($entity->end_date)) {
+			$end = strtotime((string)$entity->end_date);
+		}
+
+		// Fall back to academic period range when programme dates are not available.
+		if (($start === false || $start === null || $end === false || $end === null)
+			&& $entity->has('academic_period')
+			&& !empty($entity->academic_period)
+		) {
+			if (($start === false || $start === null) && !empty($entity->academic_period->start_date)) {
+				$start = strtotime((string)$entity->academic_period->start_date);
+			}
+			if (($end === false || $end === null) && !empty($entity->academic_period->end_date)) {
+				$end = strtotime((string)$entity->academic_period->end_date);
+			}
+		}
+
+		if ($start !== false && $start !== null && $end !== false && $end !== null) {
+			return $today >= $start && $today <= $end;
+		}
+		if ($start !== false && $start !== null) {
+			return $today >= $start;
+		}
+		if ($end !== false && $end !== null) {
+			return $today <= $end;
+		}
+
+		return false;
+	}
+	//POCOR-9689[START]
+
 	public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
@@ -308,21 +353,13 @@ class ProgrammesTable extends ControllerActionTable
 	{
         // POCOR-8980 start
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        // POCOR-9097 start
-        if ($entity->student_id) {
-            $studentId = $entity->student_id;
-        }
-        if ($entity->institution_id) {
-            $institutionId = $entity->institution_id;
-        }
-        if(!$institutionId) { // POCOR-9097
-            $queryString = $this->getQueryString();
-            $institutionId = $queryString['institution_id'];
-        }
-        if(!$studentId) { // POCOR-9097
-            $queryString = $this->getQueryString(); // POCOR-9097
-            $studentId = $queryString['student_id'];
-        }
+        // POCOR-9097 start — always merge from current URL pass so keys (e.g. institution_student_id) are kept for edit/view links
+        $decoded = $this->getQueryString();
+        $queryString = is_array($decoded) ? $decoded : [];
+
+        $studentId = !empty($entity->student_id) ? $entity->student_id : ($queryString['student_id'] ?? null);
+        $institutionId = !empty($entity->institution_id) ? $entity->institution_id : ($queryString['institution_id'] ?? null);
+
         if ($institutionId && !$entity->institution) { // POCOR-9097
              $result = $this->Institutions
 				->find()
@@ -350,8 +387,7 @@ class ProgrammesTable extends ControllerActionTable
 
 		$statuses = $this->StudentStatuses->findCodeList();
 		$studentStatusId = $entity->student_status_id;
-
-		if (isset($buttons['edit']) && $studentStatusId == $statuses['CURRENT']) {
+		if (isset($buttons['edit']) && $this->programmeEditAllowedByDateRange($entity)) { //  POCOR-9689 : previously : if (isset($buttons['edit']) && $studentStatusId == $statuses['CURRENT']) {
 			$url = [
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
@@ -421,8 +457,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->field('end_year', ['visible' => 'false']);
 
 		// Start PHPOE-1897
-		$statuses = $this->StudentStatuses->findCodeList();
-		if ($entity->student_status_id != $statuses['CURRENT']) {
+		if (!$this->programmeEditAllowedByDateRange($entity)) { //POCOR-9689:  previously:  if ($entity->student_status_id != $statuses['CURRENT']) {
 			$event->stopPropagation();
 			$urlParams = $this->url('view');
 			return $this->controller->redirect($urlParams);
