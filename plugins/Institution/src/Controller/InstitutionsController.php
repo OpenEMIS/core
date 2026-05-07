@@ -3308,10 +3308,15 @@ class InstitutionsController extends AppController
         $request = $this->request;
 
         $pass = $request->getParam('pass');
+        if (!is_array($pass)) {
+            $pass = [];
+        }
         $action = $request->getParam('action');
         $controller = $request->getParam('controller');
         $plugin = $request->getParam('plugin');
-        $furtherAction = $pass[0];
+        $furtherAction = $pass[0] ?? null;
+        // Some deployments resolve the same URL with plugin unset or with action "add"/"index" and empty pass.
+        $pluginInstitution = ($plugin === 'Institution' || $plugin === null || $plugin === '');
 //        Log::debug(print_r([$action,
 //            $controller,
 //            $plugin,
@@ -3342,10 +3347,24 @@ class InstitutionsController extends AppController
             'template', //POCOR-9584: template is a file-download action; skip institution ID check (same as downloadFailed/downloadPassed)
         ];
 
-        if (in_array($action, $primaryActions) || in_array($furtherAction, $furtherActions)) {
+        if (in_array($action, $primaryActions, true) || in_array($furtherAction, $furtherActions, true)) {
             return true;
         }
         // POCOR-8224 end
+
+        if (in_array($action, ['add', 'index', 'import'], true)
+            && $controller === 'Institutions'
+            && $pluginInstitution) {
+            return true;
+        }
+
+        // /Institution/Institutions (no extra path) resolves to action Institutions with empty pass — same as index; no institution context yet.
+        if ($action === 'Institutions'
+            && $controller === 'Institutions'
+            && $pluginInstitution
+            && ($furtherAction === null || $furtherAction === '')) {
+            return true;
+        }
 
         if (($furtherAction == 'index'
                 || $furtherAction == 'add'
@@ -3355,29 +3374,29 @@ class InstitutionsController extends AppController
                 || $furtherAction == 'excel'
             )
             && ($action == 'Institutions')
-            && ($plugin == 'Institution')
+            && $pluginInstitution
             && ($controller == 'Institutions')) {
             return true;
         }
         if ($furtherAction == 'download'
             && ($action == 'Expenditure'
                 || $action == 'Visits'
-                || $action = 'Attachments')
-            && ($plugin == 'Institution')
+                || $action == 'Attachments')
+            && $pluginInstitution
             && ($controller == 'Institutions')) {
             return true;
         }
         if (($furtherAction == 'view'
                 || $furtherAction == 'edit' || $furtherAction =='remove')
             && $action == 'Institutions'
-            && $plugin == 'Institution'
+            && $pluginInstitution
             && $controller == 'Institutions') {
             return true;
         }
         // StaffBehaviours view/edit: skip role-based SecurityAuthorize here; checkInstitutionAccess in beforeFilter will enforce institution access (avoids redirect to Dashboard when roles are null or view link came from Staff plugin)
         if (($furtherAction == 'view' || $furtherAction == 'edit')
             && $action == 'StaffBehaviours'
-            && $plugin == 'Institution'
+            && $pluginInstitution
             && $controller == 'Institutions') {
             return true;
         }
