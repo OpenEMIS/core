@@ -139,6 +139,7 @@ class InstitutionReportCardsTable extends AppTable
                 'StudentEducationGradeGender',//POCOR-8845
                 'StudentEducationGradeGenderAttendanceByDate',//POCOR-8845
                 'StudentEducationGradeGenderAttendance',//POCOR-8845
+                'StudentBehaviours',//POCOR-9675
             ]
         ]);
     }
@@ -253,6 +254,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentEducationGradeGender'] = 'onExcelTemplateInitialiseStudentEducationGradeGender';//POCOR-8845
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentEducationGradeGenderAttendanceByDate'] = 'onExcelTemplateInitialiseStudentEducationGradeGenderAttendanceByDate';//POCOR-8845
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentEducationGradeGenderAttendance'] = 'onExcelTemplateInitialiseStudentEducationGradeGenderAttendance';//POCOR-8845
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
 
         return $events;
     }
@@ -6807,8 +6809,203 @@ class InstitutionReportCardsTable extends AppTable
         return $connection->execute($query)->fetch('assoc');
 
     }
-    // POCOR-8845 ends
 
+    //POCOR-9675
+    public function onExcelTemplateInitialiseStudentBehaviours(EventInterface $event,array $params,
+        ArrayObject $extra)
+    {
+        if (empty($params['institution_id']) || empty($params['academic_period_id'])) {
+            return [];
+        }
 
+        $StudentBehaviours = TableRegistry::getTableLocator()->get('Student.StudentBehaviours');
+        $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        
+
+        $data = $StudentBehaviours->find()
+            ->select([
+                'id' => $StudentBehaviours->aliasField('id'),
+                'time_of_behaviour' => $StudentBehaviours->aliasField('time_of_behaviour'),
+                'student_id' => $StudentBehaviours->aliasField('student_id'),
+
+                'first_name' => 'Students.first_name',
+                'last_name' => 'Students.last_name',
+
+                'category_name' => 'StudentBehaviourCategories.name',
+
+                'date_of_behaviour' => $StudentBehaviours->aliasField('date_of_behaviour'),
+
+                'institution_name' => 'Institutions.name',
+                'area_name' => 'Areas.name',
+
+                'academic_period' => 'AcademicPeriods.name',
+
+                'gender' => 'Genders.name',
+
+                'education_grade' => 'EducationGrades.name',
+                
+            ])
+            ->contain([
+                'StudentBehaviourCategories',
+                'Students' => ['Genders'],
+                'Institutions' => ['Areas'],
+                'AcademicPeriods'
+            ])
+            ->leftJoin(
+                [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
+                [
+                    $InstitutionStudents->aliasField('student_id') . ' = ' . $StudentBehaviours->aliasField('student_id'),
+                    $InstitutionStudents->aliasField('institution_id') . ' = ' . $StudentBehaviours->aliasField('institution_id'),
+                    $InstitutionStudents->aliasField('academic_period_id') . ' = ' . $StudentBehaviours->aliasField('academic_period_id'),
+                    $InstitutionStudents->aliasField('student_status_id') => 1
+                ]
+            )
+            ->leftJoin(
+                [$EducationGrades->getAlias() => $EducationGrades->getTable()],
+                [
+                    $EducationGrades->aliasField('id') . ' = ' .
+                    $InstitutionStudents->aliasField('education_grade_id')
+                ]
+            )
+
+            ->where([
+                $StudentBehaviours->aliasField('institution_id') => $params['institution_id'],
+                $StudentBehaviours->aliasField('academic_period_id') => $params['academic_period_id'],
+            ])
+            ->order([
+                $StudentBehaviours->aliasField('date_of_behaviour') => 'DESC'
+            ])
+            ->group([
+                $StudentBehaviours->aliasField('id')
+            ])
+            ->enableHydration(false)
+            ->toArray();
+            $principal = $this->getInstitutionPrincipals(
+                $params['institution_id'],
+                $params['academic_period_id']
+            );
+        $entity = [];
+
+        if (!empty($data)) {
+            foreach ($data as $row) {
+
+                $studentName = trim(
+                    (!empty($row['first_name']) ? $row['first_name'] : '') . ' ' .
+                    (!empty($row['last_name']) ? $row['last_name'] : '')
+                );
+
+                $entity[] = [
+                    'id' => $row['id'] ?? '',
+
+                    'academic_period' => $row['academic_period'] ?? '',
+
+                    'institution_name' => $row['institution_name'] ?? '',
+
+                    'area_name' => $row['area_name'] ?? '',
+
+                    'date_of_behaviour' => !empty($row['date_of_behaviour'])
+                        ? $row['date_of_behaviour']->format('Y-m-d')
+                        : '',
+
+                    'time_of_behaviour' => !empty($row['time_of_behaviour'])
+                        ? date('h:i A', strtotime($row['time_of_behaviour']))
+                        : '',
+
+                    'student_id' => $row['student_id'] ?? '',
+
+                    'gender' => $row['gender'] ?? '',
+
+                    'education_grade' => $row['education_grade'] ?? '',
+
+                    'principal' => $row['principal'],
+
+                    'category_name' => $row['category_name'] ?? '',
+                    'principal' => $principal,
+                ];
+            }
+        }
+
+        return $entity;
+    }
+
+    //POCOR-9675
+    private function getInstitutionPrincipals($institutionId, $academicPeriodId)
+    {
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $academicPeriod = $AcademicPeriods->get($academicPeriodId);
+
+        $data = $InstitutionStaff->find()
+           ->select([
+                'first_name' => $SecurityUsers->aliasField('first_name'),
+                'last_name' => $SecurityUsers->aliasField('last_name')
+            ])
+            ->innerJoin(
+                ['InstitutionPositions' => 'institution_positions'],
+                [
+                    'InstitutionPositions.id = InstitutionStaff.institution_position_id'
+                ]
+            )
+            ->innerJoin(
+                ['StaffPositionTitles' => 'staff_position_titles'],
+                [
+                    'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
+                    'StaffPositionTitles.name' => 'Principal'
+                ]
+            )
+           ->innerJoin(
+                [$SecurityUsers->getAlias() => $SecurityUsers->getTable()],
+                [
+                    $SecurityUsers->aliasField('id') . ' = InstitutionStaff.staff_id',
+                    $SecurityUsers->aliasField('status') => 1
+                ]
+            )
+            ->where([
+                'InstitutionStaff.institution_id' => $institutionId,
+                'InstitutionStaff.staff_status_id' => 1,
+
+                'OR' => [
+
+                    [
+                        'InstitutionStaff.end_date IS NOT NULL',
+                        'InstitutionStaff.start_date <=' => $academicPeriod->start_date,
+                        'InstitutionStaff.end_date >=' => $academicPeriod->start_date
+                    ],
+
+                    [
+                        'InstitutionStaff.end_date IS NOT NULL',
+                        'InstitutionStaff.start_date <=' => $academicPeriod->end_date,
+                        'InstitutionStaff.end_date >=' => $academicPeriod->end_date
+                    ],
+
+                    [
+                        'InstitutionStaff.end_date IS NOT NULL',
+                        'InstitutionStaff.start_date >=' => $academicPeriod->start_date,
+                        'InstitutionStaff.end_date <=' => $academicPeriod->end_date
+                    ],
+
+                    [
+                        'InstitutionStaff.end_date IS NULL',
+                        'InstitutionStaff.start_date <=' => $academicPeriod->end_date
+                    ]
+                ]
+            ])
+            ->enableHydration(false)
+            ->toArray();
+
+        $principals = [];
+
+        foreach ($data as $row) {
+            $principals[] = trim(
+                ($row['first_name'] ?? '') . ' ' .
+                ($row['last_name'] ?? '')
+            );
+        }
+        return implode(', ', array_unique($principals));
+    }
 
 }
