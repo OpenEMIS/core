@@ -930,6 +930,7 @@ class InstitutionsController extends AppController
         if (!$institution_id) {
             $session = $this->request->getSession();
             $institution_id = $session->read('Institution.Institutions.id');
+            
             //POCOR-9691[START]
             if(empty($institution_id)){
                 $institution_id = $session->read('Institution.Institutions.primaryKey.id');
@@ -938,6 +939,7 @@ class InstitutionsController extends AppController
                 $institution_id = $session->read('Institution.Institutions.primaryKey.institution_id');
             }
             //POCOR-9691[END]
+
         }
         // StaffBehaviours view: if still missing, decode pass[1] or load behaviour by id so view does not redirect to Dashboard
         if (!$institution_id && $this->request->getParam('action') == 'StaffBehaviours') {
