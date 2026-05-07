@@ -2143,8 +2143,78 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $result['cum_gpa'] ?? 0.00;
     }
 
-
+    //POCOR-9622 -- Updated the cumulative gpa calculations as per new requirement.
     private static function getCumulativeGpaForStudentGpa(
+        int $institutionId,
+        int $studentId,
+        int $academicPeriodId,
+        int $educationGradeId,
+        int $educationGradeGpaId
+        ): float {
+        $connection = ConnectionManager::get('default');
+        
+        $sql = "SELECT
+                isg.id,
+                isg.student_id,
+                isg.institution_id,
+                isg.academic_period_id,
+                isg.education_grade_id,
+                isg.education_grades_gpa_id,
+                isg.gpa,
+                isg.cumulative_gpa,
+                calculated_gpa.new_cumulative_gpa
+            FROM institution_students_gpa AS isg
+            INNER JOIN (
+                SELECT
+                    grade_mapping.main_education_grade_gpa_id,
+                    ROUND(AVG(inner_isg.gpa), 2) AS new_cumulative_gpa,
+                    inner_isg.student_id
+                FROM (
+                    SELECT
+                        egcg.main_education_grade_id,
+                        egg.id AS main_education_grade_gpa_id,
+                        prev_grade.id AS education_grade_id,
+                        prev_egg.id AS education_grades_gpa_id
+                    FROM education_grades_cumulative_gpa AS egcg
+                    INNER JOIN education_grades_gpa AS egg
+                        ON egcg.main_education_grade_id = egg.education_grade_id
+                    INNER JOIN education_grades AS current_grade
+                        ON current_grade.id = egcg.education_grade_id
+                    INNER JOIN education_grades AS prev_grade
+                        ON prev_grade.code = current_grade.code
+                    INNER JOIN education_grades_gpa AS prev_egg
+                        ON prev_egg.education_grade_id = prev_grade.id
+                    INNER JOIN education_grades_gpa AS current_egg
+                        ON current_egg.id = egg.id
+                        AND current_egg.start_date >= prev_egg.start_date
+                ) AS grade_mapping
+                INNER JOIN institution_students_gpa AS inner_isg
+                    ON inner_isg.education_grade_id = grade_mapping.education_grade_id
+                    AND inner_isg.education_grades_gpa_id = grade_mapping.education_grades_gpa_id
+                WHERE inner_isg.student_id IN ($studentId) 
+                GROUP BY
+                    inner_isg.student_id,
+                    grade_mapping.main_education_grade_gpa_id
+            ) AS calculated_gpa
+                ON calculated_gpa.student_id = isg.student_id
+                AND calculated_gpa.main_education_grade_gpa_id = isg.education_grades_gpa_id;
+            ";
+
+
+        $result = $connection->execute($sql)->fetch('assoc');
+        $results = $connection->execute($sql)->fetchAll('assoc');
+
+        foreach ($results as $row) {
+            if ($row['education_grades_gpa_id'] == $educationGradeGpaId) {
+                return (float)$row['new_cumulative_gpa'];
+            }
+        }
+
+        return 0.00;
+    }
+
+    //POCOR-9622 -- Code required for reference purpose for initial CGPA calculation, to be removed once the new CGPA calculation is verified and stable.
+    private static function getCumulativeGpaForStudentGpaReference(
         int $institutionId,
         int $studentId,
         int $academicPeriodId,
