@@ -1043,6 +1043,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             $institutionStudents->aliasField('academic_period_id')=> $academicPeriodId,
             $institutionStudents->aliasField('education_grade_id')=> $educationGradeId,
         ])
+        ->orderAsc($institutionStudents->aliasField('student_status_id')) //POCOR-9641
         ->first();
 
     if (!$enrollment) {
