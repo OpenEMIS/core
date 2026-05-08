@@ -178,7 +178,29 @@ The repo's CQS contract is: any GET/POST/PUT/DELETE on a uniform resource goes t
 
 *Audit (deferred to Phase 1b):* every retry / force-abort will write a row to {{audit_logs}} with the acting {{security_user_id}}, target {{tasks.id}}, and action.
 
-h3. 4.6 Governance constraints (binding, codified in {{docs/v6-transition-rules.md}})
+h3. 4.6 v5 model completeness — factory + PHPDoc + 100%-passing feature test
+
+Every model registered in {{CrudApiController::$allowedResources}} must ship with the standard v5 triple in the *same commit* that registers it:
+
+# *Factory* under {{api/database/factories/Api5/<Model>Factory.php}} — extends {{Illuminate\Database\Eloquent\Factories\Factory}}, declares {{$model}}, returns a fully-formed row from {{definition()}} that respects every NOT NULL column and FK-shape link.
+# *PHPDoc* on the model — class docblock describing the resource, plus per-property docblock entries covering {{$table}}, {{$fillable}}, {{$casts}}, status enums, and Eloquent relationships (with their semantics, not just types).
+# *Feature test* under {{api/tests/Feature/<Model>ApiTest.php}} — uses {{DatabaseTransactions}} + {{WithFaker}}, authenticates as {{SecurityUsers id=2}} via {{JWTAuth::fromUser}}, exercises the full CRUD surface against {{/api/v5/<resource>}} ({{GET}} list / {{GET}} by id / {{POST}} / {{PUT}} / {{DELETE}}), and *passes 100%*.
+
+A v5 resource is not "done" until {{php artisan test tests/Feature/<Model>ApiTest.php}} returns green. If a feature test fails, fix the model / factory / migration — never weaken the test.
+
+*Verified for Phase 1a:*
+
+{code}
+PASS Tests\Feature\TasksApiTest        (5 passed, 0.40s)
+PASS Tests\Feature\TaskJobsApiTest     (5 passed, 0.17s)
+PASS Tests\Feature\TaskFailuresApiTest (5 passed, 0.23s)
+                                       ─────────────
+                                       15 / 15 passed
+{code}
+
+Each test covers list / create / view / update / delete via the CRUD pipeline ({{200 / 201 / 200 / 200 / 204}}).
+
+h3. 4.7 Governance constraints (binding, codified in {{docs/v6-transition-rules.md}})
 
 The reviewer's constraints become repo-wide rules:
 
@@ -188,6 +210,7 @@ The reviewer's constraints become repo-wide rules:
 # *No new CakePHP-side queue infrastructure.* The {{system_queue*}} tables are the OpenEMIS-owned target; legacy CakePHP queue tables ({{alert_queue}}, {{webhook_queue}}) are frozen.
 # *No request-triggered background processing.* Angular v20 SPA cannot reliably trigger work; retire the pattern formally.
 # *Operational documentation uses OpenEMIS vocabulary*: OpenEMIS Runtime, OpenEMIS Queue, OpenEMIS Tasks, OpenEMIS Workers, OpenEMIS Failures. Framework names are implementation details only.
+# *Every v5 model ships with factory + PHPDoc + 100%-passing feature test in the same commit that registers it in {{CrudApiController::$allowedResources}}* — see §4.6.
 
 {{docs/v6-transition-rules.md}} is developer-facing and cross-linked from {{CONTRIBUTING.md}} and {{README.md}} so it applies regardless of which AI assistant or editor a contributor uses.
 
@@ -206,6 +229,8 @@ h2. 5. Files Changed Summary
 | OpenEMIS Runtime entry-point | {{api/app/Console/Commands/OpenemisCoreRunCommand.php}} (auto-registered) |
 | Admin Runtime section — v5 CRUD reads | {{api/app/Http/Controllers/BaseApi/CrudApiController.php}} ({{tasks}} / {{task-jobs}} / {{task-failures}} added to {{$allowedResources}}) |
 | Admin Runtime section — v4 actions/aggregates | {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}} (Swagger-annotated), {{api/routes/api.php}} (5 endpoints under v4) |
+| Factories (v5 contract) | {{api/database/factories/Api5/TasksFactory.php}}, {{TaskJobsFactory.php}}, {{TaskFailuresFactory.php}} |
+| Feature tests (v5 contract) | {{api/tests/Feature/TasksApiTest.php}}, {{TaskJobsApiTest.php}}, {{TaskFailuresApiTest.php}} — 15 / 15 passing |
 | Documentation | {{docs/v6-transition-rules.md}} (governance, developer-facing) |
 
 *Phase 1b (deferred to follow-up ticket):*
