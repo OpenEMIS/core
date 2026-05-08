@@ -42,4 +42,12 @@ class SystemsController extends AppController
     //POCOR-9396
     public function SystemProcesses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.SystemProcesses']); }
 
+    //POCOR-9694: Administration → Async Services group. Each action delegates
+    //to the matching System.* Table class, which extends AsyncServicesAdminTable.
+    public function AsyncServicesOverview() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.AsyncServicesOverview']); }
+    public function FailedJobs()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.FailedJobs']); }
+    public function StuckProcesses()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.StuckProcesses']); }
+    public function WebhookFailures()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.WebhookFailures']); }
+    public function QueueBacklog()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.QueueBacklog']); }
+
 }
