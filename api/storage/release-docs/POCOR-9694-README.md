@@ -88,9 +88,9 @@ h2. 4. What Was Implemented (Phase 1)
 # Dual-writing the *alerts* path through {{TasksRecorder}} (the helper exists; the {{AlertCommandBase}} integration is a separate small change).
 {panel}
 
-h3. 4.1 Pin Docker PHP to 8.4.x — *deferred to Phase 1b*
+h3. 4.1 Pin Docker PHP to 8.4.x — *shipped in Phase 1b (commit {{6250b88829}})*
 
-Restores root composer to a working state. Without this, {{composer require}} on root fails because host PHP 8.5.5 is past the upper bound of {{phpoffice/phpspreadsheet}} and {{laminas/laminas-diactoros}}. Deferred to a separate follow-up ticket so the runtime work in this branch can be deployed independently.
+Bumped {{Dockerfile:40}} from {{php:8.3-apache}} to {{php:8.4-apache}}. 8.4 is the highest stable release that every direct dependency in the root {{composer.json}} supports; the host running PHP 8.5.5 was pushing {{phpoffice/phpspreadsheet}} and {{laminas/laminas-diactoros}} past their upper bounds.
 
 h3. 4.2 Remove {{exec()}} from {{WebhookRepository.php}}
 
@@ -133,7 +133,7 @@ Canonical cron line:
 *  *  *  *  *  www-data  cd /var/www/html/core/api && /usr/local/bin/php artisan openemis-core:run >> /var/www/html/core/api/storage/logs/openemis-core-run.log 2>&1
 {code}
 
-h3. 4.5 Administration → System → OpenEMIS Runtime (section with multiple pages) — *backend shipped, frontend deferred to Phase 1b*
+h3. 4.5 Administration → System → Async Services (section with multiple pages) — *CakePHP nav + stub admin pages + Laravel v4 backend shipped in Phase 1b; Angular replacement deferred to Phase 2*
 
 A new Administration section following the Webhooks / Alerts UX convention — one section, multiple pages. All pages read from the new {{system_queue*}} tables (with {{system_processes}} for stuck-process detection) so the admin surface speaks OpenEMIS vocabulary regardless of underlying framework.
 
@@ -386,3 +386,70 @@ h2. 12. References
 * {{plugins/System/src/Model/Table/SystemProcessesTable.php}} — execution-tracking table
 * {{api/storage/release-docs/POCOR-9509-README.md}} — alerts deployment instructions (updated to point to {{openemis-core:run}})
 * {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}} — governance (§4.6) in developer-facing form
+* {{api/storage/release-docs/POCOR-9694/inventories/exec-callsites.csv}} — F5: 127 {{exec()}}/{{shell_exec()}}/{{proc_open()}}/{{passthru()}} callsites in non-vendor code, classified for v6 migration
+* {{api/storage/release-docs/POCOR-9694/inventories/legacy-shells-inventory.csv}} — F4: 73 {{src/Shell/*.php}} files classified live / dead / superseded
+
+----
+
+h2. 13. Phase 1b — F-list closure & Async Services dashboard (2026-05-09)
+
+Fifteen additional commits landed on this branch on 2026-05-09 closing eight of the nine F-list follow-ups identified during the architectural review (§3) and shipping the Async Services operator dashboard end-to-end (CakePHP nav + 5 stub admin pages + Laravel v4 read API + retry endpoint). Frontend (Angular feature module) remains for Phase 2 / Core v6.
+
+h3. 13.1 F-list status
+
+|| F-item || What || Status || Commit ||
+| F1 | Pin Docker PHP base image to 8.4-apache | shipped | {{6250b88829}} |
+| F2 | Remove {{exec()}} from {{api/app/Repositories/WebhookRepository.php}} | shipped in §4.2 (commit {{5e98ef1085}}) | — |
+| F3 | Delete duplicate CakePHP alert shells + commands (audit-confirmed dead) | shipped — 22 files / 2,794 lines removed | {{c0051550bb}} |
+| F4 | Inventory the 73 legacy {{src/Shell/*.php}} files | shipped (CSV) | {{aa3a4beb6c}} |
+| F5 | Inventory the 127 {{exec()}} callsites with proposed v6 replacement strategy | shipped (CSV) | {{d42947d7ed}} |
+| F6 | Document the single-cron alternative in POCOR-9509 README | shipped | {{9aa6a1359d}} |
+| F7 | Async Services admin dashboard — CakePHP nav + stub pages + Laravel v4 backend | shipped (CakePHP + backend); Angular UI deferred to Phase 2 | several — see §13.2 |
+| F8 | Opportunistic AsyncCatchUp middleware (safety net for stalled cron) | shipped | {{24248f78f3}} |
+| F9 | {{docs/v6-transition-rules.md}} relocated to {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}} | shipped earlier | {{2d826a3dbd}} |
+
+h3. 13.2 Async Services dashboard — what shipped
+
+* *CakePHP nav restructure* — {{src/Controller/Component/NavigationComponent.php}}: existing flat *Processes* entry under Administration relocated as a child of a new *Async Services* group. Sibling children added: *Overview, Failed Jobs, Stuck Processes, Webhook Failures, Queue Backlog*. Two reusable helpers landed alongside: {{getCurrentUserRoleIds()}} (replaces the inline {{SecurityGroupUsers->matching('SecurityRoles')}} block duplicated 9 times) and {{userHasAdministrationAccessTo(string $category)}} (drop-in gate for any future admin sub-section). Commit {{8f7ec018a6}}.
+* *Migration consolidation* — security_functions seeds {{module='Administration', category='Async Services'}} (6 rows) + super_admin grants merged into the single {{20260508143848_POCOR9694.php}} migration alongside the runtime tables. The original split file {{20260508160000_POCOR9694Nav.php}} was removed; the consolidated file uses a {{withForeignKeyChecksOff(callable)}} helper to keep the four DML methods DRY. Commit {{22b25210d3}}.
+* *CakePHP stub admin pages* — {{plugins/System/src/Model/Table/AsyncServicesAdminTable.php}} (abstract base) + 5 concrete tables for the new nav children. Each child Table is intentionally minimal: {{setTable()}} + {{describeScreen()}}; the base centralises read-only toggles and the placeholder banner. Commit {{04c23e39bd}}.
+* *Laravel v4 backend* — {{api/app/Services/SystemAsyncService.php}} (data layer) + {{api/app/Http/Controllers/Administration/SystemAsyncController.php}} (HTTP layer) + 6 routes registered in the {{auth.jwt}} v4 group:
+{code}
+GET  /api/v4/system-async/overview
+GET  /api/v4/system-async/failed-jobs        ?page&limit&queue
+GET  /api/v4/system-async/stuck-processes    ?page&limit&hours
+GET  /api/v4/system-async/webhook-failures   ?page&limit
+GET  /api/v4/system-async/queue-backlog
+POST /api/v4/system-async/retry/{kind}/{id}  kind ∈ failed-job|webhook|alert
+{code}
+Commits {{96efff8ad7}}, {{f6e8595447}}, {{12bc85e117}}. End-to-end smoke-tested via curl against {{https://localhost:8482}} on 2026-05-09 — all 5 GET endpoints respond with the expected JSON envelope.
+
+h3. 13.3 AsyncCatchUp middleware (F8)
+
+{{api/app/Http/Middleware/AsyncCatchUp.php}} runs in {{terminate()}} after the response has been flushed to the client. Three configurable guards keep the cost predictable:
+
+|| Knob (env) || Default || Purpose ||
+| {{ASYNC_CATCHUP_ENABLED}} | true | Master switch for emergency shut-off without removing from Kernel |
+| {{ASYNC_CATCHUP_STALE_MINUTES}} | 5 | Only fires when newest {{system_processes}} row is older than this |
+| {{ASYNC_CATCHUP_THROTTLE_SECONDS}} | 60 | At most one catch-up per window across the whole app |
+| {{ASYNC_CATCHUP_BUDGET_MS}} | 200 | {{set_time_limit}} hard upper bound on the {{schedule:run}} call |
+
+Calls {{schedule:run}} via {{Artisan::call()}} — in-process, NOT via {{exec()}}, so no FPM worker tie-up and no shell-injection surface area. Registered in the {{web}} middleware group only; API requests skip it. Commit {{24248f78f3}}.
+
+h3. 13.4 Swagger PHPDoc cleanup on runtime models
+
+The three v5 runtime models ({{Tasks}}, {{TaskJobs}}, {{TaskFailures}}) ship the same 6-stub Swagger annotation block as the 665-model project majority — {{_swaggerPath}}, {{_swaggerList}}, {{_swaggerCreate}}, {{_swaggerView}}, {{_swaggerUpdate}}, {{_swaggerDelete}}. The initial Phase 1b version mistakenly included a 7th {{_swaggerHelper}} stub (matching the 8-model outlier pattern of {{AbsenceTypes}}); that stub was stripped to align with the majority. Generator verified end-to-end:
+
+{code:bash}
+docker exec poe-application sh -c "cd /var/www/html/emis/core/api && php artisan l5-swagger:generate"
+# Regenerating docs v5
+# exit 0; api-docs-v5.json valid, 1353 paths, /api/v5/{tasks,task-jobs,task-failures} present
+{code}
+
+Commits {{b345c33b03}} (add) + {{f557b67184}} (align with majority).
+
+h3. 13.5 What is *not* shipped (deferred to Phase 2 / Core v6)
+
+* *Angular feature module {{frontend/src/app/system-async/}}* — the CakePHP nav children currently render via stub Tables that show a placeholder banner. The Angular replacement that calls {{/api/v4/system-async/*}} ships in Core v6.
+* *Aggregate Overview screen UI* — the data is available at {{GET /api/v4/system-async/overview}} (scheduler last-run timestamps, pending counts, error totals); the Angular dashboard widget that consumes it is Phase 2.
+* *Per-row drill-in for {{failed_jobs.exception}}* — currently the API returns a 240-character preview only. Full exception + retry UI ships with the Angular module.
