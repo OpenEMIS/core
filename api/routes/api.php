@@ -614,6 +614,18 @@ Route::group(
 );
 
 Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
+    //POCOR-9694: OpenEMIS Runtime endpoints — registered BEFORE the v5 catch-all so the
+    //  CrudApiController doesn't swallow them. Lives under Administration namespace.
+    $runtime = \App\Http\Controllers\Administration\SystemRuntimeController::class;
+    Route::get('system-runtime/tasks', [$runtime, 'tasks']);
+    Route::get('system-runtime/failures', [$runtime, 'failures']);
+    Route::get('system-runtime/logs', [$runtime, 'logs']);
+    Route::get('system-runtime/queue', [$runtime, 'queue']);
+    Route::get('system-runtime/scheduler', [$runtime, 'scheduler']);
+    Route::post('system-runtime/tasks/{id}/retry', [$runtime, 'retryTask'])->where('id', '[0-9]+');
+    Route::post('system-runtime/tasks/{id}/abort', [$runtime, 'abortTask'])->where('id', '[0-9]+');
+    //POCOR-9694 end
+
     // POCOR-8915 start
     // should be always the last, as it is all-consuming
     Route::group(
