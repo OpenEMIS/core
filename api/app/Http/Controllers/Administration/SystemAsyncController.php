@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Administration;
 
+use App\Http\Controllers\Controller;
 use App\Services\SystemAsyncService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
