@@ -305,22 +305,23 @@ others. The current refactor uses a single `alerts` queue; splitting is a one-li
 
 The two direct `alerts:check` / `alerts:send` cron entries in section 5 are the **canonical** install
 for ministries that have already rolled out POCOR-9509. New deployments may prefer a single
-unified cron:
+unified cron — the OpenEMIS Runtime entry-point:
 
 ```bash
-* * * * * www-data cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
+* * * * * www-data timeout 3600 flock -n /tmp/openemis-core.lock bash -c "cd /var/www/html/emis/core/api && php artisan openemis-core:run >> /var/log/openemis-core-run.log 2>&1"
 ```
 
-`schedule:run` dispatches every entry registered in `api/app/Console/Kernel.php::schedule()`
-(currently `alerts:check`, `alerts:send`, `webhooks:process`). Operationally simpler:
+`openemis-core:run` is OpenEMIS's named tick-handler. Each tick it wakes up the runtime, which
+checks its scheduler definitions (currently `alerts:check`, `alerts:send`, `webhooks:process`)
+and the `jobs` queue table, and dispatches whatever is due. Operationally simpler:
 
 - One crontab entry instead of three
-- One log file (per-command logging stays separate)
-- New scheduled commands (e.g. `webhooks:process`, future `tasks:run`) appear automatically
+- New scheduled commands appear automatically with no crontab edit
+- Operators never need Laravel-internal vocabulary to keep the system alive
 
-**Pick one path, never both.** Mixing direct `alerts:*` entries with `schedule:run` causes every
-command to fire twice — once from each cron. The warning in section 5 still stands: if you go
-single-cron, remove `/etc/cron.d/openemis-alerts` first.
+**Pick one path, never both.** Mixing direct `alerts:*` entries with `openemis-core:run` causes every
+command to fire twice — once from each cron. If you go single-cron, remove `/etc/cron.d/openemis-alerts`
+first.
 
 The direct-entry path remains documented as the **advanced** install for ministries that need
 per-command `flock` lock files, dedicated log files, or different `timeout` budgets per command.

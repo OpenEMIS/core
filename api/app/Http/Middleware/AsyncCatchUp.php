@@ -129,7 +129,7 @@ class AsyncCatchUp
     }
 
     /**
-     * Runs {{schedule:run}} bounded by the hard budget. Any throwable
+     * Runs {{openemis-core:run}} bounded by the hard budget. Any throwable
      * is logged and swallowed — middleware must never fail a request.
      */
     private function runScheduleSafely(): void
@@ -137,14 +137,14 @@ class AsyncCatchUp
         $startedAt = microtime(true);
         try {
             $this->markAttempt();
-            Log::info(self::LOG_TAG . ' triggering schedule:run after stale window');
+            Log::info(self::LOG_TAG . ' triggering openemis-core:run after stale window');
             // Artisan::call returns the exit code synchronously; the
-            // hard budget protects us from a hung scheduler.
+            // hard budget protects us from a hung runtime tick.
             $this->withTimeBudget(static function (): void {
-                Artisan::call('schedule:run');
+                Artisan::call('openemis-core:run');
             });
             $elapsedMs = (int) round((microtime(true) - $startedAt) * 1000);
-            Log::info(sprintf('%s schedule:run completed in %dms', self::LOG_TAG, $elapsedMs));
+            Log::info(sprintf('%s openemis-core:run completed in %dms', self::LOG_TAG, $elapsedMs));
         } catch (Throwable $e) {
             $elapsedMs = (int) round((microtime(true) - $startedAt) * 1000);
             Log::warning(sprintf(
