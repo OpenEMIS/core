@@ -623,6 +623,20 @@ Route::group(
         Route::get('system-runtime/scheduler', [$runtime, 'scheduler']);
         Route::post('system-runtime/tasks/{id}/retry', [$runtime, 'retryTask'])->where('id', '[0-9]+');
         Route::post('system-runtime/tasks/{id}/abort', [$runtime, 'abortTask'])->where('id', '[0-9]+');
+
+        //POCOR-9694: Async Services dashboard — aggregate views across the four
+        //  legacy + runtime queue surfaces (system_processes, alert_queue,
+        //  webhook_queue, failed_jobs). Distinct from system-runtime/* above
+        //  which only addresses the new tasks/* abstraction.
+        $async = \App\Http\Controllers\Administration\SystemAsyncController::class;
+        Route::get('system-async/overview',          [$async, 'overview']);
+        Route::get('system-async/failed-jobs',       [$async, 'failedJobs']);
+        Route::get('system-async/stuck-processes',   [$async, 'stuckProcesses']);
+        Route::get('system-async/webhook-failures',  [$async, 'webhookFailures']);
+        Route::get('system-async/queue-backlog',     [$async, 'queueBacklog']);
+        Route::post('system-async/retry/{kind}/{id}', [$async, 'retry'])
+            ->where('kind', 'failed-job|webhook|alert')
+            ->where('id', '[0-9]+');
         //POCOR-9694 end
 
     }
