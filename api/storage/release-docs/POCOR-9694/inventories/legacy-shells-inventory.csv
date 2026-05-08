@@ -1,0 +1,74 @@
+file,classname,extends,classification,laravel_equivalent,notes
+src/Shell/AddAllInstitutionsExamCentreShell.php,AddAllInstitutionsExamCentreShell,Cake\Console\Shell,dead,,One-off bulk-link of every institution to an exam centre; no callers found
+src/Shell/AlertCaseEscalationShell.php,AlertCaseEscalationShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertCaseEscalationCommand.php,POCOR-9509 ported to Laravel alerts:case-escalation
+src/Shell/AlertLicenseRenewalShell.php,AlertLicenseRenewalShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertLicenseRenewalCommand.php,POCOR-9509 ported to Laravel alerts:license-renewal
+src/Shell/AlertLicenseValidityShell.php,AlertLicenseValidityShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertLicenseValidityCommand.php,POCOR-9509 ported to Laravel alerts:license-validity
+src/Shell/AlertRetirementWarningShell.php,AlertRetirementWarningShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertRetirementWarningCommand.php,POCOR-9509 ported to Laravel alerts:retirement-warning
+src/Shell/AlertScholarshipApplicationShell.php,AlertScholarshipApplicationShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertScholarshipApplicationCommand.php,POCOR-9509 ported to Laravel alerts:scholarship-application
+src/Shell/AlertScholarshipDisbursementShell.php,AlertScholarshipDisbursementShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertScholarshipDisbursementCommand.php,POCOR-9509 ported to Laravel alerts:scholarship-disbursement
+src/Shell/AlertShell.php,AlertShell,Cake\Console\Shell,live,,Base class for all Alert*Shell subclasses; still required as parent until subclasses go
+src/Shell/AlertStaffEmploymentShell.php,AlertStaffEmploymentShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertStaffEmploymentCommand.php,POCOR-9509 ported to Laravel alerts:staff-employment
+src/Shell/AlertStaffLeaveShell.php,AlertStaffLeaveShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertStaffLeaveCommand.php,POCOR-9509 ported to Laravel alerts:staff-leave
+src/Shell/AlertStaffTypeShell.php,AlertStaffTypeShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertStaffTypeCommand.php,POCOR-9509 ported to Laravel alerts:staff-type
+src/Shell/ArchiveStaffAttendancesShell.php,ArchiveStaffAttendancesShell,Cake\Console\Shell,live,,Archives staff attendance rows into archive_* tables; called via DatabaseTransferShell pipeline
+src/Shell/ArchiveStudentAssessmentsShell.php,ArchiveStudentAssessmentsShell,Cake\Console\Shell,live,,Archives student assessment rows; called via DatabaseTransferShell pipeline
+src/Shell/ArchiveStudentAttendancesShell.php,ArchiveStudentAttendancesShell,Cake\Console\Shell,live,,Archives student attendance rows; called via DatabaseTransferShell pipeline
+src/Shell/AutomateReportCardGenerationShell.php,AutomateReportCardGenerationShell,Cake\Console\Shell,live,,Cron-driven entry point: scans report_card_processes queue and dispatches Generate/Email shells via exec
+src/Shell/CommonArchiveShell.php,CommonArchiveShell,Cake\Console\Shell,live,,Static utility used by Archive*Shell subclasses (setSystemProcessRunning/Failed; moveRecordsToArchive)
+src/Shell/ConsoleShell.php,ConsoleShell,Cake\Console\Shell,dead,,Generic CakePHP REPL console; not invoked from app code
+src/Shell/CopyMassGraduationShell.php,CopyMassGraduationShell,Cake\Console\Shell,dead,,Mass-graduation helper; no callers found in non-shell code
+src/Shell/CopyReportCardShell.php,CopyReportCardShell,Cake\Console\Shell,dead,,Copies report-card configs across periods; no live callers
+src/Shell/DatabaseSqlDumpShell.php,DatabaseSqlDumpShell,Cake\Console\Shell,live,,Spawned by BackupLogsTable::triggerDatabaseSqlDumpShell; runs mysqldump
+src/Shell/DatabaseTransferShell.php,DatabaseTransferShell,Cake\Console\Shell,live,,Spawned by TransferLogsTable::triggerDatabaseTransferShell; orchestrates Archive*Shells
+src/Shell/DeleteOutComeRecordsShell.php,DeleteOutComeRecordsShell,Cake\Console\Shell,dead,,Bulk delete of outcome records; no callers found
+src/Shell/EducationStructureCopyShell_.php,EducationStructureCopyShell_,Cake\Console\Shell,superseded,src/Command/CopyEducationStructureCommand.php,Trailing-underscore name = parked; replaced by Cake 5 copy:education-structure command (POCOR-9354)
+src/Shell/EmailAllExcelReportCardsShell.php,EmailAllExcelReportCardsShell,Cake\Console\Shell,live,,Spawned by ReportCardStatusesTable::triggerEmailAllExcelReportCardsShell
+src/Shell/EmailAllReportCardsShell.php,EmailAllReportCardsShell,Cake\Console\Shell,live,,Spawned by ReportCardStatusesTable::triggerEmailAllReportCardsShell + ProfilesTable
+src/Shell/EmailAllStaffReportCardsShell.php,EmailAllStaffReportCardsShell,Cake\Console\Shell,live,,Spawned by StaffProfilesTable::triggerEmailAllReportCardsShell
+src/Shell/EmailAllStudentReportCardsShell.php,EmailAllStudentReportCardsShell,Cake\Console\Shell,live,,Spawned by StudentProfilesTable::triggerEmailAllReportCardsShell
+src/Shell/GenerateAllClassProfilesShell.php,GenerateAllClassProfilesShell,Cake\Console\Shell,superseded,src/Command/GenerateAllClassProfilesCommand.php,POCOR-9598 explicit replacement; new generate_class_profile command
+src/Shell/GenerateAllInstitutionReportCardsShell.php,GenerateAllInstitutionReportCardsShell,Cake\Console\Shell,superseded,src/Command/GenerateAllInstitutionProfilesCommand.php,POCOR-9598 explicit replacement; new generate_institution_profile command
+src/Shell/GenerateAllReportCardsShell.php,GenerateAllReportCardsShell,Cake\Console\Shell,live,,Spawned by ReportCardStatusesTable::triggerGenerateAllReportCardsShell + ProfilesTable; not yet ported
+src/Shell/GenerateAllStaffReportCardsShell.php,GenerateAllStaffReportCardsShell,Cake\Console\Shell,superseded,src/Command/GenerateAllStaffProfilesCommand.php,POCOR-9598 explicit replacement; new generate_staff_profile command
+src/Shell/GenerateAllStudentReportCardsShell.php,GenerateAllStudentReportCardsShell,Cake\Console\Shell,superseded,src/Command/GenerateStudentProfileCommand.php,POCOR-9598 explicit replacement; new generate_student_profile command
+src/Shell/GenerateReportCardsByIdsShell.php,GenerateReportCardsByIdsShell,Cake\Console\Shell,dead,,Variant of GenerateAllReportCardsShell; no callers in non-shell code
+src/Shell/GenerateReportCardsByInstitutionShell.php,GenerateReportCardsByInstitutionShell,Cake\Console\Shell,dead,,Variant of GenerateAllReportCardsShell; no callers in non-shell code
+src/Shell/GenerateReportCardsShell.php,GenerateReportCardsShell,Cake\Console\Shell,dead,,Older single-shot variant; superseded by GenerateAll*ReportCardsShell family
+src/Shell/GenerateStudentUnmarkedAttendancesShell.php,GenerateStudentUnmarkedAttendancesShell,Cake\Console\Shell,dead,,Backfill of unmarked-attendance rows; one-off; no callers
+src/Shell/InactiveRoleRemovalShell.php,InactiveRoleRemovalShell,Cake\Console\Shell,dead,,Cleanup of inactive security roles; no callers found
+src/Shell/InfrastructureShell.php,InfrastructureShell,Cake\Console\Shell,dead,,Old infrastructure data utility; no callers
+src/Shell/InstitutionClassSubjectsShell.php,InstitutionClassSubjectsShell,Cake\Console\Shell,dead,,Class-subjects fixup; no callers found
+src/Shell/InstitutionProgramAndGradeShell_.php,InstitutionProgramAndGradeShell_,Cake\Console\Shell,superseded,src/Command/CopyInstitutionProgramsGradesSubjectsCommand.php,POCOR-9354 trailing-underscore = parked; replaced by Cake 5 institution:copy-programs-grades command
+src/Shell/LinkAllExamCentresShell.php,LinkAllExamCentresShell,Cake\Console\Shell,dead,,One-off exam-centre linker; no callers found
+src/Shell/PasswordShell.php,PasswordShell,Cake\Console\Shell,dead,,Old password reset utility; no callers found
+src/Shell/PatchMissingStudentReportCardCommentsShell.php,PatchMissingStudentReportCardCommentsShell,Cake\Console\Shell,dead,,Backfill comments script; one-off; no callers
+src/Shell/PerformanceAssessmentShell.php,PerformanceAssessmentShell,Cake\Console\Shell,dead,,Bulk performance assessment; no callers
+src/Shell/PerformanceCompetenciesShell.php,PerformanceCompetenciesShell,Cake\Console\Shell,superseded,src/Command/CopyPerformanceCompetenciesCommand.php,Old triggerPerformanceCompetenciesShell calls all commented out; new Cake 5 Copy*Command exists
+src/Shell/PerformanceOutcomesShell.php,PerformanceOutcomesShell,Cake\Console\Shell,live,,Still spawned by DataManagementCopyTable::triggerPerformanceOutcomesShell (PerformanceOutcomes shell name)
+src/Shell/ReportShell.php,ReportShell,Cake\Console\Shell,dead,,Generic report shell; no callers found
+src/Shell/RiskShell.php,RiskShell,Cake\Console\Shell,dead,,Risk reports utility; no callers (UpdateRisksShell is the live one)
+src/Shell/SendingAlertShell.php,SendingAlertShell,Cake\Console\Shell,superseded,src/Command/SendingAlertCommand.php,Replaced by Cake 5 SendingAlertCommand (sending_alert); old triggerSendingAlertShell call commented out
+src/Shell/ShiftShell.php,ShiftShell,Cake\Console\Shell,dead,,Old shift utility; superseded by UpdateInstitutionShiftTypeShell
+src/Shell/StaffAttendancesShell.php,StaffAttendancesShell,Cake\Console\Shell,dead,,Standalone staff-attendance recompute; no callers
+src/Shell/StaffPhotoDownloadShell.php,StaffPhotoDownloadShell,Cake\Console\Shell,dead,,Bulk download staff photos; no callers
+src/Shell/StudentAdmissionShell.php,StudentAdmissionShell,Cake\Console\Shell,dead,,Old student admission batch; no callers
+src/Shell/StudentAssessmentsShell.php,StudentAssessmentsShell,Cake\Console\Shell,dead,,Old student-assessments batch; no callers
+src/Shell/StudentAttendanceShell.php,StudentAttendanceShell,Cake\Console\Shell,dead,,Old student-attendance batch; no callers (week-list logic now in InstitutionStudentWeeklyAttendanceTable)
+src/Shell/StudentsPhotoDownloadShell.php,StudentsPhotoDownloadShell,Cake\Console\Shell,dead,,Bulk download student photos; POCOR-7939 refactor; no callers
+src/Shell/SurveyShell.php,SurveyShell,Cake\Console\Shell,dead,,Builds InstitutionSurveys records; no callers found
+src/Shell/SyncExamResultShell.php,SyncExamResultShell,Cake\Console\Shell,dead,,Sync exam results; no callers found
+src/Shell/SystemUpdatesShell.php,SystemUpdatesShell,App\Shell\AlertShell,superseded,api/app/Console/Commands/Alerts/AlertSystemUpdatesCommand.php,POCOR-9509 ported to Laravel alerts:system-updates
+src/Shell/TreeShell.php,TreeShell,Cake\Console\Shell,dead,,Generic Cake tree-recover utility; no callers in app code
+src/Shell/TriggerUpdateSubjectStudentTotalMarkShell.php,TriggerUpdateSubjectStudentTotalMarkShell,Cake\Console\Shell,live,,Spawns N parallel UpdateSubjectStudentTotalMarkShell threads via exec()
+src/Shell/UpdateAssigneeShell.php,UpdateAssigneeShell,Cake\Console\Shell,live,,Spawned by WorkflowBehavior::triggerUpdateAssigneeShell + SecurityGroupUsersTable
+src/Shell/UpdateIndexesShell.php,UpdateIndexesShell,Cake\Console\Shell,live,,Spawned by RisksTable::triggerUpdateIndexesShell
+src/Shell/UpdateInstitutionShiftTypeShell.php,UpdateInstitutionShiftTypeShell,Cake\Console\Shell,live,,Spawned by AcademicPeriodsTable::triggerUpdateInstitutionShiftTypeShell
+src/Shell/UpdateRisksShell.php,UpdateRisksShell,Cake\Console\Shell,live,,Spawned by RisksTable::triggerUpdateRisksShell
+src/Shell/UpdateSecurityGroupUsersShell.php,UpdateSecurityGroupUsersShell,Cake\Console\Shell,live,,Spawned to recompute security_group_users from role/group changes
+src/Shell/UpdateStaffLateAttendanceShell.php,UpdateStaffLateAttendanceShell,Cake\Console\Shell,live,,Spawned to recompute late-attendance flags on staff
+src/Shell/UpdateStaffRolesShell.php,UpdateStaffRolesShell,Cake\Console\Shell,live,,Spawned to recompute staff role assignments
+src/Shell/UpdateStudentStatusShell.php,UpdateStudentStatusShell,Cake\Console\Shell,live,,Spawned by StudentStatusUpdatesTable::triggerUpdateStudentStatusShell
+src/Shell/UpdateSubjectStudentTotalMarkShell.php,UpdateSubjectStudentTotalMarkShell,Cake\Console\Shell,live,,Worker thread spawned by TriggerUpdateSubjectStudentTotalMarkShell
+src/Shell/UpdateUserDefaultIdentityNoShell.php,UpdateUserDefaultIdentityNoShell,Cake\Console\Shell,dead,,One-off backfill of default identity numbers; no callers
+src/Shell/VersionShell.php,VersionShell,Cake\Console\Shell,dead,,Reports app version; no callers
+src/Shell/WebhookShell.php,WebhookShell,Cake\Console\Shell,superseded,api/app/Console/Commands/ProcessWebhook.php,Replaced by Laravel webhook:process / webhooks:process queue commands
