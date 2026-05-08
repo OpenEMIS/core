@@ -1,3 +1,17 @@
+### [5.9.0] - 2026-05-08
+- Implemented: Develop changes to the Reports > Institution > Staff Report to include staff custom fields
+- Bug Fixed: Investigate the cause of queries the system configuration timezone
+- Bug Fixed: Institutions>Performance>GPA: The GPA & CGPA in the generated report card is empty for the student Jimmy Olbrice (1600991587) at C. I. Gibson
+- Bug Fixed: Institutions > Students > GPA tab: The system calculates the Cumulative GPA based on all available GPA values for the configured education grades.
+- Bug Fixed: Institution > Attendances : Student being enrolled but not shown on attendance
+- Bug Fixed: Report Card>Comments: Subject Teacher is not seeing subjects correctly when they have homeroom teacher role
+- Bug Fixed: Administration>system setup>Custom field:Issue in custom field
+- Bug Fixed: Directory>Merge: Merge is not completed properly
+- Bug Fixed: Administration>System Setup>Field Options>Contact Types: The system accepts invalid email ID's to be saved in the Staff/Student Overview page
+- Bug Fixed: Administration > Survey > Forms > Add: Section gets removed after page refresh when adding question to newly created form section
+- Bug Fixed: Institution>Student (2904672460)>Identities tab>Edit: Message is not found
+- Bug Fixed: Institutions>Survey>Forms: Institutions>Survey>Forms: The selection made on the dropdowns does not do the sorting as expected.
+
 ### [5.8.0] - 2026-05-04
 - Implemented: Develop an asynchronous alerts queue in laravel
 - Implemented: Develop a page that allows user to confirm if merge is successful
