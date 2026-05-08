@@ -96,7 +96,26 @@ permission scope, cleaner contract.
 **Apply by.** Don't add controller actions that perform side-effects beyond the resource
 they own. Don't add artisan commands that are really just data fetches with `--json`.
 
-### 5a. `/api/v5/` is uniform CRUD only — bespoke endpoints belong under `/api/v4/`
+### 5a. Every v5 model ships with factory + PHPDoc + 100%-passing feature test
+
+**Rule.** When you add a model to `CrudApiController::$allowedResources`, the *same commit* must include all three of:
+
+1. **Factory** under `api/database/factories/Api5/<Model>Factory.php` — extends `Illuminate\Database\Eloquent\Factories\Factory`, declares `$model`, returns a row from `definition()` that respects every NOT NULL column and FK-shape link.
+2. **PHPDoc** on the model — class docblock describing the resource, plus per-property entries covering `$table`, `$fillable`, `$casts`, status enums, and Eloquent relationships (semantics, not just types).
+3. **Feature test** under `api/tests/Feature/<Model>ApiTest.php` — `DatabaseTransactions` + `WithFaker`, authenticates as `SecurityUsers id=2` via `JWTAuth::fromUser`, exercises GET list / GET by id / POST / PUT / DELETE against `/api/v5/<resource>` and **passes 100%**.
+
+**Why.** Every other v5 resource on the codebase ships with this triple. A new resource without it breaks the uniformity that makes v5 predictable, leaves QA without a regression hook, and silently blocks future MCP exposure (an MCP resource needs deterministic CRUD behaviour to be wrapped). The user has been clear this is non-negotiable.
+
+**Apply by.** A v5 resource is not "done" until `php artisan test tests/Feature/<Model>ApiTest.php` returns green. If a feature test fails, fix the model / factory / migration — never weaken the test. POCOR-9694 verified for Phase 1a:
+
+```
+PASS Tests\Feature\TasksApiTest        (5 passed)
+PASS Tests\Feature\TaskJobsApiTest     (5 passed)
+PASS Tests\Feature\TaskFailuresApiTest (5 passed)
+                                       15 / 15 passed
+```
+
+### 5b. `/api/v5/` is uniform CRUD only — bespoke endpoints belong under `/api/v4/`
 
 **Rule.** New uniform GET/POST/PUT/DELETE on a resource: register the model in
 `CrudApiController::$allowedResources`. **Do not** add a hand-written controller under
