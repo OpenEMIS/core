@@ -404,7 +404,7 @@ h3. 13.1 F-list status
 | F4 | Inventory the 73 legacy {{src/Shell/*.php}} files | shipped (CSV) | {{aa3a4beb6c}} |
 | F5 | Inventory the 127 {{exec()}} callsites with proposed v6 replacement strategy | shipped (CSV) | {{d42947d7ed}} |
 | F6 | Document the single-cron alternative in POCOR-9509 README | shipped | {{9aa6a1359d}} |
-| F7 | Async Services admin dashboard — CakePHP nav + stub pages + Laravel v4 backend | shipped (CakePHP + backend); Angular UI deferred to Phase 2 | several — see §13.2 |
+| F7 | Async Services admin dashboard — CakePHP nav + 5 fully-functional admin screens + retry + Laravel v4 backend + cross-links | shipped end-to-end | several — see §13.2 |
 | F8 | Opportunistic AsyncCatchUp middleware (safety net for stalled cron) | shipped | {{24248f78f3}} |
 | F9 | {{docs/v6-transition-rules.md}} relocated to {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}} | shipped earlier | {{2d826a3dbd}} |
 
@@ -412,7 +412,23 @@ h3. 13.2 Async Services dashboard — what shipped
 
 * *CakePHP nav restructure* — {{src/Controller/Component/NavigationComponent.php}}: existing flat *Processes* entry under Administration relocated as a child of a new *Async Services* group. Sibling children added: *Overview, Failed Jobs, Stuck Processes, Webhook Failures, Queue Backlog*. Two reusable helpers landed alongside: {{getCurrentUserRoleIds()}} (replaces the inline {{SecurityGroupUsers->matching('SecurityRoles')}} block duplicated 9 times) and {{userHasAdministrationAccessTo(string $category)}} (drop-in gate for any future admin sub-section). Commit {{8f7ec018a6}}.
 * *Migration consolidation* — security_functions seeds {{module='Administration', category='Async Services'}} (6 rows) + super_admin grants merged into the single {{20260508143848_POCOR9694.php}} migration alongside the runtime tables. The original split file {{20260508160000_POCOR9694Nav.php}} was removed; the consolidated file uses a {{withForeignKeyChecksOff(callable)}} helper to keep the four DML methods DRY. Commit {{22b25210d3}}.
-* *CakePHP stub admin pages* — {{plugins/System/src/Model/Table/AsyncServicesAdminTable.php}} (abstract base) + 5 concrete tables for the new nav children. Each child Table is intentionally minimal: {{setTable()}} + {{describeScreen()}}; the base centralises read-only toggles and the placeholder banner. Commit {{04c23e39bd}}.
+* *Five fully-functional CakePHP admin screens* (commits {{04c23e39bd}} → {{2f73261b11}} → {{096c3dcd75}} → {{581db3c9b9}} → {{8cfbeee77c}} → {{847208c6b5}}). After the architectural decision (2026-05-09) to ship the dashboard in pure {{ControllerAction}} rather than a separate AngularJS module — the same pattern 70+ other plugins use, so any OpenEMIS developer can maintain it — each child Table got a real implementation:
+
+|| Screen || Source || Filter || Notable columns || Action ||
+| Overview | {{system_processes}} | (none — recent activity) | KPI tiles + activity strip | — |
+| Failed Jobs | {{failed_jobs}} | (none) | Queue / Exception preview / Failed At | *Retry* (transactional INSERT INTO jobs / DELETE FROM failed_jobs) |
+| Stuck Processes | {{system_processes}} | status IN (1,2) AND created < NOW() - INTERVAL 1 HOUR | Feature / Status / Started / Stuck For (timeAgoInWords) / Model | — |
+| Webhook Failures | {{webhook_queue}} | status = -1 | Event / Target URL / HTTP status / Last Error preview / Retries | — |
+| Queue Backlog | {{alert_queue}} | status = 0 ORDER BY available_at ASC | Alert Type / Channel / Recipient / Subject / Waiting For | — |
+
+  Shared base {{AsyncServicesAdminTable}} centralises the read-only toggles and an optional banner — concrete Tables only override {{setTable()}}. Overview KPI tiles partial: {{plugins/System/templates/Element/async_overview.php}}.
+
+* *Manual retry for Failed Jobs* — {{SystemsController::FailedJobsRetry($id)}} replicates {{php artisan queue:retry}} via DB transaction (no exec, no shared bootstrap). Smoke-tested end-to-end: synthetic failure row → click Retry on view page → row moves from {{failed_jobs}} to {{jobs}} with {{attempts=0}} and fresh availability timestamp; cron-driven {{openemis-core:run}} picks it up on the next tick. Commit {{2f73261b11}}.
+
+* *Cross-link toolbar buttons* (commit {{99b5afcc48}}) — single-click pivot from log/queue pages into the Async Services dashboard:
+  - {{Webhook.WebhookLogs}} / {{Webhook.WebhookQueue}} → *Check failures* → {{Systems.WebhookFailures}}
+  - {{Alerts.Logs}} / {{Alerts.AlertQueue}} → *Check backlog* → {{Systems.QueueBacklog}}
+
 * *Laravel v4 backend* — {{api/app/Services/SystemAsyncService.php}} (data layer) + {{api/app/Http/Controllers/Administration/SystemAsyncController.php}} (HTTP layer) + 6 routes registered in the {{auth.jwt}} v4 group:
 {code}
 GET  /api/v4/system-async/overview
@@ -450,6 +466,16 @@ Commits {{b345c33b03}} (add) + {{f557b67184}} (align with majority).
 
 h3. 13.5 What is *not* shipped (deferred to Phase 2 / Core v6)
 
-* *Angular feature module {{frontend/src/app/system-async/}}* — the CakePHP nav children currently render via stub Tables that show a placeholder banner. The Angular replacement that calls {{/api/v4/system-async/*}} ships in Core v6.
-* *Aggregate Overview screen UI* — the data is available at {{GET /api/v4/system-async/overview}} (scheduler last-run timestamps, pending counts, error totals); the Angular dashboard widget that consumes it is Phase 2.
-* *Per-row drill-in for {{failed_jobs.exception}}* — currently the API returns a 240-character preview only. Full exception + retry UI ships with the Angular module.
+* *Angular v20 SPA replacement* — the CakePHP screens are fully functional today; an Angular v20 rewrite is not blocking. When v6 lands, the same {{/api/v4/system-async/*}} endpoints already exist for the new SPA to consume.
+* *Bulk retry / mass-abort actions* — single-row Retry only on Failed Jobs. If operators ask for bulk-retry or mass-abort, those land in a follow-up ticket.
+* *Per-rule alert dispatch policy + scope predicates* — surfaced during the Async Services build but architecturally separate; drafted as Jira-ready proposals at {{tmp/POCOR-9694/followup-alert-dispatch-policy.jira.md}} and {{tmp/POCOR-9694/followup-alert-rule-predicates.jira.md}}.
+
+h3. 13.6 End-to-end smoke (2026-05-09)
+
+Validated under {{admin/demo}} login on {{https://localhost:8482}}:
+
+# Each of the 5 screens loads cleanly with the expected column set.
+# Seeded synthetic rows (1 {{failed_jobs}}, 2 {{webhook_queue}} status=-1, 2 {{alert_queue}} status=0): Overview KPI tiles correctly show *1 Failed Jobs / 2 Webhook Failures / 2 Queue Backlog / 0 Stuck Processes*; clicking each tile lands on the matching detail screen showing the seeded rows.
+# Failed Jobs retry: clicked Retry on a synthetic failure → row moved {{failed_jobs}} → {{jobs}} with {{attempts=0}}; redirected back to index.
+# Cross-link buttons: *Check failures* on Webhook Logs navigates to {{Systems.WebhookFailures}}; *Check backlog* on Alert Logs renders the QueueBacklog deep-link.
+# Existing Trigger Alert Check / Trigger Alert Send buttons still function — no PHP fatals introduced by the Table edits.
