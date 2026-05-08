@@ -72,12 +72,25 @@ Drift toward Laravel; standardise around the existing scheduler + queue + {{syst
 
 h2. 4. What Was Implemented (Phase 1)
 
-h3. 4.1 Pin Docker PHP to 8.4.x
+{panel:title=Phase 1 scope split|borderColor=#3a87ad|borderStyle=solid|titleBGColor=#d9edf7|bgColor=#ffffff}
+*Shipped in this commit (Phase 1a — backend + runtime):*
+# {{exec()}} removed from {{WebhookRepository.php}} — webhook delivery is now queue-only.
+# OpenEMIS Tasks abstraction tables: {{tasks}}, {{task_jobs}}, {{task_failures}} (migration applied).
+# Dual-write helper: {{App\Services\OpenemisRuntime\TasksRecorder}} (best-effort, never throws back).
+# Single-cron entry-point: {{php artisan openemis-core:run}} + Docker {{cron}} install.
+# Runtime backend: 5 endpoints under {{/api/v5/system-runtime/*}} + 2 actions (retry / abort).
+# Governance rules: {{docs/v6-transition-rules.md}}.
 
-Restores root composer to a working state. Without this, {{composer require}} on root fails because host PHP 8.5.5 is past the upper bound of {{phpoffice/phpspreadsheet}} and {{laminas/laminas-diactoros}}.
+*Deferred to Phase 1b (separate follow-up ticket):*
+# Pin Docker PHP to 8.4.x (Phase 1a was developed against the existing {{php:8.3-apache}} base; the upgrade is a separate concern with its own QA cycle).
+# Angular module {{frontend/src/app/system-runtime/}} — five UI pages calling the backend endpoints already shipped here.
+# Permissions seed {{System.SystemRuntime.view}} / {{System.SystemRuntime.execute}} — pairs with the frontend.
+# Dual-writing the *alerts* path through {{TasksRecorder}} (the helper exists; the {{AlertCommandBase}} integration is a separate small change).
+{panel}
 
-* {{Dockerfile}} / {{docker-compose.yml}} updated to PHP 8.4.x base image.
-* {{README.md}} carries a one-line note on the pinned PHP version and why.
+h3. 4.1 Pin Docker PHP to 8.4.x — *deferred to Phase 1b*
+
+Restores root composer to a working state. Without this, {{composer require}} on root fails because host PHP 8.5.5 is past the upper bound of {{phpoffice/phpspreadsheet}} and {{laminas/laminas-diactoros}}. Deferred to a separate follow-up ticket so the runtime work in this branch can be deployed independently.
 
 h3. 4.2 Remove {{exec()}} from {{WebhookRepository.php}}
 
@@ -86,34 +99,41 @@ The fork-from-FPM anti-pattern is replaced by enqueueing through the existing sc
 * {{api/app/Repositories/WebhookRepository.php}} — {{exec()}} call replaced with a queue insert. The OpenEMIS Runtime drains the queue every minute.
 * No new tables, no new commands, no new env knobs introduced by this change alone.
 
-h3. 4.3 OpenEMIS Queue tables (parallel/shadow data layer)
+h3. 4.3 OpenEMIS Tasks abstraction tables (parallel/shadow data layer) — *shipped*
 
 Three new OpenEMIS-owned tables are introduced as the platform-named surface for async work. They are populated by Laravel-side write paths *in parallel* with the existing {{alert_queue}} / {{webhook_queue}} / {{jobs}} / {{failed_jobs}} tables — dual-write — so the new admin pages have a stable, OpenEMIS-vocabulary source while existing CakePHP code paths remain untouched.
 
 || Table || Purpose ||
-| {{system_queue}} | Pending OpenEMIS Tasks (one row per enqueued unit of work). Status enum mirrors {{system_processes}} convention: 0=NEW, 1=PROCESSING, 2=DONE, -1=ABORT, -2=FAILED. Carries {{task_type}} ({{alert}}, {{webhook}}, {{export}}, …), {{payload}} JSON, {{available_at}}, {{retry_count}}. |
-| {{system_queue_logs}} | Per-attempt log entries — start, end, duration, outcome, message preview. One queue row may have many log rows. |
-| {{system_queue_failures}} | Failure detail rows — exception class, message, stack trace, originating queue id, retry-allowed flag. |
+| {{tasks}} | Pending OpenEMIS Tasks (one row per enqueued unit of work). Status enum mirrors {{system_processes}} convention: 0=NEW, 1=PROCESSING, 2=DONE, -1=ABORT, -2=FAILED. Carries {{task_type}} ({{alert}}, {{webhook}}, {{export}}, {{runtime_heartbeat}}, …), {{payload_json}}, {{available_at}}, {{retry_count}}, {{source_table}}, {{source_id}}. |
+| {{task_jobs}} | Per-attempt log entries — {{started_at}}, {{ended_at}}, {{duration_ms}}, {{status}} (1=PROCESSING, 2=DONE, -2=FAILED), {{message_preview}}. One {{tasks}} row may have many {{task_jobs}} rows. |
+| {{task_failures}} | Failure detail rows — {{exception_class}}, {{exception_message}}, {{stack_trace}}, originating {{task_id}} / {{task_job_id}}, {{retry_allowed}} flag. |
+
+*Naming check:* the names {{tasks}}, {{task_jobs}}, {{task_failures}} were verified to not collide with any existing Laravel-managed table in {{openemis_core_v5}} before adoption. They sit alongside {{jobs}} / {{failed_jobs}} (Laravel-native, untouched).
 
 *Dual-write rules:*
-* New Laravel write paths (queue-aware services touched by Phase 1) write to *both* legacy tables AND the {{system_queue*}} tables.
-* Existing CakePHP write paths are left as-is. They continue to write to legacy tables only. They may or may not eventually integrate with the new tables — that is v6 work.
-* The Phase 1 admin pages (§4.5) read from the {{system_queue*}} tables only, plus {{system_processes}} for stuck-process detection.
-* Migration follows the repo's backup convention ({{z_9694_*}} backup tables for any altered table; {{down()}} restores).
+* The {{App\Services\OpenemisRuntime\TasksRecorder}} helper provides {{recordEnqueue}} / {{recordStart}} / {{recordSuccess}} / {{recordFailure}} / {{recordRetry}} / {{recordAbort}}.
+* {{TasksRecorder}} *never throws back to the caller* — the legacy queue write must remain authoritative. Recorder failures are best-effort {{Log::warning}}.
+* {{api/app/Repositories/WebhookRepository.php}} now dual-writes via {{recordEnqueue('webhook', …)}} (Phase 1a).
+* Alert-side dual-writing through {{AlertCommandBase}} is *deferred to Phase 1b* — the helper is in place; the integration is a separate small change.
+* Existing CakePHP write paths are left as-is. They continue to write to legacy tables only. v6 will subsume them.
+* Migration is new-table-only, no backup pattern needed; {{down()}} drops the three tables.
 
-h3. 4.4 OpenEMIS Runtime entry-point: {{openemis-core:run}}
+h3. 4.4 OpenEMIS Runtime entry-point: {{openemis-core:run}} — *shipped*
 
 A single OpenEMIS-branded scheduler entry-point is added. Internally it invokes the Laravel scheduler tick; ops teams interact only with the OpenEMIS name.
 
-* New artisan command: {{php artisan openemis-core:run}} — registered in {{api/app/Console/Kernel.php}}.
-* Internally calls the scheduler so existing scheduled commands ({{webhooks:process}}, {{alerts:check}}, {{alerts:send}}) continue to fire on their declared intervals.
+* New artisan command: {{php artisan openemis-core:run}} at {{api/app/Console/Commands/OpenemisCoreRunCommand.php}} (auto-discovered by {{Kernel::commands()}}).
+* Internally calls {{Artisan::call('schedule:run')}} so existing scheduled commands ({{webhooks:process}}, {{alerts:check}}, {{alerts:send}}) continue to fire on their declared intervals.
 * The legacy {{php artisan schedule:run}} continues to function and is *synced* with {{openemis-core:run}} — calling either one dispatches the same scheduler tick. Operationally, ministries are advised to switch to {{openemis-core:run}} for all new deployments; existing deployments may keep {{schedule:run}} until their next ops-doc refresh.
-* Canonical cron line going forward:
+* Each tick stamps a {{tasks}} row with {{task_type='runtime_heartbeat'}} carrying {{started_at}} / {{ended_at}} / {{duration_ms}} / {{exit_code}}. The Runtime Scheduler page reads this for the "is the Runtime alive" indicator.
+* Docker {{cron}} is now installed by {{Dockerfile}} and the cron line lives in {{docker-config/cron/openemis-core}} (one entry, runs as {{www-data}} every minute). {{docker-config/init.sh}} starts the cron daemon alongside Apache.
+
+Canonical cron line:
 {code}
-* * * * * cd /var/www/html/emis/core/api && php artisan openemis-core:run >> /dev/null 2>&1
+*  *  *  *  *  www-data  cd /var/www/html/core/api && /usr/local/bin/php artisan openemis-core:run >> /var/www/html/core/api/storage/logs/openemis-core-run.log 2>&1
 {code}
 
-h3. 4.5 Administration → System → OpenEMIS Runtime (section with multiple pages)
+h3. 4.5 Administration → System → OpenEMIS Runtime (section with multiple pages) — *backend shipped, frontend deferred to Phase 1b*
 
 A new Administration section following the Webhooks / Alerts UX convention — one section, multiple pages. All pages read from the new {{system_queue*}} tables (with {{system_processes}} for stuck-process detection) so the admin surface speaks OpenEMIS vocabulary regardless of underlying framework.
 
@@ -132,12 +152,22 @@ The Runtime section adds a *cross-feature* view that none of the per-feature pag
 
 *Coexistence with per-feature pages:* the Alerts section's Alert Queue and Alert Logs continue to provide alert-specific filters (rule, recipient, channel) that the Runtime section does not duplicate. Same for Webhooks (per-URL filter, per-event filter, etc.). The Runtime section is for cross-feature operational visibility; the per-feature pages are for feature-specific business detail.
 
-Backend: {{api/app/Http/Controllers/Api5/SystemRuntimeController.php}} + {{api/app/Services/RuntimeHealthService.php}}.
-Frontend: {{frontend/src/app/system-runtime/}} (Angular module with one component per page, mirroring the Webhooks / Alerts module structure).
+*Backend (shipped in Phase 1a):* {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}} — five GET endpoints + two POST actions, all under {{/api/v5/system-runtime/*}}, all behind {{auth.jwt}}, registered in {{api/routes/api.php}} *before* the v5 catch-all so they are not consumed by {{CrudApiController}}.
 
-*Permissions:* the section is gated by {{System.SystemRuntime.view}}; retry / force-abort require {{System.SystemRuntime.execute}}. Both ship in the seed data and are assigned to {{super_admin}} by default. The view permission is decoupled from per-feature permissions — an operator can see the Runtime without having Webhook / Alert configuration permissions.
+|| Endpoint || Purpose ||
+| {{GET /api/v5/system-runtime/tasks}} | Paged list of {{tasks}}, filterable by {{task_type}} / {{status}} / {{source_table}} |
+| {{GET /api/v5/system-runtime/failures}} | Paged {{task_failures}} with task + job context |
+| {{GET /api/v5/system-runtime/logs}} | Tail of {{api/storage/logs/openemis-core-run.log}} (last N lines, capped at 64 KiB read) |
+| {{GET /api/v5/system-runtime/queue}} | Aggregate counts: {{tasks}} by status / type + legacy table sizes ({{webhook_queue}}, {{alert_queue}}, {{jobs}}, {{failed_jobs}}) |
+| {{GET /api/v5/system-runtime/scheduler}} | Latest {{runtime_heartbeat}} row + parsed {{schedule:list}} output (re-branded for the UI) |
+| {{POST /api/v5/system-runtime/tasks/\{id\}/retry}} | Calls {{TasksRecorder::recordRetry($id)}} — resets task to NEW |
+| {{POST /api/v5/system-runtime/tasks/\{id\}/abort}} | Calls {{TasksRecorder::recordAbort($id)}} — flips to ABORT |
 
-*Audit:* every retry / force-abort writes a row to {{audit_logs}} with the acting {{security_user_id}}, target {{system_queue.id}}, and action.
+*Frontend (deferred to Phase 1b):* {{frontend/src/app/system-runtime/}} — Angular module with one component per page, mirroring the Webhooks / Alerts module structure. Pairs with the permissions seed below.
+
+*Permissions (deferred to Phase 1b):* the section will be gated by {{System.SystemRuntime.view}}; retry / force-abort by {{System.SystemRuntime.execute}}. Both will ship in the seed data and be assigned to {{super_admin}} by default. The view permission is decoupled from per-feature permissions — an operator can see the Runtime without having Webhook / Alert configuration permissions.
+
+*Audit (deferred to Phase 1b):* every retry / force-abort will write a row to {{audit_logs}} with the acting {{security_user_id}}, target {{tasks.id}}, and action.
 
 h3. 4.6 Governance constraints (binding, codified in {{docs/v6-transition-rules.md}})
 
@@ -156,34 +186,43 @@ The reviewer's constraints become repo-wide rules:
 
 h2. 5. Files Changed Summary
 
+*Phase 1a (this commit) — actually changed:*
+
 || Area || Files ||
-| Docker / runtime | {{Dockerfile}}, {{docker-compose.yml}}, {{README.md}} |
-| Webhook anti-pattern fix | {{api/app/Repositories/WebhookRepository.php}} |
-| OpenEMIS Queue tables — migration | {{config/Migrations/<timestamp>_POCOR9694.php}} (creates {{system_queue}}, {{system_queue_logs}}, {{system_queue_failures}}; backup pattern follows repo convention) |
-| OpenEMIS Queue — Laravel models | {{api/app/Models/Api5/SystemQueue.php}}, {{api/app/Models/Api5/SystemQueueLogs.php}}, {{api/app/Models/Api5/SystemQueueFailures.php}} |
-| Dual-write integration | {{api/app/Services/AlertTriggerService.php}}, {{api/app/Services/WebhookSender.php}}, {{api/app/Jobs/RunAlertJob.php}}, {{api/app/Console/Commands/Alerts/AlertCommandBase.php}} (write to {{system_queue*}} alongside legacy tables) |
-| OpenEMIS Runtime entry-point | {{api/app/Console/Commands/OpenemisCoreRunCommand.php}}, {{api/app/Console/Kernel.php}} (registration) |
-| Admin Runtime section (backend) | {{api/app/Http/Controllers/Api5/SystemRuntimeController.php}}, {{api/app/Services/RuntimeHealthService.php}}, {{api/routes/api.php}} |
-| Admin Runtime section (frontend) | {{frontend/src/app/system-runtime/}} — Angular module, one component per page (Tasks, Failures, Queue, Scheduler) |
-| Permissions seed | {{config/Seeds/POCOR9694SecuritySeed.php}} (System.SystemRuntime.view + execute) |
-| Documentation | {{docs/v6-transition-rules.md}} (governance), {{api/storage/release-docs/POCOR-9509-README.md}} (single-cron note pointing to {{openemis-core:run}}) |
+| Docker / runtime cron | {{Dockerfile}} (added {{cron}} package + crontab install), {{docker-config/init.sh}} (starts {{cron}} daemon, ensures log file), {{docker-config/cron/openemis-core}} (the single cron line) |
+| Webhook anti-pattern fix | {{api/app/Repositories/WebhookRepository.php}} ({{exec()}} → {{webhook_queue}} insert + {{TasksRecorder::recordEnqueue()}}) |
+| OpenEMIS Tasks abstraction — migration | {{config/Migrations/20260508143848_POCOR9694.php}} (creates {{tasks}}, {{task_jobs}}, {{task_failures}}; new-table-only, no backup) |
+| OpenEMIS Tasks — Eloquent models | {{api/app/Models/Api5/Tasks.php}}, {{api/app/Models/Api5/TaskJobs.php}}, {{api/app/Models/Api5/TaskFailures.php}} |
+| Dual-write helper | {{api/app/Services/OpenemisRuntime/TasksRecorder.php}} (six methods, never throws back) |
+| OpenEMIS Runtime entry-point | {{api/app/Console/Commands/OpenemisCoreRunCommand.php}} (auto-registered) |
+| Admin Runtime section — backend | {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}}, {{api/routes/api.php}} (5 GET + 2 POST endpoints registered before v5 catch-all) |
+| Documentation | {{docs/v6-transition-rules.md}} (governance, developer-facing) |
+
+*Phase 1b (deferred to follow-up ticket):*
+
+|| Area || Files ||
+| Docker PHP pin | {{Dockerfile}} ({{php:8.4-apache}} base) |
+| Alerts dual-write | {{api/app/Console/Commands/Alerts/AlertCommandBase.php}} (call {{TasksRecorder::recordEnqueue/Start/Success/Failure}}) |
+| Admin Runtime section — frontend | {{frontend/src/app/system-runtime/}} — Angular module, one component per page (Tasks, Failures, Logs, Queue, Scheduler) |
+| Permissions seed | {{config/Seeds/POCOR9694SecuritySeed.php}} ({{System.SystemRuntime.view}} + {{execute}}, assigned to super_admin) |
+| Audit hook | retry / force-abort actions write to {{audit_logs}} |
 
 ----
 
 h2. 6. Database Migrations
 
-{{config/Migrations/<timestamp>_POCOR9694.php}}.
+{{config/Migrations/20260508143848_POCOR9694.php}}.
 
-* Creates {{system_queue}}, {{system_queue_logs}}, {{system_queue_failures}} (all new — no destructive changes to existing tables).
-* {{up()}} first calls {{backupTables()}} for the new table names (no-op on first run; defensive for re-runs).
-* {{down()}} drops the three new tables only — no restore of existing tables. Existing {{alert_queue}}, {{webhook_queue}}, {{jobs}}, {{failed_jobs}}, {{system_processes}} are *not touched* by this migration.
-* Indexes: {{(status, available_at)}} on {{system_queue}}; {{(system_queue_id, created)}} on logs and failures.
+* Creates {{tasks}}, {{task_jobs}}, {{task_failures}} (all new — no destructive changes to existing tables).
+* New-table-only migration; {{up()}} does *not* call {{backupTables()}} (nothing to back up).
+* {{down()}} drops the three new tables only. {{alert_queue}}, {{webhook_queue}}, {{jobs}}, {{failed_jobs}}, {{system_processes}} are *not touched*.
+* Indexes: {{(status, available_at)}} on {{tasks}}; {{(task_id, attempt_number)}} on {{task_jobs}}; {{(task_id)}} on {{task_failures}}.
 
 ----
 
 h2. 7. Deployment Instructions
 
-# *Pull the branch and rebuild containers* — Docker base image is now PHP 8.4.x:
+# *Pull the branch and rebuild containers* (only needed if shipping the Docker cron change to production; dev environments running an older image can still operate by adding the cron line manually):
 
 {code:bash}
 git checkout POCOR-9694
@@ -191,34 +230,48 @@ docker compose down
 docker compose up --build -d
 {code}
 
-# *Run migrations:*
+# *Run the migration:*
 
 {code:bash}
 docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core && php bin/cake.php migrations migrate"
 {code}
 
-# *Verify composer is unblocked:*
+Verify the three tables exist:
+
+{code:sql}
+SHOW TABLES LIKE 'task%';   -- expect: task_failures, task_jobs, tasks
+{code}
+
+# *Verify the cron is running inside the container:*
 
 {code:bash}
-docker exec poe-application /bin/sh -c "cd /var/www/html/emis/core && composer validate --no-check-publish"
+docker exec poe-application /bin/sh -c "service cron status"
+docker exec poe-application /bin/sh -c "cat /etc/cron.d/openemis-core"
 {code}
 
-# *Switch the cron entry to the OpenEMIS Runtime:*
+# *Confirm the Runtime is alive* (after the first cron tick, ≤ 60 seconds):
 
-{code}
-# Recommended canonical cron (replaces the three POCOR-9509 entries for new deployments):
-* * * * * cd /var/www/html/emis/core/api && php artisan openemis-core:run >> /dev/null 2>&1
-
-# Existing POCOR-9509 deployments may keep their direct alerts:check / alerts:send entries
-# until their next ops-doc refresh. {{openemis-core:run}} and {{schedule:run}} are synced —
-# either dispatches the same scheduler tick.
+{code:bash}
+docker exec poe-application /bin/sh -c "tail -5 /var/www/html/emis/core/api/storage/logs/openemis-core-run.log"
+# Or via the API (replace TOKEN with a JWT):
+curl -sk -H "Authorization: Bearer TOKEN" \
+  https://localhost:8482/core/api/v5/system-runtime/scheduler | jq .heartbeat
 {code}
 
-# *Smoke-test the OpenEMIS Runtime section:*
-* Login as admin → Administration → System → OpenEMIS Runtime
-* All four pages should render: Tasks, Failures, Queue, Scheduler.
-* Trigger a webhook with a deliberately-bad URL → it should appear under *Failures* within ≤ 60 seconds (next OpenEMIS Runtime tick).
-* Click *Retry* → the row returns to NEW; on next tick it transitions through PROCESSING and back to FAILED (or DONE if you fix the URL between attempts).
+# *(Optional) Decommission the legacy POCOR-9509 cron entries* — once the OpenEMIS Runtime cron is confirmed draining, the three direct entries ({{webhooks:process}}, {{alerts:check}}, {{alerts:send}}) installed by the POCOR-9509 deploy guide can be removed. {{openemis-core:run}} dispatches them through the Laravel scheduler so they continue to fire on their declared intervals.
+
+# *Smoke-test the OpenEMIS Runtime endpoints (Phase 1a):*
+
+{code:bash}
+TOK="<JWT from /api/v4/login>"
+for p in tasks failures logs queue scheduler; do
+  echo "=== $p ==="
+  curl -sk -H "Authorization: Bearer $TOK" \
+    "https://localhost:8482/core/api/v5/system-runtime/$p" | head -c 200; echo
+done
+{code}
+
+The Angular UI for these endpoints ships in Phase 1b.
 
 ----
 
@@ -227,7 +280,7 @@ h2. 8. System Administrator Guide
 *Administration → System → OpenEMIS Runtime* surfaces operational health. Use it to:
 
 * *Confirm the Runtime is alive* — the Scheduler page shows last successful run per scheduled OpenEMIS Task. If a task's age exceeds its expected interval, the cron line is missing or the Runtime is not draining.
-* *Triage stuck OpenEMIS Tasks* — the Tasks page shows {{system_queue}} rows in NEW or PROCESSING for more than 1 hour. Use *Force Abort* to mark them as ABORT so subsequent runs can re-process the underlying work.
+* *Triage stuck OpenEMIS Tasks* — the Tasks page shows {{tasks}} rows in NEW or PROCESSING for more than 1 hour. Use *Force Abort* to mark them as ABORT so subsequent runs can re-process the underlying work.
 * *Recover from failures* — the Failures page lists all OpenEMIS Failures with exception detail. Use *Retry* to push the source row back to NEW for the next Runtime tick.
 * *Spot a backlog* — the Queue page shows backlog depth per task type and oldest-pending age. Persistent backlog usually means a Runtime tick is timing out; check stuck processes first.
 
@@ -241,7 +294,7 @@ h2. 9. Decisions / context not to re-litigate
 
 * *No "Async Runtime v2" rewrite.* Endorsed by the review.
 * *Single OpenEMIS Runtime entry-point: {{openemis-core:run}}.* Synced with the Laravel scheduler tick; either dispatches the same work.
-* *{{system_queue*}} tables are the OpenEMIS-branded target.* Legacy queue tables ({{alert_queue}}, {{webhook_queue}}, {{jobs}}, {{failed_jobs}}) remain in place for v5 — Laravel writes to both. CakePHP code is not refactored.
+* *{{tasks}} / {{task_jobs}} / {{task_failures}} are the OpenEMIS-branded target.* Legacy queue tables ({{alert_queue}}, {{webhook_queue}}, {{jobs}}, {{failed_jobs}}) remain in place for v5 — Laravel writes to both via {{TasksRecorder}}. CakePHP code is not refactored.
 * *{{system_processes}} stays as the cross-stack execution-tracking contract.*
 * *No request-triggered background processing.* The hybrid web-trigger fallback explored during the audit was rejected on review — Angular SPA cannot reliably trigger background work, and the precedent ("trigger on login") was already commented out in {{src/Controller/DashboardController.php}} as part of the POCOR-9509 migration.
 * *Operational documentation uses OpenEMIS vocabulary.* Framework names ({{queue:work}}, Horizon, Supervisor, Redis, Laravel jobs, {{schedule:run}}) are implementation details, not platform architecture.
@@ -255,7 +308,7 @@ Phase 1 (this ticket) lays the foundation. Phase 2 finishes the OpenEMIS Runtime
 
 || Phase 2 deliverable || Form ||
 | Event-driven processing | Queue items become events ({{student.absence.threshold_reached}}, {{webhook.delivery.requested}}, …) dispatched to typed handlers (AlertHandler, WebhookHandler, ExportHandler, …). Replaces the current 15-Laravel-alert-commands pattern. |
-| Full OpenEMIS Queue ownership | Legacy {{alert_queue}} / {{webhook_queue}} / {{jobs}} / {{failed_jobs}} retired. {{system_queue*}} becomes the only async data layer. |
+| Full OpenEMIS Queue ownership | Legacy {{alert_queue}} / {{webhook_queue}} / {{jobs}} / {{failed_jobs}} retired. {{tasks}} / {{task_jobs}} / {{task_failures}} become the only async data layer. |
 | OpenEMIS Workers as a formal subsystem | {{openemis-core:run}} fans out to typed workers; observability per worker. |
 | Admin section split into 4 separate pages | What ships in Phase 1 as one section with 4 sub-pages may evolve into separate Administration sections in v6: Runtime, Queue, Failed Tasks, Integrations — following whatever Angular v20 SPA navigation pattern emerges. |
 | OpenEMIS Platform Services formalised | Notification / Integration / Reporting / Workflow / Queue / Identity / Audit — each documented as a platform subsystem with a stable contract. |
