@@ -1552,88 +1552,99 @@ class RecordBehavior extends Behavior
             // retrieve saved values
             $values = new ArrayObject([]);
             $cells = new ArrayObject([]);
+            
 
-            if (isset($entity->id)) {
-                $fieldKey = $this->getConfig('fieldKey');
-                $tableRowKey = $this->getConfig('tableRowKey');
-                $tableColumnKey = $this->getConfig('tableColumnKey');
+            //POCOR-9676[START]
+            $fieldKey = $this->getConfig('fieldKey');
+            $tableRowKey = $this->getConfig('tableRowKey');
+            $tableColumnKey = $this->getConfig('tableColumnKey');
 
-                if ($entity->has('custom_field_values')) {
-                    foreach ($entity->custom_field_values as $key => $obj) {
-                        if (isset($obj->id)) {
-                            $fieldId = $obj->{$fieldKey};
-                            $fieldData = ['id' => $obj->id];
+            if ($entity->has('custom_field_values')) {
+                foreach ($entity->custom_field_values as $key => $obj) {
+                    if (!isset($obj->{$fieldKey})) {
+                        continue;
+                    }
+                    // Rows without a persisted answer id must still appear on add and after validation
+                    // failures (e.g. missing Assignee), so Text/Number values are not cleared on re-render.
+                    if (!(isset($obj->id) || $entity->isNew() || $model->request->is(['post', 'put']))) {
+                        continue;
+                    }
 
-                            if ($model->request->is(['get'])) {
-                                $fieldData['text_value'] = $obj->text_value;
-                                $fieldData['number_value'] = $obj->number_value;
-                                $fieldData['decimal_value'] = $obj->decimal_value;
-                                $fieldData['textarea_value'] = $obj->textarea_value;
-                                $fieldData['date_value'] = $obj->date_value;
-                                $fieldData['time_value'] = $obj->time_value;
-                                $fieldData['file'] = $obj->file;
-                                $fieldData['file_name'] = $obj->file_name; //POCOR-9407
+                    $fieldId = $obj->{$fieldKey};
+                    $fieldData = [];
+                    if (isset($obj->id)) {
+                        $fieldData['id'] = $obj->id;
+                    }
 
-                                // logic for Initialize
-                                $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
-                                $settings = new ArrayObject([
-                                    'recordKey' => $this->getConfig('recordKey'),
-                                    'fieldKey' => $this->getConfig('fieldKey'),
-                                    'tableColumnKey' => $this->getConfig('tableColumnKey'),
-                                    'tableRowKey' => $this->getConfig('tableRowKey'),
-                                    'customValue' => $obj
-                                ]);
-                                $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
-                                if ($event->isStopped()) {
-                                    return $event->getResult();
-                                }
-                                // End
-                            } else if ($model->request->is(['post', 'put'])) {
-                                // onPost, no actions
-                                // POCOR-8352 Start
-                                $fieldData['text_value'] = $obj->text_value;
-                                $fieldData['number_value'] = $obj->number_value;
-                                $fieldData['decimal_value'] = $obj->decimal_value;
-                                $fieldData['textarea_value'] = $obj->textarea_value;
-                                $fieldData['date_value'] = $obj->date_value;
-                                $fieldData['time_value'] = $obj->time_value;
-                                $fieldData['file'] = $obj->file;
-                                $fieldData['file_name'] = $obj->file_name; //POCOR-9407
+                    if ($model->request->is(['get'])) {
+                        $fieldData['text_value'] = $obj->text_value;
+                        $fieldData['number_value'] = $obj->number_value;
+                        $fieldData['decimal_value'] = $obj->decimal_value;
+                        $fieldData['textarea_value'] = $obj->textarea_value;
+                        $fieldData['date_value'] = $obj->date_value;
+                        $fieldData['time_value'] = $obj->time_value;
+                        $fieldData['file'] = $obj->file;
+                        $fieldData['file_name'] = $obj->file_name; //POCOR-9407
 
-                                // logic for Initialize
-                                $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
-                                $settings = new ArrayObject([
-                                    'recordKey' => $this->getConfig('recordKey'),
-                                    'fieldKey' => $this->getConfig('fieldKey'),
-                                    'tableColumnKey' => $this->getConfig('tableColumnKey'),
-                                    'tableRowKey' => $this->getConfig('tableRowKey'),
-                                    'customValue' => $obj
-                                ]);
-                                $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
-                                if ($event->isStopped()) {
-                                    return $event->getResult();
-                                }
-                                // POCOR-8352 End
-                            }
-                            $values[$fieldId] = $fieldData;
+                        // logic for Initialize
+                        $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
+                        $settings = new ArrayObject([
+                            'recordKey' => $this->getConfig('recordKey'),
+                            'fieldKey' => $this->getConfig('fieldKey'),
+                            'tableColumnKey' => $this->getConfig('tableColumnKey'),
+                            'tableRowKey' => $this->getConfig('tableRowKey'),
+                            'customValue' => $obj
+                        ]);
+                        $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
+                        if ($event->isStopped()) {
+                            return $event->getResult();
                         }
-                    }
-                }
+                        // End
+                    } elseif ($model->request->is(['post', 'put'])) {
+                        // onPost, no actions
+                        // POCOR-8352 Start
+                        $fieldData['text_value'] = $obj->text_value;
+                        $fieldData['number_value'] = $obj->number_value;
+                        $fieldData['decimal_value'] = $obj->decimal_value;
+                        $fieldData['textarea_value'] = $obj->textarea_value;
+                        $fieldData['date_value'] = $obj->date_value;
+                        $fieldData['time_value'] = $obj->time_value;
+                        $fieldData['file'] = $obj->file;
+                        $fieldData['file_name'] = $obj->file_name; //POCOR-9407
 
-                if ($entity->has('custom_table_cells')) {
-                    foreach ($entity->custom_table_cells as $key => $obj) {
-                        $fieldId = $obj->{$fieldKey};
-                        $rowId = $obj->{$tableRowKey};
-                        $columnId = $obj->{$tableColumnKey};
-
-                        $cells[$fieldId][$rowId][$columnId] = [
-                            'text_value' => $obj['text_value'],
-                            'number_value' => $obj['number_value'],
-                            'decimal_value' => $obj['decimal_value']
-                        ];
+                        // logic for Initialize
+                        $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
+                        $settings = new ArrayObject([
+                            'recordKey' => $this->getConfig('recordKey'),
+                            'fieldKey' => $this->getConfig('fieldKey'),
+                            'tableColumnKey' => $this->getConfig('tableColumnKey'),
+                            'tableRowKey' => $this->getConfig('tableRowKey'),
+                            'customValue' => $obj
+                        ]);
+                        $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
+                        if ($event->isStopped()) {
+                            return $event->getResult();
+                        }
+                        // POCOR-8352 End
                     }
+                    $values[$fieldId] = $fieldData;
                 }
             }
+
+            if (isset($entity->id) && $entity->has('custom_table_cells')) {
+                foreach ($entity->custom_table_cells as $key => $obj) {
+                    $fieldId = $obj->{$fieldKey};
+                    $rowId = $obj->{$tableRowKey};
+                    $columnId = $obj->{$tableColumnKey};
+
+                    $cells[$fieldId][$rowId][$columnId] = [
+                        'text_value' => $obj['text_value'],
+                        'number_value' => $obj['number_value'],
+                        'decimal_value' => $obj['decimal_value']
+                    ];
+                }
+            }
+            //POCOR-9676[END]
 
             $valuesArray = $values->getArrayCopy();
             $cellsArray = $cells->getArrayCopy();
