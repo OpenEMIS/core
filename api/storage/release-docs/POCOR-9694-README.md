@@ -434,7 +434,7 @@ h3. 13.3 AsyncCatchUp middleware (F8)
 | {{ASYNC_CATCHUP_THROTTLE_SECONDS}} | 60 | At most one catch-up per window across the whole app |
 | {{ASYNC_CATCHUP_BUDGET_MS}} | 200 | {{set_time_limit}} hard upper bound on the {{schedule:run}} call |
 
-Calls {{schedule:run}} via {{Artisan::call()}} — in-process, NOT via {{exec()}}, so no FPM worker tie-up and no shell-injection surface area. Registered in the {{web}} middleware group only; API requests skip it. Commit {{24248f78f3}}.
+Calls {{openemis-core:run}} via {{Artisan::call()}} — in-process, NOT via {{exec()}}, so no FPM worker tie-up and no shell-injection surface area. Registered in the {{web}} middleware group only; API requests skip it. Commit {{24248f78f3}} (the call target was corrected from {{schedule:run}} → {{openemis-core:run}} in the same commit family that polished the docs).
 
 h3. 13.4 Swagger PHPDoc cleanup on runtime models
 
