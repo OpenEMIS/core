@@ -301,6 +301,30 @@ metrics, and per-queue throughput without any code changes.
 others. The current refactor uses a single `alerts` queue; splitting is a one-line change in
 `RunAlertJob::__construct` plus an additional `queue:work --queue=alerts:high,alerts` daemon.
 
+### Single-cron alternative (POCOR-9694) — recommended for new deployments
+
+The two direct `alerts:check` / `alerts:send` cron entries in section 5 are the **canonical** install
+for ministries that have already rolled out POCOR-9509. New deployments may prefer a single
+unified cron:
+
+```bash
+* * * * * www-data cd /var/www/html/emis/core/api && php artisan schedule:run >> /dev/null 2>&1
+```
+
+`schedule:run` dispatches every entry registered in `api/app/Console/Kernel.php::schedule()`
+(currently `alerts:check`, `alerts:send`, `webhooks:process`). Operationally simpler:
+
+- One crontab entry instead of three
+- One log file (per-command logging stays separate)
+- New scheduled commands (e.g. `webhooks:process`, future `tasks:run`) appear automatically
+
+**Pick one path, never both.** Mixing direct `alerts:*` entries with `schedule:run` causes every
+command to fire twice — once from each cron. The warning in section 5 still stands: if you go
+single-cron, remove `/etc/cron.d/openemis-alerts` first.
+
+The direct-entry path remains documented as the **advanced** install for ministries that need
+per-command `flock` lock files, dedicated log files, or different `timeout` budgets per command.
+
 ---
 
-*POCOR-9509 · 2026-04-15 (initial) · 2026-04-27 (queue refactor + early-return + stale-sweep)*
+*POCOR-9509 · 2026-04-15 (initial) · 2026-04-27 (queue refactor + early-return + stale-sweep) · 2026-05-08 (POCOR-9694: single-cron alternative)*
