@@ -78,7 +78,7 @@ h2. 4. What Was Implemented (Phase 1)
 # OpenEMIS Tasks abstraction tables: {{tasks}}, {{task_jobs}}, {{task_failures}} (migration applied).
 # Dual-write helper: {{App\Services\OpenemisRuntime\TasksRecorder}} (best-effort, never throws back).
 # Single-cron entry-point: {{php artisan openemis-core:run}} + Docker {{cron}} install.
-# Runtime backend: 5 endpoints under {{/api/v5/system-runtime/*}} + 2 actions (retry / abort).
+# Runtime backend: uniform CRUD reads under v5 ({{tasks}}, {{task-jobs}}, {{task-failures}} via {{CrudApiController}}) + bespoke actions/aggregates under v4 ({{logs}}, {{queue}}, {{scheduler}}, {{retry}}, {{abort}}). All Swagger-annotated.
 # Governance rules: {{docs/v6-transition-rules.md}}.
 
 *Deferred to Phase 1b (separate follow-up ticket):*
@@ -152,16 +152,25 @@ The Runtime section adds a *cross-feature* view that none of the per-feature pag
 
 *Coexistence with per-feature pages:* the Alerts section's Alert Queue and Alert Logs continue to provide alert-specific filters (rule, recipient, channel) that the Runtime section does not duplicate. Same for Webhooks (per-URL filter, per-event filter, etc.). The Runtime section is for cross-feature operational visibility; the per-feature pages are for feature-specific business detail.
 
-*Backend (shipped in Phase 1a):* {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}} — five GET endpoints + two POST actions, all under {{/api/v5/system-runtime/*}}, all behind {{auth.jwt}}, registered in {{api/routes/api.php}} *before* the v5 catch-all so they are not consumed by {{CrudApiController}}.
+*Backend (shipped in Phase 1a) — split between v5 (CRUD) and v4 (actions / aggregates).*
+
+The repo's CQS contract is: any GET/POST/PUT/DELETE on a uniform resource goes through {{CrudApiController}} under {{/api/v5/}}; bespoke endpoints (file tails, cross-table aggregates, executable actions) live under {{/api/v4/}}. Phase 1a follows that contract:
+
+*v5 — uniform resource reads via CrudApiController* (registered in {{$allowedResources}}):
+
+|| Endpoint || Resource ||
+| {{GET /api/v5/tasks}} | {{App\Models\Api5\Tasks}} (filterable, paginated, supports {{_contain}}, {{_conditions}} — same surface as every other v5 resource) |
+| {{GET /api/v5/task-jobs}} | {{App\Models\Api5\TaskJobs}} |
+| {{GET /api/v5/task-failures}} | {{App\Models\Api5\TaskFailures}} |
+
+*v4 — bespoke action / aggregate endpoints* (in {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}}, all behind {{auth.jwt}}, fully Swagger-annotated):
 
 || Endpoint || Purpose ||
-| {{GET /api/v5/system-runtime/tasks}} | Paged list of {{tasks}}, filterable by {{task_type}} / {{status}} / {{source_table}} |
-| {{GET /api/v5/system-runtime/failures}} | Paged {{task_failures}} with task + job context |
-| {{GET /api/v5/system-runtime/logs}} | Tail of {{api/storage/logs/openemis-core-run.log}} (last N lines, capped at 64 KiB read) |
-| {{GET /api/v5/system-runtime/queue}} | Aggregate counts: {{tasks}} by status / type + legacy table sizes ({{webhook_queue}}, {{alert_queue}}, {{jobs}}, {{failed_jobs}}) |
-| {{GET /api/v5/system-runtime/scheduler}} | Latest {{runtime_heartbeat}} row + parsed {{schedule:list}} output (re-branded for the UI) |
-| {{POST /api/v5/system-runtime/tasks/\{id\}/retry}} | Calls {{TasksRecorder::recordRetry($id)}} — resets task to NEW |
-| {{POST /api/v5/system-runtime/tasks/\{id\}/abort}} | Calls {{TasksRecorder::recordAbort($id)}} — flips to ABORT |
+| {{GET /api/v4/system-runtime/logs}} | Tail of {{api/storage/logs/openemis-core-run.log}} (last N lines, read capped at 64 KiB) |
+| {{GET /api/v4/system-runtime/queue}} | Aggregate counts: {{tasks}} by status / type + legacy table sizes ({{webhook_queue}}, {{alert_queue}}, {{jobs}}, {{failed_jobs}}) |
+| {{GET /api/v4/system-runtime/scheduler}} | Latest {{runtime_heartbeat}} row + parsed {{schedule:list}} output (re-branded for the UI) |
+| {{POST /api/v4/system-runtime/tasks/\{id\}/retry}} | Calls {{TasksRecorder::recordRetry($id)}} — resets task to NEW |
+| {{POST /api/v4/system-runtime/tasks/\{id\}/abort}} | Calls {{TasksRecorder::recordAbort($id)}} — flips to ABORT |
 
 *Frontend (deferred to Phase 1b):* {{frontend/src/app/system-runtime/}} — Angular module with one component per page, mirroring the Webhooks / Alerts module structure. Pairs with the permissions seed below.
 
@@ -195,7 +204,8 @@ h2. 5. Files Changed Summary
 | OpenEMIS Tasks — Eloquent models | {{api/app/Models/Api5/Tasks.php}}, {{api/app/Models/Api5/TaskJobs.php}}, {{api/app/Models/Api5/TaskFailures.php}} |
 | Dual-write helper | {{api/app/Services/OpenemisRuntime/TasksRecorder.php}} (six methods, never throws back) |
 | OpenEMIS Runtime entry-point | {{api/app/Console/Commands/OpenemisCoreRunCommand.php}} (auto-registered) |
-| Admin Runtime section — backend | {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}}, {{api/routes/api.php}} (5 GET + 2 POST endpoints registered before v5 catch-all) |
+| Admin Runtime section — v5 CRUD reads | {{api/app/Http/Controllers/BaseApi/CrudApiController.php}} ({{tasks}} / {{task-jobs}} / {{task-failures}} added to {{$allowedResources}}) |
+| Admin Runtime section — v4 actions/aggregates | {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}} (Swagger-annotated), {{api/routes/api.php}} (5 endpoints under v4) |
 | Documentation | {{docs/v6-transition-rules.md}} (governance, developer-facing) |
 
 *Phase 1b (deferred to follow-up ticket):*
@@ -264,10 +274,19 @@ curl -sk -H "Authorization: Bearer TOKEN" \
 
 {code:bash}
 TOK="<JWT from /api/v4/login>"
-for p in tasks failures logs queue scheduler; do
-  echo "=== $p ==="
+
+# v5 — uniform resource reads (CrudApiController)
+for r in tasks task-jobs task-failures; do
+  echo "=== v5/$r ==="
   curl -sk -H "Authorization: Bearer $TOK" \
-    "https://localhost:8482/core/api/v5/system-runtime/$p" | head -c 200; echo
+    "https://localhost:8482/core/api/v5/$r" | head -c 200; echo
+done
+
+# v4 — bespoke actions / aggregates
+for p in logs queue scheduler; do
+  echo "=== v4/system-runtime/$p ==="
+  curl -sk -H "Authorization: Bearer $TOK" \
+    "https://localhost:8482/core/api/v4/system-runtime/$p" | head -c 200; echo
 done
 {code}
 
