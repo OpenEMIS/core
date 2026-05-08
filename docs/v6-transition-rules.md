@@ -87,7 +87,7 @@ New CLI → `php artisan` command in `api/app/Console/Commands/`.
 
 **Rule.** Anything that **does** work (run a job, regenerate a cache, send an alert, build a
 report) ships as `php artisan <name>`. Anything that **reads or mutates state**
-(get/list/post/put/delete a resource) goes through `/api/v5/`.
+(get/list/post/put/delete a resource) goes through `/api/v5/` via `CrudApiController`.
 
 **Why.** This is the Command-Query Separation that makes Core MCP-ready in v6: artisan
 commands map to MCP tools, v5 endpoints map to MCP resources. Cleaner audit, cleaner
@@ -95,6 +95,28 @@ permission scope, cleaner contract.
 
 **Apply by.** Don't add controller actions that perform side-effects beyond the resource
 they own. Don't add artisan commands that are really just data fetches with `--json`.
+
+### 5a. `/api/v5/` is uniform CRUD only — bespoke endpoints belong under `/api/v4/`
+
+**Rule.** New uniform GET/POST/PUT/DELETE on a resource: register the model in
+`CrudApiController::$allowedResources`. **Do not** add a hand-written controller under
+v5. New bespoke endpoints (file tails, cross-table aggregates, executable actions like
+`retry` / `abort`, anything that doesn't map cleanly to one resource) go under v4 in a
+purpose-built controller with full Swagger annotations.
+
+**Why.** v5 is the predictable contract — same query language, same containment, same
+pagination across every resource. Adding hand-written v5 routes erodes that uniformity
+and the v6 catch-all route at the bottom of the v5 group will eventually swallow them
+unless someone remembers to register them above the catch-all.
+
+**Apply by.** If you can model it as a resource, add to `$allowedResources` and stop. If
+not, name the endpoint clearly under `/api/v4/<feature>/<action>` and document it with
+`@OA\Get` / `@OA\Post` blocks. POCOR-9694 follows this rule:
+
+- `tasks`, `task-jobs`, `task-failures` → registered in `$allowedResources` (v5).
+- `system-runtime/logs`, `system-runtime/queue`, `system-runtime/scheduler`,
+  `system-runtime/tasks/{id}/retry`, `system-runtime/tasks/{id}/abort` → bespoke,
+  hand-written under v4 in `SystemRuntimeController`.
 
 ---
 
