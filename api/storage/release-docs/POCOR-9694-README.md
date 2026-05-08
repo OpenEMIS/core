@@ -79,7 +79,7 @@ h2. 4. What Was Implemented (Phase 1)
 # Dual-write helper: {{App\Services\OpenemisRuntime\TasksRecorder}} (best-effort, never throws back).
 # Single-cron entry-point: {{php artisan openemis-core:run}} + Docker {{cron}} install.
 # Runtime backend: uniform CRUD reads under v5 ({{tasks}}, {{task-jobs}}, {{task-failures}} via {{CrudApiController}}) + bespoke actions/aggregates under v4 ({{logs}}, {{queue}}, {{scheduler}}, {{retry}}, {{abort}}). All Swagger-annotated.
-# Governance rules: {{docs/v6-transition-rules.md}}.
+# Governance rules: {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}}.
 
 *Deferred to Phase 1b (separate follow-up ticket):*
 # Pin Docker PHP to 8.4.x (Phase 1a was developed against the existing {{php:8.3-apache}} base; the upgrade is a separate concern with its own QA cycle).
@@ -200,7 +200,7 @@ PASS Tests\Feature\TaskFailuresApiTest (5 passed, 0.23s)
 
 Each test covers list / create / view / update / delete via the CRUD pipeline ({{200 / 201 / 200 / 200 / 204}}).
 
-h3. 4.7 Governance constraints (binding, codified in {{docs/v6-transition-rules.md}})
+h3. 4.7 Governance constraints (binding, codified in {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}})
 
 The reviewer's constraints become repo-wide rules:
 
@@ -212,7 +212,7 @@ The reviewer's constraints become repo-wide rules:
 # *Operational documentation uses OpenEMIS vocabulary*: OpenEMIS Runtime, OpenEMIS Queue, OpenEMIS Tasks, OpenEMIS Workers, OpenEMIS Failures. Framework names are implementation details only.
 # *Every v5 model ships with factory + PHPDoc + 100%-passing feature test in the same commit that registers it in {{CrudApiController::$allowedResources}}* — see §4.6.
 
-{{docs/v6-transition-rules.md}} is developer-facing and cross-linked from {{CONTRIBUTING.md}} and {{README.md}} so it applies regardless of which AI assistant or editor a contributor uses.
+{{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}} is developer-facing and cross-linked from {{CONTRIBUTING.md}} and {{README.md}} so it applies regardless of which AI assistant or editor a contributor uses.
 
 ----
 
@@ -231,7 +231,7 @@ h2. 5. Files Changed Summary
 | Admin Runtime section — v4 actions/aggregates | {{api/app/Http/Controllers/Administration/SystemRuntimeController.php}} (Swagger-annotated), {{api/routes/api.php}} (5 endpoints under v4) |
 | Factories (v5 contract) | {{api/database/factories/Api5/TasksFactory.php}}, {{TaskJobsFactory.php}}, {{TaskFailuresFactory.php}} |
 | Feature tests (v5 contract) | {{api/tests/Feature/TasksApiTest.php}}, {{TaskJobsApiTest.php}}, {{TaskFailuresApiTest.php}} — 15 / 15 passing |
-| Documentation | {{docs/v6-transition-rules.md}} (governance, developer-facing) |
+| Documentation | {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}} (governance, developer-facing) |
 
 *Phase 1b (deferred to follow-up ticket):*
 
@@ -359,7 +359,7 @@ Phase 1 (this ticket) lays the foundation. Phase 2 finishes the OpenEMIS Runtime
 | 127 {{exec()}} callsites migrated | Each becomes either an OpenEMIS Task enqueue or a synchronous service call, depending on duration. |
 | 73 legacy CakePHP Shells deleted or rewritten as Laravel commands | CakePHP exits Core. |
 
-The 7 platform standards in {{docs/v6-transition-rules.md}} (governance §4.6) apply from Phase 1 onward and are the gate for accepting Phase 2 work.
+The 7 platform standards in {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}} (governance §4.6) apply from Phase 1 onward and are the gate for accepting Phase 2 work.
 
 ----
 
@@ -385,4 +385,4 @@ h2. 12. References
 * {{config/Migrations/20260415030200_POCOR9509.php}} — original {{alert_queue}}, {{jobs}}, {{failed_jobs}} schema (frozen by Phase 1; superseded by {{system_queue*}} in Phase 2)
 * {{plugins/System/src/Model/Table/SystemProcessesTable.php}} — execution-tracking table
 * {{api/storage/release-docs/POCOR-9509-README.md}} — alerts deployment instructions (updated to point to {{openemis-core:run}})
-* {{docs/v6-transition-rules.md}} — governance (§4.6) in developer-facing form
+* {{api/storage/release-docs/POCOR-9694/v6-transition-rules.md}} — governance (§4.6) in developer-facing form
