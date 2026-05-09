@@ -470,7 +470,29 @@ h3. 13.5 What is *not* shipped (deferred to Phase 2 / Core v6)
 * *Bulk retry / mass-abort actions* — single-row Retry only on Failed Jobs. If operators ask for bulk-retry or mass-abort, those land in a follow-up ticket.
 * *Per-rule alert dispatch policy + scope predicates* — surfaced during the Async Services build but architecturally separate; drafted as Jira-ready proposals at {{tmp/POCOR-9694/followup-alert-dispatch-policy.jira.md}} and {{tmp/POCOR-9694/followup-alert-rule-predicates.jira.md}}.
 
-h3. 13.6 End-to-end smoke (2026-05-09)
+h3. 13.6 Known limitations & operational notes
+
+A critical-eyes audit pass on 2026-05-09 surfaced four items worth recording here so they are not rediscovered as "bugs" later:
+
+* *Retry button on Failed Jobs uses GET, not POST.* This matches the established OpenEMIS convention for admin toolbar actions ({{Trigger Alert Check}}, {{Trigger Alert Send}}, {{processQueue}} are also GETs). Inherits the existing CSRF risk profile — does not introduce a new class of vulnerability. A project-wide conversion of admin actions to {{POST + CSRF token}} would be its own ticket spanning multiple plugins.
+
+* *Heartbeat freshness can false-positive.* {{AsyncServicesOverview}} computes "Last heartbeat" as {{MAX(system_processes.created)}}; if there are simply no jobs running, this stays old even with a healthy cron. In production deployments this is rarely an issue (alert/webhook/job rate is high enough to refresh the column). When the dedicated runtime heartbeat row is wired in (Phase 1 follow-up), the dashboard should switch to it.
+
+* *Webhook Failures has no Retry button.* Failures live in {{webhook_queue}} (not {{failed_jobs}}); the Laravel-side retry mechanism is different and not yet replicated in CakePHP. Operators currently retry via the {{webhooks:process}} artisan command. Adding an in-page Retry is a small follow-up that mirrors the {{FailedJobsRetry}} pattern against {{webhook_queue.status}} reset.
+
+* *ACL deployment note for environments that already applied the migration.* The migration's {{view_actions}} for the *Failed Jobs* security_function row was extended to include {{FailedJobsRetry.index}} (commit {{839b2e0882}}) so future non-super_admin grants on the page also work for retry. Environments that already ran the earlier version of {{20260508143848_POCOR9694.php}} need either:
+
+{code:sql}
+UPDATE security_functions
+SET _view = 'FailedJobs.index|FailedJobs.view|FailedJobsRetry.index'
+WHERE name = 'Failed Jobs'
+  AND module = 'Administration'
+  AND category = 'Async Services';
+{code}
+
+  ...or a rollback + re-apply of the migration. Fresh deploys pick the new value up automatically. Today only super_admin (id=10) is granted, which bypasses the per-action ACL; the manual UPDATE only matters once non-super_admin grants are added.
+
+h3. 13.7 End-to-end smoke (2026-05-09)
 
 Validated under {{admin/demo}} login on {{https://localhost:8482}}:
 
