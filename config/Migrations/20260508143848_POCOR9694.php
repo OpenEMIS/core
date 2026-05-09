@@ -66,7 +66,7 @@ class POCOR9694 extends AbstractMigration
         [
             'name'         => 'Failed Jobs',
             'controller'   => 'Systems',
-            'view_actions' => ['FailedJobs.index', 'FailedJobs.view'],
+            'view_actions' => ['FailedJobs.index', 'FailedJobs.view', 'FailedJobsRetry.index'],
             'order_offset' => 2,
         ],
         [

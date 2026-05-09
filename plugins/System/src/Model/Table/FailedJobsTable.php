@@ -91,6 +91,13 @@ class FailedJobsTable extends AsyncServicesAdminTable
      * Replicates {{php artisan queue:retry <id>}} via DB transaction.
      * Returns true on success, false if the row no longer exists (e.g.
      * a concurrent retry already moved it).
+     *
+     * The {{SELECT ... FOR UPDATE}} on the failed_jobs row is essential —
+     * without it, two operators clicking Retry simultaneously would both
+     * see the row, both INSERT into {{jobs}}, and only one DELETE would
+     * win, producing a duplicate enqueue. With the row lock, the second
+     * transaction blocks until the first commits, then sees no row, and
+     * returns false cleanly.
      */
     public function requeue(int $failedJobId): bool
     {
@@ -100,6 +107,7 @@ class FailedJobsTable extends AsyncServicesAdminTable
                 ->select(['queue', 'payload'])
                 ->from('failed_jobs')
                 ->where(['id' => $failedJobId])
+                ->epilog('FOR UPDATE')
                 ->execute()
                 ->fetch('assoc');
 
