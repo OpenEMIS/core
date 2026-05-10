@@ -70,7 +70,12 @@ class LicensesTable extends ControllerActionTable
         return $validator
             ->add('issue_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'expiry_date', false]
-            ]);
+            ])
+            ->notEmptyString('license_type_id')
+            ->notEmptyString('license_number')
+            ->notEmptyString('security_user_id')
+            ->notEmptyArray('classifications')
+            ->notEmptyString('issuer');
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
