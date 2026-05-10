@@ -20,6 +20,7 @@ use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
+use App\Utility\ApplicationTimezone; //POCOR-9565
 
 class AppTable extends Table
 {
@@ -257,44 +258,53 @@ class AppTable extends Table
      * @return [type]             [description]
      * POCOR-9415, POCOR-9510 more error-save
      */
-    public function formatDateTime($dateInput): string
+    public function formatDateTime($dateInput): string //POCOR-9509: public — called from child tables and view files
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
         $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
+        $displayTimezone = new \DateTimeZone(ApplicationTimezone::getDisplayTimezone());
+        $utcTimezone = new \DateTimeZone('UTC');
 
         $displayFormat = $dateFormat . ' - ' . $timeFormat;
         $inputFormat   = $displayFormat;
 
         try {
-            // Case 1: Already a DateTime object
             if ($dateInput instanceof \DateTimeInterface) {
-                return FrozenTime::instance($dateInput)->format($displayFormat);
+                //POCOR-9565[START]
+                return FrozenTime::createFromTimestamp($dateInput->getTimestamp(), $utcTimezone)
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565[END]
             }
 
-            // Case 2: String input
             if (is_string($dateInput) && trim($dateInput) !== '') {
 
                 // Try parsing EXACT expected format first
                 $date = FrozenTime::createFromFormat(
                     $inputFormat,
-                    $dateInput
+                    $dateInput,//POCOR-9565
+                    $utcTimezone//POCOR-9565
                 );
 
                 if ($date !== false) {
-                    return $date->format($displayFormat);
+                    return $date->setTimezone($displayTimezone)->format($displayFormat);//POCOR-9565
                 }
 
                 // Fallback: try ISO / DB formats
-                return (new FrozenTime($dateInput))->format($displayFormat);
+                //POCOR-9565
+                return (new FrozenTime($dateInput, $utcTimezone))
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565
             }
-
         } catch (\Throwable $e) {
-            Log::error(
-                'formatDateTime error: ' . $e->getMessage(),
-                ['input' => $dateInput]
-            );
+            //POCOR-9509: parsing failed — return a simple readable fallback rather than empty string
+            if ($dateInput instanceof \DateTimeInterface) {
+                return $dateInput->format('d M Y H:i:s');
+            }
+            return is_string($dateInput) ? $dateInput : '';
         }
 
         return '';
@@ -387,11 +397,7 @@ class AppTable extends Table
     public function onInitializeButtons(EventInterface $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
 
-        // echo '<pre>';
-        // print_r($this->request->params);
-        // echo $this->request->url;
-        // die;
-        // needs clean up
+//         needs clean up
         $controller = $event->getSubject()->_registry->getController();
         $access = $controller->AccessControl;
 
@@ -1002,10 +1008,16 @@ class AppTable extends Table
 
     public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons START (table: ' . $this->getAlias() . ')');
+        //Log::debug('[TEMP-LOG] Incoming buttons: ' . print_r($buttons, true));
+
         $id = $this->getEncodedKeys($entity);
+        //Log::debug('[TEMP-LOG] Encoded key: ' . $id);
 
         if (isset($buttons['view'])) {
+            //Log::debug('[TEMP-LOG] View button URL before append: ' . print_r($buttons['view']['url'], true));
             $buttons['view']['url'][] = $id;
+            //Log::debug('[TEMP-LOG] View button URL after append: ' . print_r($buttons['view']['url'], true));
         }
         if (isset($buttons['edit'])) {
             $buttons['edit']['url'][] = $id;
@@ -1021,6 +1033,10 @@ class AppTable extends Table
                 $buttons['remove']['url'][] = $id;
             }
         }
+
+        //Log::debug('[TEMP-LOG] AppTable final buttons: ' . print_r($buttons, true));
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons END');
+
         return $buttons;
     }
 

@@ -1001,8 +1001,9 @@ class CrudApiController extends Controller
         }
 
         // Parse other filters from query parameters
+        // POCOR-9633: skip params starting with '_' — reserved for scope-consumed params (e.g., _date, _meal_programmes_id)
         foreach ($request->all() as $key => $value) {
-            if (!in_array($key, $excludedParams)) {
+            if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) {
                 $filters[$key] = $value;
             }
         }
@@ -1022,7 +1023,7 @@ class CrudApiController extends Controller
                     // Decrement $i by 2 to account for the removed elements
                     $i -= 2;
                 } else {
-                    if (!in_array($key, $excludedParams)) {
+                    if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) { //POCOR-9633: skip _ prefixed scope-consumed params
                         $filters[$key] = $value;
                     }
                 }
