@@ -749,8 +749,8 @@ class StudentPromotionTable extends AppTable
         $sameGradePromotion = $programme->same_grade_promotion ?? 0;
 
         // POCOR-9485: controls which grades of the next programme appear on graduation.
-        //   1 = Show One Programme  → first grade of each linked next programme only.
-        //   0 = Show All Programmes → all grades of every linked next programme.
+        //   1 = Show One Grade  → first grade of each linked next programme only.
+        //   0 = Show All Grades → all grades of every linked next programme.
         $nextProgrammeOption = $programme->next_programme_option_id ?? 1;
 
         $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
@@ -1435,8 +1435,8 @@ class StudentPromotionTable extends AppTable
      * next_programme_option_id flag (POCOR-9485) and intersected with grades actually
      * offered at this institution in the target academic period (POCOR-6257).
      *
-     *   $nextProgrammeOption = 1 → Show One Programme  → first grade of each next programme only.
-     *   $nextProgrammeOption = 0 → Show All Programmes → all grades of every next programme.
+     *   $nextProgrammeOption = 1 → Show One Grade  → first grade of each next programme only.
+     *   $nextProgrammeOption = 0 → Show All Grades → all grades of every next programme.
      */
     private function getGradesForGraduation(int $educationGradeId, $academicPeriodId, int $institutionId, int $nextProgrammeOption): array
     {
