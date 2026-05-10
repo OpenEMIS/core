@@ -97,7 +97,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByYear',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_students_by_stage' => [
