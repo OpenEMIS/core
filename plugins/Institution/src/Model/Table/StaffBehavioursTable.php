@@ -34,7 +34,7 @@ class StaffBehavioursTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
         $this->hasMany('StaffBehaviourAttachments', [
-            'className' => 'Institutions.StaffBehaviourAttachments',
+            'className' => 'Institution.StaffBehaviourAttachments',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -166,7 +166,15 @@ class StaffBehavioursTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        $extra['elements']['controls'] = [
+            'name' => 'Institution.Behaviours/controls',
+            'data' => ['encodedQueryString' => $encodedQueryString],
+            'options' => [],
+            'order' => 1
+        ];
         $periodOptions = $this->AcademicPeriods->getYearList();
         $requestData = $this->request->getQuery('academic_period_id');
         if (empty($requestData)) {
@@ -882,6 +890,28 @@ class StaffBehavioursTable extends ControllerActionTable
                 return __('Modified By');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        
+        $this->StaffBehaviourAttachments = TableRegistry::getTableLocator()->get('Institution.StaffBehaviourAttachments');
+        // Check if any associated records exist in any related tables.
+        $associatedRecordsExist = 
+            $this->StaffBehaviourAttachments->exists([
+                'staff_behaviour_id' => $entity->id
+            ]);
+
+            
+        // If associated records exist, show alert message and abort deletion
+        if ($associatedRecordsExist) {
+            $message = __('Delete operation is not allowed as there are other information linked to this record.');
+            $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
+            
+            $url = $this->request->referer();
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
         }
     }
 }

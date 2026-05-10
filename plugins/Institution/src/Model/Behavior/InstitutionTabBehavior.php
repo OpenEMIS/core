@@ -34,7 +34,14 @@ class InstitutionTabBehavior extends Behavior
         if (!$extra) {
             return;
         }
-        $toolbarButtons = $extra['toolbarButtons'];
+        //POCOR-9661
+        $toolbarButtons = $extra['toolbarButtons'] ?? new ArrayObject([]);
+        if (is_array($toolbarButtons)) {
+            $toolbarButtons = new ArrayObject($toolbarButtons);
+        } elseif (!($toolbarButtons instanceof ArrayObject)) {
+            $toolbarButtons = new ArrayObject([]);
+        }
+        //POCOR-9661
         $redirectURL = $extra['redirect'];
 
         if ($model->action == 'edit' || $model->action == 'remove') {
@@ -93,6 +100,9 @@ class InstitutionTabBehavior extends Behavior
     {
 
         $model = $this->_table;
+        if (!($toolbarButtons instanceof ArrayObject)) {
+            return $toolbarButtons;
+        }
         $institutionID = $this->getInstitutionID();
         $params = $model->getQueryString();
         if($model->getAlias() == 'FeederOutgoingInstitutions'){
@@ -132,8 +142,22 @@ class InstitutionTabBehavior extends Behavior
     public function fixAddDeleteRedirectURL()
     {
         $model = $this->_table;
-        $url = $model->url('index');
-        $queryString = $model->getQueryString();
+        //POCOR-9661
+        if (method_exists($model, 'url')) {
+            $url = $model->url('index');
+        } else {
+            $request = $model->request ?? null;
+            $url = [
+                'plugin' => $request ? $request->getParam('plugin') : null,
+                'controller' => $request ? $request->getParam('controller') : null,
+                'action' => $request ? $request->getParam('action') : 'index',
+            ];
+        }
+        $queryString = method_exists($model, 'getQueryString') ? $model->getQueryString() : [];
+        if (!is_array($queryString)) {
+            $queryString = [];
+        }
+        //POCOR-9661
         $institutionID = $this->getInstitutionID();
         if (isset($url[2])) {
             unset($url[2]);
@@ -141,7 +165,13 @@ class InstitutionTabBehavior extends Behavior
         $queryString['id'] = $institutionID;
         $queryString['institution_id'] = $institutionID;
         $url['0'] = 'index';
-        $url['1'] = $model->paramsEncode($queryString);
+        //POCOR-9661
+        if (method_exists($model, 'paramsEncode')) {
+            $url['1'] = $model->paramsEncode($queryString);
+        } else {
+            $url['?'] = $queryString;
+        }
+        //POCOR-9661
         return $url;
     }
 
@@ -300,18 +330,45 @@ class InstitutionTabBehavior extends Behavior
                     if (isset($url[2])) {
                         unset($url[2]);
                     }
-                    $queryString = $model->getQueryString();
-                    $queryString['id'] = $entity->id;
-                    if(empty($institutionID) && ($url['plugin'] == 'Institution' && $url['controller'] == 'Institutions' && $url['action'] == 'Institutions' && $url[0] == 'view')){
-                        $queryString['institution_id'] = $entity->id;
-                    }else{
-                        $queryString['institution_id'] = $institutionID;
+                    // StaffBehaviours view: preserve existing encoded pass if it already has institution_id and staff_id (from Staff table), so we do not overwrite with incomplete queryString
+                    $preserveUrl = false;
+                    if ($url_action == 'StaffBehaviours' && isset($url[1])) {
+                        try {
+                            $decoder = method_exists($model, 'paramsDecode') ? $model : $model->controller;
+                            $decoded = $decoder->paramsDecode($url[1]);
+                            if (!empty($decoded['institution_id']) && !empty($decoded['id'])) {
+                                $preserveUrl = true;
+                            }
+                        } catch (\Exception $e) {
+                            // ignore
+                        }
                     }
-                    //$queryString['institution_id'] = $institutionID;
-                    foreach ($appliedActions[$url_action] as $additionalParam) {
-                        $queryString[$additionalParam] = $entity->{$additionalParam};
+                    if (!$preserveUrl) {
+                        $queryString = $model->getQueryString();
+                        if (!is_array($queryString)) {
+                            $queryString = [];
+                        }
+                        $queryString['id'] = $entity->id;
+                        if (empty($institutionID) && ($url['plugin'] == 'Institution' && $url['controller'] == 'Institutions' && isset($url['action']) && $url['action'] == 'Institutions' && isset($url[0]) && $url[0] == 'view')) {
+                            $queryString['institution_id'] = $entity->id;
+                        } else {
+                            $queryString['institution_id'] = $institutionID;
+                        }
+                        if ($url_action == 'StaffBehaviours') {
+                            if (empty($queryString['institution_id']) && isset($entity->institution_id)) {
+                                $queryString['institution_id'] = $entity->institution_id;
+                            }
+                            if (empty($queryString['staff_id']) && isset($entity->staff_id)) {
+                                $queryString['staff_id'] = $entity->staff_id;
+                            }
+                        }
+                        if (!empty($appliedActions[$url_action])) {
+                            foreach ($appliedActions[$url_action] as $additionalParam) {
+                                $queryString[$additionalParam] = $entity->{$additionalParam} ?? null;
+                            }
+                        }
+                        $url['1'] = $model->paramsEncode($queryString);
                     }
-                    $url['1'] = $model->paramsEncode($queryString);
                     $buttons[$action]['url'] = $url;
                 }
 
@@ -325,19 +382,36 @@ class InstitutionTabBehavior extends Behavior
 
     public function addDeleteBeforeAction(EventInterface $event = null, ArrayObject $extra = null)
     {
-        //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
         if ($extra == null) {
             return;
         }
         $model = $this->_table;
-        $url = $model->url('index');
+        //POCOR-9661
+        if (method_exists($model, 'url')) {
+            $url = $model->url('index');
+        } else {
+            $request = $model->request ?? null;
+            $url = [
+                'plugin' => $request ? $request->getParam('plugin') : null,
+                'controller' => $request ? $request->getParam('controller') : null,
+                'action' => $request ? $request->getParam('action') : 'index',
+            ];
+        }
+        //POCOR-9661
         $institutionID = $this->getInstitutionID();
-        $queryString = $model->getQueryString();
+        $queryString = method_exists($model, 'getQueryString') ? $model->getQueryString() : [];
+        if (!is_array($queryString)) {
+            $queryString = [];
+        }
         if (isset($url[2])) {
             unset($url[2]);
         }
         $queryString['institution_id'] = $institutionID;
-        $url[1] = $model->paramsEncode($queryString);
+        if (method_exists($model, 'paramsEncode')) {
+            $url[1] = $model->paramsEncode($queryString);
+        } else {
+            $url['?'] = $queryString;
+        }
         $extra['redirect'] = $url;
     }
 

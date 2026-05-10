@@ -15,7 +15,13 @@ use Illuminate\Support\Facades\Response;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    //POCOR-9602: Read version from core root (works standalone or with CakePHP)
+    $versionFile = base_path('../version');
+    if (!file_exists($versionFile)) {
+        $versionFile = base_path('version'); //POCOR-9602: fallback for standalone API deployment
+    }
+    $version = file_exists($versionFile) ? trim(file_get_contents($versionFile)) : 'N/A';
+    return view('welcome', compact('version'));
 });
 
 Route::get('/api-docs-{version}.json', function ($version) {

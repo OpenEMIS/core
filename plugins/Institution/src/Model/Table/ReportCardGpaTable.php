@@ -594,6 +594,7 @@ class ReportCardGpaTable extends ControllerActionTable
                 $institutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                 $institutionStudents->aliasField('education_grade_id') => $educationGradeId,
             ])
+            ->orderAsc($institutionStudents->aliasField('student_status_id')) //POCOR-9641
             ->first();
 
         if (!$enrollment) {
@@ -909,7 +910,8 @@ class ReportCardGpaTable extends ControllerActionTable
                     'student_id' => $entity->student_id,
                     'education_grade_id' => $entity->education_grade_id,
                     'institution_id' => $institutionId,
-                    'academic_period_id' => $entity->academic_period_id
+                    'academic_period_id' => $entity->academic_period_id,
+                    'education_grades_gpa_id' => $entity->education_grades_gpa_id
                 ]);
 
             //POCOR-8699
