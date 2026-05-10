@@ -2,7 +2,7 @@
 
 ## 1. What is the Task?
 
-This feature adds a per-programme configuration option (`next_programme_option_id`) that controls which grade entries appear in the "To Grade" dropdown when promoting or graduating a student who is at the last grade of their education cycle. Two options are provided: **Show All Programmes** (0) lists every grade of every linked next programme, enabling direct cross-cycle promotion without a manual re-enrolment step; **Show One Programme** (1) retains the existing behaviour of showing only the first grade of each linked next programme. Additionally, the Education Programmes edit form now shows a read-only **Academic Period** field derived from the programme's education system, and a bug was fixed where the "Add Next Programme" dropdown was populated from the wrong academic period.
+This feature adds a per-programme configuration option (`next_programme_option_id`) that controls which grade entries appear in the "To Grade" dropdown when promoting or graduating a student who is at the last grade of their education cycle. Two options are provided: **Show All Grades** (0) lists every grade of every linked next programme, enabling direct cross-cycle promotion without a manual re-enrolment step; **Show One Grade** (1) retains the existing behaviour of showing only the first grade of each linked next programme. Additionally, the Education Programmes edit form now shows a read-only **Academic Period** field derived from the programme's education system, and a bug was fixed where the "Add Next Programme" dropdown was populated from the wrong academic period.
 
 ---
 
@@ -33,12 +33,12 @@ This feature adds a per-programme configuration option (`next_programme_option_i
 
 | Action | File |
 |---|---|
-| NEW | `config/Migrations/20260220120000_POCOR9485.php` |
+| NEW | `config/Migrations/20260511014500_POCOR9485.php` |
 | MODIFIED | `plugins/Education/src/Model/Table/EducationProgrammesTable.php` |
 | MODIFIED | `plugins/Education/src/Model/Table/EducationProgrammesNextProgrammesTable.php` |
 | MODIFIED | `plugins/Education/templates/Element/next_programmes.php` |
 | MODIFIED | `plugins/Institution/src/Model/Table/StudentPromotionTable.php` |
-| NEW | `api/storage/release-docs/POCOR-9485-v5-README.md` |
+| NEW | `api/storage/release-docs/POCOR-9485-README.md` |
 
 **Files added:** 2 | **Files modified:** 4 | **Files removed:** 0
 
@@ -46,13 +46,13 @@ This feature adds a per-programme configuration option (`next_programme_option_i
 
 - **Required:** YES
 - **Tables affected:** `education_programmes` (column `next_programme_option_id` added)
-- **Backward compatible:** YES — default value `1` keeps existing programmes on the old "Show One Programme" behaviour
+- **Backward compatible:** YES — default value `1` keeps existing programmes on the old "Show One Grade" behaviour
 
 ---
 
 ## 4. Deployment Instructions (User Experience)
 
-1. `git pull origin POCOR-9485-v5` on the target server.
+1. `git pull origin POCOR-9485` on the target server.
 2. Shell into the container: `docker exec poe-application /bin/sh`
 3. Run the migration: `cd /var/www/html/emis/core && ./bin/cake migrations migrate`
 4. Confirm the column exists:
@@ -78,16 +78,16 @@ This feature adds a per-programme configuration option (`next_programme_option_i
 7. **Smoke test — Config field:**
    - Navigate to Administration > Education Structure > Education Programmes > Edit any programme.
    - Confirm "Academic Period" read-only field appears showing the programme's academic period.
-   - Confirm "Next Programme Options" select appears with options "Show One Programme" / "Show All Programmes".
+   - Confirm "Next Programme Options" select appears with options "Show One Grade" / "Show All Grades".
 8. **Smoke test — Delete row reappears:**
    - On the same edit page, add two or more Next Programmes.
    - Delete one row. Confirm the deleted item immediately reappears in the "Add Next Programme" dropdown without a page refresh.
-9. **Smoke test — Show One Programme (option=1):**
-   - Set a programme to "Show One Programme", link two next programmes.
+9. **Smoke test — Show One Grade (option=1):**
+   - Set a programme to "Show One Grade", link two next programmes.
    - Go to Institutions > Students > Promote/Graduate for a student in the last grade of that programme.
    - Confirm "To Grade" shows only the first grade of each linked next programme.
-10. **Smoke test — Show All Programmes (option=0):**
-    - Change same programme to "Show All Programmes". Repeat step 9.
+10. **Smoke test — Show All Grades (option=0):**
+    - Change same programme to "Show All Grades". Repeat step 9.
     - Confirm "To Grade" shows all grades of all linked next programmes.
 
 ---
