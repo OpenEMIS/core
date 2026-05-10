@@ -5,9 +5,14 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Concerns\WebhookQueueTrait;
 class EducationGrades extends Model
 {
     use HasFactory;
+    use WebhookQueueTrait;
+
+    // POCOR-9257: Configure webhook events
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'code', 'name', 'admission_age', 'order', 'visible', 'education_stage_id', 'education_programme_id', 'modified_user_id', 'modified', 'created_user_id', 'created', 'education_stage_id', 'education_programme_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps

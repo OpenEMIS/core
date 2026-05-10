@@ -1,3 +1,40 @@
+### [5.9.0] - 2026-05-08
+- Implemented: Develop changes to the Reports > Institution > Staff Report to include staff custom fields
+- Bug Fixed: Investigate the cause of queries the system configuration timezone
+- Bug Fixed: Institutions>Performance>GPA: The GPA & CGPA in the generated report card is empty for the student Jimmy Olbrice (1600991587) at C. I. Gibson
+- Bug Fixed: Institutions > Students > GPA tab: The system calculates the Cumulative GPA based on all available GPA values for the configured education grades.
+- Bug Fixed: Institution > Attendances : Student being enrolled but not shown on attendance
+- Bug Fixed: Report Card>Comments: Subject Teacher is not seeing subjects correctly when they have homeroom teacher role
+- Bug Fixed: Administration>system setup>Custom field:Issue in custom field
+- Bug Fixed: Directory>Merge: Merge is not completed properly
+- Bug Fixed: Administration>System Setup>Field Options>Contact Types: The system accepts invalid email ID's to be saved in the Staff/Student Overview page
+- Bug Fixed: Administration > Survey > Forms > Add: Section gets removed after page refresh when adding question to newly created form section
+- Bug Fixed: Institution>Student (2904672460)>Identities tab>Edit: Message is not found
+- Bug Fixed: Institutions>Survey>Forms: Institutions>Survey>Forms: The selection made on the dropdowns does not do the sorting as expected.
+
+### [5.8.0] - 2026-05-04
+- Implemented: Develop an asynchronous alerts queue in laravel
+- Implemented: Develop a page that allows user to confirm if merge is successful
+- Implemented: Export Institution, Student and Staff history as PDF
+- Bug Fixed: Administration>Performance>Report Cards>Add: Unable to add report card
+- Bug Fixed: Administration>Security>Users: Remove password column
+- Bug Fixed: Remove .claude folders
+- Bug Fixed: Institutions>Attendance>Students>Export: The Student Attendance Export when generated on a day for which no attendance was marked the file shows all students to be present.
+- Bug Fixed: Institutions>Students>Academic>Competencies>Import: User is not able to import
+
+### [5.7.0] - 2026-04-09
+- Implemented: Develop webhooks in Laravel
+- Bug Fixed: Institutions>Academic>Classes>Add: User gets a error 404 when adding a class on clicking Save.
+- Bug Fixed: Core >Institution>Report Cards>Comments
+- Bug Fixed: COPY - Issues from POCOR-9607 & POCOR-9604
+- Bug Fixed: Institutions>Students>Add: Able to add Student successfully but the student is not seen in the Student list for the year in which she was added
+- Bug Fixed: Institution>Behaviors>Students: Survey Status Filter does not maintain the selection made, it reverts back to All Categories on loading.
+- Bug Fixed: Institutions > Students > Academic > Assessments: System should not add up all marks from all schools.
+- Bug Fixed: Reports>Staff>Add>Generate Staff Subjects Report>View: Should be able to view file without any errors regardless of the size of the file
+- Bug Fixed: Institution>Behaviors>Students>Export: Export button is missing
+- Bug Fixed: Administration>System Setup>System Configuration: Pagination is showing double arrow
+- Bug Fixed: Core>Institutions>Attendance>Staff>Edit: User can set the Time Out before the Time In
+
 ### [5.6.0] - 2026-04-02
 - Implemented: Develop "Absent" count on Staff attendance mini dashboard
 - Bug Fixed: Institution>Behaviors>Students>Export: Error 404 seen on clicking on Export
@@ -82,6 +119,17 @@
 - Implemented: Develop changes to existing webhooks in OpenEMIS Core to integrate with OpenEMIS Exams 
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Urgent issues)
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5
+
+### [4.51.4] - 2026-04-23
+- Bug Fixed: Institutions>Performance>GPA: The GPA & CGPA in the generated report card is empty for the student Jimmy Olbrice (1600991587) at C. I. Gibson
+
+### [4.51.3] - 2026-04-09
+- Bug Fixed: Institutions > Students > GPA tab: The system calculates the Cumulative GPA based on all available GPA values for the configured education grades.
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting same user when error is occured for one of the users
+
+### [4.51.2] - 2026-02-27
+- Bug Fixed: Institutions>Attendance>Staff: System checks the Timezone configuration before applying the validation on marking Student/Staff attendance
+- Bug Fixed: Administration>Performance>Report Cards: When calculating Cumulative GPA, use the latest GPA for that term
 
 ### [4.51.1] - 2026-02-02
 - Bug Fixed: Institutions>Performance>Assessment: Exempt button is missing for non admin roles
