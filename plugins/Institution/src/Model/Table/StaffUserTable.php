@@ -398,7 +398,19 @@ class StaffUserTable extends ControllerActionTable
                     return ($context['newRecord'] && array_key_exists('academic_period_id', $context['data']));
                 }
             ])*/
-        ;
+            ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ]) //POCOR-9680
+            ->allowEmptyString('mobile_number')
+            ->add('mobile_number', 'numeric', [
+                'rule' => 'numeric',
+                'message' => 'Only numbers are allowed'
+            ]); //POCOR-9680
         return $validator;
     }
 
@@ -737,7 +749,7 @@ class StaffUserTable extends ControllerActionTable
     {
         $session = $this->request->getSession();
         $staffUserId = $session->read('Institution.StaffUser.primaryKey.id');
-        $userNationalities = TableRegistry::getTableLocator()->get('User.userNationalities');
+        $userNationalities = TableRegistry::getTableLocator()->get('User.UserNationalities');
         $userContacts = TableRegistry::getTableLocator()->get('UserContacts');
         $contactTypes = TableRegistry::getTableLocator()->get('User.ContactTypes');
         $contactOptions = TableRegistry::getTableLocator()->get('User.ContactOptions');

@@ -19,7 +19,7 @@
 							<th><?= __('Identity Type'); ?></th>
 							<th><?= __('Identity Number'); ?></th>
 							<th><?= __('Nationality'); ?></th>
-							<th><?= __('Preferred'); ?></th>
+							<th><?= __('Preferred '); ?></th>
 						</tr>
 					</thead>
 					

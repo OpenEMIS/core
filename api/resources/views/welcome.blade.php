@@ -43,6 +43,8 @@
             <img src="public/oe-logo.png" alt="Logo" class="img-fluid mb-4">
             <h1 class="display-4">OpenEMIS Core</h1>
             <h1 class="display-4">API Home Page</h1>
+            {{-- POCOR-9602: Display version number from core/version file --}}
+            <p class="text-muted mt-3">Version {{ $version }}</p>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

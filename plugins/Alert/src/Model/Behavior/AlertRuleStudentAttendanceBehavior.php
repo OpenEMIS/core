@@ -35,7 +35,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
             '${student.identity_number}' => 'Student identity number.',
             // '${user.photo_name}' => 'Student photo name.',
             // '${user.photo_content}' => 'Student photo content.',
-            '${student.main_identity_type}' => 'Student identity type.',
+            '${student.identity_type}' => 'Student identity type.',
             '${student.main_nationality}' => 'Student nationality.',
             '${student.gender}' => 'Student gender.',
             // POCOR-9391 end
@@ -64,6 +64,9 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
                 $validator = $model->getValidator();
+                //POCOR-9509: start - validate threshold is required
+                $validator->notEmptyString('threshold', __('Threshold cannot be empty'));
+                //POCOR-9509: end
                 $validator->add('threshold', [
                     'ruleRange' => [
                         'rule' => ['range', 1, 30]
@@ -97,6 +100,7 @@ class AlertRuleStudentAttendanceBehavior extends AlertRuleBehavior
             $attr['type'] = 'integer';
             $attr['attr']['min'] = 1;
             $attr['attr']['max'] = 30;
+            $attr['attr']['required'] = true; //POCOR-9509: mark threshold as required
         } else if ($action == 'edit') {
             $attr['type'] = 'readonly';
         }

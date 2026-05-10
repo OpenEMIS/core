@@ -22,7 +22,11 @@ class StaffRequirementsTable extends AppTable
 
         parent::initialize($config);
 
-        $this->addBehavior('Excel', ['excludes' => [], 'pages' => ['index'],]);
+        $this->addBehavior('Excel', [
+            'excludes' => ['vision', 'mission'],
+            'pages' => ['index'],
+            'autoFields' => false,
+        ]);
         $this->addBehavior('Report.ReportList');
     }
 

@@ -1,3 +1,89 @@
+### [5.9.0] - 2026-05-08
+- Implemented: Develop changes to the Reports > Institution > Staff Report to include staff custom fields
+- Bug Fixed: Investigate the cause of queries the system configuration timezone
+- Bug Fixed: Institutions>Performance>GPA: The GPA & CGPA in the generated report card is empty for the student Jimmy Olbrice (1600991587) at C. I. Gibson
+- Bug Fixed: Institutions > Students > GPA tab: The system calculates the Cumulative GPA based on all available GPA values for the configured education grades.
+- Bug Fixed: Institution > Attendances : Student being enrolled but not shown on attendance
+- Bug Fixed: Report Card>Comments: Subject Teacher is not seeing subjects correctly when they have homeroom teacher role
+- Bug Fixed: Administration>system setup>Custom field:Issue in custom field
+- Bug Fixed: Directory>Merge: Merge is not completed properly
+- Bug Fixed: Administration>System Setup>Field Options>Contact Types: The system accepts invalid email ID's to be saved in the Staff/Student Overview page
+- Bug Fixed: Administration > Survey > Forms > Add: Section gets removed after page refresh when adding question to newly created form section
+- Bug Fixed: Institution>Student (2904672460)>Identities tab>Edit: Message is not found
+- Bug Fixed: Institutions>Survey>Forms: Institutions>Survey>Forms: The selection made on the dropdowns does not do the sorting as expected.
+
+### [5.8.0] - 2026-05-04
+- Implemented: Develop an asynchronous alerts queue in laravel
+- Implemented: Develop a page that allows user to confirm if merge is successful
+- Implemented: Export Institution, Student and Staff history as PDF
+- Bug Fixed: Administration>Performance>Report Cards>Add: Unable to add report card
+- Bug Fixed: Administration>Security>Users: Remove password column
+- Bug Fixed: Remove .claude folders
+- Bug Fixed: Institutions>Attendance>Students>Export: The Student Attendance Export when generated on a day for which no attendance was marked the file shows all students to be present.
+- Bug Fixed: Institutions>Students>Academic>Competencies>Import: User is not able to import
+
+### [5.7.0] - 2026-04-09
+- Implemented: Develop webhooks in Laravel
+- Bug Fixed: Institutions>Academic>Classes>Add: User gets a error 404 when adding a class on clicking Save.
+- Bug Fixed: Core >Institution>Report Cards>Comments
+- Bug Fixed: COPY - Issues from POCOR-9607 & POCOR-9604
+- Bug Fixed: Institutions>Students>Add: Able to add Student successfully but the student is not seen in the Student list for the year in which she was added
+- Bug Fixed: Institution>Behaviors>Students: Survey Status Filter does not maintain the selection made, it reverts back to All Categories on loading.
+- Bug Fixed: Institutions > Students > Academic > Assessments: System should not add up all marks from all schools.
+- Bug Fixed: Reports>Staff>Add>Generate Staff Subjects Report>View: Should be able to view file without any errors regardless of the size of the file
+- Bug Fixed: Institution>Behaviors>Students>Export: Export button is missing
+- Bug Fixed: Administration>System Setup>System Configuration: Pagination is showing double arrow
+- Bug Fixed: Core>Institutions>Attendance>Staff>Edit: User can set the Time Out before the Time In
+
+### [5.6.0] - 2026-04-02
+- Implemented: Develop "Absent" count on Staff attendance mini dashboard
+- Bug Fixed: Institution>Behaviors>Students>Export: Error 404 seen on clicking on Export
+- Bug Fixed: CakePHP 5 - Administration - Failed Cases
+- Bug Fixed: CakePHP 5 - Administration - Related Cases
+- Bug Fixed: Institutions > Behaviour > Students > Delete: Delete is not showing any associated records
+- Bug Fixed: Administration>Security>Roles>System Roles tab>Edit: On clicking Save, the page refreshes and comes back to the same edit page with no changes being saved.
+- Bug Fixed: Institution>Attendance>Students>Export: Day-wise attendance columns are empty
+- Bug Fixed: Institutions>Staff>Career>Subjects: The search bar is not working as expected
+- Bug Fixed: Directory>Student>Merge: Error 404 seen on attempting to merge student
+- Bug Fixed: Attendance>Students>No scheduled lessons: No schedule lesson is not working when no attendances are marked.
+- Bug Fixed: Institution>Academic>Subjects>Edit: System doesn't enable Save button when the Subject name field is edited, it is only enabled after some other fields are modified.
+
+### [5.5.0] - 2026-03-30
+- Implemented: Develop a migration script to prevent duplicates in the summary_area_institution_grade_attendances database table
+- Implemented: Develop Infrastructure Utilities report
+- Implemented: Develop changes to the OpenEMIS Core API page to include the version number
+- Bug Fixed: Attendance>Students>Edit>Mark attendance>Click No Scheduled Classes: No schedule class is not working properly
+- Bug Fixed: Save Student API(Add/Update): API is not saving the Profile Photo correctly.
+- Bug Fixed: Instituitons>Students>Attendance: Last date of each week is overlapping the first day of the following week
+- Bug Fixed: Administration>System Setup>System Configurations>Products List (Dropdown): Error 404 seen on clicking Save on the Products List dropdown.
+- Bug Fixed: Institutions > Students > Timetable > View: Timetable is empty even though there is data for the class
+- Bug Fixed: Core>Institutions>Performance>Assessments>Edit: When entering grades in the Gradebook, selecting a grade cell and then clicking outside of the cell without entering a value triggers an error message.
+- Bug Fixed: Institutions > Performances > Report Cards : Investigate why placeholder for Male/Female students counts does not match Institution > Classes
+
+### [5.4.1] - 2026-03-19
+- Bug Fixed: Reports > Customs: Area Filters is not showing the proper data for country area
+- Bug Fixed: Institution>Academic>Feeders>Incoming: View is getting 404 error
+- Bug Fixed: CakePHP v5 Report Bugs.
+- Bug Fixed: Administration>System Setup>Field Options>Staff Positions Titles: Security roles is not updated even though field option security role is changed
+- Bug Fixed: Reports > Scholarship > Scholarship Applications Report: Add qualification level and qualification name columns
+- Bug Fixed: Administration>Performance>Assessment>Assessment Periods tab:The system rounds up the Period Weight 0.025 to 0.03.
+- Bug Fixed: Administration>Security>Roles: Download Institution Profile is divided into download institution pdf and download institution excel
+
+### [5.4.0] - 2026-03-13
+- Implemented: Develop changes to Infrastructure > Utilities > Internet, electricity and telephone pages
+- Implemented: Develop a search function for the assessment feature
+- Bug Fixed: Administration>Performance>Report Cards: When calculating Cumulative GPA, use the latest GPA for that term
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Institutions) : When logged in as a teacher.
+- Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Administration)
+- Bug Fixed: Institutions > Survey > Form > Export : 404 error
+- Bug Fixed: Institutions>Academic>Classes>Edit: Label for Secondary Teacher is not working properly
+- Bug Fixed: Institutions>Students>List>Select Student>Overview page: The Nationality and the Identity are not visible in the overview page
+- Bug Fixed: Institution>Schedule>Interval>Edit: User getting 404 error when saving
+- Bug Fixed: Institutions>General>Institutions: Profile is stuck in progress
+- Bug Fixed: Report>Performance>Assessment: Change Assessment Period dropdown to a multi select filter page
+- Bug Fixed: Reports : Reports order are inconsistent
+- Bug Fixed: Administration > System Setup > Custom Fields > Institutions > Pages: Checkbox custom field is mandatory but user is still able to save without filling it up
+
 ### [5.3.0] - 2026-03-05
 - Implemented: Develop changes to institutions dropdown on the staff qualifications page
 - Bug Fixed: Institutions > Staff > General > Nationalities > Add: Getting 404 error when saved
@@ -33,6 +119,17 @@
 - Implemented: Develop changes to existing webhooks in OpenEMIS Core to integrate with OpenEMIS Exams 
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5-(Urgent issues)
 - Bug Fixed: Upgrade OpenEMIS Core to CakePHP 5
+
+### [4.51.4] - 2026-04-23
+- Bug Fixed: Institutions>Performance>GPA: The GPA & CGPA in the generated report card is empty for the student Jimmy Olbrice (1600991587) at C. I. Gibson
+
+### [4.51.3] - 2026-04-09
+- Bug Fixed: Institutions > Students > GPA tab: The system calculates the Cumulative GPA based on all available GPA values for the configured education grades.
+- Bug Fixed: Institutions>Performance>Report Cards: Merge and download pdf is getting same user when error is occured for one of the users
+
+### [4.51.2] - 2026-02-27
+- Bug Fixed: Institutions>Attendance>Staff: System checks the Timezone configuration before applying the validation on marking Student/Staff attendance
+- Bug Fixed: Administration>Performance>Report Cards: When calculating Cumulative GPA, use the latest GPA for that term
 
 ### [4.51.1] - 2026-02-02
 - Bug Fixed: Institutions>Performance>Assessment: Exempt button is missing for non admin roles

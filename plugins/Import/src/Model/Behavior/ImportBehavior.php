@@ -121,7 +121,7 @@ class ImportBehavior extends Behavior
     public function initialize(array $config): void
     {
         //POCOR-9584: start - debug logging for ImportOutcomeResults/add black screen
-        // Log::debug('@ImportBehavior::initialize START table=' . $this->_table->getAlias() . ' config_plugin=' . json_encode($config['plugin'] ?? null) . ' config_model=' . json_encode($config['model'] ?? null)); //[TEMP-LOG]
+        //// Log::debug('@ImportBehavior::initialize START table=' . $this->_table->getAlias() . ' config_plugin=' . json_encode($config['plugin'] ?? null) . ' config_model=' . json_encode($config['model'] ?? null)); //[TEMP-LOG]
         //POCOR-9584: end
         $fileTypes = $this->getConfig('fileTypes');
         $allowableFileTypes = [];
@@ -674,6 +674,11 @@ class ImportBehavior extends Behavior
                         //POCOR-9294[END]
                         // Log::debug('@ImportBehavior::processImport attempting save with entity=' . json_encode($tableEntity->toArray())); //[TEMP-LOG]
                         //$model->log('@ImportBehavior pre-save errors=' . json_encode($errors), 'debug');
+                        //POCOR-9583 Start
+                        if($activeModel->getAlias() == 'AssessmentItemResults' && isset($tableEntity->institution_class_id)) {
+                            $tableEntity->set('institution_classes_id', $tableEntity->institution_class_id);
+                        } 
+                        //POCOR-9583 End
                         $newEntity = $activeModel->save($tableEntity);
                         // Log::debug('@ImportBehavior::processImport save result newEntity=' . json_encode($newEntity ? 'saved' : 'failed')); //[TEMP-LOG]
                         //POCOR-9584: merge errors set during beforeSave (not captured before save() runs)

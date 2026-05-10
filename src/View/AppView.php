@@ -38,5 +38,6 @@ class AppView extends View
     {
         $this->loadHelper('ControllerAction.ControllerAction');
         $this->loadHelper('ControllerAction.HtmlField');
+        $this->loadHelper('Timezone', ['className' => 'App\View\Helper\TimezoneHelper']); //POCOR-9565
     }
 }

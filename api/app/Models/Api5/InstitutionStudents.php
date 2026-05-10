@@ -6,12 +6,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
 use App\Traits\UuidId;
+use App\Services\AlertTriggerService;
+use Illuminate\Support\Facades\Log;
 
+use App\Models\Concerns\WebhookQueueTrait;
 class InstitutionStudents extends Model
 {
     use HasFactory;
-use InstitutionScope;
-use UuidId;
+    use InstitutionScope;
+
+
+    // POCOR-9257: Configure webhook events
+    use WebhookQueueTrait;
+    protected $webhookEvents = ['created', 'updated', 'deleted'];
+
+    use UuidId;
 
     protected $table = 'institution_students';
 
@@ -36,6 +45,57 @@ use UuidId;
     {
         parent::boot();
         self::bootUuidId();
+
+        // POCOR-9509: Trigger student status alerts when the record is created or status changes.
+        static::saved(function (self $student) {
+            if (!$student->wasRecentlyCreated && !$student->wasChanged('student_status_id')) {
+                return;
+            }
+
+            if (!$student->student_id || !$student->institution_id || !$student->student_status_id) {
+                // POCOR-9509: Keep production resilient when required event data is missing.
+                return;
+            }
+
+            try {
+                $student->processStudentStatusAlert();
+            } catch (\Throwable $e) {
+                Log::error('[POCOR-9509] Student status alert processing failed in saved event', [
+                    'institution_student_id' => $student->id,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        });
+    }
+
+    /**
+     * POCOR-9509: Dispatch the Laravel alert command for student status events.
+     */
+    protected function processStudentStatusAlert(): bool
+    {
+        $alertRule = AlertTriggerService::getActiveAlertRule('StudentStatus', (int) $this->institution_id);
+
+        if (!$alertRule) {
+            return false;
+        }
+
+        $result = AlertTriggerService::triggerAlert(
+            processName: 'AlertStudentStatus',
+            featureName: 'StudentStatus',
+            userId: (int) ($this->created_user_id ?: 1),
+            ruleId: (int) $alertRule->id,
+            entityId: (string) $this->id, // POCOR-9509: institution_students.id is a UUID string, not an integer
+            context: [
+                'student_id' => (int) $this->student_id,
+                'student_status_id' => (int) $this->student_status_id,
+                'academic_period_id' => (int) $this->academic_period_id,
+                'institution_id' => (int) $this->institution_id,
+            ],
+            entityType: 'StudentStatus',
+            triggerType: 'status_changed'
+        );
+
+        return (bool) ($result['success'] ?? false) || (bool) ($result['duplicate'] ?? false);
     }
 
 

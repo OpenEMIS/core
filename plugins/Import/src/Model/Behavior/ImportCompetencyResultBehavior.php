@@ -43,11 +43,11 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
 
         return function ($model, $entity) {
             $errors = $entity->getErrors(); //POCOR-9584: errors() → getErrors()
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave entity_errors=' . json_encode($errors)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave entity_errors=' . json_encode($errors)); //[TEMP-LOG]
             if (!empty($errors)) {
                 // set error message for php file upload errors
                 $fileError = Hash::get($entity->getInvalid(), 'select_file.error'); //POCOR-9584: invalid() → getInvalid()
-                // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave fileError=' . json_encode($fileError)); //[TEMP-LOG]
+                //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave fileError=' . json_encode($fileError)); //[TEMP-LOG]
                 if (!empty($fileError)) {
                     $errorMessage = $model->getMessage("fileUpload.$fileError");
                     if ($errorMessage != '[Message Not Found]') {
@@ -65,7 +65,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $uploadedName = $fileObj->getClientFilename();
             $uploaded = $fileObj->getStream()->getMetadata('uri');
             //POCOR-9584: end
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave uploadedName=' . json_encode($uploadedName)); //[TEMP-LOG]
             $inputFileType = IOFactory::identify($uploaded); //POCOR-9584: PHPExcel_IOFactory → IOFactory
             $objReader = IOFactory::createReader($inputFileType); //POCOR-9584: PHPExcel_IOFactory → IOFactory
             $objPHPExcel = $objReader->load($uploaded);
@@ -84,7 +84,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $maxRows = $maxRows + 2;
             $sheet = $objPHPExcel->getSheet(0);
             $highestRow = $sheet->getHighestRow();
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave highestRow=' . $highestRow . ' maxRows=' . $maxRows); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave highestRow=' . $highestRow . ' maxRows=' . $maxRows); //[TEMP-LOG]
             if ($highestRow > $maxRows) {
                 $entity->setError('select_file', [$this->getExcelLabel('Import', 'over_max_rows')]); //POCOR-9584: errors() → setError()
                 return false;
@@ -96,8 +96,8 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             $postDataAlias = $this->_table->request->getData()[$this->_table->getAlias()] ?? [];
             $competency_item_id = $this->_table->request->getQuery('competency_item_id') //POCOR-9584: renamed competency_item → competency_item_id
                 ?? ($postDataAlias['competency_item_id'] ?? null); //POCOR-9584: POST fallback for addOnInitialize clear
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave allQueryParams=' . json_encode($this->_table->request->getQueryParams()) . ' allPostKeys=' . json_encode(array_keys($postDataAlias))); //[TEMP-LOG]
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave competency_item_id=' . json_encode($competency_item_id)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave allQueryParams=' . json_encode($this->_table->request->getQueryParams()) . ' allPostKeys=' . json_encode(array_keys($postDataAlias))); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave competency_item_id=' . json_encode($competency_item_id)); //[TEMP-LOG]
             $competencyItemsName = null;
             if (!empty($competency_item_id)) {
                 $competencyItemsName = $competencyItemsTable
@@ -107,18 +107,18 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                     ->first();
             }
             //POCOR-9584: end
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave competencyItemsName=' . json_encode($competencyItemsName)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave competencyItemsName=' . json_encode($competencyItemsName)); //[TEMP-LOG]
 
             // check correct template
             $header = array($competencyItemsName, 'Competency -->');
 
             //calculate number of student
             $arrayStudent = $this->_table->getStudentArray();
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave studentCount=' . count($arrayStudent)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave studentCount=' . count($arrayStudent)); //[TEMP-LOG]
 
             // calculate competency criterias
             $arrayCompetencyCriterias = $this->_table->getCompetencyCriteriasArray();
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave criteriaCount=' . count($arrayCompetencyCriterias) . ' criteriaIds=' . json_encode(array_column((array)$arrayCompetencyCriterias, 'id'))); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave criteriaCount=' . count($arrayCompetencyCriterias) . ' criteriaIds=' . json_encode(array_column((array)$arrayCompetencyCriterias, 'id'))); //[TEMP-LOG]
 
             $totalCriteria = count($arrayCompetencyCriterias);
             $totalColumns = $totalCriteria + 1;
@@ -129,19 +129,19 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             //   so PhpSpreadsheet column index for "Overall Comment" is (N*2)+3, not (N*2)+2.
             $commentColumn = (count($arrayCompetencyCriterias)*2)+3;
             //POCOR-9584: end
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave totalCriteria=' . $totalCriteria . ' totalColumns=' . $totalColumns . ' commentColumn=' . $commentColumn); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave totalCriteria=' . $totalCriteria . ' totalColumns=' . $totalColumns . ' commentColumn=' . $commentColumn); //[TEMP-LOG]
 
             foreach ($arrayCompetencyCriterias as $key => $value) {
                 $headerCriteriaId[] = $value->id;
             }
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave headerCriteriaId=' . json_encode($headerCriteriaId ?? [])); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave headerCriteriaId=' . json_encode($headerCriteriaId ?? [])); //[TEMP-LOG]
 
             $InstitutionCompetencyItemCommentsTable = TableRegistry::getTableLocator()->get('Institution.InstitutionCompetencyItemComments');
 
             //POCOR-9584: start - criteria IDs in row 1 start at PhpSpreadsheet column 3 ("C") not 2 ("B");
             //   totalColumns shifts +1 so the loop in checkCorrectIdTemplate covers the last criteria column
             $checkIdResult = $this->checkCorrectIdTemplate(3, $headerCriteriaId ?? [], $sheet, $totalColumns + 1, 1);
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave checkCorrectIdTemplate result=' . json_encode($checkIdResult) . ' startCol=3 endCol=' . ($totalColumns + 1)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave checkCorrectIdTemplate result=' . json_encode($checkIdResult) . ' startCol=3 endCol=' . ($totalColumns + 1)); //[TEMP-LOG]
             if (!$checkIdResult) {
                 $entity->setError('select_file', [$this->getExcelLabel('Import', 'wrong_template')]); //POCOR-9584: errors() → setError()
                 return false;
@@ -150,7 +150,7 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             //POCOR-9584: start - competency name is at A2 (col 1) and "Competency -->" is at B2 (col 2);
             //   old code passed col=0 which is invalid in PhpSpreadsheet 1-indexed
             $checkTemplateResult = $this->checkCorrectTemplate(1, $header, $sheet, 2, 2);
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave checkCorrectTemplate result=' . json_encode($checkTemplateResult) . ' header=' . json_encode($header)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave checkCorrectTemplate result=' . json_encode($checkTemplateResult) . ' header=' . json_encode($header)); //[TEMP-LOG]
             if (!$checkTemplateResult) {
                 $entity->setError('select_file', [$this->getExcelLabel('Import', 'wrong_template')]); //POCOR-9584: errors() → setError()
                 return false;
@@ -158,44 +158,47 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
             //POCOR-9584: end
 
             $numberOfStudents = count($arrayStudent);
-            // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave starting row loop numberOfStudents=' . $numberOfStudents . ' rows=4..' . ($numberOfStudents + 3)); //[TEMP-LOG]
+            //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave starting row loop numberOfStudents=' . $numberOfStudents . ' rows=4..' . ($numberOfStudents + 3)); //[TEMP-LOG]
             for ($row = 4; $row < $numberOfStudents + 4; $row++) {
 
                 // do the save for the comment
                 //POCOR-9584: getCellByColumnAndRow is 1-indexed in PhpSpreadsheet; column A = 1 (not 0)
                 $student = $sheet->getCellByColumnAndRow(1, $row);
-                $studentOpenEmisId = $student->getValue();
-                // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' studentOpenEmisId=' . json_encode($studentOpenEmisId)); //[TEMP-LOG]
-                $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
-
-                $User = $UsersTable->find()
-                    ->select(['id'])
-                    ->where([
-                        $UsersTable->aliasField('openemis_no') => $studentOpenEmisId
-                    ])
-                    ->first();
-                // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' userId=' . json_encode($User ? $User->id : null)); //[TEMP-LOG]
+                $studentOpenEmisId = trim((string)$student->getValue());
+                //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' studentOpenEmisId=' . json_encode($studentOpenEmisId)); //[TEMP-LOG]
 
                 $comment = $sheet->getCellByColumnAndRow($commentColumn, $row)->getValue();
-                // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' overallComment(col' . $commentColumn . ')=' . json_encode($comment)); //[TEMP-LOG]
+                //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' overallComment(col' . $commentColumn . ')=' . json_encode($comment)); //[TEMP-LOG]
 
                 if (!empty($comment)) {
-                    //POCOR-9584: start - CakePHP3 request->data[], ->alias(), session institution_id → CakePHP5 equivalents
-                    $alias = $this->_table->getAlias(); //POCOR-9584: alias() → getAlias()
-                    $reqData = $this->_table->request->getData()[$alias] ?? []; //POCOR-9584: request->data[] → getData()
-                    // Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' reqData=' . json_encode($reqData)); //[TEMP-LOG]
-                    $InstitutionCompetencyItemCommentsData = $InstitutionCompetencyItemCommentsTable->newEntity([
-                        'comments' => $comment,
-                        'student_id' => $User->id,
-                        'competency_template_id' => $reqData['competency_template_id'] ?? null, //POCOR-9584: old key competency_template → competency_template_id
-                        'competency_period_id' => $reqData['competency_period_id'] ?? null,     //POCOR-9584: old key competency_period → competency_period_id
-                        'competency_item_id' => $reqData['competency_item_id'] ?? null,         //POCOR-9584: old key competency_item → competency_item_id
-                        'institution_id' => $this->_table->getInstitutionID(), //POCOR-9584: session read → getInstitutionID()
-                        'academic_period_id' => $reqData['academic_period_id'] ?? null          //POCOR-9584: old key academic_period → academic_period_id
-                    ]);
-                    //POCOR-9584: end
+                    $User = null;
+                    if ($studentOpenEmisId !== '') {
+                        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
+                        $User = $UsersTable->find()
+                            ->select(['id'])
+                            ->where([
+                                $UsersTable->aliasField('openemis_no') => $studentOpenEmisId
+                            ])
+                            ->first();
+                    }
+                    if ($User) {
+                        //POCOR-9584: start - CakePHP3 request->data[], ->alias(), session institution_id → CakePHP5 equivalents
+                        $alias = $this->_table->getAlias(); //POCOR-9584: alias() → getAlias()
+                        $reqData = $this->_table->request->getData()[$alias] ?? []; //POCOR-9584: request->data[] → getData()
+                        //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' reqData=' . json_encode($reqData)); //[TEMP-LOG]
+                        $InstitutionCompetencyItemCommentsData = $InstitutionCompetencyItemCommentsTable->newEntity([
+                            'comments' => $comment,
+                            'student_id' => $User->id,
+                            'competency_template_id' => $reqData['competency_template_id'] ?? null, //POCOR-9584: old key competency_template → competency_template_id
+                            'competency_period_id' => $reqData['competency_period_id'] ?? null,     //POCOR-9584: old key competency_period → competency_period_id
+                            'competency_item_id' => $reqData['competency_item_id'] ?? null,         //POCOR-9584: old key competency_item → competency_item_id
+                            'institution_id' => $this->_table->getInstitutionID(), //POCOR-9584: session read → getInstitutionID()
+                            'academic_period_id' => $reqData['academic_period_id'] ?? null          //POCOR-9584: old key academic_period → academic_period_id
+                        ]);
+                        //POCOR-9584: end
 
-                    $InstitutionCompetencyItemCommentsTable->save($InstitutionCompetencyItemCommentsData);
+                        $InstitutionCompetencyItemCommentsTable->save($InstitutionCompetencyItemCommentsData);
+                    }
                 }
                 // end of save comment
 

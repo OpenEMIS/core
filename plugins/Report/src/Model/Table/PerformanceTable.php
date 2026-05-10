@@ -232,15 +232,16 @@ class PerformanceTable extends AppTable
     public function onUpdateFieldAreaEducationId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($this->request->getData($this->getAlias())['feature'])) {
+            $condition = [];
             $areaLevel = $request->getData($this->getAlias())['area_level_id'];
-            if ($areaLevel > 0) {
+            if (!empty($areaLevel) && $areaLevel > 0) {
                 $condition[$this->Areas->aliasField('area_level_id')] = $areaLevel;
             }
             $areaOptions = $this->Areas->find('list', [
                                 'keyField' => 'id',
                                 'valueField' => 'code_name'
                             ])
-                            ->where([$condition])
+                            ->where($condition)
                             ->toArray();
             $attr['type'] = 'select';
             $attr['select'] = false;
@@ -287,13 +288,31 @@ class PerformanceTable extends AppTable
     public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
+            $condition = [];
             $areaId = $request->getData($this->getAlias())['area_education_id'];
-            if ($areaId > 0) {
-                $condition[$this->Institutions->aliasField('area_id')] = $areaId;
+            if (!empty($areaId) && $areaId > 0) {
+                // Same as Report.Institutions / Institution Positions Summaries: use nested set (lft/rght) to include selected area and all descendants
+                $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+                $areaEntity = $Areas->get($areaId);
+                $areaIds = [$areaId];
+                if ($areaEntity->has('lft') && $areaEntity->has('rght') && $areaEntity->lft !== null && $areaEntity->rght !== null) {
+                    $areaFilter = $Areas->find('all')
+                        ->select(['id' => $Areas->aliasField('id')])
+                        ->where([
+                            $Areas->aliasField('lft') . ' >=' => $areaEntity->lft,
+                            $Areas->aliasField('rght') . ' <=' => $areaEntity->rght,
+                        ])
+                        ->toArray();
+                    $areaIds = [];
+                    foreach ($areaFilter as $area) {
+                        $areaIds[] = $area->id;
+                    }
+                }
+                $condition[$this->Institutions->aliasField('area_id') . ' IN'] = $areaIds;
             }
             //POCOR-9451 start
             $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
-            if ($institutionTypeId > 0) {
+            if (!empty($institutionTypeId) && $institutionTypeId > 0) {
                 $condition[$this->Institutions->aliasField('institution_type_id')] = $institutionTypeId;
             }
             //POCOR-9451 end
@@ -302,16 +321,16 @@ class PerformanceTable extends AppTable
                                 'keyField' => 'id',
                                 'valueField' => 'code_name'
                             ])
-                            ->where([$condition])
+                            ->where($condition)
                             ->order([
                                 $this->Institutions->aliasField('code') => 'ASC',
                                 $this->Institutions->aliasField('name') => 'ASC'
                             ]);
-            // if user is not super admin than list will be filtered
+            // if user is not super admin then list will be filtered
             $superAdmin = $this->Auth->user('super_admin');
             if (!$superAdmin) {
                 $userId = $this->Auth->user('id');
-                $institutionQuery->find('byAccess', ['userId' => $userId]);
+                $institutionQuery = $institutionQuery->find('byAccess', ['userId' => $userId]);
             }
             $institutionList = $institutionQuery->toArray();
             $attr['type'] = 'select';
@@ -452,17 +471,18 @@ class PerformanceTable extends AppTable
                             ])
                             ->where([$condition])
                             ->toArray();
-
-            $attr['type'] = 'select';
-            $attr['select'] = false;
-            if (count($assessmentPeriodList) > 1) {
-                $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --', 0 => __('All Periods')] + $assessmentPeriodList;
+           
+            if (count($assessmentPeriodList) >= 1) {
+                $assessmentPeriodOption = $assessmentPeriodList;
             } else {
                 $assessmentPeriodOption = ['' => '-- ' . __('Select') . ' --'] + $assessmentPeriodList;
             }
+            $attr['type'] = 'select';
+            $attr['select'] = false;
+            $attr['type'] = 'chosenSelect';
+            $attr['onChangeReload'] = false;
+            $attr['attr']['multiple'] = true;
             $attr['options'] = $assessmentPeriodOption;
-            $attr['onChangeReload'] = true;
-
             return $attr;
         }
     }
@@ -488,7 +508,7 @@ class PerformanceTable extends AppTable
 
             if ($assessmentPeriodId > 0) {
                 $query->where([
-                    $this->AssessmentPeriods->aliasField('id') => $assessmentPeriodId
+                    $this->AssessmentPeriods->aliasField('id IN') => $assessmentPeriodId['_ids']
                 ]);
             }
 
@@ -530,7 +550,6 @@ class PerformanceTable extends AppTable
         $institutionId = $requestData->institution_id;
         $gradeId = $requestData->education_grade_id;
         $assessmentPeriodId = $requestData->assessment_period_id;
-        $assessmentPeriodId = $requestData->assessment_period_id;
         $academicPeriodId = $requestData->academic_period_id;
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
@@ -558,7 +577,7 @@ class PerformanceTable extends AppTable
         }
         
         if ($assessmentPeriodId > 0) {
-            $conditions[$this->aliasField('assessment_period_id')] = $assessmentPeriodId;
+            $conditions[$this->aliasField('assessment_period_id IN')] = $assessmentPeriodId['_ids']; //POCOR-9575
         }
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
@@ -778,9 +797,14 @@ class PerformanceTable extends AppTable
             if (!empty($academicPeriodId)) {
                 $conditions[$Assessments->aliasField('academic_period_id')] = $academicPeriodId;
             }
-            if (!empty($assessmentPeriodId) && $assessmentPeriodId > 0) {
-                $conditions[$AssessmentPeriods->aliasField('id')] = $assessmentPeriodId;
+            if (!empty($assessmentPeriodId)) {
+                if (is_array($assessmentPeriodId) && isset($assessmentPeriodId['_ids'])) {
+                    $conditions[$AssessmentPeriods->aliasField('id IN')] = $assessmentPeriodId['_ids']; //POCOR-9575
+                } else {
+                    $conditions[$AssessmentPeriods->aliasField('id')] = $assessmentPeriodId;
+                }
             }
+
             if (!empty($academicTerm) && $academicTerm > 0) {
                 $conditions[$AssessmentPeriods->aliasField('academic_term')] = $academicTerm;
             }
@@ -817,6 +841,8 @@ class PerformanceTable extends AppTable
             foreach ($subjects as $val) {
                 $allowedSubjects[$val['id']] = $val['name'];
             }
+            $attr['type'] = 'select';
+            $attr['select'] = false;
             $attr['type'] = 'chosenSelect';
             $attr['onChangeReload'] = false;
             $attr['attr']['multiple'] = true;
