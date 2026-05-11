@@ -940,7 +940,7 @@ class WorkflowBehavior extends Behavior
                             ])
                             ->first();
 
-                        if ($step) {
+                         if (!empty($step)) { 
                             $stepRole = $WorkflowStepRoles->find()
                                 ->where([
                                     'workflow_step_id' => $step->id
