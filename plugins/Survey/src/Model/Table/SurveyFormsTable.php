@@ -58,6 +58,16 @@ class SurveyFormsTable extends CustomFormsTable
         $this->setDeleteStrategy('restrict');
     }
 
+    //POCOR-9638
+    /**
+     * Survey form element posts survey_question_id; CustomField.form_fields uses selected_custom_field (chosen) only.
+     */
+    protected function getOrderFieldElement(): string
+    {
+        return 'Survey.formquestions';
+    }
+    //POCOR-9638
+
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);

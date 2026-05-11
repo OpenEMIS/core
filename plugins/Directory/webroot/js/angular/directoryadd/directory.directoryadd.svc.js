@@ -1343,8 +1343,8 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                             }
                         })
                     }
+                    //POCOR-9664 Changes for date picker.
                     if(fieldData.field_type === 'DATE') {
-                        fieldData.isDatepickerOpen = false;
                         let params = fieldData.params !== '' ? JSON.parse(fieldData.params) : null;
                         fieldData.params = params;
                         fieldData.datePickerOptions = {
@@ -1352,7 +1352,12 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                             maxDate: new Date('01/01/2100'),
                             showWeeks: false
                         };
-                        fieldData.answer = new Date(fieldData.values);
+                        if (fieldData.values && fieldData.values !== 'null') {
+                            fieldData.answer = new Date(fieldData.values);
+                            fieldData.answer = fieldData.values;
+                        } else {
+                            fieldData.answer = '';
+                        }
                     }
                     if(fieldData.field_type === 'TIME') {
                         fieldData.hourStep = 1;
