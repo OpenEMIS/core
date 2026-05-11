@@ -15,7 +15,6 @@ class POCOR9610 extends AbstractMigration
     {
         $this->execute('SET FOREIGN_KEY_CHECKS=0;');
 
-        $this->backupTable('institutions',            'z_9610_institutions');
         $this->backupTable('security_functions',      'z_9610_security_functions');
         $this->backupTable('security_role_functions', 'z_9610_security_role_functions');
 
@@ -25,7 +24,7 @@ class POCOR9610 extends AbstractMigration
                 CREATE TABLE `institution_registrations` (
                     `id`               INT AUTO_INCREMENT PRIMARY KEY,
                     `institution_id`   INT NOT NULL,
-                    `valid_from`       DATE NOT NULL,
+                    `valid_from`       DATE NULL,
                     `valid_to`         DATE NULL,
                     `modified_user_id` INT NULL,
                     `modified`         DATETIME NULL,
@@ -58,7 +57,7 @@ class POCOR9610 extends AbstractMigration
                     `id`                     INT AUTO_INCREMENT PRIMARY KEY,
                     `institution_id`         INT NOT NULL,
                     `education_programme_id` INT NOT NULL,
-                    `valid_from`             DATE NOT NULL,
+                    `valid_from`             DATE NULL,
                     `valid_to`               DATE NULL,
                     `modified_user_id`       INT NULL,
                     `modified`               DATETIME NULL,
@@ -173,7 +172,7 @@ class POCOR9610 extends AbstractMigration
                     CASE WHEN r.`order` < 5 THEN 1 ELSE 0 END,
                     1, '$now'
                 FROM `security_roles` r
-                WHERE r.`id` IN (1, 2, 3, 4, 5, 6, 9, 10)
+                WHERE r.`id` IN (1, 2, 3, 4, 5, 6, 7, 9, 10)
             ");
         }
 
@@ -206,7 +205,7 @@ class POCOR9610 extends AbstractMigration
                     CASE WHEN r.`order` < 5 THEN 1 ELSE 0 END,
                     1, '$now'
                 FROM `security_roles` r
-                WHERE r.`id` IN (1, 2, 3, 4, 5, 6, 9, 10)
+                WHERE r.`id` IN (1, 2, 3, 4, 5, 6, 7, 9, 10)
             ");
         }
 
@@ -239,11 +238,6 @@ class POCOR9610 extends AbstractMigration
             $this->execute('RENAME TABLE `z_9610_institution_registrations` TO `institution_registrations`');
         } elseif ($this->hasTable('institution_registrations')) {
             $this->execute('DROP TABLE `institution_registrations`');
-        }
-
-        if ($this->hasTable('z_9610_institutions')) {
-            $this->execute('DROP TABLE `institutions`');
-            $this->execute('RENAME TABLE `z_9610_institutions` TO `institutions`');
         }
 
         $this->execute('SET FOREIGN_KEY_CHECKS=1;');
