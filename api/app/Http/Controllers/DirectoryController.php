@@ -609,7 +609,6 @@ class DirectoryController extends Controller
      *                         type="object",
      *                         @OA\Property(property="id", type="integer", example=5),
      *                         @OA\Property(property="username", type="string", example=1522271967),
-     *                         @OA\Property(property="password", type="string", example=""),
      *                         @OA\Property(property="openemis_no", type="string", example="1522271967"),
      *                         @OA\Property(property="first_name", type="string", example="Maria"),
      *                         @OA\Property(property="middle_name", type="string", nullable=true, example=null),

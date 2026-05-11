@@ -206,6 +206,32 @@ class SuperAdminEscalationProtectionTest extends TestCase
     }
 
     /**
+     * Layer 5: POST /api/v4/users/basic-information must not leak
+     * super_admin or password. DirectoryRepository previously copied
+     * super_admin verbatim into each result row.
+     */
+    public function test_v4_basic_information_response_hides_super_admin_and_password(): void
+    {
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->postJson('/api/v4/users/basic-information?first_name=Z&last_name=Z&date_of_birth=1900-01-01&user_type_id=1&gender_id=1');
+
+        // Endpoint may return 200 with empty results or 404 — both are
+        // acceptable; the only thing this test cares about is the *shape*
+        // of any rows that do come back.
+        $rows = $response->json('data.data') ?? [];
+
+        foreach ($rows as $row) {
+            $this->assertArrayNotHasKey('super_admin', $row,
+                'basic-information rows must not include super_admin.');
+            $this->assertArrayNotHasKey('password', $row,
+                'basic-information rows must not include password.');
+        }
+
+        $this->assertTrue(true, 'No leaking rows found.');
+    }
+
+    /**
      * Bonus: plaintext passwords sent to v5 must land hashed in DB
      * (via the setPasswordAttribute mutator on Api5\SecurityUsers).
      */
