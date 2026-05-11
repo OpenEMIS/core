@@ -1762,6 +1762,9 @@ class InstitutionsController extends AppController
             $this->set('user', $user);
             $this->set('pass', $pass);
             $this->set('ngController', 'InstitutionStudentMealsCtrl as $ctrl');
+            //POCOR-9633: inject baseCoreUrl so Angular api.service.ts resolves api/v4/ and api/v5/ correctly
+            $baseCoreUrl = $this->getRequest()->getSession()->read('System.baseCoreUrl');
+            $this->set('baseCoreUrl', $baseCoreUrl);
         }
 
     }
@@ -3318,7 +3321,8 @@ class InstitutionsController extends AppController
 
             'checkConfigurationForExternalSearch',
             'studentCustomFields',
-            'staffCustomFields'
+            'staffCustomFields',
+            'HistoryPdf',
         ];
 
         $furtherActions = [
@@ -7527,6 +7531,14 @@ class InstitutionsController extends AppController
         $academicPeriodId = $requestData['academic_period_id'] ?? null;
         $startDate = !empty($requestData['start_date']) ? date('Y-m-d', strtotime($requestData['start_date'])) : null;
         $endDate = !empty($requestData['end_date']) ? date('Y-m-d', strtotime($requestData['end_date'])) : null;
+        //POCOR-9635: end_date sent as "0000-00-00" or "1970-01-01" from disabled form field — fall back to academic period end_date
+        if (empty($endDate) || $endDate === '1970-01-01' || $endDate === '0000-00-00') {
+            if (!empty($academicPeriodId)) {
+                $AcademicPeriods = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
+                $period = $AcademicPeriods->find()->select(['end_date'])->where(['id' => $academicPeriodId])->first();
+                $endDate = !empty($period) ? date('Y-m-d', strtotime($period->end_date)) : null;
+            }
+        }
         //POCOR-8434 starts
         $studentAdmissionStatus = !empty($requestData['student_admission_status']) ? $requestData['student_admission_status'] : null;//POCOR-7716
         $studentAdmissionStatusValue = !empty($requestData['student_admission_status_value']) ? $requestData['student_admission_status_value'] : null;//POCOR-7716
@@ -7551,10 +7563,15 @@ class InstitutionsController extends AppController
                 ];
                 $entityStudentsData = $institutionStudents->newEntity($entityStudentsData);
                 try {
-                    $saved_student['institution_student'] = $institutionStudents->save($entityStudentsData)->toArray();
+                    $savedResult = $institutionStudents->save($entityStudentsData);
+                    if ($savedResult !== false) {
+                        $saved_student['institution_student'] = $savedResult->toArray();
+                    } else {
+                        //POCOR-9635: save returned false (validation failure) — toArray() on false caused fatal crash
+                        Log::error('[POCOR-9635] institution_students save failed in saveStudentData for student_id=' . ($entityStudentsData->student_id ?? 'unknown') . ' institution_id=' . ($entityStudentsData->institution_id ?? 'unknown') . ' errors=' . json_encode($entityStudentsData->getErrors()));
+                    }
                 } catch (\Exception $exception) {
                     Log::debug(__FUNCTION__);
-
                     Log::debug('Error: ' . $exception->getMessage());
                 }
             }
@@ -7716,7 +7733,13 @@ class InstitutionsController extends AppController
             ];
             $entityClassData = $institutionClassStudents->newEntity($entityClassData);
             try {
-                $saved_student['institution_class_student'] = $institutionClassStudents->save($entityClassData)->toArray();
+                $savedClassResult = $institutionClassStudents->save($entityClassData);
+                if ($savedClassResult !== false) {
+                    $saved_student['institution_class_student'] = $savedClassResult->toArray();
+                } else {
+                    //POCOR-9635: save returned false — toArray() on false would cause fatal crash
+                    Log::error('[POCOR-9635] institution_class_students save failed in saveStudentData for student_id=' . ($entityClassData->student_id ?? 'unknown') . ' institution_id=' . ($entityClassData->institution_id ?? 'unknown') . ' errors=' . json_encode($entityClassData->getErrors()));
+                }
             } catch (\Exception $exception) {
                 Log::debug(__FUNCTION__);
                 Log::debug('Error: ' . $exception->getMessage());
@@ -10070,6 +10093,106 @@ class InstitutionsController extends AppController
     public function InfrastructureTelephonesHistory()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InfrastructureTelephonesHistory']);
+    }
+
+    //POCOR-4681
+    public function HistoryPdf()
+    {
+        $this->autoRender = false;
+        $pass   = $this->request->getParam('pass');
+        $params = !empty($pass[0]) ? $this->paramsDecode($pass[0]) : [];
+
+        $modelType = $params['model'] ?? 'Institution';
+
+        // Config per model type: which ORM table to use, which FK to filter, to build the label
+        $modelConfig = [
+            'Institution' => [
+                'tableClass'   => 'Institution.InstitutionHistories',
+                'filterField'  => 'institution_id',
+                'filterId'     => $params['institution_id'] ?? null,
+                'entityTable'  => 'Institution.Institutions',
+                'entityFields' => ['id', 'name', 'code'],
+                'subjectLabel' => function ($e) {
+                    return h($e->name) . ' (' . h($e->code) . ')';
+                },
+                'title'        => __('Institution History'),
+                'filePrefix'   => 'institution_history',
+            ],
+            'User' => [
+                'tableClass'   => 'User.UserHistories',
+                'filterField'  => 'security_user_id',
+                'filterId'     => $params['security_user_id'] ?? null,
+                'entityTable'  => 'User.Users',
+                'entityFields' => ['id', 'first_name', 'last_name'],
+                'subjectLabel' => function ($e) {
+                    return h(trim($e->first_name . ' ' . $e->last_name));
+                },
+                'title'        => __('User History'),
+                'filePrefix'   => 'user_history',
+            ],
+        ];
+
+        $cfg = $modelConfig[$modelType] ?? $modelConfig['Institution'];
+
+        // Fetch subject entity (institution or user) for the PDF header
+        $entityTable = TableRegistry::getTableLocator()->get($cfg['entityTable']);
+        $entity      = $entityTable->get($cfg['filterId'], ['fields' => $cfg['entityFields']]);
+        $subjectName = ($cfg['subjectLabel'])($entity);
+
+        // Fetch history rows with created_user join
+        $HistoriesTable = TableRegistry::getTableLocator()->get($cfg['tableClass']);
+        $histories = $HistoriesTable->find()
+            ->contain(['CreatedUser' => ['fields' => ['id', 'first_name', 'last_name']]])
+            ->where([$HistoriesTable->aliasField($cfg['filterField']) => $cfg['filterId']])
+            ->order([$HistoriesTable->aliasField('created') => 'DESC'])
+            ->all();
+
+        // Build PDF HTML
+        $html  = '<!DOCTYPE html><html><head><meta charset="UTF-8">';
+        $html .= '<style>
+            body { font-family: Arial, sans-serif; font-size: 11px; }
+            h2   { font-size: 14px; margin-bottom: 4px; }
+            p.subtitle { font-size: 11px; color: #555; margin-top: 0; margin-bottom: 12px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { background-color: #4a90d9; color: #fff; padding: 6px 8px; text-align: left; font-size: 11px; }
+            td { padding: 5px 8px; border-bottom: 1px solid #ddd; font-size: 11px; vertical-align: top; }
+            tr:nth-child(even) td { background-color: #f5f5f5; }
+        </style></head><body>';
+        $html .= '<h2>' . $cfg['title'] . '</h2>';
+        $html .= '<p class="subtitle">' . $subjectName . '</p>';
+        $html .= '<table><thead><tr>';
+        $html .= '<th>' . __('Model') . '</th>';
+        $html .= '<th>' . __('Field') . '</th>';
+        $html .= '<th>' . __('Old Value') . '</th>';
+        $html .= '<th>' . __('New Value') . '</th>';
+        $html .= '<th>' . __('Modified By') . '</th>';
+        $html .= '<th>' . __('Modified On') . '</th>';
+        $html .= '</tr></thead><tbody>';
+
+        foreach ($histories as $row) {
+            $modifiedBy = '';
+            if (!empty($row->created_user)) {
+                $modifiedBy = h(trim($row->created_user->first_name . ' ' . $row->created_user->last_name));
+            }
+            $modifiedOn = !empty($row->created) ? $row->created->format('Y-m-d H:i') : '';
+            $html .= '<tr>';
+            $html .= '<td>' . h($row->model) . '</td>';
+            $html .= '<td>' . h($row->field) . '</td>';
+            $html .= '<td>' . h($row->old_value) . '</td>';
+            $html .= '<td>' . h($row->new_value) . '</td>';
+            $html .= '<td>' . $modifiedBy . '</td>';
+            $html .= '<td>' . $modifiedOn . '</td>';
+            $html .= '</tr>';
+        }
+
+        $html .= '</tbody></table></body></html>';
+
+        $mpdf = new \Mpdf\Mpdf(['orientation' => 'L']);
+        $mpdf->WriteHTML($html);
+
+        $filename = $cfg['filePrefix'] . '_' . $cfg['filterId'] . '_' . date('Ymd') . '.pdf';
+        $mpdf->Output($filename, 'D');
+        exit;
     }
 
 }

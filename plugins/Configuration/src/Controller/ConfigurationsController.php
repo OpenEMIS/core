@@ -38,7 +38,7 @@ class ConfigurationsController extends AppController
 
     public function Webhooks()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigWebhooks']);
+        $this->redirect(['plugin' => 'Configuration', 'controller' => 'Webhooks', 'action' => 'Webhooks']); //POCOR-9257: redirect to standalone WebhooksController
     }
     public function ProductLists()
     {
@@ -153,7 +153,7 @@ class ConfigurationsController extends AppController
         }
     }
 
-    public function isActionIgnored(Event $event, $action)
+    public function isActionIgnored(EventInterface $event, $action) //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
         if (in_array($action, ['generateServerAuthorisationToken', 'getExternalUsers'])) {
             return true;

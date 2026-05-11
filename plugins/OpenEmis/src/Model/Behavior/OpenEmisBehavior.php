@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Event\EventInterface;
+use Cake\Log\Log;
 
 class OpenEmisBehavior extends Behavior
 {
@@ -130,6 +131,7 @@ class OpenEmisBehavior extends Behavior
         }
 
         if ($extra->offsetExists('indexButtons')) {
+            //Log::debug('[TEMP-LOG] OpenEmisBehavior indexAfterAction: setting indexButtons with count = ' . $extra['indexButtons']->count() . ', keys: ' . implode(', ', array_keys($extra['indexButtons']->getArrayCopy())));
             $model->controller->set('indexButtons', $extra['indexButtons']);
         }
         if (isset($extra['toolbarButtons']['back'])) {
@@ -205,10 +207,16 @@ class OpenEmisBehavior extends Behavior
 
     public function indexAfterAction(EventInterface $event, Query|ResultSet $query = null, $resultSet = null, ArrayObject $extra =null)
     {
+        //Log::debug('[TEMP-LOG] OpenEmisBehavior indexAfterAction START');
+        if (isset($extra['indexButtons'])) {
+            //Log::debug('[TEMP-LOG] OpenEmisBehavior indexAfterAction: indexButtons count = ' . $extra['indexButtons']->count() . ', keys: ' . implode(', ', array_keys($extra['indexButtons']->getArrayCopy())));
+        }
         if ($resultSet == null || count($resultSet) == 0) {
             //$this->_table->Alert->info('general.noData'); //POCOR-8486
         }
         $extra['config']['form'] = ['class' => ''];
+
+        //Log::debug('[TEMP-LOG] OpenEmisBehavior indexAfterAction END');
     }
 
     public function viewAfterAction(EventInterface $event, Entity|bool $entity, ArrayObject $extra)
@@ -247,7 +255,7 @@ class OpenEmisBehavior extends Behavior
         }
     }
 
-    public function deleteAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    public function deleteAfterAction(EventInterface $event, ?Entity $entity, ArrayObject $extra) //POCOR-9257: nullable entity for cascade delete with no ID
     {
         $model = $this->_table;
         if ($model->request->is('delete') || $extra['forceDeleteRecord']) {
