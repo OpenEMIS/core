@@ -318,10 +318,8 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
     }
 
     function setClassStudents(classStudents) {
-        // console.log(classStudents);
         vm.classStudents = [];
         vm.classStudentList = classStudents;
-
     }
 
     function getMealReceivedOptions() {
@@ -672,8 +670,6 @@ function InstitutionStudentMealsController($scope, $q, $window, $http, UtilsSvc,
 
     // button events
     vm.onEditClick = function () {
-        // console.log('vm',vm.mealBenefitTypeOptions);
-
         getMealProgramOptions()
             .then(saveStudents)
             .then(setClassStudents)

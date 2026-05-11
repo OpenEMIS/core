@@ -886,6 +886,7 @@ class AssessmentItemResultsTable extends AppTable
      * @return |null
      * @throws \Exception
      */
+    
     public static function getLastMark($options): false|array //POCOR-8224
     {
         $id = self::getFromArray($options, 'id');
@@ -901,7 +902,8 @@ class AssessmentItemResultsTable extends AppTable
         $institutionClassesId = self::getClassId($options);
 
         $selectFields = self::buildSelectFields($options);
-        $lastMarkWhere = self::buildWhereClauses([
+        //POCOR-9568
+        $whereConditions = [
             'id' => $id,
             'student_id' => $studentId,
             'academic_period_id' => $academicPeriodId,
@@ -910,37 +912,70 @@ class AssessmentItemResultsTable extends AppTable
             'assessment_id' => $assessmentId,
             'assessment_period_id' => $assessmentPeriodId,
             'assessment_grading_option_id' => $assessmentGradingOptionId,
-//            'institution_id' => $institutionId,
-//            'institution_classes_id' => $institutionClassesId
-        ]);
+        ];
 
-        $institutionClassStudentsWhere = self::buildInstitutionClassStudentsWhere($academicPeriodId, $educationGradeId, $institutionId, $institutionClassesId);
+        if (!empty($institutionId)) {
+            $whereConditions['institution_id'] = $institutionId;
+        }
 
-        list($tableName, $connectionName) = self::getArchiveTableAndConnection($archive, 'assessment_item_results');
+        $lastMarkWhere = self::buildWhereClauses($whereConditions); //POCOR-9568
+
+        // $institutionClassStudentsWhere = self::buildInstitutionClassStudentsWhere(
+        //     $academicPeriodId,
+        //     $educationGradeId,
+        //     $institutionId,
+        //     $institutionClassesId
+        // );
+
+        list($tableName, $connectionName) = self::getArchiveTableAndConnection(
+            $archive,
+            'assessment_item_results'
+        );
 
         $sql = sprintf(
-            "SELECT %s FROM %s all_results
-        INNER JOIN (
-            SELECT latest_grades.student_id, latest_grades.assessment_id, latest_grades.education_subject_id, latest_grades.assessment_period_id, MAX(latest_grades.created) latest_created
-            FROM %s latest_grades
-            %s
-            GROUP BY latest_grades.student_id, latest_grades.assessment_id, latest_grades.education_subject_id, latest_grades.assessment_period_id
-        ) latest_grades
-        ON latest_grades.student_id = all_results.student_id
-        AND latest_grades.assessment_id = all_results.assessment_id
-        AND latest_grades.education_subject_id = all_results.education_subject_id
-        AND latest_grades.assessment_period_id = all_results.assessment_period_id
-        AND latest_grades.latest_created = all_results.created
-        %s
-        GROUP BY all_results.student_id, all_results.assessment_id, all_results.education_subject_id, all_results.assessment_period_id",
-            $selectFields, $tableName, $tableName, $lastMarkWhere, $institutionClassStudentsWhere
+            "SELECT %s
+            FROM %s all_results
+            INNER JOIN (
+                SELECT
+                    latest_grades.student_id,
+                    latest_grades.assessment_id,
+                    latest_grades.education_subject_id,
+                    latest_grades.assessment_period_id,
+                    latest_grades.institution_id,
+                    MAX(latest_grades.created) latest_created
+                FROM %s latest_grades
+                %s
+                GROUP BY
+                    latest_grades.student_id,
+                    latest_grades.assessment_id,
+                    latest_grades.education_subject_id,
+                    latest_grades.assessment_period_id,
+                    latest_grades.institution_id
+            ) latest_grades
+            ON latest_grades.student_id = all_results.student_id
+            AND latest_grades.assessment_id = all_results.assessment_id
+            AND latest_grades.education_subject_id = all_results.education_subject_id
+            AND latest_grades.assessment_period_id = all_results.assessment_period_id
+            AND latest_grades.institution_id = all_results.institution_id
+            AND latest_grades.latest_created = all_results.created
+           
+            GROUP BY
+                all_results.student_id,
+                all_results.assessment_id,
+                all_results.education_subject_id,
+                all_results.assessment_period_id,
+                all_results.institution_id",
+            $selectFields,
+            $tableName,
+            $tableName,
+            $lastMarkWhere
         );
 
         $connection = ConnectionManager::get($connectionName);
         $marks = $connection->execute($sql)->fetchAll('assoc');
         return $marks ?: [];
-
     }
+
 
     /** //POCOR-8224
      * // POCOR-7586 refactured to include prev school
