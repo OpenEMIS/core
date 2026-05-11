@@ -1694,7 +1694,20 @@ class UserRepository extends Controller
                 }
 
                 $id = $data['id'];
-                unset($data['id']);
+                //POCOR-9697: strip everything that must never be set via this
+                //endpoint. super_admin promotion requires a dedicated audited
+                //flow; created_* are immutable; id was already captured above.
+                unset(
+                    $data['id'],
+                    $data['super_admin'],
+                    $data['created_user_id'],
+                    $data['created']
+                );
+                //POCOR-9697: hash password if a new plaintext one was sent.
+                //update() bypasses Eloquent mutators just like insert() does.
+                if (array_key_exists('password', $data)) {
+                    $data['password'] = $this->hashPasswordIfPlaintext($data['password']);
+                }
                 $data['modified_user_id'] = JWTAuth::user()->id;
                 $data['modified'] = Carbon::now()->toDateTimeString();
                 $update = SecurityUsers::where('id', $id)->update($data);
@@ -1727,7 +1740,10 @@ class UserRepository extends Controller
             $userArr = [];
             if(count($params) > 0){
                 $userArr['username'] = $params['username']??"";
-                $userArr['password'] = $params['password']??"";
+                //POCOR-9697: hash plaintext passwords. setUserData feeds a raw
+                //SecurityUsers::insert() which bypasses Eloquent mutators, so
+                //we hash here. Already-bcrypted values pass through unchanged.
+                $userArr['password'] = $this->hashPasswordIfPlaintext($params['password'] ?? "");
                 $userArr['openemis_no'] = $params['openemis_no']??"";
                 $userArr['first_name'] = $params['first_name'];
                 $userArr['middle_name'] = $params['middle_name']??"";
@@ -1747,7 +1763,8 @@ class UserRepository extends Controller
                 $userArr['identity_number'] = $params['identity_number']??Null;
                 $userArr['status'] = $params['status']??1;
                 $userArr['external_reference'] = $params['external_reference']??Null;
-                $userArr['super_admin'] = $params['super_admin']??0;
+                //POCOR-9697: super_admin intentionally not copied from request.
+                //Promotion requires a dedicated audited endpoint.
                 $userArr['last_login'] = $params['last_login']??Null;
                 $userArr['photo_name'] = $params['photo_name']??Null;
 
@@ -1770,6 +1787,21 @@ class UserRepository extends Controller
         }
     }
     //pocor-7545 ends
+
+    //POCOR-9697: shared password-hashing guard. Empty stays empty (so update
+    //payloads that omit password don't end up storing a hash of "") and any
+    //bcrypt-prefixed value passes through unchanged.
+    private function hashPasswordIfPlaintext($value): string
+    {
+        if (!is_string($value) || $value === '') {
+            return (string) $value;
+        }
+        if (preg_match('/^\$2[aby]\$/', $value)) {
+            return $value;
+        }
+        return Hash::make($value);
+    }
+
     //POCOR-7716 start
     public function getStudentAdmissionStatus()
     {

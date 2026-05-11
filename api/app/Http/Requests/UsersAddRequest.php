@@ -31,7 +31,22 @@ class UsersAddRequest extends FormRequest
             'first_name' => 'required_without:id',
             'last_name' => 'required_without:id',
             'gender_id' => 'required_without:id',
-            'date_of_birth' => 'required_without:id'
+            'date_of_birth' => 'required_without:id',
+            //POCOR-9697: refuse the request outright if super_admin is sent.
+            //Defense-in-depth: even with the field stripped from $fillable
+            //and from setUserData, returning 422 makes the privilege-escalation
+            //attempt visible in logs instead of silently dropped.
+            'super_admin' => 'prohibited',
+        ];
+    }
+
+    /**
+     * POCOR-9697: tell the caller exactly why their request was rejected.
+     */
+    public function messages()
+    {
+        return [
+            'super_admin.prohibited' => 'The super_admin field may not be set through this endpoint.',
         ];
     }
 
