@@ -92,10 +92,68 @@ For v4 paths that use the query builder (`SecurityUsers::insert()` /
 `SecurityUsers::update()`, which bypass Eloquent mutators), the same
 guarantee is provided by `UserRepository::hashPasswordIfPlaintext()`.
 
+### Issue 6 — Read-side `_conditions` filter column allowlist
+
+Even after Issues 1–5 closed the write side and stripped `super_admin` /
+`password` from response bodies, the v5 `_conditions` query parameter was
+still accepted as a free-form `field:operator:value` triple by
+`CrudApiController::parseConditions()`. The WHERE clause then executed
+server-side with no column allowlist, so any authenticated v5
+SecurityUsers-list user could:
+
+1. Enumerate every super_admin: `GET /api/v5/security-users?_conditions=super_admin:1`
+   returns the membership of the set — the value is hidden in the body but
+   the row IDs and names leak the membership inference.
+2. Run a blind binary-search oracle on `security_users.password` (the
+   bcrypt hash) via inequality and `like` operators —
+   `_conditions=password:>$2y$`, `password:*$2y$10$abc*`, etc.
+
+**Fix** (`CrudApiController.php`):
+
+* New private helper `getQueryableColumns($model)` returns the per-model
+  read-side allowlist as `getFillable()` minus `getHidden()`. This mirrors
+  the published write surface so the rule is internally consistent — a
+  client cannot read-filter on any column they could not already write to.
+* `applyFilters()` now takes the resolved model and silently drops any
+  filter key not in that allowlist. The drop is logged server-side via
+  `Log::warning('POCOR-9697: filter dropped — field not queryable', …)`
+  but the field name is **never** echoed in the response (same
+  anti-fingerprinting rule as the v4 silent strip).
+* The endpoint still returns 200 — the dropped clause becomes a no-op, so
+  the result is the *unfiltered* set. Comparing the total against an
+  unfiltered baseline is how the regression tests prove the clause was
+  dropped, not applied.
+
+Live PoC against the patched container:
+
+```
+# Both queries return the same total (13671 in our DB) — clause dropped.
+curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?_conditions=super_admin:1&limit=1' | jq '.data.total'
+curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?limit=1' | jq '.data.total'
+
+# Legitimate $fillable column still filters correctly.
+curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?_conditions=username:admin&limit=5' | jq '.data.total'  # → 1
+```
+
+**Tests** (`SuperAdminEscalationProtectionTest.php`, +4 cases):
+
+* `test_v5_conditions_filter_silently_drops_hidden_super_admin` — total
+  equals unfiltered baseline.
+* `test_v5_conditions_filter_silently_drops_password_oracle` — same for
+  `password:>$2y$`.
+* `test_v5_conditions_filter_allows_legitimate_field` — `username:admin`
+  still narrows; sanity check that we did not break existing clients.
+* `test_v5_conditions_unknown_field_no_named_response_leak` — response
+  body must not contain `super_admin`, `"password"`, or `unknown column`.
+
+**Postman** (`POCOR-9697.postman_collection.json`, items 09a–09d): adds
+read-side attack, baseline, oracle, and sanity requests with
+`pm.test()` assertions that codify the silent-drop semantics.
+
 ### Files Changed Summary
 
 * **Added:** 2 files
-* **Modified:** 12 files
+* **Modified:** 13 files
 * **Removed:** 0 files
 
 | File | Change |
@@ -113,7 +171,8 @@ guarantee is provided by `UserRepository::hashPasswordIfPlaintext()`.
 | `api/app/Services/UserService.php` | `getUsersData` no longer puts `password` or `super_admin` into the v4 `GET /users/{id}` response. |
 | `api/public/api-docs-v4.json` | Regenerated. Drops 5 of 6 `super_admin` references; only `/api/v4/permissions` self-introspection remains. |
 | `api/public/api-docs-v5.json` | Regenerated. All 3 `super_admin` references gone. |
-| `api/tests/Feature/SuperAdminEscalationProtectionTest.php` | **New.** 8 feature tests covering every layer of the fix. All pass. |
+| `api/app/Http/Controllers/BaseApi/CrudApiController.php` | **POCOR-9697 (Issue 6).** New `getQueryableColumns()` helper + `applyFilters()` now takes the resolved model and silently drops filter keys not in `$fillable - $hidden`. Closes read-side enumeration / oracle holes via `_conditions`. |
+| `api/tests/Feature/SuperAdminEscalationProtectionTest.php` | **New.** 12 feature tests covering every layer of the fix (8 write-side + 4 read-side `_conditions` allowlist). All pass. |
 
 ### Database Migrations
 
