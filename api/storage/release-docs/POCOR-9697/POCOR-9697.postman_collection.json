@@ -54,6 +54,16 @@
       "key": "baseline_super_admin_block",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "audit_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "audit_original_creator",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -525,6 +535,160 @@
               "    pm.expect(body.data.total).to.be.at.least(1);",
               "    const usernames = (body.data.data || []).map(r => r.username);",
               "    pm.expect(usernames).to.include('admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUDIT-1 \u2014 Audit-trail forgery: v5 create with forged created_user_id (must be overwritten with JWT user)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type",  "value": "application/json"}
+        ],
+        "url": "{{base_url}}/api/v5/security-users",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\":         \"pocor9697_audit_{{$timestamp}}\",\n  \"openemis_no\":      \"pocor9697_audit_{{$timestamp}}\",\n  \"email\":            \"pocor9697_audit_{{$timestamp}}@example.test\",\n  \"first_name\":       \"Audit\",\n  \"last_name\":        \"Forge\",\n  \"gender_id\":        1,\n  \"date_of_birth\":    \"2000-01-01\",\n  \"password\":         \"audit-9697\",\n  \"created_user_id\":  99999,\n  \"modified_user_id\": 99999\n}"
+        },
+        "description": "POCOR-9697 Wave-2: v5 create path must derive created_user_id / modified_user_id from the authenticated JWT user, never from the request body. Sending 99999 must be silently overwritten (server log + persisted JWT user id). The response must not echo the field names in any error/diagnostic context (anti-fingerprinting)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Create succeeds (201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+              "const body = pm.response.json();",
+              "const data = body.data || body;",
+              "pm.collectionVariables.set('audit_user_id', data.id || (data.data && data.data.id));",
+              "pm.test('FIX: persisted created_user_id is NOT 99999 (forgery neutralised)', () => {",
+              "    pm.expect(parseInt(data.created_user_id, 10)).to.not.equal(99999);",
+              "});",
+              "pm.test('FIX: persisted modified_user_id is NOT 99999', () => {",
+              "    if (data.modified_user_id !== undefined && data.modified_user_id !== null) {",
+              "        pm.expect(parseInt(data.modified_user_id, 10)).to.not.equal(99999);",
+              "    }",
+              "});",
+              "pm.test('FIX: response body does not name the forgery (no fingerprint)', () => {",
+              "    const t = pm.response.text().toLowerCase();",
+              "    pm.expect(t).to.not.include('forgery');",
+              "    pm.expect(t).to.not.include('rejected');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUDIT-2 \u2014 Audit-trail forgery: v5 update with forged modified_user_id (must be overwritten)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type",  "value": "application/json"}
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\":               {{audit_user_id}},\n  \"modified_user_id\": 99999\n}"
+        },
+        "description": "POCOR-9697 Wave-2: v5 update path must always overwrite modified_user_id with the JWT user. The follow-up GET (AUDIT-3) re-fetches the row to confirm it landed as the caller, not 99999."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Update succeeds', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUDIT-3 \u2014 Audit-trail forgery: re-read user and assert modified_user_id is JWT user, created_user_id unchanged",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "description": "Confirms AUDIT-2: re-fetch the user and verify modified_user_id is NOT 99999. Also re-confirms created_user_id is immutable \u2014 a follow-up PUT below tries to change it and we re-read again."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const row = (body.data && body.data.data) || body.data || body;",
+              "pm.collectionVariables.set('audit_original_creator', row.created_user_id);",
+              "pm.test('FIX: modified_user_id is NOT 99999 (overwritten from JWT)', () => {",
+              "    pm.expect(parseInt(row.modified_user_id, 10)).to.not.equal(99999);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUDIT-4 \u2014 Audit-trail forgery: v5 update with forged created_user_id (must be silently stripped, original preserved)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"},
+          {"key": "Content-Type",  "value": "application/json"}
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\":              {{audit_user_id}},\n  \"created_user_id\": 99999\n}"
+        },
+        "description": "POCOR-9697 Wave-2: created_user_id is immutable. Sending it on update must be silently stripped + logged; the row's original creator must remain unchanged."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Update succeeds', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "AUDIT-5 \u2014 Audit-trail forgery: re-read user and assert created_user_id unchanged from original",
+      "request": {
+        "method": "GET",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "description": "Final confirmation that created_user_id is immutable. Compared against the value captured in AUDIT-3."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const row = (body.data && body.data.data) || body.data || body;",
+              "const original = pm.collectionVariables.get('audit_original_creator');",
+              "pm.test('FIX: created_user_id is unchanged (immutable, forgery dropped)', () => {",
+              "    pm.expect(String(row.created_user_id)).to.equal(String(original));",
+              "    pm.expect(parseInt(row.created_user_id, 10)).to.not.equal(99999);",
               "});"
             ]
           }

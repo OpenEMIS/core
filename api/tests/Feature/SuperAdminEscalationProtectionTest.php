@@ -67,6 +67,7 @@ class SuperAdminEscalationProtectionTest extends TestCase
             'date_of_birth' => '2000-01-01',
             'username'      => $username,
             'openemis_no'   => $username,
+            'email'         => $username . '@example.test',
             'password'      => 'someplain',
             'super_admin'   => 1,
         ]);
@@ -196,6 +197,7 @@ class SuperAdminEscalationProtectionTest extends TestCase
             'date_of_birth' => '2000-01-01',
             'username'      => $username,
             'openemis_no'   => $username,
+            'email'         => $username . '@example.test',
             'password'      => $plaintext,
         ]);
 
@@ -351,6 +353,144 @@ class SuperAdminEscalationProtectionTest extends TestCase
             'Response must not include password (always hidden).');
         $this->assertStringNotContainsStringIgnoringCase('unknown column', $body,
             'Response must not leak DB-level "unknown column" errors.');
+    }
+
+    /**
+     * Wave-2 (POCOR-9697 audit-trail integrity):
+     *
+     * v5 create must overwrite a client-forged created_user_id with the JWT
+     * user. Previously, a `created_user_id: 99999` in the body would land in
+     * DB unchanged because the controller only filled the field when absent.
+     */
+    public function test_v5_create_overwrites_forged_created_user_id(): void
+    {
+        $username = 'pocor9697_w2_create_cu_' . uniqid();
+
+        $payload = SecurityUsers::factory()->make([
+            'username' => $username,
+        ])->toArray();
+        $payload['created_user_id'] = 99999; //POCOR-9697: forgery attempt
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->postJson('/api/v5/security-users', $payload);
+
+        $this->assertContains($response->getStatusCode(), [200, 201]);
+
+        $stored = DB::table('security_users')->where('username', $username)->value('created_user_id');
+        $this->assertNotNull($stored, 'Row should have been created.');
+        $this->assertSame(2, (int) $stored,
+            'v5 create must derive created_user_id from JWT user (id=2), not from request body.');
+    }
+
+    /**
+     * Wave-2: v5 update must overwrite a client-forged modified_user_id with
+     * the JWT user.
+     */
+    public function test_v5_update_overwrites_forged_modified_user_id(): void
+    {
+        $target = SecurityUsers::factory()->create();
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->putJson('/api/v5/security-users/' . $target->id, [
+            'id'               => $target->id,
+            'modified_user_id' => 99999, //POCOR-9697: forgery attempt
+        ]);
+
+        $this->assertContains($response->getStatusCode(), [200, 204]);
+
+        $stored = DB::table('security_users')->where('id', $target->id)->value('modified_user_id');
+        $this->assertSame(2, (int) $stored,
+            'v5 update must derive modified_user_id from JWT user (id=2), not from request body.');
+    }
+
+    /**
+     * Wave-2: v5 update must silently ignore a client-supplied created_user_id
+     * — it is immutable. The original creator value must remain untouched.
+     */
+    public function test_v5_update_silently_ignores_created_user_id(): void
+    {
+        $target = SecurityUsers::factory()->create();
+        $originalCreator = (int) DB::table('security_users')
+            ->where('id', $target->id)
+            ->value('created_user_id');
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->putJson('/api/v5/security-users/' . $target->id, [
+            'id'              => $target->id,
+            'created_user_id' => 99999, //POCOR-9697: should be silently dropped
+        ]);
+
+        $this->assertContains($response->getStatusCode(), [200, 204]);
+
+        $stored = (int) DB::table('security_users')->where('id', $target->id)->value('created_user_id');
+        $this->assertSame($originalCreator, $stored,
+            'created_user_id is immutable — must equal the original creator, not the forged value.');
+        $this->assertNotSame(99999, $stored, 'Forged value must not land in DB.');
+    }
+
+    /**
+     * Wave-2: response body must NOT echo created_user_id / modified_user_id
+     * in any error/diagnostic context. Echoing the field name would tell an
+     * attacker the audit-trail forgery vector is recognised — same
+     * anti-fingerprinting rule as the super_admin strip. We allow the field
+     * to appear as a regular result attribute (it is part of the row), but
+     * not in a "field rejected" style message.
+     */
+    public function test_v5_create_no_field_fingerprint_in_response(): void
+    {
+        $username = 'pocor9697_w2_fp_' . uniqid();
+
+        $payload = SecurityUsers::factory()->make([
+            'username' => $username,
+        ])->toArray();
+        $payload['created_user_id']  = 99999;
+        $payload['modified_user_id'] = 99999;
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->postJson('/api/v5/security-users', $payload);
+
+        $this->assertContains($response->getStatusCode(), [200, 201]);
+
+        $body = $response->getContent();
+        // Anti-fingerprinting: no diagnostic phrasing naming the field.
+        $this->assertStringNotContainsStringIgnoringCase('forgery', $body);
+        $this->assertStringNotContainsStringIgnoringCase('rejected', $body);
+        $this->assertStringNotContainsStringIgnoringCase('forbidden field', $body);
+        $this->assertStringNotContainsStringIgnoringCase('audit-trail', $body);
+    }
+
+    /**
+     * Wave-2: v4 user create must also overwrite a forged created_user_id.
+     * This re-confirms the v4 path that UserRepository::setUserData already
+     * stamps from JWTAuth::user()->id and never copies the request value.
+     */
+    public function test_v4_create_overwrites_forged_created_user_id(): void
+    {
+        $username = 'pocor9697_w2_v4_cu_' . uniqid();
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->postJson('/api/v4/users', [
+            'first_name'      => 'Audit',
+            'last_name'       => 'Trail',
+            'gender_id'       => 1,
+            'date_of_birth'   => '2000-01-01',
+            'username'        => $username,
+            'openemis_no'     => $username,
+            'email'           => $username . '@example.test',
+            'password'        => 'someplain',
+            'created_user_id' => 99999, //POCOR-9697: forgery attempt
+        ]);
+
+        $response->assertStatus(200);
+
+        $stored = DB::table('security_users')->where('username', $username)->value('created_user_id');
+        $this->assertSame(2, (int) $stored,
+            'v4 create must derive created_user_id from JWT user (id=2), never the request body.');
     }
 
     /**

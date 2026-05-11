@@ -150,6 +150,71 @@ curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?_conditions
 read-side attack, baseline, oracle, and sanity requests with
 `pm.test()` assertions that codify the silent-drop semantics.
 
+### Issue 7 — Audit-trail integrity: `created_user_id` / `modified_user_id` always from JWT
+
+**Threat model.** Distinct from privilege escalation: an authenticated caller
+who knows a target user id could forge audit-trail attribution by sending
+`{"created_user_id": <victim_id>}` on any v5 write. Every downstream auditor
+(`security_user_logins`, workflow comments, webhook events, history tables…)
+would then misattribute the action. This is the *audit-trail forgery* vector
+— independent of `super_admin` membership but exploitable from the same
+write surface.
+
+**Situation before.** `CrudApiController` filled the audit fields only when
+the request omitted them:
+
+```php
+// handleSingleCreate (old)
+if (!isset($data['created_user_id'])) {
+    $data['created_user_id'] = $current_user_id;
+}
+```
+
+So a body containing `created_user_id: 2` overrode the JWT user wholesale.
+v4 was already correct (`UserRepository::setUserData` line 1779 and the
+update path at line 1711 both stamp from `JWTAuth::user()->id` unconditionally
+and never copy the request value — re-verified in this branch across ~9 call
+sites). v5 was the gap.
+
+**Fix** (`CrudApiController.php`):
+
+* New private helper `stampAuditFieldsOnCreate(array $data, array $fillable,
+  $currentUserId)` — for any model whose `$fillable` includes
+  `created_user_id` and/or `modified_user_id`, the field is **always**
+  overwritten with the JWT user. Any client-supplied value that differs is
+  logged via `Log::warning('POCOR-9697: created_user_id forgery attempt —
+  overwritten with JWT user', …)` *before* the overwrite, so ops can grep
+  forgery attempts in production.
+* `handleSingleCreate` and `handleBatchCreate` both call the helper.
+* `handleUpdateRequest` unconditionally overwrites `modified_user_id` and
+  silently strips `created_user_id` (immutable on update) — also logged.
+* Response never echoes the field name in any error/diagnostic capacity
+  (anti-fingerprinting, matches the Wave-1 super_admin strip pattern).
+
+**v4 path.** Re-verified — `UserRepository::setUserData` line 1779
+(`$userArr['created_user_id'] = JWTAuth::user()->id;`), `addUsers` update
+branch line 1711 (`$data['modified_user_id'] = JWTAuth::user()->id;`), and
+the ~9 other write sites all derive from the JWT user. No code changes
+needed in v4. The new test `test_v4_create_overwrites_forged_created_user_id`
+pins the contract.
+
+**Tests** (`SuperAdminEscalationProtectionTest.php`, +5 cases):
+
+* `test_v5_create_overwrites_forged_created_user_id`
+* `test_v5_update_overwrites_forged_modified_user_id`
+* `test_v5_update_silently_ignores_created_user_id`
+* `test_v5_create_no_field_fingerprint_in_response`
+* `test_v4_create_overwrites_forged_created_user_id`
+
+All 17 cases in the regression file pass (12 Wave-1 + 5 Wave-2).
+
+**Postman** (`POCOR-9697.postman_collection.json`, items `AUDIT-1`…`AUDIT-5`):
+forge `created_user_id` / `modified_user_id` on v5 create, forge
+`modified_user_id` on update, attempt to mutate `created_user_id` on update,
+plus follow-up GETs that re-read the row to assert the JWT user landed (and
+the forged 99999 did not). Each request ships with `pm.test()` assertions
+mirroring the feature tests.
+
 ### Files Changed Summary
 
 * **Added:** 2 files

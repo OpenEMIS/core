@@ -864,11 +864,40 @@ class CrudApiController extends Controller
         }
         $this->decodeBlobFields($data); // Decode base64 to binary before update
 
-        if (in_array('modified_user_id', $model->getFillable()) && in_array('modified', $model->getFillable())) {
-            if (!isset($data['modified_user_id'])) {
-                $data['modified_user_id'] = $current_user_id;
+        //POCOR-9697: audit-trail integrity on update — always derive
+        //modified_user_id from the JWT (never trust the request body) and
+        //silent-strip any client-supplied created_user_id since it is
+        //immutable. Logging mirrors the super_admin silent-strip: server-side
+        //warning only, never echoed back to the caller (anti-fingerprinting).
+        $fillable = $model->getFillable();
+        if (in_array('created_user_id', $fillable) && array_key_exists('created_user_id', $data)) {
+            Log::warning(
+                'POCOR-9697: created_user_id supplied on update — silently stripped (immutable)',
+                [
+                    'endpoint'       => $request->path(),
+                    'method'         => $request->method(),
+                    'caller_id'      => $current_user_id,
+                    'ip'             => $request->ip(),
+                    'supplied_value' => $data['created_user_id'],
+                ]
+            );
+            unset($data['created_user_id']);
+        }
+        if (in_array('modified_user_id', $fillable)) {
+            if (array_key_exists('modified_user_id', $data) && (int) $data['modified_user_id'] !== (int) $current_user_id) {
+                Log::warning(
+                    'POCOR-9697: modified_user_id forgery attempt — overwritten with JWT user',
+                    [
+                        'endpoint'       => $request->path(),
+                        'method'         => $request->method(),
+                        'caller_id'      => $current_user_id,
+                        'ip'             => $request->ip(),
+                        'supplied_value' => $data['modified_user_id'],
+                    ]
+                );
             }
-            if (!isset($data['modified'])) {
+            $data['modified_user_id'] = $current_user_id; //POCOR-9697: always from JWT
+            if (in_array('modified', $fillable) && !isset($data['modified'])) {
                 $data['modified'] = Carbon::now();
             }
         }
@@ -1423,16 +1452,17 @@ class CrudApiController extends Controller
                 $model = new $model;
             }
             $records = [];
+            $fillable = $model->getFillable();
             foreach ($data as $recordData) {
                 $this->decodeBlobFields($recordData); //  Decode base64 to binary
-                if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-                    if (!isset($recordData['created_user_id'])) {
-                        $recordData['created_user_id'] = $current_user_id;
-                    }
-                    if (!isset($recordData['created'])) {
-                        $recordData['created'] = Carbon::now();
-                    }
-                }
+                //POCOR-9697: audit-trail integrity on batch create — always
+                //derive created_user_id / modified_user_id from JWT; log any
+                //forgery attempt without echoing the field name back.
+                $recordData = $this->stampAuditFieldsOnCreate(
+                    $recordData,
+                    $fillable,
+                    $current_user_id
+                );
                 $records[] = $model::create($recordData);
             }
             \DB::commit();
@@ -1460,14 +1490,16 @@ class CrudApiController extends Controller
         }
         $this->decodeBlobFields($data); //  Decode base64 to binary
 
-        if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-            if (!isset($data['created_user_id'])) {
-                $data['created_user_id'] = $current_user_id;
-            }
-            if (!isset($data['created'])) {
-                $data['created'] = Carbon::now();
-            }
-        }
+        //POCOR-9697: audit-trail integrity on single create — always derive
+        //created_user_id and modified_user_id from the JWT user. Any
+        //client-supplied value is silent-stripped with a server-side log so
+        //ops can grep forgery attempts; the response never echoes the field
+        //name (anti-fingerprinting).
+        $data = $this->stampAuditFieldsOnCreate(
+            $data,
+            $model->getFillable(),
+            $current_user_id
+        );
         try {
             $record = $model::create($data);
         } catch (\Exception $e) {
@@ -1475,6 +1507,50 @@ class CrudApiController extends Controller
         }
 
         return $this->successResponse('Record created successfully.', $record, 201);
+    }
+
+    /**
+     * POCOR-9697: stamp created_user_id / modified_user_id from the JWT user
+     * on every create path, log any client-supplied value that differs, and
+     * silent-strip the offending key before persist. Keeps the v5 audit trail
+     * tamper-proof in the same way v4 already enforces it via UserRepository.
+     *
+     * @param array $data         Raw payload from the request.
+     * @param array $fillable     Target model's $fillable allowlist.
+     * @param int|null $currentUserId  Authenticated JWT user id.
+     * @return array              Payload with audit fields overwritten.
+     */
+    private function stampAuditFieldsOnCreate(array $data, array $fillable, $currentUserId)
+    {
+        $request = request();
+        foreach (['created_user_id', 'modified_user_id'] as $auditField) {
+            if (!in_array($auditField, $fillable, true)) {
+                continue;
+            }
+            if (array_key_exists($auditField, $data)
+                && (int) $data[$auditField] !== (int) $currentUserId
+            ) {
+                Log::warning(
+                    'POCOR-9697: ' . $auditField . ' forgery attempt — overwritten with JWT user',
+                    [
+                        'endpoint'       => $request ? $request->path() : null,
+                        'method'         => $request ? $request->method() : null,
+                        'caller_id'      => $currentUserId,
+                        'ip'             => $request ? $request->ip() : null,
+                        'supplied_value' => $data[$auditField],
+                    ]
+                );
+            }
+            $data[$auditField] = $currentUserId; //POCOR-9697: always from JWT
+        }
+        //POCOR-9697: keep the existing created / modified timestamp behaviour.
+        if (in_array('created', $fillable, true) && !isset($data['created'])) {
+            $data['created'] = Carbon::now();
+        }
+        if (in_array('modified', $fillable, true) && !isset($data['modified'])) {
+            $data['modified'] = Carbon::now();
+        }
+        return $data;
     }
 
     /**
