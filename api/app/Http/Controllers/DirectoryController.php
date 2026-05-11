@@ -627,7 +627,6 @@ class DirectoryController extends Controller
      *                         @OA\Property(property="preferred_language", type="string", nullable=true, example=null),
      *                         @OA\Property(property="address_area_id", type="integer", nullable=true, example=null),
      *                         @OA\Property(property="birthplace_area_id", type="integer", nullable=true, example=null),
-     *                         @OA\Property(property="super_admin", type="integer", example=0),
      *                         @OA\Property(property="status", type="integer", example=1),
      *                         @OA\Property(property="is_student", type="integer", example=1),
      *                         @OA\Property(property="is_staff", type="integer", example=0),

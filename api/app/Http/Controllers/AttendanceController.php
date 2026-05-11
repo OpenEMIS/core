@@ -2133,7 +2133,6 @@ class AttendanceController extends Controller
      *                             @OA\Property(property="identity_type_id", type="integer", example=162),
      *                             @OA\Property(property="identity_number", type="string", example="1302042293"),
      *                             @OA\Property(property="external_reference", type="string", nullable=true, example=null),
-     *                             @OA\Property(property="super_admin", type="boolean", example=0),
      *                             @OA\Property(property="status", type="integer", example=1),
      *                             @OA\Property(property="last_login", type="string", format="date-time", nullable=true, example=null),
      *                             @OA\Property(property="failed_logins", type="integer", example=0),

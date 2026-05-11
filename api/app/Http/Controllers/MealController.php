@@ -328,7 +328,6 @@ class MealController extends Controller
      *                              @OA\Property(property="identity_type_name", type="string", example=null),
      *                              @OA\Property(property="identity_number", type="string", example=null),
      *                              @OA\Property(property="external_reference", type="string", example=null),
-     *                              @OA\Property(property="super_admin", type="integer", example=1),
      *                              @OA\Property(property="status", type="integer", example=1),
      *                              @OA\Property(property="last_login", type="string", example=null),
      *                              @OA\Property(property="failed_logins", type="integer", example=0),

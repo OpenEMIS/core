@@ -8,6 +8,7 @@ use App\Models\Concerns\WebhookQueueTrait;//use Illuminate\Database\Eloquent\Mod
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\NumericId;
@@ -31,6 +32,10 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     protected $appends = ['full_name', 'name_with_id'];
 
 
+    //POCOR-9697: super_admin removed from $fillable. v5 CRUD goes through
+    //CrudApiController which already requires SecurityUsers add/edit permission,
+    //but that permission must not also implicitly grant the right to mint
+    //god-mode accounts. Promote/demote needs its own audited endpoint.
     protected $fillable = [
         'id', 'username', 'password',
         'openemis_no', 'first_name',
@@ -41,15 +46,17 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         'gender_id', 'date_of_birth',
         'date_of_death', 'nationality_id',  'identity_type_id',
         'identity_number', 'external_reference',
-        'super_admin', 'status', 'last_login',
+        'status', 'last_login',
         'failed_logins', 'photo_name',
         'photo_content', 'preferred_language',
         'is_student', 'is_staff', 'is_guardian',
         'modified_user_id', 'modified',
         'created_user_id', 'created'
     ];
+    //POCOR-9697: super_admin hidden from API responses — knowing who is a
+    //super_admin is itself sensitive information.
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'super_admin',
     ];
 
     protected $primaryKey = 'id';
@@ -146,7 +153,6 @@ public function _swaggerPath() {}
                           @OA\Property(property="identity_type_id", type="integer", example=null),
                           @OA\Property(property="identity_number", type="string", example=null),
                           @OA\Property(property="external_reference", type="string", example=null),
-                          @OA\Property(property="super_admin", type="integer", example=null),
                           @OA\Property(property="status", type="integer", example=null),
                           @OA\Property(property="last_login", type="string", format="date-time", example=null),
                           @OA\Property(property="failed_logins", type="integer", example=null),
@@ -203,7 +209,6 @@ public function _swaggerList() {}
                      @OA\Property(property="identity_type_id", type="integer", example=null),
                      @OA\Property(property="identity_number", type="string", example=null),
                      @OA\Property(property="external_reference", type="string", example=null),
-                     @OA\Property(property="super_admin", type="integer", example=null),
                      @OA\Property(property="status", type="integer", example=null),
                      @OA\Property(property="last_login", type="string", format="date-time", example=null),
                      @OA\Property(property="failed_logins", type="integer", example=null),
@@ -298,7 +303,6 @@ public function _swaggerView() {}
                      @OA\Property(property="identity_type_id", type="integer", example=null),
                      @OA\Property(property="identity_number", type="string", example=null),
                      @OA\Property(property="external_reference", type="string", example=null),
-                     @OA\Property(property="super_admin", type="integer", example=null),
                      @OA\Property(property="status", type="integer", example=null),
                      @OA\Property(property="last_login", type="string", format="date-time", example=null),
                      @OA\Property(property="failed_logins", type="integer", example=null),
@@ -361,6 +365,18 @@ public function _swaggerUpdate() {}
  * )
  */
 public function _swaggerDelete() {}
+
+    //POCOR-9697: hash plaintext passwords on assignment. Bcrypt hashes pass
+    //through unchanged so existing flows that re-save a hashed value (or the
+    //ORM reading a row and writing it back) remain idempotent.
+    public function setPasswordAttribute($value): void
+    {
+        if (is_string($value) && $value !== '' && !preg_match('/^\$2[aby]\$/', $value)) {
+            $value = Hash::make($value);
+        }
+        $this->attributes['password'] = $value;
+    }
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
