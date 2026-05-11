@@ -1,224 +1,268 @@
-# POCOR-9610 — Institution Registrations and Accreditations Tabs
+# POCOR-9610 — Institution Registrations and Accreditations
 
 ---
 
 ## 1. What is the Task?
 
-Add two new institution-profile tabs in OpenEMIS Core:
+Add two new institution-profile features to OpenEMIS Core:
 
-- **Registrations** — track institution registration validity periods (`valid_from`, `valid_to`)
-- **Accreditations** — track programme-level accreditations, each linked to an education programme (`education_programme_id`), with validity dates
+- **Registrations** — track validity periods during which an institution is officially registered.
+- **Accreditations** — track programme-level accreditations, each linked to an `education_programme`, with their own validity periods.
 
-Both tabs appear in the Institution left sidebar under **General** as **read-only views** (data is pushed from OpenEMIS Accreditations via API). Excel export is supported. The `/api/v5/*` endpoints expose read and write access with role-based permissions.
+Both appear as read-only tabs in the Institution left sidebar under **General**. Authoritative write access is via the new REST endpoints under `/api/v5/*`, gated by role-based permissions. Excel export is supported on both index views.
 
 ---
 
 ## 2. Situation Before
 
 - No `institution_registrations` or `institution_accreditations` tables existed.
-- No CakePHP tabs or controllers existed for these two concepts.
+- No CakePHP tabs, controllers, or Table classes existed for these two concepts.
 - No Laravel API resources existed for these models.
-- The Institution left sidebar had no entries for Registrations or Accreditations.
+- The Institution left sidebar had no Registrations / Accreditations entries.
+- Roles tables (`security_functions`, `security_role_functions`) had no rows for either feature in the UI or API modules.
 
 ---
 
 ## 3. What Was Implemented
 
-### Schema
+### 3.1 Schema
 
-Migration file: `config/Migrations/20260410120000_POCOR9610.php`
+Two new tables are created. **The `institutions` table is NOT modified.**
 
 **`institution_registrations`**
+
 | Column | Type | Notes |
-|--------|------|-------|
+|---|---|---|
 | `id` | INT AUTO_INCREMENT PK | |
-| `institution_id` | INT NOT NULL FK→institutions | |
-| `valid_from` | DATE NOT NULL | Defaults to institution `date_opened` if left empty on entry |
-| `valid_to` | DATE NULL | Optional end date |
-| `modified_user_id` | INT NULL FK→security_users | |
+| `institution_id` | INT NOT NULL | FK → `institutions.id` |
+| `valid_from` | DATE NULL | NULL = valid since institution opening |
+| `valid_to` | DATE NULL | NULL = no expiry (always valid) |
+| `modified_user_id` | INT NULL | FK → `security_users.id` |
 | `modified` | DATETIME NULL | |
-| `created_user_id` | INT NOT NULL FK→security_users | |
+| `created_user_id` | INT NOT NULL | FK → `security_users.id` |
 | `created` | DATETIME NOT NULL | |
 
-**`institution_accreditations`**
+**`institution_accreditations`** — same shape plus:
+
 | Column | Type | Notes |
-|--------|------|-------|
-| `id` | INT AUTO_INCREMENT PK | |
-| `institution_id` | INT NOT NULL FK→institutions | |
-| `education_programme_id` | INT NOT NULL FK→education_programmes | Programme being accredited |
-| `valid_from` | DATE NOT NULL | Defaults to institution `date_opened` if left empty on entry |
-| `valid_to` | DATE NULL | Optional end date |
-| `modified_user_id` | INT NULL FK→security_users | |
-| `modified` | DATETIME NULL | |
-| `created_user_id` | INT NOT NULL FK→security_users | |
-| `created` | DATETIME NOT NULL | |
+|---|---|---|
+| `education_programme_id` | INT NOT NULL | FK → `education_programmes.id` |
 
-The migration also inserts `security_functions` rows for both tabs (order 52 and 53, parent `General`, module/controller `Institutions`) with the following permission model:
+Both tables: InnoDB, `utf8mb4_unicode_ci`, indexed on every FK column.
 
-**CakePHP UI:** Read-only for all roles — Add/Edit/Delete buttons are disabled in the table class (`toggle('add/edit/remove', false)`) and further suppressed by `HideButtonBehavior`.
+### 3.2 Validity Semantics
 
-**API v5:** Controlled via `PermissionService::checkPermission()` which reads `security_role_functions` joined against `security_functions` action strings.
+The `valid_from` / `valid_to` columns are both nullable and interpreted at the application layer:
 
-| Role | Order | UI | API view | API write |
-|------|-------|----|----------|-----------|
-| Superrole | 1 | view only | ✓ (super_admin bypass) | ✓ (super_admin bypass) |
-| Administrator | 2 | view only | ✓ | ✓ |
-| Group Administrator | 3 | view only | ✓ | ✓ |
-| District Officer | 4 | view only | ✓ | ✓ |
-| Principal | 5 | view only | ✓ | ✗ |
-| Teacher / Staff / etc. | 7+ | view only | ✓ (where _view=1) | ✗ |
+- `valid_from IS NULL` → record is valid since the institution opened (purely informational; rendered blank on the UI).
+- `valid_to IS NULL` → no expiry; the record is treated as always valid.
+- **Status** virtual column (shown in the UI and Excel export):
+  - `Valid` when `valid_to IS NULL` or `valid_to >= CURDATE()`.
+  - `Expired` when `valid_to < CURDATE()`.
 
-#### valid_from default logic
+There is no `beforeSave()` default for `valid_from` — NULL is a meaningful, persisted value.
 
-`valid_from` is `NOT NULL` in the database. If a user leaves it blank on the add/edit form, the system automatically uses the institution's `date_opened` as the start date — this is handled in `beforeSave()` in both CakePHP Table classes, and the factories also derive it from `institution.date_opened`.
+### 3.3 CakePHP UI (Read-Only Tabs)
 
-### CakePHP UI
+Two new tabs appear under Institution → General:
 
-**New Table classes:**
-- `plugins/Institution/src/Model/Table/InstitutionRegistrationsTable.php`
-- `plugins/Institution/src/Model/Table/InstitutionAccreditationsTable.php`
+- `/Institutions/{id}/Registrations`
+- `/Institutions/{id}/Accreditations`
 
-Both use `ControllerActionTable`, `Excel` behavior (index export), and `Institution.InstitutionTab` behavior.
+**Registrations index columns:** Valid From | Valid To | Status
 
-**Registrations index columns:** Valid From | Valid To | Status | Actions
+**Accreditations index columns:** Programme Code | Programme Name | Valid From | Valid To | Status
 
-**Accreditations index columns:** Programme Code | Programme Name | Valid From | Valid To | Status | Actions
+- `Programme Code` — from `education_programmes.code` via FK.
+- `Programme Name` — full chain label: `"Name (Level — System — Period)"`.
 
-- **Programme Code** — from `education_programmes.code` via FK
-- **Programme Name** — full label: `"Name (Level — System — Period)"` using the full education chain
-- **Status** — computed virtual field: `Valid` when `valid_to` is NULL or in the future; `Expired` when `valid_to` is in the past
+**Read-only enforcement** (two layers, both required):
 
-**Read-only enforcement:** `toggle('add', false)`, `toggle('edit', false)`, `toggle('remove', false)` + `addBehavior('ControllerAction.HideButton')`. Both layers are required — `toggle()` prevents button creation, `HideButtonBehavior` catches any remaining instances.
+- Table classes: `toggle('add', false)`, `toggle('edit', false)`, `toggle('remove', false)` prevent button creation.
+- `addBehavior('ControllerAction.HideButton')` suppresses any remaining instances.
 
-**Excel export notes:**
-- Date fields (`valid_from`, `valid_to`) are forced to `'type' => 'string'` in `onExcelUpdateFields` so that `onExcelGet*` handlers are called instead of the default `onExcelRenderDate` (which returns blank in this system)
-- Registrations Excel is filtered by `institution_id` via `onExcelBeforeQuery`
+**Excel export:** dates are forced to `'type' => 'string'` in `onExcelUpdateFields` so that `onExcelGet*` handlers are honoured (the default `onExcelRenderDate` returns blank in this system). The Registrations export is filtered by `institution_id` in `onExcelBeforeQuery`.
 
-**Controller:**
-- `plugins/Institution/src/Controller/InstitutionsController.php` — added `Registrations()` and `Accreditations()` action methods
+### 3.4 REST API v5
 
-**Sidebar navigation:**
-- `src/Controller/Component/NavigationComponent.php` — added `Institutions.Registrations.index` and `Institutions.Accreditations.index` entries under `Institution.General` parent
+Endpoints (JWT-authenticated via `auth.jwt` middleware):
 
-### Laravel API v5
+| Verb | Path |
+|---|---|
+| GET | `/api/v5/institution-registrations` |
+| GET | `/api/v5/institution-registrations/{id}` |
+| POST | `/api/v5/institution-registrations` |
+| PUT | `/api/v5/institution-registrations/{id}` |
+| DELETE | `/api/v5/institution-registrations/{id}` |
+| GET / POST / PUT / DELETE | `/api/v5/institution-accreditations[/{id}]` |
 
-**Models:**
-- `api/app/Models/Api5/InstitutionRegistrations.php`
-- `api/app/Models/Api5/InstitutionAccreditations.php`
+No new controller — the resources are exposed via `CrudApiController::$allowedResources`. The standard `Services → Repositories → Models` pipeline is reused unchanged.
 
-Both registered in `CrudApiController::$allowedResources` as `institution-registrations` and `institution-accreditations`.
+**Note:** An "idempotent upsert by `external_id`" pattern was discussed during scoping (see PROMPT.md history). It is **not** implemented — the final design is plain CRUD with database-assigned `id` and no business external key.
 
-**Factories:**
-- `api/database/factories/InstitutionRegistrationsFactory.php` — `valid_from` derived from institution `date_opened`
-- `api/database/factories/InstitutionAccreditationsFactory.php` — `valid_from` derived from institution `date_opened`
+### 3.5 Permissions Matrix
 
-**Feature tests (all passing 5/5 each):**
-- `api/tests/Feature/InstitutionRegistrationsApiTest.php`
-- `api/tests/Feature/InstitutionAccreditationsApiTest.php`
+**UI** — `security_functions` rows (`module=Institutions`, `controller=Institutions`, `category=General`, `parent_id=8`):
 
-### Seed Tool
+| Name | _view | _add | _edit | _delete | Roles granted view |
+|---|---|---|---|---|---|
+| `Registrations` | `Registrations.index\|Registrations.view` | NULL | NULL | NULL | 1, 2, 3, 4, 10 |
+| `Accreditations` | `Accreditations.index\|Accreditations.view` | NULL | NULL | NULL | 1, 2, 3, 4, 10 |
 
-A developer seed page is available at `logs/pocor-9610-seed.html`. It includes:
-- Sample INSERT statements for both tables
-- A collapsible developer API reference section with `curl` examples for all endpoints (login, list, view, create, update, delete) for both resources
+NULLs in `_add/_edit/_delete` keep the UI strictly read-only at the permission layer too.
 
-### Files Changed Summary
+**API** — `security_functions` rows (`module=API`, `parent_id=10000`):
 
-| Change | File |
-|--------|------|
-| Added | `config/Migrations/20260410120000_POCOR9610.php` |
-| Added | `plugins/Institution/src/Model/Table/InstitutionRegistrationsTable.php` |
-| Added | `plugins/Institution/src/Model/Table/InstitutionAccreditationsTable.php` |
-| Modified | `plugins/Institution/src/Controller/InstitutionsController.php` |
-| Modified | `src/Controller/Component/NavigationComponent.php` |
-| Added | `api/app/Models/Api5/InstitutionRegistrations.php` |
-| Added | `api/app/Models/Api5/InstitutionAccreditations.php` |
-| Added | `api/database/factories/InstitutionRegistrationsFactory.php` |
-| Added | `api/database/factories/InstitutionAccreditationsFactory.php` |
-| Added | `api/tests/Feature/InstitutionRegistrationsApiTest.php` |
-| Added | `api/tests/Feature/InstitutionAccreditationsApiTest.php` |
-| Added | `logs/pocor-9610-seed.html` |
+| Name | _view | _add | _edit | _delete |
+|---|---|---|---|---|
+| `Institution Registrations` | `InstitutionRegistrations.view\|InstitutionRegistrations.list` | `InstitutionRegistrations.add` | `InstitutionRegistrations.edit` | `InstitutionRegistrations.delete` |
+| `Institution Accreditations` | `InstitutionAccreditations.view\|InstitutionAccreditations.list` | `InstitutionAccreditations.add` | `InstitutionAccreditations.edit` | `InstitutionAccreditations.delete` |
 
-**Files Added:** 10  |  **Files Modified:** 2
+`security_role_functions` rows are inserted for roles `IN (1, 2, 3, 4, 5, 6, 7, 9, 10)`:
+
+| Role order | Roles | _view | _add / _edit / _delete |
+|---|---|---|---|
+| `< 5` | Group Administrator (1), Administrator (2), District Officer (3), Principal (4) | 1 | 1 |
+| `>= 5` | Homeroom Teacher (5), Teacher (6), Staff (7), Guardian (9), Superrole (10) | 1 | 0 |
+
+Superrole/super_admin JWTs bypass `PermissionService::checkPermission()` entirely, so the row above is informational only for that role.
+
+### 3.6 Files Changed Summary
+
+| Change | File | Purpose |
+|---|---|---|
+| Added | `config/Migrations/20260511120000_POCOR9610.php` | Schema + permission rows |
+| Added | `plugins/Institution/src/Model/Table/InstitutionRegistrationsTable.php` | CakePHP Table (read-only) |
+| Added | `plugins/Institution/src/Model/Table/InstitutionAccreditationsTable.php` | CakePHP Table (read-only) |
+| Modified | `plugins/Institution/src/Controller/InstitutionsController.php` | `Registrations()` / `Accreditations()` actions |
+| Modified | `src/Controller/Component/NavigationComponent.php` | Two new sidebar entries under General |
+| Added | `api/app/Models/Api5/InstitutionRegistrations.php` | Eloquent model |
+| Added | `api/app/Models/Api5/InstitutionAccreditations.php` | Eloquent model |
+| Added | `api/database/factories/InstitutionRegistrationsFactory.php` | Test factory |
+| Added | `api/database/factories/InstitutionAccreditationsFactory.php` | Test factory |
+| Added | `api/tests/Feature/InstitutionRegistrationsApiTest.php` | Feature test — 5/5 pass |
+| Added | `api/tests/Feature/InstitutionAccreditationsApiTest.php` | Feature test — 5/5 pass |
+| Added | `logs/pocor-9610-seed.html` | Developer seed page (login + CRUD) |
+
+### 3.7 Database Migration
+
+`config/Migrations/20260511120000_POCOR9610.php` — class `POCOR9610`.
+
+**Backup tables created** (idempotent, only if not already present):
+- `z_9610_security_functions`
+- `z_9610_security_role_functions`
+- `z_9610_institution_registrations` *(only on the dead-branch path where the table already exists at migrate time)*
+- `z_9610_institution_accreditations` *(same)*
+
+**Rows created in `up()`:**
+- `institution_registrations` table.
+- `institution_accreditations` table.
+- 2 `security_functions` rows for the UI tabs.
+- 2 `security_functions` rows for the API endpoints.
+- 10 `security_role_functions` rows for UI tab access (5 roles × 2 tabs).
+- 18 `security_role_functions` rows for API access (9 roles × 2 endpoints).
+
+The `down()` method restores `security_functions` and `security_role_functions` from their backups, and drops both new tables.
 
 ---
 
 ## 4. Deployment Instructions
 
-### Apply schema
+1. **Pull the branch.**
 
-```bash
-docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake migrations migrate'
-```
+    ```bash
+    git fetch origin POCOR-9610
+    git checkout POCOR-9610
+    ```
 
-### Clear CakePHP cache
+2. **Run the migration.**
 
-```bash
-docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake cache clear_all'
-```
+    ```bash
+    cd /var/www/html/emis/core
+    php bin/cake.php migrations migrate
+    ```
 
-### Run API tests
+3. **Install API dependencies** *(no new packages, safe to re-run)*.
 
-```bash
-docker exec poe-application sh -c 'cd /var/www/html/emis/core/api && php artisan test tests/Feature/InstitutionRegistrationsApiTest.php tests/Feature/InstitutionAccreditationsApiTest.php'
-```
+    ```bash
+    cd /var/www/html/emis/core/api
+    composer install
+    ```
 
-### Smoke test via curl
+4. **Clear caches.**
 
-Get a JWT token first, then:
+    ```bash
+    cd /var/www/html/emis/core
+    php bin/cake.php cache clear_all
 
-```bash
-# List registrations
-curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8082/api/v5/institution-registrations | jq .
+    cd /var/www/html/emis/core/api
+    php artisan config:cache
+    php artisan cache:clear
+    php artisan route:clear
+    ```
 
-# Create a registration
-curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"institution_id":6,"valid_from":"2024-01-01","valid_to":"2026-12-31"}' \
-  http://localhost:8082/api/v5/institution-registrations | jq .
+5. **Verify UI.** Open any institution profile and confirm that under **General** the **Registrations** and **Accreditations** tabs are visible and render read-only (no Add / Edit / Delete buttons).
 
-# Create an accreditation
-curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"institution_id":6,"education_programme_id":1,"valid_from":"2024-01-01"}' \
-  http://localhost:8082/api/v5/institution-accreditations | jq .
-```
+6. **(Optional) Smoke-test the API** using the bundled seed page:
+
+    ```
+    https://<host>/core/logs/pocor-9610-seed.html
+    ```
+
+    The page lets you log in, list, add and delete records for both endpoints interactively.
+
+> **Rollback** is intentionally not provided here. `security_*` migrations are not rolled back as a matter of policy on shared environments; if a rollback is genuinely required, follow the per-branch security-users cleanup procedure in `.claude/rules/migration-rollback.md` first.
 
 ---
 
 ## 5. System Administrator Guide
 
-### Log Locations
+### 5.1 Log Locations
 
-- CakePHP logs: `/var/www/html/emis/core/logs/hin-error.log`
-- Laravel logs: `/var/www/html/emis/core/api/storage/logs/laravel.log`
+- CakePHP error log: `/var/www/html/emis/core/logs/hin-error.log`
+- CakePHP debug log: `/var/www/html/emis/core/logs/hin-debug.log`
+- Laravel log: `/var/www/html/emis/core/api/storage/logs/laravel.log`
 
-### valid_from Default Behaviour
+### 5.2 Granting UI Access to a New Role
 
-`valid_from` is stored as `DATE NOT NULL`. If a user submits a blank `valid_from` on the CakePHP add/edit form, the system automatically looks up the institution's `date_opened` and uses it as the start date.
+To allow a role to **see** the Registrations / Accreditations tabs:
 
-### Status Field
+1. Log in as Administrator and navigate to **Security → Roles → \<role\>**.
+2. Open the **Institutions** module.
+3. Under **General**, tick **View** for `Registrations` and/or `Accreditations`.
+4. Save. The tabs will appear on the next page load for users of that role.
 
-Both tabs display a computed **Status** column:
-- `Valid` — `valid_to` is NULL or in the future
-- `Expired` — `valid_to` is in the past
+The UI is read-only by design — there are no Add / Edit / Delete checkboxes for these two rows.
 
-This field is virtual (not stored in the database) and is included in Excel exports.
+### 5.3 Granting API Access to a New Role
 
-### Rollback Procedure
+To allow a role to **call** the `/api/v5/institution-registrations` or `/api/v5/institution-accreditations` endpoints:
 
-```bash
-docker exec poe-application sh -c 'cd /var/www/html/emis/core && ./bin/cake migrations rollback -t <previous_migration_version>'
-```
+1. Navigate to **Security → Roles → \<role\>**.
+2. Open the **API** module.
+3. Locate `Institution Registrations` and `Institution Accreditations`.
+4. Tick **View** for read access, and any of **Add / Edit / Delete** for write access.
+5. Save.
 
-The `down()` method removes both tables, removes the `security_functions` and `security_role_functions` rows, and restores the `institutions` table from the `z_9610_institutions` backup.
+Roles with `order < 5` (Group Administrator, Administrator, District Officer, Principal) already have full write access by default. Lower-order roles get view-only and must be elevated explicitly.
 
-### Troubleshooting
+### 5.4 Status Field
+
+The **Status** column on both tabs is computed (not stored):
+
+- `Valid` — `valid_to IS NULL` or `valid_to >= today`.
+- `Expired` — `valid_to < today`.
+
+This logic also drives the Excel export, so no further configuration is required.
+
+### 5.5 Troubleshooting
 
 | Symptom | Check |
-|---------|-------|
-| Tabs not visible in sidebar | Confirm `NavigationComponent.php` has the entries; confirm `security_functions` rows exist in DB |
-| 404 after saving a record | Confirm `InstitutionTabBehavior` is attached; check that `institution_id` is in the queryString |
-| `valid_from` saves as NULL | Should not happen — `beforeSave` sets it from `date_opened`; verify institution has `date_opened` set |
-| API `Invalid resource` | Confirm the resource key is in `CrudApiController::$allowedResources` |
-| Programme Code / Name blank in Accreditations | Confirm `indexBeforeQuery` uses closure-style `contain()` with explicit `->select()` — `ControllerActionTable::beforeFind` strips non-default FK fields otherwise |
-| Excel dates blank | Confirm `onExcelUpdateFields` forces `'type' => 'string'` on date fields |
-| Add/Edit/Delete buttons still visible | Both `toggle('add/edit/remove', false)` AND `HideButtonBehavior` must be present |
+|---|---|
+| Tabs not visible | Confirm `NavigationComponent.php` entries are present; confirm `security_functions` and `security_role_functions` rows exist for the role |
+| Tab visible but page 404 | Confirm the controller has `Registrations()` / `Accreditations()` methods and the Table classes are present under `plugins/Institution/src/Model/Table/` |
+| API returns `Invalid resource` | Confirm the resource keys `institution-registrations` and `institution-accreditations` are listed in `CrudApiController::$allowedResources` |
+| API returns 403 | Confirm the calling user's role has the matching `security_role_functions` row with `_view` (and `_add`/`_edit`/`_delete` for write) |
+| Programme Code / Name blank in Accreditations index | `indexBeforeQuery` must use closure-style `contain()` with explicit `->select()`; otherwise `ControllerActionTable::beforeFind` strips non-default FK fields |
+| Excel dates blank | `onExcelUpdateFields` must force `'type' => 'string'` on date fields |
+| Add / Edit / Delete buttons still visible | Both `toggle('add/edit/remove', false)` AND `HideButtonBehavior` must be present in the Table class |

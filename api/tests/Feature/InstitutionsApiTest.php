@@ -67,27 +67,15 @@ class InstitutionsApiTest extends TestCase
     public function test_can_update_Institutions()
     {
         $record = Institutions::factory()->create();
-        //POCOR-9610: start - Verify institution sync fields can be updated through the shared Institutions Api5 resource
         $updatedData = [
             'id' => $record->id,
-            'external_id' => 'ACC-INS-POCOR-9610',
-            'registration_status' => 'active',
-            'registration_valid_until' => '2027-01-01',
+            // Add at least one field from schema to update
         ];
-        //POCOR-9610: end
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->putJson('/api/v5/institutions/' . $record->id, $updatedData);
 
         $response->assertStatus(200);
-        //POCOR-9610: start - Persisted institution sync fields confirm the migration and fillable contract
-        $this->assertDatabaseHas('institutions', [
-            'id' => $record->id,
-            'external_id' => 'ACC-INS-POCOR-9610',
-            'registration_status' => 'active',
-            'registration_valid_until' => '2027-01-01',
-        ]);
-        //POCOR-9610: end
     }
 
     public function test_can_delete_Institutions()
