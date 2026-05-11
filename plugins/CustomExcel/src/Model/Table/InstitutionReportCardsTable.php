@@ -6997,14 +6997,21 @@ class InstitutionReportCardsTable extends AppTable
             ->enableHydration(false)
             ->toArray();
 
-        $principals = [];
+       $principals = [];
 
-        foreach ($data as $row) {
-            $principals[] = trim(
-                ($row['first_name'] ?? '') . ' ' .
-                ($row['last_name'] ?? '')
-            );
+        if (!empty($data)) {
+            foreach ($data as $row) {
+                $name = trim(
+                    ($row['first_name'] ?? '') . ' ' .
+                    ($row['last_name'] ?? '')
+                );
+
+                if ($name !== '') {
+                    $principals[] = $name;
+                }
+            }
         }
+
         return implode(', ', array_unique($principals));
     }
 
