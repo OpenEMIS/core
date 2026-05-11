@@ -475,20 +475,40 @@ class UserBehavior extends Behavior
         return ($row && !empty($row->value)) ? (int)$row->value : null;
     }
 
-    //POCOR-9590: a user is sync-eligible iff they have a preferred user_identities row whose identity_type_id matches the active external data source's identity_type_id
+    //POCOR-9590: a user is sync-eligible iff an external source is active AND
+    //   (a) they already have an external_reference (synced before, can re-sync), OR
+    //   (b) they have at least one preferred user_identities row (Local user — first-time inception sync).
+    //   The source-side `identity_type_id` attribute is intentionally NOT consulted here: it is enforced
+    //   at sync-execution time inside buildExternalUserDiff(), so a missing config row never silently
+    //   hides the button. This keeps the feature usable even on instances whose UI form omits the field.
     public function isSyncEligibleUser($securityUserId): bool
     {
-        $activeIdentityTypeId = $this->getActiveExternalSourceIdentityTypeId();
-        if ($activeIdentityTypeId === null) {
+        if (!$this->hasActiveExternalSource()) {
             return false;
+        }
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $user = $SecurityUsers->find()
+            ->select(['external_reference'])
+            ->where(['id' => $securityUserId])
+            ->first();
+        if ($user && !empty($user->external_reference)) {
+            return true;
         }
         $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         return $UserIdentities->find()
-            ->where([
-                'security_user_id' => $securityUserId,
-                'identity_type_id' => $activeIdentityTypeId,
-                'preferred' => 1,
-            ])
+            ->where(['security_user_id' => $securityUserId, 'preferred' => 1])
+            ->count() > 0;
+    }
+
+    //POCOR-9590: thin probe used by isSyncEligibleUser — returns true iff a non-empty external source is selected.
+    private function hasActiveExternalSource(): bool
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        return $ConfigItems->find()
+            ->where(['code' => 'external_data_source_type'])
+            ->where(['value IS NOT' => null])
+            ->where(['value !=' => ''])
+            ->where(['value !=' => 'None'])
             ->count() > 0;
     }
     //POCOR-9590: fetches and diffs a user against the active external identity source.

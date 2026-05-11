@@ -65,6 +65,40 @@ Add a visual sync status indicator (badge) on user General pages (Students, Staf
 - All Alert static strings wrapped in `__()` for i18n compliance
 - `UserIdentities/details.php` template references constants via FQN (`\User\Model\Behavior\UserBehavior::SYNC_STATUS_*`) — no bare integers in display logic
 
+### Eligibility Loosening + Identity-Number Lock (2026-05-11)
+
+After dmo-tst surfaced the sync button never appearing, two related issues were addressed:
+
+**Why the button was hidden on remote.** `isSyncEligibleUser()` previously required `external_data_source_attributes.attribute_field='identity_type_id'` to be present for the active source. That row is only written when the admin form for the source exposes an *Identity Type* dropdown — and the Seychelles case in `ConfigExternalDataSourceTable::editAfterAction()` never registered it. On local the row had been inserted manually via seed SQL; on dmo-tst it was missing, so the button was hidden for every user regardless of sync state.
+
+**The loosening (Option C).** `isSyncEligibleUser()` now returns true when:
+1. An external data source is active (any non-empty `external_data_source_type` config_item), AND
+2. The user has either `security_users.external_reference` set (already bound → re-sync), OR at least one preferred `user_identities` row (Local → inception sync).
+
+The source-side `identity_type_id` attribute is no longer consulted at button-render time. It is still enforced at sync-execution time inside `buildExternalUserDiff()`, so a missing config row never silently hides the feature — the strict check moves later in the flow where a clean error message can be surfaced.
+
+**The impersonation vector this opens (and how it's closed).** Without further safeguards, a low-priv user with edit access to their own Identities tab could:
+1. Replace their NIN number with a victim's real NIN,
+2. Click Sync,
+3. Receive the victim's name / DOB / gender / nationality from the external registry,
+4. Have their local record overwritten with the victim's identity.
+
+This vector exists on the *inception* path only — re-sync of an already-bound user uses `external_reference` as the immutable lookup key, so local NIN edits don't change the query.
+
+**The lock (set-once identity numbers).** Identity rows whose `identity_type_id` is registered as an external-source lookup key are now **set-once**: editable on insert (data-entry / admission), immutable on update. Enforced at three layers:
+
+- **CakePHP form** — `IdentitiesTable::editOnInitialize()` flips `number` + `identity_type_id` to `readonly` on the edit form.
+- **CakePHP server-side** — `IdentitiesTable::beforeSave()` checks `isDirty('number')` / `isDirty('identity_type_id')` on non-new entities and stops the event with a `Log::warning('POCOR-9590: blocked update to external-lookup identity row …')`. Closes the direct-POST bypass.
+- **Laravel API** — `App\Models\Api5\UserIdentities::booted()` registers an `updating` listener that returns false on the same condition. The endpoint still returns 200 (silent strip, no field-name fingerprinting — see `feedback_silent_security_rejections.md`) and writes the same log line. `App\Models\UserIdentities` (v4) delegates to the v5 model's static `isExternalLookupIdentityType()` so the rule has one definition.
+
+Other identity types (Passport, Birth Certificate, Driver's License…) remain freely editable. Only the registered external lookup type is locked.
+
+**Regression coverage.** Two new tests in `api/tests/Feature/UserIdentitiesApiTest.php`:
+- `test_external_lookup_identity_number_is_locked_against_update` — proves an NIN row's number cannot be changed via PUT `/api/v5/user-identities/{id}`.
+- `test_non_external_lookup_identity_number_still_updates` — control case proving the lock is targeted, not a blanket block.
+
+All 7 tests in the file pass.
+
 ### Seychelles Civil Status Integration Fix
 - **UserBehavior::buildExternalUserDiff()** now falls back to `api_url` when `user_endpoint_uri` is empty
 - Auto-appends `/{external_reference}` to the URL if no placeholder (`{external_reference}`) exists in the endpoint
