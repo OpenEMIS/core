@@ -520,4 +520,166 @@ class SuperAdminEscalationProtectionTest extends TestCase
         $this->assertTrue(Hash::check($plaintext, $stored),
             'v5-stored password must be a valid bcrypt hash of the plaintext.');
     }
+
+    /**
+     * Wave-3 (POCOR-9697 audit log):
+     *
+     * Every v5 create on /security-users must drop a row into user_activities
+     * naming who did it, who was created, and when. The shape mirrors what
+     * the Cake-side UserActivityBehavior / UsersController writes so the
+     * existing dashboard at User → Activities renders API rows identically.
+     *
+     * Critical: the row must NOT contain raw password or super_admin values.
+     */
+    public function test_v5_create_user_logs_audit_row(): void //POCOR-9697
+    {
+        $username = 'pocor9697_w3_create_' . uniqid();
+
+        $payload = SecurityUsers::factory()->make([
+            'username' => $username,
+        ])->toArray();
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->postJson('/api/v5/security-users', $payload);
+
+        $this->assertContains($response->getStatusCode(), [200, 201]);
+
+        $newUserId = (int) DB::table('security_users')->where('username', $username)->value('id');
+        $this->assertGreaterThan(0, $newUserId, 'Created user not found.');
+
+        $rows = DB::table('user_activities')
+            ->where('security_user_id', $newUserId)
+            ->where('operation', 'create')
+            ->get();
+
+        $this->assertGreaterThanOrEqual(1, $rows->count(),
+            'A create-row must be written to user_activities for every API user-create.');
+
+        foreach ($rows as $row) {
+            $this->assertSame(2, (int) $row->created_user_id,
+                'created_user_id must reflect the JWT caller (id=2), not 0 or the new user.');
+            // Defence in depth: password and super_admin must never land in old/new.
+            $this->assertNotSame('password', $row->field,
+                'create summary row must not name password as a changed field.');
+            $this->assertNotSame('super_admin', $row->field,
+                'create summary row must not name super_admin as a changed field.');
+        }
+    }
+
+    /**
+     * Wave-3: a v5 update changing two ordinary fields must produce a row
+     * per dirty field, each row recording the previous and new value.
+     */
+    public function test_v5_update_user_logs_audit_row_per_dirty_field(): void //POCOR-9697
+    {
+        $target = SecurityUsers::factory()->create([
+            'first_name' => 'OrigFirst',
+            'email'      => 'orig_' . uniqid() . '@example.test',
+        ]);
+
+        // Baseline — any rows from the create event itself.
+        $baseline = DB::table('user_activities')
+            ->where('security_user_id', $target->id)
+            ->where('operation', 'update')
+            ->count();
+
+        $newEmail = 'updated_' . uniqid() . '@example.test';
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->putJson('/api/v5/security-users/' . $target->id, [
+            'id'         => $target->id,
+            'first_name' => 'NewFirst',
+            'email'      => $newEmail,
+        ]);
+
+        $this->assertContains($response->getStatusCode(), [200, 204]);
+
+        $rows = DB::table('user_activities')
+            ->where('security_user_id', $target->id)
+            ->where('operation', 'update')
+            ->get();
+
+        $this->assertGreaterThanOrEqual($baseline + 2, $rows->count(),
+            'Expected at least two new update rows — one per dirty field (first_name + email).');
+
+        $fields = $rows->pluck('field')->all();
+        $this->assertContains('first_name', $fields, 'first_name change must be logged.');
+        $this->assertContains('email', $fields, 'email change must be logged.');
+
+        foreach ($rows as $row) {
+            $this->assertNotSame('password', $row->field,
+                'update audit row must not name password unless password actually changed.');
+            $this->assertNotSame('super_admin', $row->field,
+                'update audit row must never name super_admin in this test.');
+        }
+    }
+
+    /**
+     * Wave-3: when password itself is updated, the row must exist (so the
+     * dashboard sees password was changed) but old/new value columns must
+     * be redacted — we never persist plaintext or the bcrypt hash into
+     * user_activities.old_value / new_value (themselves only varchar 255).
+     */
+    public function test_v5_update_user_password_change_logs_event_without_value(): void //POCOR-9697
+    {
+        $target = SecurityUsers::factory()->create();
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->putJson('/api/v5/security-users/' . $target->id, [
+            'id'       => $target->id,
+            'password' => 'changed-plain-' . uniqid(),
+        ]);
+
+        $this->assertContains($response->getStatusCode(), [200, 204]);
+
+        $row = DB::table('user_activities')
+            ->where('security_user_id', $target->id)
+            ->where('operation', 'update')
+            ->where('field', 'password')
+            ->orderByDesc('id')
+            ->first();
+
+        $this->assertNotNull($row, 'Password change must be visible in the audit trail.');
+        $this->assertSame('[REDACTED]', $row->old_value,
+            'Audit must mask the previous password — never store the bcrypt hash.');
+        $this->assertSame('[REDACTED]', $row->new_value,
+            'Audit must mask the new password — never store plaintext or hash.');
+    }
+
+    /**
+     * Wave-3: v4 create endpoint must also produce an audit row, since the
+     * trait lives on the Eloquent model — not on a specific controller.
+     */
+    public function test_v4_create_user_logs_audit_row(): void //POCOR-9697
+    {
+        $username = 'pocor9697_w3_v4_create_' . uniqid();
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->postJson('/api/v4/users', [
+            'first_name'    => 'Audit',
+            'last_name'     => 'V4',
+            'gender_id'     => 1,
+            'date_of_birth' => '2000-01-01',
+            'username'      => $username,
+            'openemis_no'   => $username,
+            'email'         => $username . '@example.test',
+            'password'      => 'someplain',
+        ]);
+
+        $response->assertStatus(200);
+
+        $newUserId = (int) DB::table('security_users')->where('username', $username)->value('id');
+        $this->assertGreaterThan(0, $newUserId, 'v4-created user not found.');
+
+        $createdRows = DB::table('user_activities')
+            ->where('security_user_id', $newUserId)
+            ->where('operation', 'create')
+            ->count();
+
+        $this->assertGreaterThanOrEqual(1, $createdRows,
+            'v4 create must produce a user_activities row — trait lives on the model.');
+    }
 }

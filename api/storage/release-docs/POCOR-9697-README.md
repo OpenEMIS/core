@@ -341,3 +341,88 @@ change with no security impact.
    does not write `security_users.super_admin` from this path, so it is
    not an escalation vector, but the field name is visible in the JS
    bundle. Lower priority.
+
+
+---
+
+## Wave 3 — User-change audit log (mirrors CakePHP)
+
+### What changed
+
+Every API write to `security_users` — v4 *and* v5 — now produces a row in
+the existing `user_activities` table, the same table the CakePHP backend
+has always written to. The dashboard at **User → Activities** therefore
+shows API-originated changes alongside UI-originated ones, with no
+schema change required.
+
+Implementation lives in **`api/app/Models/Concerns/UserActivityLog.php`**
+and is mixed into both `App\Models\SecurityUsers` and
+`App\Models\Api5\SecurityUsers`.
+
+### Audit row shape
+
+| Column           | Source                                                                           |
+|------------------|----------------------------------------------------------------------------------|
+| `model`          | always `'Users'` — matches the Cake-side convention                              |
+| `model_reference`| `security_users.id` of the row that changed                                      |
+| `field`          | column name (or `*` for create/delete summary rows)                              |
+| `field_type`     | `string` / `integer` / `decimal` / `record`                                      |
+| `old_value`      | previous value, varchar(255) truncated, **`[REDACTED]` for password & super_admin** |
+| `new_value`      | new value, same redaction rule                                                   |
+| `operation`      | `create` / `update` / `delete`                                                   |
+| `security_user_id` | same as `model_reference`                                                      |
+| `created_user_id`| JWT caller id; falls back to `0` for CLI / queue contexts                        |
+| `created`        | now()                                                                            |
+
+### Redaction policy
+
+`password` and `super_admin` produce an audit row (so the dashboard sees
+the field changed) but `old_value` / `new_value` are forced to
+`'[REDACTED]'`. Reason: `user_activities.old_value`/`new_value` are
+`varchar(255)` and would otherwise persist either plaintext input or a
+bcrypt hash — both unacceptable. Same threat model as the Wave-1
+`$hidden` rules.
+
+### Coverage
+
+- **v5 CRUD (`/api/v5/security-users`)** — covered by the trait’s
+  Eloquent model events.
+- **v4 create / update (`POST /api/v4/users`)** — `UserRepository::addUsers`
+  uses query-builder `insert()` / `update()`, which bypass Eloquent
+  events. We close that gap by calling
+  `SecurityUsers::logExternalUserChange()` explicitly after each write,
+  with the diff computed against the pre-update row.
+
+### How to read the trail via the API
+
+```bash
+# After creating user id=14693 via /api/v5/security-users:
+curl -k -H "Authorization: Bearer $TOKEN" \
+  "https://localhost:8482/core/api/v5/user-activities?_conditions=security_user_id:14693"
+```
+
+Returns one row for the create plus one per dirty field on every update.
+
+### Regression tests
+
+`api/tests/Feature/SuperAdminEscalationProtectionTest.php` — adds:
+
+- `test_v5_create_user_logs_audit_row`
+- `test_v5_update_user_logs_audit_row_per_dirty_field`
+- `test_v5_update_user_password_change_logs_event_without_value` (asserts redaction)
+- `test_v4_create_user_logs_audit_row`
+
+Full suite: **21 / 21 passing**.
+
+### Postman section
+
+Items **WAVE3-1 … WAVE3-4** in `POCOR-9697.postman_collection.json`
+demonstrate the create → GET-activities → update → GET-activities flow
+and assert the same redaction guarantees as the PHP tests.
+
+### Known limitation
+
+Legacy rows created before this branch landed do not have a `user_activities`
+entry — the trait is forward-looking. The pingdom / seed accounts will
+remain unbacked by audit rows; that is the same gap the CakePHP behavior
+has always had.

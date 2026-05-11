@@ -6,6 +6,7 @@ namespace App\Models\Api5;
 
 use App\Models\Concerns\WebhookQueueTrait;//use Illuminate\Database\Eloquent\Model;
 
+use App\Models\Concerns\UserActivityLog; //POCOR-9697: Wave-3 audit-log trait
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
@@ -22,6 +23,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     protected $webhookEvents = ['created', 'updated', 'deleted'];
     use Notifiable;
     use NumericId;
+    use UserActivityLog; //POCOR-9697: log every create/update/delete to user_activities
 
     public $timestamps = false;
     protected $casts = [
