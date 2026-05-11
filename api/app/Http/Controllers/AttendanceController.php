@@ -2114,7 +2114,6 @@ class AttendanceController extends Controller
      *                             type="object",
      *                             @OA\Property(property="id", type="integer", example=12026),
      *                             @OA\Property(property="username", type="string", example="1611035663"),
-     *                             @OA\Property(property="password", type="string", example="$2y$10$g2iBADn0H/kqBwsHkf66xOgJIBDRLHN396FTdcSr/VIFiib4OPjzy"),
      *                             @OA\Property(property="openemis_no", type="string", example="1611035663"),
      *                             @OA\Property(property="first_name", type="string", example="Adi"),
      *                             @OA\Property(property="middle_name", type="string", nullable=true, example=""),

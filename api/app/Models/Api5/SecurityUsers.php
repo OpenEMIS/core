@@ -133,7 +133,6 @@ public function _swaggerPath() {}
  *                     type="object",
                           @OA\Property(property="id", type="integer", example=null),
                           @OA\Property(property="username", type="string", example=null),
-                          @OA\Property(property="password", type="string", example=null),
                           @OA\Property(property="openemis_no", type="string", example=null),
                           @OA\Property(property="first_name", type="string", example=null),
                           @OA\Property(property="middle_name", type="string", example=null),
