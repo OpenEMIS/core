@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\Event\EventInterface;
 use Cake\Log\LogTrait;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
@@ -20,6 +20,7 @@ use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
+use App\Utility\ApplicationTimezone; //POCOR-9565
 
 class AppTable extends Table
 {
@@ -134,7 +135,7 @@ class AppTable extends Table
 
 
     // Event: 'ControllerAction.Model.onPopulateSelectOptions'
-    public function onPopulateSelectOptions(Event $event, Query $query)
+    public function onPopulateSelectOptions(EventInterface $event, Query $query)
     {
         return $this->getList($query);
     }
@@ -169,7 +170,7 @@ class AppTable extends Table
     }
 
 
-    public function onExcelRenderDateTime(Event $event, Entity $entity, $attr)
+    public function onExcelRenderDateTime(EventInterface $event, Entity $entity, $attr)
     {
         $field = $entity->{$attr['field']};
         if (!empty($field)) {
@@ -185,7 +186,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatDate'
-    public function onFormatDate(Event $event, $dateObject)
+    public function onFormatDate(EventInterface $event, $dateObject)
     {
         return $this->formatDate($dateObject);
     }
@@ -207,7 +208,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatTime'
-    public function onFormatTime(Event $event, $timeObject)
+    public function onFormatTime(EventInterface $event, $timeObject)
     {
         return $this->formatTime($timeObject);
     }
@@ -246,7 +247,7 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onFormatDateTime'
-    public function onFormatDateTime(Event $event, $timeObject): string
+    public function onFormatDateTime(EventInterface $event, $timeObject): string
     {
         return $this->formatDateTime($timeObject);
     }
@@ -257,44 +258,53 @@ class AppTable extends Table
      * @return [type]             [description]
      * POCOR-9415, POCOR-9510 more error-save
      */
-    public function formatDateTime($dateInput): string
+    public function formatDateTime($dateInput): string //POCOR-9509: public — called from child tables and view files
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
         $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
+        $displayTimezone = new \DateTimeZone(ApplicationTimezone::getDisplayTimezone());
+        $utcTimezone = new \DateTimeZone('UTC');
 
         $displayFormat = $dateFormat . ' - ' . $timeFormat;
         $inputFormat   = $displayFormat;
 
         try {
-            // Case 1: Already a DateTime object
             if ($dateInput instanceof \DateTimeInterface) {
-                return FrozenTime::instance($dateInput)->format($displayFormat);
+                //POCOR-9565[START]
+                return FrozenTime::createFromTimestamp($dateInput->getTimestamp(), $utcTimezone)
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565[END]
             }
 
-            // Case 2: String input
             if (is_string($dateInput) && trim($dateInput) !== '') {
 
                 // Try parsing EXACT expected format first
                 $date = FrozenTime::createFromFormat(
                     $inputFormat,
-                    $dateInput
+                    $dateInput,//POCOR-9565
+                    $utcTimezone//POCOR-9565
                 );
 
                 if ($date !== false) {
-                    return $date->format($displayFormat);
+                    return $date->setTimezone($displayTimezone)->format($displayFormat);//POCOR-9565
                 }
 
                 // Fallback: try ISO / DB formats
-                return (new FrozenTime($dateInput))->format($displayFormat);
+                //POCOR-9565
+                return (new FrozenTime($dateInput, $utcTimezone))
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565
             }
-
         } catch (\Throwable $e) {
-            Log::error(
-                'formatDateTime error: ' . $e->getMessage(),
-                ['input' => $dateInput]
-            );
+            //POCOR-9509: parsing failed — return a simple readable fallback rather than empty string
+            if ($dateInput instanceof \DateTimeInterface) {
+                return $dateInput->format('d M Y H:i:s');
+            }
+            return is_string($dateInput) ? $dateInput : '';
         }
 
         return '';
@@ -302,28 +312,28 @@ class AppTable extends Table
 
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderDatetime(Event $event, $entity, $property)
+    public function onRestfulRenderDatetime(EventInterface $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatDateTime($dateTimeObj);
     }
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderDate(Event $event, $entity, $property)
+    public function onRestfulRenderDate(EventInterface $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatDate($dateTimeObj);
     }
 
     // Not using $extra parameter to be backward compatible with restfulv1
-    public function onRestfulRenderTime(Event $event, $entity, $property)
+    public function onRestfulRenderTime(EventInterface $event, $entity, $property)
     {
         $dateTimeObj = $entity[$property];
         return $this->formatTime($dateTimeObj);
     }
 
     // Event: 'ControllerAction.Model.onGetFieldLabel'
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
 
         $Labels     = TableRegistry::getTableLocator()->get('Labels');
@@ -368,7 +378,7 @@ class AppTable extends Table
     }
 
     // Event: 'Model.excel.onExcelGetLabel'
-    public function onExcelGetLabel(Event $event, $module, $col, $language)
+    public function onExcelGetLabel(EventInterface $event, $module, $col, $language)
     {
        return __($this->getFieldLabel($module, $col, $language));
     }
@@ -384,14 +394,10 @@ class AppTable extends Table
     }
 
     // Event: 'ControllerAction.Model.onInitializeButtons'
-    public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
+    public function onInitializeButtons(EventInterface $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra)
     {
 
-        // echo '<pre>';
-        // print_r($this->request->params);
-        // echo $this->request->url;
-        // die;
-        // needs clean up
+//         needs clean up
         $controller = $event->getSubject()->_registry->getController();
         $access = $controller->AccessControl;
 
@@ -992,8 +998,7 @@ class AppTable extends Table
             $controller->set('reorder', true);
         }
 
-        $event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
-        $this->getEventManager()->dispatch($event);
+        $this->dispatchEvent('Model.custom.onUpdateToolbarButtons', [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
 
         if ($toolbarButtons->offsetExists('back')) {
             $controller->set('backButton', $toolbarButtons['back']);
@@ -1001,12 +1006,18 @@ class AppTable extends Table
         $controller->set(compact('toolbarButtons', 'indexButtons'));
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons START (table: ' . $this->getAlias() . ')');
+        //Log::debug('[TEMP-LOG] Incoming buttons: ' . print_r($buttons, true));
+
         $id = $this->getEncodedKeys($entity);
+        //Log::debug('[TEMP-LOG] Encoded key: ' . $id);
 
         if (isset($buttons['view'])) {
+            //Log::debug('[TEMP-LOG] View button URL before append: ' . print_r($buttons['view']['url'], true));
             $buttons['view']['url'][] = $id;
+            //Log::debug('[TEMP-LOG] View button URL after append: ' . print_r($buttons['view']['url'], true));
         }
         if (isset($buttons['edit'])) {
             $buttons['edit']['url'][] = $id;
@@ -1022,6 +1033,10 @@ class AppTable extends Table
                 $buttons['remove']['url'][] = $id;
             }
         }
+
+        //Log::debug('[TEMP-LOG] AppTable final buttons: ' . print_r($buttons, true));
+        //Log::debug('[TEMP-LOG] AppTable::onUpdateActionButtons END');
+
         return $buttons;
     }
 

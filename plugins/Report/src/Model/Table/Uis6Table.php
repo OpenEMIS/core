@@ -114,7 +114,7 @@ class Uis6Table extends AppTable
                 //'repeater_Student' => 'summary_grade_gender_ages.total_students', //should change
             ])
             
-            ->InnerJoin([$SummaryGradeStatusGenders->alias() => $SummaryGradeStatusGenders->table() ], [
+            ->InnerJoin([$SummaryGradeStatusGenders->getAlias() => $SummaryGradeStatusGenders->getTable() ], [
                 $this->aliasField('academic_period_id'). ' = ' . $SummaryGradeStatusGenders->aliasField('academic_period_id'),
                 $this->aliasField('education_system_id'). ' = ' . $SummaryGradeStatusGenders->aliasField('education_system_id'),
                 $this->aliasField('education_level_isced_id'). ' = ' . $SummaryGradeStatusGenders->aliasField('education_level_isced_id'),
@@ -132,9 +132,8 @@ class Uis6Table extends AppTable
                     $SummaryGradeStatusGenders1 = TableRegistry::getTableLocator()->get('summary_grade_status_genders');
                     $SummaryGradeGenderAges = TableRegistry::getTableLocator()->get('summary_grade_gender_ages');
                
-                    $sumGradeData = $SummaryGradeStatusGenders1->find('all',['conditions'=>[
-                        'student_status_id' =>8,
-                        'academic_period_id' => $row->academic_period_id2,
+                    $sumGradeConditions = [
+                        'student_status_id' => 8,
                         'education_system_id' => $row->education_system_id,
                         'education_level_isced_id' => $row->education_level_isced_id,
                         'education_level_id' => $row->education_level_id,
@@ -142,7 +141,16 @@ class Uis6Table extends AppTable
                         'education_programme_id' => $row->education_programme_id,
                         'education_grade_id' => $row->education_grade_id,
                         'student_gender_id' => $row->student_gender_id,
-                        ]
+                    ];
+                    // Row has academic_period_id3 from select; avoid passing null (CakePHP requires IS/IS NOT for null)
+                    $academicPeriodId = $row->academic_period_id3 ?? null;
+                    if ($academicPeriodId !== null) {
+                        $sumGradeConditions['academic_period_id'] = $academicPeriodId;
+                    } else {
+                        $sumGradeConditions['academic_period_id IS'] = null;
+                    }
+                    $sumGradeData = $SummaryGradeStatusGenders1->find('all', [
+                        'conditions' => $sumGradeConditions
                     ])->count();
                     $row['repeater_Student1'] = $sumGradeData;
                     return $row;

@@ -363,7 +363,16 @@ class ControllerActionHelper extends Helper
         }
 
         $encodedKeys = $this->paramsEncode($primaryKeyValue);
-        $row[0] = [$row[0], ['data-row-id' => $encodedKeys]];
+        // POCOR-9509: Merge data-row-id into first cell options if it already has options (e.g., tableColumnClass)
+        $firstCell = $row[0];
+        if (is_array($firstCell) && array_key_exists(1, $firstCell) && is_array($firstCell[1])) {
+            $content = $firstCell[0];
+            $options = $firstCell[1];
+            $options['data-row-id'] = $encodedKeys;
+            $row[0] = [$content, $options];
+        } else {
+            $row[0] = [$firstCell, ['data-row-id' => $encodedKeys]];
+        }
 
         return $row;
     }
@@ -423,6 +432,7 @@ class ControllerActionHelper extends Helper
                     'value' => !empty($limit) ?  $limit : 0,//POCOR-8677
                     'options' => $pageOptions,
                     'onchange' => "$(this).closest('form').submit()",
+                    'style' => 'margin-bottom: -4px;', //POCOR-9631
                     'templates' => $this->getFormTemplate()
                 ]);
             }
@@ -534,10 +544,13 @@ class ControllerActionHelper extends Helper
         }
     }
 
-    public function getViewElements(Entity $data, $fields = [], $exclude = [])
+    public function getViewElements(?Entity $data, $fields = [], $exclude = [])
     {
         //  1. implemented override param for nav_tabs to omit label
         //  2. for case 'element', implemented $elementData for $this->_View->element($element, $elementData)
+        if ($data === null) {
+            return '';
+        }
         $config = $this->_View->get('ControllerAction');
         $_fields = $config['fields'];
 

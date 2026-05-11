@@ -8,7 +8,6 @@ use App\Services\TimetableOverviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Exports\ScheduleTimeTableExport;
-use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -153,7 +152,13 @@ class TimetableOverviewController extends Controller
             $params = $request->all();
             $str = time();
             $fileName = 'StudentTimeTable_'.$str.'.xlsx';
-            return Excel::download(new ScheduleTimeTableExport($params), $fileName);
+            $spreadsheet = (new ScheduleTimeTableExport($params))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'xlsx_');
+            $writer->save($tempFile);
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
             
         } catch (\Exception $e) {
             Log::error(

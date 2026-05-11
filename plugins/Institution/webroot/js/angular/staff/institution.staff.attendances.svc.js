@@ -12,6 +12,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         StaffAttendances: 'Institution.StaffAttendances',
         InstitutionShiftsTable:'Institution.InstitutionShifts',
         InstitutionShifts: 'Institution.InstitutionShifts',
+       ConfigItems: 'Configuration.ConfigItems',
     };
 
     var translateText = {
@@ -40,7 +41,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         getAllStaffAttendances: getAllStaffAttendances,
         getColumnDefs: getColumnDefs,
         getAllDayColumnDefs: getAllDayColumnDefs,
-        getShiftListOptions: getShiftListOptions
+        getShiftListOptions: getShiftListOptions,
+        getConfigItemValue: getConfigItemValue,
     };
     return service;
 
@@ -513,6 +515,19 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         var scope = params.context.scope;
         var leave = data.attendance[data.date].leave;
         var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
+        var isTimeOutField = (timeKey === 'time_out');
+
+        function hasTimeInSelected() {
+            return angular.isDefined(params.value.time_in) && params.value.time_in !== null && params.value.time_in !== '';
+        }
+
+        function guardTimeOutWithoutTimeIn() {
+            if (isTimeOutField && !hasTimeInSelected()) {
+                AlertSvc.warning(scope, 'Please select Time In first.');
+                return true;
+            }
+            return false;
+        }
 
         // div element
         var timeInputDivElement = document.createElement('div');
@@ -548,6 +563,40 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 var time24Hour = null;
                 if (timeInputElement.value.length > 0) {
                     time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
+                }
+                // Validate ordering: time_out must be strictly greater than time_in (and vice versa)
+                try {
+                    var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
+                    if (time24Hour !== null && otherTime) {
+                        // Compare as strings HH:MM:SS works lexicographically
+                        if (timeKey === 'time_out' && time24Hour <= otherTime) {
+                            AlertSvc.error(scope, 'Time Out must be after Time In.');
+                            // revert UI value to previous saved value
+                            try {
+                                timeInputElement.value = convert12Timeformat(params.value[timeKey] || '');
+                            } catch (err) {
+                                timeInputElement.value = '';
+                            }
+                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                            UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                            timeInputElement.setAttribute('readonly', 'readonly');
+                            return;
+                        }
+                        if (timeKey === 'time_in' && time24Hour >= otherTime) {
+                            AlertSvc.error(scope, 'Time In must be before Time Out.');
+                            try {
+                                timeInputElement.value = convert12Timeformat(params.value[timeKey] || '');
+                            } catch (err) {
+                                timeInputElement.value = '';
+                            }
+                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
+                            UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                            timeInputElement.setAttribute('readonly', 'readonly');
+                            return;
+                        }
+                    }
+                } catch (cmpErr) {
+                    // If validation comparison fails, just proceed to server-side validation
                 }
                 saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
                     .then(
@@ -618,6 +667,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         });
 
         timeInputElement.addEventListener('click', function (event) {
+            if (guardTimeOutWithoutTimeIn()) {
+                return;
+            }
             timeInputElement.removeAttribute('readonly', 'readonly');
             //POCOR-7770 to hide - Close all other time pickers before showing the selected one
             // First, hide all visible timepicker widgets in the DOM
@@ -663,6 +715,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         // Add click handler to timeSpanElement (icon) to close other timepickers
         timeSpanElement.addEventListener('click', function (event) {
             if (!isDisabled) {
+                if (guardTimeOutWithoutTimeIn()) {
+                    return;
+                }
                 timeInputElement.removeAttribute('readonly', 'readonly');
                 //POCOR-7770 to hide - Close all other time pickers before showing the selected one
                 // First, hide all visible timepicker widgets in the DOM
@@ -763,64 +818,81 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
     function saveStaffAttendance(params, dataKey, dataValue, academicPeriodId) {
         var dateString = params.data.date;
+        var $scope = params.context.$scope; // Cache the scope
 
-        // ---- Prevent saving attendance for future dates ----
-        var today = new Date();
-        today.setHours(8, 0, 0, 0); // normalize
+        // 1. Fetch the timezone and validate asynchronously
+        // We return the promise chain so the grid/caller knows when it's done
+        return getConfigItemValue('time_zone').then(function(timeZone) {
 
-        try {
+            var now = new Date();
+            var formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: timeZone,
+                year: 'numeric', month: '2-digit', day: '2-digit'
+            });
+
+            var parts = formatter.formatToParts(now);
+            var d = parts.reduce((acc, part) => {
+                if (part.type !== 'literal') acc[part.type] = part.value;
+                return acc;
+            }, {});
+
+            var institutionToday = new Date(d.year, d.month - 1, d.day);
             var selectedDate = new Date(dateString);
-            if (selectedDate > today) {
-                AlertSvc.warning(params.context.$scope, 'Future dates cannot be saved');
+            selectedDate.setHours(0, 0, 0, 0);
 
-                return false; // prevent API call or further execution
+            // Debugging logs - perfect for checking Tonga vs Bahamas
+            console.log("Saving Attendance - TZ:", timeZone);
+            console.log("Institution Today:", institutionToday.toDateString());
+            console.log("Selected Date:", selectedDate.toDateString());
+
+            // ---- Prevent saving attendance for future dates ----
+            if (selectedDate > institutionToday) {
+                if ($scope) {
+                    AlertSvc.warning($scope, 'Future dates cannot be saved');
+                } else {
+                    console.error('AlertSvc failed: scope is undefined in params.context');
+                }
+                return false;
             }
-        } catch (error) {
-            console.error('Failed to show alert for future date:', error);
-            // optionally: AlertSvc.error(params.context.$scope, 'Warning display failed');
-        }
 
-        // ----------------------------------------------------
-
-        var staffAttendanceData = {};
-        try {
+            // --- Rest of your data preparation logic ---
+            var staffAttendanceData = {};
             var timeIn  = params.data.attendance[dateString].time_in;
             var timeOut = params.data.attendance[dateString].time_out;
 
-            // If user entered reversed time — fix automatically
-            if (timeIn && timeOut && timeIn > timeOut) {
-                console.warn('time_in is after time_out — swapping automatically');
-                var tmp   = timeIn;
-                timeIn    = timeOut;
-                timeOut   = tmp;
-
-                // Optional UI alert
-                // AlertSvc.info(params.context.$scope, 'Time in/out order was corrected automatically');
-            }
+             // Enforce ordering: Time Out must be strictly greater than Time In
+             if (timeIn && timeOut && timeOut <= timeIn) {
+                 if ($scope) {
+                     AlertSvc.error($scope, 'Time Out must be after Time In.');
+                 }
+                 // Do not proceed to save; reject to stop the chain
+                 return $q.reject('TIME_ORDER_INVALID');
+             }
 
             staffAttendanceData = {
                 staff_id: params.data.staff_id,
                 institution_id: params.data.institution_id,
                 academic_period_id: academicPeriodId,
                 date: dateString,
-                shift_id: params.context.date, // POCOR-6971
+                shift_id: params.context.date,
                 time_in: timeIn,
                 time_out: timeOut,
                 comment: params.data.attendance[dateString].comment
             };
 
-        } catch (error) {
-            console.error('Error building staffAttendanceData:', error);
-            AlertSvc.error(params.context.$scope, 'Unable to prepare attendance data');
-            return false; // stop execution if something breaks
-        }
+            staffAttendanceData[dataKey] = dataValue;
 
-        staffAttendanceData[dataKey] = dataValue;
-        if(!params.data.attendance[dateString].isNew) {
-            return InstitutionStaffAttendances.edit(staffAttendanceData);
-        } else {
-            return InstitutionStaffAttendances.save(staffAttendanceData);
-        }
+            if(!params.data.attendance[dateString].isNew) {
+                return InstitutionStaffAttendances.edit(staffAttendanceData);
+            } else {
+                return InstitutionStaffAttendances.save(staffAttendanceData);
+            }
+
+        }).catch(function(err) {
+            console.error('Error in saveStaffAttendance:', err);
+            if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            return false;
+        });
     }
 
     function setError(data, dataKey, error, input) {
@@ -851,5 +923,26 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
             elm.className = elm.className.replace(/ form-error/gi, '');
         });
         errorElms = {};
+    }
+
+    function getConfigItemValue(code) {
+        var success = function(response, deferred) {
+            var results = response.data.data;
+            if (angular.isObject(results) && results.length > 0) {
+                var configItemValue = (results[0].value.length > 0) ? results[0].value : results[0].default_value;
+                deferred.resolve(configItemValue);
+            } else {
+                deferred.reject('There is no ' + code + ' configured');
+            }
+        };
+
+        return ConfigItems
+            .where({
+                code: code
+            })
+            .ajax({
+                success: success,
+                defer: true
+            });
     }
 };

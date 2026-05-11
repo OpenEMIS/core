@@ -5,7 +5,6 @@ namespace Archive\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 use ArrayObject;
-use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
@@ -61,7 +60,7 @@ class DataManagementCopyTable extends ControllerActionTable
         return $validator;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('from_academic_period', ['sort' => false]);
         $this->field('to_academic_period', ['sort' => false]);
@@ -74,7 +73,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $this->setFieldOrder(['from_academic_period', 'to_academic_period', 'features', 'created_user_id', 'created']);
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extram)
+    public function addBeforeAction(EventInterface $event, ArrayObject $extram)
     {
         $condition = [];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -84,7 +83,7 @@ class DataManagementCopyTable extends ControllerActionTable
         $this->setFieldOrder(['from_academic_period', 'to_academic_period', 'features']);
     }
 
-    public function onUpdateFieldFromAcademicPeriod(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldFromAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $condition = [];
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['conditions' => $condition]);
@@ -96,7 +95,7 @@ class DataManagementCopyTable extends ControllerActionTable
     /*───────────────────────────────────────────────────────────────────────────
      | POCOR-9354: beforeSave → delegate to feature-specific validation (unchanged logic)
      ───────────────────────────────────────────────────────────────────────────*/
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
         ini_set('memory_limit', '2G'); //POCOR-6893
 
@@ -605,7 +604,7 @@ class DataManagementCopyTable extends ControllerActionTable
         return $options;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'from_academic_period':
@@ -623,7 +622,7 @@ class DataManagementCopyTable extends ControllerActionTable
         }
     }
 
-    public function onGetToAcademicPeriod(Event $event, Entity $entity)
+    public function onGetToAcademicPeriod(EventInterface $event, Entity $entity)
     {
         $AcademicPeriodsData = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods'); //TableRegistry::get('Academic.AcademicPeriods');
         $result = $AcademicPeriodsData
@@ -635,7 +634,7 @@ class DataManagementCopyTable extends ControllerActionTable
         return $entity->to_academic_period = $result->name;
     }
 
-    public function onGetGeneratedBy(Event $event, Entity $entity)
+    public function onGetGeneratedBy(EventInterface $event, Entity $entity)
     {
         $Users = TableRegistry::get('User.Users');
         $result = $Users

@@ -203,10 +203,19 @@ class StudentUserTable extends ControllerActionTable
                     return (!empty($context['data']['class']) && $context['newRecord']);
                 }
             ])
-            ->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
-                'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
-                'on' => 'create'
-            ])
+            
+            //POCOR-9607
+            // ->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+            //     'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+            //     'on' => 'create'
+            // ])
+             ->add('date_of_birth', [
+                'ruleCheckAdmissionAge' => [
+                    'rule' => 'checkAdmissionAge',
+                ]
+             ])
+             //POCOR-9607
+
             // ->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
             //     'rule' => ['compareStudentGenderWithInstitution']
             // ])
@@ -231,8 +240,20 @@ class StudentUserTable extends ControllerActionTable
             ->add('identity_number', 'ruleCheckUniqueIdentityNumber', [
                 'rule' => ['checkUniqueIdentityNumber'],
                 'on' => 'create'
-            ])//POCOR-5924 ends
-        ;
+            ])
+            ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+            ->allowEmptyString('mobile_number')
+            ->add('mobile_number', 'numeric', [
+                'rule' => 'numeric',
+                'message' => 'Only numbers are allowed'
+            ]); //POCOR-9680
         return $validator;
     }
 
@@ -648,10 +669,10 @@ class StudentUserTable extends ControllerActionTable
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
 
-        $this->getEventManager()->dispatch(new Event('Model.Students.afterSaveCustom', $this, [
+        $this->dispatchEvent('Model.Students.afterSaveCustom', [
             'entity' => $entity,
             'options' => $options
-        ]));
+        ]);
 
     }
 

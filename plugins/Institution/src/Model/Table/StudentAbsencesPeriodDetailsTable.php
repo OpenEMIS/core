@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: use AlertLogsTable trigger helper instead of DashboardController trigger
 use App\Model\Table\AppTable;
 use ArrayObject;
 use Cake\Event\EventInterface;
@@ -21,6 +22,11 @@ use InvalidArgumentException;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
+    //POCOR-9509: per-request cache — resolved once, reused for all students saved in the same class batch
+    private ?array $absenceAlertValidTypeIds = null;
+    private mixed  $absenceAlert             = null; // false = checked but not found in DB
+    private ?array $absenceAlertActiveRules  = null;
+
     public function initialize(array $config): void
     {
         $this->setTable('institution_student_absence_details');
@@ -75,6 +81,11 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function afterSaveCommit(EventInterface $event, Entity $entity, ArrayObject $options): Entity
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[SAVE PHP] afterSaveCommit() - Transaction committed');
+        // Log::debug('Student ID: ' . $entity->student_id . ', Absence Type: ' . $entity->absence_type_id);
+        // Log::debug('========================================');
 
         //For Import StudentAbsenceExcel only. Insert into student_attendace_mark_records once import sucessfully as attendance is counted as marked
         if ($entity->has('record_source') && $entity->record_source == 'import_student_attendances') {
@@ -120,12 +131,30 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
     */
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[SAVE PHP] beforeSave() called');
+        // Log::debug('Is new record: ' . ($entity->isNew() ? 'YES' : 'NO'));
+        // Log::debug('Entity data: ' . json_encode([
+        //     'student_id' => $entity->student_id,
+        //     'absence_type_id' => $entity->absence_type_id,
+        //     'student_absence_reason_id' => $entity->student_absence_reason_id ?? null,
+        //     'comment' => $entity->comment ?? null,
+        //     'date' => $entity->date ?? null,
+        //     'period' => $entity->period ?? null
+        // ]));
+
         if ($entity->absence_type_id == 0) {
+            // Log::debug('[SAVE PHP] absence_type_id == 0 → DELETING record (PRESENT)');
             $this->delete($entity);
             $event->stopPropagation();
+            // Log::debug('[SAVE PHP] Record deleted, event stopped');
+            // Log::debug('========================================');
             return $entity;
         }
 
+        // Log::debug('[SAVE PHP] absence_type_id != 0 → Continuing with save');
+        // Log::debug('========================================');
 
         // if ($entity->isNew() || $entity->dirty('absence_type_id')) {
         //     $this->updateStudentAbsencesRecord($entity);
@@ -134,6 +163,10 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
     public function findFirst(Query $query, array $options)
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[FIND PHP] findFirst() called with options: ' . json_encode($options));
+
         $compositeKeyFields = [
             'student_id',
             'institution_id',
@@ -150,15 +183,31 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             if (isset($options[$field])) {
                 $conditions[$field] = $options[$field];
             } else {
+                Log::error('[FIND PHP] Missing composite key field: ' . $field);
                 throw new InvalidArgumentException("Missing composite key field: {$field}");
             }
         }
+
+        // Log::debug('[FIND PHP] Built WHERE conditions: ' . json_encode($conditions));
+        // Log::debug('========================================');
 
         return $query->where($conditions)->limit(1);
     }
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $requestData): Entity
     {
+        // POCOR-9572: Debug logging (commented out for production)
+        // Log::debug('========================================');
+        // Log::debug('[SAVE PHP] afterSave() - Save completed successfully');
+        // Log::debug('Saved entity data: ' . json_encode([
+        //     'student_id' => $entity->student_id,
+        //     'absence_type_id' => $entity->absence_type_id,
+        //     'student_absence_reason_id' => $entity->student_absence_reason_id ?? null,
+        //     'comment' => $entity->comment ?? null,
+        //     'date' => $entity->date->format('Y-m-d') ?? null,
+        //     'period' => $entity->period ?? null
+        // ]));
+        // Log::debug('========================================');
 
         $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
         return $entity;
@@ -179,54 +228,62 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
      */
     private function sendStudentAbsenceAlert(Entity $entity): void
     {
-//        Log::debug(print_r(['sendAlert' => $entity], true));
+        // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() ENTRY - entity_id=' . $entity->id); //[TEMP-LOG]
+        // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() entity_data: student_id=' . $entity->student_id . ', absence_type_id=' . $entity->absence_type_id); //[TEMP-LOG]
 
-        $AbsenceTypesTable = self::getDynamicTableInstance('absence_types'); // POCOR-9162
+        //POCOR-9509: load absence type IDs once per request, reuse for all students in the batch
+        if ($this->absenceAlertValidTypeIds === null) {
+            $AbsenceTypesTable = self::getDynamicTableInstance('absence_types');
+            $unexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
+            $excused   = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
+            $this->absenceAlertValidTypeIds = ($unexcused && $excused)
+                ? [$unexcused->id, $excused->id]
+                : [];
+        }
 
-        $unexcused = $AbsenceTypesTable->find()->where(['code' => 'UNEXCUSED'])->first();
-        $excused = $AbsenceTypesTable->find()->where(['code' => 'EXCUSED'])->first();
-
-        if (!$unexcused || !$excused) {
-            Log::debug('Absence type IDs not found');
+        if (empty($this->absenceAlertValidTypeIds)
+            || !in_array($entity->absence_type_id, $this->absenceAlertValidTypeIds, true)) {
             return;
         }
 
-        $validAbsenceTypeIds = [$unexcused->id, $excused->id];
+        //POCOR-9509: load alert config once per request
+        if ($this->absenceAlert === null) {
+            $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
+            $found = $alertsTable->find()
+                ->where([
+                    $alertsTable->aliasField('process_name') => 'AlertStudentAbsence',
+                    $alertsTable->aliasField('frequency') => 'once'
+                ])
+                ->first();
+            $this->absenceAlert = $found ?? false; // false = not found, skip next time too
+        }
 
-        if (!in_array($entity->absence_type_id, $validAbsenceTypeIds, true)) {
-            Log::debug('No alert sent because absence type is not valid for alert');
+        if (!$this->absenceAlert) {
             return;
         }
+
+        //POCOR-9509: load active rules once per request
+        if ($this->absenceAlertActiveRules === null) {
+            $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
+            $this->absenceAlertActiveRules = $alertRulesTable->find()
+                ->where([
+                    $alertRulesTable->aliasField('feature') => $this->absenceAlert->name,
+                    $alertRulesTable->aliasField('enabled') => 1
+                ])
+                ->toArray();
+        }
+
+        if (empty($this->absenceAlertActiveRules)) {
+            return;
+        }
+
+        $activeRules = $this->absenceAlertActiveRules; //POCOR-9509: use cached rules
+        $alert       = $this->absenceAlert;            //POCOR-9509: use cached alert
 
         // Load necessary tables
-        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
-        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
         $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
 
-        // Find the relevant alert
-        $alert = $alertsTable->find()
-            ->where([
-                $alertsTable->aliasField('process_name') => 'AlertStudentAbsence',
-                $alertsTable->aliasField('frequency') => 'once'
-            ])
-            ->first();
-
-        if (!$alert) {
-            Log::debug('No Alerts for AlertStudentAbsence');
-            return;
-        }
-
-        $activeRules = $alertRulesTable->find()
-            ->where([
-                $alertRulesTable->aliasField('feature') => $alert->name,
-                $alertRulesTable->aliasField('enabled') => 1
-            ])
-            ->toArray();
-
-        if (empty($activeRules)) {
-            Log::debug('No active alert rules for AlertStudentAbsence');
-            return;
-        }
+        // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() Found ' . count($activeRules) . ' active rules'); //[TEMP-LOG]
 
         $userId = isset($entity->modified_user_id) && (int) $entity->modified_user_id !== 0
             ? (int) $entity->modified_user_id
@@ -234,8 +291,10 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
 
         if ($userId === 0) {
             $userId = 1; // fallback default user ID
-            Log::debug('Fallback user ID used. Entity dump:');
+            // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() Using fallback userId=1'); //[TEMP-LOG]
         }
+
+        // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() Resolved userId=' . $userId); //[TEMP-LOG]
 
         $extraOptions = [
             'student_id' => (int) $entity->student_id,
@@ -247,21 +306,25 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
             'subject_id' => (int) $entity->subject_id,
         ];
 
-        foreach ($activeRules as $rule) {
-//            Log::debug(print_r([
-//                'Absence Alert Triggering' => $extraOptions,
-//                'user_id' => $userId,
-//                'alert' => $alert->toArray()
-//            ], true));
+        // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() extraOptions: ' . json_encode($extraOptions)); //[TEMP-LOG]
 
-            DashboardController::triggerSystemProcess(
+        //POCOR-9509: start - move absence alert triggering onto AlertLogsTable helper path
+        foreach ($activeRules as $rule) {
+            // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() Calling triggerAlertSystemProcess for rule_id=' . ($rule['id'] ?? $rule->id)); //[TEMP-LOG]
+
+            AlertLogsTable::triggerAlertSystemProcess(
                 $systemProcessesTable,
                 is_array($rule) ? $rule : $rule->toArray(),
                 $alert->process_name,
                 $userId,
                 $extraOptions
             );
+
+            // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() triggerAlertSystemProcess returned'); //[TEMP-LOG]
         }
+        //POCOR-9509: end - move absence alert triggering onto AlertLogsTable helper path
+
+        // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() EXIT'); //[TEMP-LOG]
     }
 
 
