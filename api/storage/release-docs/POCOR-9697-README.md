@@ -44,10 +44,15 @@ Eloquent silently drops it from any `$request->all()` payload. Also added to
 * `UserRepository::addUsers` update branch — `unset(super_admin, id,
   created_user_id, created)` before the mass `update($data)`. Password also
   re-hashed if a new plaintext value was sent.
-* `UsersAddRequest::rules()` — added `'super_admin' => 'prohibited'` with a
-  custom 422 message: *"The super_admin field may not be set through this
-  endpoint."* Returns 422 visibly so the exploit attempt lands in error
-  logs instead of being silently dropped.
+* `UsersAddRequest::prepareForValidation()` — silently strips `super_admin`
+  from the request body and writes a `Log::warning('POCOR-9697: super_admin
+  field detected …')` line to `storage/logs/laravel-YYYY-MM-DD.log` so ops
+  has telemetry on every attempt. The response is the ordinary `200 success`
+  shape with no mention of the field. Why not a `422 prohibited` rule? A
+  named-field 422 would fingerprint the API — an attacker probing
+  escalation vectors gets confirmation the field exists and is meaningful,
+  making the next exploit easier. Silent strip + server-side log gives ops
+  full visibility without giving the attacker any signal.
 
 ### Issue 3 — Permission gate on v4 user-write endpoints
 
@@ -99,7 +104,7 @@ guarantee is provided by `UserRepository::hashPasswordIfPlaintext()`.
 | `api/app/Models/Api5/SecurityUsers.php` | Same as above + stripped `super_admin` and stale `password` from the three swagger blocks. |
 | `api/app/Repositories/UserRepository.php` | `addUsers` update path unsets `super_admin`/`id`/`created_*` and hashes any new password; `setUserData` no longer copies `super_admin`; new `hashPasswordIfPlaintext()` helper. |
 | `api/app/Repositories/DirectoryRepository.php` | `getUserByBasicInfo` no longer puts `super_admin` into each result row. |
-| `api/app/Http/Requests/UsersAddRequest.php` | `'super_admin' => 'prohibited'` rule + custom 422 message. |
+| `api/app/Http/Requests/UsersAddRequest.php` | `prepareForValidation()` silently strips `super_admin` and logs the attempt server-side. No 422, no field-name fingerprint in the response. |
 | `api/app/Http/Controllers/UserController.php` | `PermissionService` DI; gate on `addUsers`/`saveStudentData`/`saveStaffData`/`saveGuardianData`; stale `password` swagger response examples stripped. |
 | `api/app/Http/Controllers/AttendanceController.php` | Stale `super_admin` and `password` swagger response entries stripped. |
 | `api/app/Http/Controllers/DirectoryController.php` | Stale `super_admin` and `password` swagger response entries stripped. |

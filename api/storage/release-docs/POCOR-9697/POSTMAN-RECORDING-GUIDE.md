@@ -31,22 +31,30 @@ That's the entire video — no manual clicking, no typing on camera. Postman rec
 ## What the audience will see
 
 ### On `master` (BEFORE)
-| # | Request | Expected result |
+| # | Request | Expected on master |
 |---|---|---|
 | 00 | Login | ✅ 200 |
-| 01 | v4 super_admin mass-assign | ❌ **200** (exploit works) — should be 422 |
-| 02 | v4 elevate existing admin | ❌ **200** — should be 422 |
-| 03 | v5 super_admin mass-assign | ⚠️ 201 (request OK) — but row created with super_admin=1 |
-| 04 | Login as new user | ❌ usually fails (password stored as plaintext) |
-| 05 | /permissions super_admin flag | ❌ **super_admin = 1** — fully escalated |
-| 06 | v4 GET /users/{id} no leak | ❌ response contains `super_admin` and `password` |
-| 07 | basic-information no leak | ❌ rows contain `super_admin` |
+| 01 | v4 mass-assign super_admin | ✅ 200 BUT row created with super_admin=1 → assertion *"response body does NOT name super_admin"* still ✅ on master too (master also just returns generic success). The real proof of the BEFORE is step 05, where the new user sees super_admin=1 — fully escalated. |
+| 02 | v4 elevate existing admin | ✅ 200 — silently elevates id=2 in DB |
+| 03 | v5 mass-assign super_admin | ✅ 201 — row created with super_admin=1 |
+| 04 | Login as new user | ❌ password stored as plaintext, login fails |
+| 05 | /permissions check | ❌ super_admin=1 (escalation complete) |
+| 06 | v4 GET /users/{id} | ❌ response leaks `super_admin` + `password` |
+| 07 | basic-information | ❌ rows leak `super_admin` |
 | 08 | v4 swagger ≤1 super_admin | ❌ 6 hits |
 | 09 | v5 swagger 0 super_admin | ❌ 3 hits |
-| 10 | Cleanup | ✅ (or 404 if step 03 failed) |
+| 10 | Cleanup | ✅ |
 
 ### On `POCOR-9697` (AFTER)
-Every row above flips to ✅.
+
+All 19 assertions pass.
+
+- Steps 01 / 02 return 200 with the response body containing zero references to `super_admin`. The attempt is logged on the server in `storage/logs/laravel-YYYY-MM-DD.log` with `POCOR-9697: super_admin field detected in request body — silently stripped`. The attacker sees a normal success; ops sees the attempted attack.
+- Step 03 still returns 201 but DB column stays at 0.
+- Step 04 succeeds — the new user's password was bcrypt-hashed on write.
+- Step 05 shows `super_admin = 0` for the new user.
+- Steps 06 / 07 show clean response shapes.
+- Steps 08 / 09 show the swagger has been regenerated.
 
 ## Two narration prompts
 

@@ -46,7 +46,7 @@
     },
 
     {
-      "name": "01 — v4 ATTACK: mass-assign super_admin (must be 422)",
+      "name": "01 — v4 ATTACK: mass-assign super_admin (silent strip, 200 + DB super_admin=0)",
       "request": {
         "method": "POST",
         "header": [
@@ -55,10 +55,10 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"first_name\":    \"Exploit\",\n  \"last_name\":     \"Demo\",\n  \"gender_id\":     1,\n  \"date_of_birth\": \"2000-01-01\",\n  \"username\":      \"{{exploit_username}}\",\n  \"password\":      \"{{exploit_user_password}}\",\n  \"super_admin\":   1\n}"
+          "raw": "{\n  \"first_name\":    \"Exploit\",\n  \"last_name\":     \"Demo\",\n  \"gender_id\":     1,\n  \"date_of_birth\": \"2000-01-01\",\n  \"username\":      \"{{exploit_username}}\",\n  \"openemis_no\":   \"{{exploit_username}}\",\n  \"password\":      \"{{exploit_user_password}}\",\n  \"super_admin\":   1\n}"
         },
         "url": "{{base_url}}/api/v4/users",
-        "description": "The exploit. Sends super_admin:1 to POST /api/v4/users.\n\n**On master (BEFORE fix):** returns 200, row created with super_admin=1.\n**On POCOR-9697 (AFTER fix):** returns 422 with the custom message — \"The super_admin field may not be set through this endpoint.\""
+        "description": "The exploit. Sends super_admin:1 to POST /api/v4/users.\n\n**On master (BEFORE fix):** returns 200, row created with super_admin=1 — the attacker wins.\n**On POCOR-9697 (AFTER fix):** also returns 200 — but the field was silently stripped by prepareForValidation(). The attempt is logged server-side to storage/logs/laravel.log. The response body MUST NOT contain the string 'super_admin' (would fingerprint the field for attackers)."
       },
       "event": [
         {
@@ -66,11 +66,15 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('FIX: rejects super_admin with 422', () => pm.response.to.have.status(422));",
-              "pm.test('FIX: error names super_admin field explicitly', () => {",
-              "    const j = pm.response.json();",
-              "    pm.expect(JSON.stringify(j)).to.include('super_admin');",
-              "});"
+              "pm.test('Request looks like normal success (200)', () => pm.response.to.have.status(200));",
+              "pm.test('FIX: response body does NOT name super_admin (no fingerprint)', () => {",
+              "    pm.expect(pm.response.text().toLowerCase()).to.not.include('super_admin');",
+              "});",
+              "// Capture the created user id so the next test can verify DB state without naming the field.",
+              "const j = pm.response.json();",
+              "const id = j && j.data && (j.data.id || (j.data[0] && j.data[0].id));",
+              "if (id) { pm.collectionVariables.set('v4_exploit_user_id', String(id)); }",
+              "else { console.log('v4 create did not return id — DB verification will be skipped'); }"
             ]
           }
         }
@@ -78,7 +82,7 @@
     },
 
     {
-      "name": "02 — v4 ATTACK: elevate existing admin via id (must be 422)",
+      "name": "02 — v4 ATTACK: elevate existing admin via id (silent strip, no fingerprint)",
       "request": {
         "method": "POST",
         "header": [
@@ -90,7 +94,7 @@
           "raw": "{\n  \"id\": 2,\n  \"super_admin\": 1\n}"
         },
         "url": "{{base_url}}/api/v4/users",
-        "description": "Variant of the exploit that targets an existing user (here id=2) instead of creating a new account. Same fix prevents both vectors — the `prohibited` validation rule fires before the controller, regardless of whether the request is a create or an update."
+        "description": "Variant of the exploit that targets an existing user (here id=2). Same silent-strip applies on the update path. Response must NOT mention super_admin. Admin row's super_admin stays at 1 (it was already 1 before the request and the update path drops the field, so the column is untouched)."
       },
       "event": [
         {
@@ -98,7 +102,10 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "pm.test('FIX: rejects super_admin on update too (422)', () => pm.response.to.have.status(422));"
+              "pm.test('Request looks like normal success (200)', () => pm.response.to.have.status(200));",
+              "pm.test('FIX: response body does NOT name super_admin', () => {",
+              "    pm.expect(pm.response.text().toLowerCase()).to.not.include('super_admin');",
+              "});"
             ]
           }
         }

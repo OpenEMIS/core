@@ -14,9 +14,12 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  *
  * Before this ticket, any authenticated API caller could become super_admin
  * (or promote anyone else) by sending `super_admin: 1` to the v4 or v5 user
- * write endpoints. This file pins down the three layers of the fix:
+ * write endpoints. This file pins down the layers of the fix:
  *
- *   1. v4 UsersAddRequest rejects super_admin outright (422).
+ *   1. v4 UsersAddRequest silently strips super_admin from the request and
+ *      logs the attempt server-side. The response gives the attacker no
+ *      signal that the field is even recognised (no 422, no field name in
+ *      the body) — defence in depth without fingerprinting the API.
  *   2. v4 UserRepository never copies super_admin into the DB write.
  *   3. v5 SecurityUsers models drop super_admin from $fillable, so it cannot
  *      slip through mass-assignment on POST/PUT against /api/v5/security-users.
@@ -44,12 +47,16 @@ class SuperAdminEscalationProtectionTest extends TestCase
     }
 
     /**
-     * Layer 1: prohibited rule on UsersAddRequest. Sending super_admin
-     * in the body must fail validation with 422 — no DB row written.
+     * Layer 1: silent strip on UsersAddRequest. Sending super_admin in the
+     * body must NOT trigger a 422 that names the field — that would
+     * fingerprint the API for any attacker probing escalation vectors.
+     * The field is removed by prepareForValidation() and the row, if
+     * created, lands with super_admin = 0. The response body contains no
+     * mention of "super_admin".
      */
-    public function test_v4_addUsers_rejects_super_admin_with_422(): void
+    public function test_v4_addUsers_silently_strips_super_admin(): void
     {
-        $username = 'pocor9697_v4_prohibit_' . uniqid();
+        $username = 'pocor9697_v4_strip_' . uniqid();
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
@@ -59,12 +66,27 @@ class SuperAdminEscalationProtectionTest extends TestCase
             'gender_id'     => 1,
             'date_of_birth' => '2000-01-01',
             'username'      => $username,
+            'openemis_no'   => $username,
             'password'      => 'someplain',
             'super_admin'   => 1,
         ]);
 
-        $response->assertStatus(422);
-        $this->assertDatabaseMissing('security_users', ['username' => $username]);
+        // Request looks like an ordinary success to the caller.
+        $response->assertStatus(200);
+
+        // Response body must NOT name super_admin — that would defeat the
+        // whole point of stripping it silently.
+        $this->assertStringNotContainsStringIgnoringCase(
+            'super_admin',
+            $response->getContent(),
+            'v4 response must not name super_admin (fingerprinting hole).'
+        );
+
+        // DB row exists and is NOT super_admin.
+        $row = DB::table('security_users')->where('username', $username)->first();
+        $this->assertNotNull($row, 'Row should still be created.');
+        $this->assertSame(0, (int) $row->super_admin,
+            'Stripped field must never reach the DB.');
     }
 
     /**
@@ -173,6 +195,7 @@ class SuperAdminEscalationProtectionTest extends TestCase
             'gender_id'     => 1,
             'date_of_birth' => '2000-01-01',
             'username'      => $username,
+            'openemis_no'   => $username,
             'password'      => $plaintext,
         ]);
 
