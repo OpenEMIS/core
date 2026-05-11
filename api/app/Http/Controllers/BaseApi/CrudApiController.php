@@ -813,7 +813,14 @@ class CrudApiController extends Controller
         $order = $this->parseOrderParams($request, $segments);
 
         $query = $this->parseSelectParams($request, $segments, $query, $model);
-        $query = $this->applyFilters($query, $filters, $model); //POCOR-9697: pass model so applyFilters can enforce a per-model column allowlist
+        //POCOR-9697: applyFilters throws InvalidArgumentException when a filter key is
+        //not in the per-model allowlist. We translate to a generic 400 with no field
+        //name so the response never fingerprints which key was rejected.
+        try {
+            $query = $this->applyFilters($query, $filters, $model);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
         $query = $this->applyOrder($query, $order, $model);
         $query = $this->applyInstitutionFilter($query, $model);
 
@@ -1209,34 +1216,51 @@ class CrudApiController extends Controller
         return array_values(array_diff($fillable, $hidden));
     }
 
+    //POCOR-9697: fields that are NEVER queryable across any model. Probes against these
+    //are escalated to a higher log severity for SOC alerting (membership inference on
+    //super_admin, binary-search oracle on password). Add credential-bearing columns here
+    //as new models are introduced.
+    private const SENSITIVE_FILTER_FIELDS = ['super_admin', 'password', 'remember_token', 'password_hash'];
+
     /**
      * Apply filters to the query.
      *
-     * POCOR-9697: `$model` is now required so we can drop any filter key that
-     * is not in `getQueryableColumns()`. The drop is silent — no field name is
-     * echoed back to the caller — and the SQL clause is simply not applied, so
-     * the request returns the unfiltered result for that key. This closes the
-     * `_conditions=super_admin:1` membership-inference and the
-     * `_conditions=password:>X` binary-search oracle on `security_users`.
+     * POCOR-9697: `$model` is now required so we can reject any filter key that
+     * is not in `getQueryableColumns()`. Dropped keys cause a 400 with a generic
+     * message — we never echo the field name back to the caller — and the
+     * server logs the dropped keys for audit. Probes against
+     * SENSITIVE_FILTER_FIELDS are logged at warning level so SOC tooling can alert.
+     *
+     * Rationale for 400 (vs the original silent-drop):
+     *  - Silent-drop quietly swallowed legitimate typos (e.g. `studnet_id` instead
+     *    of `student_id`), returning the wrong dataset and creating a long-lived
+     *    DX trap.
+     *  - 400 + generic message preserves the anti-fingerprinting property: the
+     *    response body is identical for `super_admin`, `password`, or `hubabuba`,
+     *    so the attacker cannot A/B test field existence.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param array $filters
      * @param mixed $model Fully qualified model class name or instance (POCOR-9697).
      * @return \Illuminate\Database\Eloquent\Builder
+     * @throws \InvalidArgumentException When one or more filter keys are not in the allowlist.
+     *                                   Caller (handleGetRequest) translates this to HTTP 400.
      */
     private function applyFilters($query, array $filters, $model = null)
     {
         //POCOR-9697: build allowlist once per call; empty = no allowlist enforced (defensive default for legacy callers)
         $allowed = $model ? $this->getQueryableColumns($model) : [];
+        $dropped = [];
+        $sensitiveDropped = [];
 
         foreach ($filters as $field => $value) {
-            //POCOR-9697: silently drop filter keys that are not in the per-model queryable column allowlist.
-            //We log server-side for audit but never echo the field name back to the caller (no fingerprinting).
+            //POCOR-9697: collect non-allowlist keys; we'll log and 400 after the loop so a
+            //single request lists every offender once (anti-fingerprinting + DX clarity).
             if (!empty($allowed) && !in_array($field, $allowed, true)) {
-                Log::warning('POCOR-9697: filter dropped — field not queryable', [
-                    'model' => is_string($model) ? $model : (is_object($model) ? get_class($model) : null),
-                    'field' => $field,
-                ]);
+                $dropped[] = $field;
+                if (in_array($field, self::SENSITIVE_FILTER_FIELDS, true)) {
+                    $sensitiveDropped[] = $field;
+                }
                 continue;
             }
             if (is_array($value)) {
@@ -1271,6 +1295,32 @@ class CrudApiController extends Controller
                     $query->where($field, '=', $value);
                 }
             }
+        }
+
+        //POCOR-9697: surface dropped filter keys as a single 400 with a generic
+        //message. The field names appear in server logs only — never in the response.
+        if (!empty($dropped)) {
+            $modelName = is_string($model) ? $model : (is_object($model) ? get_class($model) : null);
+
+            if (!empty($sensitiveDropped)) {
+                //Probe against credential/escalation columns — surface for SOC alerting.
+                Log::warning('POCOR-9697: SENSITIVE filter probe — possible enumeration attempt', [
+                    'model' => $modelName,
+                    'sensitive_fields' => $sensitiveDropped,
+                    'all_dropped' => $dropped,
+                    'ip' => request()->ip(),
+                ]);
+            } else {
+                //Plain non-allowlist field (typo, deprecated column, ill-informed client).
+                Log::info('POCOR-9697: filter dropped — field not queryable', [
+                    'model' => $modelName,
+                    'fields' => $dropped,
+                ]);
+            }
+
+            throw new \InvalidArgumentException(
+                'Request contains filter field names that are not present in this resource. Check API documentation for the fields of this resource.'
+            );
         }
 
         return $query;

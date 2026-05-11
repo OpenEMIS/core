@@ -114,41 +114,67 @@ SecurityUsers-list user could:
   read-side allowlist as `getFillable()` minus `getHidden()`. This mirrors
   the published write surface so the rule is internally consistent — a
   client cannot read-filter on any column they could not already write to.
-* `applyFilters()` now takes the resolved model and silently drops any
-  filter key not in that allowlist. The drop is logged server-side via
-  `Log::warning('POCOR-9697: filter dropped — field not queryable', …)`
-  but the field name is **never** echoed in the response (same
-  anti-fingerprinting rule as the v4 silent strip).
-* The endpoint still returns 200 — the dropped clause becomes a no-op, so
-  the result is the *unfiltered* set. Comparing the total against an
-  unfiltered baseline is how the regression tests prove the clause was
-  dropped, not applied.
+* `applyFilters()` now takes the resolved model. Filter keys not present
+  in the model schema cause it to throw `\InvalidArgumentException`; the
+  caller (`handleGetRequest`) translates that to **HTTP 400** with a fixed
+  generic body: `"Request contains filter field names that are not present
+  in this resource. Check API documentation for the fields of this
+  resource."` Wording matches the Swagger/OpenAPI vocabulary — the docs
+  describe field *presence*, not an *allow list*, so the error sends
+  callers to the same mental model the docs use. The rejected field name
+  is **never** echoed (anti-fingerprinting); three cases (`super_admin`,
+  `password`, typo `hubabuba`) produce byte-identical responses, so the
+  attacker cannot A/B test which keys are sensitive vs simply nonexistent.
+* The earlier silent-drop iteration was a defensive overcorrection — it
+  also swallowed honest client typos (e.g. `studnet_id` instead of
+  `student_id`) and returned the wrong dataset with no warning. The 400
+  surfaces those typos to legitimate clients while preserving
+  anti-fingerprinting for sensitive fields.
+* Server-side logging is **escalated for credential-bearing columns**.
+  A class constant `SENSITIVE_FILTER_FIELDS = ['super_admin', 'password',
+  'remember_token', 'password_hash']` controls the split:
+  * Probes against any sensitive field log at `Log::warning` with the
+    message `"POCOR-9697: SENSITIVE filter probe — possible enumeration
+    attempt"`, the dropped fields, and the caller IP — SOC tooling can
+    alert on this prefix.
+  * Plain non-allowlist fields (typos, deprecated columns) log at
+    `Log::info` with `"POCOR-9697: filter dropped — field not queryable"`.
 
 Live PoC against the patched container:
 
 ```
-# Both queries return the same total (13671 in our DB) — clause dropped.
-curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?_conditions=super_admin:1&limit=1' | jq '.data.total'
-curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?limit=1' | jq '.data.total'
+# Sensitive probe — 400 generic, no field name in body, SOC log entry created
+curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?_conditions=super_admin:1&limit=1'
+# → {"error":"Request contains filter field names that are not present in this resource. Check API documentation for the fields of this resource."}
 
-# Legitimate $fillable column still filters correctly.
+# Typo — same 400, same body (anti-fingerprinting)
+curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?_conditions=hubabuba:babble&limit=1'
+# → identical body to the super_admin probe
+
+# Legitimate $fillable column still filters
 curl -k -H "Authorization: Bearer $TOKEN" '…/api/v5/security-users?_conditions=username:admin&limit=5' | jq '.data.total'  # → 1
 ```
 
-**Tests** (`SuperAdminEscalationProtectionTest.php`, +4 cases):
+**Tests** (`SuperAdminEscalationProtectionTest.php`, 5 cases):
 
-* `test_v5_conditions_filter_silently_drops_hidden_super_admin` — total
-  equals unfiltered baseline.
-* `test_v5_conditions_filter_silently_drops_password_oracle` — same for
-  `password:>$2y$`.
+* `test_v5_conditions_filter_rejects_hidden_super_admin` — status 400, no
+  `super_admin` in body.
+* `test_v5_conditions_filter_rejects_password_oracle` — status 400, no
+  `password` in body.
+* `test_v5_conditions_filter_rejects_typo_field` — `hubabuba` rejected
+  with the same 400 and same body shape (anti-fingerprinting cross-check).
 * `test_v5_conditions_filter_allows_legitimate_field` — `username:admin`
   still narrows; sanity check that we did not break existing clients.
-* `test_v5_conditions_unknown_field_no_named_response_leak` — response
-  body must not contain `super_admin`, `"password"`, or `unknown column`.
+* `test_v5_conditions_rejected_field_no_named_response_leak` — response
+  body must not contain `super_admin`, `"password"`, `unknown column`.
 
-**Postman** (`POCOR-9697.postman_collection.json`, items 09a–09d): adds
-read-side attack, baseline, oracle, and sanity requests with
-`pm.test()` assertions that codify the silent-drop semantics.
+**Postman** (`POCOR-9697.postman_collection.json`, items x09a–x09d):
+* `x09a` — `_conditions=super_admin:1` — asserts 400 + no field name.
+* `x09b` — `_conditions=hubabuba:babble` — asserts 400 + no field name
+  (repurposed from "baseline"; now the anti-fingerprinting comparison
+  partner for x09a).
+* `x09c` — `_conditions=password:>$2y$` — asserts 400 + no field name.
+* `x09d` — `_conditions=username:admin` — asserts 200 + result narrows.
 
 ### Issue 7 — Audit-trail integrity: `created_user_id` / `modified_user_id` always from JWT
 
@@ -236,8 +262,8 @@ mirroring the feature tests.
 | `api/app/Services/UserService.php` | `getUsersData` no longer puts `password` or `super_admin` into the v4 `GET /users/{id}` response. |
 | `api/public/api-docs-v4.json` | Regenerated. Drops 5 of 6 `super_admin` references; only `/api/v4/permissions` self-introspection remains. |
 | `api/public/api-docs-v5.json` | Regenerated. All 3 `super_admin` references gone. |
-| `api/app/Http/Controllers/BaseApi/CrudApiController.php` | **POCOR-9697 (Issue 6).** New `getQueryableColumns()` helper + `applyFilters()` now takes the resolved model and silently drops filter keys not in `$fillable - $hidden`. Closes read-side enumeration / oracle holes via `_conditions`. |
-| `api/tests/Feature/SuperAdminEscalationProtectionTest.php` | **New.** 12 feature tests covering every layer of the fix (8 write-side + 4 read-side `_conditions` allowlist). All pass. |
+| `api/app/Http/Controllers/BaseApi/CrudApiController.php` | **POCOR-9697 (Issue 6).** New `getQueryableColumns()` helper + `applyFilters()` takes the resolved model and **rejects with HTTP 400** any filter key not in `$fillable - $hidden`. Generic body, no field name echo (anti-fingerprinting). Sensitive-field probes (`super_admin`, `password`, `remember_token`, `password_hash`) logged at `Log::warning` with caller IP for SOC alerting; plain typos at `Log::info`. Closes read-side enumeration / oracle holes via `_conditions` while surfacing typos to legit clients. |
+| `api/tests/Feature/SuperAdminEscalationProtectionTest.php` | **New.** 22 feature tests covering every layer of the fix (write-side strip, response leak, swagger leak, read-side `_conditions` 400-on-rejection, audit-trail forgery, Wave-3 user_activities). All pass. |
 
 ### Database Migrations
 
