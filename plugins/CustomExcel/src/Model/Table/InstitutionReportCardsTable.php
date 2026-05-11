@@ -254,7 +254,7 @@ class InstitutionReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentEducationGradeGender'] = 'onExcelTemplateInitialiseStudentEducationGradeGender';//POCOR-8845
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentEducationGradeGenderAttendanceByDate'] = 'onExcelTemplateInitialiseStudentEducationGradeGenderAttendanceByDate';//POCOR-8845
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentEducationGradeGenderAttendance'] = 'onExcelTemplateInitialiseStudentEducationGradeGenderAttendance';//POCOR-8845
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours'; //POCOR-9675
 
         return $events;
     }
