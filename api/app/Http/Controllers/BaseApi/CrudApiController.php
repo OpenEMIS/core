@@ -813,7 +813,7 @@ class CrudApiController extends Controller
         $order = $this->parseOrderParams($request, $segments);
 
         $query = $this->parseSelectParams($request, $segments, $query, $model);
-        $query = $this->applyFilters($query, $filters);
+        $query = $this->applyFilters($query, $filters, $model); //POCOR-9697: pass model so applyFilters can enforce a per-model column allowlist
         $query = $this->applyOrder($query, $order, $model);
         $query = $this->applyInstitutionFilter($query, $model);
 
@@ -1155,15 +1155,61 @@ class CrudApiController extends Controller
 
 
     /**
+     * POCOR-9697: Compute the per-model set of columns a v5 read request may
+     * filter on. Returns `$fillable` minus `$hidden`, so the read-side filter
+     * surface is exactly the writable, non-hidden columns.
+     *
+     * Rationale: `$hidden` strips sensitive columns from the response body,
+     * but without this allowlist `_conditions=hiddenfield:value` still executes
+     * as a WHERE clause, allowing membership inference (super_admin) or a
+     * binary-search oracle (password hash). Mirroring the published write
+     * surface keeps the rule internally consistent — a client cannot read-
+     * filter on any column they could not already POST/PUT to.
+     *
+     * @param mixed $model Fully qualified model class name or instance.
+     * @return array<int,string> List of column names allowed in _conditions/filters.
+     */
+    private function getQueryableColumns($model): array
+    {
+        if (is_string($model)) {
+            $model = new $model;
+        }
+        $fillable = method_exists($model, 'getFillable') ? $model->getFillable() : [];
+        $hidden   = method_exists($model, 'getHidden')   ? $model->getHidden()   : [];
+        // Belt-and-braces diff in case a future model author lists a column in both arrays.
+        return array_values(array_diff($fillable, $hidden));
+    }
+
+    /**
      * Apply filters to the query.
+     *
+     * POCOR-9697: `$model` is now required so we can drop any filter key that
+     * is not in `getQueryableColumns()`. The drop is silent — no field name is
+     * echoed back to the caller — and the SQL clause is simply not applied, so
+     * the request returns the unfiltered result for that key. This closes the
+     * `_conditions=super_admin:1` membership-inference and the
+     * `_conditions=password:>X` binary-search oracle on `security_users`.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param array $filters
+     * @param mixed $model Fully qualified model class name or instance (POCOR-9697).
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    private function applyFilters($query, array $filters)
+    private function applyFilters($query, array $filters, $model = null)
     {
+        //POCOR-9697: build allowlist once per call; empty = no allowlist enforced (defensive default for legacy callers)
+        $allowed = $model ? $this->getQueryableColumns($model) : [];
+
         foreach ($filters as $field => $value) {
+            //POCOR-9697: silently drop filter keys that are not in the per-model queryable column allowlist.
+            //We log server-side for audit but never echo the field name back to the caller (no fingerprinting).
+            if (!empty($allowed) && !in_array($field, $allowed, true)) {
+                Log::warning('POCOR-9697: filter dropped — field not queryable', [
+                    'model' => is_string($model) ? $model : (is_object($model) ? get_class($model) : null),
+                    'field' => $field,
+                ]);
+                continue;
+            }
             if (is_array($value)) {
                 $query->whereIn($field, $value);
             } elseif (strpos($value, '>=') === 0) {

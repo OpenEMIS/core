@@ -1,26 +1,72 @@
 {
   "info": {
-    "name": "POCOR-9697 — super_admin escalation tests",
-    "description": "Side-by-side regression suite for the super_admin privilege-escalation vulnerability.\n\n**How to use this collection for the video:**\n1. Record once on the *master* branch — tests will FAIL (red), proving the exploit works.\n2. Deploy POCOR-9697, then record again — same tests now PASS (green).\n\nEach request:\n  - performs the attack (or checks the leaky surface)\n  - asserts the SAFE (post-fix) behavior\n\nSo \"red on master, green on branch\" is the whole story.\n\n**Setup before recording:**\n  - In Postman → File → Settings → uncheck \"SSL certificate verification\" (local cert is self-signed).\n  - Edit collection variables `base_url`, `username`, `password`, `api_key` for your environment.\n  - Run the requests in order — later requests depend on tokens/IDs set by earlier ones.",
+    "name": "POCOR-9697 \u2014 super_admin escalation tests",
+    "description": "Side-by-side regression suite for the super_admin privilege-escalation vulnerability.\n\n**How to use this collection for the video:**\n1. Record once on the *master* branch \u2014 tests will FAIL (red), proving the exploit works.\n2. Deploy POCOR-9697, then record again \u2014 same tests now PASS (green).\n\nEach request:\n  - performs the attack (or checks the leaky surface)\n  - asserts the SAFE (post-fix) behavior\n\nSo \"red on master, green on branch\" is the whole story.\n\n**Setup before recording:**\n  - In Postman \u2192 File \u2192 Settings \u2192 uncheck \"SSL certificate verification\" (local cert is self-signed).\n  - Edit collection variables `base_url`, `username`, `password`, `api_key` for your environment.\n  - Run the requests in order \u2014 later requests depend on tokens/IDs set by earlier ones.\n\n**POCOR-9697 \u2014 Read-side _conditions allowlist (items 09a\u201309d):**\nEven with `$hidden` stripping the value from response bodies, an attacker could enumerate super_admins via membership inference on `_conditions`. POCOR-9697 closes this with a per-model `$fillable - $hidden` column allowlist in `CrudApiController` that silently drops unknown / hidden fields (no 422, no field-name leak, structured server-side log only). Items 09a\u201309d codify the threat model: 09a fires the attack, 09b proves the clause was dropped (totals match), 09c does the same for the password oracle, 09d proves we did not over-restrict legitimate clients.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "https://localhost:8482/core", "type": "string" },
-    { "key": "username", "value": "admin", "type": "string" },
-    { "key": "password", "value": "demo", "type": "string" },
-    { "key": "api_key",  "value": "apikeytest", "type": "string" },
-    { "key": "token", "value": "", "type": "string" },
-    { "key": "exploit_username", "value": "", "type": "string" },
-    { "key": "exploit_user_id", "value": "", "type": "string" },
-    { "key": "exploit_user_password", "value": "exploit-plain-9697", "type": "string" },
-    { "key": "exploit_token", "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "https://localhost:8482/core",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "demo",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "apikeytest",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exploit_username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exploit_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exploit_user_password",
+      "value": "exploit-plain-9697",
+      "type": "string"
+    },
+    {
+      "key": "exploit_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "baseline_super_admin_block",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
-      "name": "00 — Setup: Login as admin",
+      "name": "00 \u2014 Setup: Login as admin",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"api_key\":  \"{{api_key}}\"\n}"
@@ -44,21 +90,26 @@
         }
       ]
     },
-
     {
-      "name": "01 — v4 ATTACK: mass-assign super_admin (silent strip, 200 + DB super_admin=0)",
+      "name": "01 \u2014 v4 ATTACK: mass-assign super_admin (silent strip, 200 + DB super_admin=0)",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Authorization", "value": "Bearer {{token}}" },
-          { "key": "Content-Type",  "value": "application/json" }
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"first_name\":    \"Exploit\",\n  \"last_name\":     \"Demo\",\n  \"gender_id\":     1,\n  \"date_of_birth\": \"2000-01-01\",\n  \"username\":      \"{{exploit_username}}\",\n  \"openemis_no\":   \"{{exploit_username}}\",\n  \"password\":      \"{{exploit_user_password}}\",\n  \"super_admin\":   1\n}"
         },
         "url": "{{base_url}}/api/v4/users",
-        "description": "The exploit. Sends super_admin:1 to POST /api/v4/users.\n\n**On master (BEFORE fix):** returns 200, row created with super_admin=1 — the attacker wins.\n**On POCOR-9697 (AFTER fix):** also returns 200 — but the field was silently stripped by prepareForValidation(). The attempt is logged server-side to storage/logs/laravel.log. The response body MUST NOT contain the string 'super_admin' (would fingerprint the field for attackers)."
+        "description": "The exploit. Sends super_admin:1 to POST /api/v4/users.\n\n**On master (BEFORE fix):** returns 200, row created with super_admin=1 \u2014 the attacker wins.\n**On POCOR-9697 (AFTER fix):** also returns 200 \u2014 but the field was silently stripped by prepareForValidation(). The attempt is logged server-side to storage/logs/laravel.log. The response body MUST NOT contain the string 'super_admin' (would fingerprint the field for attackers)."
       },
       "event": [
         {
@@ -74,20 +125,25 @@
               "const j = pm.response.json();",
               "const id = j && j.data && (j.data.id || (j.data[0] && j.data[0].id));",
               "if (id) { pm.collectionVariables.set('v4_exploit_user_id', String(id)); }",
-              "else { console.log('v4 create did not return id — DB verification will be skipped'); }"
+              "else { console.log('v4 create did not return id \u2014 DB verification will be skipped'); }"
             ]
           }
         }
       ]
     },
-
     {
-      "name": "02 — v4 ATTACK: elevate existing admin via id (silent strip, no fingerprint)",
+      "name": "02 \u2014 v4 ATTACK: elevate existing admin via id (silent strip, no fingerprint)",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Authorization", "value": "Bearer {{token}}" },
-          { "key": "Content-Type",  "value": "application/json" }
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
         "body": {
           "mode": "raw",
@@ -111,21 +167,26 @@
         }
       ]
     },
-
     {
-      "name": "03 — v5 ATTACK: mass-assign super_admin (must succeed but DB super_admin=0)",
+      "name": "03 \u2014 v5 ATTACK: mass-assign super_admin (must succeed but DB super_admin=0)",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Authorization", "value": "Bearer {{token}}" },
-          { "key": "Content-Type",  "value": "application/json" }
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"first_name\":     \"V5Exploit\",\n  \"last_name\":      \"Demo\",\n  \"gender_id\":      1,\n  \"date_of_birth\":  \"2000-01-01\",\n  \"username\":       \"{{exploit_username}}_v5\",\n  \"password\":       \"{{exploit_user_password}}\",\n  \"openemis_no\":    \"{{exploit_username}}_v5\",\n  \"super_admin\":    1,\n  \"status\":         1\n}"
         },
         "url": "{{base_url}}/api/v5/security-users",
-        "description": "v5 CRUD: the request itself succeeds (201) because we hold add permission. The interesting question is whether super_admin:1 from the body was persisted.\n\n**On master:** super_admin=1 is persisted (model has it in $fillable).\n**On POCOR-9697:** super_admin is no longer fillable — the field is silently dropped, row created with super_admin=0. Verified by the next request, which logs in as the new user and checks /permissions."
+        "description": "v5 CRUD: the request itself succeeds (201) because we hold add permission. The interesting question is whether super_admin:1 from the body was persisted.\n\n**On master:** super_admin=1 is persisted (model has it in $fillable).\n**On POCOR-9697:** super_admin is no longer fillable \u2014 the field is silently dropped, row created with super_admin=0. Verified by the next request, which logs in as the new user and checks /permissions."
       },
       "event": [
         {
@@ -143,18 +204,22 @@
         }
       ]
     },
-
     {
-      "name": "04 — Login as the new v5 user (proves password was hashed)",
+      "name": "04 \u2014 Login as the new v5 user (proves password was hashed)",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\n  \"username\": \"{{exploit_username}}_v5\",\n  \"password\": \"{{exploit_user_password}}\",\n  \"api_key\":  \"{{api_key}}\"\n}"
         },
         "url": "{{base_url}}/api/v4/login",
-        "description": "Logs in as the user we just created. Login only works if the password column contains a valid bcrypt hash of the plaintext we sent — which proves the model's setPasswordAttribute mutator (or the repository's helper, for v4) hashed it on write.\n\n**On master:** depends — model's $fillable also has password, so the value goes in raw — login FAILS. On POCOR-9697 the mutator hashes it and login SUCCEEDS."
+        "description": "Logs in as the user we just created. Login only works if the password column contains a valid bcrypt hash of the plaintext we sent \u2014 which proves the model's setPasswordAttribute mutator (or the repository's helper, for v4) hashed it on write.\n\n**On master:** depends \u2014 model's $fillable also has password, so the value goes in raw \u2014 login FAILS. On POCOR-9697 the mutator hashes it and login SUCCEEDS."
       },
       "event": [
         {
@@ -170,14 +235,18 @@
         }
       ]
     },
-
     {
-      "name": "05 — /permissions for new user (must show super_admin = 0)",
+      "name": "05 \u2014 /permissions for new user (must show super_admin = 0)",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{exploit_token}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{exploit_token}}"
+          }
+        ],
         "url": "{{base_url}}/api/v4/permissions",
-        "description": "GET /api/v4/permissions returns the CALLER's own super_admin flag (this endpoint is intentionally allowed to do so — the frontend reads it for UI gating).\n\n**On master:** super_admin is 1 — the v5 mass-assignment succeeded.\n**On POCOR-9697:** super_admin is 0 — model dropped the field on write."
+        "description": "GET /api/v4/permissions returns the CALLER's own super_admin flag (this endpoint is intentionally allowed to do so \u2014 the frontend reads it for UI gating).\n\n**On master:** super_admin is 1 \u2014 the v5 mass-assignment succeeded.\n**On POCOR-9697:** super_admin is 0 \u2014 model dropped the field on write."
       },
       "event": [
         {
@@ -195,12 +264,16 @@
         }
       ]
     },
-
     {
-      "name": "06 — INFO LEAK: GET /api/v4/users/{id} must not contain super_admin or password",
+      "name": "06 \u2014 INFO LEAK: GET /api/v4/users/{id} must not contain super_admin or password",
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
         "url": "{{base_url}}/api/v4/users/2",
         "description": "Visit the user-detail endpoint as admin. Before the fix this response leaked both `super_admin` and the bcrypt `password` hash in the response body (UserService::getUsersData built the response array manually, bypassing the model's $hidden)."
       },
@@ -220,25 +293,51 @@
         }
       ]
     },
-
     {
-      "name": "07 — INFO LEAK: POST /api/v4/users/basic-information must not contain super_admin or password",
+      "name": "07 \u2014 INFO LEAK: POST /api/v4/users/basic-information must not contain super_admin or password",
       "request": {
         "method": "POST",
-        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
         "url": {
           "raw": "{{base_url}}/api/v4/users/basic-information?first_name=Maria&last_name=Keen&date_of_birth=2011-01-01&user_type_id=1&gender_id=2",
-          "host": ["{{base_url}}"],
-          "path": ["api","v4","users","basic-information"],
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v4",
+            "users",
+            "basic-information"
+          ],
           "query": [
-            { "key": "first_name", "value": "Maria" },
-            { "key": "last_name", "value": "Keen" },
-            { "key": "date_of_birth", "value": "2011-01-01" },
-            { "key": "user_type_id", "value": "1" },
-            { "key": "gender_id", "value": "2" }
+            {
+              "key": "first_name",
+              "value": "Maria"
+            },
+            {
+              "key": "last_name",
+              "value": "Keen"
+            },
+            {
+              "key": "date_of_birth",
+              "value": "2011-01-01"
+            },
+            {
+              "key": "user_type_id",
+              "value": "1"
+            },
+            {
+              "key": "gender_id",
+              "value": "2"
+            }
           ]
         },
-        "description": "Directory search endpoint. Before the fix, DirectoryRepository::getUserByBasicInfo manually copied super_admin into every result row. The query already filtered super_admin != 1, so the leaked value was always 0 — but exposing the field at all is needless information disclosure and would surprise a security review."
+        "description": "Directory search endpoint. Before the fix, DirectoryRepository::getUserByBasicInfo manually copied super_admin into every result row. The query already filtered super_admin != 1, so the leaked value was always 0 \u2014 but exposing the field at all is needless information disclosure and would surprise a security review."
       },
       "event": [
         {
@@ -252,20 +351,19 @@
               "    pm.test(`row ${i}: no super_admin`, () => pm.expect(r).to.not.have.property('super_admin'));",
               "    pm.test(`row ${i}: no password`,    () => pm.expect(r).to.not.have.property('password'));",
               "});",
-              "if (rows.length === 0) pm.test('no rows returned — still asserts shape on next non-empty run', () => pm.expect(true).to.equal(true));"
+              "if (rows.length === 0) pm.test('no rows returned \u2014 still asserts shape on next non-empty run', () => pm.expect(true).to.equal(true));"
             ]
           }
         }
       ]
     },
-
     {
-      "name": "08 — SWAGGER LEAK: /api-docs-v4.json must have ≤1 super_admin hits",
+      "name": "08 \u2014 SWAGGER LEAK: /api-docs-v4.json must have \u22641 super_admin hits",
       "request": {
         "method": "GET",
         "header": [],
         "url": "{{base_url}}/api/api-docs-v4.json",
-        "description": "The public swagger JSON. Before the fix and pre-regeneration, this file contained 6 super_admin entries — including the worst-case `\"example\": 1` that effectively documented the exploit for any reader.\n\n**On master (or any deploy that skipped the swagger-regen post-deploy step):** ≥ 6 hits.\n**On POCOR-9697 with proper deploy:** exactly 1 hit (the legitimate /api/v4/permissions self-introspection response)."
+        "description": "The public swagger JSON. Before the fix and pre-regeneration, this file contained 6 super_admin entries \u2014 including the worst-case `\"example\": 1` that effectively documented the exploit for any reader.\n\n**On master (or any deploy that skipped the swagger-regen post-deploy step):** \u2265 6 hits.\n**On POCOR-9697 with proper deploy:** exactly 1 hit (the legitimate /api/v4/permissions self-introspection response)."
       },
       "event": [
         {
@@ -283,9 +381,8 @@
         }
       ]
     },
-
     {
-      "name": "09 — SWAGGER LEAK: /api-docs-v5.json must have 0 super_admin hits",
+      "name": "09 \u2014 SWAGGER LEAK: /api-docs-v5.json must have 0 super_admin hits",
       "request": {
         "method": "GET",
         "header": [],
@@ -308,14 +405,144 @@
         }
       ]
     },
-
     {
-      "name": "10 — Cleanup: delete the demo v5 user (best-effort)",
+      "name": "09a \u2014 READ-SIDE ATTACK: enumerate super_admin via _conditions (must be silently dropped)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?_conditions=super_admin:1&limit=1",
+        "description": "Even with `$hidden` stripping `super_admin` from response bodies, an attacker could enumerate super_admins via membership inference on `_conditions`: the WHERE clause runs server-side and the returned row IDs leak who is in the set. POCOR-9697 closes this with a per-model column allowlist (`getFillable()` minus `getHidden()`) in CrudApiController. The clause is silently dropped \u2014 no 422, no field-name leak \u2014 and the response total matches the unfiltered baseline."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Request returns 200 (no fingerprint via error)', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('baseline_super_admin_block', body.data.total);",
+              "console.log('super_admin:1 total =', body.data.total);",
+              "pm.test('FIX: response body does not name the dropped field (no fingerprint)', () => {",
+              "    pm.expect(pm.response.text().toLowerCase()).to.not.include('super_admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09b \u2014 READ-SIDE BASELINE: unfiltered total (proves the clause was dropped, not applied)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?limit=1",
+        "description": "Baseline unfiltered total. The previous request's total must match this one \u2014 if it does, the `_conditions=super_admin:1` clause was dropped (the whole table came back). If it is smaller, the clause leaked through and we have not closed the hole."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Baseline returns 200', () => pm.response.to.have.status(200));",
+              "const baseline = pm.response.json().data.total;",
+              "const blocked  = parseInt(pm.collectionVariables.get('baseline_super_admin_block'), 10);",
+              "console.log('baseline total =', baseline, '| blocked clause total =', blocked);",
+              "pm.test('FIX: dropped-clause total equals unfiltered baseline (no membership inference)', () => {",
+              "    pm.expect(blocked).to.equal(baseline);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09c \u2014 READ-SIDE ATTACK: password binary-search oracle via _conditions (must be silently dropped)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?_conditions=password:%3E%242y%24&limit=1",
+        "description": "On master, `_conditions=password:>$2y$` runs as a real SQL WHERE clause, letting an attacker binary-search the bcrypt hash one byte at a time (the 'live PoC returned 113 confirmed real-hashed users' in the audit). POCOR-9697 drops the clause silently \u2014 total matches baseline, and the response body must not name the dropped field."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Request returns 200 (no DB error fingerprint)', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const baseline = parseInt(pm.collectionVariables.get('baseline_super_admin_block'), 10);",
+              "pm.test('FIX: total matches the unfiltered baseline (oracle neutralised)', () => {",
+              "    pm.expect(body.data.total).to.equal(baseline);",
+              "});",
+              "pm.test('FIX: response does not contain a \"password\" key (no oracle leak)', () => {",
+              "    pm.expect(pm.response.text()).to.not.include('\"password\"');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09d \u2014 READ-SIDE SANITY: legitimate $fillable column still filters",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?_conditions=username:admin&limit=5",
+        "description": "The fix must not regress legitimate clients. `username` is in `$fillable` and not in `$hidden`, so `_conditions=username:admin` must still filter as before \u2014 proving we did not over-restrict the read surface."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Legitimate filter returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Legitimate filter still narrows the result set', () => {",
+              "    pm.expect(body.data.total).to.be.at.least(1);",
+              "    const usernames = (body.data.data || []).map(r => r.username);",
+              "    pm.expect(usernames).to.include('admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 \u2014 Cleanup: delete the demo v5 user (best-effort)",
       "request": {
         "method": "DELETE",
-        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
         "url": "{{base_url}}/api/v5/security-users/{{exploit_user_id}}",
-        "description": "Best-effort cleanup so re-running the suite doesn't pile up demo rows. Skip on master if it fails — DB cleanup can be done manually with `DELETE FROM security_users WHERE username LIKE 'exploit_%';`."
+        "description": "Best-effort cleanup so re-running the suite doesn't pile up demo rows. Skip on master if it fails \u2014 DB cleanup can be done manually with `DELETE FROM security_users WHERE username LIKE 'exploit_%';`."
       },
       "event": [
         {

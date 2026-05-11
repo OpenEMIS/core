@@ -255,6 +255,105 @@ class SuperAdminEscalationProtectionTest extends TestCase
     }
 
     /**
+     * Layer 6 (POCOR-9697 read-side closure):
+     *
+     * `_conditions=super_admin:1` must NOT enumerate super_admin accounts.
+     * The CrudApiController allowlist drops the clause silently, so the
+     * response total matches the unfiltered baseline. This is the read-side
+     * equivalent of the write-side strip: a clause naming a hidden column is
+     * a no-op, never an error.
+     */
+    public function test_v5_conditions_filter_silently_drops_hidden_super_admin(): void
+    {
+        $baseline = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/security-users?limit=1');
+        $baseline->assertStatus(200);
+        $baselineTotal = $baseline->json('data.total');
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/security-users?_conditions=super_admin:1&limit=1');
+
+        $response->assertStatus(200);
+        $this->assertSame(
+            $baselineTotal,
+            $response->json('data.total'),
+            'super_admin filter must be silently dropped — total must match the unfiltered baseline.'
+        );
+    }
+
+    /**
+     * Layer 7 (POCOR-9697 read-side closure):
+     *
+     * `_conditions=password:>$2y$` must NOT act as a binary-search oracle on
+     * the bcrypt hash column. The clause is silently dropped, so the total
+     * equals the unfiltered baseline.
+     */
+    public function test_v5_conditions_filter_silently_drops_password_oracle(): void
+    {
+        $baseline = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/security-users?limit=1');
+        $baseline->assertStatus(200);
+        $baselineTotal = $baseline->json('data.total');
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/security-users?_conditions=' . urlencode('password:>$2y$') . '&limit=1');
+
+        $response->assertStatus(200);
+        $this->assertSame(
+            $baselineTotal,
+            $response->json('data.total'),
+            'password filter must be silently dropped — total must match the unfiltered baseline.'
+        );
+    }
+
+    /**
+     * Sanity: legitimate `$fillable` columns must still filter normally.
+     * If they did not, every existing v5 GET client breaks.
+     */
+    public function test_v5_conditions_filter_allows_legitimate_field(): void
+    {
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/security-users?_conditions=username:admin&limit=5');
+
+        $response->assertStatus(200);
+        $total = (int) $response->json('data.total');
+        $this->assertGreaterThanOrEqual(1, $total,
+            'username:admin should match the seeded admin row.');
+
+        $usernames = collect($response->json('data.data') ?? [])->pluck('username')->all();
+        $this->assertContains('admin', $usernames,
+            'Filter on legitimate $fillable column must still apply.');
+    }
+
+    /**
+     * Defence in depth: a dropped clause must NOT leak the field name back
+     * to the caller. No "super_admin", no "password", no "field", no
+     * "column" in the body — same anti-fingerprinting rule as the write
+     * side.
+     */
+    public function test_v5_conditions_unknown_field_no_named_response_leak(): void
+    {
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer {$this->token}",
+        ])->getJson('/api/v5/security-users?_conditions=super_admin:1&limit=1');
+
+        $response->assertStatus(200);
+        $body = $response->getContent();
+
+        $this->assertStringNotContainsStringIgnoringCase('super_admin', $body,
+            'Response must not name the dropped field.');
+        $this->assertStringNotContainsStringIgnoringCase('"password"', $body,
+            'Response must not include password (always hidden).');
+        $this->assertStringNotContainsStringIgnoringCase('unknown column', $body,
+            'Response must not leak DB-level "unknown column" errors.');
+    }
+
+    /**
      * Bonus: plaintext passwords sent to v5 must land hashed in DB
      * (via the setPasswordAttribute mutator on Api5\SecurityUsers).
      */
