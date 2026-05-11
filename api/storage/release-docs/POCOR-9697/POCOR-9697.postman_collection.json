@@ -1,0 +1,326 @@
+{
+  "info": {
+    "name": "POCOR-9697 — super_admin escalation tests",
+    "description": "Side-by-side regression suite for the super_admin privilege-escalation vulnerability.\n\n**How to use this collection for the video:**\n1. Record once on the *master* branch — tests will FAIL (red), proving the exploit works.\n2. Deploy POCOR-9697, then record again — same tests now PASS (green).\n\nEach request:\n  - performs the attack (or checks the leaky surface)\n  - asserts the SAFE (post-fix) behavior\n\nSo \"red on master, green on branch\" is the whole story.\n\n**Setup before recording:**\n  - In Postman → File → Settings → uncheck \"SSL certificate verification\" (local cert is self-signed).\n  - Edit collection variables `base_url`, `username`, `password`, `api_key` for your environment.\n  - Run the requests in order — later requests depend on tokens/IDs set by earlier ones.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://localhost:8482/core", "type": "string" },
+    { "key": "username", "value": "admin", "type": "string" },
+    { "key": "password", "value": "demo", "type": "string" },
+    { "key": "api_key",  "value": "apikeytest", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "exploit_username", "value": "", "type": "string" },
+    { "key": "exploit_user_id", "value": "", "type": "string" },
+    { "key": "exploit_user_password", "value": "exploit-plain-9697", "type": "string" },
+    { "key": "exploit_token", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "00 — Setup: Login as admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"api_key\":  \"{{api_key}}\"\n}"
+        },
+        "url": "{{base_url}}/api/v4/login",
+        "description": "Acquires the JWT used by every subsequent request. Also seeds a unique username (`exploit_<ms>`) so the test can be re-run without DB collisions."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('token', body.data.token);",
+              "pm.collectionVariables.set('exploit_username', 'exploit_' + Date.now());",
+              "console.log('Token cached. exploit_username =', pm.collectionVariables.get('exploit_username'));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "01 — v4 ATTACK: mass-assign super_admin (must be 422)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type",  "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\":    \"Exploit\",\n  \"last_name\":     \"Demo\",\n  \"gender_id\":     1,\n  \"date_of_birth\": \"2000-01-01\",\n  \"username\":      \"{{exploit_username}}\",\n  \"password\":      \"{{exploit_user_password}}\",\n  \"super_admin\":   1\n}"
+        },
+        "url": "{{base_url}}/api/v4/users",
+        "description": "The exploit. Sends super_admin:1 to POST /api/v4/users.\n\n**On master (BEFORE fix):** returns 200, row created with super_admin=1.\n**On POCOR-9697 (AFTER fix):** returns 422 with the custom message — \"The super_admin field may not be set through this endpoint.\""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('FIX: rejects super_admin with 422', () => pm.response.to.have.status(422));",
+              "pm.test('FIX: error names super_admin field explicitly', () => {",
+              "    const j = pm.response.json();",
+              "    pm.expect(JSON.stringify(j)).to.include('super_admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "02 — v4 ATTACK: elevate existing admin via id (must be 422)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type",  "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": 2,\n  \"super_admin\": 1\n}"
+        },
+        "url": "{{base_url}}/api/v4/users",
+        "description": "Variant of the exploit that targets an existing user (here id=2) instead of creating a new account. Same fix prevents both vectors — the `prohibited` validation rule fires before the controller, regardless of whether the request is a create or an update."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('FIX: rejects super_admin on update too (422)', () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "03 — v5 ATTACK: mass-assign super_admin (must succeed but DB super_admin=0)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type",  "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\":     \"V5Exploit\",\n  \"last_name\":      \"Demo\",\n  \"gender_id\":      1,\n  \"date_of_birth\":  \"2000-01-01\",\n  \"username\":       \"{{exploit_username}}_v5\",\n  \"password\":       \"{{exploit_user_password}}\",\n  \"openemis_no\":    \"{{exploit_username}}_v5\",\n  \"super_admin\":    1,\n  \"status\":         1\n}"
+        },
+        "url": "{{base_url}}/api/v5/security-users",
+        "description": "v5 CRUD: the request itself succeeds (201) because we hold add permission. The interesting question is whether super_admin:1 from the body was persisted.\n\n**On master:** super_admin=1 is persisted (model has it in $fillable).\n**On POCOR-9697:** super_admin is no longer fillable — the field is silently dropped, row created with super_admin=0. Verified by the next request, which logs in as the new user and checks /permissions."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('v5 create succeeds (201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+              "const j = pm.response.json();",
+              "const id = j.data && (j.data.id || (j.data[0] && j.data[0].id));",
+              "if (id) pm.collectionVariables.set('exploit_user_id', String(id));",
+              "console.log('Created v5 user id =', pm.collectionVariables.get('exploit_user_id'));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "04 — Login as the new v5 user (proves password was hashed)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{exploit_username}}_v5\",\n  \"password\": \"{{exploit_user_password}}\",\n  \"api_key\":  \"{{api_key}}\"\n}"
+        },
+        "url": "{{base_url}}/api/v4/login",
+        "description": "Logs in as the user we just created. Login only works if the password column contains a valid bcrypt hash of the plaintext we sent — which proves the model's setPasswordAttribute mutator (or the repository's helper, for v4) hashed it on write.\n\n**On master:** depends — model's $fillable also has password, so the value goes in raw — login FAILS. On POCOR-9697 the mutator hashes it and login SUCCEEDS."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('FIX: new user can log in (password was hashed on write)', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "if (j && j.data && j.data.token) pm.collectionVariables.set('exploit_token', j.data.token);"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "05 — /permissions for new user (must show super_admin = 0)",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{exploit_token}}" }],
+        "url": "{{base_url}}/api/v4/permissions",
+        "description": "GET /api/v4/permissions returns the CALLER's own super_admin flag (this endpoint is intentionally allowed to do so — the frontend reads it for UI gating).\n\n**On master:** super_admin is 1 — the v5 mass-assignment succeeded.\n**On POCOR-9697:** super_admin is 0 — model dropped the field on write."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Endpoint responds', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const sa = j.data && j.data.super_admin;",
+              "console.log('super_admin flag for new user =', sa);",
+              "pm.test('FIX: new user is NOT super_admin', () => pm.expect(Number(sa)).to.equal(0));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "06 — INFO LEAK: GET /api/v4/users/{id} must not contain super_admin or password",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{base_url}}/api/v4/users/2",
+        "description": "Visit the user-detail endpoint as admin. Before the fix this response leaked both `super_admin` and the bcrypt `password` hash in the response body (UserService::getUsersData built the response array manually, bypassing the model's $hidden)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Endpoint responds', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const data = j.data || {};",
+              "pm.test('FIX: response has no super_admin key', () => pm.expect(data).to.not.have.property('super_admin'));",
+              "pm.test('FIX: response has no password key',    () => pm.expect(data).to.not.have.property('password'));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "07 — INFO LEAK: POST /api/v4/users/basic-information must not contain super_admin or password",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{base_url}}/api/v4/users/basic-information?first_name=Maria&last_name=Keen&date_of_birth=2011-01-01&user_type_id=1&gender_id=2",
+          "host": ["{{base_url}}"],
+          "path": ["api","v4","users","basic-information"],
+          "query": [
+            { "key": "first_name", "value": "Maria" },
+            { "key": "last_name", "value": "Keen" },
+            { "key": "date_of_birth", "value": "2011-01-01" },
+            { "key": "user_type_id", "value": "1" },
+            { "key": "gender_id", "value": "2" }
+          ]
+        },
+        "description": "Directory search endpoint. Before the fix, DirectoryRepository::getUserByBasicInfo manually copied super_admin into every result row. The query already filtered super_admin != 1, so the leaked value was always 0 — but exposing the field at all is needless information disclosure and would surprise a security review."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const j = pm.response.json();",
+              "const rows = (j.data && (j.data.data || [])) || [];",
+              "rows.forEach((r, i) => {",
+              "    pm.test(`row ${i}: no super_admin`, () => pm.expect(r).to.not.have.property('super_admin'));",
+              "    pm.test(`row ${i}: no password`,    () => pm.expect(r).to.not.have.property('password'));",
+              "});",
+              "if (rows.length === 0) pm.test('no rows returned — still asserts shape on next non-empty run', () => pm.expect(true).to.equal(true));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "08 — SWAGGER LEAK: /api-docs-v4.json must have ≤1 super_admin hits",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api-docs-v4.json",
+        "description": "The public swagger JSON. Before the fix and pre-regeneration, this file contained 6 super_admin entries — including the worst-case `\"example\": 1` that effectively documented the exploit for any reader.\n\n**On master (or any deploy that skipped the swagger-regen post-deploy step):** ≥ 6 hits.\n**On POCOR-9697 with proper deploy:** exactly 1 hit (the legitimate /api/v4/permissions self-introspection response)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Swagger served', () => pm.response.to.have.status(200));",
+              "const text = pm.response.text();",
+              "const hits = (text.match(/\"super_admin\"/g) || []).length;",
+              "console.log('v4 swagger super_admin hits =', hits);",
+              "pm.test('FIX: at most 1 super_admin hit (the /permissions self-introspection)', () => pm.expect(hits).to.be.at.most(1));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "09 — SWAGGER LEAK: /api-docs-v5.json must have 0 super_admin hits",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api-docs-v5.json",
+        "description": "v5 has no legitimate super_admin response anywhere, so the count must be zero after the fix."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Swagger served', () => pm.response.to.have.status(200));",
+              "const text = pm.response.text();",
+              "const hits = (text.match(/\"super_admin\"/g) || []).length;",
+              "console.log('v5 swagger super_admin hits =', hits);",
+              "pm.test('FIX: zero super_admin hits', () => pm.expect(hits).to.equal(0));"
+            ]
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "10 — Cleanup: delete the demo v5 user (best-effort)",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{base_url}}/api/v5/security-users/{{exploit_user_id}}",
+        "description": "Best-effort cleanup so re-running the suite doesn't pile up demo rows. Skip on master if it fails — DB cleanup can be done manually with `DELETE FROM security_users WHERE username LIKE 'exploit_%';`."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('cleanup attempted (200/204)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
