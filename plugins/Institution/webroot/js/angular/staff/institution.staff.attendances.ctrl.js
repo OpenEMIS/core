@@ -43,6 +43,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     vm.allAttendances = 0;
     vm.allPresentCount = 0;
     vm.allLeaveCount = 0;
+    vm.allAbsentCount = 0; //POCOR-8135
     // vm.allLateCount = 0;
     // vm.globalLateCount = 0;
     // gridOptions
@@ -321,6 +322,7 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         vm.totalStaff = 0;
         vm.allAttendances = 0;
         vm.allLeaveCount = 0;
+        vm.allAbsentCount = 0; //POCOR-8135
         // vm.allLateCount = 0;
         vm.count = 0;
         vm.staffList = staffList;
@@ -337,6 +339,11 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
                     if (attendance.leave.length > 0) {
                         vm.allLeaveCount = vm.allLeaveCount + 1;
                     }
+                    //POCOR-8135: start - count absent (no time_in and no leave record)
+                    if (!attendance.time_in && attendance.leave.length === 0) {
+                        vm.allAbsentCount = vm.allAbsentCount + 1;
+                    }
+                    //POCOR-8135: end
                     // if (attendance.absence_type_id == 3) {
                     //     vm.allLateCount++; //POCOR-8118
                     // }
@@ -351,6 +358,9 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             }
             if (vm.allLeaveCount == 0) {
                 vm.allLeaveCount = '-';
+            }
+            if (vm.allAbsentCount == 0) { //POCOR-8135
+                vm.allAbsentCount = '-';
             }
             if (vm.allLateCount == 0) {
                 vm.allLateCount = '-';
@@ -385,22 +395,54 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
     }
 
     vm.onEditClick = function() {
-
-        // Prevent editing on future dates
-        var today = new Date();
         var selectedDate = new Date(vm.selectedDayDate);
+        selectedDate.setHours(0, 0, 0, 0);
 
-        if (selectedDate > today) {
-            AlertSvc.warning($scope, 'Future dates cannot be edited');
-            return false;
-        }
+        InstitutionStaffAttendancesSvc.getConfigItemValue('time_zone').then(function (timeZone) {
+            var now = new Date();
 
-        //POCOR-6971[START]
-        if(vm.selectedShift == -1){
-            AlertSvc.warning($scope, 'Please select shift');
-            return false;
-        }
-            //POCOR-6971[END]
+            // 2. Get "Now" in the configured timezone
+            var formatter = new Intl.DateTimeFormat('en-CA', {
+                timeZone: timeZone,
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            });
+
+            var parts = formatter.formatToParts(now);
+            var d = parts.reduce((acc, part) => {
+                if (part.type !== 'literal') acc[part.type] = part.value;
+                return acc;
+            }, {});
+
+            var institutionToday = new Date(d.year, d.month - 1, d.day);
+
+            // --- CONSOLE LOGS FOR TESTING ---
+            // console.log("--- Timezone Validation Debug ---");
+            // console.log("Configured Timezone:", timeZone);
+            // console.log("Local Browser Time:", now.toString());
+            // console.log("Institution Current Time:", `${d.year}-${d.month}-${d.day} ${d.hour}:${d.minute}:${d.second}`);
+            // console.log("Selected Date for Edit:", selectedDate.toDateString());
+            // console.log("Institution 'Today' Limit:", institutionToday.toDateString());
+            // console.log("Is Future Date?:", selectedDate > institutionToday);
+            // console.log("---------------------------------");
+
+            if (selectedDate > institutionToday) {
+                // Check if $scope exists before calling alert to prevent the 'class' error
+                if ($scope) {
+                    console.warn('Future dates cannot be edited');
+                    AlertSvc.warning($scope, 'Future dates cannot be edited');
+                } else {
+                    console.warn('AlertSvc failed: $scope is undefined');
+                }
+                return false;
+            }
+
+            if (vm.selectedShift == -1) {
+                AlertSvc.warning($scope, 'Please select shift');
+                return false;
+            }
+
+            // Logic for successful edit
             vm.action = 'edit';
             vm.gridOptions.context.ownEdit = vm.ownEdit;
             vm.gridOptions.context.otherEdit = vm.otherEdit;
@@ -408,7 +450,15 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
             vm.gridOptions.context.action = vm.action;
             vm.setColumnDef();
             AlertSvc.info($scope, 'Attendance will be saved automatically.');
+
+
+        }).catch(function (err) {
+            console.error("Timezone config missing or error:", err);
+        });
     };
+
+
+
 
     vm.onBackClick = function() {
         // vm.setAllStaffAttendances(vm.staffList); //POCOR-7255 comment this line

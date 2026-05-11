@@ -5,7 +5,6 @@ use ArrayObject;
 use DateTime;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\Event\Event;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
@@ -16,6 +15,7 @@ use Cake\Validation\Validator;
 use Cake\I18n\FrozenTime;
 use Cake\I18n\FrozenDate;
 use Cake\Database\Expression\QueryExpression;
+use Cake\Event\EventInterface;
 /**
  * POCOR-9381
  * Develop Reports > Audit > Deleted Records report
@@ -41,7 +41,7 @@ class AuditDeletedRecordsTable extends AppTable
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
 
@@ -92,7 +92,7 @@ class AuditDeletedRecordsTable extends AppTable
     }
 
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
     {
         $newFields = [];
         $newFields[] = [
@@ -141,23 +141,23 @@ class AuditDeletedRecordsTable extends AppTable
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetStartDate(Event $event, Entity $entity) {
+    public function onExcelGetStartDate(EventInterface $event, Entity $entity) {
         if (!empty($entity->start_date)) {
             return $this->formatDate($entity->start_date);
         }
     }
-    public function onExcelGetEndDate(Event $event, Entity $entity) {
+    public function onExcelGetEndDate(EventInterface $event, Entity $entity) {
         if (!empty($entity->end_date)) {
             return $this->formatDate($entity->end_date);
         }
     }
-    public function onExcelGetCreated(Event $event, Entity $entity) {
+    public function onExcelGetCreated(EventInterface $event, Entity $entity) {
         if (!empty($entity->created)) {
             return $this->formatDate($entity->created);
         }
     }
 
-    public function onExcelGetSecurityRole(Event $event, Entity $entity)
+    public function onExcelGetSecurityRole(EventInterface $event, Entity $entity)
     {
         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
         $SecurityRoles = TableRegistry::get('Security.SecurityRoles');

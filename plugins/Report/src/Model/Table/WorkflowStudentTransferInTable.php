@@ -38,20 +38,42 @@ class WorkflowStudentTransferInTable extends AppTable
         ]);
     }
 
-    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query) {
+    // public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query) {
+    //     $requestData = json_decode($settings['process']['params']);
+    //     $institutionId = $requestData->institution_id;
+    //     $reportStartDate = $requestData->report_start_date;
+    //     $reportEndDate = $requestData->report_end_date;
+    //     if ($institutionId == 0) {
+    //         $query
+    //          ->orWhere([
+    //             $this->aliasField('institution_id !=') => $institutionId,
+    //                 $this->aliasField('start_date >= "') . $reportStartDate . '"',
+    //                 $this->aliasField('end_date <= "') . $reportEndDate . '"'
+    //         ]);
+    //     }
+    // }
+
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, $query)
+    {
         $requestData = json_decode($settings['process']['params']);
-        $institutionId = $requestData->institution_id;
+
+        $institutionId = (int)$requestData->institution_id;
         $reportStartDate = $requestData->report_start_date;
         $reportEndDate = $requestData->report_end_date;
-        if ($institutionId == 0) {
-            $query
-             ->orWhere([
-                $this->aliasField('institution_id !=') => $institutionId,
-                    $this->aliasField('start_date >= "') . $reportStartDate . '"',
-                    $this->aliasField('end_date <= "') . $reportEndDate . '"'
-            ]);
+
+        if ($institutionId === 0) {
+
+            $query->where(function ($exp) use ($institutionId, $reportStartDate, $reportEndDate) {
+                return $exp->or_([
+                    $this->aliasField('institution_id !=') => $institutionId,
+                    $this->aliasField('start_date >=') => $reportStartDate,
+                    $this->aliasField('end_date <=') => $reportEndDate,
+                ]);
+            });
+
         }
     }
+
 
     //POCOR-7619
     public function onExcelGetOpenemisNo(EventInterface $event, Entity $entity)

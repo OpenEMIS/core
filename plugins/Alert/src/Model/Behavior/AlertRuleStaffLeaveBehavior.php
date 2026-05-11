@@ -49,6 +49,7 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
                 '${date_from}' => 'Leave start date.',
                 '${date_to}' => 'Leave end date.',
                 '${day_difference}' => 'Days difference between today and leave end date.',
+                '${employment_period}' => 'Days difference between today and leave end date (alias for day_difference).',
                 '${user.openemis_no}' => 'OpenEMIS ID.',
                 '${user.first_name}' => 'First name.',
                 '${user.middle_name}' => 'Middle name.',

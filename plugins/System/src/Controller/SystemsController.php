@@ -15,7 +15,7 @@ class SystemsController extends AppController
 		parent::initialize();
     }
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event) {
+    public function beforeFilter(EventInterface $event) {
 		$request = $this->request;
     	parent::beforeFilter($event);
 
@@ -38,5 +38,8 @@ class SystemsController extends AppController
     public function StaffEntitlements() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.LeaveEntitlements']); }    // POCOR-8128 end
 
     public function SystemNotices() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.Notices']); }
+
+    //POCOR-9396
+    public function SystemProcesses() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'System.SystemProcesses']); }
 
 }

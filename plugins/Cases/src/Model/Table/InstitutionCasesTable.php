@@ -13,6 +13,7 @@ use Cake\Utility\Text;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
+use Cake\Validation\Validator;
 use Workflow\Model\Table\WorkflowStepsTable as WorkflowSteps;
 use Workflow\Model\Behavior\WorkflowBehavior;
 use Cake\Http\ServerRequest;
@@ -61,7 +62,16 @@ class InstitutionCasesTable extends ControllerActionTable
         $events['Model.LinkedRecord.afterSave'] = 'linkedRecordAfterSave';
         return $events;
     }
-
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->notEmptyString('tytle')
+            ->notEmptyString('description')
+            ->notEmptyString('case_type_id')
+        ->notEmptyString('case_priority_id');
+        return $validator;
+    }
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-7367::Start
@@ -416,7 +426,7 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
     }
 
-    public function onGetCustomLinkedRecordsElement(Event $mainEvent, $action, $entity, $attr, $options = [])
+    public function onGetCustomLinkedRecordsElement(EventInterface $mainEvent, $action, $entity, $attr, $options = [])
     {
         if ($action == 'index') {
             if ($entity->has('linked_records')) {

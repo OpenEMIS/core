@@ -10,7 +10,7 @@ use Scholarship\Controller\AttachmentsController as BaseController;
 
 class ScholarshipApplicationAttachmentsController extends BaseController
 {
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         $page = $this->Page;
 

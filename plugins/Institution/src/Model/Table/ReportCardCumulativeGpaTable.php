@@ -50,6 +50,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         $this->toggle('remove', false);
         $this->ReportCards = self::getDynamicTableInstance('ReportCard.ReportCards');
         $this->ReportCardProcesses = self::getDynamicTableInstance('ReportCard.ReportCardProcesses');
+        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Institution.InstitutionTab', [
             'appliedAction' => ['ReportCardCumulativeGpa' =>['id','student_id','academic_period_id','education_grade_id','institution_class_id']
             ]
@@ -1022,7 +1023,9 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     $checkgpaStudent, // POCOR-9162
     $selectedAcademicPeriodId,
     $institutionId,
-    $educationGradeId
+    $educationGradeId,
+    $reportStartDate = null,
+    $reportEndDate = null
 ): array {
 
     // ---- keep original parameter mapping ----
@@ -1040,6 +1043,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
             $institutionStudents->aliasField('academic_period_id')=> $academicPeriodId,
             $institutionStudents->aliasField('education_grade_id')=> $educationGradeId,
         ])
+        ->orderAsc($institutionStudents->aliasField('student_status_id')) //POCOR-9641
         ->first();
 
     if (!$enrollment) {
@@ -1083,10 +1087,31 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
     //     }
     // }
 
+    // foreach ($gpaResults as $gpa) {
+    //     // Allow all GPA terms that have already started
+    //     if ($gpa->start_date <= $today) {
+    //         $gpaIds[] = $gpa->id;
+    //     }
+    // }
+
     foreach ($gpaResults as $gpa) {
-        // Allow all GPA terms that have already started
-        if ($gpa->start_date <= $today) {
-            $gpaIds[] = $gpa->id;
+
+        if ($reportStartDate && $reportEndDate) {
+
+            // Report card context → only matching GPA term
+            if (
+                $gpa->start_date <= $reportEndDate &&
+                $gpa->end_date   >= $reportStartDate
+            ) {
+                $gpaIds[] = $gpa->id;
+            }
+
+        } else {
+
+            // Original behaviour (GPA/CGPA processes)
+            if ($gpa->start_date <= FrozenDate::today()) {
+                $gpaIds[] = $gpa->id;
+            }
         }
     }
     $gpaIds = array_values(array_unique($gpaIds));
@@ -2118,8 +2143,78 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $result['cum_gpa'] ?? 0.00;
     }
 
-
+    //POCOR-9622 -- Updated the cumulative gpa calculations as per new requirement.
     private static function getCumulativeGpaForStudentGpa(
+        int $institutionId,
+        int $studentId,
+        int $academicPeriodId,
+        int $educationGradeId,
+        int $educationGradeGpaId
+        ): float {
+        $connection = ConnectionManager::get('default');
+        
+        $sql = "SELECT
+                isg.id,
+                isg.student_id,
+                isg.institution_id,
+                isg.academic_period_id,
+                isg.education_grade_id,
+                isg.education_grades_gpa_id,
+                isg.gpa,
+                isg.cumulative_gpa,
+                calculated_gpa.new_cumulative_gpa
+            FROM institution_students_gpa AS isg
+            INNER JOIN (
+                SELECT
+                    grade_mapping.main_education_grade_gpa_id,
+                    ROUND(AVG(inner_isg.gpa), 2) AS new_cumulative_gpa,
+                    inner_isg.student_id
+                FROM (
+                    SELECT
+                        egcg.main_education_grade_id,
+                        egg.id AS main_education_grade_gpa_id,
+                        prev_grade.id AS education_grade_id,
+                        prev_egg.id AS education_grades_gpa_id
+                    FROM education_grades_cumulative_gpa AS egcg
+                    INNER JOIN education_grades_gpa AS egg
+                        ON egcg.main_education_grade_id = egg.education_grade_id
+                    INNER JOIN education_grades AS current_grade
+                        ON current_grade.id = egcg.education_grade_id
+                    INNER JOIN education_grades AS prev_grade
+                        ON prev_grade.code = current_grade.code
+                    INNER JOIN education_grades_gpa AS prev_egg
+                        ON prev_egg.education_grade_id = prev_grade.id
+                    INNER JOIN education_grades_gpa AS current_egg
+                        ON current_egg.id = egg.id
+                        AND current_egg.start_date >= prev_egg.start_date
+                ) AS grade_mapping
+                INNER JOIN institution_students_gpa AS inner_isg
+                    ON inner_isg.education_grade_id = grade_mapping.education_grade_id
+                    AND inner_isg.education_grades_gpa_id = grade_mapping.education_grades_gpa_id
+                WHERE inner_isg.student_id IN ($studentId) 
+                GROUP BY
+                    inner_isg.student_id,
+                    grade_mapping.main_education_grade_gpa_id
+            ) AS calculated_gpa
+                ON calculated_gpa.student_id = isg.student_id
+                AND calculated_gpa.main_education_grade_gpa_id = isg.education_grades_gpa_id;
+            ";
+
+
+        $result = $connection->execute($sql)->fetch('assoc');
+        $results = $connection->execute($sql)->fetchAll('assoc');
+
+        foreach ($results as $row) {
+            if ($row['education_grades_gpa_id'] == $educationGradeGpaId) {
+                return (float)$row['new_cumulative_gpa'];
+            }
+        }
+
+        return 0.00;
+    }
+
+    //POCOR-9622 -- Code required for reference purpose for initial CGPA calculation, to be removed once the new CGPA calculation is verified and stable.
+    private static function getCumulativeGpaForStudentGpaReference(
         int $institutionId,
         int $studentId,
         int $academicPeriodId,
@@ -2329,6 +2424,7 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
                 INNER JOIN education_grades_gpa egpa
                     ON egpa.id = institution_students_gpa.education_grades_gpa_id
                 WHERE institution_students_gpa.student_id = $studentId
+                AND institution_students_gpa.institution_id = $institutionId
                 AND egpa.start_date <= CURRENT_DATE
                 GROUP BY institution_students_gpa.institution_id
                     ,institution_students_gpa.academic_period_id

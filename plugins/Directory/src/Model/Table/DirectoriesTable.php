@@ -1401,7 +1401,20 @@ class DirectoriesTable extends ControllerActionTable
                 'provider' => 'table',
                 'last' => true
             ])
-            ->notEmpty('nationality');
+            ->notEmpty('nationality')
+        ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+        ->allowEmptyString('mobile_number')
+        ->add('mobile_number', 'numeric', [
+            'rule' => 'numeric',
+            'message' => 'Only numbers are allowed'
+        ]); //POCOR-9680
         $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
@@ -1527,6 +1540,10 @@ class DirectoriesTable extends ControllerActionTable
 
         // Check if 'page' is set in the query string or 'AdvanceSearch' is present
         if (isset($_GET['page']) || isset($_REQUEST['AdvanceSearch'])) {
+            $this->behaviors()->get('AdvanceSearch')->setConfig([
+                'showOnLoad' => 0,
+            ]);
+        } else if (isset($_GET['sort']) || isset($_REQUEST['direction'])) {
             $this->behaviors()->get('AdvanceSearch')->setConfig([
                 'showOnLoad' => 0,
             ]);

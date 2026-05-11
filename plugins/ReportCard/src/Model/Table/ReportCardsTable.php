@@ -576,14 +576,21 @@ class ReportCardsTable extends ControllerActionTable
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
+
         //POCOR-7860 :: Start
         $string = $data['ReportCards']['name'];
-        if (preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $string))
+        if (preg_match('/[\'\^£$%&*()}{@#~?><>,|=_+¬-]/u', $string))
         {
             // one or more of the 'special characters' found in $string
             $this->Alert->error('Templates.specialCharr', ['reset' => true]);
             $event->stopPropagation();
-            return $this->controller->redirect($this->url('edit'));;
+            //POCOR-9639: redirect back to the current action (add or edit) instead of hardcoding 'edit'
+            //Previously always redirected to /edit with no entity ID, causing SecurityException:
+            //"Wrong number of segments" in paramsDecode() when pass[1] is null on Edit page load
+            if ($entity->isNew()) {
+                return $this->controller->redirect($this->url('add'));
+            }
+            return $this->controller->redirect($this->url('edit'));
         }
         //POCOR-7860 :: End
         if (!empty($data[$this->getAlias()]['teacher_comments_required']) && !empty($data[$this->getAlias()]['education_grade_id'])) {
@@ -798,12 +805,16 @@ class ReportCardsTable extends ControllerActionTable
          $institutionsPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPosition');//POCOR-8093
          $StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
          $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-         $where = [
+         //POCOR-9598: start - getPrincipalRoleId() returns an array of IDs; use IN() so CakePHP doesn't try to cast array as string
+         $staffPosnCondition = is_array($staffPosnId)
+             ? ['InstitutionPositions.staff_position_title_id IN' => $staffPosnId]
+             : ['InstitutionPositions.staff_position_title_id' => $staffPosnId];
+         //POCOR-9598: end
+         $where = array_merge([
              $Staff->aliasField('institution_id') => $institutionId,
-             'InstitutionPositions.staff_position_title_id' => $staffPosnId, //POCOR-8193
              'SecurityGroupUsers.security_group_id IN (' . implode(',', $institutionSecurityGroupsIds) . ')',
              $Staff->aliasField('staff_status_id') => $assignedStatus
-         ];
+         ], $staffPosnCondition);
 
          $staffQuery = $Staff
              ->find()

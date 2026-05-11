@@ -64,6 +64,14 @@ class LeaveTable extends ControllerActionTable
         $this->addBehavior('Staff.StaffTab');
     }
 
+    /**
+     * Enable identifier quoting so the alias "Leave" (MySQL reserved word) is quoted in SQL.
+     */
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options, $primary)
+    {
+        $this->getConnection()->getDriver()->enableAutoQuoting();
+    }
+
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
@@ -524,7 +532,7 @@ class LeaveTable extends ControllerActionTable
         }
     }
 
-    /*public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    /*public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action != 'add' && $action != 'edit'){
             return $attr;
@@ -768,7 +776,7 @@ class LeaveTable extends ControllerActionTable
     }
 
     //POCOR-9496
-    public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAssigneeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
             $assigneesOptions = $this->getAssigneesOptions($request);
@@ -891,7 +899,7 @@ class LeaveTable extends ControllerActionTable
         return $assigneeOptions;
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Institution');

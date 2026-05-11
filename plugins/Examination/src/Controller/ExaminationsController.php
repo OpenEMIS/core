@@ -5,7 +5,6 @@ namespace Examination\Controller;
 use App\Controller\AppController;
 use ArrayObject;
 use Cake\Event\EventInterface;
-use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
@@ -110,7 +109,7 @@ class ExaminationsController extends AppController
     }
     // End
 
-    public function beforeFilter(Event|\Cake\Event\EventInterface $event)
+    public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Examination') {
             $this->Security->setConfig('validatePost', false);
@@ -141,8 +140,7 @@ class ExaminationsController extends AppController
         $this->set('contentHeader', $header);
 
         $persona = false;
-        $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
-        $event = $model->getEventManager()->dispatch($event);
+        $event = $model->dispatchEvent('Model.Navigation.breadcrumb', [$this->request, $this->Navigation, $persona], $this);
     }
 
     public function getExamsTab()
@@ -165,6 +163,12 @@ class ExaminationsController extends AppController
     public function getExamCentresTab($action = null)
     {
         $queryString = $this->request->getQuery('queryString');
+        if (empty($queryString) && isset($this->ControllerAction)) {
+            $centreId = $this->ControllerAction->getQueryString('examination_centre_id');
+            if ($centreId !== null && $centreId !== '') {
+                $queryString = $this->ControllerAction->paramsEncode(['examination_centre_id' => $centreId]);
+            }
+        }
         $tabElements = [
             'ExamCentres' => [
                 'url' => ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => 'ExamCentres', 'view', 'queryString' => $queryString],
@@ -246,7 +250,7 @@ class ExaminationsController extends AppController
         }
     }
 
-    public function beforeRender(Event|\Cake\Event\EventInterface $event)
+    public function beforeRender(EventInterface $event)
     {
         parent::beforeRender($event);
         $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');

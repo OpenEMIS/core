@@ -3,7 +3,6 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use ZipArchive;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -11,8 +10,8 @@ use Cake\ORM\ResultSet;
 use Cake\Event\EventInterface;
 use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
-
 use App\Model\Table\ControllerActionTable;
+use Institution\Model\Traits\ProfilePermissionTrait; //POCOR-9598: centralised profile permission check
 
 /**
  *
@@ -23,14 +22,22 @@ use App\Model\Table\ControllerActionTable;
  */
 class StaffProfilesTable extends ControllerActionTable
 {
+    use ProfilePermissionTrait; //POCOR-9598: security_role_functions execute-permission check
+
     private $statusOptions = [];
     private $reportProcessList = [];
+
+    //POCOR-9598: security_functions name+controller for staff profile buttons (portable — no hardcoded IDs)
+    const GENERATE_FUNCTION_NAME = 'Generate Staff Profile';
+    const DOWNLOAD_FUNCTION_NAME = 'Download Staff Profile';
+    const FUNCTION_CONTROLLER    = 'Institutions';
 
     // for status
     CONST NEW_REPORT = 1;
     CONST IN_PROGRESS = 2;
     CONST GENERATED = 3;
     CONST PUBLISHED = 4;
+    CONST FAILED = 5; //POCOR-9598: Failed status for stuck-in-progress profiles
 
     CONST MAX_PROCESSES = 2;
 
@@ -75,7 +82,8 @@ class StaffProfilesTable extends ControllerActionTable
             self::NEW_REPORT => __('New'),
             self::IN_PROGRESS => __('In Progress'),
             self::GENERATED => __('Generated'),
-            self::PUBLISHED => __('Published')
+            self::PUBLISHED => __('Published'),
+            self::FAILED => __('Failed') //POCOR-9598: Failed status
         ];
         $this->addBehavior('Institution.InstitutionTab');
     }
@@ -128,28 +136,38 @@ class StaffProfilesTable extends ControllerActionTable
             ];
 
             // Download button, status must be generated or published
-            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'downloadExcel']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-                //START:POCOR-6667
-                $viewPdfUrl = $this->setQueryString($this->url('viewPDF'), $params);
-                $buttons['viewPdf'] = [
-                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
-                    'attr' => $indexAttr,
-                    'url' => $viewPdfUrl
-                ];
-                //END:POCOR-6667
-                $downloadPdfUrl = $this->setQueryString($this->url('downloadPDF'), $params);
-                $buttons['downloadPdf'] = [
-                    'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
-                    'attr' => $indexAttr,
-                    'url' => $downloadPdfUrl
-                ];
-                $downloadUrl = $this->setQueryString($this->url('downloadExcel'), $params);
+            if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'downloadExcel'])
+                && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) 
+            {
+                $downloadUrl = $this->url('downloadExcel');
+                $downloadUrl['1'] = $queryString;
                 $buttons['download'] = [
                     'label' => '<i class="fa kd-download"></i>'.__('Download Excel'),
                     'attr' => $indexAttr,
                     'url' => $downloadUrl
                 ];
             }
+
+            //POCOR-9585 start
+            if($this->AccessControl->check(['Institutions', 'StaffProfiles', 'download']) &&
+             $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED]))
+            {
+                $viewPdfUrl = $this->url('viewPDF');
+                $viewPdfUrl['1'] = $queryString;
+                $buttons['viewPdf'] = [
+                    'label' => '<i class="fa fa-eye"></i>'.__('View PDF'),
+                    'attr' => $indexAttr,
+                    'url' => $viewPdfUrl
+                ];
+
+                $downloadPdfUrl =$this->url('downloadPDF');
+                $downloadPdfUrl['1'] = $queryString;
+                $buttons['downloadPdf'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download PDF'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadPdfUrl
+                ];
+            } //POCOR-9585 end
 
             // Generate button, all statuses
             if ($this->AccessControl->check(['Institutions', 'StaffProfiles', 'generate'])) {
@@ -465,10 +483,9 @@ class StaffProfilesTable extends ControllerActionTable
                     $extra['toolbarButtons']['generateAll'] = $generateButton;
 
                 } else {
-                    $generateButton['attr']['data-html'] = true;
-                    $generateButton['attr']['title'] .= __('<br>'.$this->getMessage('StaffProfiles.date_closed'));
-                    $generateButton['url'] = 'javascript:void(0)';
-                    $extra['toolbarButtons']['generateAll'] = $generateButton;
+                    //POCOR-9598: start - hide Generate All button and show warning when date window is closed
+                    $this->Alert->warning(__('This profile template generation is not enabled. Consult with system administrator to check the dates.'), ['type' => 'string', 'reset' => true]);
+                    //POCOR-9598: end
                 }
 
                 // Publish all button
@@ -741,7 +758,7 @@ class StaffProfilesTable extends ControllerActionTable
         $hasTemplate = $this->StaffTemplates->checkIfHasTemplate($params['staff_profile_template_id']);
         if ($hasTemplate) {
             $this->addReportCardsToProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
-            $this->triggerGenerateAllReportCardsShell($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
+            $this->triggerGenerateReportCardCommand($institutionId, $params['academic_period_id'], $params['staff_profile_template_id'], $params['staff_id']);
             $this->Alert->warning('StaffProfiles.generate');
         }
 
@@ -770,7 +787,7 @@ class StaffProfilesTable extends ControllerActionTable
 
             if (!$inProgress) {
                 $this->addReportCardsToProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
-                $this->triggerGenerateAllReportCardsShell($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
+                $this->triggerGenerateReportCardCommand($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
                 $this->Alert->warning('StaffProfiles.generateAll');
             } else {
                 $this->Alert->warning('StaffProfiles.inProgress');
@@ -1071,10 +1088,38 @@ class StaffProfilesTable extends ControllerActionTable
         Log::write('debug', 'End Add All staff profile Report Cards '.$reportCardId.' for Institution '.$institutionId.' to processes ('.FrozenTime::now().')');
     }
 
-    private function triggerGenerateAllReportCardsShell($institutionId, $academicPeriodId, $reportCardId, $staffId = null)
+    private function triggerGenerateReportCardCommand($institutionId, $academicPeriodId, $reportCardId, $staffId = null) //POCOR-9598: renamed from triggerGenerateReportCardCommand
     {
+        //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand ENTRY institutionId=' . $institutionId . ' academicPeriodId=' . $academicPeriodId . ' reportCardId=' . $reportCardId . ' staffId=' . $staffId); //[TEMP-LOG]
+
         $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+        $StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
+        $today = FrozenTime::now();
+
+        //POCOR-9598: start — reset staff_report_card_processes records stuck RUNNING > 6 hours
+        $cutoff6h = clone($today);
+        $cutoff6h->subHours(24); //POCOR-9598: 24h window for large countries
+        $stuckQueueCount = $StaffReportCardProcesses->find()
+            ->where([
+                $StaffReportCardProcesses->aliasField('status') => $StaffReportCardProcesses::RUNNING,
+                $StaffReportCardProcesses->aliasField('created') . ' <' => $cutoff6h->format('Y-m-d H:i:s'),
+            ])
+            ->count();
+        //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand stuckQueueCount (RUNNING > 24h)=' . $stuckQueueCount . ' cutoff=' . $cutoff6h->format('Y-m-d H:i:s')); //[TEMP-LOG]
+        if ($stuckQueueCount > 0) {
+            $StaffReportCardProcesses->updateAll(
+                ['status' => $StaffReportCardProcesses::NEW_PROCESS],
+                [
+                    $StaffReportCardProcesses->aliasField('status') => $StaffReportCardProcesses::RUNNING,
+                    $StaffReportCardProcesses->aliasField('created') . ' <' => $cutoff6h->format('Y-m-d H:i:s'),
+                ]
+            );
+            //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand reset ' . $stuckQueueCount . ' stuck queue records back to NEW_PROCESS'); //[TEMP-LOG]
+        }
+        //POCOR-9598: end
+
         $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias()); //POCOR-8551
+        //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand runningProcessCount=' . count($runningProcess) . ' MAX_PROCESSES=' . self::MAX_PROCESSES . ' registryAlias=' . $this->getRegistryAlias()); //[TEMP-LOG]
 
         foreach ($runningProcess as $key => $processData) {
             $systemProcessId = $processData['id'];
@@ -1083,16 +1128,20 @@ class StaffProfilesTable extends ControllerActionTable
 
             $expiryDate = clone($createdDate);
             $expiryDate->addMinutes(30);
-            $today = FrozenTime::now();
+
+            //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand checking stale process systemProcessId=' . $systemProcessId . ' pId=' . $pId . ' expired=' . ($expiryDate < $today ? 'YES' : 'NO')); //[TEMP-LOG]
 
             if ($expiryDate < $today) {
                 $SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $SystemProcesses::COMPLETED);
                 $SystemProcesses->killProcess($pId);
             }
         }
+        // Re-query after cleanup for an accurate live count
+        $runningProcess = $SystemProcesses->getRunningProcesses($this->getRegistryAlias()); //POCOR-9598
+        //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand freshRunningCount=' . count($runningProcess) . ' willSpawn=' . (count($runningProcess) <= self::MAX_PROCESSES ? 'YES' : 'NO')); //[TEMP-LOG]
 
         if (count($runningProcess) <= self::MAX_PROCESSES) {
-            $processModel = $this->getRegistryAlias();//POCOR-8551
+            $processModel = $this->getRegistryAlias(); //POCOR-8551
             $passArray = [
                 'institution_id' => $institutionId,
                 'staff_profile_template_id' => $reportCardId
@@ -1102,18 +1151,24 @@ class StaffProfilesTable extends ControllerActionTable
             }
             $params = json_encode($passArray);
 
-            $args = $processModel . " " . $params;
+            $args = escapeshellarg($processModel) . ' ' . escapeshellarg($params); //POCOR-9598: escapeshellarg prevents bash brace expansion splitting JSON on commas
 
-            $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllStaffReportCards '.$args;
-            $logs = ROOT . DS . 'logs' . DS . 'GenerateAllStaffReportCards.log & echo $!';
+            $cmd = ROOT . DS . 'bin' . DS . 'cake generate_staff_profile ' . $args; //POCOR-9598: migrated from Shell to Command
+            $logs = ROOT . DS . 'logs' . DS . 'GenerateAllStaffReportCards.log 2>&1 & echo $!'; //POCOR-9598: 2>&1 captures stderr
             $shellCmd = $cmd . ' >> ' . $logs;
+
+            //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand SPAWNING cmd=' . $shellCmd); //[TEMP-LOG]
             try {
                 $pid = exec($shellCmd);
+                //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand SPAWNED pid=' . $pid); //[TEMP-LOG]
                 Log::write('debug', $shellCmd);
-            } catch(\Exception $ex) {
-                Log::write('error', __METHOD__ . ' exception when generate all report cards : '. $ex);
+            } catch (\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when generate staff profile: ' . $ex);
             }
+        } else {
+            //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand NOT spawning, reached MAX_PROCESSES=' . self::MAX_PROCESSES); //[TEMP-LOG]
         }
+        //Log::debug('@StaffProfilesTable::triggerGenerateReportCardCommand EXIT'); //[TEMP-LOG]
     }
 
     private function addReportCardsToEmailProcesses($institutionId, $academicPeriodId, $reportCardId, $staffId = null)

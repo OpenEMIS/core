@@ -57,7 +57,7 @@ class HealthReportsTable extends AppTable
 
     public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
         return $attr;
     }
 
@@ -1030,14 +1030,14 @@ class HealthReportsTable extends AppTable
 //        $this->log(__FUNCTION__, 'debug');
         $classes = TableRegistry::getTableLocator()->get('institution_classes');
         $class_students = TableRegistry::getTableLocator()->get('institution_class_students');
-        $query->leftJoin([$class_students->alias() => $class_students->table()], [
+        $query->leftJoin([$class_students->getAlias() => $class_students->getTable()], [
             $class_students->aliasField('student_id = ') . $this->aliasField('student_id'),
             $class_students->aliasField('institution_id = ') . $this->aliasField('institution_id'),
             $class_students->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
             $class_students->aliasField('student_status_id = ') . $this->aliasField('student_status_id'),
             $class_students->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id')
         ])
-            ->leftJoin([$classes->alias() => $classes->table()], [
+            ->leftJoin([$classes->getAlias() => $classes->getTable()], [
                 $classes->aliasField('id = ') . $class_students->aliasField('institution_class_id')
             ]);
         $query = $query->select([
@@ -1971,13 +1971,15 @@ class HealthReportsTable extends AppTable
         if ($query) {
             $academic_period_id = $this->academic_period_id;
             $allBodyMasses = TableRegistry::getTableLocator()->get('user_body_masses');
-            $sumBodyMasses = $allBodyMasses->find('all')
+            if(!empty($academic_period_id)){
+                $sumBodyMasses = $allBodyMasses->find('all')
                 ->select(['security_user_id' => 'security_user_id',
                     'body_mass_details' => "GROUP_CONCAT('Weight: ', user_body_masses.weight, 'kg - Height: ', user_body_masses.height, 'cm - BMI: ', user_body_masses.body_mass_index, ' on ', user_body_masses.date)",
                     'last_body_mass_date' => $query->func()->max('user_body_masses.date'),
                 ])
                 ->where(['user_body_masses.academic_period_id' => $academic_period_id])
                 ->group(['security_user_id']);
+            }
 
             $query = $query->select([
                 'body_mass_details' => 'sumBodyMasses.body_mass_details',

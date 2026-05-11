@@ -472,7 +472,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
         /**POCOR-6886 ends*/
     }
 
-    public function onExcelGetIdentityNumber(Event $event, Entity $entity)
+    public function onExcelGetIdentityNumber(EventInterface $event, Entity $entity)
     {
         return $entity->custom_identity_number;
     }

@@ -47,7 +47,6 @@ use DateInterval;
 use DatePeriod;
 use App\Imports\StudentAttendanceImport;
 use File;
-use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class AttendanceRepository extends Controller
@@ -2273,7 +2272,7 @@ class AttendanceRepository extends Controller
             }
 
             $headers = ['Date ( DD/MM/YYYY )', 'Student Attendance Type Code', 'Period', 'Institution Subject Name', ' OpenEMIS ID', 'Absence Type Code', 'Student Absence Reason Code', 'Comment'];
-            $results = Excel::toArray(new StudentAttendanceImport(), $params['file']);
+            $results = StudentAttendanceImport::toArray($params['file']);
             
             if (empty($results[0][1])) {
                 return 2; //Header is not present...

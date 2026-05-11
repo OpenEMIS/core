@@ -58,8 +58,15 @@ class InstitutionSurveysTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
             'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
             'recordKey' => 'institution_survey_id',
-            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
-            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells', 'foreignKey' => 'institution_survey_id', 'dependent' => true, 'cascadeCallbacks' => true,]
+            'fieldValueClass' => ['className' => 'Institution.InstitutionSurveyAnswers',
+                'foreignKey' => 'institution_survey_id',
+                'dependent' => true,
+                'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'Institution.InstitutionSurveyTableCells',
+                'foreignKey' => 'institution_survey_id',
+                'dependent' => true,
+                'cascadeCallbacks' => true,]
+
         ]);
         $this->addBehavior('Excel', ['pages' => ['view']]);
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -244,6 +251,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
         $this->request = $this->request->withData($this->getAlias(), $data[$this->getAlias()]); // POCOR-9105
     }
+
     //POCOR-7171:Start
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
@@ -331,7 +339,7 @@ class InstitutionSurveysTable extends ControllerActionTable
         }
     }
 
-    public function getWorkflowFilterOptions(EventInterface $event, array $extra = null)
+    public function getWorkflowFilterOptions(EventInterface $event, ?array $extra = null)
     {
         $CustomModules = $this->SurveyForms->CustomModules;
         $module = $this->module;
@@ -342,71 +350,40 @@ class InstitutionSurveysTable extends ControllerActionTable
             })
             ->toArray();
 
-        if (is_null($extra) || empty($extra['institution_id'])) {
+        if ($extra === null || empty($extra['institution_id'])) {
             // used by WorkflowTable, and it will not pass back $extra, to return the whole list
             return $surveyList;
-        } else {
-            // used by WorkflowBehavior, and it will pass back $extra with the institution_id to read from
-            $institutionId = $extra['institution_id'];
-
-            if (!is_null($institutionId)) {
-                $AcademicPeriods = $this->AcademicPeriods;
-                $SurveyFormsFilters = TableRegistry::getTableLocator()->get('Survey.SurveyFormsFilters');
-                $SurveyStatuses = $this->SurveyForms->SurveyStatuses;
-                $SurveyStatusPeriods = $this->SurveyForms->SurveyStatuses->SurveyStatusPeriods;
-                //$institutionTypeId = $this->Institutions->get($institutionId)->institution_type_id;
-                $todayDate = date("Y-m-d");
-                $list = [];
-
-                foreach ($surveyList as $key => $value) {
-                    $surveyFormId = $key;
-
-                    // check if survey form filter type matches
-                    $institutionFilterCount = $SurveyFormsFilters
-                        ->find()
-                        ->leftJoin(
-                            ['SurveyFilterInstitutionTypes' => 'survey_filter_institution_types'],
-                            ['SurveyFilterInstitutionTypes.survey_filter_id = SurveyFormsFilters.id']
-                        )
-                        ->where([
-                            'AND' => [
-                                [$SurveyFormsFilters->aliasField('survey_form_id') => $surveyFormId],
-                                /*[
-                                    'OR' => [
-                                        [$SurveyFormsFilters->aliasField('survey_filter_id') => $institutionTypeId],
-                                        [$SurveyFormsFilters->aliasField('survey_filter_id') => SurveyForms::ALL_CUSTOM_FILER]
-                                    ]
-                                ]*/ //comment line in POCOR-7271
-                            ]
-                        ])
-                        ->count();
-
-                    // if filter type matches, check if the status is active
-                    if ($institutionFilterCount > 0) {
-                        $activeSurveyCount = $SurveyStatusPeriods
-                            ->find()
-                            ->matching($AcademicPeriods->getAlias())
-                            ->matching($SurveyStatuses->getAlias(), function ($q) use ($SurveyStatuses, $surveyFormId, $todayDate) {
-                                return $q
-                                    ->where([
-                                        $SurveyStatuses->aliasField('survey_form_id') => $surveyFormId,
-                                        $SurveyStatuses->aliasField('date_disabled >=') => $todayDate
-                                    ]);
-                            })
-                            ->count();
-                    } else {
-                        $activeSurveyCount = 0;
-                    }
-
-                    // update the filter list if their is existing active surveys for the institution by institution type
-                    if ($activeSurveyCount > 0) {
-                        $list[$key] = $value;
-                    }
-                }
-            }
-
-            return $list;
         }
+
+        // used by WorkflowBehavior with institution_id
+        $institutionId = $extra['institution_id'];
+        if ($institutionId === null) {
+            return $surveyList;
+        }
+
+        // Distinct forms that have non-expired rows for this institution (same scope as grid base rows).
+        // Do not intersect with $surveyList: the index query joins survey_forms directly, while
+        // $surveyList is limited by CustomModules.model — that mismatch hid most forms in the filter.
+        $formIds = $this->find('list', [
+            'keyField' => 'survey_form_id',
+            'valueField' => 'survey_form_id',
+        ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('status_id <>') => self::EXPIRED,
+            ])
+            ->group([$this->aliasField('survey_form_id')])
+            ->toArray();
+
+        if ($formIds === []) {
+            return [];
+        }
+
+        return $this->SurveyForms
+            ->find('list')
+            ->where([$this->SurveyForms->aliasField('id') . ' IN' => array_keys($formIds)])
+            ->orderAsc($this->SurveyForms->aliasField('name'))
+            ->toArray();
     }
 
     public function triggerBuildSurveyRecordsShell($params)
@@ -542,12 +519,17 @@ class InstitutionSurveysTable extends ControllerActionTable
         $request = $this->controller->getRequest();
         $filterValues = $request->getQuery('filter');
 
-        // Handle both array and scalar values
+        // Handle both array and scalar values; '-1' is the workflow "Select" placeholder — do not treat as form id 1
+        $rawFilter = '';
+        if (is_array($filterValues) && array_key_exists(0, $filterValues) && $filterValues[0] !== '' && $filterValues[0] !== null) {
+            $rawFilter = (string)$filterValues[0];
+        } elseif (!is_array($filterValues) && $filterValues !== null && $filterValues !== '') {
+            $rawFilter = (string)$filterValues;
+        }
+
         $firstVal = '';
-        if (is_array($filterValues) && !empty($filterValues[0])) {
-            $firstVal = preg_replace('/\D/', '', $filterValues[0]);
-        } elseif (!empty($filterValues)) {
-            $firstVal = preg_replace('/\D/', '', $filterValues);
+        if ($rawFilter !== '' && $rawFilter !== '-1') {
+            $firstVal = preg_replace('/\D/', '', $rawFilter);
         }
 
         $getdata = !empty($firstVal) ? [$firstVal] : [''];
@@ -630,7 +612,9 @@ class InstitutionSurveysTable extends ControllerActionTable
                     //POCOR-5666 Condition[START]
                     //Survey should only show for the active institution
                     $this->aliasField('Institutions.institution_status_id = ') => 1,
-                    $this->aliasField('SurveyFormsFilters.survey_form_id IN') => $getdata,
+                    // Filter by assigned survey form on the main row (not survey_forms_filters.survey_form_id:
+                    // many forms have no filter rows, so the old condition dropped all rows when a form was selected).
+                    $this->aliasField('survey_form_id IN') => $getdata,
                     //POCOR-5666 Condition[END]
                     'surveyStatuses.date_enabled <=' => $todayDate,
                     // 'surveyStatuses.date_disabled >=' => $todayDate, //POCOR-8095

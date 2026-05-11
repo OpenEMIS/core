@@ -5,12 +5,24 @@ $operation = (isset($attr['operation']))? $attr['operation']: null;
 $totalAmount = 0;
 $addBtnName = "";
 
+//POCOR-9584: Log what data is available
+error_log('[POCOR-9584] salary_info.php - fieldName: ' . $fieldName);
+error_log('[POCOR-9584] salary_info.php - data keys: ' . json_encode(array_keys((array)$data)));
+error_log('[POCOR-9584] salary_info.php - data->' . $fieldName . ': ' . json_encode($data->{$fieldName} ?? 'NOT SET'));
+if (isset($data->additions)) {
+	error_log('[POCOR-9584] salary_info.php - data->additions: ' . $data->additions);
+}
+if (isset($data->deductions)) {
+	error_log('[POCOR-9584] salary_info.php - data->deductions: ' . $data->deductions);
+}
+
 switch ($fieldName) {
 	case 'salary_additions':
 	$operand = 'plus';
 	$optionName = 'salary_addition';
 	$totalAmount = $data->additions;
 	$addBtnName = "Addition";
+	error_log('[POCOR-9584] salary_info.php - ADDITIONS: totalAmount from data->additions = ' . $totalAmount);
 	break;
 
 	case 'salary_deductions':
@@ -18,6 +30,7 @@ switch ($fieldName) {
 	$optionName = 'salary_deduction';
 	$totalAmount = $data->deductions;
 	$addBtnName = "Deduction";
+	error_log('[POCOR-9584] salary_info.php - DEDUCTIONS: totalAmount from data->deductions = ' . $totalAmount);
 	break;
 }
 ?>

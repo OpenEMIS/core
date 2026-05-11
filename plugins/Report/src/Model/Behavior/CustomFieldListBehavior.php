@@ -10,6 +10,7 @@ use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
 use Cake\ORM\Table;
 use Cake\Log\Log; // POCOR-9116
+use Cake\Datasource\ConnectionManager;
 
 class CustomFieldListBehavior extends Behavior
 {
@@ -494,6 +495,11 @@ class CustomFieldListBehavior extends Behavior
      */
     public function getFieldValue($recordId)
     {
+        //POCOR-9182 START
+        // Set group_concat_max_len to handle longer text values at the beginning
+        $conn = ConnectionManager::get('default');
+        $conn->execute('SET SESSION group_concat_max_len = 1048576'); // 1MB limit
+        //POCOR-9182 END
         $customFieldValueTable = $this->CustomFieldValues;
         $customFieldsForeignKey = $customFieldValueTable->CustomFields->getForeignKey();
         $customRecordsForeignKey = $customFieldValueTable->CustomRecords->getForeignKey();

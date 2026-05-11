@@ -14,6 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
+use App\Utility\ApplicationTimezone;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Http\ServerRequest;
@@ -277,7 +278,12 @@ class ConfigItemsTable extends AppTable
             $this->deleteLanguageCacheFile();
         } else if ($entity->code == 'language_menu') {
             $this->deleteLanguageCacheFile();
+        } 
+        //POCOR-9565[START]
+        else if ($entity->code === 'time_zone' || $entity->name === 'Time Zone') {
+            ApplicationTimezone::clearDisplayTimezoneCache();
         }
+        //POCOR-9565[END]
         $session = $this->request->getSession();
         $session->write('successAlert', 'yes');
         $action = [
@@ -598,7 +604,8 @@ class ConfigItemsTable extends AppTable
                 $value = $optionsModel->find()
                     ->where([
                         'ConfigItemOptions.option_type' => $entity->option_type,
-                        'ConfigItemOptions.value' => $entity->{$valueField},
+                        // 'ConfigItemOptions.value' => $entity->{$valueField},
+                        'ConfigItemOptions.value' => $entity->value,
                     ])
                     ->first();
                 if (is_object($value)) {
@@ -946,16 +953,17 @@ class ConfigItemsTable extends AppTable
             'last' => true
         ]
     ];
-
+    
+    //POCOR-9554[START] initially it was 200
     private $validateMaxStudentsPerClass = [
         'num' => [
             'rule' => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 200',
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
         ],
         'bet' => [
-            'rule' => ['range', 0, 200],
-            'message' => 'Numeric Value should be between 0 to 200',
+            'rule' => ['range', 0, 1000],
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
         ]
     ];
@@ -963,19 +971,20 @@ class ConfigItemsTable extends AppTable
     private $validateMaxStudentsPerSubject = [
         'num' => [
             'rule' => 'numeric',
-            'message' => 'Numeric Value should be between 0 to 200',
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
         ],
         'bet' => [
-            'rule' => ['range', 0, 200],
-            'message' => 'Numeric Value should be between 0 to 200',
+            'rule' => ['range', 0, 1000],
+            'message' => 'Numeric Value should be between 0 to 1000',
             'last' => true
-        ],
-        'checkMaxStudentsPerSubject' => [
+        ]
+        /*'checkMaxStudentsPerSubject' => [
             'rule' => ['checkMaxStudentsPerSubject'],
             'provider' => 'table'
-        ]
+        ]*/
     ];
+     //POCOR-9554[END]
 
     private $validateLatitudeMinimum = [
         'num' => [

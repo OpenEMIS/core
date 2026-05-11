@@ -15,7 +15,7 @@ use Cake\Datasource\ConnectionManager; // POCOR-7158
 class StaffTrainingNeedsTable extends TrainingNeedsAppTable
 {
     public function initialize(array $config): void
-    { 
+    {
         parent::initialize($config);
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Excel',[
@@ -59,9 +59,9 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         }
         // End
 
-                        
+
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Needs','Staff - Training');       
+		$is_manual_exist = $this->getManualUrl('Institutions','Needs','Staff - Training');
 		if(!empty($is_manual_exist)){
 			$btnAttr = [
 				'class' => 'btn btn-xs btn-default icon-big',
@@ -100,13 +100,13 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
     // POCOR-6137 start
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        $session = $this->request->session();
-        $staffId = $session->read('Staff.Staff.id');
-        $status = $this->request->query('category');
-        $workflowSteps = TableRegistry::getTableLocator()->get('workflow_steps');
+        $session = $this->request->getSession(); //POCOR-9584: CakePHP 5 - getSession()
+        $staffId = $this->getStaffID(); //POCOR-9584: CakePHP 5 - getStaffID()
+        $status = $this->request->getQuery('category'); //POCOR-9584: CakePHP 5 - getQuery()
+        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps'); //POCOR-9584: CakePHP 5 - namespaced plugin model
 
         $query
-        ->innerJoin([$workflowSteps->alias() => $workflowSteps->table()],[
+        ->innerJoin([$workflowSteps->getAlias() => $workflowSteps->getTable()],[ //POCOR-9584: CakePHP 5 - getAlias()/getTable()
             $workflowSteps->aliasField('id = ').$this->aliasField('status_id')
         ])
         ->where([
@@ -117,7 +117,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
             $query
             ->where([
                 $workflowSteps->aliasField('category = ') => $status
-            ]); 
+            ]);
         }
     }
 
