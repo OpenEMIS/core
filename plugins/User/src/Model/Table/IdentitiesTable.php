@@ -69,6 +69,21 @@ class IdentitiesTable extends ControllerActionTable
                 $entity['security_user_id'] = $userID;
             }
         }
+        //POCOR-9590: server-side mirror of the readonly UI rule. Block updates to number /
+        //identity_type_id on rows whose identity_type is an external lookup key — closes the
+        //"swap NIN then re-sync to steal identity" vector even when the request bypasses the form.
+        if (!$entity->isNew()
+            && $this->isExternalLookupIdentityType((int) $entity->identity_type_id)
+            && ($entity->isDirty('number') || $entity->isDirty('identity_type_id'))
+        ) {
+            Log::write(
+                'warning',
+                'POCOR-9590: blocked update to external-lookup identity row '
+                . $entity->id . ' by user ' . $this->getUserID()
+            );
+            $event->stopPropagation();
+            return false;
+        }
         $message = $this->checkCustomIdentityNumber($options);
         if ($message != "") {
             $message = __('Wrong identity number');
@@ -294,6 +309,31 @@ class IdentitiesTable extends ControllerActionTable
         if (empty($entity->expiry_date)) {
             $this->fields['expiry_date']['default_date'] = false;
         }
+
+        //POCOR-9590: identity types registered as an external-source lookup key (e.g. NIN) are
+        //set-once. The number is editable on insert (admission/data-entry) but immutable on
+        //subsequent edits — otherwise the row can be retargeted to another person's NIN and
+        //re-synced to import their identity (impersonation by swap).
+        if (!$entity->isNew() && $this->isExternalLookupIdentityType((int) $entity->identity_type_id)) {
+            $this->fields['number']['type'] = 'readonly';
+            $this->fields['identity_type_id']['type'] = 'readonly';
+        }
+    }
+
+    //POCOR-9590: true when this identity_type_id is registered as the lookup key for any
+    //configured external data source. Used by IdentitiesTable + Laravel API guards.
+    public function isExternalLookupIdentityType(int $identityTypeId): bool
+    {
+        if ($identityTypeId <= 0) {
+            return false;
+        }
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        return $ExternalAttrs->find()
+            ->where([
+                'attribute_field' => 'identity_type_id',
+                'value' => (string) $identityTypeId,
+            ])
+            ->count() > 0;
     }
 
     public function validationDefault(Validator $validator): Validator
