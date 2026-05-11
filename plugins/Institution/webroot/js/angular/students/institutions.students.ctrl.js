@@ -1483,7 +1483,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             }
                             if (field.field_type === 'DATE') {
                                 if (field.answer) {
-                                    fieldData.date_value = $filter('date')(field.answer, 'yyyy-MM-dd');
+                                    fieldData.date_value = normalizeCustomDateForSave(field.answer); //POCOR-9664 - fix date format for custom field
                                 }
                             }
                             if (field.field_type === 'FILE') {
@@ -1635,6 +1635,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 $window.localStorage.removeItem('repeater_validation')
             }
         }, 3000);
+    }
+
+    //POCOR-9664 - Function to normalize custom field date input for saving.
+    function normalizeCustomDateForSave(value) {
+        if (!value) {
+            return null;
+        }
+
+        if (value instanceof Date) {
+            return isNaN(value.getTime()) ? null : $filter('date')(value, 'yyyy-MM-dd');
+        }
+
+        if (typeof value === 'string') {
+            var raw = value.trim();
+            if (!raw || raw.toLowerCase() === 'null') {
+                return null;
+            }
+            if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(raw)) {
+                return raw;
+            }
+            if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(raw)) {
+                var parts = raw.split('-');
+                return parts[2] + '-' + ('0' + parts[1]).slice(-2) + '-' + ('0' + parts[0]).slice(-2);
+            }
+            var parsed = new Date(raw);
+            return isNaN(parsed.getTime()) ? null : $filter('date')(parsed, 'yyyy-MM-dd');
+        }
+
+        return null;
     }
 
     function goToFirstStep() {
@@ -2585,12 +2614,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         });
     }
 
+    // POCOR-9664 - Initialize date field with datepicker options and parse existing value
     function initializeDateField(fieldData) {
         fieldData.isDatepickerOpen = false;
         fieldData.params = parseParams(fieldData.params);
         fieldData.datePickerOptions = {showWeeks: false};
-        const splitDate = fieldData.values.split('-').map(Number);
-        fieldData.answer = fieldData.values ? new Date(splitDate[0], splitDate[1] - 1, splitDate[2]) : new Date();
+        if (fieldData.values && fieldData.values !== 'null') {
+            const parsedDate = new Date(fieldData.values);
+            fieldData.answer = isNaN(parsedDate.getTime()) ? null : parsedDate;
+        } else {
+            fieldData.answer = null;
+        }
     }
 
     function initializeTimeField(fieldData) {

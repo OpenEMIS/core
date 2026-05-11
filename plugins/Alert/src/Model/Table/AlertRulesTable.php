@@ -54,6 +54,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleSystemUpdates');//POCOR-7642
         $this->addBehavior('Alert.AlertRuleStudentAdmission');//POCOR-8869
         $this->addBehavior('Alert.AlertRuleStudentEnrolment');//POCOR-8286
+        $this->addBehavior('Alert.AlertRuleStudentStatus'); //POCOR-9509: register StudentStatus alert feature
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -206,13 +207,20 @@ class AlertRulesTable extends ControllerActionTable
 
     public function getFeatureOptions()
     {
+        // POCOR-9509: Exclude alerts without Laravel command implementations
+        $nonImplemented = [
+            'StaffAttendance',
+        ];
+
         $featureOptions = [];
         foreach ($this->alertTypeFeatures as $key => $obj) {
+            if (in_array($obj['feature'], $nonImplemented, true)) {
+                continue;
+            }
             $featureOptions[$obj['feature']] = __(Inflector::humanize(Inflector::underscore($obj['feature'])));
         }
 
         ksort($featureOptions);
-
         return $featureOptions;
     }
 
@@ -310,12 +318,13 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('enabled', ['type' => 'select']);
         //POCOR-8690[START]
         // $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        //POCOR-9509: start - fix method field required attribute — was nested incorrectly, now uses attr key
         $this->field('method', [
             'after' => 'threshold',
             'entity' => $entity,
-            'required' => 'required',
-            ['attr' => ['required' => 'required']]
+            'attr' => ['required' => true],
         ]);
+        //POCOR-9509: end
         //POCOR-8690[END]
         $this->field('security_roles', ['after' => 'method',
             'entity' => $entity,
@@ -431,6 +440,9 @@ class AlertRulesTable extends ControllerActionTable
     {
         if ($action == 'add' || $action == 'edit') {
             $entity = $attr['entity'];
+            //POCOR-9509: start - always mark method as required for add/edit
+            $attr['attr']['required'] = true;
+            //POCOR-9509: end
             // POCOR-8286 start
             if ($entity->feature) {
                 $methods = $this->getMethod($entity->feature);
@@ -519,6 +531,10 @@ class AlertRulesTable extends ControllerActionTable
             return $this->assignToGuardianOnly($attr);
         }
 
+        if ($feature === 'StudentAttendance') { //POCOR-9509: restrict to class staff roles only
+            return $this->assignToClassStaffOnly($attr);
+        }
+
         return $this->assignToAllRoles($attr);
     }
 
@@ -550,6 +566,26 @@ class AlertRulesTable extends ControllerActionTable
 
         return $attr;
     }
+
+    //POCOR-9509: start - restrict StudentAttendance alert roles to class staff only
+    private function assignToClassStaffOnly(array $attr): array
+    {
+        $roleOptions = $this->getVisibleSecurityRoles();
+
+        $filteredRoles = array_filter($roleOptions, function ($roleName) {
+            return in_array($roleName, ['Principal', 'Deputy Principal', 'Homeroom Teacher', 'Teacher'], true);
+        });
+
+        $translatedRoles = array_map(function ($roleName) {
+            return __($roleName);
+        }, $filteredRoles);
+
+        $attr['type'] = 'chosenSelect';
+        $attr['options'] = $translatedRoles;
+
+        return $attr;
+    }
+    //POCOR-9509: end
 
     private function getVisibleSecurityRoles(): array
     {

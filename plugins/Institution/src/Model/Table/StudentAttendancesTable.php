@@ -26,7 +26,6 @@ use Cake\ORM\Table;
 use Cake\Chronos\Chronos;
 
 // POCOR-9406
-
 class StudentAttendancesTable extends ControllerActionTable
 {
     private $allDayOptions = [];
@@ -1280,10 +1279,15 @@ class StudentAttendancesTable extends ControllerActionTable
         $date = $entity->date ?? null;
         if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
             $row = $this->_absenceDataCache[$entity->student_id][$date];
+            // marked_date is NULL when attendance was never marked for this day.
+            // Only show a status when the teacher actually submitted attendance.
+            if (empty($row->marked_date)) {
+                return '';
+            }
             $absenceTypeName = $row->absence_type_name ?? 'Present';
             return __($absenceTypeName);
         }
-        return 'Present';
+        return ''; // No record in cache — attendance not marked
     }
 
     // POCOR-9572: Excel export methods for flat field structure
@@ -1300,10 +1304,14 @@ class StudentAttendancesTable extends ControllerActionTable
         $date = $entity->date ?? null;
         if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
             $row = $this->_absenceDataCache[$entity->student_id][$date];
+            // POCOR-9643 return blank when attendance was never marked for this day
+            if (empty($row->marked_date)) {
+                return '';
+            }
             $period = $row->period ?? 1;
             return 'Period ' . $period;
         }
-        return 'Period 1';
+        return ''; // attendance not marked
     }
 
     public function onExcelGetSubject(EventInterface $event, Entity $entity)
@@ -1328,24 +1336,9 @@ class StudentAttendancesTable extends ControllerActionTable
 
     public function onExcelGetStudentStatuses(EventInterface $event, Entity $entity)
     {
-        // Get cached data for this student
-        static $absenceDataCache = null;
-        if ($absenceDataCache === null) {
-            $absenceDataCache = [];
-            $query = $this->_absenceData;
-            if ($query) {
-                $results = $query->all();
-                foreach ($results as $row) {
-                    $studentId = $row->student_id;
-                    $date = $row->date ?? '';
-                    $absenceDataCache[$studentId][$date] = $row;
-                }
-            }
-        }
-
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             return $row->student_status ?? '';
         }
         return '';
@@ -1367,10 +1360,9 @@ class StudentAttendancesTable extends ControllerActionTable
                 }
             }
         }
-
         $date = $entity->date ?? null;
-        if (isset($absenceDataCache[$entity->student_id][$date])) {
-            $row = $absenceDataCache[$entity->student_id][$date];
+        if (isset($this->_absenceDataCache[$entity->student_id][$date])) {
+            $row = $this->_absenceDataCache[$entity->student_id][$date];
             return $row->class_name ?? '';
         }
         return '';
@@ -1886,8 +1878,15 @@ SQL;
                 $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
                 $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
                 $DayCondititon, //POCOR-7183
-                $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
-            ])->toArray();
+                $InstitutionStudents->aliasField('student_status_id !=') => 1 ,//POCOR-6062
+                //POCOR-9667 Only consider withdrawn rows if there is no active record for the current year
+                $InstitutionStudents->aliasField('start_date <=') => $dayly ? $day : $weekEndDay,
+                'OR' => [
+                    $InstitutionStudents->aliasField('end_date IS') => null,
+                    $InstitutionStudents->aliasField('end_date >=') => $dayly ? $day : $weekStartDay
+                ]
+            ])
+            ->toArray();
         //POCOR-6547[END]
         if ($studentWithdrawData) {
             foreach ($studentWithdrawData as $withdrawStudent) {
@@ -1899,6 +1898,53 @@ SQL;
         }
         return $query;
     }
+    
+    // private function getAttendanceQueryWithoutWithdrawnbkp(Query $query, $dayly, $day, $institutionId, $academicPeriodId, $educationGradeId, $weekStartDay, $weekEndDay, $archive = false)
+    // {
+    //     if ($archive) {
+    //         return $query;
+    //     }
+    //     $studentWithdraw = self::getDynamicTableInstance('institution_student_withdraw');
+    //     if ($dayly) {
+    //         $DayCondititon = [$studentWithdraw->aliasField('effective_date <= ') => $day];
+    //     }
+    //     if (!$dayly) {
+    //         $DayCondititon = [
+    //             $studentWithdraw->aliasField('effective_date >= ') => $weekStartDay,
+    //             $studentWithdraw->aliasField('effective_date <= ') => $weekEndDay
+    //         ];
+    //     }
+    //     $withdrawStudentIds = [];
+    //     $InstitutionStudents = self::getDynamicTableInstance('institution_students');
+    //     $studentWithdrawData = $studentWithdraw->find()
+    //         ->select([
+    //             'student_id' => $studentWithdraw->aliasField('student_id')
+    //         ])
+    //         /*POCOR-6062 starts*/
+    //         ->leftJoin([$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()], [
+    //             $InstitutionStudents->aliasField('student_id = ') . $studentWithdraw->aliasField('student_id'),
+    //             $InstitutionStudents->aliasField('education_grade_id = ') . $studentWithdraw->aliasField('education_grade_id'),
+    //             $InstitutionStudents->aliasField('academic_period_id = ') . $studentWithdraw->aliasField('academic_period_id'),
+    //             $InstitutionStudents->aliasField('institution_id = ') . $studentWithdraw->aliasField('institution_id')
+    //         ])/*POCOR-6062 ends*/
+    //         ->where([
+    //             $studentWithdraw->aliasField('institution_id') => $institutionId,
+    //             $studentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
+    //             $studentWithdraw->aliasField('education_grade_id') => $educationGradeId,
+    //             $DayCondititon, //POCOR-7183
+    //             $InstitutionStudents->aliasField('student_status_id !=') => 1 //POCOR-6062
+    //         ])->toArray();
+    //     //POCOR-6547[END]
+    //     if ($studentWithdrawData) {
+    //         foreach ($studentWithdrawData as $withdrawStudent) {
+    //             $withdrawStudentIds[] = $withdrawStudent['student_id'];
+    //         }
+    //         if (!empty($withdrawStudentIds)) {
+    //             $query->where([$this->aliasField('student_id NOT IN') => $withdrawStudentIds]);
+    //         }
+    //     }
+    //     return $query;
+    // }
 
     /**
      * POCOR-8224 added
