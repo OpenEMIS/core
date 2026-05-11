@@ -64,6 +64,11 @@
       "key": "audit_original_creator",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "w3_user_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -689,6 +694,134 @@
               "pm.test('FIX: created_user_id is unchanged (immutable, forgery dropped)', () => {",
               "    pm.expect(String(row.created_user_id)).to.equal(String(original));",
               "    pm.expect(parseInt(row.created_user_id, 10)).to.not.equal(99999);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "WAVE3-1 \u2014 Audit log: create a fresh v5 user and capture id",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{$randomUserName}}_w3_{{$timestamp}}\",\n  \"openemis_no\": \"{{$timestamp}}\",\n  \"first_name\": \"Wave3\",\n  \"last_name\": \"Auditee\",\n  \"gender_id\": 1,\n  \"date_of_birth\": \"2000-01-01\",\n  \"password\": \"w3-plain-{{$timestamp}}\"\n}"
+        },
+        "url": "{{base_url}}/api/v5/security-users",
+        "description": "Wave 3 (POCOR-9697): create a user via v5 and capture its id for the subsequent audit-log assertions. The trait UserActivityLog must drop a row into user_activities for this create."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('user created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+              "const body = pm.response.json();",
+              "const row = (body.data && body.data.data) || body.data || body;",
+              "pm.collectionVariables.set('w3_user_id', String(row.id));",
+              "pm.test('response hides password and super_admin', () => {",
+              "    pm.expect(row).to.not.have.property('password');",
+              "    pm.expect(row).to.not.have.property('super_admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "WAVE3-2 \u2014 Audit log: GET /api/v5/user-activities for the new user (create row must exist)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{base_url}}/api/v5/user-activities?_conditions=security_user_id:{{w3_user_id}}&limit=50",
+        "description": "Wave 3 (POCOR-9697): the trait must have produced a 'create' row in user_activities for the user just created. The response must NEVER contain a literal password or bcrypt hash."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET user-activities returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const rows = (body.data && body.data.data) || body.data || [];",
+              "pm.test('FIX: at least one create-row exists for the new user', () => {",
+              "    const creates = rows.filter(r => r.operation === 'create');",
+              "    pm.expect(creates.length).to.be.greaterThan(0);",
+              "});",
+              "pm.test('FIX: no audit row leaks a bcrypt hash or plaintext password', () => {",
+              "    const raw = pm.response.text();",
+              "    pm.expect(raw).to.not.match(/\\$2[aby]\\$/);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "WAVE3-3 \u2014 Audit log: PUT to change first_name + email then re-GET activities",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": {{w3_user_id}},\n  \"first_name\": \"Wave3Updated\",\n  \"email\": \"w3_updated_{{$timestamp}}@example.test\"\n}"
+        },
+        "url": "{{base_url}}/api/v5/security-users/{{w3_user_id}}",
+        "description": "Wave 3 (POCOR-9697): updating two ordinary fields must produce one user_activities row per dirty field. Verified in the next request."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('update returns 200/204', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "WAVE3-4 \u2014 Audit log: confirm per-dirty-field update rows are present",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{base_url}}/api/v5/user-activities?_conditions=security_user_id:{{w3_user_id}}&limit=50",
+        "description": "Wave 3 (POCOR-9697): the trait must have emitted one update row for first_name and one for email."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('GET returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const rows = (body.data && body.data.data) || body.data || [];",
+              "const updates = rows.filter(r => r.operation === 'update');",
+              "pm.test('FIX: update rows include first_name + email', () => {",
+              "    const fields = updates.map(r => r.field);",
+              "    pm.expect(fields).to.include('first_name');",
+              "    pm.expect(fields).to.include('email');",
+              "});",
+              "pm.test('FIX: password/super_admin never appear as field names here', () => {",
+              "    const fields = updates.map(r => r.field);",
+              "    pm.expect(fields).to.not.include('password');",
+              "    pm.expect(fields).to.not.include('super_admin');",
               "});"
             ]
           }

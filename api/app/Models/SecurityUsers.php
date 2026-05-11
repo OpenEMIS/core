@@ -11,12 +11,14 @@ use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\NumericId;
+use App\Models\Concerns\UserActivityLog; //POCOR-9697: Wave-3 audit-log trait
 
 class SecurityUsers extends Authenticatable implements JWTSubject
 {
     use HasFactory;
     use Notifiable;
     use NumericId;
+    use UserActivityLog; //POCOR-9697: log every create/update/delete to user_activities
 
     public $timestamps = false;
     protected $casts = [

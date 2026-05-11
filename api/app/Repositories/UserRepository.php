@@ -1710,11 +1710,40 @@ class UserRepository extends Controller
                 }
                 $data['modified_user_id'] = JWTAuth::user()->id;
                 $data['modified'] = Carbon::now()->toDateTimeString();
+                //POCOR-9697: capture the dirty diff for the audit log BEFORE the
+                //query builder update wipes our visibility into the prior state.
+                $auditDiff = []; //POCOR-9697
+                $skipAudit = ['modified', 'modified_user_id', 'last_login', 'failed_logins']; //POCOR-9697
+                foreach ($data as $f => $newV) { //POCOR-9697
+                    if (in_array($f, $skipAudit, true)) { continue; } //POCOR-9697
+                    $oldV = $check->{$f} ?? null; //POCOR-9697
+                    if ((string)$oldV !== (string)$newV) { //POCOR-9697
+                        $auditDiff[$f] = ['old' => $oldV, 'new' => $newV]; //POCOR-9697
+                    } //POCOR-9697
+                } //POCOR-9697
                 $update = SecurityUsers::where('id', $id)->update($data);
+                //POCOR-9697: query-builder update bypasses Eloquent events, so we
+                //call the audit hook explicitly to mirror what the trait does.
+                if (!empty($auditDiff)) { //POCOR-9697
+                    SecurityUsers::logExternalUserChange('update', (int)$id, $auditDiff); //POCOR-9697
+                } //POCOR-9697
             } else {
                 $userData = $this->setUserData($data);
                 if(count($userData) > 0){
+                    //POCOR-9697: explicit id so we can audit the row without a
+                    //second SELECT and so we don't rely on insert() returning
+                    //the lastInsertId, which is fragile on a non-auto-increment
+                    //PK (NumericId trait normally fills this in the `creating`
+                    //event, but query-builder insert skips that event).
+                    if (empty($userData['id'])) { //POCOR-9697
+                        $userData['id'] = SecurityUsers::getNextId(); //POCOR-9697
+                    } //POCOR-9697
                     $insert = SecurityUsers::insert($userData);
+                    //POCOR-9697: insert() bypasses Eloquent events, so call the
+                    //audit hook explicitly to mirror the trait's `created` write.
+                    if ($insert) { //POCOR-9697
+                        SecurityUsers::logExternalUserChange('create', (int)$userData['id']); //POCOR-9697
+                    } //POCOR-9697
                 }
             }
 
