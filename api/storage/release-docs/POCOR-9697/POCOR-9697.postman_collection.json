@@ -205,9 +205,9 @@
             "exec": [
               "pm.test('Endpoint responds', () => pm.response.to.have.status(200));",
               "const j = pm.response.json();",
-              "const data = j.data || {};",
-              "pm.test('FIX: response has no super_admin key', () => pm.expect(data).to.not.have.property('super_admin'));",
-              "pm.test('FIX: response has no password key',    () => pm.expect(data).to.not.have.property('password'));"
+              "const userData = (j && j.data) || {};",
+              "pm.test('FIX: response has no super_admin key', () => pm.expect(userData).to.not.have.property('super_admin'));",
+              "pm.test('FIX: response has no password key',    () => pm.expect(userData).to.not.have.property('password'));"
             ]
           }
         }
@@ -257,7 +257,7 @@
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{base_url}}/api-docs-v4.json",
+        "url": "{{base_url}}/api/api-docs-v4.json",
         "description": "The public swagger JSON. Before the fix and pre-regeneration, this file contained 6 super_admin entries — including the worst-case `\"example\": 1` that effectively documented the exploit for any reader.\n\n**On master (or any deploy that skipped the swagger-regen post-deploy step):** ≥ 6 hits.\n**On POCOR-9697 with proper deploy:** exactly 1 hit (the legitimate /api/v4/permissions self-introspection response)."
       },
       "event": [
@@ -282,7 +282,7 @@
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{base_url}}/api-docs-v5.json",
+        "url": "{{base_url}}/api/api-docs-v5.json",
         "description": "v5 has no legitimate super_admin response anywhere, so the count must be zero after the fix."
       },
       "event": [
