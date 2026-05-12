@@ -23,7 +23,8 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
                 'type' => 'chosenSelect',
                 'select' => false,
                 'after' => 'security_roles',
-                'options' => 'StudentAdmission.workflow_steps'
+                'options' => 'StudentAdmission.workflow_steps',
+                'attr' => ['required' => true], //POCOR-9509: mark workflow_steps as required
             ],
         ],
         'placeholder' => [
@@ -77,15 +78,15 @@ class AlertRuleStudentAdmissionBehavior extends AlertRuleBehavior
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
 
             if (isset($data['submit']) && $data['submit'] == 'save') {
+                //POCOR-9509: start - validate workflow_steps is required non-empty array
+                $workflowIds = $data['workflow_steps']['_ids'] ?? [];
+                if (empty($workflowIds)) {
+                    $data['workflow_steps'] = null;
+                }
                 $validator = $model->getValidator();
-                $validator->add('value', [
-                    'ruleRange' => [
-                        'rule' => ['range', 1, 30],
-                        'message' => __('Value must be within 1 to 30')
-                    ]
-                ]);
+                $validator->notEmptyString('workflow_steps', __('Workflow Step cannot be empty'));
+                //POCOR-9509: end
                 $model->setValidator('forSave', $validator); // POCOR-8286
-
             }
         }
     }
