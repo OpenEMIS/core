@@ -701,10 +701,10 @@ class EducationProgrammesTable extends ControllerActionTable {
     // POCOR-9485: show the academic period this programme's education system belongs to (readonly)
     public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $entity  = $attr['entity'];
-        if(!$entity){
-            return 'a';
-        };
+        $entity = $attr['entity'] ?? null;
+        if (!$entity) {
+            return $attr;
+        }
         $cycleId = $entity->has('education_cycle_id') ? $entity->education_cycle_id : null;
 
         $periodName = '';
@@ -743,13 +743,13 @@ class EducationProgrammesTable extends ControllerActionTable {
     // POCOR-9485
     public function onGetNextProgrammeOptions(EventInterface $event, Entity $entity)
     {
-       if($entity->next_programme_option_id==1){
-          return  __('Show One Grade');
-       }
-       if($entity->next_programme_option_id==0){
-          return __('Show All Grades');
-       }
-       return 'Buh';
+        if ($entity->next_programme_option_id == 1) {
+            return __('Show One Grade');
+        }
+        if ($entity->next_programme_option_id == 0) {
+            return __('Show All Grades');
+        }
+        return '';
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
