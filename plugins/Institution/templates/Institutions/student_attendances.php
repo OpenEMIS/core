@@ -43,15 +43,14 @@ $this->start('toolbar');
 <?php endif; ?>
 <?php /******POCOR-8745--End*********/ ?>
 <?php if ($_edit) : ?>
-    <?php //POCOR-9652: button turns amber when day is already flagged No Scheduled Classes ?>
-    <button class="btn btn-xs"
-        ng-class="$ctrl.isNoScheduledDay() ? 'btn-warning' : 'btn-default'"
+    <?php //POCOR-9652: icon (oe-check / oe-close) reflects whether day is flagged No Scheduled Classes ?>
+    <button class="btn btn-xs btn-default"
         data-placement="bottom"
         data-container="body"
         ng-attr-title="{{$ctrl.isNoScheduledDay() ? '<?= __('No Scheduled Class (set — click to reapply)'); ?>' : '<?= __('No Scheduled Class'); ?>'}}"
         ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
         ng-click="$ctrl.onNoScheduledClick()">
-        <i class="kd-null"></i>
+        <i ng-class="$ctrl.isNoScheduledDay() ? 'oe-check' : 'oe-close'"></i>
     </button>
 <?php endif; ?>
 <?php
