@@ -11,6 +11,17 @@ Add two new institution-profile features to OpenEMIS Core:
 
 Both appear as read-only tabs in the Institution left sidebar under **General**. Authoritative write access is via the new REST endpoints under `/api/v5/*`, gated by role-based permissions. Excel export is supported on both index views.
 
+### 1.1 Why a New Feature (Naming Disambiguation)
+
+The pre-existing **"Registrations"** module in OpenEMIS Core refers to **student registration / enrolment** — admitting students into an institution. It does **not** track whether the *institution itself* is licensed or accredited to operate.
+
+This ticket introduces a distinct concept at the institution level:
+
+- **Institution Registrations** — the institution's own legal/regulatory registration with a competent authority (e.g. Ministry of Education licence to operate), with a validity period.
+- **Institution Accreditations** — per-programme accreditations the institution holds (e.g. "Bachelor of Education accredited 2024–2029"), each linked to an `education_programmes` row, with their own validity periods.
+
+The two domains do not overlap. Student registration uses `institution_student_admission` / `institution_students`; this feature uses two brand-new tables (`institution_registrations`, `institution_accreditations`) and a separate sidebar entry under **Institution → General**.
+
 ---
 
 ## 2. Situation Before
@@ -142,7 +153,6 @@ Superrole/super_admin JWTs bypass `PermissionService::checkPermission()` entirel
 | Added | `api/database/factories/InstitutionAccreditationsFactory.php` | Test factory |
 | Added | `api/tests/Feature/InstitutionRegistrationsApiTest.php` | Feature test — 5/5 pass |
 | Added | `api/tests/Feature/InstitutionAccreditationsApiTest.php` | Feature test — 5/5 pass |
-| Added | `logs/pocor-9610-seed.html` | Developer seed page (login + CRUD) |
 
 ### 3.7 Database Migration
 
@@ -203,13 +213,26 @@ The `down()` method restores `security_functions` and `security_role_functions` 
 
 5. **Verify UI.** Open any institution profile and confirm that under **General** the **Registrations** and **Accreditations** tabs are visible and render read-only (no Add / Edit / Delete buttons).
 
-6. **(Optional) Smoke-test the API** using the bundled seed page:
+6. **Smoke-test the API** with curl or the Postman collection:
 
-    ```
-    https://<host>/core/logs/pocor-9610-seed.html
+    ```bash
+    # 1. Login (api_key is environment-specific; the seeded test value is 'apikeytest')
+    TOKEN=$(curl -ks -X POST https://<host>/core/api/v4/login \
+      -H "Content-Type: application/json" \
+      -d '{"username":"admin","password":"<pwd>","api_key":"<key>"}' \
+      | jq -r .data.token)
+
+    # 2. List
+    curl -ks -H "Authorization: Bearer $TOKEN" https://<host>/core/api/v5/institution-registrations  | jq '.data | length'
+    curl -ks -H "Authorization: Bearer $TOKEN" https://<host>/core/api/v5/institution-accreditations | jq '.data | length'
+
+    # 3. Create (registration)
+    curl -ks -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+      -d '{"institution_id":1,"valid_from":"2026-01-01","valid_to":null}' \
+      https://<host>/core/api/v5/institution-registrations | jq
     ```
 
-    The page lets you log in, list, add and delete records for both endpoints interactively.
+    > **Optional — developer-only interactive seed page.** A standalone HTML page that drives the same endpoints from a browser form (login + list/create/delete for both resources) is attached to the Jira ticket as `pocor-9610-seed.html`. Save it locally and open the file directly in your browser (`file:///...`); fill in the API base URL + `api_key` at the top, then login. **Do not deploy this page to any institution-facing server** — it is a developer convenience only, not part of the shipped product.
 
 > **Rollback** is intentionally not provided here. `security_*` migrations are not rolled back as a matter of policy on shared environments; if a rollback is genuinely required, follow the per-branch security-users cleanup procedure in `.claude/rules/migration-rollback.md` first.
 
