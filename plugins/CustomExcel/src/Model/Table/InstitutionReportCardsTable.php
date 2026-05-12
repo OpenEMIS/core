@@ -6936,6 +6936,7 @@ class InstitutionReportCardsTable extends AppTable
         $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
         $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $SecurityRole = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriod = $AcademicPeriods->get($academicPeriodId);
 
@@ -6954,7 +6955,13 @@ class InstitutionReportCardsTable extends AppTable
                 ['StaffPositionTitles' => 'staff_position_titles'],
                 [
                     'StaffPositionTitles.id = InstitutionPositions.staff_position_title_id',
-                    'StaffPositionTitles.name' => 'Principal'
+                ]
+            )
+            ->innerJoin(
+                ['SecurityRoles' => 'security_roles'],
+                [
+                    'SecurityRoles.id = StaffPositionTitles.security_role_id',
+                    'SecurityRoles.code' => 'PRINCIPAL'
                 ]
             )
            ->innerJoin(
