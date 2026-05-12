@@ -181,7 +181,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
         }
 
         //POCOR-9590: add Test Connection button on view page
-        if ($this->action == 'view') {
+        //POCOR-9590: hidden — button kept in code for future re-enable, registration disabled
+        if (false && $this->action == 'view') {
             $testBtn = [
                 'type'  => 'button',
                 'label' => '<i class="fa fa-plug"></i>',
