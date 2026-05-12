@@ -269,6 +269,36 @@ mirroring the feature tests.
 
 None. No schema change required.
 
+## 3a. Integration / Merge Notes
+
+POCOR-9697 touches `api/app/Http/Controllers/BaseApi/CrudApiController.php` and `api/app/Models/Api5/SecurityUsers.php`. Two sibling branches edit those same files. The detailed merge plan with conflict-region dumps, paste-ready resolution snippets, regression-signal smoke tests, and recommended merge order ships alongside this README at **`api/storage/release-docs/POCOR-9697/merge-plan.md`**.
+
+Quick matrix (verified by dry-run merge against `origin/POCOR-9697@892af27276`):
+
+| Target | Result | Conflict file | Severity |
+|---|---|---|---|
+| POCOR-9697 ↔ **POCOR-9660** | 1 conflict | `CrudApiController::handleGetRequest` | Medium — combine both try/catch wrappers; **must pass `$model` to `applyFilters`** or Wave 1c silently no-ops |
+| POCOR-9697 ↔ **tst-5.10.0** | Clean | — | None |
+| POCOR-9697 ↔ **tst-5.10.0-1** | 1 conflict | `Api5/SecurityUsers.php` (`$fillable` + Swagger ×3) | **High — security regression risk.** Resolution rule: never accept their side on `super_admin`, always accept their side on `sync_status` (POCOR-9590) |
+
+Recommended merge order: **POCOR-9660 first** (smaller surface), then POCOR-9697 on top. Post-merge regression smoke:
+
+```bash
+# Wave 1c must still 400 with generic body
+curl -ks -w '\nStatus: %{http_code}\n' -H "Authorization: Bearer $TOKEN" \
+  "https://localhost:8482/core/api/v5/security-users?_conditions=super_admin:1"
+# Expected: 400 + "...not present in this resource..."
+# REGRESSION: 200 + rows → `$model` was dropped from applyFilters during the merge
+
+# POCOR-9660 implicit id-list must still work
+curl -ks -H "Authorization: Bearer $TOKEN" \
+  "https://localhost:8482/core/api/v5/academic-periods/1,2,3" | jq '.data | length'
+# Expected: 3
+
+# 22-test suite must still pass
+cd api && php artisan test --filter=SuperAdminEscalationProtectionTest
+```
+
 ## 4. Deployment Instructions
 
 This is a hot-fix; deploy ASAP on any instance that exposes the public swagger.
