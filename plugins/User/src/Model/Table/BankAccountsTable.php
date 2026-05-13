@@ -140,8 +140,13 @@ class BankAccountsTable extends ControllerActionTable
 
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
+        if ($entity instanceof Entity) {
+            $this->mergeBankOptionQueryForBankDropdowns($entity);
+        }
         $this->field('bank_name', ['type' => 'select']);
         $this->field('bank_branch_id', ['type' => 'select']);
+        $this->field('account_name', ['attr' => ['required' => true]]); //POCOR-9674
+        $this->field('account_number', ['attr' => ['required' => true]]); //POCOR-9674
 
         $this->setFieldOrder(['bank_name', 'bank_branch_id', 'account_name', 'account_number', 'active']);
     }
@@ -154,9 +159,44 @@ class BankAccountsTable extends ControllerActionTable
 
     public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $bankId = $this->BankBranches->get($entity->bank_branch_id)->bank_id;
-        //POCOR-9584: $request is immutable in CakePHP5; bank_option pre-population handled via query param on redirect
-        // original CakePHP3 code: $this->request->getQuery['bank_option'] = $bankId;
+        //POCOR-9674
+        $this->mergeBankOptionQueryForBankDropdowns($entity);
+    }
+
+    /**
+     * Sets `bank_option` query param so onUpdateFieldBankName / onUpdateFieldBankBranchId can load options
+     * (CakePHP 5 removed mutable query writes from editOnInitialize; POST re-render has no edit.onInitialize).
+     */
+    //POCOR-9674
+    protected function mergeBankOptionQueryForBankDropdowns(Entity $entity): void
+    {
+        $queryParams = $this->request->getQueryParams();
+        if (!empty($queryParams['bank_option'])) {
+            return;
+        }
+
+        $alias = $this->getAlias();
+        $bankId = null;
+        if ($this->request->is(['post', 'put'])) {
+            $data = $this->request->getData($alias);
+            if (is_array($data) && isset($data['bank_name']) && $data['bank_name'] !== '' && $data['bank_name'] !== null) {
+                $bankId = $data['bank_name'];
+            }
+        }
+
+        if ($bankId === null || $bankId === '') {
+            $branchId = $entity->get('bank_branch_id');
+            if ($branchId) {
+                $branch = $this->BankBranches->find()->where([$this->BankBranches->aliasField('id') => $branchId])->first();
+                if ($branch !== null) {
+                    $bankId = $branch->bank_id;
+                }
+            }
+        }
+
+        if ($bankId !== null && $bankId !== '') {
+            $this->addQueryParam('bank_option', (string)$bankId);
+        }
     }
 
 
@@ -169,8 +209,16 @@ class BankAccountsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
-        return $validator->requirePresence('bank_name');
+        //POCOR-9674
+        return $validator
+            ->requirePresence('bank_name')
+            ->notEmptyString('bank_name', __('This field cannot be left empty'))
+            ->requirePresence('bank_branch_id')
+            ->notEmptyString('bank_branch_id', __('This field cannot be left empty'))
+            ->requirePresence('account_name')
+            ->notEmptyString('account_name', __('This field cannot be left empty'))
+            ->requirePresence('account_number')
+            ->notEmptyString('account_number', __('This field cannot be left empty'));
     }
 
     public function onGetActive(EventInterface $event, Entity $entity)
@@ -266,6 +314,7 @@ class BankAccountsTable extends ControllerActionTable
                 $bankBranches = [];
             }
             $attr['options'] = $bankBranches;
+            $attr['attr']['required'] = true; //POCOR-9674
         }
         return $attr;
     }
@@ -293,7 +342,7 @@ class BankAccountsTable extends ControllerActionTable
         if ($field == 'bank_name') {
             return __('Bank Name');
         } elseif ($field == 'bank_branch_id') {
-            return __('	Bank Branch');
+            return __('Bank Branch');
         } elseif ($field == 'account_name') {
             return __('Account Name');
         } elseif ($field == 'account_number') {
