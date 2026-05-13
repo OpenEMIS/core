@@ -11,29 +11,58 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  *
  * POCOR-9697 (Wave 3): mirror the CakePHP `user_activities` audit trail from
  * the Laravel API. Every create / update / delete of a user record fires an
- * insert into `user_activities` so that the existing Cake-side dashboard
- * (User → Activities) shows API-originated changes alongside UI-originated
- * ones.
+ * insert into `user_activities` so the existing Cake-side dashboard
+ * (User → Activities) renders API-originated rows next to UI-originated ones.
  *
- * Shape (matches Cake schema verbatim — same dashboard reads both):
- *   model            'Users'
- *   model_reference  the security_users.id whose record changed
- *   field            the column name (or '*' for create/delete summary rows)
- *   field_type       'string' | 'integer' | 'record'
- *   old_value        previous value, truncated to 255 chars, '[REDACTED]' for
- *                    password / super_admin (the column type itself is varchar
- *                    255 — we never store the raw bcrypt hash there either)
- *   new_value        new value, same redaction policy
- *   operation        'create' | 'update' | 'delete'
- *   security_user_id the user the row is about (same as model_reference)
- *   created_user_id  the JWT caller, 0 when run from CLI / queue / seed
- *   created          now()
+ * --------------------------------------------------------------------------
+ * Row shape — ports CakePHP `TrackActivityBehavior` (src/Model/Behavior/
+ * TrackActivityBehavior.php) verbatim so a single dashboard query covers
+ * both origins:
  *
+ *   UPDATE  → one row per dirty field
+ *             field       = column name
+ *             field_type  = column type ('string' | 'integer' | 'decimal' …)
+ *             old_value   = previous value (or '[REDACTED]' — see below)
+ *             new_value   = new value      (or '[REDACTED]')
+ *             operation   = 'edit'   ← matches Cake enum, not 'update'
+ *
+ *   DELETE  → one summary row, all four columns empty strings,
+ *             operation   = 'delete'   (matches TrackActivityBehavior::afterDelete)
+ *
+ *   CREATE  → port of the missing CakePHP creation event (Cake's
+ *             TrackActivityBehavior does not emit on create — but the
+ *             dashboard already renders 'create' rows seeded by
+ *             UsersController, so we adopt that shape).
+ *             one summary row, all four columns empty strings,
+ *             operation   = 'create'
+ *
+ * --------------------------------------------------------------------------
+ * Logging policy — what fires a Laravel `Log::warning` / `Log::info`:
+ *
+ * We do NOT log normal CRUD activity (the `user_activities` row IS the audit
+ * trail for that). The Laravel log is reserved for SUSPICIOUS or DANGEROUS
+ * events that an SOC / ops engineer should be alertable on:
+ *
+ *   • `password` or `super_admin` value supplied in a request body
+ *   • Filter probe targeting `password` / `super_admin` / `remember_token`
+ *     (read-side enumeration attempt)
+ *   • `created_user_id` / `modified_user_id` forgery in the payload
+ *   • ACL denial against SecurityUsers endpoints
+ *   • Audit-row INSERT itself failing (defensive try/catch — see this trait)
+ *
+ * Everything else is silent. The audit table records the WHAT; the Laravel
+ * log records the SUSPICIOUS attempts only.
+ *
+ * --------------------------------------------------------------------------
  * Critical rules:
- *  1. NEVER persist password or super_admin values — only that they changed.
+ *  1. NEVER persist `password` or `super_admin` values — emit the row to
+ *     prove the column changed, but force old/new to '[REDACTED]'. The
+ *     column type itself is `varchar(255)` so a bcrypt hash would not even
+ *     fit cleanly; the redaction guards the trail regardless.
  *  2. NEVER let an audit-log failure break the underlying write — every
- *     insert is wrapped in try/catch and logged to the Laravel log on failure.
- *  3. CLI / queue / seed contexts have no JWT — fall back to created_user_id=0.
+ *     insert is wrapped in try/catch and surfaces to Laravel log on failure.
+ *  3. CLI / queue / seed contexts have no JWT — fall back to
+ *     `created_user_id = 0`.
  */
 trait UserActivityLog
 {
@@ -91,15 +120,18 @@ trait UserActivityLog
                 return;
             }
 
-            // create / delete — single summary row
+            //POCOR-9697: create / delete — single summary row.
+            //Shape matches CakePHP TrackActivityBehavior::afterDelete: empty
+            //strings for field / field_type / old_value / new_value so the
+            //dashboard renders identically regardless of origin.
             $this->insertUserActivityRow([
                 'model'            => 'Users',
                 'model_reference'  => $targetId,
-                'field'            => '*',
-                'field_type'       => 'record',
-                'old_value'        => null,
-                'new_value'        => null,
-                'operation'        => $operation,
+                'field'            => '',
+                'field_type'       => '',
+                'old_value'        => '',
+                'new_value'        => '',
+                'operation'        => $operation, //'create' or 'delete'
                 'security_user_id' => $targetId,
                 'created_user_id'  => $callerId,
                 'created'          => date('Y-m-d H:i:s'),
@@ -139,7 +171,7 @@ trait UserActivityLog
                 'field_type'       => $this->inferFieldType($newValue),
                 'old_value'        => $isRedacted ? '[REDACTED]' : $this->stringifyForAudit($oldValue),
                 'new_value'        => $isRedacted ? '[REDACTED]' : $this->stringifyForAudit($newValue),
-                'operation'        => 'update',
+                'operation'        => 'edit', //POCOR-9697: 'edit' matches CakePHP TrackActivityBehavior — not 'update'
                 'security_user_id' => $targetId,
                 'created_user_id'  => $callerId,
                 'created'          => $now,
@@ -257,7 +289,7 @@ trait UserActivityLog
                         'field_type'       => 'string',
                         'old_value'        => $isRedacted ? '[REDACTED]' : self::staticStringifyForAudit($delta['old'] ?? null),
                         'new_value'        => $isRedacted ? '[REDACTED]' : self::staticStringifyForAudit($delta['new'] ?? null),
-                        'operation'        => 'update',
+                        'operation'        => 'edit', //POCOR-9697: 'edit' matches CakePHP TrackActivityBehavior
                         'security_user_id' => $targetUserId,
                         'created_user_id'  => $callerId,
                         'created'          => $now,
@@ -266,14 +298,16 @@ trait UserActivityLog
                 return;
             }
 
+            //POCOR-9697: create / delete — single summary row, empty-string shape
+            //(matches CakePHP TrackActivityBehavior::afterDelete).
             DB::table('user_activities')->insert([
                 'model'            => 'Users',
                 'model_reference'  => $targetUserId,
-                'field'            => '*',
-                'field_type'       => 'record',
-                'old_value'        => null,
-                'new_value'        => null,
-                'operation'        => $operation,
+                'field'            => '',
+                'field_type'       => '',
+                'old_value'        => '',
+                'new_value'        => '',
+                'operation'        => $operation, //'create' or 'delete'
                 'security_user_id' => $targetUserId,
                 'created_user_id'  => $callerId,
                 'created'          => $now,

@@ -583,7 +583,7 @@ class SuperAdminEscalationProtectionTest extends TestCase
         // Baseline — any rows from the create event itself.
         $baseline = DB::table('user_activities')
             ->where('security_user_id', $target->id)
-            ->where('operation', 'update')
+            ->where('operation', 'edit')
             ->count();
 
         $newEmail = 'updated_' . uniqid() . '@example.test';
@@ -599,11 +599,11 @@ class SuperAdminEscalationProtectionTest extends TestCase
 
         $rows = DB::table('user_activities')
             ->where('security_user_id', $target->id)
-            ->where('operation', 'update')
+            ->where('operation', 'edit')
             ->get();
 
         $this->assertGreaterThanOrEqual($baseline + 2, $rows->count(),
-            'Expected at least two new update rows — one per dirty field (first_name + email).');
+            'Expected at least two new edit rows — one per dirty field (first_name + email).');
 
         $fields = $rows->pluck('field')->all();
         $this->assertContains('first_name', $fields, 'first_name change must be logged.');
@@ -611,9 +611,9 @@ class SuperAdminEscalationProtectionTest extends TestCase
 
         foreach ($rows as $row) {
             $this->assertNotSame('password', $row->field,
-                'update audit row must not name password unless password actually changed.');
+                'edit audit row must not name password unless password actually changed.');
             $this->assertNotSame('super_admin', $row->field,
-                'update audit row must never name super_admin in this test.');
+                'edit audit row must never name super_admin in this test.');
         }
     }
 
@@ -638,7 +638,7 @@ class SuperAdminEscalationProtectionTest extends TestCase
 
         $row = DB::table('user_activities')
             ->where('security_user_id', $target->id)
-            ->where('operation', 'update')
+            ->where('operation', 'edit')
             ->where('field', 'password')
             ->orderByDesc('id')
             ->first();
