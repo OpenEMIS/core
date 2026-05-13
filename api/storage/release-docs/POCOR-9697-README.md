@@ -268,11 +268,39 @@ mirroring the feature tests.
 
 ### Database Migrations
 
-None. No schema change shipped on this branch.
+**None.** No schema change ships on this branch — a deliberate design choice, not an oversight.
 
-**Note on hard-delete:** `user_activities.security_user_id` has a FK to `security_users.id` with `ON DELETE RESTRICT`. Any single `create` / `edit` audit row blocks the hard-delete of that user — and since this trait writes one on every create / edit, users who have ever been touched are un-deletable at the schema level. In practice OpenEMIS soft-deletes users via the `status` column; the production `user_activities` table holds zero `delete` rows over years of operation.
+#### Hard-delete is schema-blocked (existing OpenEMIS behaviour)
 
-The per-field delete-snapshot logic (`UserActivityLog::logDeleteSnapshot` and the corresponding `TrackActivityBehavior::afterDelete` loop) therefore ships as *dormant infrastructure*: ready for the day the FK is ever relaxed to `ON DELETE SET NULL` (separate ticket — would require a migration and an event-timing flip to `deleting` / `beforeDelete`), or for any other table that adopts the trait without that constraint. The Laravel test exercises the snapshot via direct invocation (`$user->logUserActivity('delete')`) — same code path the Eloquent `deleted` event would fire — so the row shape is provable today.
+`user_activities.security_user_id` has a FK to `security_users.id` with `ON DELETE RESTRICT`. Any single `create` / `edit` audit row blocks the hard-delete of that user — and since this trait writes one on every create / edit, users who have ever been touched are un-deletable at the schema level. In practice OpenEMIS soft-deletes users via the `status` column; the production `user_activities` table holds **zero** `delete` rows over years of operation, confirming this is the supported norm.
+
+#### Delete-snapshot ships as dormant infrastructure
+
+The per-field delete-snapshot code (`UserActivityLog::logDeleteSnapshot` on the Laravel side, the `afterDelete` snapshot loop in `TrackActivityBehavior` on the CakePHP side) is fully implemented and tested. Under the current FK it sits dormant for `security_users`:
+
+* If the `deleted` event somehow fires (e.g. an admin manually clears the user's audit rows to defeat RESTRICT), the snapshot `INSERT`s will fail with a FK violation against the now-vanished parent. The trait's `try/catch` and the CakePHP `Log::write('debug', getErrors())` swallow that failure without breaking the request.
+* On any other table that adopts the trait without a RESTRICT-ed FK, the snapshot fires normally.
+
+The Laravel test exercises the snapshot via direct invocation (`$user->logUserActivity('delete')`) — same code path the Eloquent `deleted` event would fire — so the row shape is provable today (23 / 23 passing).
+
+#### What a future ticket would need
+
+To activate the snapshot for `security_users`:
+
+1. Migration relaxing the FK to `ON DELETE SET NULL`:
+   ```sql
+   ALTER TABLE user_activities MODIFY security_user_id INT NULL;
+   ALTER TABLE user_activities DROP FOREIGN KEY user_activ_fk_secur_user_id;
+   ALTER TABLE user_activities
+     ADD CONSTRAINT user_activ_fk_secur_user_id
+     FOREIGN KEY (security_user_id) REFERENCES security_users(id)
+     ON DELETE SET NULL ON UPDATE RESTRICT;
+   ```
+2. Flip Eloquent event from `static::deleted` → `static::deleting` (so snapshot `INSERT`s land while parent still exists).
+3. Flip CakePHP `afterDelete` → `beforeDelete` for the same reason.
+4. Update the dashboard query for "user history" to use `WHERE model='Users' AND model_reference=X` (immutable id) rather than the FK column, since `security_user_id` will be SET NULL for deleted users.
+
+This was prototyped during POCOR-9697 review, reverted as out-of-scope (weakens referential integrity on a previously NOT NULL column; the existing "users with history can't be hard-deleted" rule is the accepted OpenEMIS norm). The dormant snapshot code stays so this future ticket reduces to the four steps above with no application logic to write.
 
 ## 3a. Integration / Merge Notes
 
