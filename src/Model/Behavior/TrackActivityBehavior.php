@@ -53,6 +53,11 @@ class TrackActivityBehavior extends Behavior {
 	];
 	private $_exclude = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
 	private $_excludeType = ['binary'];
+	//POCOR-9697: parity with Laravel App\Models\Concerns\UserActivityLog.
+	//Fields here emit an audit row but the values are forced to '[REDACTED]'.
+	//Takes precedence over $_excludeType so photo_content (longblob, normally
+	//skipped as 'binary') still surfaces as a row noting the photo changed.
+	private $_redact = ['password', 'super_admin', 'photo_content'];
 	private $_session;
 
 	public function initialize(array $config): void {
@@ -84,6 +89,26 @@ public function beforeSave(EventInterface $event, Entity $entity) {
 
 		foreach ($entity->extractOriginalChanged($entity->getVisible()) as $field=>$value) {
 			if (!in_array($field, $this->_exclude) && $entity->has($field)) {
+				//POCOR-9697: redact sensitive / binary fields — emit a row to
+				//show the field changed, but never persist the value. Mirrors
+				//the Laravel UserActivityLog trait (password / super_admin /
+				//photo_content). Takes precedence over $_excludeType so the
+				//photo_content (longblob, normally skipped) still produces a
+				//visible audit row.
+				if (in_array($field, $this->_redact)) {
+					$redactObj = $obj;
+					$redactObj['field']      = $field;
+					$redactObj['field_type'] = 'string';
+					$redactObj['old_value']  = '[REDACTED]';
+					$redactObj['new_value']  = '[REDACTED]';
+					$redactObj['operation']  = 'edit';
+					$redactEntity = $ActivityModel->newEmptyEntity();
+					$redactEntity = $ActivityModel->patchEntity($redactEntity, $redactObj);
+					if (!$ActivityModel->save($redactEntity)) {
+						Log::write('debug', $redactEntity->getErrors());
+					}
+					continue;
+				}
 				if (!is_null($schema->getColumn($field)) && !in_array($schema->getColumnType($field), $this->_excludeType)) {
 
 					$oldValue = $entity->getOriginal($field);
