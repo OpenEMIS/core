@@ -37,7 +37,7 @@ $renderStatusBadge = function ($row) use ($syncStatus, $activeTypeId) {
 							<th><?= __('Identity Number'); ?></th>
 							<th><?= __('Nationality'); ?></th>
 							<th><?= __('Preferred'); ?></th>
-							<th><?= __('Status'); ?></th>
+							<th><?= __('Synced'); ?></th>
 						</tr>
 					</thead>
 
