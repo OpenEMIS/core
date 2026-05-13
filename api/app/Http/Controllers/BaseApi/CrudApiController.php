@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
-        //POCOR-9694: OpenEMIS Runtime abstraction tables — read-only resources for the Runtime UI
+        // POCOR-9694: OpenEMIS Runtime abstraction tables — read-only resources for the Runtime UI
         'tasks' => \App\Models\Api5\Tasks::class, //POCOR-9694
         'task-jobs' => \App\Models\Api5\TaskJobs::class, //POCOR-9694
         'task-failures' => \App\Models\Api5\TaskFailures::class, //POCOR-9694
