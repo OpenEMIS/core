@@ -22,6 +22,10 @@ class IdentitiesTable extends ControllerActionTable
     const ISPREFERRED = 1;
     use OptionsTrait;
 
+    //POCOR-9590: cached per-request for the index grid — avoids N+1 queries
+    private $_indexSyncStatus = null; //POCOR-9590: security_users.sync_status for the current user
+    private $_indexActiveIdentityTypeId = null; //POCOR-9590: identity_type_id from active external data source
+
     public function initialize(array $config): void
     {
         $this->setTable('user_identities');
@@ -210,6 +214,16 @@ class IdentitiesTable extends ControllerActionTable
     {
         $this->fields['comments']['visible'] = 'false';
 
+        //POCOR-9590: start — add virtual "Synced" column, index-only
+        $this->field('sync_status', [
+            'type' => 'string',
+            'visible' => ['index' => true, 'view' => false, 'edit' => false, 'add' => false],
+        ]); //POCOR-9590: virtual field — value computed in onGetSyncStatus()
+        $this->setFieldOrder([
+            'identity_type_id', 'nationality_id', 'number', 'preferred', 'sync_status',
+            'issue_date', 'expiry_date', 'issue_location', 'comments',
+        ]); //POCOR-9590: end — sync_status inserted after preferred
+
         // Start POCOR-5188
         if ($this->request->getParam('controller') == 'Staff') {
             $is_manual_exist = $this->getManualUrl('Institutions', 'Identities', 'Staff - General');
@@ -295,6 +309,16 @@ class IdentitiesTable extends ControllerActionTable
     {
         $userId = $this->getUserID();
         $query->where([$this->aliasField('security_user_id') => $userId]);
+
+        //POCOR-9590: start — cache user sync_status and active external identity_type_id once per index render
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $userRow = $SecurityUsers->find()
+            ->select(['sync_status'])
+            ->where(['id' => $userId])
+            ->first(); //POCOR-9590: single query for the whole grid
+        $this->_indexSyncStatus = $userRow ? (int)$userRow->sync_status : \User\Model\Behavior\UserBehavior::SYNC_STATUS_LOCAL;
+        $this->_indexActiveIdentityTypeId = $SecurityUsers->getActiveExternalSourceIdentityTypeId(); //POCOR-9590: helper lives on User\Model\Behavior\UserBehavior attached to Security.Users — delegate via __call, do not duplicate
+        //POCOR-9590: end
     }
 
     /*POCOR-6267 Ends*/
@@ -564,8 +588,26 @@ class IdentitiesTable extends ControllerActionTable
             return __('Modified By');
         } elseif ($field == 'created') {
             return __('Created On');
+        } elseif ($field == 'sync_status') {
+            return __('Synced'); //POCOR-9590: column header label
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-9590: start — per-row "Synced" value for the index grid
+    //Mirrors the eligibility rule in plugins/User/templates/Element/UserIdentities/details.php:
+    //  eligible = preferred==1 AND identity_type_id == active_source_identity_type_id AND sync_status == SYNC_STATUS_SYNCED
+    public function onGetSyncStatus(EventInterface $event, Entity $entity): string
+    {
+        $activeTypeId = $this->_indexActiveIdentityTypeId;
+        $eligible = ($entity->preferred == 1)
+            && ($activeTypeId !== null)
+            && ((int)$entity->identity_type_id === (int)$activeTypeId); //POCOR-9590: match type+preferred, same as details.php line 16
+        if ($eligible && $this->_indexSyncStatus === \User\Model\Behavior\UserBehavior::SYNC_STATUS_SYNCED) {
+            return __('Yes'); //POCOR-9590: plain text — index grid renders text, not HTML badges
+        }
+        return __('No'); //POCOR-9590: not eligible, drifted, or local
+    }
+    //POCOR-9590: end
 }
