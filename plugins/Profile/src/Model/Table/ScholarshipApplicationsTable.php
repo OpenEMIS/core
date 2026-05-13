@@ -249,7 +249,11 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                 $this->aliasField('requested_amount'),
                 $this->aliasField('comments'),
                 $this->aliasField('status_id'),
-                $this->aliasField('assignee_id')
+                $this->aliasField('assignee_id'),
+                $this->aliasField('created_user_id'),
+                $this->aliasField('modified_user_id'),
+                $this->aliasField('created'),
+                $this->aliasField('modified'),
             ])
             ->contain([
                 'Scholarships' => [
@@ -304,7 +308,29 @@ class ScholarshipApplicationsTable extends ControllerActionTable
                         'last_name',
                         'preferred_name'
                     ]
-                ]
+                ],
+                'CreatedUser' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name',
+                    ],
+                ],
+                'ModifiedUser' => [
+                    'fields' => [
+                        'id',
+                        'openemis_no',
+                        'first_name',
+                        'middle_name',
+                        'third_name',
+                        'last_name',
+                        'preferred_name',
+                    ],
+                ],
             ]);
     }
 
