@@ -699,20 +699,20 @@ class SuperAdminEscalationProtectionTest extends TestCase
         ]);
         $targetId = $target->id;
 
-        //POCOR-9697: the schema enforces `user_activities.security_user_id →
-        //security_users.id ON DELETE RESTRICT`, so an actual hard-delete is
-        //blocked while audit rows exist (the existing production table has
-        //ZERO 'delete' rows over years for this reason). We invoke the
-        //handler directly to verify the snapshot logic without performing
-        //the schema-blocked hard delete; in normal operation the Eloquent
-        //`deleted` event would fire this same method.
-        DB::table('user_activities')->where('security_user_id', $targetId)
-            ->where('operation', 'create')->delete();
+        //POCOR-9697: the FK on user_activities.security_user_id was
+        //relaxed in migration 20260513141500_POCOR9697.php to
+        //ON DELETE SET NULL — the parent delete now succeeds and the
+        //snapshot INSERTs from the `deleted` event persist with
+        //security_user_id NULL but model_reference holding the original id.
+        $target->delete();
 
-        $target->logUserActivity('delete');
-
+        //POCOR-9697: after the parent delete, FK ON DELETE SET NULL has
+        //NULLed `security_user_id` on every row pointing to the deleted
+        //user. We query by `model_reference` (immutable, never altered by
+        //FK rules) to find the snapshot rows.
         $rows = DB::table('user_activities')
-            ->where('security_user_id', $targetId)
+            ->where('model', 'Users')
+            ->where('model_reference', $targetId)
             ->where('operation', 'delete')
             ->get();
 
