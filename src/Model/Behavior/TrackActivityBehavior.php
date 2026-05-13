@@ -15,6 +15,33 @@ use Cake\Http\Session;
 
 /**
  * Depends on ControllerActionComponent's function "getAssociatedBelongsToModel()"
+ *
+ * --------------------------------------------------------------------------
+ * POCOR-9697 — Logging policy mirror (CakePHP / Laravel parity)
+ *
+ * Both sides of OpenEMIS — this CakePHP behavior AND the Laravel
+ * `App\Models\Concerns\UserActivityLog` trait (api/app/Models/Concerns/
+ * UserActivityLog.php) — write into the same `user_activities` table
+ * using the same row shape:
+ *
+ *   edit    → one row per dirty field, real old/new values
+ *             ('[REDACTED]' for password / super_admin)
+ *   delete  → single summary row, empty strings for field/field_type/old/new
+ *   create  → API side only (port of the missing Cake behavior here); same
+ *             empty-string summary shape
+ *
+ * The `user_activities` rows ARE the audit trail. A separate framework-level
+ * log entry (`Log::write` here, `Log::warning` on Laravel) is reserved for
+ * SUSPICIOUS or DANGEROUS events only — never normal CRUD:
+ *
+ *   • Attempts to set / probe `password` or `super_admin`
+ *   • `created_user_id` / `modified_user_id` forgery in a payload
+ *   • ACL denial against SecurityUsers endpoints
+ *   • Audit-row INSERT itself failing (defensive fallback)
+ *
+ * If you add new audit behavior here, keep the row shape and the
+ * "log suspicious only" policy aligned with the Laravel trait.
+ * --------------------------------------------------------------------------
  */
 class TrackActivityBehavior extends Behavior {
 	protected $session;
