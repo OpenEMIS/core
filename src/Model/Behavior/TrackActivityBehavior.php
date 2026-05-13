@@ -41,6 +41,13 @@ use Cake\Http\Session;
  *
  * If you add new audit behavior here, keep the row shape and the
  * "log suspicious only" policy aligned with the Laravel trait.
+ *
+ * Note: `user_activities.security_user_id` has a FK to `security_users.id`
+ * with `ON DELETE RESTRICT`. Hard-deletes of `security_users` are therefore
+ * blocked at the schema level — the production table has zero 'delete'
+ * rows for this reason. The snapshot logic here ships ready for any
+ * non-RESTRICTed table (or a future FK relaxation) but does not magically
+ * make security_users hard-deletable.
  * --------------------------------------------------------------------------
  */
 class TrackActivityBehavior extends Behavior {
@@ -202,22 +209,78 @@ public function beforeSave(EventInterface $event, Entity $entity) {
 
 	public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
 		if (!empty($entity->id) && $this->_table->trackActivity) {
-			$alias = $this->_table->getAlias();
+			$model = $this->_table;
+			$alias = $model->getAlias();
+			$schema = $model->getSchema();
 			$id = $entity->id;
 			$keyField = $entity->{$this->getConfig('keyField')};
-			$activity['model'] = $alias;
-			$activity['model_reference'] = $id;
-			$activity['field'] = '';
-			$activity['field_type'] = '';
-			$activity['old_value'] = '';
-			$activity['new_value'] = '';
-			$activity[$this->getConfig('key')] = $keyField;
-			$activity['operation'] = 'delete';
-
 			$ActivityModel = TableRegistry::getTableLocator()->get($this->getConfig('target'));
-			$newEntity = $ActivityModel->newEntity($activity);
-			if (!$ActivityModel->save($newEntity)) {
-				Log::write('debug', $newEntity->getErrors());
+
+			$base = [
+				'model' => $alias,
+				'model_reference' => $id,
+				$this->getConfig('key') => $keyField,
+				'operation' => 'delete',
+			];
+
+			// 1) Summary row — preserves existing dashboard behavior (one
+			//    "row was deleted" entry per delete event).
+			$summary = $base + [
+				'field' => '',
+				'field_type' => '',
+				'old_value' => '',
+				'new_value' => '',
+			];
+			$summaryEntity = $ActivityModel->newEntity($summary);
+			if (!$ActivityModel->save($summaryEntity)) {
+				Log::write('debug', $summaryEntity->getErrors());
+			}
+
+			//POCOR-9697: 2) Per-field snapshot of the deleted entity so
+			//forensic / undelete code can reconstruct who the user was.
+			//Mirrors Laravel UserActivityLog::logDeleteSnapshot.
+			//  - password / super_admin → '[REDACTED]'
+			//  - photo_content (longblob)   → '[...]'
+			//  - other binary columns       → skipped via $_excludeType
+			//  - excluded audit columns     → skipped via $_exclude
+			foreach ($schema->columns() as $field) {
+				if (in_array($field, $this->_exclude)) {
+					continue;
+				}
+				if (!$entity->has($field)) {
+					continue;
+				}
+
+				$isRedacted = in_array($field, $this->_redact);
+				if (!$isRedacted && in_array($schema->getColumnType($field), $this->_excludeType)) {
+					// Non-redacted binary column — skip entirely.
+					continue;
+				}
+
+				$oldRaw = $entity->{$field};
+				if ($isRedacted) {
+					$oldValue = ($field === 'photo_content') ? '[...]' : '[REDACTED]';
+				} else {
+					$oldValue = (string) $oldRaw;
+					if (strlen($oldValue) > 255) {
+						$oldValue = substr($oldValue, 0, 252) . '...';
+					}
+				}
+
+				$fieldType = isset($model->fields[$field]['type'])
+					? $model->fields[$field]['type']
+					: ($schema->getColumnType($field) ?: 'string');
+
+				$row = $base + [
+					'field' => $field,
+					'field_type' => $fieldType,
+					'old_value' => $oldValue,
+					'new_value' => '',
+				];
+				$rowEntity = $ActivityModel->newEntity($row);
+				if (!$ActivityModel->save($rowEntity)) {
+					Log::write('debug', $rowEntity->getErrors());
+				}
 			}
 		}
 	}
