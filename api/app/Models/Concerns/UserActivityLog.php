@@ -54,6 +54,24 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  * log records the SUSPICIOUS attempts only.
  *
  * --------------------------------------------------------------------------
+ * Known schema constraint — hard delete is currently blocked:
+ *
+ * `user_activities.security_user_id` has a FK to `security_users.id` with
+ * `ON DELETE RESTRICT ON UPDATE RESTRICT`. While that constraint stands:
+ *
+ *   • The 'created' rows we emit will block any hard-delete of the parent.
+ *   • Even if those create rows are cleared, the snapshot INSERTs would
+ *     fail (FK now points at a non-existent parent) — the try/catch on
+ *     this trait swallows the failure rather than breaking the request.
+ *
+ * In practice the production `security_users` table is soft-deleted via
+ * the `status` column — the snapshot logic still ships ready for any
+ * future schema where the FK is relaxed to `ON DELETE SET NULL`, or for
+ * tables that adopt this trait without that constraint. The accompanying
+ * feature test exercises `logUserActivity('delete')` directly to prove
+ * the row shape is correct.
+ *
+ * --------------------------------------------------------------------------
  * Critical rules:
  *  1. NEVER persist `password` or `super_admin` values — emit the row to
  *     prove the column changed, but force old/new to '[REDACTED]'. The
@@ -125,10 +143,12 @@ trait UserActivityLog
                 return;
             }
 
-            //POCOR-9697: create / delete — single summary row.
-            //Shape matches CakePHP TrackActivityBehavior::afterDelete: empty
-            //strings for field / field_type / old_value / new_value so the
-            //dashboard renders identically regardless of origin.
+            $now = date('Y-m-d H:i:s');
+
+            //POCOR-9697: create / delete — always emit the summary row first
+            //(matches CakePHP TrackActivityBehavior::afterDelete shape: empty
+            //strings for field / field_type / old_value / new_value). The
+            //dashboard renders this as the "user was created / deleted" event.
             $this->insertUserActivityRow([
                 'model'            => 'Users',
                 'model_reference'  => $targetId,
@@ -139,8 +159,16 @@ trait UserActivityLog
                 'operation'        => $operation, //'create' or 'delete'
                 'security_user_id' => $targetId,
                 'created_user_id'  => $callerId,
-                'created'          => date('Y-m-d H:i:s'),
+                'created'          => $now,
             ]);
+
+            //POCOR-9697: on delete, additionally snapshot every column into
+            //its own row so the deleted user can be reconstructed / inspected
+            //post-mortem. password and super_admin stay '[REDACTED]';
+            //photo_content (longblob) becomes '[...]'.
+            if ($operation === 'delete') {
+                $this->logDeleteSnapshot($targetId, $callerId, $now);
+            }
         } catch (\Throwable $e) {
             // Audit failures must never break the underlying write.
             Log::warning('[POCOR-9697 UserActivityLog] insert failed: ' . $e->getMessage(), [
@@ -174,14 +202,61 @@ trait UserActivityLog
                 'model_reference'  => $targetId,
                 'field'            => $field,
                 'field_type'       => $this->inferFieldType($newValue),
-                'old_value'        => $isRedacted ? '[REDACTED]' : $this->stringifyForAudit($oldValue),
-                'new_value'        => $isRedacted ? '[REDACTED]' : $this->stringifyForAudit($newValue),
+                'old_value'        => $isRedacted ? $this->redactPlaceholder($field, 'edit') : $this->stringifyForAudit($oldValue),
+                'new_value'        => $isRedacted ? $this->redactPlaceholder($field, 'edit') : $this->stringifyForAudit($newValue),
                 'operation'        => 'edit', //POCOR-9697: 'edit' matches CakePHP TrackActivityBehavior — not 'update'
                 'security_user_id' => $targetId,
                 'created_user_id'  => $callerId,
                 'created'          => $now,
             ]);
         }
+    }
+
+    /**
+     * POCOR-9697: snapshot every column of the deleted entity into its own
+     * audit row. Lets a forensic / undelete path reconstruct who the user
+     * was. Skips the ignored list (audit timestamps, last_login, etc.) and
+     * the primary key.
+     */
+    protected function logDeleteSnapshot(int $targetId, int $callerId, string $now): void
+    {
+        $ignored = array_flip($this->userActivityIgnoredFields());
+        $redact  = array_flip($this->userActivityRedactedFields());
+
+        foreach ($this->getAttributes() as $field => $value) {
+            if ($field === $this->getKeyName() || isset($ignored[$field])) {
+                continue;
+            }
+
+            $isRedacted = isset($redact[$field]);
+
+            $this->insertUserActivityRow([
+                'model'            => 'Users',
+                'model_reference'  => $targetId,
+                'field'            => $field,
+                'field_type'       => $this->inferFieldType($value),
+                'old_value'        => $isRedacted ? $this->redactPlaceholder($field, 'delete') : $this->stringifyForAudit($value),
+                'new_value'        => '', //POCOR-9697: nothing remains after delete
+                'operation'        => 'delete',
+                'security_user_id' => $targetId,
+                'created_user_id'  => $callerId,
+                'created'          => $now,
+            ]);
+        }
+    }
+
+    /**
+     * POCOR-9697: pick the placeholder for a redacted field.
+     * - photo_content on a delete snapshot → '[...]' (binary, omitted)
+     * - everything else (password, super_admin, photo_content on edit)
+     *   → '[REDACTED]'
+     */
+    protected function redactPlaceholder(string $field, string $operation): string
+    {
+        if ($operation === 'delete' && $field === 'photo_content') {
+            return '[...]';
+        }
+        return '[REDACTED]';
     }
 
     /**
@@ -306,8 +381,13 @@ trait UserActivityLog
                 return;
             }
 
-            //POCOR-9697: create / delete — single summary row, empty-string shape
-            //(matches CakePHP TrackActivityBehavior::afterDelete).
+            //POCOR-9697: create / delete via the query-builder path — emit
+            //the summary row only. Per-field delete snapshot lives on the
+            //Eloquent trait (logDeleteSnapshot) because it needs the entity
+            //to read attribute values; query-builder callers don't have one.
+            //If a query-builder caller needs the full snapshot, fetch the
+            //row first with SecurityUsers::find() and call ->delete() so the
+            //Eloquent `deleted` event fires.
             DB::table('user_activities')->insert([
                 'model'            => 'Users',
                 'model_reference'  => $targetUserId,

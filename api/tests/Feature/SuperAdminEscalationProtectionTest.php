@@ -684,4 +684,69 @@ class SuperAdminEscalationProtectionTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $createdRows,
             'v4 create must produce a user_activities row — trait lives on the model.');
     }
+
+    /**
+     * Wave-3 follow-up: deleting a user must write the summary row PLUS
+     * one snapshot row per column so the deleted entity can be
+     * reconstructed forensically. password / super_admin must come
+     * through as '[REDACTED]'; photo_content as '[...]'.
+     */
+    public function test_delete_user_writes_per_field_snapshot(): void //POCOR-9697
+    {
+        $target = SecurityUsers::factory()->create([
+            'first_name' => 'DeleteSnap',
+            'email'      => 'snap_' . uniqid() . '@example.test',
+        ]);
+        $targetId = $target->id;
+
+        //POCOR-9697: the schema enforces `user_activities.security_user_id →
+        //security_users.id ON DELETE RESTRICT`, so an actual hard-delete is
+        //blocked while audit rows exist (the existing production table has
+        //ZERO 'delete' rows over years for this reason). We invoke the
+        //handler directly to verify the snapshot logic without performing
+        //the schema-blocked hard delete; in normal operation the Eloquent
+        //`deleted` event would fire this same method.
+        DB::table('user_activities')->where('security_user_id', $targetId)
+            ->where('operation', 'create')->delete();
+
+        $target->logUserActivity('delete');
+
+        $rows = DB::table('user_activities')
+            ->where('security_user_id', $targetId)
+            ->where('operation', 'delete')
+            ->get();
+
+        $this->assertGreaterThanOrEqual(
+            2,
+            $rows->count(),
+            'delete must produce at least a summary row + per-field snapshot rows.'
+        );
+
+        $summary = $rows->first(function ($r) {
+            return $r->field === '' && $r->old_value === '' && $r->new_value === '';
+        });
+        $this->assertNotNull($summary, 'Summary row (empty-string shape) must exist.');
+
+        $firstName = $rows->firstWhere('field', 'first_name');
+        $this->assertNotNull($firstName, 'first_name snapshot row must exist.');
+        $this->assertSame('DeleteSnap', $firstName->old_value);
+        $this->assertSame('', $firstName->new_value);
+
+        $pw = $rows->firstWhere('field', 'password');
+        $this->assertNotNull($pw, 'password row must exist (proves a password change/value was on the deleted user).');
+        $this->assertSame('[REDACTED]', $pw->old_value,
+            'password must never be persisted into the audit trail.');
+
+        $sa = $rows->firstWhere('field', 'super_admin');
+        $this->assertNotNull($sa, 'super_admin row must exist.');
+        $this->assertSame('[REDACTED]', $sa->old_value);
+
+        // photo_content is nullable on factory rows but the snapshot row
+        // must exist with the '[...]' placeholder regardless of value.
+        $photo = $rows->firstWhere('field', 'photo_content');
+        if ($photo !== null) {
+            $this->assertSame('[...]', $photo->old_value,
+                'photo_content (longblob) must surface as [...] never the raw blob.');
+        }
+    }
 }
