@@ -54,22 +54,22 @@ use Tymon\JWTAuth\Facades\JWTAuth;
  * log records the SUSPICIOUS attempts only.
  *
  * --------------------------------------------------------------------------
- * Known schema constraint — hard delete is currently blocked:
+ * Hard-delete is supported:
  *
- * `user_activities.security_user_id` has a FK to `security_users.id` with
- * `ON DELETE RESTRICT ON UPDATE RESTRICT`. While that constraint stands:
+ * The FK `user_activities.security_user_id → security_users.id` was relaxed
+ * to `ON DELETE SET NULL ON UPDATE RESTRICT` in migration
+ * `config/Migrations/20260513141500_POCOR9697.php`. The snapshot rows are
+ * inserted on the Eloquent `deleting` event (i.e. *before* the DB DELETE),
+ * while the parent row still exists — so the FK is satisfied on insert.
+ * When the DB DELETE then runs, ALL audit rows pointing at that parent
+ * (create / edit / the just-inserted delete snapshot) have their
+ * `security_user_id` set to NULL automatically by the FK action.
  *
- *   • The 'created' rows we emit will block any hard-delete of the parent.
- *   • Even if those create rows are cleared, the snapshot INSERTs would
- *     fail (FK now points at a non-existent parent) — the try/catch on
- *     this trait swallows the failure rather than breaking the request.
- *
- * In practice the production `security_users` table is soft-deleted via
- * the `status` column — the snapshot logic still ships ready for any
- * future schema where the FK is relaxed to `ON DELETE SET NULL`, or for
- * tables that adopt this trait without that constraint. The accompanying
- * feature test exercises `logUserActivity('delete')` directly to prove
- * the row shape is correct.
+ * `model_reference` is never modified — it preserves the original
+ * `security_users.id` indefinitely. The dashboard query for
+ * "everything that happened to user X" should use
+ * `WHERE model = 'Users' AND model_reference = X` rather than the
+ * FK column, so deleted-user history remains discoverable.
  *
  * --------------------------------------------------------------------------
  * Critical rules:
@@ -97,7 +97,11 @@ trait UserActivityLog
             $model->logUserActivity('update');
         });
 
-        static::deleted(function ($model) {
+        //POCOR-9697: fire on `deleting` (before the DB DELETE) so the
+        //snapshot rows insert while the parent still exists — the FK then
+        //SET NULLs them automatically when the parent vanishes. Doing this
+        //in `deleted` would fail the FK check (parent already gone).
+        static::deleting(function ($model) {
             $model->logUserActivity('delete');
         });
     }
