@@ -88,10 +88,15 @@ trait UserActivityLog
      * Fields whose value must never be persisted into user_activities.
      * The row is still emitted so the dashboard sees the field changed;
      * the value is masked.
+     *
+     * POCOR-9697: photo_content is `longblob` — storing it makes no sense
+     * (binary garbage, blows the varchar(255) column). On edit we write
+     * '[REDACTED]' to mark the change; if the field ever appears in a
+     * delete-snapshot row, write '[...]' as the placeholder.
      */
     protected function userActivityRedactedFields(): array
     {
-        return ['password', 'super_admin'];
+        return ['password', 'super_admin', 'photo_content'];
     }
 
     /**
@@ -277,7 +282,10 @@ trait UserActivityLog
             }
             $callerId = self::resolveExternalAuditCallerId();
             $now      = date('Y-m-d H:i:s');
-            $redact   = array_flip(['password', 'super_admin']);
+            //POCOR-9697: keep the static helper's redact list aligned with
+            //the instance method's userActivityRedactedFields() — photo_content
+            //is longblob, no value in storing it.
+            $redact   = array_flip(['password', 'super_admin', 'photo_content']);
 
             if ($operation === 'update' && !empty($changedFields)) {
                 foreach ($changedFields as $field => $delta) {
