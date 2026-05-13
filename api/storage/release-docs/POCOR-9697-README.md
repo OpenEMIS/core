@@ -535,8 +535,8 @@ The branch adds 9 `Log::` sites across the Laravel app. Every single one fires *
 | 5 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:1307 | warning | **Filter probe against sensitive column** (`password`, `super_admin`, `remember_token`, `password_hash`) — enumeration / oracle attempt |
 | 6 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:1315 | info | Filter dropped — field not queryable (client typo) |
 | 7 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:1583 | warning | `created_user_id` / `modified_user_id` forgery on create |
-| 8 | `api/app/Models/Concerns/UserActivityLog.php` | warning | Audit-row INSERT itself failed — defensive fallback |
-| 9 | `api/app/Models/Concerns/UserActivityLog.php` (static) | warning | Same fallback for the query-builder code path |
+| 8 | `api/app/Models/Concerns/UserActivityLog.php`:174 | warning | Audit-row INSERT itself failed — defensive fallback inside `logUserActivity()` |
+| 9 | `api/app/Models/Concerns/UserActivityLog.php`:404 | warning | Same fallback inside the static `logExternalUserChange()` helper |
 
 Rows 1 and 5 are the direct password / super_admin tampering signals; rows 3 / 4 / 7 cover audit-field forgery; rows 8 / 9 ensure we don't silently lose the audit trail itself.
 
