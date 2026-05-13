@@ -434,7 +434,7 @@ change with no security impact.
 
 ---
 
-## Wave 3 — User-change audit log (mirrors CakePHP)
+## Wave 3 — User-change audit log (CakePHP / Laravel parity)
 
 ### What changed
 
@@ -444,43 +444,51 @@ has always written to. The dashboard at **User → Activities** therefore
 shows API-originated changes alongside UI-originated ones, with no
 schema change required.
 
-Implementation lives in **`api/app/Models/Concerns/UserActivityLog.php`**
-and is mixed into both `App\Models\SecurityUsers` and
-`App\Models\Api5\SecurityUsers`.
+Two implementation halves, kept in lockstep:
 
-### Audit row shape
+| Stack | File | Role |
+|---|---|---|
+| Laravel | `api/app/Models/Concerns/UserActivityLog.php` | Trait mixed into both `App\Models\SecurityUsers` and `App\Models\Api5\SecurityUsers`. Wires Eloquent `created` / `updated` / `deleted` events; exposes a static `logExternalUserChange()` for v4 query-builder paths. |
+| CakePHP | `src/Model/Behavior/TrackActivityBehavior.php` | Pre-existing behavior attached to `StudentUser`, `StaffUser`, `Profiles`, `Directories`, `Staff`. Now updated to match the new shared row contract verbatim. |
 
-| Column           | Source                                                                           |
-|------------------|----------------------------------------------------------------------------------|
-| `model`          | always `'Users'` — matches the Cake-side convention                              |
-| `model_reference`| `security_users.id` of the row that changed                                      |
-| `field`          | column name (or `*` for create/delete summary rows)                              |
-| `field_type`     | `string` / `integer` / `decimal` / `record`                                      |
-| `old_value`      | previous value, varchar(255) truncated, **`[REDACTED]` for password & super_admin** |
-| `new_value`      | new value, same redaction rule                                                   |
-| `operation`      | `create` / `update` / `delete`                                                   |
-| `security_user_id` | same as `model_reference`                                                      |
-| `created_user_id`| JWT caller id; falls back to `0` for CLI / queue contexts                        |
-| `created`        | now()                                                                            |
+Both stacks read from a single docblock contract — change one, update the other. The header docblocks reference each other.
 
-### Redaction policy
+### Audit row shape (matches CakePHP `TrackActivityBehavior` verbatim)
 
-`password` and `super_admin` produce an audit row (so the dashboard sees
-the field changed) but `old_value` / `new_value` are forced to
-`'[REDACTED]'`. Reason: `user_activities.old_value`/`new_value` are
-`varchar(255)` and would otherwise persist either plaintext input or a
-bcrypt hash — both unacceptable. Same threat model as the Wave-1
-`$hidden` rules.
+| Operation | Rows | `field` | `field_type` | `old_value` / `new_value` | `operation` |
+|---|---|---|---|---|---|
+| edit | one per dirty field | column name | column type (`string`/`integer`/`decimal`/…) | real values, truncated to 252+`...` if >255 chars | `'edit'` |
+| delete (summary) | 1 | `''` | `''` | `''` / `''` | `'delete'` |
+| delete (per-field snapshot — see §"Delete snapshot" below) | N | column name | column type | previous value (or redaction placeholder) | `''` | `'delete'` |
+| create | 1 | `''` | `''` | `''` / `''` | `'create'` |
+
+`operation` value matches the Cake enum exactly — `'edit'` (not `'update'`), `'create'` (not `'add'`), `'delete'`. `field=''` / `field_type=''` / empty-string values on the summary rows match CakePHP `TrackActivityBehavior::afterDelete` byte-for-byte. Production DB confirms only these values appear (`SELECT operation, COUNT(*) FROM user_activities GROUP BY operation` returns `edit` and `create` only).
+
+Constant columns: `model='Users'`, `model_reference=security_users.id`, `security_user_id=security_users.id`, `created_user_id=JWT caller id (0 for CLI / queue / seed)`, `created=now()`.
+
+### Redaction policy — same list on both stacks
+
+| Field | On `edit` | On `delete` snapshot |
+|---|---|---|
+| `password` | `'[REDACTED]'` | `'[REDACTED]'` |
+| `super_admin` | `'[REDACTED]'` | `'[REDACTED]'` |
+| `photo_content` (longblob) | `'[REDACTED]'` | `'[...]'` |
+| any non-redacted `binary` column | row skipped (`$_excludeType` on Cake, not in `$fillable` on Laravel) | row skipped |
+| everything else | real value, truncated to 252+`...` if >255 chars | same |
+
+`[REDACTED]` means "value omitted for security" (password, super_admin); `[...]` means "value omitted for size / format" (longblob photo). The two markers are deliberately distinct so a forensic reader can tell *why* a value isn't there. The list is parity-mirrored: Laravel `userActivityRedactedFields()` and CakePHP `$_redact` both return `['password', 'super_admin', 'photo_content']`.
+
+Reason `password` and `super_admin` are redacted: `user_activities.old_value` / `new_value` are `varchar(255)`, so would otherwise persist either plaintext input or a bcrypt hash — both unacceptable. Same threat model as the Wave-1 `$hidden` rules. Reason `photo_content` is redacted: it's a `longblob`, never fits into 255 chars and is binary garbage anyway.
+
+### Delete snapshot — ships, but dormant for `security_users`
+
+The trait additionally emits, *on delete*, a per-field snapshot row for every column of the deleted entity so a forensic / undelete code path can reconstruct who the user was. See the "Database Migrations" section above for the schema constraint that keeps this dormant for `security_users` today and the four-step recipe to activate it on a future ticket.
 
 ### Coverage
 
-- **v5 CRUD (`/api/v5/security-users`)** — covered by the trait’s
-  Eloquent model events.
-- **v4 create / update (`POST /api/v4/users`)** — `UserRepository::addUsers`
-  uses query-builder `insert()` / `update()`, which bypass Eloquent
-  events. We close that gap by calling
-  `SecurityUsers::logExternalUserChange()` explicitly after each write,
-  with the diff computed against the pre-update row.
+- **v5 CRUD (`/api/v5/security-users`)** — covered by the trait's Eloquent model events.
+- **v4 create / update (`POST /api/v4/users`)** — `UserRepository::addUsers` uses query-builder `insert()` / `update()`, which bypass Eloquent events. We close that gap by calling `SecurityUsers::logExternalUserChange()` explicitly after each write, with the diff computed against the pre-update row.
+- **CakePHP UI flow (Students, Staff, Directories, Profiles)** — covered by the pre-existing `TrackActivityBehavior` (now updated to write the new row shape).
 
 ### How to read the trail via the API
 
@@ -490,28 +498,46 @@ curl -k -H "Authorization: Bearer $TOKEN" \
   "https://localhost:8482/core/api/v5/user-activities?_conditions=security_user_id:14693"
 ```
 
-Returns one row for the create plus one per dirty field on every update.
+Returns the create summary row plus one row per dirty field on every update. For users that have been deleted under a future SET NULL FK, query by `model_reference` instead of `security_user_id` — see the migration section.
 
 ### Regression tests
 
-`api/tests/Feature/SuperAdminEscalationProtectionTest.php` — adds:
+`api/tests/Feature/SuperAdminEscalationProtectionTest.php` — Wave-3 tests:
 
 - `test_v5_create_user_logs_audit_row`
 - `test_v5_update_user_logs_audit_row_per_dirty_field`
-- `test_v5_update_user_password_change_logs_event_without_value` (asserts redaction)
+- `test_v5_update_user_password_change_logs_event_without_value` (asserts `'[REDACTED]'`)
 - `test_v4_create_user_logs_audit_row`
+- `test_delete_user_writes_per_field_snapshot` (exercises the dormant delete-snapshot via direct `logUserActivity('delete')` invocation since the FK blocks the DB delete itself)
 
-Full suite: **21 / 21 passing**.
+Full suite: **23 / 23 passing.**
 
 ### Postman section
 
-Items **WAVE3-1 … WAVE3-4** in `POCOR-9697.postman_collection.json`
-demonstrate the create → GET-activities → update → GET-activities flow
-and assert the same redaction guarantees as the PHP tests.
+Items **WAVE3-1 … WAVE3-4** in `POCOR-9697.postman_collection.json` demonstrate the create → GET-activities → update → GET-activities flow and assert the same redaction guarantees as the PHP tests.
 
 ### Known limitation
 
-Legacy rows created before this branch landed do not have a `user_activities`
-entry — the trait is forward-looking. The pingdom / seed accounts will
-remain unbacked by audit rows; that is the same gap the CakePHP behavior
-has always had.
+Legacy rows created before this branch landed do not have a `user_activities` entry — the trait is forward-looking. The pingdom / seed accounts will remain unbacked by audit rows; that is the same gap the CakePHP behavior has always had.
+
+---
+
+## Logging policy — SUSPICIOUS-only, never normal CRUD
+
+The branch adds 9 `Log::` sites across the Laravel app. Every single one fires *only* on a defensive condition that an SOC / ops engineer should be alertable on — legitimate authenticated CRUD writes **zero** extra Laravel log lines. The `user_activities` table records the WHAT; the Laravel log records the SUSPICIOUS.
+
+| # | File | Level | Fires when |
+|---|---|---|---|
+| 1 | `api/app/Http/Requests/UsersAddRequest.php` | warning | **`super_admin` field present in request body** — silently stripped, attempt recorded |
+| 2 | `api/app/Http/Controllers/UserController.php` | info | ACL denial for `SecurityUsers:{action}` |
+| 3 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:881 | warning | `created_user_id` supplied on update — immutable, silently stripped |
+| 4 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:895 | warning | `modified_user_id` ≠ JWT user — forgery attempt overwritten |
+| 5 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:1307 | warning | **Filter probe against sensitive column** (`password`, `super_admin`, `remember_token`, `password_hash`) — enumeration / oracle attempt |
+| 6 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:1315 | info | Filter dropped — field not queryable (client typo) |
+| 7 | `api/app/Http/Controllers/BaseApi/CrudApiController.php`:1583 | warning | `created_user_id` / `modified_user_id` forgery on create |
+| 8 | `api/app/Models/Concerns/UserActivityLog.php` | warning | Audit-row INSERT itself failed — defensive fallback |
+| 9 | `api/app/Models/Concerns/UserActivityLog.php` (static) | warning | Same fallback for the query-builder code path |
+
+Rows 1 and 5 are the direct password / super_admin tampering signals; rows 3 / 4 / 7 cover audit-field forgery; rows 8 / 9 ensure we don't silently lose the audit trail itself.
+
+A matching policy paragraph is documented in the trait header docblock and in `src/Model/Behavior/TrackActivityBehavior.php` — a developer reading either stack sees the same contract. Volume on dmo-dev during a full SuperAdminEscalationProtection test run: zero extra `Log::` lines from authenticated CRUD; one line per simulated attack.
