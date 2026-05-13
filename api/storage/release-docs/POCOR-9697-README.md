@@ -263,29 +263,16 @@ mirroring the feature tests.
 | `api/public/api-docs-v4.json` | Regenerated. Drops 5 of 6 `super_admin` references; only `/api/v4/permissions` self-introspection remains. |
 | `api/public/api-docs-v5.json` | Regenerated. All 3 `super_admin` references gone. |
 | `api/app/Http/Controllers/BaseApi/CrudApiController.php` | **POCOR-9697 (Issue 6).** New `getQueryableColumns()` helper + `applyFilters()` takes the resolved model and **rejects with HTTP 400** any filter key not in `$fillable - $hidden`. Generic body, no field name echo (anti-fingerprinting). Sensitive-field probes (`super_admin`, `password`, `remember_token`, `password_hash`) logged at `Log::warning` with caller IP for SOC alerting; plain typos at `Log::info`. Closes read-side enumeration / oracle holes via `_conditions` while surfacing typos to legit clients. |
-| `api/tests/Feature/SuperAdminEscalationProtectionTest.php` | **New.** 23 feature tests covering every layer of the fix (write-side strip, response leak, swagger leak, read-side `_conditions` 400-on-rejection, audit-trail forgery, Wave-3 user_activities create/edit, **and the per-field hard-delete snapshot**). All pass. |
-| `config/Migrations/20260513141500_POCOR9697.php` | **New (reviewer follow-up).** Relaxes the `user_activities.security_user_id` FK from `ON DELETE RESTRICT` to `ON DELETE SET NULL` so a hard-deleted user's audit trail survives. See "Database Migrations" below. |
-| `src/Model/Behavior/TrackActivityBehavior.php` | **CakePHP-side parity.** Per-field delete snapshot in `beforeDelete` (moved from `afterDelete` for the same FK-timing reason as the Laravel trait); `_redact = ['password', 'super_admin', 'photo_content']` list emits `[REDACTED]` rows that previously were silently dropped under `_excludeType='binary'`. Header docblock now describes the parity contract with the Laravel trait. |
+| `api/tests/Feature/SuperAdminEscalationProtectionTest.php` | **New.** 23 feature tests covering every layer of the fix (write-side strip, response leak, swagger leak, read-side `_conditions` 400-on-rejection, audit-trail forgery, Wave-3 user_activities create/edit, **plus the per-field delete-snapshot logic, exercised directly because hard-delete itself is schema-blocked — see below**). All pass. |
+| `src/Model/Behavior/TrackActivityBehavior.php` | **CakePHP-side parity.** New `_redact = ['password', 'super_admin', 'photo_content']` list emits `[REDACTED]` rows that previously were silently dropped under `_excludeType='binary'`. `afterDelete` keeps the summary row and adds a per-field snapshot loop (dormant infrastructure — see schema note below). Header docblock now describes the parity contract with the Laravel trait. |
 
 ### Database Migrations
 
-| Migration | What | Backup table | `down()` |
-|---|---|---|---|
-| `config/Migrations/20260513141500_POCOR9697.php` | Backs up `user_activities`, makes `security_user_id` nullable, drops & re-adds the FK as `ON DELETE SET NULL ON UPDATE RESTRICT` so the audit trail survives a hard-delete of the parent user. | `z_9697_user_activities` | Restores from backup; drops `z_9697_user_activities` |
+None. No schema change shipped on this branch.
 
-**Why the migration is needed.** The previous FK definition (`ON DELETE RESTRICT`) made hard-delete of `security_users` impossible at the schema level — the production `user_activities` table held zero `delete` rows over years of operation. The reviewer asked whether a deletion can preserve the old values for forensic / undelete; the Wave-3 trait can now do that, but only if the FK allows the audit rows to outlive the parent row.
+**Note on hard-delete:** `user_activities.security_user_id` has a FK to `security_users.id` with `ON DELETE RESTRICT`. Any single `create` / `edit` audit row blocks the hard-delete of that user — and since this trait writes one on every create / edit, users who have ever been touched are un-deletable at the schema level. In practice OpenEMIS soft-deletes users via the `status` column; the production `user_activities` table holds zero `delete` rows over years of operation.
 
-**End-state semantics.** After a hard-delete:
-* All audit rows pointing at the deleted user have `security_user_id` set to NULL by the FK action.
-* `model_reference` is never touched by FK rules — it preserves the original `security_users.id` indefinitely.
-* Dashboard / API queries for "everything that happened to user X" must use `WHERE model='Users' AND model_reference=X`, not the FK column.
-
-**Event timing.** Both stacks now write snapshot rows *before* the DB DELETE (Laravel `static::deleting`, CakePHP `beforeDelete`) so the inserts succeed against the still-existing parent. Once the parent is removed, `SET NULL` cleans up all pointing rows in one shot — including the just-written snapshot.
-
-**Rollback.** Single migration with a clean restore path. `user_activities` is the only table touched (no `security_users` orphan-cleanup needed — see `.claude/rules/migration-rollback.md` for the rule). If audit rows were written under the new schema with `security_user_id IS NULL`, run this first to satisfy the NOT NULL constraint after rollback:
-```sql
-UPDATE user_activities SET security_user_id = model_reference WHERE security_user_id IS NULL;
-```
+The per-field delete-snapshot logic (`UserActivityLog::logDeleteSnapshot` and the corresponding `TrackActivityBehavior::afterDelete` loop) therefore ships as *dormant infrastructure*: ready for the day the FK is ever relaxed to `ON DELETE SET NULL` (separate ticket — would require a migration and an event-timing flip to `deleting` / `beforeDelete`), or for any other table that adopts the trait without that constraint. The Laravel test exercises the snapshot via direct invocation (`$user->logUserActivity('delete')`) — same code path the Eloquent `deleted` event would fire — so the row shape is provable today.
 
 ## 3a. Integration / Merge Notes
 

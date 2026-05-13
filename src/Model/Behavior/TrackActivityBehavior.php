@@ -42,15 +42,14 @@ use Cake\Http\Session;
  * If you add new audit behavior here, keep the row shape and the
  * "log suspicious only" policy aligned with the Laravel trait.
  *
- * Note: `user_activities.security_user_id` was previously `ON DELETE
- * RESTRICT`, which blocked hard-deletes of `security_users` entirely.
- * Migration `20260513141500_POCOR9697` relaxed the FK to
- * `ON DELETE SET NULL` — hard-delete is now supported, and ALL audit
- * rows for the deleted user get their `security_user_id` SET NULL by
- * the FK action. `model_reference` is never touched, so queries by
- * `model = 'Users' AND model_reference = X` still find every row.
- * This behavior fires `beforeDelete` (not `afterDelete`) so the
- * snapshot rows insert while the parent still exists.
+ * Note: `user_activities.security_user_id` has a FK to `security_users.id`
+ * with `ON DELETE RESTRICT`. Hard-deletes of `security_users` are
+ * therefore blocked at the schema level — any single create/edit row
+ * about a user blocks their delete. The production table has zero
+ * `delete` rows for this reason (OpenEMIS soft-deletes via `status`).
+ * The per-field snapshot code in `afterDelete` ships ready for any
+ * non-RESTRICTed table or a future FK relaxation but does not
+ * by itself make `security_users` hard-deletable.
  * --------------------------------------------------------------------------
  */
 class TrackActivityBehavior extends Behavior {
@@ -210,11 +209,7 @@ public function beforeSave(EventInterface $event, Entity $entity) {
 	return true;
 }
 
-	//POCOR-9697: fire BEFORE the DB DELETE so the snapshot rows insert
-	//while the parent still exists — the FK (now ON DELETE SET NULL after
-	//migration 20260513141500_POCOR9697) then NULLs them when the parent
-	//vanishes. Firing in afterDelete would fail the FK check.
-	public function beforeDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
+	public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options) {
 		if (!empty($entity->id) && $this->_table->trackActivity) {
 			$model = $this->_table;
 			$alias = $model->getAlias();

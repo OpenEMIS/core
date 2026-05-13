@@ -699,20 +699,14 @@ class SuperAdminEscalationProtectionTest extends TestCase
         ]);
         $targetId = $target->id;
 
-        //POCOR-9697: the FK on user_activities.security_user_id was
-        //relaxed in migration 20260513141500_POCOR9697.php to
-        //ON DELETE SET NULL — the parent delete now succeeds and the
-        //snapshot INSERTs from the `deleted` event persist with
-        //security_user_id NULL but model_reference holding the original id.
-        $target->delete();
+        //POCOR-9697: hard-delete of security_users is schema-blocked
+        //(FK ON DELETE RESTRICT). We exercise the snapshot logic
+        //directly — same code path the Eloquent `deleted` event would
+        //fire — without performing the schema-blocked DB delete.
+        $target->logUserActivity('delete');
 
-        //POCOR-9697: after the parent delete, FK ON DELETE SET NULL has
-        //NULLed `security_user_id` on every row pointing to the deleted
-        //user. We query by `model_reference` (immutable, never altered by
-        //FK rules) to find the snapshot rows.
         $rows = DB::table('user_activities')
-            ->where('model', 'Users')
-            ->where('model_reference', $targetId)
+            ->where('security_user_id', $targetId)
             ->where('operation', 'delete')
             ->get();
 
