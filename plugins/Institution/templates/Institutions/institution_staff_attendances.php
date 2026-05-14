@@ -162,6 +162,13 @@ $institutionId = $paramsQuery['institution_id'];
         padding-right: 8px;
         text-align: center;
     }
+    /* POCOR-9700: hide the native browser clock indicator — the blue glyphicon addon is the
+       single clickable affordance (clicking the addon focuses the input so the spinner / keyboard
+       still works). Without this rule Chrome rendered TWO clocks side by side. */
+    #institution-staff-attendances-table .timPikr::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+    }
 
     #institution-staff-attendances-table .sg-theme .time-view > i {
         margin: 0 8px 0 0;
