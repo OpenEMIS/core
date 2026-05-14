@@ -501,3 +501,164 @@ Validated under {{admin/demo}} login on {{https://localhost:8482}}:
 # Failed Jobs retry: clicked Retry on a synthetic failure → row moved {{failed_jobs}} → {{jobs}} with {{attempts=0}}; redirected back to index.
 # Cross-link buttons: *Check failures* on Webhook Logs navigates to {{Systems.WebhookFailures}}; *Check backlog* on Alert Logs renders the QueueBacklog deep-link.
 # Existing Trigger Alert Check / Trigger Alert Send buttons still function — no PHP fatals introduced by the Table edits.
+
+----
+
+h2. 14. Phase 1c — Background Activity rename, cron shell wrapper, and page-title humanisation (2026-05-14)
+
+This session resolved three threads of Karl Turnbull's review and prepared all Jira KB content for the sprint review.
+
+h3. 14.1 Background Activity rename (v4 UI labels)
+
+Karl's third review thread identified the original labels as too implementation-specific. The admin dashboard now uses plain-English labels that work for ministry ICT staff regardless of the underlying framework. The mapping from old code-level names to new v4 UI labels is:
+
+|| Old label (code / Phase 1b nav) || New v4 UI label ||
+| Async Services (menu parent) | Background Activity |
+| Overview | Overview |
+| Processes | Completed Background Tasks |
+| Failed Jobs | Failed Background Tasks |
+| Stuck Processes | Frozen Background Tasks |
+| Webhook Failures | Webhook Sending Problems |
+| Queue Backlog | Waiting Background Tasks |
+
+*Frozen* replaces *Stuck* because it is visceral, internationally understood, and unambiguous. *Waiting* replaces *Backlog* because it is neutral and does not imply a problem. *Completed Background Tasks* replaces *Processes* because "process" is an OS term unfamiliar to ministry staff. *Webhook Sending Problems* replaces *Webhook Failures* to align with the description on the page (delivery failures, not task failures).
+
+Seven files were edited to apply the rename:
+
+|| File || Change ||
+| {{src/Controller/Component/NavigationComponent.php}} | Menu parent label changed to *Background Activity*; five child labels updated to new v4 terms |
+| {{plugins/System/src/Model/Table/AsyncServicesAdminTable.php}} | Base-class {{pageTitle()}} override returns *Background Activity* |
+| {{plugins/System/src/Model/Table/AsyncServicesOverviewTable.php}} | Subclass {{pageTitle()}} returns *Overview* |
+| {{plugins/System/src/Model/Table/AsyncServicesQueueBacklogTable.php}} | Subclass {{pageTitle()}} returns *Waiting Background Tasks* |
+| {{plugins/System/src/Model/Table/AsyncServicesStuckProcessesTable.php}} | Subclass {{pageTitle()}} returns *Frozen Background Tasks* |
+| {{plugins/System/src/Model/Table/AsyncServicesFailedJobsTable.php}} | Subclass {{pageTitle()}} returns *Failed Background Tasks* |
+| {{plugins/System/src/Model/Table/SystemProcessesTable.php}} | Standalone {{beforeAction}} sets page title to *Completed Background Tasks* (legacy table; no shared base class) |
+
+The {{security_functions}} seeds in {{config/Migrations/20260508143848_POCOR9694.php}} were also updated so the {{name}} column matches the new labels. The migration was in {{down}} status at the time of the edit, so no rollback dance was needed — the file was updated before first application.
+
+h3. 14.2 Page-header humanisation via pageTitle()
+
+The shared base class {{AsyncServicesAdminTable}} introduces a {{pageTitle()}} hook that each concrete subclass overrides with its plain-English label. The legacy {{SystemProcessesTable}} (which does not extend the shared base) uses a {{beforeAction}} callback instead, following the same pattern used elsewhere in the codebase for standalone page-title overrides.
+
+This approach keeps the heading logic in the Table layer, out of templates, and means adding a future page requires overriding one method — no template change needed.
+
+h3. 14.3 Cron shell wrapper: openemis-core.sh + install.sh + uninstall.sh
+
+Karl's first review thread identified the original 120-character compound cron line as impossible to read and maintain in a P1 incident. The replacement is a shell wrapper installed by a single idempotent command.
+
+*Three files ship as the cron deliverable* under {{tmp/POCOR-9694/2026-05-14/cron/}}:
+
+- {{openemis-core.sh}} — the runtime wrapper (handles lock, timeout, log, env overrides, single-tenant and multi-tenant modes in one script)
+- {{install.sh}} — one-command installer; handles storage permissions, wrapper placement, log file creation, cron entry, and log rotation
+- {{uninstall.sh}} — matching uninstaller with the same {{--name}} flag
+
+#### Single-tenant install (ministry production case)
+
+```bash
+sudo ./install.sh /var/www/html/openemis.org/production
+```
+
+After install, the cron entry is one readable line:
+
+```
+* * * * * www-data /var/www/html/openemis.org/production/openemis-core.sh
+```
+
+Log lives at `/var/log/openemis-core.log`; lock at `/var/lock/openemis-core.lock`.
+
+#### Multi-tenant install (dev box with many sibling OpenEMIS instances)
+
+```bash
+sudo ./install.sh --name alice /var/www/html/openemis.org/dev/alice/core
+sudo ./install.sh --name bob   /var/www/html/openemis.org/dev/bob/core
+```
+
+Each named instance gets its own `/etc/cron.d/openemis-core-<name>`, `/var/log/openemis-core-<name>.log`, `/var/lock/openemis-core-<name>.lock`, and `/etc/logrotate.d/openemis-core-<name>`. The cron line passes the instance name as the script's argument:
+
+```
+* * * * * www-data /var/www/html/openemis.org/dev/alice/core/openemis-core.sh alice
+```
+
+Ministry production hosts omit `--name` and keep the unprefixed filenames — no change to existing deployments.
+
+#### The wrapper script (openemis-core.sh)
+
+The wrapper reads an optional instance-name argument, sources `/etc/default/openemis-core[-<name>]` for env overrides, then runs:
+
+```bash
+/usr/bin/flock -n "$LOCK_FILE" \
+    /usr/bin/timeout "$TIMEOUT_SECONDS" \
+    "$PHP_BIN" artisan openemis-core:run \
+    >> "$LOG_FILE" 2>&1
+```
+
+OS-level `flock` is used (not app-level locking) because if PHP crashes, `flock` still releases the lock file cleanly. `timeout` hard-kills any tick that runs past 3600 seconds.
+
+#### Uninstall
+
+```bash
+sudo ./uninstall.sh /var/www/html/openemis.org/production
+sudo ./uninstall.sh --name alice /var/www/html/openemis.org/dev/alice/core
+```
+
+Removes the cron entry, logrotate config, optional env overrides, and the wrapper. Laravel storage permissions and the lock file are left alone.
+
+h3. 14.4 Docker installation patterns
+
+Two patterns cover Docker deployments. The choice depends on whether the ministry ships OpenEMIS as a turn-key Docker image or runs it on a developer's local Docker host.
+
+#### Pattern A — Host cron calling docker exec
+
+The cron job lives on the *host machine*. It calls the wrapper inside the container with `docker exec`. Best for developers who already use the project's `docker-compose.yml` and do not want to modify the image.
+
+```
+* * * * * root /usr/bin/docker exec poe-application /var/www/html/emis/core/openemis-core.sh
+```
+
+Pros: cron survives container restarts; no image rebuild needed.  
+Cons: the cron user must have `docker exec` privilege; if the container is stopped, cron calls fail silently.
+
+#### Pattern B — Cron inside the container image
+
+The Dockerfile installs `cron` and writes the cron entry at image build time. Operators only need `docker compose up` — nothing to configure on the host. Best for ministries that receive OpenEMIS as a pre-built image.
+
+```dockerfile
+RUN apt-get update && apt-get install -y --no-install-recommends cron && \
+    install -o www-data -g www-data -m 0755 \
+        /opt/openemis-cron/openemis-core.sh \
+        /var/www/html/emis/core/openemis-core.sh && \
+    echo "* * * * * www-data /var/www/html/emis/core/openemis-core.sh" \
+        > /etc/cron.d/openemis-core && \
+    chmod 0644 /etc/cron.d/openemis-core
+```
+
+The container entrypoint starts cron before Apache:
+
+```bash
+service cron start
+touch /var/log/openemis-core.log
+chown www-data:www-data /var/log/openemis-core.log
+apache2-foreground
+```
+
+Pros: image is self-contained; no host configuration needed.  
+Cons: any task in flight when the container is stopped is interrupted and must be retried manually via the *Frozen Background Tasks* page.
+
+h3. 14.5 Migration applied with renamed security_functions seeds
+
+The migration `config/Migrations/20260508143848_POCOR9694.php` was edited to update the `security_functions.name` seeds before first application. The file was in `down` status at edit time, so no rollback was needed — the file was simply updated and then applied cleanly with `./bin/cake migrations migrate`. No post-apply SQL patch is required on any environment that runs the migration fresh.
+
+h3. 14.6 Tooltip strategy
+
+Every Background Activity sub-page gets a `(?)` icon beside its title. The hover tooltip carries the page's lifecycle definition, the threshold or rule, and the recommended action — all in B1 English. No link to external documentation is needed because the rigorous definition is inline.
+
+|| Page || Tooltip ||
+| Waiting Background Tasks | Tasks scheduled but not yet started. A short queue is normal; a long queue may mean the background worker is not running. |
+| Frozen Background Tasks | Tasks that started running but have not updated their status for more than 15 minutes. The worker may have crashed; use Retry to re-queue them. |
+| Failed Background Tasks | Tasks that ran and ended with an error. The error message is shown in the row; use Retry to run them again. |
+| Completed Background Tasks | Tasks that ran and finished successfully. Kept for 30 days, then removed automatically. |
+| Webhook Sending Problems | Outbound notifications that could not be delivered to the receiving system. The HTTP response code is shown in the row. |
+
+h3. 14.7 KB content prepared for Jira
+
+Seven manual pages and one installation guide were written at B1 English level under `tmp/POCOR-9694/2026-05-14/`. They are ready to paste into the KB once Karl approves the structure. See `tmp/POCOR-9694/2026-05-14/INDEX.md` for the paste order.
