@@ -156,12 +156,14 @@ $institutionId = $paramsQuery['institution_id'];
         font-size: 13px;
     }
 
-    /* POCOR-9700: shrink-wrap the input-group so the addon hugs the input.
-       Bootstrap 3's .input-group is display:table width:100%, which inside a wide ag-Grid cell
-       stretches and leaves an empty gap between the input (fixed width) and the addon. */
+    /* POCOR-9700: shrink-wrap the input-group so the addon hugs the input AND the two stacked
+       cells (Time In / Time Out) sit on separate rows. Bootstrap 3's default display:table
+       width:100% stretched inside the wide ag-Grid cell and left a gap; inline-flex closed the
+       gap but put the two cells side by side and truncated Time Out. Block-level flex with
+       fit-content keeps both: block layout = vertical stacking, fit-content = shrink-wrap. */
     #institution-staff-attendances-table .input-group.time {
-        display: inline-flex;
-        width: auto;
+        display: flex;
+        width: fit-content;
         gap: 4px;
     }
     /* POCOR-9700: native HTML5 type=time edit-cell input sized so 24h/12h text fits comfortably. */
