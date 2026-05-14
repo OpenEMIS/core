@@ -522,6 +522,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         inputElement.setAttribute('step', '60');
         inputElement.setAttribute('id', timepickerId); //POCOR-9700: id moved to input so error/test selectors work natively
         inputElement.setAttribute('class', 'form-control timPikr');
+        //POCOR-9700: explicit width — matches the pre-9700 jQuery-timepicker layout (~100px)
+        // and, more importantly, gives Chrome enough room to render the AM/PM marker
+        // inside the native type=time picker so 12h locales don't silently truncate to 24h-looking text.
+        inputElement.style.width = '110px';
 
         //POCOR-9700: lock the edit picker to 24h (en-GB). Demonstrated failure mode of en-US:
         // Chrome's HTML5 picker is too narrow inside the ag-Grid cell to render the AM/PM
