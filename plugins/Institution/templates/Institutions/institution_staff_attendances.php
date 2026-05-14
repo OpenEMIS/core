@@ -156,6 +156,13 @@ $institutionId = $paramsQuery['institution_id'];
         font-size: 13px;
     }
 
+    /* POCOR-9700: shrink-wrap the input-group so the addon hugs the input.
+       Bootstrap 3's .input-group is display:table width:100%, which inside a wide ag-Grid cell
+       stretches and leaves an empty gap between the input (fixed width) and the addon. */
+    #institution-staff-attendances-table .input-group.time {
+        display: inline-flex;
+        width: auto;
+    }
     /* POCOR-9700: native HTML5 type=time edit-cell input sized so 24h/12h text fits comfortably. */
     #institution-staff-attendances-table .timPikr {
         width: 100px;
