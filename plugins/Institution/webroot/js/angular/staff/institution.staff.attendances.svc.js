@@ -4,7 +4,7 @@ angular
 
 InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700
 
-function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700
+function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700: $compile injected for uib-timepicker cell rendering
    var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaffAttendances: 'Staff.InstitutionStaffAttendances',
@@ -501,9 +501,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         return eTextarea;
     }
 
-    //POCOR-9700: native HTML5 <input type="time"> replaces Bootstrap 3 jQuery timepicker.
-    // Removes focus-loss + lack of OS 12/24h respect + fragile hide.timepicker save event.
-    // Race fix: per-row save promise chain via _savePromise; recheck-from-DB via server response.
+    //POCOR-9700: Angular UI Bootstrap uib-timepicker wrapped in uib-dropdown for popover behaviour.
+    // Replaces both the legacy jQuery bootstrap-timepicker (focus loss, no OS 12/24h respect)
+    // and the brief HTML5 type=time experiment (Chrome ignores lang attr, drops AM/PM on macOS).
+    // uib-timepicker has show-meridian → always renders an explicit AM/PM column when system is 12h.
+    // Race fix preserved: per-row save promise chain (_savePromise) + recheck-from-DB.
     function createTimeElement(params, timeKey, rowIndex) {
         var data = params.data;
         var dateString = data.date;
@@ -514,46 +516,69 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
         var isTimeOutField = (timeKey === 'time_out');
 
-        var wrapperDiv = document.createElement('div');
-        wrapperDiv.setAttribute('class', 'input-group time html5-timepicker' + (isDisabled ? ' disabled' : ''));
-
-        var inputElement = document.createElement('input');
-        inputElement.setAttribute('type', 'time');
-        inputElement.setAttribute('step', '60');
-        inputElement.setAttribute('id', timepickerId); //POCOR-9700: id moved to input so error/test selectors work natively
-        inputElement.setAttribute('class', 'form-control timPikr');
-        //POCOR-9700: explicit width — matches the pre-9700 jQuery-timepicker layout (~100px)
-        // and, more importantly, gives Chrome enough room to render the AM/PM marker
-        // inside the native type=time picker so 12h locales don't silently truncate to 24h-looking text.
-        inputElement.style.width = '110px';
-
-        //POCOR-9700: honour system time_format on the edit picker now that the input has
-        // explicit width:110px — Chrome's native picker has room to render the AM/PM marker.
-        // 'en-US' → 12h AM/PM, 'en-GB' → 24h. Lazy so the config call doesn't race
-        // svc-init (auth not ready); shares the _timeFormatIs12h cache with the view formatter.
         ensureTimeFormatLoaded();
-        inputElement.lang = _timeFormatIs12h ? 'en-US' : 'en-GB';
-        if (isDisabled) {
-            inputElement.setAttribute('disabled', 'disabled');
-        }
-        var existing = params.value[timeKey];
-        if (existing) {
-            inputElement.value = existing.substring(0, 5); // HH:MM
-        }
-        if (hasError(data, timeKey, timepickerId)) {
-            inputElement.className += ' form-error';
+
+        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+        function parseHmsToDate(s) {
+            if (!s || typeof s !== 'string') return null;
+            var parts = s.split(':');
+            var d = new Date();
+            d.setHours(parseInt(parts[0], 10) || 0);
+            d.setMinutes(parseInt(parts[1], 10) || 0);
+            d.setSeconds(0);
+            d.setMilliseconds(0);
+            return d;
         }
 
-        //POCOR-9700: no glyphicon-time button — HTML5 type=time renders its own clock indicator
-        // natively (inside the input). The legacy .input-group-addon span was the jQuery
-        // timepicker launcher; with the native picker it became a non-functional second clock.
+        function dateToHms(d) {
+            if (!d) return null;
+            return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';
+        }
+
+        function formatDisplay(d) {
+            if (!d) return '';
+            var h24 = d.getHours();
+            var m = d.getMinutes();
+            if (_timeFormatIs12h) {
+                var meridian = h24 >= 12 ? 'PM' : 'AM';
+                var h12 = h24 % 12 || 12;
+                return pad(h12) + ':' + pad(m) + ' ' + meridian;
+            }
+            return pad(h24) + ':' + pad(m);
+        }
+
+        // Per-cell child scope drives uib-timepicker.
+        var ps = scope.$new();
+        ps.time = parseHmsToDate(params.value[timeKey]);
+        ps.showMeridian = _timeFormatIs12h;
+        ps.isDisabled = isDisabled;
+        ps.hasErrorClass = hasError(data, timeKey, timepickerId);
+        ps.displayValue = formatDisplay(ps.time);
+        ps.isOpen = false;
+
+        var template =
+            '<div class="input-group time uib-timepicker-cell' + (isDisabled ? ' disabled' : '') + '" uib-dropdown auto-close="outsideClick" is-open="isOpen">' +
+                '<input type="text" id="' + timepickerId + '" class="form-control timPikr" ' +
+                    'ng-class="{\'form-error\': hasErrorClass}" ' +
+                    'ng-model="displayValue" ' +
+                    'ng-disabled="isDisabled" ' +
+                    'uib-dropdown-toggle readonly ' +
+                    'style="width: 110px; cursor: pointer; background-color: #fff;" />' +
+                '<span class="input-group-addon" uib-dropdown-toggle ng-class="{disabled: isDisabled}" style="cursor: pointer;">' +
+                    '<i class="glyphicon glyphicon-time"></i>' +
+                '</span>' +
+                '<ul uib-dropdown-menu role="menu" style="padding: 6px; min-width: auto;">' +
+                    '<li><div uib-timepicker ng-model="time" show-meridian="showMeridian" minute-step="1" mousewheel="true"></div></li>' +
+                '</ul>' +
+            '</div>';
+
+        var compiled = $compile(template)(ps);
+        var wrapperEl = compiled[0];
+        var inputEl = wrapperEl.querySelector('input');
 
         function hasTimeInSelected() {
             return params.value.time_in !== null && params.value.time_in !== undefined && params.value.time_in !== '';
-        }
-
-        function revertInput() {
-            inputElement.value = params.value[timeKey] ? params.value[timeKey].substring(0, 5) : '';
         }
 
         function toMinutes(hms) {
@@ -578,30 +603,43 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             return null;
         }
 
-        inputElement.addEventListener('change', function () {
+        function revertToPersisted() {
+            ps.time = parseHmsToDate(params.value[timeKey]);
+            ps.displayValue = formatDisplay(ps.time);
+        }
+
+        // Skip the initial $watch firing — only react to user changes.
+        var firstWatch = true;
+        ps.$watch('time', function (newVal, oldVal) {
+            if (firstWatch) { firstWatch = false; return; }
+            if (newVal === oldVal) return;
             if (isDisabled) return;
+
+            ps.displayValue = formatDisplay(newVal);
+
             if (isTimeOutField && !hasTimeInSelected()) {
                 AlertSvc.warning(scope, 'Please select Time In first.');
-                inputElement.value = '';
+                ps.time = null;
                 return;
             }
 
-            var rawValue = inputElement.value; // "HH:MM" or ""
-            var time24Hour = rawValue ? (rawValue + ':00') : null;
+            var time24Hour = dateToHms(newVal);
 
             // Order validation: strict > between time_in and time_out
             var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
             if (time24Hour !== null && otherTime) {
                 if (timeKey === 'time_out' && time24Hour <= otherTime) {
                     AlertSvc.error(scope, 'Time Out must be after Time In.');
-                    revertInput();
-                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                    revertToPersisted();
+                    ps.hasErrorClass = true;
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
                     return;
                 }
                 if (timeKey === 'time_in' && time24Hour >= otherTime) {
                     AlertSvc.error(scope, 'Time In must be before Time Out.');
-                    revertInput();
-                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                    revertToPersisted();
+                    ps.hasErrorClass = true;
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
                     return;
                 }
             }
@@ -613,7 +651,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                 params.value.isNew = true;
             }
 
-            // POCOR-9700: write the typed value into row state immediately so a debounced save sees the latest.
+            // POCOR-9700: write the picked value into row state immediately so a debounced save sees the latest.
             params.value[timeKey] = time24Hour;
 
             // POCOR-9700: debounce per row to coalesce time_in + time_out into one POST under load.
@@ -629,11 +667,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                     rowState._savePromise = $q.when();
                 }
                 rowState._savePromise = rowState._savePromise.then(function () {
-                    // POCOR-9700: use the latest in-memory values so the POST includes both cells if both changed.
                     return saveStaffAttendance(params, timeKey, params.value[timeKey], academicPeriodId);
                 }).then(
                 function (response) {
                     clearError(data, timeKey);
+                    ps.hasErrorClass = false;
                     if (!response || !response.data) {
                         AlertSvc.error(scope, 'There was an error when saving record');
                         return;
@@ -641,7 +679,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                     var errBlob = response.data.error || {};
                     var hasErr = Array.isArray(errBlob) ? errBlob.length > 0 : Object.keys(errBlob).length > 0;
                     if (hasErr) {
-                        setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                        setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
+                        ps.hasErrorClass = true;
                         var errorMsg = 'There was an error when saving record';
                         if (typeof errBlob === 'string') {
                             errorMsg = errBlob;
@@ -653,14 +692,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                         AlertSvc.error(scope, errorMsg);
                         return;
                     }
-                    // POCOR-9700: fold any outside-shift warning into the save toast so the user actually sees it
-                    // (the AlertSvc area shows one message at a time — a later success() would otherwise overwrite a prior warning()).
                     if (outsideShiftWarning) {
                         AlertSvc.warning(scope, 'Saved. ' + outsideShiftWarning);
                     } else {
                         AlertSvc.success(scope, 'Time record successfully saved.');
                     }
-                    // POCOR-9700: trust the server's persisted record, not the typed value.
+                    // POCOR-9700: trust the server's persisted record, not the picked value.
                     var saved = response.data.data || {};
                     if (angular.isDefined(saved.time_in)) {
                         params.value.time_in = saved.time_in;
@@ -669,11 +706,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                         params.value.time_out = saved.time_out;
                     }
                     params.value.isNew = false;
-                    setError(data, timeKey, false, {id: timepickerId, elm: inputElement});
+                    setError(data, timeKey, false, {id: timepickerId, elm: inputEl});
                 },
                 function () {
                     clearError(data, timeKey);
-                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
+                    ps.hasErrorClass = true;
                     AlertSvc.error(scope, 'There was an error when saving record');
                 }
                 ).finally(function () {
@@ -683,8 +721,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             }, 600); //POCOR-9700: debounce window
         });
 
-        wrapperDiv.appendChild(inputElement);
-        return wrapperDiv;
+        return wrapperEl;
     }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
