@@ -503,6 +503,23 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         return eTextarea;
     }
 
+    //POCOR-9700: server returns time strings per system time_format config — when 12h is configured,
+    // it returns 'HH:MM:SS AM/PM' which HTML5 <input type=time> CANNOT display (value attribute is
+    // strictly 24h HH:MM per W3C spec). Normalize to canonical 24h before assignment. Idempotent
+    // on already-24h input.
+    function normalizeTo24Hour(timeStr) {
+        if (!timeStr || typeof timeStr !== 'string') return timeStr;
+        var m = timeStr.match(/^\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)?\s*$/);
+        if (!m) return timeStr;
+        var h = parseInt(m[1], 10);
+        var mm = m[2];
+        var ss = m[3] || '00';
+        var meridian = (m[4] || '').toUpperCase();
+        if (meridian === 'PM' && h < 12) h += 12;
+        if (meridian === 'AM' && h === 12) h = 0;
+        return (h < 10 ? '0' + h : h) + ':' + mm + ':' + ss;
+    }
+
     //POCOR-9700: native HTML5 <input type="time"> picker.
     // Per MDN, AM/PM display is decided by the browser/OS locale — there is no HTML/CSS/JS
     // knob to override it. Trade-off accepted in favour of the generic, universally-available
@@ -533,7 +550,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         inputElement.setAttribute('class', 'form-control timPikr');
         inputElement.style.width = '110px';
         if (isDisabled) inputElement.setAttribute('disabled', 'disabled');
-        var existing = params.value[timeKey];
+        var existing = normalizeTo24Hour(params.value[timeKey]);
         if (existing) inputElement.value = existing.substring(0, 5);
         if (hasError(data, timeKey, timepickerId)) inputElement.className += ' form-error';
 
@@ -611,6 +628,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                     return saveStaffAttendance(params, timeKey, params.value[timeKey], academicPeriodId);
                 }).then(function (response) {
                     console.log('[TEMP-LOG POCOR-9700] save success', { timeKey: timeKey, rowIndex: rowIndex, response: response && response.data }); //[TEMP-LOG]
+                    console.log('[TEMP-LOG POCOR-9700] response.data.data raw', response && response.data && JSON.stringify(response.data.data)); //[TEMP-LOG]
                     clearError(data, timeKey);
                     if (!response || !response.data) { AlertSvc.error(scope, 'There was an error when saving record'); return; }
                     var errBlob = response.data.error || {};
@@ -627,8 +645,8 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                     else AlertSvc.success(scope, 'Time record successfully saved.');
                     // POCOR-9700: trust the server's persisted record, not the picked value.
                     var saved = response.data.data || {};
-                    if (angular.isDefined(saved.time_in)) params.value.time_in = saved.time_in;
-                    if (angular.isDefined(saved.time_out)) params.value.time_out = saved.time_out;
+                    if (angular.isDefined(saved.time_in))  params.value.time_in  = normalizeTo24Hour(saved.time_in);
+                    if (angular.isDefined(saved.time_out)) params.value.time_out = normalizeTo24Hour(saved.time_out);
                     params.value.isNew = false;
                     setError(data, timeKey, false, {id: timepickerId, elm: inputElement});
                 }, function () {
@@ -810,7 +828,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
 
             staffAttendanceData[dataKey] = dataValue;
 
-            if(!params.data.attendance[dateString].isNew) {
+            var isNew = params.data.attendance[dateString].isNew;
+            console.log('[TEMP-LOG POCOR-9700] POST payload', { method: isNew ? 'save' : 'edit', data: angular.copy(staffAttendanceData) }); //[TEMP-LOG]
+            if(!isNew) {
                 return InstitutionStaffAttendances.edit(staffAttendanceData);
             } else {
                 return InstitutionStaffAttendances.save(staffAttendanceData);
