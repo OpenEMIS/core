@@ -523,11 +523,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         inputElement.setAttribute('id', timepickerId); //POCOR-9700: id moved to input so error/test selectors work natively
         inputElement.setAttribute('class', 'form-control timPikr');
 
-        //POCOR-9700: force the edit picker to 24h always. The 12h display puts a tiny "AM/PM"
-        // marker right under the clock-icon — it is easy to miss at a glance, and a time_out like
-        // "04:45 PM" then reads as if the user clocked out 4 hours before clocking in. View mode
-        // can still respect the system time_format (where AM/PM has room to be clearly visible).
-        inputElement.lang = 'en-GB';
+        //POCOR-9700: honour system time_format on the edit picker so it matches the view-mode
+        // rendering. 'en-US' → 12h AM/PM, 'en-GB' → 24h. Lazy so the config call doesn't race
+        // svc-init (auth not ready) — we use the same _timeFormatIs12h cache as the view formatter.
+        ensureTimeFormatLoaded();
+        inputElement.lang = _timeFormatIs12h ? 'en-US' : 'en-GB';
         if (isDisabled) {
             inputElement.setAttribute('disabled', 'disabled');
         }
