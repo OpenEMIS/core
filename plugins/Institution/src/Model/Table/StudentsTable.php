@@ -3935,7 +3935,19 @@ class StudentsTable extends ControllerActionTable
                     if (isset($studentId)) {
                         $found = false;
                         //POCOR-9687 --Start
-                        $allowedStatuses = [3, 4, 5, 6];
+                        $allowedStatuses = $this->StudentStatuses->find()
+                            ->select(['id'])
+                            ->where([
+                                'code IN' => [
+                                    'WITHDRAWN',
+                                    'GRADUATED',
+                                    'PROMOTED',
+                                    'REPEATED'
+                                ]
+                            ])
+                            ->enableHydration(false)
+                            ->extract('id')
+                            ->toArray();
                         foreach ($oldStatus as $status) {
 
                             $sameGrade =
