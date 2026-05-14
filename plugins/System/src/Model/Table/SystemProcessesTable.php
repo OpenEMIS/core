@@ -36,6 +36,12 @@ class SystemProcessesTable extends ControllerActionTable
         -2 => 'Error'
     ];
 
+    //POCOR-9694: humanise the page header — "Systems - SystemProcesses" → "Completed Background Tasks"
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->controller->set('contentHeader', __('Completed Background Tasks'));
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('system_processes');

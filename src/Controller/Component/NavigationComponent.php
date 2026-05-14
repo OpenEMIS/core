@@ -4063,19 +4063,21 @@ class NavigationComponent extends Component
                 'selected' => [$key],
             ];
         };
+        //POCOR-9694: start — v4 menu labels (Karl Turnbull feedback). Internal nav keys kept; user-visible titles renamed.
         return [
             'Administration.AsyncServices' => [
-                'title' => 'Async Services',
+                'title' => 'Background Activity',
                 'parent' => 'Administration',
                 'link' => false,
             ],
-            'Systems.AsyncServicesOverview' => $child('Overview', 'Systems.AsyncServicesOverview'),
-            'Systems.SystemProcesses'       => $child('Processes', 'Systems.SystemProcesses'),
-            'Systems.FailedJobs'            => $child('Failed Jobs', 'Systems.FailedJobs'),
-            'Systems.StuckProcesses'        => $child('Stuck Processes', 'Systems.StuckProcesses'),
-            'Systems.WebhookFailures'       => $child('Webhook Failures', 'Systems.WebhookFailures'),
-            'Systems.QueueBacklog'          => $child('Queue Backlog', 'Systems.QueueBacklog'),
+            'Systems.AsyncServicesOverview' => $child('Overview',                    'Systems.AsyncServicesOverview'),
+            'Systems.SystemProcesses'       => $child('Completed Background Tasks', 'Systems.SystemProcesses'),
+            'Systems.FailedJobs'            => $child('Failed Background Tasks',    'Systems.FailedJobs'),
+            'Systems.StuckProcesses'        => $child('Frozen Background Tasks',    'Systems.StuckProcesses'),
+            'Systems.WebhookFailures'       => $child('Webhook Failures',           'Systems.WebhookFailures'),
+            'Systems.QueueBacklog'          => $child('Waiting Background Tasks',   'Systems.QueueBacklog'),
         ];
+        //POCOR-9694: end
     }
 
     //POCOR-7527

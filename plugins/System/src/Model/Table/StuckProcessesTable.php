@@ -41,6 +41,11 @@ class StuckProcessesTable extends AsyncServicesAdminTable
         parent::initialize($config);
     }
 
+    protected function pageTitle(): string
+    {
+        return 'Frozen Background Tasks';
+    }
+
     protected function describeScreen(): string
     {
         return sprintf(

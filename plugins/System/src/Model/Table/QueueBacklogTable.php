@@ -34,6 +34,11 @@ class QueueBacklogTable extends AsyncServicesAdminTable
         parent::initialize($config);
     }
 
+    protected function pageTitle(): string
+    {
+        return 'Waiting Background Tasks';
+    }
+
     protected function describeScreen(): string
     {
         return 'Pending alert_queue rows ordered by oldest first. Each tick'

@@ -58,19 +58,19 @@ class POCOR9694 extends AbstractMigration
             'order_offset' => 0,
         ],
         [
-            'name'         => 'Processes',
+            'name'         => 'Completed Background Tasks',
             'controller'   => 'Systems',
             'view_actions' => ['SystemProcesses.index', 'SystemProcesses.view'],
             'order_offset' => 1,
         ],
         [
-            'name'         => 'Failed Jobs',
+            'name'         => 'Failed Background Tasks',
             'controller'   => 'Systems',
             'view_actions' => ['FailedJobs.index', 'FailedJobs.view', 'FailedJobsRetry.index'],
             'order_offset' => 2,
         ],
         [
-            'name'         => 'Stuck Processes',
+            'name'         => 'Frozen Background Tasks',
             'controller'   => 'Systems',
             'view_actions' => ['StuckProcesses.index', 'StuckProcesses.view'],
             'order_offset' => 3,
@@ -82,7 +82,7 @@ class POCOR9694 extends AbstractMigration
             'order_offset' => 4,
         ],
         [
-            'name'         => 'Queue Backlog',
+            'name'         => 'Waiting Background Tasks',
             'controller'   => 'Systems',
             'view_actions' => ['QueueBacklog.index', 'QueueBacklog.view'],
             'order_offset' => 5,
