@@ -162,6 +162,7 @@ $institutionId = $paramsQuery['institution_id'];
     #institution-staff-attendances-table .input-group.time {
         display: inline-flex;
         width: auto;
+        gap: 4px;
     }
     /* POCOR-9700: native HTML5 type=time edit-cell input sized so 24h/12h text fits comfortably. */
     #institution-staff-attendances-table .timPikr {
