@@ -43,6 +43,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         getAllDayColumnDefs: getAllDayColumnDefs,
         getShiftListOptions: getShiftListOptions,
         getConfigItemValue: getConfigItemValue,
+        getTimeFormatIs12h: getTimeFormatIs12h, //POCOR-9700: ctrl awaits this before grid renders so AM/PM is correct on first paint
     };
     return service;
 
@@ -749,17 +750,27 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         }
     }
 
-    //POCOR-9700: cache the system time_format. Default to 12h (most common, matches pre-9700 behaviour);
-    // fetch lazily on first formatter call (config service is not ready at svc factory init time);
-    // when the real value arrives, expose it on the grid context so the ctrl can refresh once.
-    var _timeFormatIs12h = true;
-    var _timeFormatFetched = false;
+    //POCOR-9700: cache the system time_format. The fetch returns a promise that the ctrl
+    // awaits BEFORE first grid render — so AM/PM is correct on the very first paint instead
+    // of flipping after a config call resolves mid-flight. Private cache is also read
+    // synchronously by convert12Timeformat (view-mode formatter); since the ctrl has already
+    // awaited the promise by then, the cache is hot.
+    var _timeFormatPromise = null;
+    var _timeFormatIs12h = true; // safe default if the config call is never made (e.g. tests)
+    function getTimeFormatIs12h() {
+        if (!_timeFormatPromise) {
+            _timeFormatPromise = getConfigItemValue('time_format').then(function (tf) {
+                _timeFormatIs12h = /[aA]/.test(tf || '');
+                return _timeFormatIs12h;
+            }, function () {
+                return _timeFormatIs12h;
+            });
+        }
+        return _timeFormatPromise;
+    }
     function ensureTimeFormatLoaded() {
-        if (_timeFormatFetched) return;
-        _timeFormatFetched = true;
-        getConfigItemValue('time_format').then(function (tf) {
-            _timeFormatIs12h = /[aA]/.test(tf || '');
-        }, function () { /* keep default */ });
+        // Fire-and-forget — keeps the cache hot for the view-mode formatter (which is sync).
+        getTimeFormatIs12h();
     }
 
     function convert12Timeformat(time) {
