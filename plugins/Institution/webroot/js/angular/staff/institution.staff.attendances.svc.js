@@ -539,11 +539,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             inputElement.className += ' form-error';
         }
 
-        var iconSpan = document.createElement('span');
-        iconSpan.setAttribute('class', 'input-group-addon' + (isDisabled ? ' disabled' : ''));
-        var iconElement = document.createElement('i');
-        iconElement.setAttribute('class', 'glyphicon glyphicon-time');
-        iconSpan.appendChild(iconElement);
+        //POCOR-9700: no glyphicon-time button — HTML5 type=time renders its own clock indicator
+        // natively (inside the input). The legacy .input-group-addon span was the jQuery
+        // timepicker launcher; with the native picker it became a non-functional second clock.
 
         function hasTimeInSelected() {
             return params.value.time_in !== null && params.value.time_in !== undefined && params.value.time_in !== '';
@@ -681,7 +679,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         });
 
         wrapperDiv.appendChild(inputElement);
-        wrapperDiv.appendChild(iconSpan);
         return wrapperDiv;
     }
 
