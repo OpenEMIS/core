@@ -40,6 +40,11 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         parent::initialize($config);
     }
 
+    protected function pageTitle(): string
+    {
+        return 'Overview';
+    }
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         // Hide the noisier columns; the dashboard's table is a "recent activity"
@@ -98,10 +103,10 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
 
         return [
             'tiles' => [
-                $this->tile('Failed Jobs',       $failedJobsCount,    ['action' => 'FailedJobs']),
-                $this->tile('Stuck Processes',   $stuckProcessCount,  ['action' => 'StuckProcesses']),
-                $this->tile('Webhook Failures',  $webhookFailureCount,['action' => 'WebhookFailures']),
-                $this->tile('Queue Backlog',     $queueBacklogCount,  ['action' => 'QueueBacklog']),
+                $this->tile('Failed Background Tasks',  $failedJobsCount,    ['action' => 'FailedJobs']),
+                $this->tile('Frozen Background Tasks',  $stuckProcessCount,  ['action' => 'StuckProcesses']),
+                $this->tile('Webhook Failures',         $webhookFailureCount,['action' => 'WebhookFailures']),
+                $this->tile('Waiting Background Tasks', $queueBacklogCount,  ['action' => 'QueueBacklog']),
             ],
             'heartbeat' => $this->describeHeartbeat($latestHeartbeat),
         ];

@@ -30,6 +30,11 @@ class WebhookFailuresTable extends AsyncServicesAdminTable
         parent::initialize($config);
     }
 
+    protected function pageTitle(): string
+    {
+        return 'Webhook Failures';
+    }
+
     protected function describeScreen(): string
     {
         return 'webhook_queue rows whose final status is FAILED. Each row'

@@ -6,6 +6,7 @@ namespace System\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\EventInterface;
+use Cake\Utility\Inflector;
 
 /**
  * Base class for every {{Administration → Async Services}} admin screen.
@@ -40,6 +41,26 @@ abstract class AsyncServicesAdminTable extends ControllerActionTable
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+    }
+
+    /**
+     * Overrides the default {{Systems - StuckProcesses}} concatenation with
+     * the agreed v4 label from {{pageTitle()}}. Fires for every CRUD action
+     * so the heading is consistent across index / view.
+     */
+    public function beforeAction(EventInterface $event, ArrayObject $extra): void
+    {
+        $this->controller->set('contentHeader', __($this->pageTitle()));
+    }
+
+    /**
+     * Human-facing page title. Default is the auto-humanized alias — useful
+     * for stub screens. Concrete pages override with the agreed v4 label
+     * (Failed Background Tasks, Frozen Background Tasks, etc.).
+     */
+    protected function pageTitle(): string
+    {
+        return Inflector::humanize(Inflector::underscore($this->getAlias()));
     }
 
     /**

@@ -41,6 +41,11 @@ class FailedJobsTable extends AsyncServicesAdminTable
         parent::initialize($config);
     }
 
+    protected function pageTitle(): string
+    {
+        return 'Failed Background Tasks';
+    }
+
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         parent::indexBeforeAction($event, $extra);
