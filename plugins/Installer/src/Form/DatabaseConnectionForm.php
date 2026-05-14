@@ -289,6 +289,22 @@ return [
             // same credentials.
             $this->updateEnvFile($host, (string)$port, $db, $dbUser, $dbPassword);
 
+            // Populate APP_KEY (Laravel) and JWT_SECRET (tymon/jwt-auth) in
+            // api/.env. We deliberately generate these natively in PHP rather
+            // than shelling out to `php artisan key:generate` / `jwt:secret`
+            // because:
+            //   * PHP_BINARY under mod_php / mod_fcgid points at the SAPI
+            //     module, NOT a usable CLI binary;
+            //   * the Apache/PHP-FPM worker has no $PATH and often no
+            //     permission to exec from the webroot;
+            //   * exec() swallows stderr silently, so a failure leaves an
+            //     empty APP_KEY in .env (which then breaks the Laravel API);
+            //   * on Windows `cd <path> && ...` requires `cd /d` to switch
+            //     drives, which the artisan invocations above did not do.
+            // Both values are just random strings (artisan does exactly the
+            // same thing internally), so reproducing them in-process is
+            // simpler and far more reliable.
+            $this->generateApiAppKeyAndJwtSecret();
             // Make absolutely sure the next require/include of app_local.php
             // does not return a stale, OPcache-cached version of the file we
             // just rewrote — that has been the root cause of the
@@ -584,33 +600,6 @@ return [
         $pdo->exec($createDbSQL);
     }
 
-    // private function createDbUser($pdo, $host, &$user, $password, $db)
-    // {
-    //     $host = '%';
-    //     $userSql = "SELECT 1 FROM mysql.user WHERE User = ? AND Host = ?";
-    //     $result = true;
-    //     $counter = 0;
-    //     $newUser = '';
-    //     do {
-    //         if ($counter == 0) {
-    //             $newUser = $user;
-    //             $counter++;
-    //         } else {
-    //             $newUser = $user . '_' . $counter++;
-    //         }
-    //         $userExists = $pdo->prepare($userSql);
-    //         $userExists->execute([$newUser, $host]);
-    //         $result = $userExists->rowCount();
-    //     } while ($result);
-    //     $user = $newUser;
-    //     $createUserSQL = sprintf("CREATE USER '%s'@'%s' IDENTIFIED BY '%s'", $user, $host, $password);
-    //     $flushPriviledges = "FLUSH PRIVILEGES";
-    //     $grantSQL = sprintf("GRANT ALL PRIVILEGES  ON %s.* TO '%s'@'%s'", $db, $user, $host);
-    //     $pdo->exec($createUserSQL);
-    //     $pdo->exec($grantSQL);
-    //     $pdo->exec($flushPriviledges);
-    // }
-
     /**
      * POCOR-9686: Refactored createDbUser() to ensure we do not end up with 
      * a silently-created database user that lacks privileges on the new database 
@@ -728,6 +717,93 @@ return [
      */
     private function updateEnvFile(string $host, string $port, string $database, string $username, string $password): void
     {
+        // Replace (or append) the keys we control. Anything else the user has
+        // configured manually is left untouched.
+        $this->writeEnvValues([
+            'DB_HOST'     => $host,
+            'DB_PORT'     => $port,
+            'DB_DATABASE' => $database,
+            'DB_USERNAME' => $username,
+            'DB_PASSWORD' => $password,
+        ]);
+    }
+
+    /**
+     * Populate APP_KEY (Laravel) and JWT_SECRET (tymon/jwt-auth) in
+     * api/.env using values generated natively in PHP — equivalent to
+     * what `php artisan key:generate` and `php artisan jwt:secret` would
+     * write, without having to shell out to a CLI process from a web
+     * request.
+     *
+     * Existing non-empty values are left alone so repeated installs do
+     * not invalidate sessions / tokens that were issued against the old
+     * keys.
+     *
+     * @return void
+     */
+    private function generateApiAppKeyAndJwtSecret(): void
+    {
+        $existing = $this->readEnvValues(['APP_KEY', 'JWT_SECRET']);
+        $updates = [];
+
+        // APP_KEY: same format Laravel's KeyGenerateCommand emits for the
+        // default AES-256-CBC cipher.
+        if (empty($existing['APP_KEY']) || $existing['APP_KEY'] === 'base64:') {
+            $updates['APP_KEY'] = 'base64:' . base64_encode(random_bytes(32));
+        }
+
+        // JWT_SECRET: 64-char alphanumeric string, matching what
+        // tymon/jwt-auth's JWTGenerateSecretCommand writes via Str::random(64).
+        if (empty($existing['JWT_SECRET'])) {
+            $updates['JWT_SECRET'] = $this->randomAlnumString(64);
+        }
+
+        if (!empty($updates)) {
+            $this->writeEnvValues($updates);
+        }
+    }
+
+    /**
+     * Read a set of keys out of api/.env.
+     *
+     * The match patterns use `[ \t]*` (instead of `\s*`) around the `=`
+     * and `[^\r\n]*` for the value, so we behave identically on Windows
+     * (CRLF), Linux (LF) and macOS (LF) — `\s` in PCRE also matches `\r`
+     * and `\n`, which can confuse greedy matches on CRLF files.
+     *
+     * @param array<int,string> $keys
+     * @return array<string,string>  Map of key => value (empty string when absent).
+     */
+    private function readEnvValues(array $keys): array
+    {
+        $envFile = ROOT . DS . 'api' . DS . '.env';
+        $values = array_fill_keys($keys, '');
+
+        if (!file_exists($envFile)) {
+            return $values;
+        }
+        $contents = (string)file_get_contents($envFile);
+
+        foreach ($keys as $key) {
+            $pattern = '/^[ \t]*' . preg_quote($key, '/') . '[ \t]*=([^\r\n]*)/m';
+            if (preg_match($pattern, $contents, $m)) {
+                // Strip surrounding quotes / whitespace if any.
+                $values[$key] = trim($m[1], " \t\"'");
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * Replace (or append) the given KEY=value pairs inside api/.env.
+     * Anything else the user has configured manually is left untouched.
+     *
+     * @param array<string,string> $pairs
+     * @return void
+     */
+    private function writeEnvValues(array $pairs): void
+    {
         $envFile = ROOT . DS . 'api' . DS . '.env';
         $defaultEnv = ROOT . DS . 'api' . DS . '.env.example';
 
@@ -741,40 +817,54 @@ return [
             }
         }
 
-        $contents = file_get_contents($envFile);
-        if ($contents === false) {
-            $contents = '';
-        }
+        $contents = (string)file_get_contents($envFile);
 
-        // Replace (or append) the keys we control. Anything else the user has
-        // configured manually is left untouched.
-        $replacements = [
-            'DB_HOST'     => $host,
-            'DB_PORT'     => $port,
-            'DB_DATABASE' => $database,
-            'DB_USERNAME' => $username,
-            'DB_PASSWORD' => $password,
-        ];
+        // Preserve the dominant line-ending convention of the existing
+        // file so we don't mix CRLF and LF when editing a Windows-authored
+        // .env on Linux (or vice versa).
+        $eol = (strpos($contents, "\r\n") !== false) ? "\r\n" : "\n";
 
-        foreach ($replacements as $key => $value) {
-            $pattern = '/^\s*' . preg_quote($key, '/') . '\s*=.*$/m';
+        foreach ($pairs as $key => $value) {
+            // `[ \t]*` (not `\s*`) deliberately — `\s` also matches \r/\n
+            // in PCRE, which can swallow surrounding line-endings on CRLF
+            // files. `[^\r\n]*` for the value side guarantees we only
+            // touch the line we care about.
+            $pattern = '/^[ \t]*' . preg_quote($key, '/') . '[ \t]*=[^\r\n]*/m';
             $line = $key . '=' . $value;
             if (preg_match($pattern, $contents)) {
                 $contents = preg_replace($pattern, $line, $contents);
             } else {
-                $contents = rtrim($contents, "\r\n") . PHP_EOL . $line . PHP_EOL;
+                $contents = rtrim($contents, "\r\n") . $eol . $line . $eol;
             }
         }
 
         file_put_contents($envFile, $contents);
 
-        // Make the new values visible to env() inside the same request (the
-        // wizard uses env() to read SECURITY_SALT etc. when re-rendering).
-        foreach ($replacements as $key => $value) {
+        // Make the new values visible to env() inside the same request.
+        foreach ($pairs as $key => $value) {
             putenv($key . '=' . $value);
             $_ENV[$key] = $value;
             $_SERVER[$key] = $value;
         }
-        // POCOR-9686 Ends
+        
     }
+
+    /**
+     * Cryptographically-secure random alphanumeric string of the given
+     * length — same alphabet Laravel's Illuminate\Support\Str::random() and
+     * tymon/jwt-auth's JWTGenerateSecretCommand use.
+     *
+     * @param int $length
+     * @return string
+     */
+    private function randomAlnumString(int $length): string
+    {
+        $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $max = strlen($alphabet) - 1;
+        $out = '';
+        for ($i = 0; $i < $length; $i++) {
+            $out .= $alphabet[random_int(0, $max)];
+        }
+        return $out;
+    }// POCOR-9686 Ends
 }
