@@ -165,16 +165,27 @@ $institutionId = $paramsQuery['institution_id'];
         text-align: center;
     }
     .staff-attendance-timepicker-popover .popover-content {
-        padding: 4px 8px;
+        padding: 6px 8px;
     }
     .staff-attendance-timepicker-popover .uib-timepicker {
         margin: 0;
     }
     .staff-attendance-timepicker-popover .uib-timepicker table {
-        margin-bottom: 0;
+        margin: 0;
+    }
+    .staff-attendance-timepicker-popover .uib-timepicker table td {
+        padding: 0 2px;
     }
     .staff-attendance-timepicker-popover .uib-timepicker .btn-link {
+        padding: 1px 4px;
+    }
+    .staff-attendance-timepicker-popover .uib-timepicker input {
+        width: 38px;
+        text-align: center;
+    }
+    .staff-attendance-timepicker-popover .uib-timepicker .btn.btn-default {
         padding: 2px 6px;
+        min-width: 36px;
     }
 
     #institution-staff-attendances-table .sg-theme .time-view > i {
