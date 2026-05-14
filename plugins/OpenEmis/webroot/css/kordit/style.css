@@ -12,7 +12,7 @@
 }
 
 [class^="kd-"], [class*=" kd-"],
-[class^="oe-"], [class*=" oe-"] { /* POCOR-9652: oe- alias prefix */
+.oe-check, .oe-close { /* POCOR-9652: oe- alias — enumerate ONLY the icon classes; never [class^="oe-"], it bleeds onto oe-cell-*, oe-select-wrapper, etc. */
   /* use !important to prevent issues with browser extensions that change fonts */
   font-family: 'kordit-fonts' !important;
   speak: none;
