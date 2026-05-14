@@ -240,8 +240,20 @@ class StudentUserTable extends ControllerActionTable
             ->add('identity_number', 'ruleCheckUniqueIdentityNumber', [
                 'rule' => ['checkUniqueIdentityNumber'],
                 'on' => 'create'
-            ])//POCOR-5924 ends
-        ;
+            ])
+            ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+            ->allowEmptyString('mobile_number')
+            ->add('mobile_number', 'numeric', [
+                'rule' => 'numeric',
+                'message' => 'Only numbers are allowed'
+            ]); //POCOR-9680
         return $validator;
     }
 
