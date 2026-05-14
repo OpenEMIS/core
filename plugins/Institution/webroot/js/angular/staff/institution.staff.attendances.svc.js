@@ -537,8 +537,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
         var isTimeOutField = (timeKey === 'time_out');
 
-        console.log('[TEMP-LOG POCOR-9700] createTimeElement', { timeKey: timeKey, rowIndex: rowIndex, value: params.value[timeKey], isDisabled: isDisabled }); //[TEMP-LOG]
-
         // input-group wrapper with native HTML5 type=time input + glyphicon-time addon
         var wrapperDiv = document.createElement('div');
         wrapperDiv.setAttribute('class', 'input-group time' + (isDisabled ? ' disabled' : ''));
@@ -548,7 +546,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         inputElement.setAttribute('step', '60');
         inputElement.setAttribute('id', timepickerId);
         inputElement.setAttribute('class', 'form-control timPikr');
-        inputElement.style.width = '110px';
         if (isDisabled) inputElement.setAttribute('disabled', 'disabled');
         var existing = normalizeTo24Hour(params.value[timeKey]);
         if (existing) inputElement.value = existing.substring(0, 5);
@@ -590,7 +587,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         }
 
         inputElement.addEventListener('change', function () {
-            console.log('[TEMP-LOG POCOR-9700] input change', { timeKey: timeKey, rowIndex: rowIndex, raw: inputElement.value }); //[TEMP-LOG]
             if (isDisabled) return;
             if (isTimeOutField && !hasTimeInSelected()) {
                 AlertSvc.warning(scope, 'Please select Time In first.');
@@ -627,8 +623,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                 rowState._savePromise = rowState._savePromise.then(function () {
                     return saveStaffAttendance(params, timeKey, params.value[timeKey], academicPeriodId);
                 }).then(function (response) {
-                    console.log('[TEMP-LOG POCOR-9700] save success', { timeKey: timeKey, rowIndex: rowIndex, response: response && response.data }); //[TEMP-LOG]
-                    console.log('[TEMP-LOG POCOR-9700] response.data.data raw', response && response.data && JSON.stringify(response.data.data)); //[TEMP-LOG]
                     clearError(data, timeKey);
                     if (!response || !response.data) { AlertSvc.error(scope, 'There was an error when saving record'); return; }
                     var errBlob = response.data.error || {};
@@ -650,7 +644,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                     params.value.isNew = false;
                     setError(data, timeKey, false, {id: timepickerId, elm: inputElement});
                 }, function () {
-                    console.log('[TEMP-LOG POCOR-9700] save error', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                     clearError(data, timeKey);
                     setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
                     AlertSvc.error(scope, 'There was an error when saving record');
@@ -701,7 +694,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
     function getTimeFormatIs12h() {
         if (!_timeFormatPromise) {
             _timeFormatPromise = getConfigItemValue('time_format').then(function (tf) {
-                _timeFormatIs12h = /[aA]/.test(tf || '');
+                //POCOR-9700: PHP date format chars — lowercase h/g = 12-hour, uppercase H/G = 24-hour,
+                // a/A = am/pm token. Any lowercase h/g (even without A) means 12-hour even if lossy
+                // (e.g. "h:i:s" with no meridian — we still treat it as 12h so the view formatter
+                // doesn't mistakenly emit a 24-h string).
+                _timeFormatIs12h = /[hgaA]/.test(tf || '');
                 return _timeFormatIs12h;
             }, function () {
                 return _timeFormatIs12h;
@@ -833,7 +830,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             staffAttendanceData[dataKey] = dataValue;
 
             var isNew = params.data.attendance[dateString].isNew;
-            console.log('[TEMP-LOG POCOR-9700] POST payload', { method: isNew ? 'save' : 'edit', data: angular.copy(staffAttendanceData) }); //[TEMP-LOG]
             if(!isNew) {
                 return InstitutionStaffAttendances.edit(staffAttendanceData);
             } else {
