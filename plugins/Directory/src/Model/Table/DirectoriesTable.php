@@ -1401,7 +1401,20 @@ class DirectoriesTable extends ControllerActionTable
                 'provider' => 'table',
                 'last' => true
             ])
-            ->notEmpty('nationality');
+            ->notEmpty('nationality')
+        ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+        ->allowEmptyString('mobile_number')
+        ->add('mobile_number', 'numeric', [
+            'rule' => 'numeric',
+            'message' => 'Only numbers are allowed'
+        ]); //POCOR-9680
         $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }

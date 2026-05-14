@@ -64,7 +64,12 @@ class IdentitiesTable extends ControllerActionTable
     {
         //$this->log('beforeSave', 'debug');
         //$this->log($entity, 'debug');
-        //POCOR-8243
+        //POCOR-9663 start
+        $duplicateMessage = $this->checkDuplicateIdentity($entity);
+        if ($duplicateMessage != "") {
+            $entity->setError('number', $duplicateMessage);
+            return false; // stop save
+        }  //POCOR-9663 end
         $options = [];
         $options['identity_type_id'] = $entity->identity_type_id;
         $options['identity_number'] = $entity->number;
@@ -351,72 +356,98 @@ class IdentitiesTable extends ControllerActionTable
 
     public function validationDefault(Validator $validator): Validator
     {
-        //POCOR-9404 start
         $requestData = $_REQUEST;
+
+        // POCOR-9404 start
         if (isset($requestData['ImportStudentAdmission'])) {
             $importStudentAdmission = $requestData['ImportStudentAdmission'];
+
             if (!empty($importStudentAdmission['feature'])) {
-                $feature = $importStudentAdmission['feature'];
+                $feature      = $importStudentAdmission['feature'];
                 $featureParts = explode('.', $feature);
-                $featureName = end($featureParts);
+                $featureName  = end($featureParts);
+
                 // Apply this validation ONLY if not ImportStudentAdmission
-                if ($featureName !== 'ImportStudentAdmission') { //POCOR-9404 end
+                if ($featureName !== 'ImportStudentAdmission') {
                     $validator = parent::validationDefault($validator);
                     $validator->setProvider('custom', $this);
+
                     $validator
                         ->add('issue_date', 'ruleCompareDate', [
                             'rule' => ['compareDate', 'expiry_date', false],
-                            'on' => 'create',
+                            'provider' => 'custom',
+                            'on'   => 'create',
                         ])
                         ->allowEmptyDate('issue_date')
                         ->allowEmptyDate('expiry_date')
                         ->add('identity_type_id', 'ruleCustomIdentityType', [
-                            'rule' => ['validateCustomIdentityType'],
+                            'rule'     => ['validateCustomIdentityType'],
                             'provider' => 'table',
                         ])
                         ->add('number', 'ruleCustomIdentityNumber', [
-                            'rule' => ['validateCustomIdentityNumber'],
+                            'rule'     => ['validateCustomIdentityNumber'],
                             'provider' => 'table',
-                            'last' => true
+                            'last'     => true,
                         ])
-                        ->add('number', [
-                            'ruleUnique' => [
-                                'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
-                                'provider' => 'table'
-                            ]
+                        ->add('number', 'ruleUnique', [
+                            'rule'     => ['validateUnique', ['scope' => 'identity_type_id']],
+                            'provider' => 'table',
+                            'message'  => __('This identity number already exists for the nationality'),
                         ])
-                        //POCOR-5987 starts
-                        ->notEmpty('nationality_id');//POCOR-5987 ends
+                        ->notEmpty('nationality_id'); // POCOR-5987
                 }
             }
-        }elseif(!empty($requestData['Identities'])){ //POCOR-9404
+        } elseif (!empty($requestData['Identities'])) { // POCOR-9404
             $validator = parent::validationDefault($validator);
             $validator->setProvider('custom', $this);
+
             return $validator
-                ->add('issue_date', 'ruleCompareDate', [
+                 ->add('issue_date', 'ruleCompareDate', [
                     'rule' => ['compareDate', 'expiry_date', false]
                 ])
                 ->add('expiry_date', [
                 ])
                 ->add('identity_type_id', 'ruleCustomIdentityType', [
-                    'rule' => ['validateCustomIdentityType'],
+                    'rule'     => ['validateCustomIdentityType'],
                     'provider' => 'table',
                 ])
                 ->add('number', 'ruleCustomIdentityNumber', [
-                    'rule' => ['validateCustomIdentityNumber'],
+                    'rule'     => ['validateCustomIdentityNumber'],
                     'provider' => 'table',
-                    'last' => true
+                    'last'     => true,
                 ])
-                ->add('number', [
-                    'ruleUnique' => [
-                        'rule' => ['validateUnique', ['scope' => 'identity_type_id']],
-                        'provider' => 'table'
-                    ]
+                ->add('number', 'ruleUnique', [
+                    'rule'     => ['validateUnique', ['scope' => 'identity_type_id']],
+                    'provider' => 'table',
+                    'message'  => __('This identity number already exists for the nationality'),
                 ])
-                //POCOR-5987 starts
-            ->notEmpty('nationality_id');
-        //POCOR-5987 ends
+                ->notEmpty('nationality_id'); // POCOR-5987
 
+        } else { // POCOR-9663
+            $validator = parent::validationDefault($validator);
+            $validator->setProvider('custom', $this);
+
+            return $validator
+                 ->add('issue_date', 'ruleCompareDate', [
+                    'rule' => ['compareDate', 'expiry_date', false]
+                ])
+                ->add('expiry_date', [
+                ])
+                ->add('identity_type_id', 'ruleCustomIdentityType', [
+                    'rule'     => ['validateCustomIdentityType'],
+                    'provider' => 'table',
+                ])
+                ->add('number', 'ruleCustomIdentityNumber', [
+                    'rule'     => ['validateCustomIdentityNumber'],
+                    'provider' => 'table',
+                    'last'     => true,
+                ])
+                ->add('number', 'ruleUnique', [
+                    'rule'     => ['validateUnique', ['scope' => 'identity_type_id']],
+                    'provider' => 'table',
+                    'message'  => __('This identity number already exists for the nationality'),
+                ])
+                ->notEmpty('nationality_id'); // POCOR-5987
         }
 
         return $validator;
@@ -618,4 +649,28 @@ class IdentitiesTable extends ControllerActionTable
         $this->_syncCacheLoaded = true;
     }
     //POCOR-9590: end
+
+    //POCOR-9663
+    private function checkDuplicateIdentity($entity)
+    {
+        if (empty($entity->number) || empty($entity->nationality_id)) {
+            return "";
+        }
+        $conditions = [
+            'number' => $entity->number,
+            'nationality_id' => $entity->nationality_id
+        ];
+
+        if (!$entity->isNew() && !empty($entity->id)) {
+            $conditions['id !='] = $entity->id;
+        }
+        $existing = $this->find()
+            ->where($conditions)
+            ->first();
+
+        if ($existing) {
+            return __("This identity number already exists for the  nationality.");
+        }
+        return "";
+    }
 }
