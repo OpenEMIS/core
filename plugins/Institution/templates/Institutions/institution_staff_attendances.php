@@ -15,7 +15,15 @@ $this->start('toolbar');
 </button>
 <?php endif; ?>
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && !$ctrl.schoolClosed && $ctrl.selectedDay != -1" ng-click="$ctrl.onEditClick()">
+    <?php //POCOR-9700: keep Edit visible but disabled when no shift is selected (multishift schools). ?>
+    <?php //Use uib-tooltip (reactive) instead of Bootstrap data-toggle=tooltip so the hint switches when state changes. ?>
+    <button class="btn btn-xs btn-default" data-placement="bottom"
+            aria-label="<?= __('Edit') ?>"
+            uib-tooltip="{{(!$ctrl.selectedShift || $ctrl.selectedShift == -1) ? '<?= __('Select a shift to enable editing') ?>' : '<?= __('Edit') ?>'}}"
+            tooltip-placement="bottom" tooltip-append-to-body="true"
+            ng-show="$ctrl.action == 'view' && !$ctrl.schoolClosed && $ctrl.selectedDay != -1"
+            ng-disabled="!$ctrl.selectedShift || $ctrl.selectedShift == -1"
+            ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
 
