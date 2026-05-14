@@ -50,6 +50,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
     // The popover is appended to <body> so it escapes ag-Grid's overflow:hidden on cells/rows.
     // The explicit Done button gives users a visible confirm affordance (auto-save still happens
     // on spinner change via deep-watch — Done just dismisses the popover by flipping ps.isOpen).
+    console.log('[TEMP-LOG POCOR-9700] popover template registered'); //[TEMP-LOG]
     $templateCache.put('institution-staff-attendances/timepicker-popover.html',
         '<div uib-timepicker ng-model="time" show-meridian="showMeridian" minute-step="1" mousewheel="true"></div>' +
         '<div class="text-right" style="margin-top: 6px;">' +
@@ -520,6 +521,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
     // uib-timepicker has show-meridian → always renders an explicit AM/PM column when system is 12h.
     // Race fix preserved: per-row save promise chain (_savePromise) + recheck-from-DB.
     function createTimeElement(params, timeKey, rowIndex) {
+        console.log('[TEMP-LOG POCOR-9700] createTimeElement entry', { timeKey: timeKey, rowIndex: rowIndex, currentValue: params.value[timeKey], isDisabled: (params.data.attendance[params.data.date].leave && params.data.attendance[params.data.date].leave.length > 0 && params.data.attendance[params.data.date].leave[0].isFullDay === 1), is12h: _timeFormatIs12h }); //[TEMP-LOG]
         var data = params.data;
         var dateString = data.date;
         var academicPeriodId = params.context.period;
@@ -600,6 +602,11 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         var wrapperEl = compiled[0];
         var inputEl = wrapperEl.querySelector('input');
 
+        // [TEMP-LOG] Track wrapper click event
+        wrapperEl.addEventListener('click', function(evt) { //[TEMP-LOG]
+            console.log('[TEMP-LOG POCOR-9700] wrapper click', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
+        }); //[TEMP-LOG]
+
         function hasTimeInSelected() {
             return params.value.time_in !== null && params.value.time_in !== undefined && params.value.time_in !== '';
         }
@@ -639,14 +646,16 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         // is always true on a real change — compare by getTime() to skip no-op fires.
         var firstWatch = true;
         ps.$watch('time', function (newVal, oldVal) {
+            console.log('[TEMP-LOG POCOR-9700] ps.$watch(time) fired', { timeKey: timeKey, rowIndex: rowIndex, firstWatch: firstWatch, oldTime: oldVal && oldVal.getTime ? oldVal.getTime() : null, newTime: newVal && newVal.getTime ? newVal.getTime() : null, currentValue: params.value[timeKey] }); //[TEMP-LOG]
             if (firstWatch) { firstWatch = false; return; }
             if (newVal && oldVal && newVal.getTime && oldVal.getTime &&
                 newVal.getTime() === oldVal.getTime()) return;
-            if (isDisabled) return;
+            if (isDisabled) { console.log('[TEMP-LOG POCOR-9700] watch returned early: isDisabled', { timeKey: timeKey, rowIndex: rowIndex }); return; } //[TEMP-LOG]
 
             ps.displayValue = formatDisplay(newVal);
 
             if (isTimeOutField && !hasTimeInSelected()) {
+                console.log('[TEMP-LOG POCOR-9700] time_out guard: time_in not selected', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                 AlertSvc.warning(scope, 'Please select Time In first.');
                 ps.time = null;
                 return;
@@ -658,6 +667,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
             var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
             if (time24Hour !== null && otherTime) {
                 if (timeKey === 'time_out' && time24Hour <= otherTime) {
+                    console.log('[TEMP-LOG POCOR-9700] order validation failed: time_out <= time_in', { timeKey: timeKey, rowIndex: rowIndex, time24Hour: time24Hour, otherTime: otherTime }); //[TEMP-LOG]
                     AlertSvc.error(scope, 'Time Out must be after Time In.');
                     revertToPersisted();
                     ps.hasErrorClass = true;
@@ -665,6 +675,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
                     return;
                 }
                 if (timeKey === 'time_in' && time24Hour >= otherTime) {
+                    console.log('[TEMP-LOG POCOR-9700] order validation failed: time_in >= time_out', { timeKey: timeKey, rowIndex: rowIndex, time24Hour: time24Hour, otherTime: otherTime }); //[TEMP-LOG]
                     AlertSvc.error(scope, 'Time In must be before Time Out.');
                     revertToPersisted();
                     ps.hasErrorClass = true;
@@ -674,6 +685,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
             }
 
             var outsideShiftWarning = detectOutsideShiftWarning(time24Hour);
+            if (outsideShiftWarning) { console.log('[TEMP-LOG POCOR-9700] outside-shift warning', { timeKey: timeKey, rowIndex: rowIndex, warning: outsideShiftWarning }); } //[TEMP-LOG]
 
             UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
             if (params.value[timeKey] == null) {
@@ -688,9 +700,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
             // two cell-changes into one save halves request volume AND removes the race.
             var rowState = params.data.attendance[dateString];
             if (rowState._saveTimer) {
+                console.log('[TEMP-LOG POCOR-9700] debounce: cancelling previous timer', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                 $timeout.cancel(rowState._saveTimer);
             }
+            console.log('[TEMP-LOG POCOR-9700] debounce: scheduling save', { timeKey: timeKey, rowIndex: rowIndex, delayMs: 600 }); //[TEMP-LOG]
             rowState._saveTimer = $timeout(function () {
+                console.log('[TEMP-LOG POCOR-9700] debounce: save fired', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                 rowState._saveTimer = null;
                 if (!rowState._savePromise) {
                     rowState._savePromise = $q.when();
@@ -699,6 +714,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
                     return saveStaffAttendance(params, timeKey, params.value[timeKey], academicPeriodId);
                 }).then(
                 function (response) {
+                    console.log('[TEMP-LOG POCOR-9700] save success', { timeKey: timeKey, rowIndex: rowIndex, hasData: response && response.data }); //[TEMP-LOG]
                     clearError(data, timeKey);
                     ps.hasErrorClass = false;
                     if (!response || !response.data) {
@@ -708,6 +724,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
                     var errBlob = response.data.error || {};
                     var hasErr = Array.isArray(errBlob) ? errBlob.length > 0 : Object.keys(errBlob).length > 0;
                     if (hasErr) {
+                        console.log('[TEMP-LOG POCOR-9700] save validation error', { timeKey: timeKey, rowIndex: rowIndex, errorBlob: errBlob }); //[TEMP-LOG]
                         setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
                         ps.hasErrorClass = true;
                         var errorMsg = 'There was an error when saving record';
@@ -721,6 +738,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
                         AlertSvc.error(scope, errorMsg);
                         return;
                     }
+                    console.log('[TEMP-LOG POCOR-9700] save complete, updating from server', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                     if (outsideShiftWarning) {
                         AlertSvc.warning(scope, 'Saved. ' + outsideShiftWarning);
                     } else {
@@ -738,17 +756,23 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
                     setError(data, timeKey, false, {id: timepickerId, elm: inputEl});
                 },
                 function () {
+                    console.log('[TEMP-LOG POCOR-9700] save error', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                     clearError(data, timeKey);
                     setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
                     ps.hasErrorClass = true;
                     AlertSvc.error(scope, 'There was an error when saving record');
                 }
                 ).finally(function () {
+                    console.log('[TEMP-LOG POCOR-9700] save finally', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                     UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
                     params.api.refreshCells({columns: ['attendance.' + dateString], force: true});
                 });
             }, 600); //POCOR-9700: debounce window
         }, true); //POCOR-9700: deep-watch — uib-timepicker mutates Date in place
+
+        ps.$watch('isOpen', function (newVal, oldVal) { //[TEMP-LOG]
+            console.log('[TEMP-LOG POCOR-9700] popover isOpen transition', { timeKey: timeKey, rowIndex: rowIndex, oldVal: oldVal, newVal: newVal }); //[TEMP-LOG]
+        }); //[TEMP-LOG]
 
         return wrapperEl;
     }
