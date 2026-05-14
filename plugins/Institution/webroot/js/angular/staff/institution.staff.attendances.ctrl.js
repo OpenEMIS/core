@@ -91,6 +91,12 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         UtilsSvc.isAppendLoader(true);
         InstitutionStaffAttendancesSvc.getTranslatedText().
         then(function(isTranslated) {
+            //POCOR-9700: warm the time_format cache BEFORE the grid renders so AM/PM appears on first paint.
+            // Without this, the lazy fetch in createTimeElement resolves after the first render and
+            // the AM/PM only shows after a shift change triggers a grid refresh.
+            return InstitutionStaffAttendancesSvc.getTimeFormatIs12h();
+        }, vm.error)
+        .then(function() {
             return InstitutionStaffAttendancesSvc.getAcademicPeriodOptions();
         }, vm.error)
         .then(function(academicPeriods) {
