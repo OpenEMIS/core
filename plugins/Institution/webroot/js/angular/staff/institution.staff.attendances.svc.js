@@ -48,8 +48,13 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
 
     //POCOR-9700: register the uib-timepicker popover template once at svc init.
     // The popover is appended to <body> so it escapes ag-Grid's overflow:hidden on cells/rows.
+    // The explicit Done button gives users a visible confirm affordance (auto-save still happens
+    // on spinner change via deep-watch — Done just dismisses the popover by flipping ps.isOpen).
     $templateCache.put('institution-staff-attendances/timepicker-popover.html',
-        '<div uib-timepicker ng-model="time" show-meridian="showMeridian" minute-step="1" mousewheel="true"></div>'
+        '<div uib-timepicker ng-model="time" show-meridian="showMeridian" minute-step="1" mousewheel="true"></div>' +
+        '<div class="text-right" style="margin-top: 6px;">' +
+            '<button type="button" class="btn btn-xs btn-primary" ng-click="isOpen = false">Done</button>' +
+        '</div>'
     );
 
     return service;
@@ -576,6 +581,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
                 'uib-popover-template="\'institution-staff-attendances/timepicker-popover.html\'" ' +
                 'popover-placement="bottom-left" ' +
                 'popover-append-to-body="true" ' +
+                'popover-is-open="isOpen" ' + //POCOR-9700: two-way bind so Done button can close popover via ps.isOpen=false
                 'popover-class="staff-attendance-timepicker-popover" ' +
                 'popover-enable="!isDisabled">' +
                 '<input type="text" id="' + timepickerId + '" class="form-control timPikr uib-timepicker-trigger" ' +
