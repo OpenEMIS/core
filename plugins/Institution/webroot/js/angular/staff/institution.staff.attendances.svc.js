@@ -624,11 +624,17 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
             ps.displayValue = formatDisplay(ps.time);
         }
 
-        // Skip the initial $watch firing — only react to user changes.
+        // POCOR-9700: uib-timepicker MUTATES the bound Date in-place via setHours/setMinutes —
+        // it does NOT assign a new Date instance. A reference-equality $watch therefore never
+        // fires when the user clicks the spinner arrows, so the readonly input stays stuck on
+        // the old value. Deep-watch (third arg true) compares via angular.equals and detects
+        // in-place mutation. AngularJS clones the old value for deep-watches, so newVal !== oldVal
+        // is always true on a real change — compare by getTime() to skip no-op fires.
         var firstWatch = true;
         ps.$watch('time', function (newVal, oldVal) {
             if (firstWatch) { firstWatch = false; return; }
-            if (newVal === oldVal) return;
+            if (newVal && oldVal && newVal.getTime && oldVal.getTime &&
+                newVal.getTime() === oldVal.getTime()) return;
             if (isDisabled) return;
 
             ps.displayValue = formatDisplay(newVal);
@@ -735,7 +741,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
                     params.api.refreshCells({columns: ['attendance.' + dateString], force: true});
                 });
             }, 600); //POCOR-9700: debounce window
-        });
+        }, true); //POCOR-9700: deep-watch — uib-timepicker mutates Date in place
 
         return wrapperEl;
     }
