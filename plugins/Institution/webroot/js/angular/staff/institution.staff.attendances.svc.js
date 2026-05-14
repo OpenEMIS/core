@@ -579,6 +579,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         var template =
             '<div class="input-group time uib-timepicker-cell' + (isDisabled ? ' disabled' : '') + '" ' +
                 'uib-popover-template="\'institution-staff-attendances/timepicker-popover.html\'" ' +
+                'popover-trigger="outsideClick" ' + //POCOR-9700: literal v1.1.2 syntax (no expression quotes) — opens on click, closes when anything else (incl. another cell) is clicked
                 'popover-placement="bottom-left" ' +
                 'popover-append-to-body="true" ' +
                 'popover-is-open="isOpen" ' + //POCOR-9700: two-way bind so Done button can close popover via ps.isOpen=false
