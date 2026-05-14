@@ -719,6 +719,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         // Returns 24h "HH:MM" when system is configured 24h, else 12h "HH:MM AM/PM".
         ensureTimeFormatLoaded();
         try {
+            //POCOR-9700: server can return either "15:00:00" (24h) or "03:00:00 PM" (12h) depending
+            // on time_format config. Canonicalise to 24h FIRST — without this, splitting "03:00:00 PM"
+            // on ":" yielded hours=3 and we mis-rendered every PM time as AM (Khindol's screenshot bug).
+            time = normalizeTo24Hour(time);
             if (!time || typeof time !== "string") {
                 throw new Error("Input is not a string");
             }
