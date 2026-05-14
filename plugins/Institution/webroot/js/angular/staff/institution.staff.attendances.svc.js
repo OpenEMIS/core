@@ -2,7 +2,7 @@ angular
     .module('institution.staff.attendances.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStaffAttendancesSvc', InstitutionStaffAttendancesSvc);
 
-InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700
+InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', '$compile', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700: $compile added for uib-timepicker
 
 function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700: $compile injected for uib-timepicker cell rendering
    var models = {
