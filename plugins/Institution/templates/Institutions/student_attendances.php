@@ -45,6 +45,7 @@ $this->start('toolbar');
 <?php if ($_edit) : ?>
     <?php //POCOR-9652: icon (oe-check / oe-close) reflects flag state; tooltip advertises the destination state on click — "Scheduled Class" when flagged, "No Scheduled Class" when not ?>
     <button class="btn btn-xs btn-default"
+        data-toggle="tooltip" <?php //POCOR-9652: restore Bootstrap tooltip binding (was lost in earlier reformat) ?>
         data-placement="bottom"
         data-container="body"
         ng-attr-title="{{$ctrl.isNoScheduledDay() ? '<?= __('Scheduled Class'); ?>' : '<?= __('No Scheduled Class'); ?>'}}" <?php //POCOR-9652 ?>
