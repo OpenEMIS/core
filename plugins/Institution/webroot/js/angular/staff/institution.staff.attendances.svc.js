@@ -2,9 +2,9 @@ angular
     .module('institution.staff.attendances.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStaffAttendancesSvc', InstitutionStaffAttendancesSvc);
 
-InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', '$compile', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700: $compile added for uib-timepicker
+InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', '$compile', '$templateCache', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700: $compile + $templateCache for uib-popover-template
 
-function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700: $compile injected for uib-timepicker cell rendering
+function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, $templateCache, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700: $compile + $templateCache
    var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaffAttendances: 'Staff.InstitutionStaffAttendances',
@@ -45,6 +45,13 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         getConfigItemValue: getConfigItemValue,
         getTimeFormatIs12h: getTimeFormatIs12h, //POCOR-9700: ctrl awaits this before grid renders so AM/PM is correct on first paint
     };
+
+    //POCOR-9700: register the uib-timepicker popover template once at svc init.
+    // The popover is appended to <body> so it escapes ag-Grid's overflow:hidden on cells/rows.
+    $templateCache.put('institution-staff-attendances/timepicker-popover.html',
+        '<div uib-timepicker ng-model="time" show-meridian="showMeridian" minute-step="1" mousewheel="true"></div>'
+    );
+
     return service;
 
     function init(baseUrl) {
@@ -558,20 +565,29 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         ps.displayValue = formatDisplay(ps.time);
         ps.isOpen = false;
 
+        //POCOR-9700: input-group with explicit clock-icon button as the obvious clickable affordance.
+        // - The whole .input-group div owns uib-popover-template — clicking either the readonly
+        //   input or the clock-icon addon opens the popover (readonly inputs alone don't fire
+        //   popover-trigger="click" reliably across browsers).
+        // - popover-append-to-body="true" so the picker escapes ag-Grid's overflow:hidden on
+        //   cells/rows — it renders at full natural size (HH | : | MM | AM/PM) in <body>.
         var template =
-            '<div class="input-group time uib-timepicker-cell' + (isDisabled ? ' disabled' : '') + '" uib-dropdown auto-close="outsideClick" is-open="isOpen">' +
-                '<input type="text" id="' + timepickerId + '" class="form-control timPikr" ' +
+            '<div class="input-group time uib-timepicker-cell' + (isDisabled ? ' disabled' : '') + '" ' +
+                'uib-popover-template="\'institution-staff-attendances/timepicker-popover.html\'" ' +
+                'popover-trigger="\'outsideClick\'" ' +
+                'popover-placement="bottom-left" ' +
+                'popover-append-to-body="true" ' +
+                'popover-class="staff-attendance-timepicker-popover" ' +
+                'popover-enable="!isDisabled">' +
+                '<input type="text" id="' + timepickerId + '" class="form-control timPikr uib-timepicker-trigger" ' +
                     'ng-class="{\'form-error\': hasErrorClass}" ' +
                     'ng-model="displayValue" ' +
                     'ng-disabled="isDisabled" ' +
-                    'uib-dropdown-toggle readonly ' +
-                    'style="width: 110px; cursor: pointer; background-color: #fff;" />' +
-                '<span class="input-group-addon" uib-dropdown-toggle ng-class="{disabled: isDisabled}" style="cursor: pointer;">' +
+                    'readonly placeholder="--:-- --" ' +
+                    'style="cursor: pointer; background-color: #fff;" />' +
+                '<span class="input-group-addon" ng-class="{disabled: isDisabled}" style="cursor: pointer;">' +
                     '<i class="glyphicon glyphicon-time"></i>' +
                 '</span>' +
-                '<ul uib-dropdown-menu role="menu" style="padding: 6px; min-width: auto;">' +
-                    '<li><div uib-timepicker ng-model="time" show-meridian="showMeridian" minute-step="1" mousewheel="true"></div></li>' +
-                '</ul>' +
             '</div>';
 
         var compiled = $compile(template)(ps);
