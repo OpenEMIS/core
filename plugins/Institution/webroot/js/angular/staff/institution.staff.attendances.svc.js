@@ -574,7 +574,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         var template =
             '<div class="input-group time uib-timepicker-cell' + (isDisabled ? ' disabled' : '') + '" ' +
                 'uib-popover-template="\'institution-staff-attendances/timepicker-popover.html\'" ' +
-                'popover-trigger="\'outsideClick\'" ' +
                 'popover-placement="bottom-left" ' +
                 'popover-append-to-body="true" ' +
                 'popover-class="staff-attendance-timepicker-popover" ' +
