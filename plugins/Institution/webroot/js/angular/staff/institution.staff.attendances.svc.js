@@ -710,16 +710,23 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         }
     }
 
-    //POCOR-9700: cache the system time_format once at svc init so view-mode formatting is synchronous.
-    // Default to 24h until the config call resolves; the cell renderer re-runs naturally on grid refresh.
-    var _timeFormatIs12h = false;
-    getConfigItemValue('time_format').then(function (tf) {
-        _timeFormatIs12h = /[aA]/.test(tf || '');
-    }, function () { /* unreachable — leave default */ });
+    //POCOR-9700: cache the system time_format. Default to 12h (most common, matches pre-9700 behaviour);
+    // fetch lazily on first formatter call (config service is not ready at svc factory init time);
+    // when the real value arrives, expose it on the grid context so the ctrl can refresh once.
+    var _timeFormatIs12h = true;
+    var _timeFormatFetched = false;
+    function ensureTimeFormatLoaded() {
+        if (_timeFormatFetched) return;
+        _timeFormatFetched = true;
+        getConfigItemValue('time_format').then(function (tf) {
+            _timeFormatIs12h = /[aA]/.test(tf || '');
+        }, function () { /* keep default */ });
+    }
 
     function convert12Timeformat(time) {
         //POCOR-9700: name kept for back-compat, but now respects the system time_format config.
         // Returns 24h "HH:MM" when system is configured 24h, else 12h "HH:MM AM/PM".
+        ensureTimeFormatLoaded();
         try {
             if (!time || typeof time !== "string") {
                 throw new Error("Input is not a string");
