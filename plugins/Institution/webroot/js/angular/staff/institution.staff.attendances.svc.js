@@ -527,12 +527,12 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         // inside the native type=time picker so 12h locales don't silently truncate to 24h-looking text.
         inputElement.style.width = '110px';
 
-        //POCOR-9700: lock the edit picker to 24h (en-GB). Demonstrated failure mode of en-US:
-        // Chrome's HTML5 picker is too narrow inside the ag-Grid cell to render the AM/PM
-        // marker — typing "15:00" silently converts to "03:00" with no visible PM indicator.
-        // Ambiguous and unsafe. View mode still respects time_format config (AM/PM as text
-        // has room there). Same call as the previous always-24h lock — keep this stable.
-        inputElement.lang = 'en-GB';
+        //POCOR-9700: honour system time_format on the edit picker now that the input has
+        // explicit width:110px — Chrome's native picker has room to render the AM/PM marker.
+        // 'en-US' → 12h AM/PM, 'en-GB' → 24h. Lazy so the config call doesn't race
+        // svc-init (auth not ready); shares the _timeFormatIs12h cache with the view formatter.
+        ensureTimeFormatLoaded();
+        inputElement.lang = _timeFormatIs12h ? 'en-US' : 'en-GB';
         if (isDisabled) {
             inputElement.setAttribute('disabled', 'disabled');
         }
