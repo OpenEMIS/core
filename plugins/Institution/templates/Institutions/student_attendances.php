@@ -43,12 +43,11 @@ $this->start('toolbar');
 <?php endif; ?>
 <?php /******POCOR-8745--End*********/ ?>
 <?php if ($_edit) : ?>
-    <?php //POCOR-9652: icon (oe-check / oe-close) reflects flag state; tooltip advertises the destination state on click — "Scheduled Class" when flagged, "No Scheduled Class" when not ?>
+    <?php //POCOR-9652: icon + reactive tooltip — uib-tooltip re-evaluates on digest, so text toggles with the flag (plain Bootstrap data-toggle="tooltip" caches title at bind time and won't update) ?>
     <button class="btn btn-xs btn-default"
-        data-toggle="tooltip" <?php //POCOR-9652: restore Bootstrap tooltip binding (was lost in earlier reformat) ?>
-        data-placement="bottom"
-        data-container="body"
-        ng-attr-title="{{$ctrl.isNoScheduledDay() ? '<?= __('Scheduled Class'); ?>' : '<?= __('No Scheduled Class'); ?>'}}" <?php //POCOR-9652 ?>
+        uib-tooltip="{{$ctrl.isNoScheduledDay() ? '<?= __('Scheduled Class'); ?>' : '<?= __('No Scheduled Class'); ?>'}}"
+        tooltip-placement="bottom"
+        tooltip-append-to-body="true"
         ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
         ng-click="$ctrl.onNoScheduledClick()">
         <i ng-class="$ctrl.isNoScheduledDay() ? 'oe-check' : 'oe-close'"></i>
