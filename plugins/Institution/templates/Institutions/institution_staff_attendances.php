@@ -156,36 +156,11 @@ $institutionId = $paramsQuery['institution_id'];
         font-size: 13px;
     }
 
-    /* POCOR-9700: uib-timepicker edit-cell trigger + popover styles.
-       - Trigger input sized so AM/PM text (e.g. "07:30 AM") fits comfortably.
-       - Popover is appended to <body>, so its scope is global — namespace with .staff-attendance-timepicker-popover. */
-    #institution-staff-attendances-table .uib-timepicker-trigger {
+    /* POCOR-9700: native HTML5 type=time edit-cell input sized so 24h/12h text fits comfortably. */
+    #institution-staff-attendances-table .timPikr {
         width: 100px;
         padding-right: 8px;
         text-align: center;
-    }
-    .staff-attendance-timepicker-popover .popover-content {
-        padding: 6px 8px;
-    }
-    .staff-attendance-timepicker-popover .uib-timepicker {
-        margin: 0;
-    }
-    .staff-attendance-timepicker-popover .uib-timepicker table {
-        margin: 0;
-    }
-    .staff-attendance-timepicker-popover .uib-timepicker table td {
-        padding: 0 2px;
-    }
-    .staff-attendance-timepicker-popover .uib-timepicker .btn-link {
-        padding: 1px 4px;
-    }
-    .staff-attendance-timepicker-popover .uib-timepicker input {
-        width: 38px;
-        text-align: center;
-    }
-    .staff-attendance-timepicker-popover .uib-timepicker .btn.btn-default {
-        padding: 2px 6px;
-        min-width: 36px;
     }
 
     #institution-staff-attendances-table .sg-theme .time-view > i {

@@ -2,9 +2,9 @@ angular
     .module('institution.staff.attendances.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStaffAttendancesSvc', InstitutionStaffAttendancesSvc);
 
-InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', '$compile', '$templateCache', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700: $compile + $templateCache for uib-popover-template
+InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700: native HTML5 type=time picker
 
-function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, $templateCache, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700: $compile + $templateCache
+function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700: native HTML5 type=time picker
    var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaffAttendances: 'Staff.InstitutionStaffAttendances',
@@ -45,18 +45,6 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         getConfigItemValue: getConfigItemValue,
         getTimeFormatIs12h: getTimeFormatIs12h, //POCOR-9700: ctrl awaits this before grid renders so AM/PM is correct on first paint
     };
-
-    //POCOR-9700: register the uib-timepicker popover template once at svc init.
-    // The popover is appended to <body> so it escapes ag-Grid's overflow:hidden on cells/rows.
-    // The explicit Done button gives users a visible confirm affordance (auto-save still happens
-    // on spinner change via deep-watch — Done just dismisses the popover by flipping ps.isOpen).
-    console.log('[TEMP-LOG POCOR-9700] popover template registered'); //[TEMP-LOG]
-    $templateCache.put('institution-staff-attendances/timepicker-popover.html',
-        '<div uib-timepicker ng-model="time" show-meridian="showMeridian" minute-step="1" mousewheel="true"></div>' +
-        '<div class="text-right" style="margin-top: 6px;">' +
-            '<button type="button" class="btn btn-xs btn-primary" ng-click="isOpen = false">Done</button>' +
-        '</div>'
-    );
 
     return service;
 
@@ -515,13 +503,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         return eTextarea;
     }
 
-    //POCOR-9700: Angular UI Bootstrap uib-timepicker wrapped in uib-dropdown for popover behaviour.
-    // Replaces both the legacy jQuery bootstrap-timepicker (focus loss, no OS 12/24h respect)
-    // and the brief HTML5 type=time experiment (Chrome ignores lang attr, drops AM/PM on macOS).
-    // uib-timepicker has show-meridian → always renders an explicit AM/PM column when system is 12h.
-    // Race fix preserved: per-row save promise chain (_savePromise) + recheck-from-DB.
+    //POCOR-9700: native HTML5 <input type="time"> picker.
+    // Per MDN, AM/PM display is decided by the browser/OS locale — there is no HTML/CSS/JS
+    // knob to override it. Trade-off accepted in favour of the generic, universally-available
+    // native picker: no extra library, mobile-native UX, zero popup-stacking risk.
+    // Preserved from prior POCOR-9700 work: per-row _savePromise chain, 600ms debounce,
+    // recheck-from-DB after save, order validation, outside-shift ±3h soft warning,
+    // future-time block, permission checks.
     function createTimeElement(params, timeKey, rowIndex) {
-        console.log('[TEMP-LOG POCOR-9700] createTimeElement entry', { timeKey: timeKey, rowIndex: rowIndex, currentValue: params.value[timeKey], isDisabled: (params.data.attendance[params.data.date].leave && params.data.attendance[params.data.date].leave.length > 0 && params.data.attendance[params.data.date].leave[0].isFullDay === 1), is12h: _timeFormatIs12h }); //[TEMP-LOG]
         var data = params.data;
         var dateString = data.date;
         var academicPeriodId = params.context.period;
@@ -531,91 +520,41 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
         var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
         var isTimeOutField = (timeKey === 'time_out');
 
-        ensureTimeFormatLoaded();
+        console.log('[TEMP-LOG POCOR-9700] createTimeElement', { timeKey: timeKey, rowIndex: rowIndex, value: params.value[timeKey], isDisabled: isDisabled }); //[TEMP-LOG]
 
-        function pad(n) { return n < 10 ? '0' + n : '' + n; }
+        // input-group wrapper with native HTML5 type=time input + glyphicon-time addon
+        var wrapperDiv = document.createElement('div');
+        wrapperDiv.setAttribute('class', 'input-group time' + (isDisabled ? ' disabled' : ''));
 
-        function parseHmsToDate(s) {
-            if (!s || typeof s !== 'string') return null;
-            var parts = s.split(':');
-            var d = new Date();
-            d.setHours(parseInt(parts[0], 10) || 0);
-            d.setMinutes(parseInt(parts[1], 10) || 0);
-            d.setSeconds(0);
-            d.setMilliseconds(0);
-            return d;
-        }
+        var inputElement = document.createElement('input');
+        inputElement.setAttribute('type', 'time');
+        inputElement.setAttribute('step', '60');
+        inputElement.setAttribute('id', timepickerId);
+        inputElement.setAttribute('class', 'form-control timPikr');
+        inputElement.style.width = '110px';
+        if (isDisabled) inputElement.setAttribute('disabled', 'disabled');
+        var existing = params.value[timeKey];
+        if (existing) inputElement.value = existing.substring(0, 5);
+        if (hasError(data, timeKey, timepickerId)) inputElement.className += ' form-error';
 
-        function dateToHms(d) {
-            if (!d) return null;
-            return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';
-        }
-
-        function formatDisplay(d) {
-            if (!d) return '';
-            var h24 = d.getHours();
-            var m = d.getMinutes();
-            if (_timeFormatIs12h) {
-                var meridian = h24 >= 12 ? 'PM' : 'AM';
-                var h12 = h24 % 12 || 12;
-                return pad(h12) + ':' + pad(m) + ' ' + meridian;
-            }
-            return pad(h24) + ':' + pad(m);
-        }
-
-        // Per-cell child scope drives uib-timepicker.
-        var ps = scope.$new();
-        ps.time = parseHmsToDate(params.value[timeKey]);
-        ps.showMeridian = _timeFormatIs12h;
-        ps.isDisabled = isDisabled;
-        ps.hasErrorClass = hasError(data, timeKey, timepickerId);
-        ps.displayValue = formatDisplay(ps.time);
-        ps.isOpen = false;
-
-        //POCOR-9700: input-group with explicit clock-icon button as the obvious clickable affordance.
-        // - The whole .input-group div owns uib-popover-template — clicking either the readonly
-        //   input or the clock-icon addon opens the popover (readonly inputs alone don't fire
-        //   popover-trigger="click" reliably across browsers).
-        // - popover-append-to-body="true" so the picker escapes ag-Grid's overflow:hidden on
-        //   cells/rows — it renders at full natural size (HH | : | MM | AM/PM) in <body>.
-        var template =
-            '<div class="input-group time uib-timepicker-cell' + (isDisabled ? ' disabled' : '') + '" ' +
-                'uib-popover-template="\'institution-staff-attendances/timepicker-popover.html\'" ' +
-                'popover-trigger="outsideClick" ' + //POCOR-9700: literal v1.1.2 syntax (no expression quotes) — opens on click, closes when anything else (incl. another cell) is clicked
-                'popover-placement="bottom-left" ' +
-                'popover-append-to-body="true" ' +
-                'popover-is-open="isOpen" ' + //POCOR-9700: two-way bind so Done button can close popover via ps.isOpen=false
-                'popover-class="staff-attendance-timepicker-popover" ' +
-                'popover-enable="!isDisabled">' +
-                '<input type="text" id="' + timepickerId + '" class="form-control timPikr uib-timepicker-trigger" ' +
-                    'ng-class="{\'form-error\': hasErrorClass}" ' +
-                    'ng-model="displayValue" ' +
-                    'ng-disabled="isDisabled" ' +
-                    'readonly placeholder="--:-- --" ' +
-                    'style="cursor: pointer; background-color: #fff;" />' +
-                '<span class="input-group-addon" ng-class="{disabled: isDisabled}" style="cursor: pointer;">' +
-                    '<i class="glyphicon glyphicon-time"></i>' +
-                '</span>' +
-            '</div>';
-
-        var compiled = $compile(template)(ps);
-        var wrapperEl = compiled[0];
-        var inputEl = wrapperEl.querySelector('input');
-
-        // [TEMP-LOG] Track wrapper click event
-        wrapperEl.addEventListener('click', function(evt) { //[TEMP-LOG]
-            console.log('[TEMP-LOG POCOR-9700] wrapper click', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
-        }); //[TEMP-LOG]
+        var iconSpan = document.createElement('span');
+        iconSpan.setAttribute('class', 'input-group-addon' + (isDisabled ? ' disabled' : ''));
+        var iconElement = document.createElement('i');
+        iconElement.setAttribute('class', 'glyphicon glyphicon-time');
+        iconSpan.appendChild(iconElement);
+        //POCOR-9700: clicking the addon icon focuses the native input so user can use spinner / keyboard
+        iconSpan.addEventListener('click', function () { if (!isDisabled) inputElement.focus(); });
 
         function hasTimeInSelected() {
             return params.value.time_in !== null && params.value.time_in !== undefined && params.value.time_in !== '';
         }
-
+        function revertInput() {
+            inputElement.value = params.value[timeKey] ? params.value[timeKey].substring(0, 5) : '';
+        }
         function toMinutes(hms) {
             var p = hms.split(':');
             return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
         }
-
         function detectOutsideShiftWarning(time24Hour) {
             //POCOR-9700: returns the warning text (or null), so the save callback can fold it into a
             // single combined toast rather than letting the success message overwrite the warning.
@@ -633,148 +572,80 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, $compile, 
             return null;
         }
 
-        function revertToPersisted() {
-            ps.time = parseHmsToDate(params.value[timeKey]);
-            ps.displayValue = formatDisplay(ps.time);
-        }
-
-        // POCOR-9700: uib-timepicker MUTATES the bound Date in-place via setHours/setMinutes —
-        // it does NOT assign a new Date instance. A reference-equality $watch therefore never
-        // fires when the user clicks the spinner arrows, so the readonly input stays stuck on
-        // the old value. Deep-watch (third arg true) compares via angular.equals and detects
-        // in-place mutation. AngularJS clones the old value for deep-watches, so newVal !== oldVal
-        // is always true on a real change — compare by getTime() to skip no-op fires.
-        var firstWatch = true;
-        ps.$watch('time', function (newVal, oldVal) {
-            console.log('[TEMP-LOG POCOR-9700] ps.$watch(time) fired', { timeKey: timeKey, rowIndex: rowIndex, firstWatch: firstWatch, oldTime: oldVal && oldVal.getTime ? oldVal.getTime() : null, newTime: newVal && newVal.getTime ? newVal.getTime() : null, currentValue: params.value[timeKey] }); //[TEMP-LOG]
-            if (firstWatch) { firstWatch = false; return; }
-            if (newVal && oldVal && newVal.getTime && oldVal.getTime &&
-                newVal.getTime() === oldVal.getTime()) return;
-            if (isDisabled) { console.log('[TEMP-LOG POCOR-9700] watch returned early: isDisabled', { timeKey: timeKey, rowIndex: rowIndex }); return; } //[TEMP-LOG]
-
-            ps.displayValue = formatDisplay(newVal);
-
+        inputElement.addEventListener('change', function () {
+            console.log('[TEMP-LOG POCOR-9700] input change', { timeKey: timeKey, rowIndex: rowIndex, raw: inputElement.value }); //[TEMP-LOG]
+            if (isDisabled) return;
             if (isTimeOutField && !hasTimeInSelected()) {
-                console.log('[TEMP-LOG POCOR-9700] time_out guard: time_in not selected', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                 AlertSvc.warning(scope, 'Please select Time In first.');
-                ps.time = null;
+                inputElement.value = '';
                 return;
             }
-
-            var time24Hour = dateToHms(newVal);
-
-            // Order validation: strict > between time_in and time_out
+            var rawValue = inputElement.value;
+            var time24Hour = rawValue ? (rawValue + ':00') : null;
             var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
             if (time24Hour !== null && otherTime) {
                 if (timeKey === 'time_out' && time24Hour <= otherTime) {
-                    console.log('[TEMP-LOG POCOR-9700] order validation failed: time_out <= time_in', { timeKey: timeKey, rowIndex: rowIndex, time24Hour: time24Hour, otherTime: otherTime }); //[TEMP-LOG]
                     AlertSvc.error(scope, 'Time Out must be after Time In.');
-                    revertToPersisted();
-                    ps.hasErrorClass = true;
-                    setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
+                    revertInput();
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
                     return;
                 }
                 if (timeKey === 'time_in' && time24Hour >= otherTime) {
-                    console.log('[TEMP-LOG POCOR-9700] order validation failed: time_in >= time_out', { timeKey: timeKey, rowIndex: rowIndex, time24Hour: time24Hour, otherTime: otherTime }); //[TEMP-LOG]
                     AlertSvc.error(scope, 'Time In must be before Time Out.');
-                    revertToPersisted();
-                    ps.hasErrorClass = true;
-                    setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
+                    revertInput();
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
                     return;
                 }
             }
-
             var outsideShiftWarning = detectOutsideShiftWarning(time24Hour);
-            if (outsideShiftWarning) { console.log('[TEMP-LOG POCOR-9700] outside-shift warning', { timeKey: timeKey, rowIndex: rowIndex, warning: outsideShiftWarning }); } //[TEMP-LOG]
-
             UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
-            if (params.value[timeKey] == null) {
-                params.value.isNew = true;
-            }
-
-            // POCOR-9700: write the picked value into row state immediately so a debounced save sees the latest.
+            if (params.value[timeKey] == null) params.value.isNew = true;
             params.value[timeKey] = time24Hour;
-
             // POCOR-9700: debounce per row to coalesce time_in + time_out into one POST under load.
-            // Schools mark hundreds of teachers within the same morning window — collapsing
-            // two cell-changes into one save halves request volume AND removes the race.
             var rowState = params.data.attendance[dateString];
-            if (rowState._saveTimer) {
-                console.log('[TEMP-LOG POCOR-9700] debounce: cancelling previous timer', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
-                $timeout.cancel(rowState._saveTimer);
-            }
-            console.log('[TEMP-LOG POCOR-9700] debounce: scheduling save', { timeKey: timeKey, rowIndex: rowIndex, delayMs: 600 }); //[TEMP-LOG]
+            if (rowState._saveTimer) $timeout.cancel(rowState._saveTimer);
             rowState._saveTimer = $timeout(function () {
-                console.log('[TEMP-LOG POCOR-9700] debounce: save fired', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                 rowState._saveTimer = null;
-                if (!rowState._savePromise) {
-                    rowState._savePromise = $q.when();
-                }
+                if (!rowState._savePromise) rowState._savePromise = $q.when();
                 rowState._savePromise = rowState._savePromise.then(function () {
                     return saveStaffAttendance(params, timeKey, params.value[timeKey], academicPeriodId);
-                }).then(
-                function (response) {
-                    console.log('[TEMP-LOG POCOR-9700] save success', { timeKey: timeKey, rowIndex: rowIndex, hasData: response && response.data }); //[TEMP-LOG]
+                }).then(function (response) {
+                    console.log('[TEMP-LOG POCOR-9700] save success', { timeKey: timeKey, rowIndex: rowIndex, response: response && response.data }); //[TEMP-LOG]
                     clearError(data, timeKey);
-                    ps.hasErrorClass = false;
-                    if (!response || !response.data) {
-                        AlertSvc.error(scope, 'There was an error when saving record');
-                        return;
-                    }
+                    if (!response || !response.data) { AlertSvc.error(scope, 'There was an error when saving record'); return; }
                     var errBlob = response.data.error || {};
                     var hasErr = Array.isArray(errBlob) ? errBlob.length > 0 : Object.keys(errBlob).length > 0;
                     if (hasErr) {
-                        console.log('[TEMP-LOG POCOR-9700] save validation error', { timeKey: timeKey, rowIndex: rowIndex, errorBlob: errBlob }); //[TEMP-LOG]
-                        setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
-                        ps.hasErrorClass = true;
+                        setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
                         var errorMsg = 'There was an error when saving record';
-                        if (typeof errBlob === 'string') {
-                            errorMsg = errBlob;
-                        } else if (errBlob.time_out) {
-                            errorMsg = errBlob.time_out.ruleCompareTimeReverse
-                                || errBlob.time_out.timeInShouldNotEmpty
-                                || errorMsg;
-                        }
+                        if (typeof errBlob === 'string') errorMsg = errBlob;
+                        else if (errBlob.time_out) errorMsg = errBlob.time_out.ruleCompareTimeReverse || errBlob.time_out.timeInShouldNotEmpty || errorMsg;
                         AlertSvc.error(scope, errorMsg);
                         return;
                     }
-                    console.log('[TEMP-LOG POCOR-9700] save complete, updating from server', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
-                    if (outsideShiftWarning) {
-                        AlertSvc.warning(scope, 'Saved. ' + outsideShiftWarning);
-                    } else {
-                        AlertSvc.success(scope, 'Time record successfully saved.');
-                    }
+                    if (outsideShiftWarning) AlertSvc.warning(scope, 'Saved. ' + outsideShiftWarning);
+                    else AlertSvc.success(scope, 'Time record successfully saved.');
                     // POCOR-9700: trust the server's persisted record, not the picked value.
                     var saved = response.data.data || {};
-                    if (angular.isDefined(saved.time_in)) {
-                        params.value.time_in = saved.time_in;
-                    }
-                    if (angular.isDefined(saved.time_out)) {
-                        params.value.time_out = saved.time_out;
-                    }
+                    if (angular.isDefined(saved.time_in)) params.value.time_in = saved.time_in;
+                    if (angular.isDefined(saved.time_out)) params.value.time_out = saved.time_out;
                     params.value.isNew = false;
-                    setError(data, timeKey, false, {id: timepickerId, elm: inputEl});
-                },
-                function () {
+                    setError(data, timeKey, false, {id: timepickerId, elm: inputElement});
+                }, function () {
                     console.log('[TEMP-LOG POCOR-9700] save error', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
                     clearError(data, timeKey);
-                    setError(data, timeKey, true, {id: timepickerId, elm: inputEl});
-                    ps.hasErrorClass = true;
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
                     AlertSvc.error(scope, 'There was an error when saving record');
-                }
-                ).finally(function () {
-                    console.log('[TEMP-LOG POCOR-9700] save finally', { timeKey: timeKey, rowIndex: rowIndex }); //[TEMP-LOG]
+                }).finally(function () {
                     UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
                     params.api.refreshCells({columns: ['attendance.' + dateString], force: true});
                 });
-            }, 600); //POCOR-9700: debounce window
-        }, true); //POCOR-9700: deep-watch — uib-timepicker mutates Date in place
+            }, 600);
+        });
 
-        ps.$watch('isOpen', function (newVal, oldVal) { //[TEMP-LOG]
-            console.log('[TEMP-LOG POCOR-9700] popover isOpen transition', { timeKey: timeKey, rowIndex: rowIndex, oldVal: oldVal, newVal: newVal }); //[TEMP-LOG]
-        }); //[TEMP-LOG]
-
-        return wrapperEl;
+        wrapperDiv.appendChild(inputElement);
+        wrapperDiv.appendChild(iconSpan);
+        return wrapperDiv;
     }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
