@@ -708,9 +708,7 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-
         $entity           = $attr['entity'];
-//        dd($entity);
         $studentStatusId  = $entity->has('student_status_id')       ? $entity->student_status_id       : null;
         $academicPeriodId = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
         $educationGradeId = $entity->has('grade_to_promote')        ? $entity->grade_to_promote        : null;
@@ -740,6 +738,15 @@ class StudentPromotionTable extends AppTable
         }
 
         // ── PROMOTED or GRADUATED ──────────────────────────────────────────────
+        // No grade selected yet — render readonly until the user picks a student.
+        // POCOR-9485: prevents RecordNotFoundException on initial /Promotion/add render,
+        // where student_status_id is seeded from session but grade_to_promote is still null.
+        if (empty($educationGradeId)) {
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = '';
+            return $attr;
+        }
+
         // Load programme flags for this grade once — both branches below use them.
         $gradeObj  = $this->EducationGrades->get($educationGradeId, ['contain' => ['EducationProgrammes']]);
         $programme = $gradeObj->education_programme;
@@ -760,17 +767,7 @@ class StudentPromotionTable extends AppTable
         if ($studentStatusId == $statuses['GRADUATED'] && $isLastGrade) {
             // Graduate from the final grade → show grades from the linked next programme.
             // Scope controlled by next_programme_option_id (POCOR-9485 / POCOR-6257).
-//            Log::debug(sprintf(
-//                '[POCOR-9485] GRADUATED+isLastGrade: gradeId=%s periodId=%s institutionId=%s option=%s(%s) programmeId=%s programmeName=%s',
-//                $educationGradeId, $academicPeriodId, $institutionId,
-//                $nextProgrammeOption, ($nextProgrammeOption == 1 ? 'ShowOne' : 'ShowAll'),
-//                $programme->id, $programme->name
-//            ));
             $options = $this->getGradesForGraduation($educationGradeId, $academicPeriodId, $institutionId, $nextProgrammeOption);
-//            Log::debug(sprintf(
-//                '[POCOR-9485] FINAL result: count=%d grades=%s',
-//                count($options), json_encode($options)
-//            ));
 
         } elseif ($studentStatusId == $statuses['GRADUATED'] && !$isLastGrade) {
             // Graduate from a non-final grade (edge case) — prepend a "not enrolled" marker.
@@ -785,21 +782,17 @@ class StudentPromotionTable extends AppTable
             $options = $this->findMatchingGradeInPeriod($educationGradeId, $academicPeriodId);
             if (empty($options)) {
                 // Fallback: standard next-grade list when no matching grade name is found.
-                $nextGrades   = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, false);
-                $periodGrades = $this->EducationGrades->getEducationGradesByPeriod($academicPeriodId, $institutionId);
-                $options      = array_intersect($nextGrades, $periodGrades);
+                $options = $this->getStandardPromotionGrades($educationGradeId, $academicPeriodId, $institutionId);
             }
 
         } else {
             // Standard promotion: advance to the next sequential grade in the same programme.
             // POCOR-6257
-            $nextGrades   = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, false);
-            $periodGrades = $this->EducationGrades->getEducationGradesByPeriod($academicPeriodId, $institutionId);
-            $options      = array_intersect($nextGrades, $periodGrades);
+            $options = $this->getStandardPromotionGrades($educationGradeId, $academicPeriodId, $institutionId);
         }
 
         $attr['type']           = 'select';
-        $attr['options']        = ['0' => '-- ' . __('Select') . ' --'] + (array)$options;
+        $attr['options']        = ['0' => '-- ' . __('Select') . ' --'] + $options;
         $attr['onChangeReload'] = 'changeToNextGrade';
 
         return $attr;
@@ -1445,24 +1438,10 @@ class StudentPromotionTable extends AppTable
 
         $firstGradeOnly = ($nextProgrammeOption == 1);
 
-        // ── Step 1: linked next programmes for this grade's programme ──────────
-        $EducationProgrammesNext = TableRegistry::getTableLocator()->get('Education.EducationProgrammesNextProgrammes');
-        $gradeObj   = $EducationGrades->get($educationGradeId);
-        $programmeId = $gradeObj->education_programme_id;
-        $nextProgrammeList = $EducationProgrammesNext->getNextProgrammeList($programmeId);
-//        Log::debug(sprintf(
-//            '[POCOR-9485] Step1 next-programmes for programmeId=%s: count=%d ids=%s',
-//            $programmeId, count($nextProgrammeList), json_encode(array_values($nextProgrammeList))
-//        ));
+        // Candidate grades from next programmes (no period filter yet).
+        $nextProgrammeGrades = $EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, $firstGradeOnly);
 
-        // ── Step 2: candidate grades from next programmes (no period filter) ───
-        $nextProgrammeGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, $firstGradeOnly);
-//        Log::debug(sprintf(
-//            '[POCOR-9485] Step2 candidate grades (firstGradeOnly=%s): count=%d grades=%s',
-//            $firstGradeOnly ? 'true' : 'false', count($nextProgrammeGrades), json_encode($nextProgrammeGrades)
-//        ));
-
-        // ── Step 3: all grades offered by this institution in the target period ─
+        // All grades offered by this institution in the target period.
         $periodInstitutionGrades = $EducationGrades->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
             ->find('visible')
             ->find('order')
@@ -1475,23 +1454,22 @@ class StudentPromotionTable extends AppTable
                 $InstitutionGrades->aliasField('institution_id')  => $institutionId,
             ])
             ->toArray();
-//        Log::debug(sprintf(
-//            '[POCOR-9485] Step3 institution(id=%s) grades in period %s: count=%d grades=%s',
-//            $institutionId, $academicPeriodId, count($periodInstitutionGrades), json_encode($periodInstitutionGrades)
-//        ));
 
-        // ── Step 4: intersect — keep target-period grade IDs whose names appear in candidates ─
-        $result = array_intersect($periodInstitutionGrades, $nextProgrammeGrades);
-//        Log::debug(sprintf(
-//            '[POCOR-9485] Step4 intersection: count=%d grades=%s',
-//            count($result), json_encode($result)
-//        ));
+        // Keep target-period grade IDs whose display names appear in the next-programme
+        // candidates — array_intersect by value (POCOR-6257) ensures we return the IDs
+        // the institution actually uses in the target period, not the source-period IDs.
+        return array_intersect($periodInstitutionGrades, $nextProgrammeGrades);
+    }
 
-        // Keep grades from $periodInstitutionGrades (correct target-period grade IDs)
-        // whose display names appear in $nextProgrammeGrades (the next programme candidates).
-        // POCOR-6257 original logic: array_intersect by value (display name) ensures we return
-        // the grade IDs the institution actually uses in the target period.
-        return $result;
+    /**
+     * Standard promotion list: next sequential grade of the same programme, filtered to
+     * grades offered by this institution in the target academic period.
+     */
+    private function getStandardPromotionGrades(int $educationGradeId, $academicPeriodId, int $institutionId): array
+    {
+        $nextGrades   = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, false);
+        $periodGrades = $this->EducationGrades->getEducationGradesByPeriod($academicPeriodId, $institutionId);
+        return array_intersect($nextGrades, $periodGrades);
     }
 
     /**
