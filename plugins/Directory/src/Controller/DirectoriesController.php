@@ -1524,12 +1524,16 @@ class DirectoriesController extends AppController
         $identityTypesTable = $this->getDynamicTableInstance('identity_types');
         $identityTypes = $identityTypesTable
             ->find()
-            ->select(['id', 'name'])
+            ->select(['id', 'name', 'validation_pattern'])
             ->order(['`order`'])
             ->toArray();
 
         $resultArray = array_map(function ($type) {
-            return ["id" => $type['id'], "name" => $type['name']];
+            return [
+                "id" => $type['id'],
+                "name" => $type['name'],
+                "validation_pattern" => $type['validation_pattern'] ?? '',
+            ];
         }, $identityTypes);
 
         return $this->sendJsonResponse($resultArray);
