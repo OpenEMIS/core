@@ -570,7 +570,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
         }
         function detectOutsideShiftWarning(time24Hour) {
-            //POCOR-9700: returns the warning text (or null), so the save callback can fold it into a
+            // POCOR-9700: returns the warning text (or null), so the save callback can fold it into a
             // single combined toast rather than letting the success message overwrite the warning.
             var shiftStart = params.context.shiftStartTime;
             var shiftEnd = params.context.shiftEndTime;
