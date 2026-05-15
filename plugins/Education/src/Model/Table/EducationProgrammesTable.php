@@ -494,15 +494,10 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     private function getCycleAndLevelInfo($cycleId): array
     {
-        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $EducationCycles  = TableRegistry::getTableLocator()->get('Education.EducationCycles');
         $EducationLevels  = TableRegistry::getTableLocator()->get('Education.EducationLevels');
         $EducationSystems = TableRegistry::getTableLocator()->get('Education.EducationSystems');
 
-        // Get current academic period
-        $fallBackAcademicPeriodId = $AcademicPeriods->getCurrent();
-
-        // Build query explicitly (no contain)
         $cycleRecord = $EducationCycles->find()
             ->select([
                 'education_level_id' => $EducationCycles->aliasField('education_level_id'),
@@ -532,16 +527,16 @@ class EducationProgrammesTable extends ControllerActionTable {
             ->enableHydration(false)
             ->first();
 
-        $academicPeriodId = $cycleRecord['academic_period_id'] ?? 0;
+        $academicPeriodId = is_array($cycleRecord) ? (int)($cycleRecord['academic_period_id'] ?? 0) : 0;
         return [$academicPeriodId, $cycleRecord];
     }
 
     private function getNextProgrammeOptions($cycleInfo, $academicPeriodId): array
     {
-        $AcademicPeriods = $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods;
-        $currentAcademicPeriod = $AcademicPeriods->getCurrent();
-        $nextAcademicPeriodId = $AcademicPeriods->getNextAcademicPeriodId($academicPeriodId) ?? $currentAcademicPeriod;
         $academicPeriodId = $academicPeriodId ?? 0;
+
+        $AcademicPeriods = $this->EducationCycles->EducationLevels->EducationSystems->AcademicPeriods;
+        $nextAcademicPeriodId = $AcademicPeriods->getNextAcademicPeriodId($academicPeriodId) ?? $AcademicPeriods->getCurrent();
 
         // 1) Build excluded IDs as a simple array [1,2,3]
         $EducationSystems     = TableRegistry::getTableLocator()->get('Education.EducationSystems');
@@ -702,10 +697,7 @@ class EducationProgrammesTable extends ControllerActionTable {
     public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $entity = $attr['entity'] ?? null;
-        if (!$entity) {
-            return $attr;
-        }
-        $cycleId = $entity->has('education_cycle_id') ? $entity->education_cycle_id : null;
+        $cycleId = ($entity && $entity->has('education_cycle_id')) ? $entity->education_cycle_id : null;
 
         $periodName = '';
         if (!empty($cycleId)) {
@@ -714,7 +706,8 @@ class EducationProgrammesTable extends ControllerActionTable {
                 ->contain(['EducationLevels.EducationSystems.AcademicPeriods'])
                 ->where([$EducationCycles->aliasField('id') => $cycleId])
                 ->first();
-            $periodName = $cycle->education_level->education_system->academic_period->name ?? '';
+            // Null-safe traversal — any intermediate relation may be unloaded for legacy rows.
+            $periodName = $cycle?->education_level?->education_system?->academic_period?->name ?? '';
         }
 
         $attr['type']          = 'readonly';
@@ -722,10 +715,12 @@ class EducationProgrammesTable extends ControllerActionTable {
         return $attr;
     }
 
-    // POCOR-9485
+    // POCOR-9485: column is NOT NULL DEFAULT 1 — no "-- Select --" placeholder needed
+    // (it would silently mis-save as 0 = Show All Grades if a user picked it).
     public function onUpdateFieldNextProgrammeOptionId(EventInterface $event, array $attr, $action, ServerRequest $request) {
-        $attr['type'] = 'select';
-        $attr['options'] = [1 => __('Show One Grade'), 0 => __('Show All Grades')];
+        $attr['type']           = 'select';
+        $attr['options']        = $this->getNextProgrammeOptionLabels();
+        $attr['select']         = false; // suppress the meaningless first-row placeholder
         $attr['onChangeReload'] = false;
         return $attr;
     }
@@ -743,13 +738,16 @@ class EducationProgrammesTable extends ControllerActionTable {
     // POCOR-9485
     public function onGetNextProgrammeOptions(EventInterface $event, Entity $entity)
     {
-        if ($entity->next_programme_option_id == 1) {
-            return __('Show One Grade');
-        }
-        if ($entity->next_programme_option_id == 0) {
-            return __('Show All Grades');
-        }
-        return '';
+        return $this->getNextProgrammeOptionLabels()[$entity->next_programme_option_id] ?? '';
+    }
+
+    // POCOR-9485: single source of truth for the next_programme_option_id ↔ label mapping
+    private function getNextProgrammeOptionLabels(): array
+    {
+        return [
+            1 => __('Show One Grade'),
+            0 => __('Show All Grades'),
+        ];
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
