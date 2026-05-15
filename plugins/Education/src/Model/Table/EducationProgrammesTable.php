@@ -27,7 +27,6 @@ class EducationProgrammesTable extends ControllerActionTable {
         'education_certification_id',
         'same_grade_promotion',
         'next_programme_option_id',
-        'next_programme_options',
         'next_programmes'];//POCOR-4746 //POCOR-9485
     private  $arrayNextProgrammes = []; // POCOR-9403
     public function initialize(array $config): void {
@@ -95,27 +94,20 @@ class EducationProgrammesTable extends ControllerActionTable {
 
     public function afterAction(EventInterface $event, ArrayObject $extra) {
         $this->setFieldOrder($this->_fieldOrder);
-        if ($this->action == 'view' || $this->action == 'index') {
-            $this->field('next_programme_option_id', ['type' => 'hidden', 'visible' => ['index' => false, 'view' => false]]);
-        }
     }
 
-    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
-        $this->field('academic_period', ['entity' => $entity]);
-        $this->field('next_programme_options', ['entity' => $entity]);
-//        dd($entity);
-    }
-
+    // POCOR-9485: pass the entity through to onUpdateFieldAcademicPeriod on the edit form.
+    // View uses onGetAcademicPeriod (entity arrives natively).
     public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
         $this->field('academic_period', ['entity' => $entity]);
     }
-
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->fields['education_field_of_study_id']['sort'] = ['field' => 'EducationFieldOfStudies.name'];
         $this->fields['education_cycle_id']['sort'] = ['field' => 'EducationCycles.name'];
         $this->fields['education_certification_id']['sort'] = ['field' => 'EducationCertifications.name'];
         $this->field('same_grade_promotion',['visible'=>'hidden']);//POCOR-4746
+        $this->field('next_programme_option_id', ['visible' => false]); // POCOR-9485: hide from index list
         // Start POCOR-5188
 		$is_manual_exist = $this->getManualUrl('Administration','Education Programmes','Education');
 		if(!empty($is_manual_exist)){
@@ -735,10 +727,29 @@ class EducationProgrammesTable extends ControllerActionTable {
        }
     }
 
-    // POCOR-9485
-    public function onGetNextProgrammeOptions(EventInterface $event, Entity $entity)
+    // POCOR-9485: convert the raw next_programme_option_id (0/1) into its UI label on view/index.
+    // The column is NOT NULL DEFAULT 1, so the lookup always resolves — empty-string fallback is
+    // a safety net for legacy data that pre-dates the default.
+    public function onGetNextProgrammeOptionId(EventInterface $event, Entity $entity)
     {
         return $this->getNextProgrammeOptionLabels()[$entity->next_programme_option_id] ?? '';
+    }
+
+    // POCOR-9485: derive the academic period name from the programme's cycle on view.
+    // Equivalent to onUpdateFieldAcademicPeriod (used on edit) but reads the entity directly
+    // — onGet fires for view/index where there is no $attr['entity'] passthrough.
+    public function onGetAcademicPeriod(EventInterface $event, Entity $entity)
+    {
+        $cycleId = $entity->has('education_cycle_id') ? $entity->education_cycle_id : null;
+        if (empty($cycleId)) {
+            return '';
+        }
+        $EducationCycles = TableRegistry::getTableLocator()->get('Education.EducationCycles');
+        $cycle = $EducationCycles->find()
+            ->contain(['EducationLevels.EducationSystems.AcademicPeriods'])
+            ->where([$EducationCycles->aliasField('id') => $cycleId])
+            ->first();
+        return $cycle?->education_level?->education_system?->academic_period?->name ?? '';
     }
 
     // POCOR-9485: single source of truth for the next_programme_option_id ↔ label mapping
