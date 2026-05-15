@@ -107,7 +107,7 @@ class StaffTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByAttendanceType',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_staff_by_type' => [
@@ -128,7 +128,7 @@ class StaffTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByYear',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_staff_gender' => [
@@ -2680,6 +2680,8 @@ class StaffTable extends ControllerActionTable
         }
 
         $params['dataSet'] = $dataSet->getArrayCopy();
+        $params['options']['title'] = ['text' => __('Number of Staff')]; //POCOR-9636: Rename chart label
+
         return $params;
     }
 
