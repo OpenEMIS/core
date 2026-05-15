@@ -402,70 +402,162 @@ class ReportsController extends AppController
 
         $inputFileName = $replace_data;
 
-        //POCOR-9567: start - prefer companion CSV (written at generation time, no timeout risk)
-        $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
-        if (file_exists($csvFileName) && is_readable($csvFileName)) {
-            $csvHandle = fopen($csvFileName, 'r');
-            $rowHeader = null;
-            $rowHeaderNew = [];
-            $newArr2 = [];
-            while (($csvRow = fgetcsv($csvHandle)) !== false) {
-                if ($rowHeader === null) {
-                    $rowHeader = [$csvRow];
-                    $rowHeaderNew = $csvRow;
-                    continue;
-                }
-                if ($this->isEmptyRow($csvRow)) {
-                    continue;
-                }
-                if (count($csvRow) === count($rowHeaderNew)) {
-                    $newArr2[] = array_combine($rowHeaderNew, $csvRow);
-                }
-            }
-            fclose($csvHandle);
-        } else {
-            // POCOR-8289 - for view report change in IOFactory logic
-            // POCOR-9567: use read-data-only mode to skip formatting/formulas — 2-5x faster for large files
+        if (!file_exists($inputFileName) || !is_readable($inputFileName)) {
+            throw new NotFoundException(__('File not found or not readable.'));
+        }
+
+        $rowHeader = [];
+        $newArr2 = [];
+        $reportSections = [];
+
+        // Multi-sheet workbooks (e.g. Class Attendance Marked: one sheet per month). View used only sheet 0
+        // and companion CSV repeats headers with different column counts per month — unusable for view.
+        if ($ext === 'xlsx') {
             try {
-                $inputFileType = IOFactory::identify($inputFileName);
-                $objReader = IOFactory::createReader($inputFileType);
-                $objReader->setReadDataOnly(true); //POCOR-9567: skip cell formatting metadata for faster load
-                $spreadsheet = $objReader->load($inputFileName);
+                $xlsxReader = IOFactory::createReader('Xlsx');
+                $xlsxReader->setReadDataOnly(true);
+                $xlsxReader->setReadEmptyCells(false);
+                $worksheetNames = $xlsxReader->listWorksheetNames($inputFileName);
             } catch (\Exception $e) {
                 throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
             }
 
-            $sheet = $spreadsheet->getSheet(0);
-            $highestRow = $sheet->getHighestRow();
-            if ($data['module'] == 'InstitutionStatistics') {
-                $highestRow = $sheet->getHighestRow() + 1;
-            }
-            $highestColumn = $sheet->getHighestColumn();
-
-            for ($row = 1; $row <= 1; $row++) {
-                $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-            }
-
-            $rowHeaderNew = $this->array_flatten($rowHeader);
-            $rowData = [];
-            $newArr2 = [];
-            for ($row = 2; $row <= $highestRow - 1; $row++) {
-                $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-                if ($this->isEmptyRow(reset($currentRow))) {
-                    continue;
+            if (count($worksheetNames) > 1) {
+                foreach ($worksheetNames as $worksheetName) {
+                    $reportSections[] = $this->readViewReportXlsxSheetSection(
+                        $inputFileName,
+                        $worksheetName,
+                        $dataModule
+                    );
                 }
-                foreach ($currentRow as $new_data_arr) {
-                    if (isset($new_data_arr)) {
-                        $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
-                    }
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
                 }
+                $reportSections = array_values(array_filter($reportSections, function ($section) {
+                    return !empty($section['headers']) && !empty($section['rows']);
+                }));
             }
         }
-        //POCOR-9567: end
 
+        if (!empty($reportSections)) {
+            $first = $reportSections[0];
+            $rowHeader = [isset($first['headers']) ? $first['headers'] : []];
+            $newArr2 = isset($first['rows']) ? $first['rows'] : [];
+        } else {
+            //POCOR-9567: prefer companion CSV for single-sheet xlsx (fast path)
+            $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
+            if (file_exists($csvFileName) && is_readable($csvFileName)) {
+                $csvHandle = fopen($csvFileName, 'r');
+                $rowHeader = null;
+                $rowHeaderNew = [];
+                $newArr2 = [];
+                while (($csvRow = fgetcsv($csvHandle)) !== false) {
+                    if ($rowHeader === null) {
+                        $rowHeader = [$csvRow];
+                        $rowHeaderNew = $csvRow;
+                        continue;
+                    }
+                    if ($this->isEmptyRow($csvRow)) {
+                        continue;
+                    }
+                    if (count($csvRow) === count($rowHeaderNew)) {
+                        $newArr2[] = array_combine($rowHeaderNew, $csvRow);
+                    }
+                }
+                fclose($csvHandle);
+            } else {
+                try {
+                    $inputFileType = IOFactory::identify($inputFileName);
+                    $objReader = IOFactory::createReader($inputFileType);
+                    $objReader->setReadDataOnly(true);
+                    $spreadsheet = $objReader->load($inputFileName);
+                } catch (\Exception $e) {
+                    throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+                }
+
+                $sheet = $spreadsheet->getSheet(0);
+                $highestRow = $sheet->getHighestRow();
+                if ($data['module'] == 'InstitutionStatistics') {
+                    $highestRow = $sheet->getHighestRow() + 1;
+                }
+                $highestColumn = $sheet->getHighestColumn();
+
+                for ($row = 1; $row <= 1; $row++) {
+                    $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, null, true, false);
+                }
+
+                $rowHeaderNew = $this->array_flatten($rowHeader);
+                $newArr2 = [];
+                for ($row = 2; $row <= $highestRow - 1; $row++) {
+                    $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, null, true, false);
+                    if ($this->isEmptyRow(reset($currentRow))) {
+                        continue;
+                    }
+                    foreach ($currentRow as $new_data_arr) {
+                        if (isset($new_data_arr) && is_array($rowHeaderNew)) {
+                            if (count($new_data_arr) === count($rowHeaderNew)) {
+                                $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+                            }
+                        }
+                    }
+                }
+                $spreadsheet->disconnectWorksheets();
+            }
+        }
+
+        $this->set('reportSections', $reportSections);
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
         $this->set('contentHeader', $header);
+    }
+
+    /**
+     * Read one worksheet for ViewReport (one month per sheet). Loads only that sheet to limit memory.
+     *
+     * @return array{title: string, headers: array, rows: array<int, array<string, mixed>>}
+     */
+    private function readViewReportXlsxSheetSection(string $path, string $worksheetTitle, string $module): array
+    {
+        $reader = IOFactory::createReader('Xlsx');
+        $reader->setReadDataOnly(true);
+        $reader->setReadEmptyCells(false);
+        $reader->setLoadSheetsOnly([$worksheetTitle]);
+        $spreadsheet = $reader->load($path);
+        $sheet = $spreadsheet->getActiveSheet();
+        $highestRow = (int)$sheet->getHighestRow();
+        if ($module === 'InstitutionStatistics') {
+            $highestRow = (int)$sheet->getHighestRow() + 1;
+        }
+        $highestColumn = $sheet->getHighestColumn();
+        $headers = [];
+        if ($highestRow >= 1 && $highestColumn !== '') {
+            $headerMatrix = $sheet->rangeToArray('A1:' . $highestColumn . '1', null, true, false);
+            if (!empty($headerMatrix[0])) {
+                $headers = $headerMatrix[0];
+            }
+        }
+        $rows = [];
+        if ($highestRow >= 2 && $highestColumn !== '' && $headers !== []) {
+            for ($row = 2; $row <= $highestRow - 1; $row++) {
+                $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, null, true, false);
+                $line = reset($currentRow);
+                if ($line === false || $this->isEmptyRow($line)) {
+                    continue;
+                }
+                if (count($line) !== count($headers)) {
+                    continue;
+                }
+                $rows[] = array_combine($headers, $line);
+            }
+        }
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet, $sheet);
+
+        return [
+            'title' => $worksheetTitle,
+            'headers' => $headers,
+            'rows' => $rows,
+        ];
     }
 
     function array_flatten($array)
