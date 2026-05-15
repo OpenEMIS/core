@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardSubjectsTable extends ControllerActionTable
@@ -31,6 +31,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
         $checkType = $options['type'];
         $staffType = $options['staffType'];
         $staffSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+        $reportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $reportCardId = $options['report_card_id'];
         $classId = $options['institution_class_id'];
         $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
