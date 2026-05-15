@@ -96,9 +96,11 @@ class EducationProgrammesTable extends ControllerActionTable {
         $this->setFieldOrder($this->_fieldOrder);
     }
 
-    // POCOR-9485: pass the entity through to onUpdateFieldAcademicPeriod on the edit form.
+    // POCOR-9485: pass the entity through so onUpdateFieldAcademicPeriod can resolve
+    // the readonly period name from the currently-picked cycle on BOTH add and edit
+    // (edit needs it for the initial render; add needs it after the cycle onChangeReload).
     // View uses onGetAcademicPeriod (entity arrives natively).
-    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
+    public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra) {
         $this->field('academic_period', ['entity' => $entity]);
     }
 
@@ -223,6 +225,10 @@ class EducationProgrammesTable extends ControllerActionTable {
             $attr['type'] = 'select';
             //$attr['default'] =   $selectedCycle;
             $attr['options'] = ['' => '-- ' . __('Select') . ' --'] + $cycleOptions;
+        }
+        // POCOR-9485: reload on cycle change so the Academic Period readonly field
+        // refreshes immediately on both add and edit (was previously add-only).
+        if ($action == 'add' || $action == 'edit') {
             $attr['onChangeReload'] = true;
         }
 
