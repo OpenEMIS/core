@@ -166,6 +166,12 @@ $institutionId = $paramsQuery['institution_id'];
         width: fit-content;
         gap: 4px;
     }
+    /* POCOR-9700: matching 4px vertical breathing room between Time In and Time Out rows —
+       otherwise the two blue addons abut and read as one tall block. Adjacent-sibling selector
+       so we never add margin before the first row or after the last. */
+    #institution-staff-attendances-table .input-group.time + .input-group.time {
+        margin-top: 4px;
+    }
     /* POCOR-9700: native HTML5 type=time edit-cell input sized so 24h/12h text fits comfortably. */
     #institution-staff-attendances-table .timPikr {
         width: 100px;
