@@ -592,6 +592,18 @@ class InstitutionsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']);
     }
 
+    //POCOR-9610: start - Institution Registrations and Accreditations CakePHP actions
+    public function Registrations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionRegistrations']);
+    }
+
+    public function Accreditations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAccreditations']);
+    }
+    //POCOR-9610: end
+
     public function Fees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFees']);
