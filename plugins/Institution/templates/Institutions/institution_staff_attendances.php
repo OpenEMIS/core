@@ -172,6 +172,16 @@ $institutionId = $paramsQuery['institution_id'];
     #institution-staff-attendances-table .input-group.time + .input-group.time {
         margin-top: 4px;
     }
+    /* POCOR-9700: when the wrapper became display:flex, the addon (a flex item) stretches to
+       match the input's height, but its Bootstrap default vertical-align:middle no longer
+       applies (vertical-align only honours inline / table-cell). The glyph then sits at the
+       top, per its line-height:1. Making the addon a centering flex container itself fixes the
+       icon's vertical alignment inside the stretched blue box. */
+    #institution-staff-attendances-table .input-group.time .input-group-addon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
     /* POCOR-9700: native HTML5 type=time edit-cell input sized so 24h/12h text fits comfortably. */
     #institution-staff-attendances-table .timPikr {
         width: 100px;
