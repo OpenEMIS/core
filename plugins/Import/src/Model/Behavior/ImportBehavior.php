@@ -1420,18 +1420,35 @@ class ImportBehavior extends Behavior
         return $header === $cellsValue;
     }
 
+    //POCOR-9236 Start
+    /**
+     * Model name as stored in import_mapping.model (may differ from ORM table model name).
+     */
+    protected function getImportMappingModelName(): string
+    {
+        $modelName = (string)$this->getConfig('model');
+        if ($modelName === 'ExaminationStudentSubjectResults') {
+            return 'ExaminationItemResults';
+        }
+
+        return $modelName;
+    }
+
+    /**
+     * Full import_mapping.model value, e.g. Examination.ExaminationItemResults
+     */
+    protected function getImportMappingModelKey(): string
+    {
+        return $this->getConfig('plugin') . '.' . $this->getImportMappingModelName();
+    }
+    //POCOR-9236 End
+
     public function getMapping()
     {
         $model = $this->_table;
-        //POCOR-8174
-        $modelName = $this->getConfig('model');
-        if (($this->getConfig('model')) == 'ExaminationStudentSubjectResults') {
-            $modelName = "ExaminationItemResults";
-        }
-        //POCOR-8174
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $modelName //POCOR-8174
+                $model->aliasField('model') => $this->getImportMappingModelKey(), //POCOR-9236 
             ])
             ->order($model->aliasField('order'))
             ->toArray();
@@ -1555,13 +1572,21 @@ class ImportBehavior extends Behavior
     {
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model'),
+                $model->aliasField('model') => $this->getImportMappingModelKey(),//POCOR-9236 
                 $model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
             ])
             ->order($model->aliasField('order'))
             ->toArray();
         $data = new ArrayObject;
         foreach ($mapping as $row) {
+            //POCOR-9236 Marks must be free entry; dropdown lists belong on examination_grading_option_id only.
+            if ($row->column_name === 'marks' && preg_match(
+                '/^Examination\\.(ExaminationItemResults|ExaminationStudentSubjectResults)$/',
+                (string)$row->model
+            )) {
+                continue;
+            }
+            //POCOR-9236 End
             $foreignKey = $row->foreign_key;
             $lookupPlugin = $row->lookup_plugin;
             $lookupModel = $row->lookup_model;
