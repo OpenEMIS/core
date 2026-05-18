@@ -20,6 +20,7 @@ use Cake\Database\Schema\TableSchema;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\I18n\FrozenTime;
+use App\Utility\ApplicationTimezone; //POCOR-9565
 
 class AppTable extends Table
 {
@@ -257,44 +258,53 @@ class AppTable extends Table
      * @return [type]             [description]
      * POCOR-9415, POCOR-9510 more error-save
      */
-    public function formatDateTime($dateInput): string
+    public function formatDateTime($dateInput): string //POCOR-9509: public — called from child tables and view files
     {
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         $dateFormat = $ConfigItem->value('date_format') ?: 'Y-m-d';
         $timeFormat = $ConfigItem->value('time_format') ?: 'H:i:s';
+        $displayTimezone = new \DateTimeZone(ApplicationTimezone::getDisplayTimezone());
+        $utcTimezone = new \DateTimeZone('UTC');
 
         $displayFormat = $dateFormat . ' - ' . $timeFormat;
         $inputFormat   = $displayFormat;
 
         try {
-            // Case 1: Already a DateTime object
             if ($dateInput instanceof \DateTimeInterface) {
-                return FrozenTime::instance($dateInput)->format($displayFormat);
+                //POCOR-9565[START]
+                return FrozenTime::createFromTimestamp($dateInput->getTimestamp(), $utcTimezone)
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565[END]
             }
 
-            // Case 2: String input
             if (is_string($dateInput) && trim($dateInput) !== '') {
 
                 // Try parsing EXACT expected format first
                 $date = FrozenTime::createFromFormat(
                     $inputFormat,
-                    $dateInput
+                    $dateInput,//POCOR-9565
+                    $utcTimezone//POCOR-9565
                 );
 
                 if ($date !== false) {
-                    return $date->format($displayFormat);
+                    return $date->setTimezone($displayTimezone)->format($displayFormat);//POCOR-9565
                 }
 
                 // Fallback: try ISO / DB formats
-                return (new FrozenTime($dateInput))->format($displayFormat);
+                //POCOR-9565
+                return (new FrozenTime($dateInput, $utcTimezone))
+                    ->setTimezone($displayTimezone)
+                    ->format($displayFormat);
+                //POCOR-9565
             }
-
         } catch (\Throwable $e) {
-            Log::error(
-                'formatDateTime error: ' . $e->getMessage(),
-                ['input' => $dateInput]
-            );
+            //POCOR-9509: parsing failed — return a simple readable fallback rather than empty string
+            if ($dateInput instanceof \DateTimeInterface) {
+                return $dateInput->format('d M Y H:i:s');
+            }
+            return is_string($dateInput) ? $dateInput : '';
         }
 
         return '';
