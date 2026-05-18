@@ -200,6 +200,17 @@ class AppraisalFormsTable extends ControllerActionTable
                     $fieldId = $requestData[$this->getAlias()]['selected_custom_field'];
                     if (!empty($fieldId)) {
                         $fieldObj = $this->AppraisalCriterias->get($fieldId, ['contain' => ['FieldTypes']]);
+                        //POCOR-9638
+                        $alias = $this->getAlias();
+                        $newSection = '';
+                        if (!empty($requestData[$alias]['sectiontxt'])) {
+                            $newSection = trim((string)$requestData[$alias]['sectiontxt']);
+                        } elseif ($entity->has('sectiontxt') && (string)$entity->get('sectiontxt') !== '') {
+                            $newSection = trim((string)$entity->get('sectiontxt'));
+                        } elseif ($entity->has('section') && (string)$entity->get('section') !== '') {
+                            $newSection = trim((string)$entity->get('section'));
+                        }
+                        //POCOR-9638
                         $arrayFields[] = [
                             'name' => $fieldObj->name,
                             'field_type' => $fieldObj->field_type->name,
@@ -207,7 +218,7 @@ class AppraisalFormsTable extends ControllerActionTable
                             'appraisal_criteria_id' => $fieldObj->id,
                             'appraisal_form_id' => $entity->id,
                             'is_mandatory' => 0,
-                            'section' => $entity->section
+                            'section' => $newSection
                         ];
                     }
                 }
