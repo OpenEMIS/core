@@ -14,6 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
+use App\Utility\ApplicationTimezone;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Http\ServerRequest;
@@ -277,7 +278,12 @@ class ConfigItemsTable extends AppTable
             $this->deleteLanguageCacheFile();
         } else if ($entity->code == 'language_menu') {
             $this->deleteLanguageCacheFile();
+        } 
+        //POCOR-9565[START]
+        else if ($entity->code === 'time_zone' || $entity->name === 'Time Zone') {
+            ApplicationTimezone::clearDisplayTimezoneCache();
         }
+        //POCOR-9565[END]
         $session = $this->request->getSession();
         $session->write('successAlert', 'yes');
         $action = [

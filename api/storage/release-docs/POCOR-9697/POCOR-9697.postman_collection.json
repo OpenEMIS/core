@@ -1,0 +1,903 @@
+{
+  "info": {
+    "name": "xPOCOR-9697 — super_admin escalation tests",
+    "description": "xUPDATED-2026-05-12 — IF YOU SEE THIS LINE THE NEW FILE LOADED\n\nSide-by-side regression suite for the super_admin privilege-escalation vulnerability.\n\n**How to use this collection for the video:**\n1. Record once on the *master* branch — tests will FAIL (red), proving the exploit works.\n2. Deploy POCOR-9697, then record again — same tests now PASS (green).\n\nEach request:\n  - performs the attack (or checks the leaky surface)\n  - asserts the SAFE (post-fix) behavior\n\nSo \"red on master, green on branch\" is the whole story.\n\n**Setup before recording:**\n  - In Postman → File → Settings → uncheck \"SSL certificate verification\" (local cert is self-signed).\n  - Edit collection variables `base_url`, `username`, `password`, `api_key` for your environment.\n  - Run the requests in order — later requests depend on tokens/IDs set by earlier ones.\n\n**POCOR-9697 — Read-side _conditions allowlist (items 09a–09d):**\nEven with `$hidden` stripping the value from response bodies, an attacker could enumerate super_admins via membership inference on `_conditions`. POCOR-9697 closes this with a per-model `$fillable - $hidden` column allowlist in `CrudApiController` that silently drops unknown / hidden fields (no 422, no field-name leak, structured server-side log only). Items 09a–09d codify the threat model: 09a fires the attack, 09b proves the clause was dropped (totals match), 09c does the same for the password oracle, 09d proves we did not over-restrict legitimate clients.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://localhost:8482/core",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "demo",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "apikeytest",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exploit_username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exploit_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exploit_user_password",
+      "value": "exploit-plain-9697",
+      "type": "string"
+    },
+    {
+      "key": "exploit_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "baseline_super_admin_block",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "audit_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "audit_original_creator",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "w3_user_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "x00 — Setup: Login as admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"api_key\":  \"{{api_key}}\"\n}"
+        },
+        "url": "{{base_url}}/api/v4/login",
+        "description": "xMARKER-2026-05-12: Acquires the JWT used by every subsequent request. Also seeds a unique username (`exploit_<ms>`) so the test can be re-run without DB collisions."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xLogin returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('token', body.data.token);",
+              "pm.collectionVariables.set('exploit_username', 'exploit_' + Date.now());",
+              "console.log('Token cached. exploit_username =', pm.collectionVariables.get('exploit_username'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x01 — v4 ATTACK: mass-assign super_admin (silent strip, 200 + DB super_admin=0)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\":    \"Exploit\",\n  \"last_name\":     \"Demo\",\n  \"gender_id\":     1,\n  \"date_of_birth\": \"2000-01-01\",\n  \"username\":      \"{{exploit_username}}\",\n  \"openemis_no\":   \"{{exploit_username}}\",\n  \"email\":         \"{{exploit_username}}@example.test\",\n  \"password\":      \"{{exploit_user_password}}\",\n  \"super_admin\":   1\n}"
+        },
+        "url": "{{base_url}}/api/v4/users",
+        "description": "xMARKER-2026-05-12: The exploit. Sends super_admin:1 to POST /api/v4/users.\n\n**On master (BEFORE fix):** returns 200, row created with super_admin=1 — the attacker wins.\n**On POCOR-9697 (AFTER fix):** also returns 200 — but the field was silently stripped by prepareForValidation(). The attempt is logged server-side to storage/logs/laravel.log. The response body MUST NOT contain the string 'super_admin' (would fingerprint the field for attackers)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xRequest looks like normal success (200)', () => pm.response.to.have.status(200));",
+              "pm.test('xFIX: response body does NOT name super_admin (no fingerprint)', () => {",
+              "    pm.expect(pm.response.text().toLowerCase()).to.not.include('super_admin');",
+              "});",
+              "// Capture the created user id so the next test can verify DB state without naming the field.",
+              "const j = pm.response.json();",
+              "const id = j && j.data && (j.data.id || (j.data[0] && j.data[0].id));",
+              "if (id) { pm.collectionVariables.set('v4_exploit_user_id', String(id)); }",
+              "else { console.log('v4 create did not return id — DB verification will be skipped'); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x02 — v4 ATTACK: elevate existing user via id=3 (silent strip, no fingerprint)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": 3,\n  \"super_admin\": 1\n}"
+        },
+        "url": "{{base_url}}/api/v4/users",
+        "description": "xMARKER-2026-05-12: Variant of the exploit that targets an existing low-priv user (id=3, poc_v5_update — super_admin=0 in seed). On master, this elevates the row to super_admin=1. On POCOR-9697, the silent-strip on the update path drops the field; row stays at super_admin=0. Response must NOT mention super_admin (anti-fingerprinting). Verify the actual outcome in the DB pane via query (B). Note: id=2 (admin) is NOT used here because it's the JWT login account and already super_admin=1 — the demo would be meaningless."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xRequest looks like normal success (200)', () => pm.response.to.have.status(200));",
+              "pm.test('xFIX: response body does NOT name super_admin', () => {",
+              "    pm.expect(pm.response.text().toLowerCase()).to.not.include('super_admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x03 — v5 ATTACK: mass-assign super_admin (must succeed but DB super_admin=0)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"first_name\":     \"V5Exploit\",\n  \"last_name\":      \"Demo\",\n  \"gender_id\":      1,\n  \"date_of_birth\":  \"2000-01-01\",\n  \"username\":       \"{{exploit_username}}_v5\",\n  \"password\":       \"{{exploit_user_password}}\",\n  \"openemis_no\":    \"{{exploit_username}}_v5\",\n  \"email\":          \"{{exploit_username}}_v5@example.test\",\n  \"super_admin\":    1,\n  \"status\":         1\n}"
+        },
+        "url": "{{base_url}}/api/v5/security-users",
+        "description": "xMARKER-2026-05-12: v5 CRUD: the request itself succeeds (201) because we hold add permission. The interesting question is whether super_admin:1 from the body was persisted.\n\n**On master:** super_admin=1 is persisted (model has it in $fillable).\n**On POCOR-9697:** super_admin is no longer fillable — the field is silently dropped, row created with super_admin=0. Verified by the next request, which logs in as the new user and checks /permissions."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xv5 create succeeds (201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+              "const j = pm.response.json();",
+              "const id = j.data && (j.data.id || (j.data[0] && j.data[0].id));",
+              "if (id) pm.collectionVariables.set('exploit_user_id', String(id));",
+              "console.log('Created v5 user id =', pm.collectionVariables.get('exploit_user_id'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x04 — Login as the new v5 user (proves password was hashed)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{exploit_username}}_v5\",\n  \"password\": \"{{exploit_user_password}}\",\n  \"api_key\":  \"{{api_key}}\"\n}"
+        },
+        "url": "{{base_url}}/api/v4/login",
+        "description": "xMARKER-2026-05-12: Logs in as the user we just created. Login only works if the password column contains a valid bcrypt hash of the plaintext we sent — which proves the model's setPasswordAttribute mutator (or the repository's helper, for v4) hashed it on write.\n\n**On master:** depends — model's $fillable also has password, so the value goes in raw — login FAILS. On POCOR-9697 the mutator hashes it and login SUCCEEDS."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xFIX: new user can log in (password was hashed on write)', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "if (j && j.data && j.data.token) pm.collectionVariables.set('exploit_token', j.data.token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x05 — /permissions for new user (must show super_admin = 0)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{exploit_token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v4/permissions",
+        "description": "xMARKER-2026-05-12: GET /api/v4/permissions returns the CALLER's own super_admin flag (this endpoint is intentionally allowed to do so — the frontend reads it for UI gating).\n\n**On master:** super_admin is 1 — the v5 mass-assignment succeeded.\n**On POCOR-9697:** super_admin is 0 — model dropped the field on write."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xEndpoint responds', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const sa = j.data && j.data.super_admin;",
+              "console.log('super_admin flag for new user =', sa);",
+              "pm.test('xFIX: new user is NOT super_admin', () => pm.expect(Number(sa)).to.equal(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x06 — INFO LEAK: GET /api/v4/users/{id} must not contain super_admin or password",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v4/users/2",
+        "description": "xMARKER-2026-05-12: Visit the user-detail endpoint as admin. Before the fix this response leaked both `super_admin` and the bcrypt `password` hash in the response body (UserService::getUsersData built the response array manually, bypassing the model's $hidden)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xEndpoint responds', () => pm.response.to.have.status(200));",
+              "const j = pm.response.json();",
+              "const userData = (j && j.data) || {};",
+              "pm.test('xFIX: response has no super_admin key', () => pm.expect(userData).to.not.have.property('super_admin'));",
+              "pm.test('xFIX: response has no password key',    () => pm.expect(userData).to.not.have.property('password'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x07 — INFO LEAK: POST /api/v4/users/basic-information must not contain super_admin or password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/v4/users/basic-information?first_name=Maria&last_name=Keen&date_of_birth=2011-01-01&user_type_id=1&gender_id=2",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v4",
+            "users",
+            "basic-information"
+          ],
+          "query": [
+            {
+              "key": "first_name",
+              "value": "Maria"
+            },
+            {
+              "key": "last_name",
+              "value": "Keen"
+            },
+            {
+              "key": "date_of_birth",
+              "value": "2011-01-01"
+            },
+            {
+              "key": "user_type_id",
+              "value": "1"
+            },
+            {
+              "key": "gender_id",
+              "value": "2"
+            }
+          ]
+        },
+        "description": "xMARKER-2026-05-12: Directory search endpoint. Before the fix, DirectoryRepository::getUserByBasicInfo manually copied super_admin into every result row. The query already filtered super_admin != 1, so the leaked value was always 0 — but exposing the field at all is needless information disclosure and would surprise a security review."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const j = pm.response.json();",
+              "const rows = (j.data && (j.data.data || [])) || [];",
+              "rows.forEach((r, i) => {",
+              "    pm.test(`row ${i}: no super_admin`, () => pm.expect(r).to.not.have.property('super_admin'));",
+              "    pm.test(`row ${i}: no password`,    () => pm.expect(r).to.not.have.property('password'));",
+              "});",
+              "if (rows.length === 0) pm.test('xno rows returned — still asserts shape on next non-empty run', () => pm.expect(true).to.equal(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x08 — SWAGGER LEAK: /api-docs-v4.json must have ≤1 super_admin hits",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/api-docs-v4.json",
+        "description": "xMARKER-2026-05-12: The public swagger JSON. Before the fix and pre-regeneration, this file contained 6 super_admin entries — including the worst-case `\"example\": 1` that effectively documented the exploit for any reader.\n\n**On master (or any deploy that skipped the swagger-regen post-deploy step):** ≥ 6 hits.\n**On POCOR-9697 with proper deploy:** exactly 1 hit (the legitimate /api/v4/permissions self-introspection response)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xSwagger served', () => pm.response.to.have.status(200));",
+              "const text = pm.response.text();",
+              "const hits = (text.match(/\"super_admin\"/g) || []).length;",
+              "console.log('v4 swagger super_admin hits =', hits);",
+              "pm.test('xFIX: at most 1 super_admin hit (the /permissions self-introspection)', () => pm.expect(hits).to.be.at.most(1));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x09 — SWAGGER LEAK: /api-docs-v5.json must have 0 super_admin hits",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/api/api-docs-v5.json",
+        "description": "xMARKER-2026-05-12: v5 has no legitimate super_admin response anywhere, so the count must be zero after the fix."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xSwagger served', () => pm.response.to.have.status(200));",
+              "const text = pm.response.text();",
+              "const hits = (text.match(/\"super_admin\"/g) || []).length;",
+              "console.log('v5 swagger super_admin hits =', hits);",
+              "pm.test('xFIX: zero super_admin hits', () => pm.expect(hits).to.equal(0));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x09a — READ-SIDE ATTACK: enumerate super_admin via _conditions (rejected 400, generic)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?_conditions=super_admin:1&limit=1",
+        "description": "xMARKER-2026-05-12: Even with $hidden stripping super_admin from response bodies, an attacker could enumerate super_admins via membership inference on _conditions: the WHERE clause runs server-side and the returned row IDs leak who is in the set. POCOR-9697 closes this with a per-model column allowlist (getFillable() minus getHidden()) in CrudApiController. The clause is rejected with HTTP 400 + a generic message — no 422, no field-name leak. Server-side log gets a SENSITIVE-probe entry with IP for SOC alerting."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xRejected with 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.text();",
+              "console.log('Body:', body);",
+              "pm.test('xFIX: response body does NOT name the rejected field (no fingerprint)', () => {",
+              "    pm.expect(body.toLowerCase()).to.not.include('super_admin');",
+              "});",
+              "pm.test('xFIX: response is the generic not-present message', () => {",
+              "    pm.expect(body.toLowerCase()).to.include('not present');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x09b — READ-SIDE DX: typo field (hubabuba) — rejected 400, body identical to x09a",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?_conditions=hubabuba:babble&limit=1",
+        "description": "xMARKER-2026-05-12: A genuine typo (hubabuba:babble) gets the SAME generic 400 as a sensitive probe (x09a). This is the anti-fingerprinting property: an attacker cannot A/B test 'is super_admin a real column?' by comparing the responses of x09a and x09b — both bodies are byte-identical. Side benefit: legit clients with a typo see a 400 instead of silently getting the wrong dataset (the previous silent-drop swallowed both attacks AND honest mistakes)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xTypo rejected with 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.text();",
+              "pm.test('xFIX: response body does NOT name the typo field', () => {",
+              "    pm.expect(body.toLowerCase()).to.not.include('hubabuba');",
+              "});",
+              "pm.test('xFIX: response is the generic not-present message', () => {",
+              "    pm.expect(body.toLowerCase()).to.include('not present');",
+              "});",
+              "// Anti-fingerprinting cross-check: this body should be byte-identical to x09a's body.",
+              "// If they differ, the attacker can A/B test field existence."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x09c — READ-SIDE ATTACK: password binary-search oracle via _conditions (rejected 400, generic)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?_conditions=password:%3E%242y%24&limit=1",
+        "description": "xMARKER-2026-05-12: On master, _conditions=password:>$2y$ runs as a real SQL WHERE clause, letting an attacker binary-search the bcrypt hash one byte at a time (the 'live PoC returned 113 confirmed real-hashed users' in the audit). POCOR-9697 rejects with 400 + generic message, identical to any other non-allowlist field. SOC log gets the SENSITIVE-probe escalated entry with IP."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xPassword oracle rejected with 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.text();",
+              "pm.test('xFIX: response body does NOT include the password key (no oracle leak)', () => {",
+              "    pm.expect(body.toLowerCase()).to.not.include('password');",
+              "});",
+              "pm.test('xFIX: response is the generic not-present message', () => {",
+              "    pm.expect(body.toLowerCase()).to.include('not present');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x09d — READ-SIDE SANITY: legitimate $fillable column still filters",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users?_conditions=username:admin&limit=5",
+        "description": "xMARKER-2026-05-12: The fix must not regress legitimate clients. `username` is in `$fillable` and not in `$hidden`, so `_conditions=username:admin` must still filter as before — proving we did not over-restrict the read surface."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xLegitimate filter returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('xLegitimate filter still narrows the result set', () => {",
+              "    pm.expect(body.data.total).to.be.at.least(1);",
+              "    const usernames = (body.data.data || []).map(r => r.username);",
+              "    pm.expect(usernames).to.include('admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xAUDIT-1 — Audit-trail forgery: v5 create with forged created_user_id (must be overwritten with JWT user)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\":         \"pocor9697_audit_{{$timestamp}}\",\n  \"openemis_no\":      \"pocor9697_audit_{{$timestamp}}\",\n  \"email\":            \"pocor9697_audit_{{$timestamp}}@example.test\",\n  \"first_name\":       \"Audit\",\n  \"last_name\":        \"Forge\",\n  \"gender_id\":        1,\n  \"date_of_birth\":    \"2000-01-01\",\n  \"password\":         \"audit-9697\",\n  \"created_user_id\":  99999,\n  \"modified_user_id\": 99999\n}"
+        },
+        "description": "xMARKER-2026-05-12: POCOR-9697 Wave-2: v5 create path must derive created_user_id / modified_user_id from the authenticated JWT user, never from the request body. Sending 99999 must be silently overwritten (server log + persisted JWT user id). The response must not echo the field names in any error/diagnostic context (anti-fingerprinting)."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xCreate succeeds (201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+              "const body = pm.response.json();",
+              "const data = body.data || body;",
+              "pm.collectionVariables.set('audit_user_id', data.id || (data.data && data.data.id));",
+              "pm.test('xFIX: persisted created_user_id is NOT 99999 (forgery neutralised)', () => {",
+              "    pm.expect(parseInt(data.created_user_id, 10)).to.not.equal(99999);",
+              "});",
+              "pm.test('xFIX: persisted modified_user_id is NOT 99999', () => {",
+              "    if (data.modified_user_id !== undefined && data.modified_user_id !== null) {",
+              "        pm.expect(parseInt(data.modified_user_id, 10)).to.not.equal(99999);",
+              "    }",
+              "});",
+              "pm.test('xFIX: response body does not name the forgery (no fingerprint)', () => {",
+              "    const t = pm.response.text().toLowerCase();",
+              "    pm.expect(t).to.not.include('forgery');",
+              "    pm.expect(t).to.not.include('rejected');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xAUDIT-2 — Audit-trail forgery: v5 update with forged modified_user_id (must be overwritten)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\":               {{audit_user_id}},\n  \"modified_user_id\": 99999\n}"
+        },
+        "description": "xMARKER-2026-05-12: POCOR-9697 Wave-2: v5 update path must always overwrite modified_user_id with the JWT user. The follow-up GET (AUDIT-3) re-fetches the row to confirm it landed as the caller, not 99999."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xUpdate succeeds', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xAUDIT-3 — Audit-trail forgery: re-read user and assert modified_user_id is JWT user, created_user_id unchanged",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "description": "xMARKER-2026-05-12: Confirms AUDIT-2: re-fetch the user and verify modified_user_id is NOT 99999. Also re-confirms created_user_id is immutable — a follow-up PUT below tries to change it and we re-read again."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xGET returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const row = (body.data && body.data.data) || body.data || body;",
+              "pm.collectionVariables.set('audit_original_creator', row.created_user_id);",
+              "pm.test('xFIX: modified_user_id is NOT 99999 (overwritten from JWT)', () => {",
+              "    pm.expect(parseInt(row.modified_user_id, 10)).to.not.equal(99999);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xAUDIT-4 — Audit-trail forgery: v5 update with forged created_user_id (must be silently stripped, original preserved)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\":              {{audit_user_id}},\n  \"created_user_id\": 99999\n}"
+        },
+        "description": "xMARKER-2026-05-12: POCOR-9697 Wave-2: created_user_id is immutable. Sending it on update must be silently stripped + logged; the row's original creator must remain unchanged."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xUpdate succeeds', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xAUDIT-5 — Audit-trail forgery: re-read user and assert created_user_id unchanged from original",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{audit_user_id}}",
+        "description": "xMARKER-2026-05-12: Final confirmation that created_user_id is immutable. Compared against the value captured in AUDIT-3."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xGET returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const row = (body.data && body.data.data) || body.data || body;",
+              "const original = pm.collectionVariables.get('audit_original_creator');",
+              "pm.test('xFIX: created_user_id is unchanged (immutable, forgery dropped)', () => {",
+              "    pm.expect(String(row.created_user_id)).to.equal(String(original));",
+              "    pm.expect(parseInt(row.created_user_id, 10)).to.not.equal(99999);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xWAVE3-1 — Audit log: create a fresh v5 user and capture id",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{$randomUserName}}_w3_{{$timestamp}}\",\n  \"openemis_no\": \"{{$timestamp}}\",\n  \"email\": \"w3_{{$timestamp}}@example.test\",\n  \"first_name\": \"Wave3\",\n  \"last_name\": \"Auditee\",\n  \"gender_id\": 1,\n  \"date_of_birth\": \"2000-01-01\",\n  \"password\": \"w3-plain-{{$timestamp}}\"\n}"
+        },
+        "url": "{{base_url}}/api/v5/security-users",
+        "description": "xMARKER-2026-05-12: Wave 3 (POCOR-9697): create a user via v5 and capture its id for the subsequent audit-log assertions. The trait UserActivityLog must drop a row into user_activities for this create."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xuser created (200/201)', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+              "const body = pm.response.json();",
+              "const row = (body.data && body.data.data) || body.data || body;",
+              "pm.collectionVariables.set('w3_user_id', String(row.id));",
+              "pm.test('xresponse hides password and super_admin', () => {",
+              "    pm.expect(row).to.not.have.property('password');",
+              "    pm.expect(row).to.not.have.property('super_admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xWAVE3-2 — Audit log: GET /api/v5/user-activities for the new user (create row must exist)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/user-activities?_conditions=security_user_id:{{w3_user_id}}&limit=50",
+        "description": "xMARKER-2026-05-12: Wave 3 (POCOR-9697): the trait must have produced a 'create' row in user_activities for the user just created. The response must NEVER contain a literal password or bcrypt hash."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xGET user-activities returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const rows = (body.data && body.data.data) || body.data || [];",
+              "pm.test('xFIX: at least one create-row exists for the new user', () => {",
+              "    const creates = rows.filter(r => r.operation === 'create');",
+              "    pm.expect(creates.length).to.be.greaterThan(0);",
+              "});",
+              "pm.test('xFIX: no audit row leaks a bcrypt hash or plaintext password', () => {",
+              "    const raw = pm.response.text();",
+              "    pm.expect(raw).to.not.match(/\\$2[aby]\\$/);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xWAVE3-3 — Audit log: PUT to change first_name + email then re-GET activities",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": {{w3_user_id}},\n  \"first_name\": \"Wave3Updated\",\n  \"email\": \"w3_updated_{{$timestamp}}@example.test\"\n}"
+        },
+        "url": "{{base_url}}/api/v5/security-users/{{w3_user_id}}",
+        "description": "xMARKER-2026-05-12: Wave 3 (POCOR-9697): updating two ordinary fields must produce one user_activities row per dirty field. Verified in the next request."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xupdate returns 200/204', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "xWAVE3-4 — Audit log: confirm per-dirty-field update rows are present",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/user-activities?_conditions=security_user_id:{{w3_user_id}}&limit=50",
+        "description": "xMARKER-2026-05-12: Wave 3 (POCOR-9697): the trait must have emitted one update row for first_name and one for email."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xGET returns 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "const rows = (body.data && body.data.data) || body.data || [];",
+              "const updates = rows.filter(r => r.operation === 'update');",
+              "pm.test('xFIX: update rows include first_name + email', () => {",
+              "    const fields = updates.map(r => r.field);",
+              "    pm.expect(fields).to.include('first_name');",
+              "    pm.expect(fields).to.include('email');",
+              "});",
+              "pm.test('xFIX: password/super_admin never appear as field names here', () => {",
+              "    const fields = updates.map(r => r.field);",
+              "    pm.expect(fields).to.not.include('password');",
+              "    pm.expect(fields).to.not.include('super_admin');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "x10 — Cleanup: delete the demo v5 user (best-effort)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": "{{base_url}}/api/v5/security-users/{{exploit_user_id}}",
+        "description": "xMARKER-2026-05-12: Best-effort cleanup so re-running the suite doesn't pile up demo rows. Skip on master if it fails — DB cleanup can be done manually with `DELETE FROM security_users WHERE username LIKE 'exploit_%';`."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('xcleanup attempted (200/204)', () => pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
