@@ -41,8 +41,12 @@ class ReportCardSubjectsTable extends ControllerActionTable
            $orWhere[$staffSubject->aliasField('staff_id')] = $staffId;
            //$orWhere[$InstitutionClasses->aliasField('staff_id')] = $staffId;//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject
         }
-        $educationGradeId = $reportCard->find()->where(['id' => $reportCardId])->first()
-                            ->education_grade_id ?? null; //POCOR-9681
+        $reportCardData = $reportCard->find()
+                            ->select(['education_grade_id'])
+                            ->where(['id' => $reportCardId])
+                            ->first();
+
+        $educationGradeId = $reportCardData->education_grade_id ?? null; //POCOR-9681
         return $query
                 ->select([
                     'education_subject_id' => $this->aliasField('education_subject_id'),
