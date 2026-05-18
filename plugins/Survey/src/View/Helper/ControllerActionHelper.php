@@ -388,7 +388,7 @@ class ControllerActionHelper extends Helper
         $_fields = $config['fields'];
 
         $html = '';
-        $model = $config['table']->alias();
+        $model = $config['table']->getAlias();
         $displayFields = $_fields;
 
         if (!empty($fields)) { // if we only want specific fields to be displayed
