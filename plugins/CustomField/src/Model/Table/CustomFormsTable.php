@@ -311,42 +311,23 @@ class CustomFormsTable extends ControllerActionTable
                     }
                 }
 
-                if (array_key_exists('selected_custom_field', $requestData[$this->getAlias()])) {
-                    $fieldId = $requestData[$this->getAlias()]['selected_custom_field'];
-                    if (!empty($fieldId)) {
-                        $fieldObj = $Fields->get($fieldId);
-                        $sectionName = $entity->section;
-                        $arrayFields[] = [
-                            'name' => $fieldObj->name,
-                            'field_type' => $fieldObj->field_type,
-                            $fieldKey => $fieldObj->id,
-                            $formKey => $entity->id,
-                            'section' => $sectionName
-                        ];
-                    }
-                    // To be implemented in the future (To add questions to the specified section)
-                    // if(empty($sectionName)){
-                    // 	array_unshift($arrayQuestions, [
-                    // 		'name' => $questionObj->name,
-                    // 		'survey_question_id' => $questionObj->id,
-                    // 		'survey_form_id' => $entity->id,
-                    // 		'section' => $sectionName,
-                    // 	]);
-                    // } else {
-                    // 	$arrayKeys = array_keys($arraySection, $sectionName);
-                    // 	$sectionCounter = max($arrayKeys) + 1;
-                    // 	$res = [];
-                    // 	$res[] = array_slice($arrayQuestions, 0, $sectionCounter, true);
-                    // 	$res[] = [
-                    // 				'name' => $questionObj->name,
-                    // 				'survey_question_id' => $questionObj->id,
-                    // 				'survey_form_id' => $entity->id,
-                    // 				'section' => $sectionName,
-                    // 			];
-                    // 	$res[] = array_slice($arrayQuestions, $sectionCounter, count($arrayQuestions) - 1, true) ;
-                    // 	$arrayQuestions = $res;
-                    // }
+                //POCOR-9638
+                $alias = $this->getAlias();
+                $aliasData = $requestData[$alias] ?? [];
+                $addedFieldId = $this->resolveAddedFieldIdFromRequest($aliasData, $fieldKey);
+                if ($addedFieldId !== null) {
+                    $fieldObj = $Fields->get($addedFieldId);
+                    // Section for the new row comes from the "Add Section" text field (sectiontxt), not $entity->section
+                    $sectionName = $this->getSectionNameForNewFieldFromRequest($requestData, $entity);
+                    $arrayFields[] = [
+                        'name' => $fieldObj->name,
+                        'field_type' => $fieldObj->field_type,
+                        $fieldKey => $fieldObj->id,
+                        $formKey => $entity->id,
+                        'section' => $sectionName
+                    ];
                 }
+                //POCOR-9638
             }
 
             $cellCount = 0;
@@ -434,8 +415,69 @@ class CustomFormsTable extends ControllerActionTable
             $attr['options'] = $customFieldOptions;
         }
 
-        return $event->getSubject()->renderElement('CustomField.form_fields', ['attr' => $attr]);
+        return $event->getSubject()->renderElement($this->getOrderFieldElement(), ['attr' => $attr]); //POCOR-9638
     }
+
+    //POCOR-9638[START]
+    /**
+     * View element for the custom order field (questions/fields table). Subclasses may override (e.g. Survey).
+     */
+    protected function getOrderFieldElement(): string
+    {
+        return 'CustomField.form_fields';
+    }
+
+    /**
+     * Which question/field was chosen to add: Custom Forms use selected_custom_field (chosen);
+     * Survey formquestions element posts survey_question_id (targetForeignKey) instead.
+     *
+     * @param array $aliasData $requestData[$tableAlias]
+     * @param string $fieldKey e.g. survey_question_id or custom_field_id
+     * @return string|int|null
+     */
+    protected function resolveAddedFieldIdFromRequest(array $aliasData, string $fieldKey)
+    {
+        $selected = $aliasData['selected_custom_field'] ?? null;
+        if ($selected !== null && $selected !== '' && (int)$selected !== 0) {
+            return $selected;
+        }
+        $viaFk = $aliasData[$fieldKey] ?? null;
+        if ($viaFk !== null && $viaFk !== '' && (int)$viaFk !== 0) {
+            return $viaFk;
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve section name when adding a field from the dropdown.
+     * The form posts it as sectiontxt (Add Section text field); older code incorrectly used $entity->section.
+     *
+     * @param array $requestData
+     * @param \Cake\Datasource\EntityInterface $entity
+     * @return string
+     */
+    protected function getSectionNameForNewFieldFromRequest(array $requestData, Entity $entity): string
+    {
+        $alias = $this->getAlias();
+        if (!empty($requestData[$alias]) && is_array($requestData[$alias])) {
+            foreach ($requestData[$alias] as $key => $value) {
+                if (strcasecmp((string)$key, 'sectiontxt') === 0 && $value !== null && $value !== '') {
+                    return trim((string)$value);
+                }
+            }
+        }
+        if ($entity->has('sectiontxt') && (string)$entity->get('sectiontxt') !== '') {
+            return trim((string)$entity->get('sectiontxt'));
+        }
+        if ($entity->has('section') && (string)$entity->get('section') !== '') {
+            return trim((string)$entity->get('section'));
+        }
+
+        return '';
+    }
+
+    //POCOR-9638[END]
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {

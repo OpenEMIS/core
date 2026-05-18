@@ -513,16 +513,8 @@ class WorkflowCaseBehavior extends Behavior
                     $filterOptions = $newEvent->result;
                 }
                 // End
-                //POCOR-7263::Start
                 $filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
-                $url = $_SERVER['QUERY_STRING'];
-                $data = explode('=', $url);
-                $filterOne = $data[1];
-                $filterTwo = $data[2];
-                $firstVal = preg_replace('/\D/', '', $filterOne);
-                $selectedFilter = $firstVal;
-                //POCOR-7263::End
-               // $selectedFilter = $this->_table->queryString('filter', $filterOptions);
+                $selectedFilter = $this->_table->queryString('filter', $filterOptions);
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
@@ -613,12 +605,15 @@ class WorkflowCaseBehavior extends Behavior
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
+            if ($selectedFilter === null || $selectedFilter === '') {
+                $selectedFilter = $this->_table->request->getQuery('filter');
+            }
 
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
 
-            if ($selectedFilter != -1) {
+            if ($selectedFilter != -1 && !empty($selectedFilter)) {
                 $query->where([
                     $this->_table->aliasField($filterKey) => $selectedFilter
                 ]);
