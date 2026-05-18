@@ -81,3 +81,4 @@ frontend/out-tsc
 frontend/bazel-out
 frontend/node_modules
 api/storage/api-docs
+/.claude/
