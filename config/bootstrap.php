@@ -146,11 +146,13 @@ if (Configure::read('debug')) {
     Configure::write('Cache._cake_routes_.duration', '+2 seconds');
 }
 
+//POCOR-9565[START]
 /*
- * Set the default server timezone. Using UTC makes time calculations / conversions easier.
- * Check http://php.net/manual/en/timezones.php for list of valid timezone strings.
+ * Internal timezone: UTC. Display timezone (e.g. Asia/Singapore) is loaded from config_items
+ * via App\Utility\ApplicationTimezone (cached) into Configure::read('App.displayTimezone').
  */
-//date_default_timezone_set(Configure::read('App.defaultTimezone'));
+date_default_timezone_set(Configure::read('App.defaultTimezone') ?: 'UTC');
+//POCOR-9565[END]
 
 /*
  * Configure the mbstring extension to use the correct encoding.
