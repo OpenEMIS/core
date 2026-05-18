@@ -36,7 +36,8 @@
 			<?php
 				$attr['model'] = $alias;
 				$attr['field'] = 'selected_custom_field';
-				echo $this->HtmlField->chosenSelectInput($attr, ['label' => __($labels['add_field']), 'multiple' => false, 'onchange' => "$('#reload').val('addField').click();"]);
+				//POCOR-9638
+				echo $this->HtmlField->chosenSelectInput($attr, ['label' => __($labels['add_field']), 'multiple' => false, 'onchange' => "if (typeof CustomForm !== 'undefined' && CustomForm.prepareAddField) { CustomForm.prepareAddField(); } $('#reload').val('addField').click();"]);
 			?>
 			<?=
 				$this->Form->input($alias.".sectiontxt", [
