@@ -137,10 +137,10 @@ class UsersMergeCommand extends Command
                 $this->repointForeignKeys($conn, $this->baseId, $this->mergeId, $SystemProcesses, $this->systemProcessId);
 
                 // 8) Deactivate MERGE user (and optionally scrub PII to avoid future uniqueness surprises)
-                $conn->execute(
-                    "UPDATE `security_users` SET `status` = 0 WHERE `id` = :id",
-                    ['id' => $this->mergeId]
-                );
+                // $conn->execute(
+                //     "UPDATE `security_users` SET `status` = 0 WHERE `id` = :id",
+                //     ['id' => $this->mergeId]
+                // );
 
                 // Optional: scrub PII/unique-ish fields on merge to avoid future conflicts (uncomment if desired)
                 /*
@@ -154,6 +154,12 @@ class UsersMergeCommand extends Command
                 */
 
             });
+            $conn->execute(
+                "UPDATE `security_users`
+                SET `status` = 0
+                WHERE `id` = :id",
+                ['id' => $this->mergeId]
+            );
 
             if (method_exists($SystemProcesses, 'updateProcess')) {
                 $SystemProcesses->updateProcess($this->systemProcessId, FrozenTime::now(), $SystemProcesses::COMPLETED);
@@ -360,154 +366,393 @@ class UsersMergeCommand extends Command
      * Scans INFORMATION_SCHEMA for common FK column names you listed.
      */
     private function repointForeignKeys(
-    $conn,
-    int $baseId,
-    int $mergeId,
-    Table $SystemProcesses,
-    int $systemProcessId
-): void {
+        $conn,
+        int $baseId,
+        int $mergeId,
+        Table $SystemProcesses,
+        int $systemProcessId
+    ): void {
 
-    $db = $conn->config()['database'];
+        $db = $conn->config()['database'];
 
-    // FK-like columns we care about
-    $fkColumns = [
-        'student_id',
-        'security_user_id',
-        'user_id',
-        'core_user_id',
-        'guardian_id',
-        'staff_id',
-        'secondary_staff_id',
-        'assignee_id'
-    ];
+        $fkColumns = [
+            'student_id',
+            'security_user_id',
+            'user_id',
+            'core_user_id',
+            'guardian_id',
+            'staff_id',
+            'secondary_staff_id',
+            'assignee_id'
+        ];
 
-    // Discover tables + columns dynamically
-    $columns = $conn->execute(
-        "SELECT TABLE_NAME, COLUMN_NAME
-         FROM INFORMATION_SCHEMA.COLUMNS
-         WHERE COLUMN_NAME IN ('" . implode("','", $fkColumns) . "')
-           AND TABLE_SCHEMA = :db
-           AND TABLE_NAME NOT LIKE 'z%'",
-        ['db' => $db]
-    )->fetchAll('assoc');
+        // 🔥 Only BASE TABLES (skip views automatically)
+        $columns = $conn->execute(
+            "SELECT c.TABLE_NAME, c.COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS c
+            JOIN INFORMATION_SCHEMA.TABLES t
+            ON c.TABLE_NAME = t.TABLE_NAME
+            AND c.TABLE_SCHEMA = t.TABLE_SCHEMA
+            WHERE c.COLUMN_NAME IN ('" . implode("','", $fkColumns) . "')
+            AND c.TABLE_SCHEMA = :db
+            AND t.TABLE_TYPE = 'BASE TABLE'
+            AND c.TABLE_NAME NOT LIKE 'z%'",
+            ['db' => $db]
+        )->fetchAll('assoc');
 
-    $progress = 0;
-    $errors   = [];
+        $progress = 0;
+        $errors   = [];
 
-    foreach ($columns as $colInfo) {
-        $table = $colInfo['TABLE_NAME'];
-        $fkCol = $colInfo['COLUMN_NAME'];
+        foreach ($columns as $colInfo) {
 
-        try {
-            // 1️⃣ Discover composite UNIQUE indexes for this table
-            $uniqueIndexes = $this->getCompositeUniqueIndexes($conn, $table);
+            $table = $colInfo['TABLE_NAME'];
+            $fkCol = $colInfo['COLUMN_NAME'];
 
-            // 2️⃣ Fetch rows belonging to merge user
-            $rows = $conn->execute(
-                "SELECT * FROM `$table` WHERE `$fkCol` = :merge",
-                ['merge' => $mergeId]
-            )->fetchAll('assoc');
+            try {
 
-            foreach ($rows as $row) {
+                // 🔹 Discover composite unique indexes
+            //  $uniqueIndexes = $this->getCompositeUniqueIndexes($conn, $table);
 
-                // Prepare candidate row with baseId
-                $candidate = $row;
-                $candidate[$fkCol] = $baseId;
+                $uniqueIndexes = array_merge(
+                    $this->getCompositeUniqueIndexes($conn, $table),
+                    $this->getPrimaryKeyIndexes($conn, $table)
+                );
 
-                // 3️⃣ Check if this causes a duplicate
-                if ($this->wouldCauseDuplicate(
-                    $conn,
-                    $table,
-                    $uniqueIndexes,
-                    $candidate
-                )) {
-                    // Skip duplicate safely
-                    continue;
+                // 🔹 Fetch rows from merge
+                $rows = $conn->execute(
+                    "SELECT * FROM `$table` WHERE `$fkCol` = :merge",
+                    ['merge' => $mergeId]
+                )->fetchAll('assoc');
+
+                foreach ($rows as $row) {
+
+                    $candidate = $row;
+                    $candidate[$fkCol] = $baseId;
+
+                    // 🔹 Skip if duplicate would happen
+                    // if ($this->wouldCauseDuplicate($conn, $table, $uniqueIndexes, $candidate)) {
+                    //     continue;
+                    // }
+
+                    if ($this->wouldCauseDuplicate($conn, $table, $uniqueIndexes, $candidate)) {
+
+                        $rowIdentifier = $row['id'] ?? 'no-id';
+
+                        Log::warning(sprintf(
+                            'Merge skip: duplicate detected in %s.%s row=%s base_id=%d merge_id=%d',
+                            $table,
+                            $fkCol,
+                            $rowIdentifier,
+                            $baseId,
+                            $mergeId
+                        ));
+
+                        continue;
+                    }
+
+                    // 🔥 SAFE UPDATE
+                    if (array_key_exists('id', $row)) {
+
+                        // Normal case
+                        $conn->execute(
+                            "UPDATE `$table`
+                            SET `$fkCol` = :base
+                            WHERE `id` = :id",
+                            [
+                                'base' => $baseId,
+                                'id'   => $row['id']
+                            ]
+                        );
+
+                    } else {
+
+                        // Update using all columns to target only this row
+                        $conditions = [];
+                        $params = ['base' => $baseId];
+
+                        foreach ($row as $col => $val) {
+
+                            if ($col === $fkCol) {
+                                $conditions[] = "`$col` = :merge";
+                                $params['merge'] = $mergeId;
+                            } else {
+                                $conditions[] = "`$col` <=> :$col";
+                                $params[$col] = $val;
+                            }
+                        }
+
+                        $conn->execute(
+                            "UPDATE `$table`
+                            SET `$fkCol` = :base
+                            WHERE " . implode(' AND ', $conditions),
+                            $params
+                        );
+                    }
                 }
 
-                // 4️⃣ Safe to repoint
-                $conn->execute(
-                    "UPDATE `$table`
-                     SET `$fkCol` = :base
-                     WHERE id = :id",
-                    [
-                        'base' => $baseId,
-                        'id'   => $row['id']
-                    ]
-                );
+            } catch (\Throwable $e) {
+                $errors[] = "[{$table}.{$fkCol}] {$e->getMessage()}";
             }
 
-        } catch (\Throwable $e) {
-            $errors[] = "[{$table}.{$fkCol}] {$e->getMessage()}";
+            $progress++;
+
+            if (method_exists($SystemProcesses, 'updateProcess')) {
+                $SystemProcesses->updateProcess(
+                    $systemProcessId,
+                    null,
+                    $SystemProcesses::RUNNING,
+                    $progress
+                );
+            }
         }
 
-        $progress++;
-        if (method_exists($SystemProcesses, 'updateProcess')) {
-            $SystemProcesses->updateProcess(
-                $systemProcessId,
-                null,
-                $SystemProcesses::RUNNING,
-                $progress
+        if ($errors) {
+            throw new \RuntimeException(
+                'User merge failed: ' . implode(' | ', $errors)
             );
         }
     }
 
-    if ($errors) {
-        throw new \RuntimeException(
-            'User merge failed: ' . implode(' | ', $errors)
-        );
+    private function getPrimaryKeyIndexes($conn, string $table): array
+    {
+        $indexes = $conn->execute(
+            "SELECT COLUMN_NAME
+            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = :table
+            AND CONSTRAINT_NAME = 'PRIMARY'
+            ORDER BY ORDINAL_POSITION",
+            ['table' => $table]
+        )->fetchAll('assoc');
+
+        if (!$indexes) {
+            return [];
+        }
+
+        return [[
+            'name' => 'PRIMARY',
+            'columns' => array_column($indexes, 'COLUMN_NAME')
+        ]];
     }
-}
-private function getCompositeUniqueIndexes($conn, string $table): array
-{
-    $indexes = $conn->execute(
-        "SHOW INDEX FROM `$table` WHERE Non_unique = 0"
-    )->fetchAll('assoc');
 
-    $uniqueIndexes = [];
 
-    foreach ($indexes as $idx) {
-        $uniqueIndexes[$idx['Key_name']][] = $idx['Column_name'];
-    }
+    private function repointForeignKeysWorking(
+        $conn,
+        int $baseId,
+        int $mergeId,
+        Table $SystemProcesses,
+        int $systemProcessId
+    ): void {
 
-    // Remove single-column unique keys (student_id alone is irrelevant)
-    return array_filter($uniqueIndexes, fn($cols) => count($cols) > 1);
-}
+        $db = $conn->config()['database'];
 
-private function wouldCauseDuplicate(
-    $conn,
-    string $table,
-    array $uniqueIndexes,
-    array $candidateRow
-): bool {
+        // FK-like columns we care about
+        $fkColumns = [
+            'student_id',
+            'security_user_id',
+            'user_id',
+            'core_user_id',
+            'guardian_id',
+            'staff_id',
+            'secondary_staff_id',
+            'assignee_id'
+        ];
 
-    foreach ($uniqueIndexes as $columns) {
+        // Discover tables + columns dynamically
+        $columns = $conn->execute(
+            "SELECT TABLE_NAME, COLUMN_NAME
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE COLUMN_NAME IN ('" . implode("','", $fkColumns) . "')
+            AND TABLE_SCHEMA = :db
+            AND TABLE_NAME NOT LIKE 'z%'",
+            ['db' => $db]
+        )->fetchAll('assoc');
 
-        $conditions = [];
-        $params     = [];
+        $progress = 0;
+        $errors   = [];
 
-        foreach ($columns as $col) {
-            if (!array_key_exists($col, $candidateRow)) {
-                continue 2; // Cannot evaluate this index
+        foreach ($columns as $colInfo) {
+            $table = $colInfo['TABLE_NAME'];
+            $fkCol = $colInfo['COLUMN_NAME'];
+
+            try {
+                // 1️⃣ Discover composite UNIQUE indexes for this table
+                $uniqueIndexes = $this->getCompositeUniqueIndexes($conn, $table);
+
+                // 2️⃣ Fetch rows belonging to merge user
+                $rows = $conn->execute(
+                    "SELECT * FROM `$table` WHERE `$fkCol` = :merge",
+                    ['merge' => $mergeId]
+                )->fetchAll('assoc');
+
+                foreach ($rows as $row) {
+
+                    // Prepare candidate row with baseId
+                    $candidate = $row;
+                    $candidate[$fkCol] = $baseId;
+
+                    // 3️⃣ Check if this causes a duplicate
+                    if ($this->wouldCauseDuplicate(
+                        $conn,
+                        $table,
+                        $uniqueIndexes,
+                        $candidate
+                    )) {
+                        // Skip duplicate safely
+                        continue;
+                    }
+
+                    // 4️⃣ Safe to repoint
+                    $conn->execute(
+                        "UPDATE `$table`
+                        SET `$fkCol` = :base
+                        WHERE id = :id",
+                        [
+                            'base' => $baseId,
+                            'id'   => $row['id']
+                        ]
+                    );
+                }
+
+            } catch (\Throwable $e) {
+                $errors[] = "[{$table}.{$fkCol}] {$e->getMessage()}";
             }
 
-            $conditions[] = "`$col` = :$col";
-            $params[$col] = $candidateRow[$col];
+            $progress++;
+            if (method_exists($SystemProcesses, 'updateProcess')) {
+                $SystemProcesses->updateProcess(
+                    $systemProcessId,
+                    null,
+                    $SystemProcesses::RUNNING,
+                    $progress
+                );
+            }
         }
 
-        $sql = sprintf(
-            "SELECT 1 FROM `%s` WHERE %s LIMIT 1",
-            $table,
-            implode(' AND ', $conditions)
-        );
-
-        if ($conn->execute($sql, $params)->fetch()) {
-            return true;
+        if ($errors) {
+            throw new \RuntimeException(
+                'User merge failed: ' . implode(' | ', $errors)
+            );
         }
     }
 
-    return false;
-}
+    private function getCompositeUniqueIndexes($conn, string $table): array
+    {
+        $indexes = $conn->execute(
+            "SHOW INDEX FROM `$table` WHERE Non_unique = 0"
+        )->fetchAll('assoc');
+
+        $uniqueIndexes = [];
+
+        // Group indexes
+        foreach ($indexes as $idx) {
+            $key = $idx['Key_name'];
+
+            $uniqueIndexes[$key][] = [
+                'column' => $idx['Column_name'],
+                'seq'    => $idx['Seq_in_index']
+            ];
+        }
+
+        // Sort columns by Seq_in_index
+        foreach ($uniqueIndexes as $key => $cols) {
+
+            usort($cols, function ($a, $b) {
+                return $a['seq'] <=> $b['seq'];
+            });
+
+            $uniqueIndexes[$key] = array_column($cols, 'column');
+        }
+
+        return $uniqueIndexes;
+    }
+
+    private function getCompositeUniqueIndexesOrg($conn, string $table): array
+    {
+        $indexes = $conn->execute(
+            "SHOW INDEX FROM `$table` WHERE Non_unique = 0"
+        )->fetchAll('assoc');
+
+        $uniqueIndexes = [];
+
+        foreach ($indexes as $idx) {
+            $uniqueIndexes[$idx['Key_name']][] = $idx['Column_name'];
+        }
+
+        // Remove single-column unique keys (student_id alone is irrelevant)
+        return array_filter($uniqueIndexes, fn($cols) => count($cols) > 1);
+    }
+
+    private function wouldCauseDuplicate(
+        $conn,
+        string $table,
+        array $uniqueIndexes,
+        array $candidateRow
+    ): bool {
+
+        foreach ($uniqueIndexes as $columns) {
+
+            $conditions = [];
+            $params     = [];
+
+            foreach ($columns as $col) {
+
+                if (!array_key_exists($col, $candidateRow)) {
+                    continue 2;
+                }
+
+                $conditions[] = "`$col` = :$col";
+                $params[$col] = $candidateRow[$col];
+            }
+
+            $sql = sprintf(
+                "SELECT 1 FROM `%s` WHERE %s LIMIT 1",
+                $table,
+                implode(' AND ', $conditions)
+            );
+
+            if ($conn->execute($sql, $params)->fetch()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function wouldCauseDuplicateOrg(
+        $conn,
+        string $table,
+        array $uniqueIndexes,
+        array $candidateRow
+    ): bool {
+
+        foreach ($uniqueIndexes as $columns) {
+
+            $conditions = [];
+            $params     = [];
+
+            foreach ($columns as $col) {
+                if (!array_key_exists($col, $candidateRow)) {
+                    continue 2; // Cannot evaluate this index
+                }
+
+                $conditions[] = "`$col` = :$col";
+                $params[$col] = $candidateRow[$col];
+            }
+
+            $sql = sprintf(
+                "SELECT 1 FROM `%s` WHERE %s LIMIT 1",
+                $table,
+                implode(' AND ', $conditions)
+            );
+
+            if ($conn->execute($sql, $params)->fetch()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 
     private function repointForeignKeysOrg($conn, int $baseId, int $mergeId, Table $SystemProcesses, int $systemProcessId): void

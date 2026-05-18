@@ -9,6 +9,12 @@ class AlertLogs extends Model
 {
     use HasFactory;
 
+    //POCOR-9509: Numeric status constants — language-agnostic integers stored in alert_logs.status (SMALLINT)
+    // Mirrors AlertQueueTable::STATUS_* in CakePHP
+    const STATUS_PENDING = 0;
+    const STATUS_SENT = 1;
+    const STATUS_FAILED = -1;
+
     protected $table = 'alert_logs';
 
     // ✅ Allow mass assignment
@@ -17,8 +23,8 @@ class AlertLogs extends Model
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
 
-    // ✅ Treat 'modified' and 'created' as timestamps
-    protected $dates = ['modified', 'created'];
+    // ✅ Treat 'created' as timestamp (alert_logs has no 'modified' column) //POCOR-9509: removed 'modified'
+    protected $dates = ['created'];
 
     // ✅ Define the primary key
 
@@ -92,7 +98,7 @@ public function _swaggerPath() {}
                           @OA\Property(property="feature", type="string", example=null),
                           @OA\Property(property="method", type="string", example=null),
                           @OA\Property(property="destination", type="string", example=null),
-                          @OA\Property(property="status", type="string", example=null),
+                          @OA\Property(property="status", type="integer", example=0),
                           @OA\Property(property="subject", type="string", example=null),
                           @OA\Property(property="message", type="string", example=null),
                           @OA\Property(property="checksum", type="string", example=null),
@@ -124,7 +130,7 @@ public function _swaggerList() {}
                      @OA\Property(property="feature", type="string", example=null),
                      @OA\Property(property="method", type="string", example=null),
                      @OA\Property(property="destination", type="string", example=null),
-                     @OA\Property(property="status", type="string", example=null),
+                     @OA\Property(property="status", type="integer", example=0),
                      @OA\Property(property="subject", type="string", example=null),
                      @OA\Property(property="message", type="string", example=null),
                      @OA\Property(property="checksum", type="string", example=null),
@@ -194,7 +200,7 @@ public function _swaggerView() {}
                      @OA\Property(property="feature", type="string", example=null),
                      @OA\Property(property="method", type="string", example=null),
                      @OA\Property(property="destination", type="string", example=null),
-                     @OA\Property(property="status", type="string", example=null),
+                     @OA\Property(property="status", type="integer", example=0),
                      @OA\Property(property="subject", type="string", example=null),
                      @OA\Property(property="message", type="string", example=null),
                      @OA\Property(property="checksum", type="string", example=null),
