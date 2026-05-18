@@ -5,14 +5,9 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-use App\Models\Concerns\WebhookQueueTrait;
 class AcademicPeriods extends Model
 {
     use HasFactory;
-    use WebhookQueueTrait;
-
-    // POCOR-9257: Configure webhook events
-    protected $webhookEvents = ['created', 'updated', 'deleted'];
 
     protected $table = 'academic_periods';
 
