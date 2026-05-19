@@ -2834,7 +2834,7 @@ class NavigationComponent extends Component
                 'selected' => ['Calendars.Calendars']
             ],
             //POCOR-9694: 'Systems.SystemProcesses' relocated under
-            //Administration → Async Services. See getAdministrationAsyncServicesNav().
+            //Administration → System Activities. See getAdministrationAsyncServicesNav().
 
         ];
 
@@ -4049,20 +4049,20 @@ class NavigationComponent extends Component
     }
 
     /**
-     * POCOR-9694 — assembles the {{Administration → Async Services}} group.
+     * POCOR-9694 — assembles the {{Administration → System Activities}} group.
      *
      * Single sidebar location for every queue/async monitoring surface.
      * The existing {{Systems.SystemProcesses}} page is relocated under this
      * group; the rest are POCOR-9694 follow-up screens (Overview, Failed
-     * Jobs, Stuck Processes, Webhook Failures, Queue Backlog).
+     * Jobs, Frozen Jobs, Failed Webhooks, Waiting Jobs).
      *
-     * Gated by {{security_functions.category = 'Async Services'}}, seeded
-     * by {{config/Migrations/20260508160000_POCOR9694Nav.php}}. Returns an
+     * Gated by {{security_functions.category = 'System Activities'}}, seeded
+     * by {{config/Migrations/20260519160000_POCOR9694.php}}. Returns an
      * empty array when no role grants the user at least one `_view = 1`.
      */
     private function getAdministrationAsyncServicesNav(): array
     {
-        if (!$this->userHasAdministrationAccessTo('Async Services')) {
+        if (!$this->userHasAdministrationAccessTo('System Activities')) {
             return [];
         }
         $childParent = 'Administration.AsyncServices';
@@ -4075,19 +4075,19 @@ class NavigationComponent extends Component
                 'selected' => [$key],
             ];
         };
-        //POCOR-9694: start — v4 menu labels (Karl Turnbull feedback). Internal nav keys kept; user-visible titles renamed.
+        //POCOR-9694: v5 menu labels — user-visible titles only; internal nav keys kept stable.
         return [
             'Administration.AsyncServices' => [
-                'title' => 'Background Activity',
+                'title' => 'System Activities',
                 'parent' => 'Administration',
                 'link' => false,
             ],
-            'Systems.AsyncServicesOverview' => $child('Overview',                    'Systems.AsyncServicesOverview'),
-            'Systems.SystemProcesses'       => $child('Completed Background Tasks', 'Systems.SystemProcesses'),
-            'Systems.FailedJobs'            => $child('Failed Background Tasks',    'Systems.FailedJobs'),
-            'Systems.StuckProcesses'        => $child('Frozen Background Tasks',    'Systems.StuckProcesses'),
-            'Systems.WebhookFailures'       => $child('Webhook Failures',           'Systems.WebhookFailures'),
-            'Systems.QueueBacklog'          => $child('Waiting Background Tasks',   'Systems.QueueBacklog'),
+            'Systems.AsyncServicesOverview' => $child('Overview',         'Systems.AsyncServicesOverview'),
+            'Systems.SystemProcesses'       => $child('Completed Jobs',   'Systems.SystemProcesses'),
+            'Systems.FailedJobs'            => $child('Failed Jobs',      'Systems.FailedJobs'),
+            'Systems.StuckProcesses'        => $child('Frozen Jobs',      'Systems.StuckProcesses'),
+            'Systems.WebhookFailures'       => $child('Failed Webhooks',  'Systems.WebhookFailures'),
+            'Systems.QueueBacklog'          => $child('Waiting Jobs',     'Systems.QueueBacklog'),
         ];
         //POCOR-9694: end
     }

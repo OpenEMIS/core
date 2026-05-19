@@ -4,7 +4,7 @@ declare(strict_types=1);
 use Migrations\AbstractMigration;
 
 /**
- * POCOR-9694 — OpenEMIS Runtime + Async Services nav.
+ * POCOR-9694 — OpenEMIS Runtime + System Activities nav.
  *
  * Single migration for the whole ticket. Two related concerns ship
  * together because both are facets of the same architectural change:
@@ -13,15 +13,14 @@ use Migrations\AbstractMigration;
  *    `task_jobs`, `task_failures`) that abstract over Laravel's
  *    queue and provide an OpenEMIS-native execution-tracking layer.
  *
- * 2. Async Services nav — the {{Administration → Async Services}}
+ * 2. System Activities nav — the {{Administration → System Activities}}
  *    sidebar group that exposes the runtime to operators. Backed by
  *    six rows in `security_functions` (module=Administration,
- *    category='Async Services') gated to the super_admin role.
+ *    category='System Activities') gated to the super_admin role.
  *
  * Idempotent: re-running the migration is a no-op when the rows /
  * tables already exist.
  *
- * @see api/storage/release-docs/POCOR-9694-README.md
  * @see src/Controller/Component/NavigationComponent.php
  *      ::getAdministrationAsyncServicesNav()
  */
@@ -29,7 +28,7 @@ class POCOR9694 extends AbstractMigration
 {
     private const TICKET = '9694';
     private const ADMINISTRATION_PARENT_ID = 5000;
-    private const NAV_CATEGORY = 'Async Services';
+    private const NAV_CATEGORY = 'System Activities';
     private const NAV_MODULE = 'Administration';
 
     /** Tables modified (rows added) by this migration — backed up in up(). */
@@ -39,7 +38,7 @@ class POCOR9694 extends AbstractMigration
     ];
 
     /**
-     * Each row defines one Async Services nav entry.
+     * Each row defines one System Activities nav entry.
      *
      * - {{name}} is the human-facing label rendered in the sidebar.
      * - {{controller}} is the CakePHP controller key used by the nav array.
@@ -58,31 +57,31 @@ class POCOR9694 extends AbstractMigration
             'order_offset' => 0,
         ],
         [
-            'name'         => 'Completed Background Tasks',
+            'name'         => 'Completed Jobs',
             'controller'   => 'Systems',
             'view_actions' => ['SystemProcesses.index', 'SystemProcesses.view'],
             'order_offset' => 1,
         ],
         [
-            'name'         => 'Failed Background Tasks',
+            'name'         => 'Failed Jobs',
             'controller'   => 'Systems',
             'view_actions' => ['FailedJobs.index', 'FailedJobs.view', 'FailedJobsRetry.index'],
             'order_offset' => 2,
         ],
         [
-            'name'         => 'Frozen Background Tasks',
+            'name'         => 'Frozen Jobs',
             'controller'   => 'Systems',
             'view_actions' => ['StuckProcesses.index', 'StuckProcesses.view'],
             'order_offset' => 3,
         ],
         [
-            'name'         => 'Webhook Failures',
+            'name'         => 'Failed Webhooks',
             'controller'   => 'Systems',
             'view_actions' => ['WebhookFailures.index', 'WebhookFailures.view'],
             'order_offset' => 4,
         ],
         [
-            'name'         => 'Waiting Background Tasks',
+            'name'         => 'Waiting Jobs',
             'controller'   => 'Systems',
             'view_actions' => ['QueueBacklog.index', 'QueueBacklog.view'],
             'order_offset' => 5,
@@ -326,7 +325,7 @@ class POCOR9694 extends AbstractMigration
     }
 
     // -------------------------------------------------------------------------
-    // Async Services nav — security_functions seed
+    // System Activities nav — security_functions seed
     // -------------------------------------------------------------------------
 
     private function insertSecurityFunctions(): void
@@ -379,7 +378,7 @@ class POCOR9694 extends AbstractMigration
     }
 
     // -------------------------------------------------------------------------
-    // Async Services nav — security_role_functions grant for super_admin
+    // System Activities nav — security_role_functions grant for super_admin
     // -------------------------------------------------------------------------
 
     private function grantSuperAdmin(): void
