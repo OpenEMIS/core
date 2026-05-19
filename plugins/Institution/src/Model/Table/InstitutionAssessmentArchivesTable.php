@@ -49,19 +49,20 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
     }
 
     /**
-     * Map physical table name to Cake ORM table class alias for TableRegistry.
+     * Map legacy DB table names to Cake table aliases (TableLocator cannot resolve snake_case alone).
      *
      * @param string $tableName
      * @return string
      */
-    private static function getRelatedTableClassName($tableName)
+    private static function resolveTableLocatorAlias(string $tableName): string
     {
         $map = [
             'institution_classes' => 'Institution.InstitutionClasses',
+            'security_users' => 'Security.Users',
             'education_grades' => 'Education.EducationGrades',
-            'security_users' => 'User.Users',
         ];
-        return isset($map[$tableName]) ? $map[$tableName] : $tableName;
+
+        return $map[$tableName] ?? $tableName;
     }
 
     /**
@@ -75,8 +76,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
         if (!$relatedField) {
             return "";
         }
-        $tableClassName = self::getRelatedTableClassName($tableName);
-        $Table = TableRegistry::getTableLocator()->get($tableClassName);
+        $Table = TableRegistry::getTableLocator()->get(self::resolveTableLocatorAlias($tableName));
         try {
             $related = $Table->get($relatedField);
             return $related->toArray();
@@ -91,7 +91,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
-        $user = self::getRelatedRecord('security_users', $entity->student_id);
+        $user = self::getRelatedRecord('Security.Users', $entity->student_id);
 
         return $user['openemis_no'];
     }
@@ -212,7 +212,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
 
     public function onGetEducationGrade(EventInterface $event, Entity $entity)
     {
-        $EducationGrade = self::getRelatedRecord('education_grades', $entity->education_grade_id);
+        $EducationGrade = self::getRelatedRecord('Education.EducationGrades', $entity->education_grade_id);
         return $EducationGrade['programme_grade_name'];
     }
 
@@ -267,11 +267,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
      */
     public static function getArchiveStudentsPresent(string $table_name, array $where)
     {
-        try {
-            $tableArchived = ArchiveConnections::getArchiveTable($table_name);
-        } catch (\Throwable $e) {
-            return '<i class="fa fa-close"></i>';
-        }
+        $tableArchived = ArchiveConnections::getArchiveTable($table_name);
         $distinctResults = $tableArchived->find('all')
             ->where($where)
             ->select(['student_id'])
@@ -287,7 +283,7 @@ class InstitutionAssessmentArchivesTable extends ControllerActionTable
      */
     public function onGetName(EventInterface $event, Entity $entity)
     {
-        $class = self::getRelatedRecord('institution_classes', $entity->institution_class_id);
+        $class = self::getRelatedRecord('Institution.InstitutionClasses', $entity->institution_class_id);
         return $class['name'];
     }
 

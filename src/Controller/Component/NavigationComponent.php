@@ -602,6 +602,18 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.General',
                 'selected' => ['Institutions.Shifts'],
             ],
+            //POCOR-9610: start - Registrations and Accreditations sidebar tabs under General
+            'Institutions.Registrations.index' => [
+                'title' => 'Registrations',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Registrations'],
+            ],
+            'Institutions.Accreditations.index' => [
+                'title' => 'Accreditations',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Accreditations'],
+            ],
+            //POCOR-9610: end
             'Institution.Academic' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Institutions.index',
