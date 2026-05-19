@@ -159,6 +159,9 @@ class StudentAttendanceMarkTypesTable extends AppTable
         if ($dayId != -1) {
             $where[$StudentMarkTypeStatuses->aliasField('date_enabled <=')] = $dayId;
             $where[$StudentMarkTypeStatuses->aliasField('date_disabled >=')] = $dayId;
+        }else{
+            $where[$StudentMarkTypeStatuses->aliasField('date_enabled <= ')] = $weekStartDay;
+            $where[$StudentMarkTypeStatuses->aliasField('date_disabled >= ')] = $weekEndDay;
         }
 
         $results = $StudentMarkTypeStatuses->find()
@@ -219,6 +222,8 @@ class StudentAttendanceMarkTypesTable extends AppTable
                         $StudentMarkTypeStatuses->aliasField('academic_period_id') => $academicPeriodId,
                         //$StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $dayId,
                         //$StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $dayId
+                        $StudentMarkTypeStatuses->aliasField('date_enabled <= ') => $weekStartDay,
+                        $StudentMarkTypeStatuses->aliasField('date_disabled >= ') => $weekEndDay
                     ];
                 }else{
                     $dayId = date('Y-m-d',strtotime($dayId));
