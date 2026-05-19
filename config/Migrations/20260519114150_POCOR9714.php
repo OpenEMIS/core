@@ -22,13 +22,14 @@ class POCOR9714 extends AbstractMigration
         ");
 
         $this->execute("
-            UPDATE themes
+            UPDATE themes t
+            INNER JOIN config_items ci
+                ON ci.id = t.config_item_id
             SET
-                value = REPLACE(value, 'Registration', 'Admissions'),
-                default_value = 'OpenEMIS Admissions'
-            WHERE default_value = 'OpenEMIS Core'
+                t.default_value = 'OpenEMIS Admissions'
+            WHERE ci.code = 'openemis_admissions'
+              AND t.default_value = 'OpenEMIS Core'
         ");
-
         
     }
 
