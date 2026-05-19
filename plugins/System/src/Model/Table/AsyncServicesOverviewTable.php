@@ -103,10 +103,10 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
 
         return [
             'tiles' => [
-                $this->tile('Failed Background Tasks',  $failedJobsCount,    ['action' => 'FailedJobs']),
-                $this->tile('Frozen Background Tasks',  $stuckProcessCount,  ['action' => 'StuckProcesses']),
-                $this->tile('Webhook Failures',         $webhookFailureCount,['action' => 'WebhookFailures']),
-                $this->tile('Waiting Background Tasks', $queueBacklogCount,  ['action' => 'QueueBacklog']),
+                $this->tile('Failed Jobs',     $failedJobsCount,    ['action' => 'FailedJobs']),
+                $this->tile('Frozen Jobs',     $stuckProcessCount,  ['action' => 'StuckProcesses']),
+                $this->tile('Failed Webhooks', $webhookFailureCount,['action' => 'WebhookFailures']),
+                $this->tile('Waiting Jobs',    $queueBacklogCount,  ['action' => 'QueueBacklog']),
             ],
             'heartbeat' => $this->describeHeartbeat($latestHeartbeat),
         ];
