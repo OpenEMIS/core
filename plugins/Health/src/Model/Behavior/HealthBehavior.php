@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Event\EventInterface;
+use Cake\Utility\Inflector;
 
 class HealthBehavior extends Behavior
 {
@@ -23,6 +24,10 @@ class HealthBehavior extends Behavior
         //bare-redirects, ending in 404 (Student/Directory contexts).
         $events['ControllerAction.Model.add.afterSave']  = ['callable' => 'forcePassOnRedirect', 'priority' => 100];
         $events['ControllerAction.Model.edit.afterSave'] = ['callable' => 'forcePassOnRedirect', 'priority' => 100];
+        //POCOR-9718: guard empty lookup tables — block save with a user-facing alert so
+        //the user does not waste time filling an unsavable form.
+        $events['ControllerAction.Model.add.afterAction']  = ['callable' => 'guardEmptyLookups', 'priority' => 90];
+        $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'guardEmptyLookups', 'priority' => 90];
         return $events;
     }
 
@@ -64,6 +69,51 @@ class HealthBehavior extends Behavior
     private function positiveInt($value): ?int
     {
         return is_numeric($value) && (int)$value > 0 ? (int)$value : null;
+    }
+
+    //POCOR-9718: on form open, if any Health lookup table the form depends on
+    //is empty, raise an i18n alert AND disable Save — user gets the warning before
+    //typing anything, instead of a generic FK violation at submit time.
+    public function guardEmptyLookups(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $missing = $this->collectMissingLookups();
+        if (empty($missing)) {
+            return;
+        }
+
+        $controller = $this->_table->controller;
+        if (isset($controller->Alert)) {
+            $controller->Alert->error(
+                __('Cannot save: the following option(s) are not configured: {0}. Please ask your system administrator to add them.',
+                    [implode(', ', $missing)]),
+                ['type' => 'string', 'reset' => true]
+            );
+        }
+
+        if (isset($extra['toolbarButtons']['save'])) {
+            unset($extra['toolbarButtons']['save']);
+        }
+    }
+
+    //POCOR-9718: collect humanized labels of empty Health-plugin lookup tables
+    //that this form's belongsTo associations depend on. Non-Health and user-ish
+    //associations are skipped.
+    private function collectMissingLookups(): array
+    {
+        $missing = [];
+        foreach ($this->_table->associations() as $assoc) {
+            if ($assoc->type() !== 'manyToOne') {
+                continue;
+            }
+            $className = (string)$assoc->getClassName();
+            if (strpos($className, 'Health.') !== 0) {
+                continue;
+            }
+            if (!$assoc->getTarget()->exists([])) {
+                $missing[] = __(Inflector::humanize(Inflector::underscore($assoc->getAlias())));
+            }
+        }
+        return $missing;
     }
 
     public function beforeAction(EventInterface $event)
