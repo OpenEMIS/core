@@ -10,6 +10,10 @@ use Cake\Utility\Inflector;
 
 class HealthBehavior extends Behavior
 {
+    //POCOR-9718: set true when the current add/edit form depends on an empty
+    //Health lookup; consumed by onGetFormButtons to strip the footer Save button.
+    private bool $blockedByEmptyLookup = false;
+
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -28,6 +32,7 @@ class HealthBehavior extends Behavior
         //the user does not waste time filling an unsavable form.
         $events['ControllerAction.Model.add.afterAction']  = ['callable' => 'guardEmptyLookups', 'priority' => 90];
         $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'guardEmptyLookups', 'priority' => 90];
+        $events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'stripSaveOnBlocked', 'priority' => 90];
         return $events;
     }
 
@@ -81,6 +86,8 @@ class HealthBehavior extends Behavior
             return;
         }
 
+        $this->blockedByEmptyLookup = true;
+
         $controller = $this->_table->controller;
         if (isset($controller->Alert)) {
             $controller->Alert->error(
@@ -92,6 +99,20 @@ class HealthBehavior extends Behavior
 
         if (isset($extra['toolbarButtons']['save'])) {
             unset($extra['toolbarButtons']['save']);
+        }
+    }
+
+    //POCOR-9718: drop the footer Save button when guardEmptyLookups flagged the form.
+    //Fires from ControllerActionHelper::getFormButtons during render.
+    public function stripSaveOnBlocked(EventInterface $event, ArrayObject $buttons)
+    {
+        if (!$this->blockedByEmptyLookup) {
+            return;
+        }
+        foreach ($buttons as $i => $btn) {
+            if (isset($btn['attr']['value']) && $btn['attr']['value'] === 'save') {
+                $buttons->offsetUnset($i);
+            }
         }
     }
 
