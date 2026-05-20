@@ -68,6 +68,10 @@ class LicensesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
         return $validator
+            ->requirePresence('license_type_id', true)
+            ->notEmptyString('license_type_id', __('This field cannot be left empty'))
+            ->requirePresence('issuer', true)
+            ->notEmptyString('issuer', __('This field cannot be left empty'))
             ->add('issue_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'expiry_date', false]
             ])
@@ -81,8 +85,16 @@ class LicensesTable extends ControllerActionTable
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
-        $data['staff_id'] = $queryString['staff_id'];
-		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
+        if (!empty($queryString['staff_id'])) {
+            $staffId = $queryString['staff_id'];
+        } elseif (!empty($queryString['user_id'])) {
+            $staffId = $queryString['user_id'];
+        } elseif (!empty($queryString['id'])) {
+            $staffId = $queryString['id'];
+        } else {
+            $staffId = null;
+        }
+        $this->field('security_user_id', ['type' => 'hidden', 'value' => $staffId]);
     }
 
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
