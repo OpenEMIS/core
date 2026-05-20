@@ -723,7 +723,10 @@ class DirectoryRepository extends Controller
                     'preferred_language' => $security_user['preferred_language'],
                     'address_area_id' => $security_user['address_area_id'],
                     'birthplace_area_id' => $security_user['birthplace_area_id'],
-                    'super_admin' => $security_user['super_admin'],
+                    //POCOR-9697: super_admin removed from response. The query
+                    //already filters super_admin != 1, so this field was
+                    //always 0 here, but exposing it at all is needless
+                    //information disclosure.
                     'status' => $security_user['status'],
                     'is_student' => $security_user['is_student'],
                     'is_staff' => $security_user['is_staff'],

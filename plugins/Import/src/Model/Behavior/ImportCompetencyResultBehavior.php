@@ -164,38 +164,41 @@ class ImportCompetencyResultBehavior extends ImportResultBehavior
                 // do the save for the comment
                 //POCOR-9584: getCellByColumnAndRow is 1-indexed in PhpSpreadsheet; column A = 1 (not 0)
                 $student = $sheet->getCellByColumnAndRow(1, $row);
-                $studentOpenEmisId = $student->getValue();
+                $studentOpenEmisId = trim((string)$student->getValue());
                 //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' studentOpenEmisId=' . json_encode($studentOpenEmisId)); //[TEMP-LOG]
-                $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
-
-                $User = $UsersTable->find()
-                    ->select(['id'])
-                    ->where([
-                        $UsersTable->aliasField('openemis_no') => $studentOpenEmisId
-                    ])
-                    ->first();
-                //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' userId=' . json_encode($User ? $User->id : null)); //[TEMP-LOG]
 
                 $comment = $sheet->getCellByColumnAndRow($commentColumn, $row)->getValue();
                 //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' overallComment(col' . $commentColumn . ')=' . json_encode($comment)); //[TEMP-LOG]
 
                 if (!empty($comment)) {
-                    //POCOR-9584: start - CakePHP3 request->data[], ->alias(), session institution_id → CakePHP5 equivalents
-                    $alias = $this->_table->getAlias(); //POCOR-9584: alias() → getAlias()
-                    $reqData = $this->_table->request->getData()[$alias] ?? []; //POCOR-9584: request->data[] → getData()
-                    //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' reqData=' . json_encode($reqData)); //[TEMP-LOG]
-                    $InstitutionCompetencyItemCommentsData = $InstitutionCompetencyItemCommentsTable->newEntity([
-                        'comments' => $comment,
-                        'student_id' => $User->id,
-                        'competency_template_id' => $reqData['competency_template_id'] ?? null, //POCOR-9584: old key competency_template → competency_template_id
-                        'competency_period_id' => $reqData['competency_period_id'] ?? null,     //POCOR-9584: old key competency_period → competency_period_id
-                        'competency_item_id' => $reqData['competency_item_id'] ?? null,         //POCOR-9584: old key competency_item → competency_item_id
-                        'institution_id' => $this->_table->getInstitutionID(), //POCOR-9584: session read → getInstitutionID()
-                        'academic_period_id' => $reqData['academic_period_id'] ?? null          //POCOR-9584: old key academic_period → academic_period_id
-                    ]);
-                    //POCOR-9584: end
+                    $User = null;
+                    if ($studentOpenEmisId !== '') {
+                        $UsersTable = TableRegistry::getTableLocator()->get('User.Users');
+                        $User = $UsersTable->find()
+                            ->select(['id'])
+                            ->where([
+                                $UsersTable->aliasField('openemis_no') => $studentOpenEmisId
+                            ])
+                            ->first();
+                    }
+                    if ($User) {
+                        //POCOR-9584: start - CakePHP3 request->data[], ->alias(), session institution_id → CakePHP5 equivalents
+                        $alias = $this->_table->getAlias(); //POCOR-9584: alias() → getAlias()
+                        $reqData = $this->_table->request->getData()[$alias] ?? []; //POCOR-9584: request->data[] → getData()
+                        //// Log::debug('@ImportCompetencyResultBehavior::addBeforeSave row=' . $row . ' reqData=' . json_encode($reqData)); //[TEMP-LOG]
+                        $InstitutionCompetencyItemCommentsData = $InstitutionCompetencyItemCommentsTable->newEntity([
+                            'comments' => $comment,
+                            'student_id' => $User->id,
+                            'competency_template_id' => $reqData['competency_template_id'] ?? null, //POCOR-9584: old key competency_template → competency_template_id
+                            'competency_period_id' => $reqData['competency_period_id'] ?? null,     //POCOR-9584: old key competency_period → competency_period_id
+                            'competency_item_id' => $reqData['competency_item_id'] ?? null,         //POCOR-9584: old key competency_item → competency_item_id
+                            'institution_id' => $this->_table->getInstitutionID(), //POCOR-9584: session read → getInstitutionID()
+                            'academic_period_id' => $reqData['academic_period_id'] ?? null          //POCOR-9584: old key academic_period → academic_period_id
+                        ]);
+                        //POCOR-9584: end
 
-                    $InstitutionCompetencyItemCommentsTable->save($InstitutionCompetencyItemCommentsData);
+                        $InstitutionCompetencyItemCommentsTable->save($InstitutionCompetencyItemCommentsData);
+                    }
                 }
                 // end of save comment
 
