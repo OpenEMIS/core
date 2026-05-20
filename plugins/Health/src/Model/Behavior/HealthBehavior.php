@@ -2,7 +2,9 @@
 
 namespace Health\Model\Behavior;
 
+use ArrayObject;
 use Cake\ORM\Behavior;
+use Cake\ORM\Entity;
 use Cake\Event\EventInterface;
 
 class HealthBehavior extends Behavior
@@ -16,7 +18,36 @@ class HealthBehavior extends Behavior
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 100];
+        //POCOR-9718: force encoded pass[1] on every Health post-save redirect — Procrustean exit.
+        //Without this, ControllerAction's default redirect drops pass[1] and the index page
+        //bare-redirects, ending in 404 (Student/Directory contexts).
+        $events['ControllerAction.Model.add.afterSave']  = ['callable' => 'forcePassOnRedirect', 'priority' => 100];
+        $events['ControllerAction.Model.edit.afterSave'] = ['callable' => 'forcePassOnRedirect', 'priority' => 100];
         return $events;
+    }
+
+    //POCOR-9718: stop the default redirect and emit one carrying pass[1].
+    //Payload mirrors getHealthTabElements() so the index page sees the same encoded context
+    //the user arrived with. Profile context omits institution_id (no school).
+    public function forcePassOnRedirect(EventInterface $event, Entity $entity, ArrayObject $data)
+    {
+        $model = $this->_table;
+        $controller = $model->controller;
+        $userId = $model->getUserID();
+        $institutionId = $model->getInstitutionID();
+
+        $action = $model->url('index');
+
+        $payload = ['user_id' => $userId, 'student_id' => $userId, 'staff_id' => $userId];
+        $isProfile = $controller->getPlugin() === 'Profile';
+        if (!$isProfile && !empty($institutionId)) {
+            $payload['institution_id'] = $institutionId;
+        }
+
+        $action[1] = $model->paramsEncode($payload);
+
+        $event->stopPropagation();
+        return $controller->redirect($action);
     }
 
     public function beforeAction(EventInterface $event)
