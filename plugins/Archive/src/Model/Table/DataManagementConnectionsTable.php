@@ -20,7 +20,7 @@ use Cake\Core\Configure;
 use Cake\Utility\Security;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Database\Schema\TableSchema;
-use Cake\Http\Exception\NotFoundException;
+use Cake\Utility\Inflector;
 
 /**
  * DeletedLogs Model
@@ -456,19 +456,8 @@ class DataManagementConnectionsTable extends ControllerActionTable
         // }
 
 
-        if ($targetTableName === '') {
-            return false;
-        }
-        $tableClassName = self::getArchiveTableClassName($targetTableName);
-        $tableLocator = new TableLocator();
-        $tableArchived = $tableLocator->get($tableClassName, [
-            'connection' => $archiveConnection,
-        ]);
-
-
-        /*echo "<pre>"; print_r($targetTableName);
-        echo "<pre>"; print_r($archiveConnection);
-die;*/
+        $tableArchived = self::loadArchiveTableInstance($targetTableName, $archiveConnection);
+        
         // $tableArchived = TableRegistry::getTableLocator()->get('Institution.'.$targetTableName, [
         //     'connection' => $archiveConnection,
         // ]);
@@ -553,15 +542,10 @@ die;*/
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        if($targetTableName == 'assessment_item_results_archived'){
-            $tableLocator = new TableLocator();
-            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
-            'connection' => $remoteConnection]);
-        }else{
-            $tableLocator = new TableLocator();
-            $tableArchived = $tableLocator->get($targetTableName, [
-            'connection' => $remoteConnection]);
-        }
+        $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
+
+//        Log::write('debug', 'getArchiveYears');
+//        Log::write('debug', $where);
         $distinctYears = $tableArchived->find('all')
             ->where($where)
             ->select(['academic_period_id'])
@@ -618,9 +602,7 @@ die;*/
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
-            'connection' => $remoteConnection,
-        ]);
+        $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
         $distinctResults = $tableArchived->find('all')
             ->where($where)
             ->select(['assessment_period_id'])
@@ -647,9 +629,7 @@ die;*/
         $targetTableName = $targetTableNameAndConnection[0];
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
-            'connection' => $remoteConnection,
-        ]);
+        $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
         $distinctResults = $tableArchived->find('all')
             ->where($where)
             ->select(['student_id'])
@@ -677,15 +657,9 @@ die;*/
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
 
-        if($targetTableName == 'assessment_item_results_archived'){
-            $tableLocator = new TableLocator();
-            $tableArchived = $tableLocator->get('AssessmentItemResultsArchived', [
-            'connection' => $remoteConnection]);
-        }else{
-           $tableArchived = TableRegistry::getTableLocator()->get($targetTableName, [
-            'connection' => $remoteConnection,
-        ]);
-        }
+        $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
+//        Log::write('debug', 'getArchiveYears');
+//        Log::write('debug', $where);
 
         if($table_name == 'assessment_item_results'){
             $distinctResults = $tableArchived->find('all')
@@ -708,19 +682,31 @@ die;*/
     }
 
     /**
-     * Map physical archive table name to Cake ORM table class alias for TableRegistry.
+     * CakePHP 4: registry alias cannot be a snake_case name without a matching *Table class.
+     * Uses CamelCase alias + generic {@see \Cake\ORM\Table} and explicit `table` option.
      *
-     * @param string $targetTableName
-     * @return string
+     * @param string $targetTableName Physical *_archived table name
+     * @param \Cake\Datasource\ConnectionInterface $connection
+     * @return \Cake\ORM\Table
      */
-    private static function getArchiveTableClassName($targetTableName)
+    private static function loadArchiveTableInstance(string $targetTableName, $connection)
     {
-        $map = [
-            'institution_staff_attendances_archived' => 'Institution.StaffAttendancesArchived',
-            'institution_staff_leave_archived' => 'Institution.StaffLeaveArchived',
-            'assessment_item_results_archived' => 'Institution.AssessmentItemResultsArchived',
-        ];
-        return isset($map[$targetTableName]) ? $map[$targetTableName] : $targetTableName;
+        if ($targetTableName === '') {
+            throw new \RuntimeException('Archive table name is empty.');
+        }
+        if ($targetTableName === 'assessment_item_results_archived') {
+            return (new TableLocator())->get('AssessmentItemResultsArchived', [
+                'connection' => $connection,
+            ]);
+        }
+
+        $registryAlias = Inflector::camelize($targetTableName);
+
+        return TableRegistry::getTableLocator()->get($registryAlias, [
+            'className' => \Cake\ORM\Table::class,
+            'table' => $targetTableName,
+            'connection' => $connection,
+        ]);
     }
 
     /**
@@ -737,11 +723,8 @@ die;*/
         }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableClassName = self::getArchiveTableClassName($targetTableName);
-        $tableArchived = TableRegistry::getTableLocator()->get($tableClassName, [
-            'connection' => $remoteConnection,
-        ]);
-        return $tableArchived;
+
+        return self::loadArchiveTableInstance($targetTableName, $remoteConnection);
     }
 
     public static function getArchiveDays(string $table_name, array $where = [])
@@ -754,10 +737,7 @@ die;*/
         }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableClassName = self::getArchiveTableClassName($targetTableName);
-        $tableArchived = TableRegistry::getTableLocator()->get($tableClassName, [
-            'connection' => $remoteConnection,
-        ]);
+        $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
         $distinctDates = $tableArchived->find('all')
             ->where($where)
             ->select(['date'])
@@ -782,10 +762,7 @@ die;*/
         }
         $targetTableConnection = $targetTableNameAndConnection[1];
         $remoteConnection = ConnectionManager::get($targetTableConnection);
-        $tableClassName = self::getArchiveTableClassName($targetTableName);
-        $tableArchived = TableRegistry::getTableLocator()->get($tableClassName, [
-            'connection' => $remoteConnection,
-        ]);
+        $tableArchived = self::loadArchiveTableInstance($targetTableName, $remoteConnection);
 //        Log::write('debug', 'getArchiveLeaveDays');
 //        Log::write('debug', '$where');
 //        Log::write('debug', $where);

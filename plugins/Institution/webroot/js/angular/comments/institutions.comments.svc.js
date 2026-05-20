@@ -743,7 +743,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
                 //Superrole[START]
                 //POCOR-9028 -- if condition updated
-                if(getCurrentUserRole[0] != 'PRINCIPAL' && getCurrentUserRole[0] != 'HOMEROOM_TEACHER'  && getCurrentUserRole[0] != 'SUPER_ADMIN'){
+                //POCOR-9040 -- if condition updated
+                if(getCurrentUserRole[0] != 'PRINCIPAL' && getCurrentUserRole[0] != 'HOMEROOM_TEACHER'  && getCurrentUserRole[0] != 'SUPER_ADMIN' && getCurrentUserRole[0] == 'Teacher' || getCurrentUserRole[0] == 'Superrole'){ // Here && getCurrentUserRole[0] == 'Teacher' and getCurrentUserRole[0] == 'Superrole' is added for the ticket POCOR-9040 the condition may chnage based on requirment
                     if (allCommentsViewRequired == 1 || allCommentsEditRequired == 1) {
                         subjects = response.data;
                         if (angular.isObject(subjects) && subjects.length > 0) {
