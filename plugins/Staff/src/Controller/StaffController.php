@@ -605,6 +605,13 @@ class StaffController extends AppController
         $staffId = $this->getStaffID();
 
         $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        //POCOR-9718: guard against NULL institution_id. Without this, any internal redirect that
+        //lands on /Staff/Staff without an encoded pass[1] token crashes with InvalidPrimaryKeyException
+        //(seen after a successful save to Health/SpecialNeeds Add — the post-save redirect doesn't
+        //carry the full encoded context, falls through onInitialize's bare-redirect, ends up here).
+        if (empty($institutionId)) {
+            return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+        }
         $activeInstitution = $this->Institutions->get($institutionId);
         $institutionName = $activeInstitution->name;
         $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId ,'institution_id' => $institutionId]);
@@ -1138,9 +1145,17 @@ class StaffController extends AppController
         if ($pass[0] == 'template'){
             return true;
         }
-        if (in_array($pass[0], ['add', 'results', 'downloadFailed', 'downloadPassed']) //POCOR-9584: results + downloadFailed have no staff_id in URL
+        //POCOR-9718: scope the 'add' skip to context-less /add URLs only.
+        //Skip onInitialize ONLY when there is no encoded context token at pass[1].
+        //ImportStaff/add (no token) → still skips, original POCOR-9584 intent preserved.
+        //HealthAllergies/add/<encoded>, SpecialNeedsReferrals/add/<encoded>, etc. → has token,
+        //runs onInitialize so the staff/institution context is wired up.
+        if ($pass[0] === 'add' && empty($pass[1])
+            && $plugin === 'Staff' && $controller === 'Staff') {
+            return true;
+        }
+        if (in_array($pass[0], ['results', 'downloadFailed', 'downloadPassed']) //POCOR-9584: results + downloadFailed have no staff_id in URL
             && ($plugin == 'Staff') && ($controller == 'Staff')) {
-
             return true;
         }
 
