@@ -26,17 +26,33 @@ class AwardsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator;
+        return $validator
+            ->requirePresence('award', true)
+            ->notEmptyString('award', __('This field cannot be left empty'))
+            ->requirePresence('issuer', true)
+            ->notEmptyString('issuer', __('This field cannot be left empty'));
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $queryString = $this->getQueryString();
-        $data['staff_id'] = $queryString['staff_id'];    
-		$this->field('security_user_id', ['type' => 'hidden', 'value' => $data['staff_id']]);
-        if($this->request->getParam('controller') == 'Students' || $this->request->getParam('controller') == 'Directories'){
-            $this->field('security_user_id', ['type' => 'hidden', 'value' => $queryString['student_id']]);
+        $controller = $this->request->getParam('controller');
+
+        if (($controller === 'Students' || $controller === 'Directories') && !empty($queryString['student_id'])) {
+            $securityUserId = $queryString['student_id'];
+        } elseif (!empty($queryString['staff_id'])) {
+            $securityUserId = $queryString['staff_id'];
+        } elseif (!empty($queryString['user_id'])) {
+            $securityUserId = $queryString['user_id'];
+        } elseif (!empty($queryString['security_user_id'])) {
+            $securityUserId = $queryString['security_user_id'];
+        } elseif (!empty($queryString['id'])) {
+            $securityUserId = $queryString['id'];
+        } else {
+            $securityUserId = null;
         }
+
+        $this->field('security_user_id', ['type' => 'hidden', 'value' => $securityUserId]);
     }
     
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
