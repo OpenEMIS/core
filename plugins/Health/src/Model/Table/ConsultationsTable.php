@@ -7,10 +7,11 @@ use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry; //POCOR-9718
 
 class ConsultationsTable extends ControllerActionTable
 {
+    use HealthLookupTrait; //POCOR-9718
+
     public function initialize(array $config): void
     {
         $this->setTable('user_health_consultations');
@@ -212,16 +213,10 @@ class ConsultationsTable extends ControllerActionTable
         return $query;
     }
 
-    //POCOR-9718: populate health_consultation_type_id options from Health.ConsultationTypes
-    public function onUpdateFieldHealthConsultationTypeId(EventInterface $event, array $attr, $action, $request)
+    //POCOR-9718: populate health_consultation_type_id select from Health.ConsultationTypes.
+    public function onUpdateFieldHealthConsultationTypeId(EventInterface $event, array $attr, $action)
     {
-        if ($action == 'add' || $action == 'edit') {
-            $typeTable = TableRegistry::getTableLocator()->get('Health.ConsultationTypes');
-            $attr['type'] = 'select';
-            $attr['placeholder'] = __('--Select--');
-            $attr['options'] = $typeTable->find('list')->toArray();
-        }
-        return $attr;
+        return $this->populateLookupSelect($attr, $action, 'Health.ConsultationTypes');
     }
 
 

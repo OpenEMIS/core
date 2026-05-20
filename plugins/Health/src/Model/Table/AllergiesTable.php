@@ -7,7 +7,6 @@ use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use Cake\Event\EventInterface;
 use Cake\ORM\Query;
-use Cake\ORM\TableRegistry; //POCOR-9718
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
@@ -15,6 +14,7 @@ use Cake\Validation\Validator;
 class AllergiesTable extends ControllerActionTable
 {
     use OptionsTrait;
+    use HealthLookupTrait; //POCOR-9718
 
     public function initialize(array $config): void
     {
@@ -158,18 +158,10 @@ class AllergiesTable extends ControllerActionTable
         return $attr;
     }
 
-    //POCOR-9718: populate health_allergy_type_id options from Health.AllergyTypes — Add form
-    //previously rendered an empty <select>, causing POST to omit the FK and DB to reject
-    //with "Field 'health_allergy_type_id' doesn't have a default value".
-    public function onUpdateFieldHealthAllergyTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    //POCOR-9718: populate health_allergy_type_id select from Health.AllergyTypes.
+    public function onUpdateFieldHealthAllergyTypeId(EventInterface $event, array $attr, $action)
     {
-        if ($action == 'add' || $action == 'edit') {
-            $typeTable = TableRegistry::getTableLocator()->get('Health.AllergyTypes');
-            $attr['type'] = 'select';
-            $attr['placeholder'] = __('--Select--');
-            $attr['options'] = $typeTable->find('list')->toArray();
-        }
-        return $attr;
+        return $this->populateLookupSelect($attr, $action, 'Health.AllergyTypes');
     }
 
     private function setupFields(Entity $entity)
