@@ -268,7 +268,7 @@ class UsersTable extends ControllerActionTable
     public function beforeAction(EventInterface $event)
     {
         $this->fields['photo_content']['visible'] = false;
-        $this->fields['password']['visible'] = true;
+        $this->fields['password']['visible'] = false; //POCOR-9666
         $this->fields['address']['visible'] = false;
         $this->fields['postal_code']['visible'] = false;
         $this->fields['address_area_id']['visible'] = false;
