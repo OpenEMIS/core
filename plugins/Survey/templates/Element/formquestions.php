@@ -15,9 +15,11 @@
 	</div>
 <?php elseif ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
 	<?php
+		$alias = $ControllerAction['table']->getAlias();
 		$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
 		$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
 		$reorder = isset($attr['reorder']) ? $attr['reorder'] : [];
+		$labels = isset($attr['labels']) ? $attr['labels'] : [];
 		echo $this->Html->script('Survey.surveyform', ['block' => true]);
 
 		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 0;
@@ -31,19 +33,20 @@
 	?>
 	<div class="clearfix"></div>
 		<hr>
-		<h3><?= __('Survey Questions')?></h3>
+		<!-- POCOR-9638 -->
+		<h3><?= !empty($labels['custom_fields']) ? __($labels['custom_fields']) : __('Survey Questions') ?></h3> 
 		<div class="clearfix">
-			<?=
-				$this->Form->input($ControllerAction['table']->alias().".survey_question_id", [
+			<?php
+				$attr['model'] = $alias;
+				$attr['field'] = 'selected_custom_field';
+				echo $this->HtmlField->chosenSelectInput($attr, [
 					'label' => $this->Label->get('SurveyForms.add_question'),
-					'type' => 'select',
-					'options' => $attr['options'],
-					'value' => 0,
-					'onchange' => "$('#reload').val('addQuestion').click();"
+					'multiple' => false,
+					'onchange' => "if (typeof SurveyForm !== 'undefined' && SurveyForm.prepareAddQuestion) { SurveyForm.prepareAddQuestion(); } $('#reload').val('addQuestion').click();",
 				]);
 			?>
 			<?php
-				// echo $this->Form->input($ControllerAction['table']->alias().".section", [
+				// echo $this->Form->input($ControllerAction['table']->getAlias().".section", [
 				// 	'label' => $this->Label->get('SurveyForms.add_to_section'),
 				// 	'type' => 'select',
 				// 	'options' => '',
@@ -52,14 +55,14 @@
 				// ]);
 			?>
 			<?=
-				$this->Form->input($ControllerAction['table']->alias().".sectiontxt", [
+				$this->Form->input($alias.".sectiontxt", [
 					'label' => __('Add Section'),
 					'type' => 'text',
 					'id' => 'sectionTxt'
 				]);
 			?>
-			<div class="form-buttons">
-				<div class="button-label"></div><button onclick="SurveyForm.addSection('#sectionTxt');" type="button" class="btn btn-default"><span><?=__('Add Section')?></span></button>
+			<div class="form-buttons no-margin-top">
+				<div class="button-label"></div><button onclick="SurveyForm.addSection('#sectionTxt');" type="button" class="btn btn-default btn-xs"><span><i class="fa fa-plus"></i><?=__('Add Section')?></span></button>
 			</div>
 			<br/>
 		</div>
@@ -71,4 +74,5 @@
 		</table>
 		</div>
 	</div>
+	<!-- POCOR-9638 -->
 <?php endif ?>

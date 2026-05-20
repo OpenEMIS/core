@@ -67,7 +67,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'UTC'), //POCOR-9509: set APP_TIMEZONE in .env to match server local timezone
 
     /*
     |--------------------------------------------------------------------------
