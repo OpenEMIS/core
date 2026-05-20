@@ -28,26 +28,42 @@ class HealthBehavior extends Behavior
 
     //POCOR-9718: stop the default redirect and emit one carrying pass[1].
     //Payload mirrors getHealthTabElements() so the index page sees the same encoded context
-    //the user arrived with. Profile context omits institution_id (no school).
+    //the user arrived with.
     public function forcePassOnRedirect(EventInterface $event, Entity $entity, ArrayObject $data)
     {
-        $model = $this->_table;
-        $controller = $model->controller;
-        $userId = $model->getUserID();
-        $institutionId = $model->getInstitutionID();
-
-        $action = $model->url('index');
-
-        $payload = ['user_id' => $userId, 'student_id' => $userId, 'staff_id' => $userId];
-        $isProfile = $controller->getPlugin() === 'Profile';
-        if (!$isProfile && !empty($institutionId)) {
-            $payload['institution_id'] = $institutionId;
+        $payload = $this->buildContextPayload();
+        if (empty($payload)) {
+            return;
         }
 
-        $action[1] = $model->paramsEncode($payload);
+        $action = $this->_table->url('index');
+        $action[1] = $this->_table->paramsEncode($payload);
 
         $event->stopPropagation();
-        return $controller->redirect($action);
+        return $this->_table->controller->redirect($action);
+    }
+
+    private function buildContextPayload(): array
+    {
+        $userId        = $this->positiveInt($this->_table->getUserID());
+        $institutionId = $this->positiveInt($this->_table->getInstitutionID());
+        $isProfile     = $this->_table->controller->getPlugin() === 'Profile';
+
+        $payload = [];
+        if ($userId !== null) {
+            $payload['user_id']    = $userId;
+            $payload['student_id'] = $userId;
+            $payload['staff_id']   = $userId;
+        }
+        if ($institutionId !== null && !$isProfile) {
+            $payload['institution_id'] = $institutionId;
+        }
+        return $payload;
+    }
+
+    private function positiveInt($value): ?int
+    {
+        return is_numeric($value) && (int)$value > 0 ? (int)$value : null;
     }
 
     public function beforeAction(EventInterface $event)
