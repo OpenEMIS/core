@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate admission alerts through AlertLogsTable helper
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -1544,6 +1545,7 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9313 start: made a little safer
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::afterSave() About to call sendStudentAdmissionAlert()'); //[TEMP-LOG]
         if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
             $this->sendStudentAdmissionAlert($entity);
         }
@@ -1626,43 +1628,16 @@ class StudentAdmissionTable extends ControllerActionTable
 
     private function sendStudentAdmissionAlert($entity)
     {
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', status_id=' . ($entity->status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
         if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
             $userId = $entity->modified_user_id;
         } else {
             $userId = $entity->created_user_id;
         }
 
-        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
-        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
-        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
-
-
-        $alert = $alertsTable
-            ->find()
-            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAdmission',
-                $alertsTable->aliasField('frequency') => 'Once'])
-            ->first();
-        if (!$alert) {
-            Log::error('No Alerts for AlertStudentAdmission'); // POCOR-9323
-            return;
-        }
-        if (!is_array($alert)) {
-            $alert = $alert->toArray();
-        }
-        $activeRules = $alertRulesTable->find()
-            ->where([
-                $alertRulesTable->aliasField('feature') => $alert['name'],
-                $alertRulesTable->aliasField('enabled') => 1
-            ])
-            ->toArray();
-
-//        return;
-        foreach ($activeRules as $rule) {
-            if (!is_array($rule)) {
-                $rule = $rule->toArray();
-            }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
-        }
+        //POCOR-9509: delegate admission alert triggering to AlertLogsTable helper
+        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentAdmission', $entity, $userId);
     }
 
     public function findWorkbench(Query $query, array $options)
