@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Http\ServerRequest;
 use Cake\Event\EventInterface;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry; //POCOR-9718
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
@@ -154,6 +155,20 @@ class AllergiesTable extends ControllerActionTable
     public function onUpdateFieldSevere(EventInterface $event, array $attr, $action)
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
+        return $attr;
+    }
+
+    //POCOR-9718: populate health_allergy_type_id options from Health.AllergyTypes — Add form
+    //previously rendered an empty <select>, causing POST to omit the FK and DB to reject
+    //with "Field 'health_allergy_type_id' doesn't have a default value".
+    public function onUpdateFieldHealthAllergyTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $typeTable = TableRegistry::getTableLocator()->get('Health.AllergyTypes');
+            $attr['type'] = 'select';
+            $attr['placeholder'] = __('--Select--');
+            $attr['options'] = $typeTable->find('list')->toArray();
+        }
         return $attr;
     }
 
