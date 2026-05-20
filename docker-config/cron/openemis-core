@@ -1,0 +1,12 @@
+# POCOR-9694: OpenEMIS Runtime — single-cron entry-point.
+#
+# This file is installed at /etc/cron.d/openemis-core in the Docker image.
+# `openemis-core:run` wraps Laravel's scheduler so all scheduled work
+# (webhooks:process, alerts:check, alerts:send, …) is dispatched from
+# ONE entry-point. Every-minute granularity matches Laravel's scheduler.
+#
+# Format for /etc/cron.d/: minute hour dom month dow USER command
+# stdout/stderr appended to a dedicated log readable by the Runtime page.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*  *  *  *  *  www-data  cd /var/www/html/core/api && /usr/local/bin/php artisan openemis-core:run >> /var/www/html/core/api/storage/logs/openemis-core-run.log 2>&1

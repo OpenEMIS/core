@@ -2763,4 +2763,197 @@ class ReportCardCumulativeGpaTable extends ControllerActionTable
         return $locator->get($tableFullAlias);
     }
 
+    /**
+     * Cumulative CGPA generation for a student based on report card configuration.
+     * calculate CGPA only
+     * POCOR-9629
+     * @return void
+     */
+    public static function addGpaReportCardRegenrate(
+    $checkgpaStudent,
+    $selectedAcademicPeriodId,
+    $institutionId,
+    $educationGradeId,
+    $reportStartDate = null,
+    $reportEndDate = null,
+    $isRegenerate = false 
+    ): array {
+
+        $studentId        = $checkgpaStudent;
+        $academicPeriodId = $selectedAcademicPeriodId;
+
+        // 1. Get enrollment
+        $institutionStudents = self::getDynamicTableInstance('Institution.InstitutionStudents');
+        $enrollment = $institutionStudents->find()
+            ->where([
+                'student_id' => $studentId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'education_grade_id' => $educationGradeId,
+            ])
+            ->first();
+
+        if (!$enrollment) {
+            return [];
+        }
+
+        // 2. Get GPA terms
+        $gpaGrades = self::getDynamicTableInstance('Gpa.GpaSystem');
+
+        $gpaResults = $gpaGrades->find()
+            ->select(['id', 'start_date', 'end_date'])
+            ->where([
+                'academic_period_id' => $academicPeriodId,
+                'education_grade_id' => $educationGradeId,
+                'start_date <=' => $enrollment->end_date,
+                'end_date >='   => $enrollment->start_date,
+            ])
+            ->orderAsc('start_date')
+            ->toArray();
+
+        if (empty($gpaResults)) {
+            return [];
+        }
+
+        // 3. Filter GPA IDs 
+        $gpaIds = [];
+
+        foreach ($gpaResults as $gpa) {
+            if ($reportStartDate && $reportEndDate) {
+                if (
+                    $gpa->start_date <= $reportEndDate &&
+                    $gpa->end_date   >= $reportStartDate
+                ) {
+                    $gpaIds[] = $gpa->id;
+                }
+            } else {
+                if ($gpa->start_date <= FrozenDate::today()) {
+                    $gpaIds[] = $gpa->id;
+                }
+            }
+        }
+
+        $gpaIds = array_values(array_unique($gpaIds));
+
+        if (empty($gpaIds)) {
+            return [];
+        }
+
+        // Check existing records
+        $StudentsGpa = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+
+        $results = [];
+
+        foreach ($gpaIds as $gpaId) {
+
+            $existing = $StudentsGpa->find()
+                ->where([
+                    'student_id' => $studentId,
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_grade_id' => $educationGradeId,
+                    'education_grades_gpa_id' => $gpaId
+                ])
+                ->first();
+            if ($isRegenerate || empty($existing)) {
+                $results[] = self::insertOnlyCumulativeGpaPerStudentPerGpa(
+                    $institutionId,
+                    $studentId,
+                    $academicPeriodId,
+                    $educationGradeId,
+                    $gpaId
+                );
+            }
+            // else skip (regenerate = NO and record exists)
+        }
+
+        return $results;
+    }
+
+    /**
+     * Cumulative CGPA generation for a student based on report card configuration.
+     * calculate CGPA only
+     * insert CGPA based on report card configuration
+     * POCOR-9629
+     * @return void
+     */
+    private static function insertOnlyCumulativeGpaPerStudentPerGpa(
+    $institutionId,
+    $studentId,
+    $academicPeriodId,
+    $educationGradeId,
+    $educationGradeGpaId
+    ): \Cake\Datasource\EntityInterface
+    {
+        $cum_gpa = self::getCumulativeGpaForStudentGpa(
+            $institutionId,
+            $studentId,
+            $academicPeriodId,
+            $educationGradeId,
+            $educationGradeGpaId
+        );
+
+        $session = new Session();
+        $userId = $session->read('Auth.User.id') ?? 1;
+
+        $gpaTable = self::getDynamicTableInstance('Institution.InstitutionStudentsGpa');
+
+        $existing = $gpaTable->find()
+            ->where([
+                'student_id' => $studentId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'education_grade_id' => $educationGradeId,
+                'education_grades_gpa_id' => $educationGradeGpaId,
+            ])
+            ->first();
+
+        $new = false;
+
+        if ($existing) {
+
+            //ONLY update cumulative_gpa
+            if ($existing->cumulative_gpa != $cum_gpa) {
+                $new = true;
+
+                $existing = $gpaTable->patchEntity($existing, [
+                    'cumulative_gpa' => $cum_gpa,
+                    'modified_user_id' => $userId,
+                    'modified' => FrozenTime::now()
+                ]);
+            }
+
+        } else {
+
+            //Insert with ONLY CGPA (GPA = NULL or keep default)
+            $new = true;
+
+            $existing = $gpaTable->newEntity([
+                'student_id' => $studentId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'education_grade_id' => $educationGradeId,
+                'education_grades_gpa_id' => $educationGradeGpaId,
+                'cumulative_gpa' => $cum_gpa,
+                'created_user_id' => $userId,
+                'created' => FrozenTime::now()
+            ]);
+        }
+
+        if ($new) {
+            $conn = $gpaTable->getConnection();
+            $conn->begin();
+
+            if ($gpaTable->save($existing)) {
+                $conn->commit();
+                return $existing;
+            } else {
+                $conn->rollback();
+                throw new \Exception("Failed to save CGPA record.");
+            }
+        }
+
+        return $existing;
+    }
+
 }

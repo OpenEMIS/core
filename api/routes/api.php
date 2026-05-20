@@ -610,10 +610,46 @@ Route::group(
         Route::get('users/email/{email}', 'UserController@getUserByEmail'); // POCOR-8912
         // POCOR-8912 end
 
+        //POCOR-9694: OpenEMIS Runtime — action / aggregate endpoints (v4).
+        //  Plain resource reads of tasks / task_jobs / task_failures go through CrudApiController under v5.
+        //  Here we expose only the things CrudApiController cannot model:
+        //    - aggregations across tables (queue counts)
+        //    - file tail (logs)
+        //    - scheduler introspection (heartbeat + schedule:list)
+        //    - state-mutating actions on a task (retry, abort)
+        $runtime = \App\Http\Controllers\Administration\SystemRuntimeController::class;
+        Route::get('system-runtime/logs', [$runtime, 'logs']);
+        Route::get('system-runtime/queue', [$runtime, 'queue']);
+        Route::get('system-runtime/scheduler', [$runtime, 'scheduler']);
+        Route::post('system-runtime/tasks/{id}/retry', [$runtime, 'retryTask'])->where('id', '[0-9]+');
+        Route::post('system-runtime/tasks/{id}/abort', [$runtime, 'abortTask'])->where('id', '[0-9]+');
+
+        //POCOR-9694: Async Services dashboard — aggregate views across the four
+        //  legacy + runtime queue surfaces (system_processes, alert_queue,
+        //  webhook_queue, failed_jobs). Distinct from system-runtime/* above
+        //  which only addresses the new tasks/* abstraction.
+        $async = \App\Http\Controllers\Administration\SystemAsyncController::class;
+        Route::get('system-async/overview',          [$async, 'overview']);
+        Route::get('system-async/failed-jobs',       [$async, 'failedJobs']);
+        Route::get('system-async/stuck-processes',   [$async, 'stuckProcesses']);
+        Route::get('system-async/webhook-failures',  [$async, 'webhookFailures']);
+        Route::get('system-async/queue-backlog',     [$async, 'queueBacklog']);
+        Route::post('system-async/retry/{kind}/{id}', [$async, 'retry'])
+            ->where('kind', 'failed-job|webhook|alert')
+            ->where('id', '[0-9]+');
+        //POCOR-9694 end
+
     }
 );
 
 Route::group(["middleware" => "auth.jwt", "prefix" => "v5"], function () {
+    //POCOR-9694: OpenEMIS Runtime endpoints — registered BEFORE the v5 catch-all so the
+    //  CrudApiController doesn't swallow them. Lives under Administration namespace.
+    //POCOR-9694: Runtime resource reads moved to CrudApiController under v5
+    //  (`/api/v5/tasks`, `/api/v5/task-jobs`, `/api/v5/task-failures`).
+    //  Action / aggregate endpoints live under v4 — see SystemRuntimeController routes there.
+    //POCOR-9694 end
+
     // POCOR-8915 start
     // should be always the last, as it is all-consuming
     Route::group(
