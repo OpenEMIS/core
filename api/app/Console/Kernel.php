@@ -47,9 +47,9 @@ class Kernel extends ConsoleKernel
                 ->weekdays()
                 ->withoutOverlapping(60)
                 ->runInBackground();
-        } else { //POCOR-9509: default — run every 10 minutes
+        } else { //POCOR-9719: every cron tick — delivery latency = cron cadence, not a hard-coded throttle
             $schedule->command('alerts:send', ['--limit' => env('ALERT_SEND_LIMIT', 50)]) //POCOR-9509: ALERT_SEND_LIMIT=0 sends all
-                ->everyTenMinutes()
+                ->everyMinute()
                 ->withoutOverlapping(60)
                 ->runInBackground();
         }
