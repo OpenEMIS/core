@@ -55,11 +55,11 @@ class StuckProcessesTable extends AsyncServicesAdminTable
 
     protected function describeScreen(): string
     {
+        //POCOR-9719: plain English banner, no internal table names or jargon.
         return sprintf(
-            'Showing system_processes rows still in NEW or RUNNING state'
-            . ' for more than %d hour. The global 1-day stale-sweep will'
-            . ' eventually reap these, but operators should investigate'
-            . ' first — these are typically worker crashes or hung calls.',
+            __('Background tasks that have been running for more than %d hour.'
+            . ' The system clears these automatically after a day, but they'
+            . ' usually mean something has gone wrong and is worth checking sooner.'),
             self::STUCK_THRESHOLD_HOURS
         );
     }

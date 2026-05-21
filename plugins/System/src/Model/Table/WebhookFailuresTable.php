@@ -44,10 +44,10 @@ class WebhookFailuresTable extends AsyncServicesAdminTable
 
     protected function describeScreen(): string
     {
-        return 'webhook_queue rows whose final status is FAILED. Each row'
-            . ' represents a delivery that exhausted its retry budget;'
-            . ' inspect the response body and target URL before deciding'
-            . ' whether to retry or blacklist the receiver.';
+        //POCOR-9719: plain English banner, no internal table names or jargon.
+        return __('Notifications to external systems that failed after every'
+            . ' retry. Review the error message and the target address before'
+            . ' deciding whether to send again or stop sending to that address.');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
