@@ -18,6 +18,13 @@ use Cake\ORM\Query;
  */
 class WebhookFailuresTable extends AsyncServicesAdminTable
 {
+    use AsyncFilterTrait; //POCOR-9719
+
+    protected function asyncFilterKey(): string //POCOR-9719
+    {
+        return 'failed_webhooks';
+    }
+
     /** Status code in {{webhook_queue}} that marks a final delivery failure. */
     private const FAILED_STATUS = -1;
 
@@ -46,6 +53,7 @@ class WebhookFailuresTable extends AsyncServicesAdminTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         parent::indexBeforeAction($event, $extra);
+        $this->addAsyncFilter($extra); //POCOR-9719: filter dropdown
 
         // Hide noisy / sensitive columns on the index — visible on view page.
         // {{status}} is always FAILED here (we filter by it) so it's redundant;
