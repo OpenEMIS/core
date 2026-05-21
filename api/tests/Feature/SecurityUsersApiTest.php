@@ -78,14 +78,18 @@ class SecurityUsersApiTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_can_delete_SecurityUsers()
+    //POCOR-9697: hard-delete of security_users is schema-blocked — the audit
+    //trail `user_activities.security_user_id` FK is ON DELETE RESTRICT, and
+    //UserActivityLog writes one row per create/edit. The CRUD endpoint must
+    //surface this as 403, not 204. Production uses soft-delete via `status`.
+    public function test_delete_SecurityUsers_blocked_by_audit_trail()
     {
-        $record = SecurityUsers::factory()->create();
+        $record = SecurityUsers::factory()->create(); //POCOR-9697: factory create writes a user_activities row
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/security-users/' . $record->id);
 
-        $response->assertStatus(204);
+        $response->assertStatus(403);
     }
 
     //POCOR-9590: drift detection — Synced user edited in any General field flips to Not Synced
