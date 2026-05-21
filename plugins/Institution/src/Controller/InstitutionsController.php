@@ -341,8 +341,8 @@ class InstitutionsController extends AppController
             case 'AssessmentItemResultsArchived':
                 $this->Angular->addModules([
                     'alert.svc',
-                    'institutions.results.archive.ctrl',
-                    'institutions.results.archive.svc'
+                    'institutions.results.archived.svc',
+                    'institutions.results.archived.ctrl',
                 ]);
                 break;
             case 'Surveys':
@@ -591,6 +591,18 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']);
     }
+
+    //POCOR-9610: start - Institution Registrations and Accreditations CakePHP actions
+    public function Registrations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionRegistrations']);
+    }
+
+    public function Accreditations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAccreditations']);
+    }
+    //POCOR-9610: end
 
     public function Fees()
     {
@@ -956,98 +968,91 @@ class InstitutionsController extends AppController
         }
         return $institution_id;
     }
+    
+    //POCOR-9620
 
-    public function AssessmentItemResultsArchived($pass = '')
-    {
-//        $this->log($pass, 'debug');
-        if ($pass == 'excel') {
+    // public function AssessmentItemResultsArchived($pass = '')
+    // {
+    //     if ($pass == 'excel') {
 
-            $classId = $this->ControllerAction->getQueryString('class_id');
-            $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
-        } else {
-            $queryString = $this->request->getQuery('queryString');
-            $classId = $this->ControllerAction->getQueryString('class_id');
+    //         $classId = $this->ControllerAction->getQueryString('class_id');
+    //         $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+    //         $institutionId = $this->ControllerAction->getQueryString('institution_id');
+    //         $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+    //         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
+    //     } else {
+    //         $queryString = $this->request->getQuery('queryString');
+    //         $classId = $this->ControllerAction->getQueryString('class_id');
 
-            $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
-            $institutionId = $this->ControllerAction->getQueryString('institution_id');
-            $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
-            $myClassName = $this->getInstitutionClassName($classId);
-            $this->Navigation->addCrumb('Assessments', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
-            $this->Navigation->addCrumb('Assessment Archives',
-                ['plugin' => $this->getPlugin(),
-                    'controller' => 'Institutions',
-                    'action' => 'AssessmentArchives',
-                    'academic_period_id' => $academicPeriodId]);
-            $this->Navigation->addCrumb("$myClassName");
+    //         $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+    //         $institutionId = $this->ControllerAction->getQueryString('institution_id');
+    //         $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
+    //         $myClassName = $this->getInstitutionClassName($classId);
+    //         $this->Navigation->addCrumb('Assessments', ['plugin' => $this->getPlugin(), 'controller' => 'Institutions', 'action' => 'Assessments', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
+    //         $this->Navigation->addCrumb('Assessment Archives',
+    //             ['plugin' => $this->getPlugin(),
+    //                 'controller' => 'Institutions',
+    //                 'action' => 'AssessmentArchives',
+    //                 'academic_period_id' => $academicPeriodId]);
+    //         $this->Navigation->addCrumb("$myClassName");
+    //         $roles = [];
 
-//            $this->log("academic_period_id $academicPeriodId", 'debug');
-//            $this->log("institution_id $institutionId", 'debug');
-//            $this->log("class_id $classId", 'debug');
-//            $this->log("assessmentId $assessmentId", 'debug');
-            $roles = [];
+    //         if (!$this->AccessControl->isAdmin()) {
+    //             $userId = $this->Auth->user('id');
+    //             $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+    //         }
 
-            if (!$this->AccessControl->isAdmin()) {
-                $userId = $this->Auth->user('id');
-                $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
-            }
+    //         $this->set('_roles', $roles);
 
-            $this->set('_roles', $roles);
+    //         // POCOR-3983 check institution status
+    //         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+    //         $isActive = $Institutions->isActive($institutionId);
+    //         if ($isActive) {
+    //             $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+    //         } else {
+    //             $_edit = false;
+    //         }
+    //         // end POCOR-3983
 
-            // POCOR-3983 check institution status
-            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $isActive = $Institutions->isActive($institutionId);
-            if ($isActive) {
-                $_edit = $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
-            } else {
-                $_edit = false;
-            }
-            // end POCOR-3983
+    //         $this->set('_edit', $_edit);
+    //         $this->set('_excel', $this->AccessControl->check(['Institutions', 'AssessmentItemResultsArchived', 'excel'], $roles));
 
-            $this->set('_edit', $_edit);
-            $this->set('_excel', $this->AccessControl->check(['Institutions', 'AssessmentItemResultsArchived', 'excel'], $roles));
-            // $url = $this->ControllerAction->url('index');
-            // $url['plugin'] = 'Institution';
-            // $url['controller'] = 'Institutions';
-            // $url['action'] = 'AssessmentItemResultsArchived';
+    //         $url = Router::url([
+    //             'plugin' => 'Institution',
+    //             'controller' => 'Institutions',
+    //             'action' => 'AssessmentItemResultsArchived',
+    //             'excel',
+    //             'queryString' => $queryString
+    //         ]);
 
-            $url = Router::url([
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'AssessmentItemResultsArchived',
-                'excel',
-                'queryString' => $queryString
-            ]);
+    //         $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
+    //         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
+    //         if ($hasTemplate) {
 
-            $Assessments = TableRegistry::getTableLocator()->get('Assessment.Assessments');
-            $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
-            if ($hasTemplate) {
+    //             $customUrl = Router::url([
+    //                 'plugin' => 'Institution',
+    //                 'controller' => 'Institutions',
+    //                 'action' => 'reportCardGenerate',
+    //                 'add',
+    //                 'queryString' => $queryString
+    //             ]);
 
-                $customUrl = Router::url([
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'reportCardGenerate',
-                    'add',
-                    'queryString' => $queryString
-                ]);
+    //             $this->set('reportCardGenerate', $customUrl);
 
-                $this->set('reportCardGenerate', $customUrl);
+    //             $exportPDF_Url = $this->ControllerAction->url('index');
+    //             $exportPDF_Url['plugin'] = 'CustomExcel';
+    //             $exportPDF_Url['controller'] = 'CustomExcels';
+    //             $exportPDF_Url['action'] = 'exportPDF';
+    //             $exportPDF_Url[0] = 'AssessmentResults';
+    //             $this->set('exportPDF', Router::url($exportPDF_Url));
+    //         }
 
-                $exportPDF_Url = $this->ControllerAction->url('index');
-                $exportPDF_Url['plugin'] = 'CustomExcel';
-                $exportPDF_Url['controller'] = 'CustomExcels';
-                $exportPDF_Url['action'] = 'exportPDF';
-                $exportPDF_Url[0] = 'AssessmentResults';
-                $this->set('exportPDF', Router::url($exportPDF_Url));
-            }
-
-            $this->set('excelUrl', $url);
-            $this->set('ngController', 'InstitutionsAssessmentArchiveCtrl');
-        }
-        // $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentItemResultsArchived']);
-    }
+    //         $this->set('excelUrl', $url);
+    //         $this->set('ngController', 'InstitutionsAssessmentArchiveCtrl');
+    //     }
+    // }
+    
+    //POCOR-9620
 
     /**
      * @param $classId
@@ -1981,6 +1986,49 @@ class InstitutionsController extends AppController
         $this->render('results');
 
     }
+    
+    //POCOR-9620
+    public function AssessmentItemResultsArchived()
+    {
+        $classId = $this->getQueryString('class_id');
+        $assessmentId = $this->getQueryString('assessment_id');
+        $institutionId = $this->getQueryString('institution_id');
+        $academicPeriodId = $this->getQueryString('academic_period_id');
+        $roles = [];
+        if (!$this->AccessControl->isAdmin()) {
+            $userId = $this->Auth->user('id');
+            $roles = TableRegistry::getTableLocator()->get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
+        }
+        $this->set('_roles', $roles);
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $isActive = $Institutions->isActive($institutionId);
+        $_edit = $isActive && $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles);
+        $queryString = $this->request->getQuery('queryString');
+        $this->set('_edit', $_edit);
+        $this->set('queryString', $queryString);
+        $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
+        $url = $this->ControllerAction->url('index');
+        $url['plugin'] = 'Institution';
+        $url['controller'] = 'Institutions';
+        $url['action'] = 'resultsExport';
+        $url['?'] = ['queryString' => $queryString];
+
+        $labelsTable = self::getDynamicTableInstance('labels');
+        $labelsData = $labelsTable->find()->where([
+            $labelsTable->aliasField('module') => 'Institution Assessments',
+            $labelsTable->aliasField('field') => 'total_mark'])->first();
+        $dynamicTotalMarkHeader = $labelsData->name;
+        if(empty($dynamicTotalMarkHeader)) {
+            $dynamicTotalMarkHeader = $labelsData->code;
+        }
+        $this->set('dynamicTotalMarkHeader', $dynamicTotalMarkHeader);
+        //POCOR-8146 End
+        $this->set('excelUrl', Router::url($url));
+        $this->set('ngController', 'InstitutionsResultsArchivedCtrl');
+        $this->render('results_archived');
+
+    }
+    //POCOR-9620
 
     // POCOR-8224 start
     public function AssessmentItemExemptions($subaction = 'index', $institutionSubjectId = null)
@@ -6961,6 +7009,10 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        if ($identityValidationError instanceof Response) {
+            return $identityValidationError;
+        }
 //        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $studentData = $this->extractSecurityUserData($requestData, $userId, true);
@@ -6973,7 +7025,10 @@ class InstitutionsController extends AppController
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
-            $this->handleIdentities($requestData, $userRecordId, $userId);
+            $identityResult = $this->handleIdentities($requestData, $userRecordId, $userId);
+            if ($identityResult instanceof Response) {
+                return $identityResult;
+            }
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('student', $requestData, $userRecordId, $userId);
             //if ($requestData['student_admission_status_value'] == 0 || strtolower($requestData['student_admission_status']) == "enrolled") {//POCOR-8434
@@ -7008,6 +7063,10 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        if ($identityValidationError instanceof Response) {
+            return $identityValidationError;
+        }
 //        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $staffData = $this->extractSecurityUserData($requestData, $userId, false,true);
@@ -7021,7 +7080,10 @@ class InstitutionsController extends AppController
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
-            $this->handleIdentities($requestData, $userRecordId, $userId);
+            $identityResult = $this->handleIdentities($requestData, $userRecordId, $userId);
+            if ($identityResult instanceof Response) {
+                return $identityResult;
+            }
             $this->handleContacts($requestData, $userRecordId, $userId);
             $this->handleCustomFields('staff', $requestData, $userRecordId, $userId);
             $staff = $this->handleStaffInstitutionData($requestData, $userRecordId, $userId) ?? $securityUserResult; // POCOR-8776
@@ -7303,40 +7365,47 @@ class InstitutionsController extends AppController
         $identity_number = $requestData['identity_number'] ?? null;
         $identity_type_id = $requestData['identity_type_id'] ?? null;
         $nationality_id = $requestData['nationality_id'] ?? null;
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        if ($identityValidationError instanceof Response) {
+            return $identityValidationError;
+        }
         if ($identity_number
             && $identity_type_id
             && $nationality_id) { // POCOR-9027 end
-            $identityTypesTbl = self::getDynamicTableInstance('identity_types');
-            $identityTypes = $identityTypesTbl->find()
-                ->where(['name' => $requestData['identity_type_name']])
-                ->first();
+            $userIdentities = self::getDynamicTableInstance('User.Identities');
+            $checkExistingIdentities = $userIdentities->find()
+                ->where([
+                    'nationality_id' => $nationality_id,
+                    'identity_type_id' => $identity_type_id,
+                    'number' => $identity_number,
+                ])->first();
 
-            if ($identityTypes) {
-                $userIdentities = self::getDynamicTableInstance('user_identities');
-                $checkExistingIdentities = $userIdentities->find()
-                    ->where([
-                        'nationality_id' => $nationality_id,
-                        'identity_type_id' => $identity_type_id,
-                        'number' => $identity_number,
-                    ])->first();
-
-                if (!$checkExistingIdentities) {
-                    $entityIdentitiesData = [
-                        'identity_type_id' => $identityTypes->id,
-                        'number' => $identity_number,
-                        'nationality_id' => $nationality_id,
-                        'security_user_id' => $userRecordId,
-                        'created_user_id' => $userId,
-                        'created' => date('Y-m-d H:i:s')
-                    ];
-                    $entityIdentitiesData = $userIdentities->newEntity($entityIdentitiesData);
-                    try {
-                        return $userIdentities->save($entityIdentitiesData, ['associated' => false]);
-                    } catch (\Exception $e) {
-                        Log::debug(__FUNCTION__);
-                        Log::debug('Error: ' . $e->getMessage());
-                        return $e;
+            if (!$checkExistingIdentities) {
+                $entityIdentitiesData = [
+                    'identity_type_id' => $identity_type_id,
+                    'number' => trim((string)$identity_number),
+                    'nationality_id' => $nationality_id,
+                    'security_user_id' => $userRecordId,
+                    'created_user_id' => $userId,
+                    'created' => date('Y-m-d H:i:s')
+                ];
+                $entityIdentitiesData = $userIdentities->newEntity($entityIdentitiesData);
+                if ($entityIdentitiesData->hasErrors()) {
+                    return $this->sendJsonResponse([
+                        'message' => __('Please enter a valid Identity Number'),
+                        'errors' => $entityIdentitiesData->getErrors()
+                    ], 422);
+                }
+                try {
+                    $savedIdentity = $userIdentities->save($entityIdentitiesData, ['associated' => false]);
+                    if (!$savedIdentity) {
+                        return $this->sendJsonResponse(['message' => __('Please enter a valid Identity Number')], 422);
                     }
+                    return $savedIdentity;
+                } catch (\Exception $e) {
+                    Log::debug(__FUNCTION__);
+                    Log::debug('Error: ' . $e->getMessage());
+                    return $this->sendJsonResponse(['message' => __('Please enter a valid Identity Number')], 422);
                 }
             }
         }
@@ -8346,6 +8415,10 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        if ($identityValidationError instanceof Response) {
+            return $identityValidationError;
+        }
 
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
@@ -8358,6 +8431,9 @@ class InstitutionsController extends AppController
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
+            if ($r2 instanceof Response) {
+                return $r2;
+            }
             $r3 = $this->handleContacts($requestData, $userRecordId, $userId);
             if ($studentOpenemisNo) {
             $r4 = $this->handleGuardians($guardianRelationId, $studentOpenemisNo, $userRecordId, $userId);
@@ -8396,6 +8472,10 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        if ($identityValidationError instanceof Response) {
+            return $identityValidationError;
+        }
 
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $userData = $this->extractSecurityUserData($requestData, $userId, false, false, true);
@@ -8408,6 +8488,9 @@ class InstitutionsController extends AppController
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
             $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
+            if ($r2 instanceof Response) {
+                return $r2;
+            }
             $r3 = $this->handleContacts($requestData, $userRecordId, $userId);
 //            $r5 = $this->handleCustomFields('guardian', $requestData, $userRecordId, $userId);
 //            Log::debug('handleNationalities');
@@ -8564,24 +8647,30 @@ class InstitutionsController extends AppController
     function validateCustomIdentityNumber($options)
     {
         $pattern = '';
-
-
-        if (isset($options['identity_type_id']) && !empty($options['identity_type_id'])) {
-            $identityTypeId = $options['identity_type_id'];
-        } else {
-            return "";
+        $identityTypeId = null;
+        if (isset($options['identity_type_id']) && $options['identity_type_id'] !== '' && $options['identity_type_id'] !== null) {
+            $identityTypeId = (int)$options['identity_type_id'];
         }
-        if (isset($options['identity_number']) && !empty($options['identity_number'])) {
-            $identityNumber = $options['identity_number'];
+        if (isset($options['identity_number']) && $options['identity_number'] !== '' && $options['identity_number'] !== null) {
+            $identityNumber = trim((string)$options['identity_number']);
         } else {
             return "";
         }
 
         $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
-        $IdentityTypesData = $IdentityTypes
-            ->find()
-            ->where([$IdentityTypes->aliasField('id') => $identityTypeId])
-            ->first();
+        $identityTypesQuery = $IdentityTypes->find();
+        if (!empty($identityTypeId)) {
+            $identityTypesQuery->where([$IdentityTypes->aliasField('id') => $identityTypeId]);
+        } elseif (!empty($options['identity_type_name'])) {
+            $identityTypesQuery->where([$IdentityTypes->aliasField('name') => $options['identity_type_name']]);
+        } else {
+            return "";
+        }
+
+        $IdentityTypesData = $identityTypesQuery->first();
+        if (empty($IdentityTypesData)) {
+            return __("Please enter a valid Identity Number");
+        }
 
         if (!empty($IdentityTypesData->validation_pattern)) {
             $pattern = '/' . $IdentityTypesData->validation_pattern . '/';
@@ -8594,6 +8683,33 @@ class InstitutionsController extends AppController
         }
 
         return "";
+    }
+
+    private function validateIdentityByTypePatternOrResponse(array $requestData): ?Response
+    {
+        $identityTypeId = isset($requestData['identity_type_id']) ? trim((string)$requestData['identity_type_id']) : '';
+        $identityNumber = isset($requestData['identity_number']) ? trim((string)$requestData['identity_number']) : '';
+        $nationalityId = isset($requestData['nationality_id']) ? trim((string)$requestData['nationality_id']) : '';
+
+        // If any identity info is provided, require the full identity tuple.
+        $hasAnyIdentityValue = ($identityTypeId !== '' || $identityNumber !== '' || $nationalityId !== '');
+        if ($hasAnyIdentityValue) {
+            if ($identityTypeId === '') {
+                return $this->sendJsonResponse(['message' => __('Please enter value')], 422);
+            }
+            if ($identityNumber === '') {
+                return $this->sendJsonResponse(['message' => __('Please enter value')], 422);
+            }
+            if ($nationalityId === '') {
+                return $this->sendJsonResponse(['message' => __('Please enter value')], 422);
+            }
+        }
+
+        $message = $this->validateCustomIdentityNumber($requestData);
+        if (!empty($message)) {
+            return $this->sendJsonResponse(['message' => $message], 422);
+        }
+        return null;
     }
 
     /**
