@@ -107,7 +107,7 @@ class StaffTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByAttendanceType',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_staff_by_type' => [
@@ -128,7 +128,7 @@ class StaffTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByYear',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'institution_staff_gender' => [
@@ -2680,6 +2680,8 @@ class StaffTable extends ControllerActionTable
         }
 
         $params['dataSet'] = $dataSet->getArrayCopy();
+        $params['options']['title'] = ['text' => __('Number of Staff')]; //POCOR-9636: Rename chart label
+
         return $params;
     }
 
@@ -4280,17 +4282,21 @@ class StaffTable extends ControllerActionTable
      */
     private function getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId, $archive = false)
     {
+        $weekStartDate = $this->normalizeDateForDbCompare($weekStartDate);
+        $weekEndDate = $this->normalizeDateForDbCompare($weekEndDate);
+
         if (!$archive) {
             $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
             $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
             $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+            $attDate = $InstitutionStaffAttendances->aliasField('date');
             $allStaffAttendancesQuery = $InstitutionStaffAttendances
                 ->find('all')
                 ->where([
                     $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
                     $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
-                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
-                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                    $attDate . ' >=' => $weekStartDate,
+                    $attDate . ' <=' => $weekEndDate,
                 ]);
 
             if ($shiftId != -1) {
@@ -4305,11 +4311,29 @@ class StaffTable extends ControllerActionTable
             }
         }
         if ($archive) {
-            try {
-                //POCOR-9606
-                // $InstitutionStaffAttendances = ArchiveConnections::getArchiveTable('institution_staff_attendances');
-                $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffAttendancesArchived');
-                //POCOR-9606
+            // Resolves physical table institution_staff_attendances_archived (see Archive\DataManagementConnectionsTable::hasArchiveTable)
+            $InstitutionStaffAttendances = ArchiveConnections::getArchiveTable('institution_staff_attendances');
+            $attDateArchived = $InstitutionStaffAttendances->aliasField('date');
+            $t = $InstitutionStaffAttendances;
+            // Aliased columns so dehydrated rows always expose id/staff_id (generic Table + hydration is unreliable)
+            $allStaffAttendancesQuery = $t
+                ->find('all')
+                ->select([
+                    '_att_row_id' => $t->aliasField('id'),
+                    '_att_staff_id' => $t->aliasField('staff_id'),
+                    'date' => $t->aliasField('date'),
+                    'time_in' => $t->aliasField('time_in'),
+                    'time_out' => $t->aliasField('time_out'),
+                    'comment' => $t->aliasField('comment'),
+                    'absence_type_id' => $t->aliasField('absence_type_id'),
+                ])
+                ->where([
+                    $t->aliasField('institution_id') => (int)$institutionId,
+                    $t->aliasField('academic_period_id') => (int)$academicPeriodId,
+                    $attDateArchived . ' >=' => $weekStartDate,
+                    $attDateArchived . ' <=' => $weekEndDate,
+                ])
+                ->enableHydration(false);
 
                 $allStaffAttendancesQuery = $InstitutionStaffAttendances
                     ->find('all')
@@ -4319,17 +4343,90 @@ class StaffTable extends ControllerActionTable
                         $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
                         $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
                     ]);
-            } catch (\Throwable $e) {
-                return [];
+        }
+
+        $attendanceByStaffIdRecords = [];
+        if ($archive) {
+            foreach ($allStaffAttendancesQuery->all() as $row) {
+                $row = $this->archiveAttendanceResultRowToArray($row);
+                $sid = null;
+                if (isset($row['_att_staff_id']) && $row['_att_staff_id'] !== '') {
+                    $sid = (int)$row['_att_staff_id'];
+                } elseif (isset($row['staff_id']) && $row['staff_id'] !== '') {
+                    $sid = (int)$row['staff_id'];
+                }
+                $id = $row['_att_row_id'] ?? $row['id'] ?? null;
+                if ($sid === null || $sid === 0 || $id === null) {
+                    continue;
+                }
+                if (!isset($attendanceByStaffIdRecords[$sid])) {
+                    $attendanceByStaffIdRecords[$sid] = [];
+                }
+                $dateVal = $row['date'] ?? null;
+                if ($dateVal !== null && !$dateVal instanceof \DateTimeInterface) {
+                    $dateVal = FrozenDate::parse((string)$dateVal);
+                }
+                $attendanceByStaffIdRecords[$sid][$id] = [
+                    'id' => $id,
+                    'staff_id' => $sid,
+                    'date' => $dateVal,
+                    'time_in' => $row['time_in'] ?? null,
+                    'time_out' => $row['time_out'] ?? null,
+                    'comment' => $row['comment'] ?? null,
+                    'absence_type_id' => $row['absence_type_id'] ?? null,
+                ];
+            }
+        } else {
+            foreach ($allStaffAttendancesQuery->all() as $attendanceRow) {
+                $sid = $attendanceRow->get('staff_id');
+                $id = $attendanceRow->get('id');
+                if ($sid === null || $id === null) {
+                    continue;
+                }
+                $sid = (int)$sid;
+                if (!isset($attendanceByStaffIdRecords[$sid])) {
+                    $attendanceByStaffIdRecords[$sid] = [];
+                }
+                $attendanceByStaffIdRecords[$sid][$id] = $attendanceRow;
             }
         }
 
-        $allStaffAttendances = $allStaffAttendancesQuery
-            ->enableHydration(false)
-            ->toArray();
-
-        $attendanceByStaffIdRecords = Hash::combine($allStaffAttendances, '{n}.id', '{n}', '{n}.staff_id');
         return $attendanceByStaffIdRecords;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function normalizeDateForDbCompare($value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        if (is_string($value) && $value !== '') {
+            $ts = strtotime($value);
+
+            return $ts ? date('Y-m-d', $ts) : $value;
+        }
+
+        return (string)$value;
+    }
+
+    /**
+     * Normalizes ORM/archive query rows to a plain array (keys may vary by driver or hydration).
+     *
+     * @param mixed $row
+     * @return array<string, mixed>
+     */
+    private function archiveAttendanceResultRowToArray($row): array
+    {
+        if (is_array($row)) {
+            return $row;
+        }
+        if ($row instanceof Entity) {
+            return $row->toArray();
+        }
+
+        return (array)$row;
     }
 
     /**
@@ -4407,37 +4504,18 @@ class StaffTable extends ControllerActionTable
 
         if (!$archive) {
             $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
-        }
-        if ($archive) {
+        } else {
+            // Base table name only — not a plugin alias (getArchiveTable maps to institution_staff_leave_archived)
             $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
         }
-        if ($weekEndDate == $weekStartDate) {
-            $whereForLeaveTable = [
-                $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'",
-                $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'"
-            ];
-        } else {
-            $whereForLeaveTable = [
-                'OR' => [
-                    [
-                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date_to <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date_to >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date_from <= '") . $weekEndDate . "'",
-                        $StaffLeaveTable->aliasField("date_from >= '") . $weekStartDate . "'"
-                    ],
-                    [
-                        $StaffLeaveTable->aliasField("date_from <= '") . $weekStartDate . "'",
-                        $StaffLeaveTable->aliasField("date_to >= '") . $weekEndDate . "'"
-                    ]
-                ]
-            ];
-        }
+        $dateFrom = $StaffLeaveTable->aliasField('date_from');
+        $dateTo = $StaffLeaveTable->aliasField('date_to');
+        // Leave row overlaps [weekStartDate, weekEndDate] iff date_from <= weekEnd AND date_to >= weekStart
+        $whereForLeaveTable = [
+            $dateFrom . ' <=' => $weekEndDate,
+            $dateTo . ' >=' => $weekStartDate,
+        ];
+
         return $whereForLeaveTable;
     }
 
@@ -4449,12 +4527,15 @@ class StaffTable extends ControllerActionTable
      */
     private function setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery)
     {
-        $conditionQuery[$this->aliasField('start_date <= ')] = $weekStartDate;
-        $conditionQuery[$this->aliasField('start_date <= ')] = $weekEndDate;
+        $start = $this->aliasField('start_date');
+        $end = $this->aliasField('end_date');
+        // Assignment overlaps the week window: started on/before week end, and not ended before week start
+        $conditionQuery[$start . ' <='] = $weekEndDate;
         $conditionQuery['OR'] = [
-            $this->aliasField('end_date is ') => null,
-            $this->aliasField('end_date >= ') => $weekEndDate
+            [$end . ' IS' => null],
+            [$end . ' >=' => $weekStartDate],
         ];
+
         return $conditionQuery;
     }
 
@@ -4659,6 +4740,12 @@ class StaffTable extends ControllerActionTable
         //if $dayId != -1 then $weekStartDate = $weekEndDate
         list($weekStartDate, $weekEndDate) =
             $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
+        // Match findAllStaffAttendances: when day_id is empty/null, resetWeekStartEndForOneDaySearch can
+        // still treat (null != -1) as true and clobber the week with day_date — restore from options.
+        if (empty($dayId)) {
+            $weekStartDate = self::getFromArray($options, 'week_start_day');
+            $weekEndDate = self::getFromArray($options, 'week_end_day');
+        }
 
         $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
             $institutionId,
@@ -4675,7 +4762,23 @@ class StaffTable extends ControllerActionTable
             $weekEndDate,
             $archive);
 
-        $conditionQuery = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+        // Do not apply setConditionQueryForDates() here. That filter requires institution_staff.start_date/end_date
+        // to overlap the selected week; for historical archive weeks (e.g. 2016) current assignment rows often
+        // start years later, so every row would be excluded even when archive attendance exists. The list is
+        // already scoped by institution_id and staff_id IN (from archived attendance in the date range).
+
+        // Archived screen: only list staff who have rows in institution_staff_attendances_archived for this window
+        $staffIdsWithArchivedAttendance = array_values(array_unique(array_map(
+            'intval',
+            array_keys($attendanceByStaffIdRecords)
+        )));
+        if ($staffIdsWithArchivedAttendance === []) {
+            $query->where('1 = 0');
+
+            return $query;
+        }
+        $conditionQuery[$this->aliasField('staff_id') . ' IN'] = $staffIdsWithArchivedAttendance;
+
         //POCOR-6971[START]
         
         //Gets all the days in the selected week based on its start date end date
@@ -4683,11 +4786,7 @@ class StaffTable extends ControllerActionTable
 //        $query = $this->getQueryWithShiftId($query, $shiftId);
         $query = $query
             ->matching('Users')
-            ->where(
-                [
-                    $conditionQuery
-                ]
-            )
+            ->where($conditionQuery)
             ->order([
                 $this->Users->aliasField('first_name')
             ])
@@ -4726,7 +4825,7 @@ class StaffTable extends ControllerActionTable
                 $day_id,
                 $absenceTypes
             ) {
-                $staffId = $row->staff_id;
+                $staffId = (int)$row->staff_id;
                 $institution_id = $row->institution_id; // POCOR-9166
 
                 $staffRecords = [];
@@ -4752,19 +4851,29 @@ class StaffTable extends ControllerActionTable
 
                     $found = false;
                     foreach ($staffRecords as $attendanceRecord) {
-                        $staffAttendanceDate = $attendanceRecord['date']->format('Y-m-d');
+                        $recDate = $attendanceRecord['date'] ?? null;
+                        if ($recDate instanceof \DateTimeInterface) {
+                            $staffAttendanceDate = $recDate->format('Y-m-d');
+                        } elseif ($recDate !== null && $recDate !== '') {
+                            $staffAttendanceDate = FrozenDate::parse((string)$recDate)->format('Y-m-d');
+                        } else {
+                            continue;
+                        }
 
                         if ($dateStr == $staffAttendanceDate) {
                             $found = true;
+                            $absenceTypeId = $attendanceRecord['absence_type_id'] ?? null;
                             //isNew determines if record is existing data
                             $attendanceData = [
                                 'dateStr' => $dateStr,
-                                'date' => $this->formatDate($attendanceRecord['date']),
+                                'date' => $this->formatDate($recDate instanceof \DateTimeInterface ? $recDate : FrozenDate::parse((string)$recDate)),
                                 'time_in' => $this->formatTime($attendanceRecord['time_in']),
                                 'time_out' => $this->formatTime($attendanceRecord['time_out']),
                                 'comment' => $attendanceRecord['comment'],
-                                'absence_type_id' => $attendanceRecord['absence_type_id'],
-                                'absence_type' => __($absenceTypes[$attendanceRecord['absence_type_id']]),
+                                'absence_type_id' => $absenceTypeId,
+                                'absence_type' => ($absenceTypeId !== null && isset($absenceTypes[$absenceTypeId]))
+                                    ? __($absenceTypes[$absenceTypeId])
+                                    : '',
                                 'isNew' => false
                             ];
                             break;
