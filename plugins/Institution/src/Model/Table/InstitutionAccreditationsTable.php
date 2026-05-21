@@ -40,10 +40,10 @@ class InstitutionAccreditationsTable extends ControllerActionTable
         ]);
 
         // Read-only: data managed via API; HideButton removes add/edit/delete from UI
-        $this->toggle('add', false);
-        $this->toggle('edit', false);
+        $this->toggle('add', true);
+        $this->toggle('edit', true);
         $this->toggle('remove', false);
-        $this->addBehavior('ControllerAction.HideButton');
+       // $this->addBehavior('ControllerAction.HideButton');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
@@ -209,5 +209,12 @@ class InstitutionAccreditationsTable extends ControllerActionTable
     public function onExcelGetStatus(EventInterface $event, Entity $entity): string
     {
         return $this->onGetStatus($event, $entity);
+    }
+
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) 
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        unset($buttons['edit']);
+        return $buttons;
     }
 }
