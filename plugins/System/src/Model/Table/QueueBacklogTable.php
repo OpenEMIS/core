@@ -48,9 +48,10 @@ class QueueBacklogTable extends AsyncServicesAdminTable
 
     protected function describeScreen(): string
     {
-        return 'Pending alert_queue rows ordered by oldest first. Each tick'
-            . ' of openemis-core:run consumes from this table; a backlog'
-            . ' that grows over multiple ticks signals a wedged dispatcher.';
+        //POCOR-9719: plain English banner, no internal table names or jargon.
+        return __('Messages waiting to be sent, oldest first. The list normally'
+            . ' empties within a minute; a list that keeps growing means'
+            . ' delivery has stopped and is worth investigating.');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
