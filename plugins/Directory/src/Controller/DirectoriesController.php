@@ -2173,28 +2173,14 @@ class DirectoriesController extends AppController
     private function getSeychellesData(array $attributes, string $noData, string $identityNumber, ?string $dateOfBirth = null): array
     {
         $responseData = json_decode($noData, true);
-        //POCOR-9590: temporary diagnostic — surfaces silent failures in the Seychelles fetch path.
-        Log::debug(print_r([__FUNCTION__ . ' ATTR' => array_keys($attributes), 'NIN' => $identityNumber], true));
 
         // Basic config
-        $clientId  = $attributes['client_id'] ?? null;
-        $secret    = $attributes['client_secret'] ?? null;
-        $tokenUri  = rtrim($attributes['token_uri'] ?? '', '/');
-        $apiUrl    = rtrim($attributes['api_url'] ?? '', '/');
-        $grantType = $attributes['grant_type'] ?? null;
-        $scopes    = $attributes['scopes'] ?? null;
-
-        if (!$clientId || !$secret || !$tokenUri || !$apiUrl || !$grantType || !$scopes) {
-            Log::debug(__FUNCTION__ . ' MISSING_ATTR ' . json_encode([
-                'client_id' => !empty($clientId),
-                'client_secret' => !empty($secret),
-                'token_uri' => !empty($tokenUri),
-                'api_url' => !empty($apiUrl),
-                'grant_type' => !empty($grantType),
-                'scopes' => !empty($scopes),
-            ]));
-            return $responseData;
-        }
+        $clientId  = $attributes['client_id'];
+        $secret    = $attributes['client_secret'];
+        $tokenUri  = rtrim($attributes['token_uri'], '/');
+        $apiUrl    = rtrim($attributes['api_url'], '/');
+        $grantType = $attributes['grant_type'];
+        $scopes    = $attributes['scopes'];
 
         // Field mappings (normalized)
         $mapFirst       = strtolower(trim($attributes['first_name_mapping']     ?? 'givennames'));
@@ -2221,10 +2207,6 @@ class DirectoriesController extends AppController
         ]);
 
         $decodedToken = $tokenResponse->getJson();
-        Log::debug(__FUNCTION__ . ' TOKEN status=' . $tokenResponse->getStatusCode()
-            . ' uri=' . $tokenUri
-            . ' hasToken=' . (!empty($decodedToken['access_token']) ? 'yes' : 'no')
-            . ' raw=' . substr(json_encode($decodedToken), 0, 200));
 
         if (!$tokenResponse->isOk() || empty($decodedToken['access_token'])) {
             return $responseData;
@@ -2242,9 +2224,6 @@ class DirectoriesController extends AppController
         ]);
 
         $payload = $userResponse->getJson();
-        Log::debug(__FUNCTION__ . ' USER status=' . $userResponse->getStatusCode()
-            . ' url=' . $ninEndpoint
-            . ' raw=' . substr(json_encode($payload), 0, 400));
 
         $record = $payload['record'] ?? $payload;
         if (!$userResponse->isOk() || empty($record)) {
