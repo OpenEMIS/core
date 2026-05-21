@@ -593,6 +593,11 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     //grid stuck in "no more pages" mode for every subsequent identity.
     function resetExternalSearchGrid(scope) {
         var prior = scope.externalGridOptions;
+        console.log('[POCOR-9590] ExternalSearch RESET', {
+            hadPriorGrid: !!(prior && prior.api),
+            identity_number: scope.selectedUserData && scope.selectedUserData.identity_number,
+            source: scope.externalSearchSourceName
+        });
         if (prior && prior.api) {
             if (typeof prior.api.purgeInfiniteCache === 'function') {
                 try { prior.api.purgeInfiniteCache(); } catch (e) { /* api torn down */ }
@@ -1227,12 +1232,25 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
     function getExternalSearchData(params) {
+        //POCOR-9590: client-side diagnostic — mirrors the PHP Log::debug lines so
+        //the developer can see request/response in DevTools without server log access.
+        console.log('[POCOR-9590] ExternalSearch REQ', params);
         var deferred = $q.defer();
         var url = angular.baseUrl + '/Directories/directoryExternalSearch';
         $http.post(url, {params: params})
         .then(function(response){
+            console.log('[POCOR-9590] ExternalSearch RESP', {
+                status: response.status,
+                data: response.data,
+                rowCount: Array.isArray(response.data && response.data.data) ? response.data.data.length : 'n/a'
+            });
             deferred.resolve(response);
         }, function(error) {
+            console.error('[POCOR-9590] ExternalSearch ERR', {
+                status: error.status,
+                statusText: error.statusText,
+                data: error.data
+            });
             deferred.reject(error);
         });
         return deferred.promise;
