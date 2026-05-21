@@ -4076,18 +4076,28 @@ class NavigationComponent extends Component
             ];
         };
         //POCOR-9694: v5 menu labels — user-visible titles only; internal nav keys kept stable.
+        //POCOR-9719: 5 list pages collapsed into one entry with a filter dropdown on the page.
+        //selected[] covers every legacy URL so the sidebar entry stays highlighted regardless
+        //of which filter is active. Overview stays as a separate summary page.
         return [
             'Administration.AsyncServices' => [
                 'title' => 'System Activities',
                 'parent' => 'Administration',
                 'link' => false,
             ],
-            'Systems.AsyncServicesOverview' => $child('Overview',         'Systems.AsyncServicesOverview'),
-            'Systems.SystemProcesses'       => $child('Completed Jobs',   'Systems.SystemProcesses'),
-            'Systems.FailedJobs'            => $child('Failed Jobs',      'Systems.FailedJobs'),
-            'Systems.StuckProcesses'        => $child('Frozen Jobs',      'Systems.StuckProcesses'),
-            'Systems.WebhookFailures'       => $child('Failed Webhooks',  'Systems.WebhookFailures'),
-            'Systems.QueueBacklog'          => $child('Waiting Jobs',     'Systems.QueueBacklog'),
+            'Systems.AsyncServicesOverview' => $child('Overview', 'Systems.AsyncServicesOverview'),
+            'Systems.SystemProcesses' => [
+                'title' => 'Async Services',
+                'parent' => $childParent,
+                'params' => $systemPlugin,
+                'selected' => [
+                    'Systems.SystemProcesses',
+                    'Systems.FailedJobs',
+                    'Systems.StuckProcesses',
+                    'Systems.WebhookFailures',
+                    'Systems.QueueBacklog',
+                ],
+            ],
         ];
         //POCOR-9694: end
     }
