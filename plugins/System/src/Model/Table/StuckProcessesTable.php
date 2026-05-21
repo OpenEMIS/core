@@ -20,6 +20,13 @@ use Cake\ORM\Query;
  */
 class StuckProcessesTable extends AsyncServicesAdminTable
 {
+    use AsyncFilterTrait; //POCOR-9719
+
+    protected function asyncFilterKey(): string //POCOR-9719
+    {
+        return 'frozen_jobs';
+    }
+
     /** A row older than this with status IN (1,2) is considered stuck. */
     private const STUCK_THRESHOLD_HOURS = 1;
 
@@ -60,6 +67,7 @@ class StuckProcessesTable extends AsyncServicesAdminTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         parent::indexBeforeAction($event, $extra);
+        $this->addAsyncFilter($extra); //POCOR-9719: filter dropdown
 
         $this->field('process_id',       ['visible' => false]);
         $this->field('callable_event',   ['visible' => false]);

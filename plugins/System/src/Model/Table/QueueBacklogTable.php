@@ -25,6 +25,13 @@ use Cake\ORM\Query;
  */
 class QueueBacklogTable extends AsyncServicesAdminTable
 {
+    use AsyncFilterTrait; //POCOR-9719
+
+    protected function asyncFilterKey(): string //POCOR-9719
+    {
+        return 'waiting_jobs';
+    }
+
     /** Status code: a row that has not yet been picked up for delivery. */
     private const PENDING_STATUS = 0;
 
@@ -49,6 +56,7 @@ class QueueBacklogTable extends AsyncServicesAdminTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         parent::indexBeforeAction($event, $extra);
+        $this->addAsyncFilter($extra); //POCOR-9719: filter dropdown
 
         foreach (['payload', 'last_error', 'sent_at', 'modified', 'message_body',
                   'status', 'retry_count'] as $hide) {
