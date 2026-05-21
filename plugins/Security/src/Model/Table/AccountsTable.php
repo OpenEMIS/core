@@ -111,6 +111,7 @@ class AccountsTable extends AppTable {
 
     public function viewAfterAction(EventInterface $event, Entity $entity) {
         $this->setupFields($entity);
+        $this->fields['new_password']['visible'] = false; //POCOR-9666
     }
 
     public function setupFields(Entity $entity) {

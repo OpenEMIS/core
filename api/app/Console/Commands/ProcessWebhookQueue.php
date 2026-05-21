@@ -74,7 +74,7 @@ class ProcessWebhookQueue extends Command
             // $this->info("✅ Completed! Total processed: {$processed}");
         }
 
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 
     /**

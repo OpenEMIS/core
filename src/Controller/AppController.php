@@ -30,6 +30,7 @@ use Cake\Cache\Cache;
 use Cake\ORM\Table;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
+use App\Utility\ApplicationTimezone;
 
 
 /**
@@ -210,21 +211,10 @@ class AppController extends Controller
             $this->getEventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
-        // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $ConfigItem = $ConfigItemTable
-            ->find()
-            ->select(['zonevalue' => 'ConfigItems.value'])
-            ->where([
-                $ConfigItemTable->aliasField('name') => 'Time Zone'
-            ]);
-        //->first();
-        foreach ($ConfigItem->toArray() as $value) {
-            $timezone = $value['zonevalue'];
-            date_default_timezone_set($timezone);
-        }
+        // START: POCOR-6538 — display timezone from config_items (cached; PHP default remains UTC in bootstrap).
+        ApplicationTimezone::registerDisplayTimezone(); //POCOR-9565
         $this->checkAccessControl();
-        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        // END: POCOR-6538
     }
 
     private function darkenColour($rgb, $darker = 2)
