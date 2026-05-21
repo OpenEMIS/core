@@ -45,8 +45,15 @@ class AppServiceProvider extends ServiceProvider
                 return ($row && @timezone_open($row) !== false) ? $row : 'UTC'; //POCOR-9509: invalid/missing → Greenwich (UTC)
             });
             config(['app.timezone' => $tz]);
-            date_default_timezone_set($tz);
-            Carbon::setTimezone($tz);
+            date_default_timezone_set($tz); //POCOR-9509: also seeds Carbon — Carbon honours PHP default tz.
+            //POCOR-9719: align MySQL session TZ with PHP TZ so DATETIME columns
+            //and CURRENT_TIMESTAMP defaults round-trip in the same wallclock.
+            //Without this, alert_queue.available_at drifts by the UTC offset
+            //(Tonga saw +13h, scheduling alerts for "tomorrow 03:00" instead of "today 14:00").
+            //POCOR-9719: removed the broken Carbon::setTimezone($tz) — that's an
+            //instance method called statically; it was throwing silently and
+            //preventing every subsequent line from running.
+            DB::statement('SET time_zone = ?', [$tz]);
         } catch (\Throwable $e) {
             // DB not ready (e.g. during migrations) — stay on default timezone
         }
