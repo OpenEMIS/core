@@ -1,3 +1,38 @@
+### [5.11.0] - 2026-05-20
+- Implemented: Develop Async Runtime Consolidation
+- Bug Fixed: Institutions > Report Cards > Comments : Issues when viewing Multi Grade Classes
+- Bug Fixed: Personal: Check all view pages to ensure that the following fields are standard
+- Bug Fixed: Institutions > Students > Finance > Bank Accounts > Edit : Gives 404.
+- Bug Fixed: Personal > Professional : Gives 404 for adding fields, when logged in as teacher.
+- Bug Fixed: Institutions > Academic >Houses > Add: When trying to add a house just after deleting any previous house it gives 404.
+
+### [5.10.0] - 2026-05-15
+- Implemented: Develop Registrations and Accreditations features
+- Implemented: Develop a new configuration to determine if GPA and Cumulative GPA should be will recalculated when report cards are generated
+- Implemented: Develop behaviour placeholders for institution profiles report
+- Bug Fixed: Security fix for v5 API-Core
+- Bug Fixed: CakePHP 5 - Administration > Archive
+- Bug Fixed: Update summary_student_attendances and summary_area_institution_grade_attendances tables
+- Bug Fixed: Institutions>Dashboard: Rename the labels on the visualizations seen below to Number of Students and Number of Staff.
+- Bug Fixed: Administrations > Surveys : Filters and Recipients tab are not showing even though permission is given
+- Bug Fixed: Directory>Add: Able to save National Identity Number value without any validation check being implemented.
+- Bug Fixed: Administrations > Surveys : No delete permission
+- Bug Fixed: Administration > Examinations > Results > Import Template: User should be upload template and upload result
+
+### [5.9.0] - 2026-05-08
+- Implemented: Develop changes to the Reports > Institution > Staff Report to include staff custom fields
+- Bug Fixed: Investigate the cause of queries the system configuration timezone
+- Bug Fixed: Institutions>Performance>GPA: The GPA & CGPA in the generated report card is empty for the student Jimmy Olbrice (1600991587) at C. I. Gibson
+- Bug Fixed: Institutions > Students > GPA tab: The system calculates the Cumulative GPA based on all available GPA values for the configured education grades.
+- Bug Fixed: Institution > Attendances : Student being enrolled but not shown on attendance
+- Bug Fixed: Report Card>Comments: Subject Teacher is not seeing subjects correctly when they have homeroom teacher role
+- Bug Fixed: Administration>system setup>Custom field:Issue in custom field
+- Bug Fixed: Directory>Merge: Merge is not completed properly
+- Bug Fixed: Administration>System Setup>Field Options>Contact Types: The system accepts invalid email ID's to be saved in the Staff/Student Overview page
+- Bug Fixed: Administration > Survey > Forms > Add: Section gets removed after page refresh when adding question to newly created form section
+- Bug Fixed: Institution>Student (2904672460)>Identities tab>Edit: Message is not found
+- Bug Fixed: Institutions>Survey>Forms: Institutions>Survey>Forms: The selection made on the dropdowns does not do the sorting as expected.
+
 ### [5.8.0] - 2026-05-04
 - Implemented: Develop an asynchronous alerts queue in laravel
 - Implemented: Develop a page that allows user to confirm if merge is successful
