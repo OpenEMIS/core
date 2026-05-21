@@ -2182,13 +2182,8 @@ class DirectoriesController extends AppController
         $grantType = $attributes['grant_type'];
         $scopes    = $attributes['scopes'];
 
-        // Field mappings (normalized)
-        $mapFirst       = strtolower(trim($attributes['first_name_mapping']     ?? 'givennames'));
-        $mapLast        = strtolower(trim($attributes['last_name_mapping']      ?? 'presentsurname'));
-        $mapFull        = strtolower(trim($attributes['full_name_mapping']      ?? 'fullname'));
-        $mapDob         = strtolower(trim($attributes['date_of_birth_mapping']  ?? 'dob'));
-        $mapGender      = strtolower(trim($attributes['gender_mapping']         ?? 'sex'));
-        $mapNationality = strtolower(trim($attributes['nationality_mapping']    ?? 'nationality'));
+        //POCOR-9590: full_name is wizard-only — strict mapping done via shared ExternalIdentityMapper below
+        $mapFull = trim((string)($attributes['full_name_mapping'] ?? 'fullname'));
 
         // ------------------------------------------------------------
         // TOKEN REQUEST
@@ -2230,38 +2225,30 @@ class DirectoriesController extends AppController
             return $responseData;
         }
 
-        $raw = $this->normalizeKeys($record);
-
-        // ------------------------------------------------------------
-        // NORMALIZED RESULT
-        // ------------------------------------------------------------
+        //POCOR-9590: same strict mapper as SyncUser — no silent case-fixups
+        ['mapped' => $core] = \User\Lib\ExternalIdentityMapper::map($record, $attributes);
         $mapped = [
             'identity_number' => $identityNumber,
-            'first_name'      => $raw[$mapFirst] ?? '',
-            'last_name'       => $raw[$mapLast] ?? '',
-            'full_name'       => $raw[$mapFull] ?? '',
-            'date_of_birth'   => isset($raw[$mapDob]) ? substr($raw[$mapDob], 0, 10) : '',
-            'gender'          => $raw[$mapGender] ?? '',
-            'nationality'     => $raw[$mapNationality] ?? ''
+            'first_name'      => $core['first_name'] ?? '',
+            'last_name'       => $core['last_name'] ?? '',
+            'full_name'       => $record[$mapFull] ?? '',
+            'date_of_birth'   => $core['date_of_birth'] ?? '',
+            'gender'          => $core['gender'] ?? '',
+            'nationality'     => $core['nationality'] ?? '',
         ];
 
-        // Generate full_name if missing
         if (empty($mapped['full_name'])) {
             $mapped['full_name'] = trim(($mapped['first_name'] ?? '') . ' ' . ($mapped['last_name'] ?? ''));
         }
 
-        // Add gender_id
-        $mapped['gender_id'] = $this->matchGenderId($mapped['gender']);
-
-        // Add nationality_id
+        $mapped['gender_id']      = $this->matchGenderId($mapped['gender']);
         $mapped['nationality_id'] = $this->matchOrCreateNationalityId($mapped['nationality']);
 
-        // Optional extras
-        if (isset($raw['postaladdress1'])) {
-            $mapped['address'] = $raw['postaladdress1'];
+        if (isset($record['postaladdress1'])) {
+            $mapped['address'] = $record['postaladdress1'];
         }
-        if (isset($raw['district'])) {
-            $mapped['district'] = $raw['district'];
+        if (isset($record['district'])) {
+            $mapped['district'] = $record['district'];
         }
 
 //        Log::debug(print_r(['SeychellesMapped' => $mapped], true));
@@ -2270,15 +2257,6 @@ class DirectoriesController extends AppController
             'data'  => [$mapped],
             'total' => 1
         ];
-    }
-
-    private function normalizeKeys(array $arr): array
-    {
-        $normalized = [];
-        foreach ($arr as $key => $value) {
-            $normalized[strtolower($key)] = $value;
-        }
-        return $normalized;
     }
 
     //POCOR-5673 starts

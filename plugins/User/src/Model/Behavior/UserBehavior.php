@@ -654,13 +654,12 @@ class UserBehavior extends Behavior
             return 'Failed to retrieve data from external identity source.';
         }
 
-        $apiData        = $apiResponse->getJson();
-        $externalValues = [];
-        foreach (['first_name', 'middle_name', 'third_name', 'last_name', 'gender', 'date_of_birth'] as $field) {
-            $path = $configs[$field . '_mapping'] ?? null;
-            if ($path) {
-                $externalValues[$field] = $this->resolveMappingPath($apiData, $path);
-            }
+        //POCOR-9590: shared strict mapper — same code path the add-from-external wizard uses
+        $apiData = $apiResponse->getJson();
+        ['mapped' => $externalValues, 'missing' => $missingMappings] = \User\Lib\ExternalIdentityMapper::map($apiData, $configs);
+        if (!empty($missingMappings)) {
+            $missingDetail = implode(', ', array_map(fn($f, $p) => "$f→$p", array_keys($missingMappings), $missingMappings));
+            return 'External source response is missing keys for configured mappings: ' . $missingDetail;
         }
 
         $externalGenderId = null;
@@ -669,10 +668,6 @@ class UserBehavior extends Behavior
             $externalGenderId = $genderRow ? $genderRow->id : null;
         }
 
-        //POCOR-9590: normalize both sides to Y-m-d — registry returns ISO datetime, OE Core stores FrozenDate
-        if (isset($externalValues['date_of_birth'])) {
-            $externalValues['date_of_birth'] = substr((string)$externalValues['date_of_birth'], 0, 10);
-        }
         $userDob = $user->date_of_birth instanceof \DateTimeInterface
             ? $user->date_of_birth->format('Y-m-d')
             : (string)$user->date_of_birth;
@@ -713,30 +708,6 @@ class UserBehavior extends Behavior
         $user->sync_status = self::SYNC_STATUS_SYNCED;
     }
 
-    //POCOR-9590: case-insensitive key walk so DB mapping typos (givenNames vs givennames)
-    //don't silently break sync — wizard's getSeychellesData already normalizes this way.
-    private function resolveMappingPath(array $data, string $path)
-    {
-        $value = $data;
-        foreach (explode('.', $path) as $key) {
-            if (!is_array($value)) {
-                return null;
-            }
-            $matched = null;
-            $needle = strtolower($key);
-            foreach ($value as $k => $v) {
-                if (strtolower((string)$k) === $needle) {
-                    $matched = $v;
-                    break;
-                }
-            }
-            if ($matched === null && !array_key_exists($key, $value)) {
-                return null;
-            }
-            $value = $matched ?? $value[$key];
-        }
-        return $value;
-    }
 
     //POCOR-5668 add identity section ends
 
