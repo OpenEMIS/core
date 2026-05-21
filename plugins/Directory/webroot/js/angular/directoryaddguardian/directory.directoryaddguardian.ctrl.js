@@ -727,7 +727,21 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
-                userCtrl.message =  error.data.message || error.statusText || error.toString();
+                //POCOR-9590: walk per-field errors so the offending field is highlighted
+                //and the toast carries the field+rule message instead of generic "Validation failed".
+                const fieldErrors = (error && error.data && error.data.errors) ? error.data.errors : null;
+                let firstFieldMessage = '';
+                if (fieldErrors && typeof fieldErrors === 'object') {
+                    for (const field of Object.keys(fieldErrors)) {
+                        const rules = fieldErrors[field];
+                        const msg = (rules && typeof rules === 'object') ? Object.values(rules)[0] : rules;
+                        if (msg) {
+                            userCtrl.setError(field, msg);
+                            if (!firstFieldMessage) firstFieldMessage = `${field}: ${msg}`;
+                        }
+                    }
+                }
+                userCtrl.message = firstFieldMessage || (error.data && error.data.message) || error.statusText || error.toString();
                 userCtrl.messageClass = 'alert-danger';
                 UtilsSvc.isAppendLoader(false);
             });
