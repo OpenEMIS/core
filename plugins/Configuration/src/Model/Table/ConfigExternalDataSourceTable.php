@@ -81,6 +81,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 ->notEmptyString('client_secret', 'Please enter a secret', 'create')
                 // on UPDATE: allow blank so we can restore original
                 ->allowEmptyString('client_secret', null, 'update')
+                ->requirePresence('identity_type_id')->notEmptyString('identity_type_id') //POCOR-9590: required so Sync knows which user_identities row to use
                 ->requirePresence('grant_type')->notEmptyString('grant_type')
                 ->requirePresence('scopes')->notEmptyString('scopes')
                 ->requirePresence('first_name_mapping')->notEmptyString('first_name_mapping')
@@ -499,6 +500,14 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 $this->field('token_uri', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('api_url', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
                 $this->field('client_secret', ['type' => 'password', 'required' => 'required', 'attr' => ['value' => '', 'required' => 'required'], 'autocomplete' => 'off']);
+                //POCOR-9590: identity_type_id picks which user_identities row Sync uses;
+                //without it, UserBehavior::getActiveExternalSourceIdentityTypeId() returns null and Sync silently no-ops.
+                $this->field('identity_type_id', [
+                    'type' => 'select',
+                    'after' => 'client_secret',
+                    'entity' => $entity,
+                    'attr' => ['required' => 'required'],
+                ]);
                 $this->field('grant_type', ['type' => 'string', 'required' => 'required',  'attr' => ['required' => 'required']]);
                 $this->field('scopes', ['type' => 'string', 'required' => 'required',  'attr' => ['required' => 'required']]);
                 $this->field('first_name_mapping', ['type' => 'string', 'required' => 'required', 'attr' => ['required' => 'required']]);
