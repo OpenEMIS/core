@@ -473,6 +473,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     userCtrl.selectUserFromExternalSearch = function (id) {
         userCtrl.selectedGuardian = id;
         userCtrl.isInternalSearchSelected = false;
+        userCtrl.isExternalSearchSelected = true; //POCOR-9590: mark guardian as sourced from External Search so saveDetails sets sync_status=1
         userCtrl.getGuardianData();
         userCtrl.disableFields = {
             username: false,
