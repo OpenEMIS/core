@@ -14,8 +14,8 @@
 
 set -euo pipefail
 
-SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "${BASH_SOURCE[0]}")"
-SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd -P)"
+#POCOR-9719: pure-bash path resolution, no interpreter fallback
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 find_laravel_root() {
     if [[ -n "${OPENEMIS_LARAVEL_ROOT:-}" ]]; then
