@@ -287,6 +287,11 @@ class ConfigExternalDataSourceTable extends ControllerActionTable
                 if (isset($attributes['client_secret'])) {
                     $attributes['client_secret'] = '*****';
                 }
+                //POCOR-9590: render the identity type as its name (e.g. "National Identity Number (NIN)")
+                //instead of the raw foreign-key id — mirrors the OpenEMIS Core branch above.
+                if (isset($attributes['identity_type_id'])) {
+                    $attributes['identity_type_id'] = $this->getRelatedName('FieldOption.IdentityTypes', $attributes['identity_type_id']);
+                }
                 unset($attributes['middle_name_mapping']);
                 unset($attributes['third_name_mapping']);
                 unset($attributes['external_reference_mapping']);
