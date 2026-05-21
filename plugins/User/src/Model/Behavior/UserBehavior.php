@@ -450,26 +450,38 @@ class UserBehavior extends Behavior
         ];
     }
 
-    //POCOR-9590: returns identity_type_id of the active external data source, or null if no source is active or no identity_type configured
-    //POCOR-9590: public so 3 user-tables (StudentUser/StaffUser/Directories) can call it via behavior __call proxy
+    //POCOR-9590: returns identity_type_id of the (first) enabled external data source whose
+    //identity_type_id attribute is configured, or null if no source is enabled / no identity_type set.
+    //
+    //OpenEMIS represents enabled external sources as per-source rows in config_items:
+    //   type = 'External Data Source - Identity', value = '1' (enabled), name = 'Seychelles Civil Status' / 'OpenEMIS Core' / 'UNHCR' / ...
+    //There is no separate single-active-source pointer row to query — earlier revisions of this helper
+    //expected one (code='external_data_source_type'), which only exists on instances where the admin
+    //has saved the legacy "External Data Source" config form. On a fresh install (and on the dmo-dev
+    //remote we tested against) that row is absent, so the badge silently never lit up. The fix is to
+    //read the same per-source enable flags the wizards already use.
+    //
+    //Public so the 3 user-tables (StudentUser / StaffUser / Directories) can call it via behavior __call proxy.
     public function getActiveExternalSourceIdentityTypeId()
     {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $activeItem = $ConfigItems->find()
-            ->where(['code' => 'external_data_source_type'])
-            ->where(['value IS NOT' => null])
-            ->where(['value !=' => ''])
-            ->where(['value !=' => 'None'])
-            ->first();
-        if (!$activeItem) {
+        $enabledSourceNames = $ConfigItems->find()
+            ->where([
+                'type' => 'External Data Source - Identity',
+                'value' => '1',
+            ])
+            ->extract('name')
+            ->toArray();
+        if (empty($enabledSourceNames)) {
             return null;
         }
         $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
-        //POCOR-9590: external_data_source_attributes.external_data_source_type matches config_items.VALUE (active source name like "Seychelles Civil Status"), not config_items.name (which is the form-field label "Type"). Same convention PullBehavior uses.
         $row = $ExternalAttrs->find()
             ->where([
-                'external_data_source_type' => $activeItem->value,
+                'external_data_source_type IN' => $enabledSourceNames,
                 'attribute_field' => 'identity_type_id',
+                'value IS NOT' => null,
+                'value !=' => '',
             ])
             ->first();
         return ($row && !empty($row->value)) ? (int)$row->value : null;
@@ -500,15 +512,18 @@ class UserBehavior extends Behavior
             ->count() > 0;
     }
 
-    //POCOR-9590: thin probe used by isSyncEligibleUser — returns true iff a non-empty external source is selected.
+    //POCOR-9590: thin probe used by isSyncEligibleUser — returns true iff at least one
+    //External Data Source Identity is enabled. Uses the same per-source enable convention
+    //(type='External Data Source - Identity', value='1') as the wizards, so the badge
+    //works on fresh installs without an admin needing to first save the legacy form.
     private function hasActiveExternalSource(): bool
     {
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         return $ConfigItems->find()
-            ->where(['code' => 'external_data_source_type'])
-            ->where(['value IS NOT' => null])
-            ->where(['value !=' => ''])
-            ->where(['value !=' => 'None'])
+            ->where([
+                'type' => 'External Data Source - Identity',
+                'value' => '1',
+            ])
             ->count() > 0;
     }
     //POCOR-9590: fetches and diffs a user against the active external identity source.
@@ -522,21 +537,39 @@ class UserBehavior extends Behavior
 
         $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
 
-        $activeItem = $ConfigItems->find()
-            ->where(['code' => 'external_data_source_type'])
-            ->where(['value IS NOT' => null])
-            ->where(['value !=' => ''])
-            ->where(['value !=' => 'None'])
-            ->first();
-        if (!$activeItem) {
-            return 'No active external identity source is configured.';
+        //POCOR-9590: pick the first enabled External Data Source Identity (per-source enable flag,
+        //the same convention the wizards use). Earlier this read a single 'external_data_source_type'
+        //pointer that only exists on instances where the legacy form had been saved at least once.
+        $enabledSourceNames = $ConfigItems->find()
+            ->where([
+                'type' => 'External Data Source - Identity',
+                'value' => '1',
+            ])
+            ->extract('name')
+            ->toArray();
+        if (empty($enabledSourceNames)) {
+            return 'No external identity source is enabled.';
         }
 
-        $configs = $ExternalAttrs->find()
-            ->where(['external_data_source_type' => $activeItem->value])
-            ->all()
-            ->combine('attribute_field', 'value')
-            ->toArray();
+        //If multiple sources are enabled, pick the one whose user has identifying data — for now take the
+        //first that has attribute rows. The sync ultimately uses this source's tokenUri / apiUrl.
+        $configs = [];
+        $sourceName = null;
+        foreach ($enabledSourceNames as $candidate) {
+            $candidateConfigs = $ExternalAttrs->find()
+                ->where(['external_data_source_type' => $candidate])
+                ->all()
+                ->combine('attribute_field', 'value')
+                ->toArray();
+            if (!empty($candidateConfigs)) {
+                $configs = $candidateConfigs;
+                $sourceName = $candidate;
+                break;
+            }
+        }
+        if (empty($configs)) {
+            return 'No external identity source has attributes configured.';
+        }
 
         $tokenUrl     = $configs['token_uri'] ?? null;
         //POCOR-9590: fall back to api_url for sources (e.g. Seychelles) that store the endpoint there instead of user_endpoint_uri

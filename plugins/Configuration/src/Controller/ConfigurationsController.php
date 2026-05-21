@@ -189,21 +189,21 @@ class ConfigurationsController extends AppController
         $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
         $ConfigItems   = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
-        //POCOR-9590: find the currently active source type from config_items
+        //POCOR-9590: pick the first enabled External Data Source Identity (same per-source enable
+        //convention the wizards use — value='1' means enabled, name is the source label).
         $activeItem = $ConfigItems->find()
-            ->where(['code' => 'external_data_source_type'])
-            ->where(['value IS NOT' => null])
-            ->where(['value !=' => ''])
-            ->where(['value !=' => 'None'])
+            ->where([
+                'type' => 'External Data Source - Identity',
+                'value' => '1',
+            ])
             ->first();
 
         if (!$activeItem) {
-            $this->response->getBody()->write(json_encode(['status' => 'no_config', 'message' => 'No active external data source configured']));
+            $this->response->getBody()->write(json_encode(['status' => 'no_config', 'message' => 'No external data source is enabled']));
             return $this->response;
         }
 
-        //POCOR-9590: read .value (active source name like "Seychelles Civil Status"), not .name (form-field label "Type"). Same convention UserBehavior + PullBehavior use.
-        $sourceType = $activeItem->value;
+        $sourceType = $activeItem->name;
         //POCOR-9590: 'Seychellois' is an alias for 'Seychelles Civil Status' in some deployments — normalize early so DB lookups and routing both work
         if ($sourceType === ConfigExternalDataSourceTable::SOURCE_SEYCHELLOIS) {
             $sourceType = ConfigExternalDataSourceTable::SOURCE_SEYCHELLES;
