@@ -428,21 +428,6 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     };
 
     userCtrl.goToExternalSearch = function () {
-        //POCOR-9590: purge any prior External Search result before re-querying.
-        //Without this, going Back to change the identity inputs and clicking Next
-        //again shows the previous hit (the ag-Grid infinite cache survived the step
-        //transition). Clearing the cache + selection forces a fresh API call.
-        if (userCtrl.externalGridOptions && userCtrl.externalGridOptions.api) {
-            if (typeof userCtrl.externalGridOptions.api.purgeInfiniteCache === 'function') {
-                userCtrl.externalGridOptions.api.purgeInfiniteCache();
-            }
-            if (typeof userCtrl.externalGridOptions.api.setRowData === 'function') {
-                userCtrl.externalGridOptions.api.setRowData([]);
-            }
-        }
-        userCtrl.rowsThisPage = [];
-        userCtrl.isExternalSearchSelected = false;
-        userCtrl.selectedGuardian = undefined;
         directorySvc.goToExternalSearch(userCtrl);
     }
 
