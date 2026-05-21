@@ -605,8 +605,14 @@ class UserBehavior extends Behavior
             $userEndpoint = rtrim($userEndpoint, '/') . '/{external_reference}';
         }
         $clientId   = $configs['client_id'] ?? null;
-        //POCOR-9590: Seychelles uses client_secret; other sources use private_key — accept both
-        $privateKey = $configs['private_key'] ?? ($configs['client_secret'] ?? null);
+        //POCOR-9590: OAuth2 client_credentials grant uses client_secret (Seychelles, plain OAuth).
+        //JWT-bearer grants use the long signed-assertion private_key (legacy OpenEMIS Core).
+        //Pick by grant_type so the right secret reaches the IdP, regardless of which extra
+        //fields happen to be filled on the source row.
+        $grantType  = $configs['grant_type'] ?? '';
+        $privateKey = ($grantType === 'client_credentials')
+            ? ($configs['client_secret'] ?? ($configs['private_key'] ?? null))
+            : ($configs['private_key'] ?? ($configs['client_secret'] ?? null));
 
         if (!$tokenUrl || !$userEndpoint) {
             return 'External identity source is not configured.';
