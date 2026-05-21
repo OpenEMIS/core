@@ -537,9 +537,10 @@ class UserBehavior extends Behavior
 
         $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
 
-        //POCOR-9590: pick the first enabled External Data Source Identity (per-source enable flag,
-        //the same convention the wizards use). Earlier this read a single 'external_data_source_type'
-        //pointer that only exists on instances where the legacy form had been saved at least once.
+        //POCOR-9590: pick the enabled External Data Source Identity whose configured
+        //identity_type_id matches the user's preferred identity. Per-source enable flag is
+        //(type='External Data Source - Identity', value='1', name=source label) — same
+        //convention the wizards use.
         $enabledSourceNames = $ConfigItems->find()
             ->where([
                 'type' => 'External Data Source - Identity',
@@ -551,20 +552,46 @@ class UserBehavior extends Behavior
             return 'No external identity source is enabled.';
         }
 
-        //If multiple sources are enabled, pick the one whose user has identifying data — for now take the
-        //first that has attribute rows. The sync ultimately uses this source's tokenUri / apiUrl.
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $preferredIdentity = $UserIdentities->find()
+            ->select(['identity_type_id'])
+            ->where(['security_user_id' => $userId, 'preferred' => 1])
+            ->first();
+        $preferredTypeId = $preferredIdentity ? (int)$preferredIdentity->identity_type_id : null;
+
+        //Match enabled source by its configured identity_type_id attribute; fall back to the first
+        //source that has any attribute rows if no semantic match is found.
         $configs = [];
         $sourceName = null;
-        foreach ($enabledSourceNames as $candidate) {
-            $candidateConfigs = $ExternalAttrs->find()
-                ->where(['external_data_source_type' => $candidate])
-                ->all()
-                ->combine('attribute_field', 'value')
-                ->toArray();
-            if (!empty($candidateConfigs)) {
-                $configs = $candidateConfigs;
-                $sourceName = $candidate;
-                break;
+        if ($preferredTypeId) {
+            $matchRow = $ExternalAttrs->find()
+                ->where([
+                    'external_data_source_type IN' => $enabledSourceNames,
+                    'attribute_field' => 'identity_type_id',
+                    'value' => (string)$preferredTypeId,
+                ])
+                ->first();
+            if ($matchRow) {
+                $sourceName = $matchRow->external_data_source_type;
+                $configs = $ExternalAttrs->find()
+                    ->where(['external_data_source_type' => $sourceName])
+                    ->all()
+                    ->combine('attribute_field', 'value')
+                    ->toArray();
+            }
+        }
+        if (empty($configs)) {
+            foreach ($enabledSourceNames as $candidate) {
+                $candidateConfigs = $ExternalAttrs->find()
+                    ->where(['external_data_source_type' => $candidate])
+                    ->all()
+                    ->combine('attribute_field', 'value')
+                    ->toArray();
+                if (!empty($candidateConfigs)) {
+                    $configs = $candidateConfigs;
+                    $sourceName = $candidate;
+                    break;
+                }
             }
         }
         if (empty($configs)) {
