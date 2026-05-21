@@ -713,14 +713,27 @@ class UserBehavior extends Behavior
         $user->sync_status = self::SYNC_STATUS_SYNCED;
     }
 
+    //POCOR-9590: case-insensitive key walk so DB mapping typos (givenNames vs givennames)
+    //don't silently break sync — wizard's getSeychellesData already normalizes this way.
     private function resolveMappingPath(array $data, string $path)
     {
         $value = $data;
         foreach (explode('.', $path) as $key) {
-            if (!is_array($value) || !array_key_exists($key, $value)) {
+            if (!is_array($value)) {
                 return null;
             }
-            $value = $value[$key];
+            $matched = null;
+            $needle = strtolower($key);
+            foreach ($value as $k => $v) {
+                if (strtolower((string)$k) === $needle) {
+                    $matched = $v;
+                    break;
+                }
+            }
+            if ($matched === null && !array_key_exists($key, $value)) {
+                return null;
+            }
+            $value = $matched ?? $value[$key];
         }
         return $value;
     }
