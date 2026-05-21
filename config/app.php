@@ -55,8 +55,10 @@ return [
             'locales' => [APP . 'Locale' . DS],
         ],
         //POCOR-9565[START]
-        /** PHP default timezone (internal). Use UTC for storage; display uses App.displayTimezone from config. */
-        'defaultTimezone' => env('APP_DEFAULT_TIMEZONE', 'UTC'),
+        /** Static fallback only. The real value is loaded from config_items.time_zone
+         *  at bootstrap (see config/bootstrap.php) so CakePHP, Laravel, MySQL, and
+         *  the UI display all agree on one timezone. Env removed in POCOR-9719. */
+        'defaultTimezone' => 'UTC', //POCOR-9719
         /** If config_items Time Zone cannot be read, used for display conversion only. */
         'displayTimezoneFallback' => env('APP_DISPLAY_TIMEZONE_FALLBACK', 'UTC'),
         //POCOR-9565[END]

@@ -218,6 +218,36 @@ unset($fullBaseUrl);
 
 Cache::setConfig(Configure::consume('Cache'));
 ConnectionManager::setConfig(Configure::consume('Datasources'));
+
+//POCOR-9719: single source of truth for timezone is config_items.time_zone
+//(shared with Laravel's AppServiceProvider::applySystemTimezone). Applied to
+//PHP date_default_timezone_set, App.defaultTimezone, and every MySQL
+//connection's session timezone so CakePHP, Laravel, MySQL, and UI display
+//all agree. Env vars removed — cron and queue workers don't inherit FPM env,
+//which was the root cause of the Tonga alert_queue.available_at +13h drift.
+try {
+    $configRow = ConnectionManager::get('default')
+        ->execute("SELECT value FROM config_items WHERE code = 'time_zone' LIMIT 1")
+        ->fetch('assoc');
+    $rawTz = $configRow['value'] ?? null;
+    $configuredTz = (is_string($rawTz) && in_array($rawTz, timezone_identifiers_list(), true))
+        ? $rawTz
+        : 'UTC';
+} catch (\Throwable $e) {
+    $configuredTz = 'UTC'; //DB not ready (install / migrations) — fall back.
+}
+Configure::write('App.defaultTimezone', $configuredTz);
+date_default_timezone_set($configuredTz);
+foreach (ConnectionManager::configured() as $name) {
+    $cfg = ConnectionManager::getConfig($name);
+    if (isset($cfg['driver']) && str_contains((string) $cfg['driver'], 'Mysql')) {
+        $cfg['timezone'] = $configuredTz;
+        ConnectionManager::drop($name);
+        ConnectionManager::setConfig($name, $cfg);
+    }
+}
+unset($configRow, $rawTz, $configuredTz);
+
 TransportFactory::setConfig(Configure::consume('EmailTransport'));
 Mailer::setConfig(Configure::consume('Email'));
 Log::setConfig(Configure::consume('Log'));
