@@ -42,14 +42,6 @@ class WebhookFailuresTable extends AsyncServicesAdminTable
         return 'Webhook Failures';
     }
 
-    protected function describeScreen(): string
-    {
-        //POCOR-9719: plain English banner, no internal table names or jargon.
-        return __('Notifications to external systems that failed after every'
-            . ' retry. Review the error message and the target address before'
-            . ' deciding whether to send again or stop sending to that address.');
-    }
-
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         parent::indexBeforeAction($event, $extra);
