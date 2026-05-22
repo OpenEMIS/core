@@ -28,13 +28,7 @@ use App\Model\Table\ControllerActionTable;
  */
 class SystemProcessesTable extends ControllerActionTable
 {
-    use AsyncFilterTrait; //POCOR-9719
-
-    //POCOR-9719: identifies this Table in the shared filter dropdown.
-    protected function asyncFilterKey(): string
-    {
-        return 'completed_jobs';
-    }
+    use AsyncTabsTrait; //POCOR-9719
 
     protected $statusMap = [
         1  => 'New',
@@ -62,7 +56,7 @@ class SystemProcessesTable extends ControllerActionTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->addAsyncFilter($extra); //POCOR-9719: filter dropdown
+        $this->setupAsyncTabs(); //POCOR-9719: horizontal tab bar
         $this->field('created_user_id', ['visible' => false, 'sort' => false]);
         $this->field('params',          ['visible' => false, 'sort' => true]);
         $this->field('process',         ['visible' => false, 'sort' => true]);

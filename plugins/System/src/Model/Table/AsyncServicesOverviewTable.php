@@ -30,6 +30,8 @@ use Cake\ORM\Query;
  */
 class AsyncServicesOverviewTable extends AsyncServicesAdminTable
 {
+    use AsyncTabsTrait; //POCOR-9719: horizontal tab bar shared by all 6 screens
+
     /** Mirrors the StuckProcesses screen so the count matches what the user clicks through to. */
     private const STUCK_THRESHOLD_HOURS = 1;
     private const ACTIVE_STATUSES = [1, 2];
@@ -47,6 +49,8 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
+        $this->setupAsyncTabs(); //POCOR-9719: horizontal tab bar
+
         // Hide the noisier columns; the dashboard's table is a "recent activity"
         // strip, not a workbench.
         foreach (['callable_event', 'executed_count', 'params', 'process_id',

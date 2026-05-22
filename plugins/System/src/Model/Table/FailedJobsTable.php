@@ -32,12 +32,7 @@ use Cake\ORM\Entity;
  */
 class FailedJobsTable extends AsyncServicesAdminTable
 {
-    use AsyncFilterTrait; //POCOR-9719
-
-    protected function asyncFilterKey(): string //POCOR-9719
-    {
-        return 'failed_jobs';
-    }
+    use AsyncTabsTrait; //POCOR-9719
 
     /** Display cap so the index doesn't vomit a 30 KB stack trace per row. */
     private const EXCEPTION_PREVIEW_CHARS = 120;
@@ -55,8 +50,7 @@ class FailedJobsTable extends AsyncServicesAdminTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        parent::indexBeforeAction($event, $extra);
-        $this->addAsyncFilter($extra); //POCOR-9719: filter dropdown
+        $this->setupAsyncTabs(); //POCOR-9719: horizontal tab bar
 
         $this->field('uuid',       ['visible' => false]);
         $this->field('connection', ['visible' => false]);
