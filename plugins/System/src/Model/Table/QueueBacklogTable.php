@@ -46,14 +46,6 @@ class QueueBacklogTable extends AsyncServicesAdminTable
         return 'Waiting Background Tasks';
     }
 
-    protected function describeScreen(): string
-    {
-        //POCOR-9719: plain English banner, no internal table names or jargon.
-        return __('Messages waiting to be sent, oldest first. The list normally'
-            . ' empties within a minute; a list that keeps growing means'
-            . ' delivery has stopped and is worth investigating.');
-    }
-
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         parent::indexBeforeAction($event, $extra);

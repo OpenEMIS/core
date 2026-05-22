@@ -53,17 +53,6 @@ class StuckProcessesTable extends AsyncServicesAdminTable
         return 'Frozen Background Tasks';
     }
 
-    protected function describeScreen(): string
-    {
-        //POCOR-9719: plain English banner, no internal table names or jargon.
-        return sprintf(
-            __('Background tasks that have been running for more than %d hour.'
-            . ' The system clears these automatically after a day, but they'
-            . ' usually mean something has gone wrong and is worth checking sooner.'),
-            self::STUCK_THRESHOLD_HOURS
-        );
-    }
-
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
         parent::indexBeforeAction($event, $extra);
