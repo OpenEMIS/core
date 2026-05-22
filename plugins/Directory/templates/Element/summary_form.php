@@ -79,7 +79,7 @@
                                             <td class="vertical-align-top">
                                                 {{selectedUserData.nationality_name}}
                                             </td>
-                                            <td class="vertical-align-top"><?= __('Yes') //POCOR-9590: the only identity on a new person is preferred=1 (DB default) — display matched ?></td>
+                                            <td class="vertical-align-top"><?= __('Yes') ?></td>
                                         </tr>
                                         </tbody>
                                     </table>
