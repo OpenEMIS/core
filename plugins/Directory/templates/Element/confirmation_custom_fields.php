@@ -51,22 +51,13 @@
         <!-- POCOR-7874 little fix -->
         <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DATE'">
             <label for={{field.student_custom_field_id}}>{{field.name}}</label>
-            <div class="input-group date"
-                 id={{field.student_custom_field_id}}
-                 style="" datepicker=""
-                 ng-model="field.answer"
-                 ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]"
-                 ng-init="unsetCustomError(field); field.isDatepickerOpen = false"
-
-            >
-                <input type="text" class="form-control "
+            <!-- POCOR-9664 Changes for date picker -->
+            <div class="input-group date">
+                <input type="text"
+                       class="form-control js-confirmation-custom-date"
+                       id={{field.student_custom_field_id}}
                        ng-model="field.answer"
-                       uib-datepicker-popup='<?= $angularFormat ?>'
-                       is-open="field.isDatepickerOpen"
-                       datepicker-options="field.datePickerOptions"
-                       close-text="Close"
-                       alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important"
-                       ng-change="unsetCustomError(field); field.isDatepickerOpen = false"
+                       ng-change="unsetCustomError(field)"
                        ng-required="field.is_mandatory !== 0" />
                 <span class="input-group-addon" style="background-color: #6699CC; color: #FFF;"><i class="glyphicon glyphicon-calendar"></i></span>
             </div>
@@ -160,23 +151,14 @@
         </div>
         <!-- POCOR-7874 little fix -->
         <div class="input date" ng-class="{'required': field.is_mandatory !== 0}" ng-if="field.field_type === 'DATE'">
-            <label for={{field.staff_custom_field_id}}>{{field.name}}</label>
-            <div class="input-group date"
-                 id={{field.staff_custom_field_id}}
-                 style="" datepicker=""
-                 ng-model="field.answer"
-                 ng-click="[field.isDatepickerOpen = !field.isDatepickerOpen]"
-                 ng-init="unsetCustomError(field); field.isDatepickerOpen = false"
-
-            >
-                <input type="text" class="form-control "
+            <label for={{field.student_custom_field_id}}>{{field.name}}</label>
+            <!-- POCOR-9664 Changes for date picker -->
+            <div class="input-group date">
+                <input type="text"
+                       class="form-control js-confirmation-custom-date"
+                       id={{field.student_custom_field_id}}
                        ng-model="field.answer"
-                       uib-datepicker-popup='<?= $angularFormat ?>'
-                       is-open="field.isDatepickerOpen"
-                       datepicker-options="field.datePickerOptions"
-                       close-text="Close"
-                       alt-input-formats="altInputFormats" style="width: calc(100% - 52px) !important"
-                       ng-change="unsetCustomError(field); field.isDatepickerOpen = false"
+                       ng-change="unsetCustomError(field)"
                        ng-required="field.is_mandatory !== 0" />
                 <span class="input-group-addon" style="background-color: #6699CC; color: #FFF;"><i class="glyphicon glyphicon-calendar"></i></span>
             </div>
@@ -217,3 +199,29 @@
         </div>
     </div>
 </div>
+<!-- POCOR-9664 Changes for date picker. Script to initialize datepicker -->
+<script>
+    $(function () {
+        function initConfirmationCustomDatepicker($input) {
+            if ($input.data('datepicker')) {
+                return $input;
+            }
+            return $input.datepicker({
+                format: '<?= $datepickerFormat ?>',
+                todayBtn: 'linked',
+                orientation: 'auto',
+                autoclose: true,
+                language: '<?= $dateLanguage ?>'
+            }).on('changeDate', function () {
+                $(this).trigger('input').trigger('change');
+            });
+        }
+        $(document).on('focus', '.js-confirmation-custom-date', function () {
+            initConfirmationCustomDatepicker($(this));
+        });
+        $(document).on('click', '.js-confirmation-custom-date + .input-group-addon', function () {
+            var $input = $(this).siblings('.js-confirmation-custom-date');
+            initConfirmationCustomDatepicker($input).datepicker('show');
+        });
+    });
+</script>
