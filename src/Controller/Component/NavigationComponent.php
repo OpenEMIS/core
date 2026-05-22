@@ -4065,32 +4065,17 @@ class NavigationComponent extends Component
         if (!$this->userHasAdministrationAccessTo('System Activities')) {
             return [];
         }
-        $childParent = 'Administration.AsyncServices';
-        $systemPlugin = ['plugin' => 'System'];
-        $child = static function (string $title, string $key) use ($childParent, $systemPlugin): array {
-            return [
-                'title' => $title,
-                'parent' => $childParent,
-                'params' => $systemPlugin,
-                'selected' => [$key],
-            ];
-        };
         //POCOR-9694: v5 menu labels — user-visible titles only; internal nav keys kept stable.
-        //POCOR-9719: 5 list pages collapsed into one entry with a filter dropdown on the page.
-        //selected[] covers every legacy URL so the sidebar entry stays highlighted regardless
-        //of which filter is active. Overview stays as a separate summary page.
+        //POCOR-9719: ONE sidebar entry — no sub-menu. The page itself renders a horizontal
+        //tab bar with all 6 actions (Overview / Completed / Failed / Stuck / Webhook Failures /
+        //Waiting). selected[] keeps the sidebar entry highlighted on every tab.
         return [
-            'Administration.AsyncServices' => [
+            'Systems.AsyncServicesOverview' => [
                 'title' => 'System Activities',
                 'parent' => 'Administration',
-                'link' => false,
-            ],
-            'Systems.AsyncServicesOverview' => $child('Overview', 'Systems.AsyncServicesOverview'),
-            'Systems.SystemProcesses' => [
-                'title' => 'Async Services',
-                'parent' => $childParent,
-                'params' => $systemPlugin,
+                'params' => ['plugin' => 'System'],
                 'selected' => [
+                    'Systems.AsyncServicesOverview',
                     'Systems.SystemProcesses',
                     'Systems.FailedJobs',
                     'Systems.StuckProcesses',
