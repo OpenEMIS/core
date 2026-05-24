@@ -661,69 +661,186 @@ class UsersTable extends AppTable
         return $val;
     }
 
+    //POCOR-9540[START]
+    // public function getUniqueOpenemisId($options = [])
+    // {
+    //     // POCOR-9364 to review
+    //     $prefix = '';
+
+    //     $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
+    //     $prefix = explode(",", $prefix);
+    //     $prefix = ($prefix[1] > 0) ? $prefix[0] : '';
+
+    //     $latest = $this->find()
+    //         ->order($this->aliasField('id') . ' DESC')
+    //         ->first();
+    //     if (is_array($latest)) {
+    //         $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
+    //     } else {
+    //         $latestOpenemisNo = $latest->openemis_no;
+    //     }
+    //     if (empty($prefix)) {
+    //         $latestDbStamp = $latestOpenemisNo;
+    //     } else {
+    //         $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
+    //     }
+
+    //     $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
+
+    //     $currentStamp = time();
+    //     if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
+    //         $newStamp = $latestDbStamp + 1;
+    //     } else {
+    //         $newStamp = $currentStamp;
+    //     }
+    //     $newOpenemisNo = $prefix . $newStamp;
+    //     $openemisTemps = TableRegistry::getTableLocator()->get('User.OpenemisTemps');
+    //     $SecurityUser = TableRegistry::getTableLocator()->get('Security.Users');
+    //     $resultOpenemisTemp = $openemisTemps->find('all')
+    //         ->order(['id' => 'DESC'])
+    //         ->first();
+    //     //POCOR-6980[START]
+    //     if (strlen($resultOpenemisTemp->openemis_no) < 5) {
+    //         $resultOpenemisTemp = $SecurityUser->find('all')
+    //             ->order(['id' => 'DESC'])
+    //             ->first();
+    //     }
+    //     //POCOR-6980[END]
+
+    //     $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
+    //     $numericPart = (int) preg_replace('/\D+/', '', $resultOpenemisNoTemp);
+
+    //     $numericPart++;
+    //     $newOpenemisNo = $prefix . str_pad($numericPart, 5, '0', STR_PAD_LEFT);
+
+    //     $resultOpenemisTemps = $openemisTemps->find('all')
+    //         ->where(['openemis_no' => $newOpenemisNo])
+    //         ->first();
+
+    //     if (empty($resultOpenemisTemps->openemis_no)) {
+    //         $openemisTemp = $openemisTemps->newEntity([]);
+    //         $openemisTemp->openemis_no = $newOpenemisNo;
+    //         $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
+    //         $openemisTemps->save($openemisTemp);
+    //     }
+    //     return $newOpenemisNo;
+    // }
+
     public function getUniqueOpenemisId($options = [])
     {
-        // POCOR-9364 to review
-        $prefix = '';
-
-        $prefix = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
-        $prefix = explode(",", $prefix);
-        $prefix = ($prefix[1] > 0) ? $prefix[0] : '';
-
-        $latest = $this->find()
-            ->order($this->aliasField('id') . ' DESC')
-            ->first();
-        if (is_array($latest)) {
-            $latestOpenemisNo = $latest['SecurityUser']['openemis_no'];
-        } else {
-            $latestOpenemisNo = $latest->openemis_no;
-        }
-        if (empty($prefix)) {
-            $latestDbStamp = $latestOpenemisNo;
-        } else {
-            $latestDbStamp = substr($latestOpenemisNo, strlen($prefix));
-        }
-
-        $latestOpenemisNoLastValue = substr($latestOpenemisNo, -1);
-
-        $currentStamp = time();
-        if ($latestDbStamp <= $currentStamp && is_numeric($latestOpenemisNoLastValue)) {
-            $newStamp = $latestDbStamp + 1;
-        } else {
-            $newStamp = $currentStamp;
-        }
-        $newOpenemisNo = $prefix . $newStamp;
+        $prefix = $this->getOpenemisIdPrefix();
+        $connection = $this->getConnection();
         $openemisTemps = TableRegistry::getTableLocator()->get('User.OpenemisTemps');
-        $SecurityUser = TableRegistry::getTableLocator()->get('Security.Users');
-        $resultOpenemisTemp = $openemisTemps->find('all')
-            ->order(['id' => 'DESC'])
-            ->first();
-        //POCOR-6980[START]
-        if (strlen($resultOpenemisTemp->openemis_no) < 5) {
-            $resultOpenemisTemp = $SecurityUser->find('all')
-                ->order(['id' => 'DESC'])
-                ->first();
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+
+        $usersTableSql = $connection->quoteIdentifier($this->getTable());
+        $tempTableSql = $connection->quoteIdentifier('security_users_openemis_no');
+        $openemisNoSql = $connection->quoteIdentifier('openemis_no');
+        $pattern = $this->getNumericOpenemisRegexp($prefix);
+        $maxExpr = $this->getNumericOpenemisCastExpression($usersTableSql, $openemisNoSql, $prefix);
+
+        $selectSql = 'SELECT COALESCE(' . $maxExpr . ', 0) + 1 AS next_openemis_no'
+            . ' FROM ' . $usersTableSql
+            . ' WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
+            . ' AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern';
+
+        $row = $connection->execute($selectSql, ['pattern' => $pattern])->fetch('assoc');
+        $nextSuffix = isset($row['next_openemis_no']) ? (string)$row['next_openemis_no'] : '1';
+
+        $attempts = 0;
+        while ($attempts < 100) {
+            $newOpenemisNo = $prefix . $nextSuffix;
+
+            if (!$this->exists([$this->aliasField('openemis_no') => $newOpenemisNo])
+                && !$openemisTemps->exists(['openemis_no' => $newOpenemisNo])) {
+                if ($attempts === 0) {
+                    $insertSql = 'INSERT INTO ' . $tempTableSql . ' (' . $openemisNoSql . ', ip_address, created)'
+                        . ' SELECT CAST(COALESCE(' . $maxExpr . ', 0) + 1 AS CHAR), :ip_address, NOW()'
+                        . ' FROM ' . $usersTableSql
+                        . ' WHERE ' . $usersTableSql . '.' . $openemisNoSql . ' IS NOT NULL'
+                        . ' AND ' . $usersTableSql . '.' . $openemisNoSql . ' REGEXP :pattern';
+
+                    try {
+                        $connection->execute($insertSql, [
+                            'ip_address' => $ipAddress,
+                            'pattern' => $pattern,
+                        ]);
+                    } catch (\Exception $exception) {
+                        $openemisTemp = $openemisTemps->newEntity([
+                            'openemis_no' => $newOpenemisNo,
+                            'ip_address' => $ipAddress,
+                        ]);
+                        $openemisTemps->save($openemisTemp);
+                    }
+                } else {
+                    $connection->execute(
+                        'INSERT INTO ' . $tempTableSql . ' (' . $openemisNoSql . ', ip_address, created)'
+                        . ' VALUES (:openemis_no, :ip_address, NOW())',
+                        ['openemis_no' => $newOpenemisNo, 'ip_address' => $ipAddress]
+                    );
+                }
+
+                return $newOpenemisNo;
+            }
+
+            $nextSuffix = $this->incrementNumericString($nextSuffix);
+            $attempts++;
         }
-        //POCOR-6980[END]
 
-        $resultOpenemisNoTemp = substr($resultOpenemisTemp->openemis_no, strlen($prefix));
-        $numericPart = (int) preg_replace('/\D+/', '', $resultOpenemisNoTemp);
-
-        $numericPart++;
-        $newOpenemisNo = $prefix . str_pad($numericPart, 5, '0', STR_PAD_LEFT);
-
-        $resultOpenemisTemps = $openemisTemps->find('all')
-            ->where(['openemis_no' => $newOpenemisNo])
-            ->first();
-
-        if (empty($resultOpenemisTemps->openemis_no)) {
-            $openemisTemp = $openemisTemps->newEntity([]);
-            $openemisTemp->openemis_no = $newOpenemisNo;
-            $openemisTemp->ip_address = $_SERVER['REMOTE_ADDR'];
-            $openemisTemps->save($openemisTemp);
-        }
-        return $newOpenemisNo;
+        return $prefix . $nextSuffix;
     }
+
+    /**
+     * Configured OpenEMIS ID prefix (empty string when disabled).
+     */
+    protected function getOpenemisIdPrefix(): string
+    {
+        $config = TableRegistry::getTableLocator()->get('Configuration.ConfigItems')->value('openemis_id_prefix');
+        $parts = explode(',', (string)$config);
+
+        return (isset($parts[1]) && $parts[1] > 0) ? (string)$parts[0] : '';
+    }
+
+    /**
+     * MAX(CAST(openemis_no AS UNSIGNED)) — matches security_users numeric openemis_no rule.
+     */
+    protected function getNumericOpenemisCastExpression(
+        string $tableSql,
+        string $openemisNoSql,
+        string $prefix
+    ): string {
+        if ($prefix === '') {
+            return 'MAX(CAST(' . $tableSql . '.' . $openemisNoSql . ' AS UNSIGNED))';
+        }
+
+        $prefixLength = strlen($prefix);
+
+        return 'MAX(CAST(SUBSTRING(' . $tableSql . '.' . $openemisNoSql . ', ' . ($prefixLength + 1) . ') AS UNSIGNED))';
+    }
+
+    protected function getNumericOpenemisRegexp(string $prefix): string
+    {
+        if ($prefix === '') {
+            return '^[0-9]+$';
+        }
+
+        return '^' . preg_quote($prefix, '/') . '[0-9]+$';
+    }
+
+    protected function incrementNumericString(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '' || !ctype_digit($value)) {
+            $value = '0';
+        }
+
+        if (function_exists('bcadd')) {
+            return bcadd($value, '1');
+        }
+
+        return (string)((int)$value + 1);
+    }
+    //POCOR-9540[END]
 
     public function validationDefault(Validator $validator): Validator
     {
