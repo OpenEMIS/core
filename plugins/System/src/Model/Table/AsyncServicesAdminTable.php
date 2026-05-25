@@ -33,15 +33,13 @@ abstract class AsyncServicesAdminTable extends ControllerActionTable
         $title = __($this->pageTitle());
         $this->controller->set('contentHeader', $title);
 
-        //POCOR-9719: keep breadcrumb in lockstep with the page heading.
-        //SystemsController::beforeFilter() seeds the last crumb from the
-        //humanized action name (e.g. "Queue Backlog") before the Table is
-        //instantiated; pageTitle() is the source of truth for the v4 label
-        //("Waiting Background Tasks") so we overwrite the trailing crumb.
+        //POCOR-9719: align breadcrumbs with the sidebar label.
+        //beforeFilter() seeds crumbs as "Systems > Queue Backlog"; we
+        //correct both to "System Activities > Waiting Background Tasks".
         $nav = $this->controller->Navigation ?? null;
         if ($nav && !empty($nav->breadcrumbs)) {
-            $lastKey = array_key_last($nav->breadcrumbs);
-            $nav->breadcrumbs[$lastKey]['title'] = $title;
+            $nav->breadcrumbs[0]['title'] = __('System Activities');
+            $nav->breadcrumbs[array_key_last($nav->breadcrumbs)]['title'] = $title;
             $this->controller->set('_breadcrumbs', $nav->breadcrumbs);
         }
     }
