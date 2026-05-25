@@ -30,7 +30,20 @@ abstract class AsyncServicesAdminTable extends ControllerActionTable
 
     public function beforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        $this->controller->set('contentHeader', __($this->pageTitle()));
+        $title = __($this->pageTitle());
+        $this->controller->set('contentHeader', $title);
+
+        //POCOR-9719: keep breadcrumb in lockstep with the page heading.
+        //SystemsController::beforeFilter() seeds the last crumb from the
+        //humanized action name (e.g. "Queue Backlog") before the Table is
+        //instantiated; pageTitle() is the source of truth for the v4 label
+        //("Waiting Background Tasks") so we overwrite the trailing crumb.
+        $nav = $this->controller->Navigation ?? null;
+        if ($nav && !empty($nav->breadcrumbs)) {
+            $lastKey = array_key_last($nav->breadcrumbs);
+            $nav->breadcrumbs[$lastKey]['title'] = $title;
+            $this->controller->set('_breadcrumbs', $nav->breadcrumbs);
+        }
     }
 
     protected function pageTitle(): string
