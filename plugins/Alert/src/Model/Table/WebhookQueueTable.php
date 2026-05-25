@@ -236,9 +236,27 @@ class WebhookQueueTable extends ControllerActionTable
             ]
         ];
 
+        //POCOR-9694: cross-link to Async Services → Webhook Failures dashboard.
+        $checkFailures = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-exclamation-triangle"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Check failures'),
+            ],
+            'url' => [
+                'plugin' => 'System', 'controller' => 'Systems',
+                'action' => 'WebhookFailures',
+            ],
+        ];
+
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarButtonsArray['process'] = $processButton;
         $toolbarButtonsArray['access'] = $toolbarButton;
+        $toolbarButtonsArray['checkFailures'] = $checkFailures;
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
     }

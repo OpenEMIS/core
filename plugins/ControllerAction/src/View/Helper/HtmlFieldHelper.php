@@ -875,6 +875,9 @@ class HtmlFieldHelper extends Helper
         $_options['options'] = isset($attr['options']) ? $attr['options'] : [];
         $_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
         $options = array_merge($_options, $options);
+        if (!empty($attr['attr']) && is_array($attr['attr'])) {
+            $options = array_merge($options, $attr['attr']);
+        }
 
         $this->includes['chosen']['include'] = true;
 
@@ -1029,7 +1032,8 @@ class HtmlFieldHelper extends Helper
 		';
 
         $headers = $this->Html->tableHeaders($attr['headers']);
-        $cells = $this->Html->tableCells($attr['cells']);
+        $cellRows = isset($attr['cells']) && is_array($attr['cells']) ? array_values($attr['cells']) : [];
+        $cells = $this->Html->tableCells($cellRows);
 
         $html = sprintf($html, $attr['label'], $headers, $cells);
         return $html;
