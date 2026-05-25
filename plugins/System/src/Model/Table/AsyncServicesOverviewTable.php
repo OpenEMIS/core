@@ -139,8 +139,9 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         $time = FrozenTime::parse($latestHeartbeat);
         $minutesAgo = $time->diffInMinutes(FrozenTime::now());
         $severity = $minutesAgo > 5 ? 'stale' : 'ok';
+
         return [
-            'text' => __('Last heartbeat: ') . $time->timeAgoInWords(['accuracy' => ['hour' => 'minute']]),
+            'text' => __('Last heartbeat: ') . $this->formatDateTime($time), //POCOR-9719
             'severity' => $severity,
         ];
     }
