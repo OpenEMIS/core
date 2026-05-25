@@ -15,6 +15,7 @@ use Cake\Http\ServerRequest;
 use Cake\Http\Response;
 use Cake\Mailer\Mailer;
 use App\Model\Table\ControllerActionTable;
+use System\Model\Table\AsyncServicesAdminTable; //POCOR-9719
 
 /**
  * System Processes Table
@@ -26,7 +27,9 @@ use App\Model\Table\ControllerActionTable;
  * @author    divya.vishwakarma@dataforall.org
  * @property \Cake\ORM\Association\BelongsTo $CreatedUsers
  */
-class SystemProcessesTable extends ControllerActionTable
+//POCOR-9719: extends AsyncServicesAdminTable so breadcrumb + read-only
+//toggles (view/add/edit/remove) match the other Async Services tabs.
+class SystemProcessesTable extends AsyncServicesAdminTable
 {
     use AsyncTabsTrait; //POCOR-9719
 
@@ -39,19 +42,15 @@ class SystemProcessesTable extends ControllerActionTable
     ];
 
     //POCOR-9694: humanise the page header — "Systems - SystemProcesses" → "Completed Background Tasks"
-    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    protected function pageTitle(): string
     {
-        $this->controller->set('contentHeader', __('Completed Background Tasks'));
+        return 'Completed Background Tasks';
     }
 
     public function initialize(array $config): void
     {
         $this->setTable('system_processes');
         parent::initialize($config);
-        $this->toggle('view', true);
-        $this->toggle('add', false);
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
