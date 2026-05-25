@@ -12,6 +12,10 @@ use Illuminate\Support\Carbon;
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        // POCOR-9694: OpenEMIS Runtime abstraction tables — read-only resources for the Runtime UI
+        'tasks' => \App\Models\Api5\Tasks::class, //POCOR-9694
+        'task-jobs' => \App\Models\Api5\TaskJobs::class, //POCOR-9694
+        'task-failures' => \App\Models\Api5\TaskFailures::class, //POCOR-9694
         'department-staff' => \App\Models\Api5\DepartmentStaff::class, // POCOR_8030
         'institution-departments' => \App\Models\Api5\InstitutionDepartments::class, // POCOR_8030
         'institution-infrastructure-attachments' => \App\Models\InstitutionInfrastructureAttachments::class,
@@ -339,6 +343,10 @@ class CrudApiController extends Controller
         'insurance-types' => \App\Models\Api5\InsuranceTypes::class,
         'insurance-providers' => \App\Models\Api5\InsuranceProviders::class,
         'institutions' => \App\Models\Api5\Institutions::class,
+        //POCOR-9610: start - Expose external registrations integration resources through shared Api5 CRUD routing
+        'institution-registrations' => \App\Models\Api5\InstitutionRegistrations::class,
+        'institution-accreditations' => \App\Models\Api5\InstitutionAccreditations::class,
+        //POCOR-9610: end
         'institution-visit-requests' => \App\Models\Api5\InstitutionVisitRequests::class,
         'institution-units' => \App\Models\Api5\InstitutionUnits::class,
         'institution-types' => \App\Models\Api5\InstitutionTypes::class,
@@ -813,7 +821,14 @@ class CrudApiController extends Controller
         $order = $this->parseOrderParams($request, $segments);
 
         $query = $this->parseSelectParams($request, $segments, $query, $model);
-        $query = $this->applyFilters($query, $filters);
+        //POCOR-9697: applyFilters throws InvalidArgumentException when a filter key is
+        //not in the per-model allowlist. We translate to a generic 400 with no field
+        //name so the response never fingerprints which key was rejected.
+        try {
+            $query = $this->applyFilters($query, $filters, $model);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
         $query = $this->applyOrder($query, $order, $model);
         $query = $this->applyInstitutionFilter($query, $model);
 
@@ -864,11 +879,40 @@ class CrudApiController extends Controller
         }
         $this->decodeBlobFields($data); // Decode base64 to binary before update
 
-        if (in_array('modified_user_id', $model->getFillable()) && in_array('modified', $model->getFillable())) {
-            if (!isset($data['modified_user_id'])) {
-                $data['modified_user_id'] = $current_user_id;
+        //POCOR-9697: audit-trail integrity on update — always derive
+        //modified_user_id from the JWT (never trust the request body) and
+        //silent-strip any client-supplied created_user_id since it is
+        //immutable. Logging mirrors the super_admin silent-strip: server-side
+        //warning only, never echoed back to the caller (anti-fingerprinting).
+        $fillable = $model->getFillable();
+        if (in_array('created_user_id', $fillable) && array_key_exists('created_user_id', $data)) {
+            Log::warning(
+                'POCOR-9697: created_user_id supplied on update — silently stripped (immutable)',
+                [
+                    'endpoint'       => $request->path(),
+                    'method'         => $request->method(),
+                    'caller_id'      => $current_user_id,
+                    'ip'             => $request->ip(),
+                    'supplied_value' => $data['created_user_id'],
+                ]
+            );
+            unset($data['created_user_id']);
+        }
+        if (in_array('modified_user_id', $fillable)) {
+            if (array_key_exists('modified_user_id', $data) && (int) $data['modified_user_id'] !== (int) $current_user_id) {
+                Log::warning(
+                    'POCOR-9697: modified_user_id forgery attempt — overwritten with JWT user',
+                    [
+                        'endpoint'       => $request->path(),
+                        'method'         => $request->method(),
+                        'caller_id'      => $current_user_id,
+                        'ip'             => $request->ip(),
+                        'supplied_value' => $data['modified_user_id'],
+                    ]
+                );
             }
-            if (!isset($data['modified'])) {
+            $data['modified_user_id'] = $current_user_id; //POCOR-9697: always from JWT
+            if (in_array('modified', $fillable) && !isset($data['modified'])) {
                 $data['modified'] = Carbon::now();
             }
         }
@@ -1155,15 +1199,78 @@ class CrudApiController extends Controller
 
 
     /**
+     * POCOR-9697: Compute the per-model set of columns a v5 read request may
+     * filter on. Returns `$fillable` minus `$hidden`, so the read-side filter
+     * surface is exactly the writable, non-hidden columns.
+     *
+     * Rationale: `$hidden` strips sensitive columns from the response body,
+     * but without this allowlist `_conditions=hiddenfield:value` still executes
+     * as a WHERE clause, allowing membership inference (super_admin) or a
+     * binary-search oracle (password hash). Mirroring the published write
+     * surface keeps the rule internally consistent — a client cannot read-
+     * filter on any column they could not already POST/PUT to.
+     *
+     * @param mixed $model Fully qualified model class name or instance.
+     * @return array<int,string> List of column names allowed in _conditions/filters.
+     */
+    private function getQueryableColumns($model): array
+    {
+        if (is_string($model)) {
+            $model = new $model;
+        }
+        $fillable = method_exists($model, 'getFillable') ? $model->getFillable() : [];
+        $hidden   = method_exists($model, 'getHidden')   ? $model->getHidden()   : [];
+        // Belt-and-braces diff in case a future model author lists a column in both arrays.
+        return array_values(array_diff($fillable, $hidden));
+    }
+
+    //POCOR-9697: fields that are NEVER queryable across any model. Probes against these
+    //are escalated to a higher log severity for SOC alerting (membership inference on
+    //super_admin, binary-search oracle on password). Add credential-bearing columns here
+    //as new models are introduced.
+    private const SENSITIVE_FILTER_FIELDS = ['super_admin', 'password', 'remember_token', 'password_hash'];
+
+    /**
      * Apply filters to the query.
+     *
+     * POCOR-9697: `$model` is now required so we can reject any filter key that
+     * is not in `getQueryableColumns()`. Dropped keys cause a 400 with a generic
+     * message — we never echo the field name back to the caller — and the
+     * server logs the dropped keys for audit. Probes against
+     * SENSITIVE_FILTER_FIELDS are logged at warning level so SOC tooling can alert.
+     *
+     * Rationale for 400 (vs the original silent-drop):
+     *  - Silent-drop quietly swallowed legitimate typos (e.g. `studnet_id` instead
+     *    of `student_id`), returning the wrong dataset and creating a long-lived
+     *    DX trap.
+     *  - 400 + generic message preserves the anti-fingerprinting property: the
+     *    response body is identical for `super_admin`, `password`, or `hubabuba`,
+     *    so the attacker cannot A/B test field existence.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param array $filters
+     * @param mixed $model Fully qualified model class name or instance (POCOR-9697).
      * @return \Illuminate\Database\Eloquent\Builder
+     * @throws \InvalidArgumentException When one or more filter keys are not in the allowlist.
+     *                                   Caller (handleGetRequest) translates this to HTTP 400.
      */
-    private function applyFilters($query, array $filters)
+    private function applyFilters($query, array $filters, $model = null)
     {
+        //POCOR-9697: build allowlist once per call; empty = no allowlist enforced (defensive default for legacy callers)
+        $allowed = $model ? $this->getQueryableColumns($model) : [];
+        $dropped = [];
+        $sensitiveDropped = [];
+
         foreach ($filters as $field => $value) {
+            //POCOR-9697: collect non-allowlist keys; we'll log and 400 after the loop so a
+            //single request lists every offender once (anti-fingerprinting + DX clarity).
+            if (!empty($allowed) && !in_array($field, $allowed, true)) {
+                $dropped[] = $field;
+                if (in_array($field, self::SENSITIVE_FILTER_FIELDS, true)) {
+                    $sensitiveDropped[] = $field;
+                }
+                continue;
+            }
             if (is_array($value)) {
                 $query->whereIn($field, $value);
             } elseif (strpos($value, '>=') === 0) {
@@ -1196,6 +1303,32 @@ class CrudApiController extends Controller
                     $query->where($field, '=', $value);
                 }
             }
+        }
+
+        //POCOR-9697: surface dropped filter keys as a single 400 with a generic
+        //message. The field names appear in server logs only — never in the response.
+        if (!empty($dropped)) {
+            $modelName = is_string($model) ? $model : (is_object($model) ? get_class($model) : null);
+
+            if (!empty($sensitiveDropped)) {
+                //Probe against credential/escalation columns — surface for SOC alerting.
+                Log::warning('POCOR-9697: SENSITIVE filter probe — possible enumeration attempt', [
+                    'model' => $modelName,
+                    'sensitive_fields' => $sensitiveDropped,
+                    'all_dropped' => $dropped,
+                    'ip' => request()->ip(),
+                ]);
+            } else {
+                //Plain non-allowlist field (typo, deprecated column, ill-informed client).
+                Log::info('POCOR-9697: filter dropped — field not queryable', [
+                    'model' => $modelName,
+                    'fields' => $dropped,
+                ]);
+            }
+
+            throw new \InvalidArgumentException(
+                'Request contains filter field names that are not present in this resource. Check API documentation for the fields of this resource.'
+            );
         }
 
         return $query;
@@ -1377,16 +1510,17 @@ class CrudApiController extends Controller
                 $model = new $model;
             }
             $records = [];
+            $fillable = $model->getFillable();
             foreach ($data as $recordData) {
                 $this->decodeBlobFields($recordData); //  Decode base64 to binary
-                if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-                    if (!isset($recordData['created_user_id'])) {
-                        $recordData['created_user_id'] = $current_user_id;
-                    }
-                    if (!isset($recordData['created'])) {
-                        $recordData['created'] = Carbon::now();
-                    }
-                }
+                //POCOR-9697: audit-trail integrity on batch create — always
+                //derive created_user_id / modified_user_id from JWT; log any
+                //forgery attempt without echoing the field name back.
+                $recordData = $this->stampAuditFieldsOnCreate(
+                    $recordData,
+                    $fillable,
+                    $current_user_id
+                );
                 $records[] = $model::create($recordData);
             }
             \DB::commit();
@@ -1414,14 +1548,16 @@ class CrudApiController extends Controller
         }
         $this->decodeBlobFields($data); //  Decode base64 to binary
 
-        if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-            if (!isset($data['created_user_id'])) {
-                $data['created_user_id'] = $current_user_id;
-            }
-            if (!isset($data['created'])) {
-                $data['created'] = Carbon::now();
-            }
-        }
+        //POCOR-9697: audit-trail integrity on single create — always derive
+        //created_user_id and modified_user_id from the JWT user. Any
+        //client-supplied value is silent-stripped with a server-side log so
+        //ops can grep forgery attempts; the response never echoes the field
+        //name (anti-fingerprinting).
+        $data = $this->stampAuditFieldsOnCreate(
+            $data,
+            $model->getFillable(),
+            $current_user_id
+        );
         try {
             $record = $model::create($data);
         } catch (\Exception $e) {
@@ -1429,6 +1565,50 @@ class CrudApiController extends Controller
         }
 
         return $this->successResponse('Record created successfully.', $record, 201);
+    }
+
+    /**
+     * POCOR-9697: stamp created_user_id / modified_user_id from the JWT user
+     * on every create path, log any client-supplied value that differs, and
+     * silent-strip the offending key before persist. Keeps the v5 audit trail
+     * tamper-proof in the same way v4 already enforces it via UserRepository.
+     *
+     * @param array $data         Raw payload from the request.
+     * @param array $fillable     Target model's $fillable allowlist.
+     * @param int|null $currentUserId  Authenticated JWT user id.
+     * @return array              Payload with audit fields overwritten.
+     */
+    private function stampAuditFieldsOnCreate(array $data, array $fillable, $currentUserId)
+    {
+        $request = request();
+        foreach (['created_user_id', 'modified_user_id'] as $auditField) {
+            if (!in_array($auditField, $fillable, true)) {
+                continue;
+            }
+            if (array_key_exists($auditField, $data)
+                && (int) $data[$auditField] !== (int) $currentUserId
+            ) {
+                Log::warning(
+                    'POCOR-9697: ' . $auditField . ' forgery attempt — overwritten with JWT user',
+                    [
+                        'endpoint'       => $request ? $request->path() : null,
+                        'method'         => $request ? $request->method() : null,
+                        'caller_id'      => $currentUserId,
+                        'ip'             => $request ? $request->ip() : null,
+                        'supplied_value' => $data[$auditField],
+                    ]
+                );
+            }
+            $data[$auditField] = $currentUserId; //POCOR-9697: always from JWT
+        }
+        //POCOR-9697: keep the existing created / modified timestamp behaviour.
+        if (in_array('created', $fillable, true) && !isset($data['created'])) {
+            $data['created'] = Carbon::now();
+        }
+        if (in_array('modified', $fillable, true) && !isset($data['modified'])) {
+            $data['modified'] = Carbon::now();
+        }
+        return $data;
     }
 
     /**
