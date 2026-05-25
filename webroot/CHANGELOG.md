@@ -1,3 +1,15 @@
+### [5.11.1] - 2026-05-22
+- Bug Fixed: Institution>Attendance>Staff>Edit: The changed time values did not take.
+- Bug Fixed: Institutions>Add: Giving message "For Developer: You should put institution_id into query string first"
+
+### [5.11.0] - 2026-05-20
+- Implemented: Develop Async Runtime Consolidation
+- Bug Fixed: Institutions > Report Cards > Comments : Issues when viewing Multi Grade Classes
+- Bug Fixed: Personal: Check all view pages to ensure that the following fields are standard
+- Bug Fixed: Institutions > Students > Finance > Bank Accounts > Edit : Gives 404.
+- Bug Fixed: Personal > Professional : Gives 404 for adding fields, when logged in as teacher.
+- Bug Fixed: Institutions > Academic >Houses > Add: When trying to add a house just after deleting any previous house it gives 404.
+
 ### [5.10.0] - 2026-05-15
 - Implemented: Develop Registrations and Accreditations features
 - Implemented: Develop a new configuration to determine if GPA and Cumulative GPA should be will recalculated when report cards are generated
