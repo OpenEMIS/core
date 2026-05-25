@@ -170,46 +170,26 @@ function StaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) 
         return columnDefs;
     }
 
+    //POCOR-9700: My Profile / Directory / GuardianNav views render attendance read-only.
+    // Marking is done from Institution > Attendance > Staff > Edit; this view reflects the persisted result.
     function getTimeInElement(params) {
-        var action = params.context.action;
         var data = params.data;
-        var rowIndex = params.rowIndex;
         var timeIn = params.data.InstitutionStaffAttendances.time_in;
-        if (action == 'edit') {
-            var divElement = document.createElement('div');
-            var timeInInputDivElement = createTimeElement(params, 'time_in', rowIndex);
-            divElement.appendChild(timeInInputDivElement);
-            return divElement;
-        } else {
-            clearError(data, 'time_in');
-            if (timeIn) {
-                timeIn = '<div class = "time-view"><i class="fa fa-external-link-square"></i>' + convert12Timeformat(timeIn) + '</div>';
-            } else {
-                timeIn = '<i class="fa fa-minus"></i>';
-            }
-            return timeIn;
+        clearError(data, 'time_in');
+        if (timeIn) {
+            return '<div class = "time-view"><i class="fa fa-external-link-square"></i>' + convert12Timeformat(timeIn) + '</div>';
         }
+        return '<i class="fa fa-minus"></i>';
     }
 
     function getTimeOutElement(params) {
-        var action = params.context.action;
         var data = params.data;
-        var rowIndex = params.rowIndex;
         var timeOut = params.data.InstitutionStaffAttendances.time_out;
-        if (action == 'edit') {
-            var divElement = document.createElement('div');
-            var timeOutInputDivElement = createTimeElement(params, 'time_out', rowIndex);
-            divElement.appendChild(timeOutInputDivElement);
-            return divElement;
-        } else {
-            clearError(data, 'time_out');
-            if (timeOut) {
-                timeOut = '<div class = "time-view"><i class="fa fa-external-link"></i>' + convert12Timeformat(timeOut) + '</div>';
-            } else {
-                timeOut = '<i class="fa fa-minus"></i>';
-            }
-            return timeOut;
+        clearError(data, 'time_out');
+        if (timeOut) {
+            return '<div class = "time-view"><i class="fa fa-external-link"></i>' + convert12Timeformat(timeOut) + '</div>';
         }
+        return '<i class="fa fa-minus"></i>';
     }
 
     function createTimeElement(params, timeKey, rowIndex) {
