@@ -8,6 +8,9 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\EventInterface;
 use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest ;
+use Cake\ORM\TableRegistry;
+
 
 class InstitutionAccreditationsTable extends ControllerActionTable
 {
@@ -48,6 +51,7 @@ class InstitutionAccreditationsTable extends ControllerActionTable
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
+        $this->field('academic_period_id', ['visible' => false]);
         $this->field('institution_id', ['visible' => false]);
         $this->field('education_programme_id', ['visible' => false]);
         $this->field('modified_user_id', ['visible' => false]);
@@ -61,6 +65,16 @@ class InstitutionAccreditationsTable extends ControllerActionTable
         $this->field('status',         ['label' => __('Status'),         'visible' => true]);
 
         $this->setFieldOrder(['programme_code', 'programme_name', 'valid_from', 'valid_to', 'status']);
+    }
+
+    //POCOR-9708
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('academic_period_id');
+        $this->field('education_programme_id');
+        $this->field('valid_from');
+        $this->field('valid_to');
+
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra): Query
@@ -217,4 +231,84 @@ class InstitutionAccreditationsTable extends ControllerActionTable
         unset($buttons['edit']);
         return $buttons;
     }
+
+    //POCOR-9708
+     public
+    function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $academicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $periodOptions  = $academicPeriods->getYearList();
+        $selectedPeriod  = $academicPeriods->getCurrent();
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
+                $attr['options'] = $periodOptions;
+                $attr['default'] = $selectedPeriod;
+                $attr['onChangeReload'] = true;
+            } else {
+                $queryString = $this->getQueryString();
+                $id = $queryString['id'];
+                $educationProgramme = $this->find()
+                    ->where(['id' => $id])
+                    ->first();
+                if (!empty($educationProgramme)) {
+                    $programmeId = $educationProgramme->education_programme_id;
+                }
+                $EducationProgrammes = TableRegistry::getTableLocator()
+                    ->get('Education.EducationProgrammes');
+
+                $programmeOptions = $EducationProgrammes
+                    ->find()
+                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    ->where(['EducationProgrammes.id' => $programmeId])
+                    ->first();
+                $academicPeriodId = $programmeOptions['education_cycle']['education_level']['education_system']['academic_period_id'];
+                $attr['type'] = 'readonly';
+                $attr['value'] = $academicPeriodId;
+                $attr['attr']['value'] = $academicPeriods->get($academicPeriodId)->name;
+            }
+        }
+        return $attr;
+    }
+
+    //POCOR-9708
+    public
+    function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $request = $this->request;
+        if ($action == 'view') {
+            $attr['visible'] = false;
+        } else if ($action == 'add' || $action == 'edit') {
+            $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+
+            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+
+            if ($action == 'add') {
+                $programmeOptions = $EducationProgrammes
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('availableProgrammes')
+                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
+                    ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+                    ->toArray();
+
+                $attr['options'] = $programmeOptions;
+                $attr['onChangeReload'] = 'changeEducationProgrammeId';
+
+            } else {
+                $queryString = $this->getQueryString();
+                $id = $queryString['id'];
+                $educationProgramme = $this->find()
+                    ->where(['id' => $id])
+                    ->first();
+                if (!empty($educationProgramme)) {
+                    $programmeId = $educationProgramme->education_programme_id;
+                }
+                $attr['type'] = 'readonly';
+                $attr['value'] = $programmeId;
+                $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
+            }
+        }
+        return $attr;
+    }
+
 }
