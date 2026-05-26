@@ -233,81 +233,138 @@ class InstitutionAccreditationsTable extends ControllerActionTable
     }
 
     //POCOR-9708
-     public
-    function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event,array $attr,$action,ServerRequest $request)
     {
-        $academicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-        $periodOptions  = $academicPeriods->getYearList();
-        $selectedPeriod  = $academicPeriods->getCurrent();
+        $academicPeriods = TableRegistry::getTableLocator()
+            ->get('AcademicPeriod.AcademicPeriods');
+
+        $periodOptions = $academicPeriods->getYearList();
+        $selectedPeriod = $academicPeriods->getCurrent();
+
         if ($action == 'add' || $action == 'edit') {
+
             if ($action == 'add') {
+
                 $attr['options'] = $periodOptions;
                 $attr['default'] = $selectedPeriod;
                 $attr['onChangeReload'] = true;
-            } else {
-                $queryString = $this->getQueryString();
-                $id = $queryString['id'];
-                $educationProgramme = $this->find()
-                    ->where(['id' => $id])
-                    ->first();
-                if (!empty($educationProgramme)) {
-                    $programmeId = $educationProgramme->education_programme_id;
-                }
-                $EducationProgrammes = TableRegistry::getTableLocator()
-                    ->get('Education.EducationProgrammes');
 
-                $programmeOptions = $EducationProgrammes
-                    ->find()
-                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
-                    ->where(['EducationProgrammes.id' => $programmeId])
-                    ->first();
-                $academicPeriodId = $programmeOptions['education_cycle']['education_level']['education_system']['academic_period_id'];
+            } else {
+
+                $queryString = $this->getQueryString();
+                $id = $queryString['id'] ?? null;
+                $academicPeriodId = '';
+                $academicPeriodName = '';
+
+                if (!empty($id)) {
+                    $educationProgramme = $this->find()
+                        ->where([
+                            'id' => $id
+                        ])
+                        ->first();
+                    $programmeId = $educationProgramme->education_programme_id ?? null;
+                    if (!empty($programmeId)) {
+
+                        $EducationProgrammes = TableRegistry::getTableLocator()
+                            ->get('Education.EducationProgrammes');
+                        $programmeOptions = $EducationProgrammes
+                            ->find()
+                            ->contain([
+                                'EducationCycles.EducationLevels.EducationSystems'
+                            ])
+                            ->where([
+                                'EducationProgrammes.id' => $programmeId
+                            ])
+                            ->first();
+
+                        if (!empty($programmeOptions)) {
+                            $academicPeriodId =
+                                $programmeOptions->education_cycle->education_level
+                                ->education_system->academic_period_id ?? '';
+                            if (!empty($academicPeriodId)) {
+
+                                $academicPeriod = $academicPeriods
+                                    ->find()
+                                    ->where([
+                                        'id' => $academicPeriodId
+                                    ])
+                                    ->first();
+                                $academicPeriodName =
+                                    $academicPeriod->name ?? '';
+                            }
+                        }
+                    }
+                }
                 $attr['type'] = 'readonly';
                 $attr['value'] = $academicPeriodId;
-                $attr['attr']['value'] = $academicPeriods->get($academicPeriodId)->name;
+                $attr['attr']['value'] = $academicPeriodName;
             }
         }
+
         return $attr;
     }
 
     //POCOR-9708
-    public
-    function onUpdateFieldEducationProgrammeId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event,array $attr,$action,ServerRequest $request)
     {
         $request = $this->request;
         if ($action == 'view') {
             $attr['visible'] = false;
         } else if ($action == 'add' || $action == 'edit') {
-            $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-            $academicPeriodId = !is_null($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();
+            $AcademicPeriod = TableRegistry::getTableLocator()
+                ->get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId =
+                !is_null($request->getData($this->aliasField('academic_period_id')))
+                ? $request->getData($this->aliasField('academic_period_id'))
+                : $AcademicPeriod->getCurrent();
 
-            $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
-
+            $EducationProgrammes = TableRegistry::getTableLocator()
+                ->get('Education.EducationProgrammes');
             if ($action == 'add') {
                 $programmeOptions = $EducationProgrammes
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'cycle_programme_name'
+                    ])
                     ->find('availableProgrammes')
-                    ->contain(['EducationCycles.EducationLevels.EducationSystems'])
-                    ->where(['EducationSystems.academic_period_id' => $academicPeriodId])
+                    ->contain([
+                        'EducationCycles.EducationLevels.EducationSystems'
+                    ])
+                    ->where([
+                        'EducationSystems.academic_period_id' => $academicPeriodId
+                    ])
                     ->toArray();
-
                 $attr['options'] = $programmeOptions;
                 $attr['onChangeReload'] = 'changeEducationProgrammeId';
 
             } else {
                 $queryString = $this->getQueryString();
-                $id = $queryString['id'];
-                $educationProgramme = $this->find()
-                    ->where(['id' => $id])
-                    ->first();
-                if (!empty($educationProgramme)) {
-                    $programmeId = $educationProgramme->education_programme_id;
+                $id = $queryString['id'] ?? null;
+                $programmeId = '';
+                $programmeName = '';
+                if (!empty($id)) {
+                    $educationProgramme = $this->find()
+                        ->where([
+                            'id' => $id
+                        ])
+                        ->first();
+                    $programmeId = $educationProgramme->education_programme_id ?? '';
+                    if (!empty($programmeId)) {
+                        $programme =
+                            $EducationProgrammes->find()
+                            ->where([
+                                'id' => $programmeId
+                            ])
+                            ->first();
+                        $programmeName = $programme->name ?? '';
+                    }
                 }
                 $attr['type'] = 'readonly';
                 $attr['value'] = $programmeId;
-                $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
+                $attr['attr']['value'] = $programmeName;
             }
         }
+
         return $attr;
     }
 
