@@ -875,6 +875,9 @@ class HtmlFieldHelper extends Helper
         $_options['options'] = isset($attr['options']) ? $attr['options'] : [];
         $_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
         $options = array_merge($_options, $options);
+        if (!empty($attr['attr']) && is_array($attr['attr'])) {
+            $options = array_merge($options, $attr['attr']);
+        }
 
         $this->includes['chosen']['include'] = true;
 
