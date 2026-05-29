@@ -2222,15 +2222,6 @@ class InstitutionsTable extends AppTable
         $institutionIds = $requestData->institution_id->_ids ?? [];
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
-        if (!empty($institutionIds) && $institutionIds !== [0]) {
-            if (in_array(0, $institutionIds)) {
-                if (!$superAdmin) {
-                    $conditions['Institutions.id IN'] = $institutionIds;
-                }
-            } else {
-                $conditions['Institutions.id IN'] = $institutionIds;
-            }
-        }
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -2241,6 +2232,25 @@ class InstitutionsTable extends AppTable
                 $allselectedAreas = $selectedArea1;
             }
             $conditions['Institutions.area_id IN'] = $allselectedAreas;
+        }
+
+        if (!empty($institutionIds) && !in_array(0, $institutionIds)) {
+            if (!$superAdmin) {
+                $conditions['Institutions.id IN'] = $institutionIds;
+            } else {
+                $conditions['Institutions.id IN'] = $institutionIds;
+            }
+        }elseif (!empty($areaId) && $areaId != -1) {
+            // "All Institutions" selected -> get institutions by area
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $areaInstitutionIds = $Institutions->find()
+                ->select(['id'])
+                ->where(['area_id' => $areaId])
+                ->extract('id')
+                ->toArray();
+            if (!empty($areaInstitutionIds)) {
+                $conditions['Institutions.id IN'] = $areaInstitutionIds;
+            }
         }
         //POCOR-9449 Start
         $query

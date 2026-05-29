@@ -580,22 +580,25 @@ class StudentsTable extends AppTable
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudent.academic_period_id'] = $academicPeriodId;
         }
-       
         // Institution Filter (_ids logic)
-        if (!empty($institutionIds) && $institutionIds !== [0]) {
-            if (in_array(0, $institutionIds)) {
-                if (!$superAdmin) {
-                    $conditions['InstitutionStudent.institution_id IN'] = $institutionIds;
-                }
+        if (!empty($institutionIds) && !in_array(0, $institutionIds)) {
+            if (!$superAdmin) {
+                $conditions['InstitutionStudent.institution_id IN'] = $institutionIds;
             } else {
                 $conditions['InstitutionStudent.institution_id IN'] = $institutionIds;
             }
+        }elseif (!empty($areaId) && $areaId != -1) {
+            // "All Institutions" selected -> get institutions by area
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $areaInstitutionIds = $Institutions->find()
+                ->select(['id'])
+                ->where(['area_id' => $areaId])
+                ->extract('id')
+                ->toArray();
+            if (!empty($areaInstitutionIds)) {
+                $conditions['InstitutionStudent.institution_id IN'] = $areaInstitutionIds;
+            }
         }
-
-        // Area Filter
-        /*if (!empty($areaId) && $areaId != -1) {
-            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId;
-        }*/
 
         if (!empty($enrolled)) {
             $conditions['InstitutionStudent.student_status_id'] = $enrolled;
