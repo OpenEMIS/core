@@ -582,10 +582,10 @@ class StudentsTable extends AppTable
         }
        
         // Institution Filter (_ids logic)
-        if (!empty($institutionIds) &&  ($institutionIds > 0)) {
+        if (!empty($institutionIds) && $institutionIds !== [0]) {
             if (in_array(0, $institutionIds)) {
                 if (!$superAdmin) {
-                    $conditions['InstitutionStudent.institution_id IN'] = array_keys($institutionList);
+                    $conditions['InstitutionStudent.institution_id IN'] = $institutionIds;
                 }
             } else {
                 $conditions['InstitutionStudent.institution_id IN'] = $institutionIds;
@@ -593,9 +593,9 @@ class StudentsTable extends AppTable
         }
 
         // Area Filter
-        if (!empty($areaId) && $areaId != -1) {
+        /*if (!empty($areaId) && $areaId != -1) {
             $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId;
-        }
+        }*/
 
         if (!empty($enrolled)) {
             $conditions['InstitutionStudent.student_status_id'] = $enrolled;
