@@ -2222,7 +2222,7 @@ class InstitutionsTable extends AppTable
         $institutionIds = $requestData->institution_id->_ids ?? [];
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
-        if (!empty($institutionIds) && !in_array('0', $institutionIds)) {
+        if (!empty($institutionIds) && $institutionIds !== [0]) {
             if (in_array(0, $institutionIds)) {
                 if (!$superAdmin) {
                     $conditions['Institutions.id IN'] = $institutionIds;

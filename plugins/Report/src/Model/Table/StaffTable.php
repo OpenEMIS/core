@@ -515,7 +515,7 @@ class StaffTable extends AppTable  {
         }
 
         // Institution Filter (_ids logic)
-        if (!empty($institutionIds) &&  ($institutionIds > 0)) {
+        if (!empty($institutionIds) && $institutionIds !== [0]) {
             if (in_array(0, $institutionIds)) {
                 if (!$superAdmin) {
                     $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
