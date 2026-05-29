@@ -337,7 +337,7 @@ class WorkflowBehavior extends Behavior
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         /** POCOR-6928 - added staff_change_type_id condition to skip Change-of-shift from workflow steps*/
-        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN && $entity->staff_change_type_id != 5) {
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) { //POCOR-9722 - removed && $entity->staff_change_type_id != 5 condition
             $this->setStatusAsOpen($entity);
         }
 
@@ -1294,7 +1294,7 @@ class WorkflowBehavior extends Behavior
                 $attr['attr']['value'] = $userEntity->name_with_id;
 
             }
-            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4){
+            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 5 ){ //POCOR-9722
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;
