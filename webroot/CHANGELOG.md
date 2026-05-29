@@ -1,3 +1,7 @@
+### [5.11.1] - 2026-05-22
+- Bug Fixed: Institution>Attendance>Staff>Edit: The changed time values did not take.
+- Bug Fixed: Institutions>Add: Giving message "For Developer: You should put institution_id into query string first"
+
 ### [5.11.0] - 2026-05-20
 - Implemented: Develop Async Runtime Consolidation
 - Bug Fixed: Institutions > Report Cards > Comments : Issues when viewing Multi Grade Classes
