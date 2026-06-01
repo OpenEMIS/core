@@ -7,6 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
 use Cake\Event\EventInterface;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 
 class HealthBehavior extends Behavior
 {
@@ -33,7 +34,32 @@ class HealthBehavior extends Behavior
         $events['ControllerAction.Model.add.afterAction']  = ['callable' => 'guardEmptyLookups', 'priority' => 90];
         $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'guardEmptyLookups', 'priority' => 90];
         $events['ControllerAction.Model.onGetFormButtons'] = ['callable' => 'stripSaveOnBlocked', 'priority' => 90];
+        //POCOR-9718: require a value in every non-nullable Health lookup select, so submitting
+        //the form without choosing shows a clear inline "select a value" message instead of a 404.
+        $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 90];
         return $events;
+    }
+
+    //POCOR-9718: a non-nullable belongsTo lookup left on "--Select--" used to submit an empty FK
+    //and fall through to a 404; now it fails validation with a user-facing message and the field
+    //renders the required asterisk. Scoped to Health.* lookups whose column is NOT NULL, so genuinely
+    //optional fields are untouched. Centralised here instead of repeating in each Health table.
+    public function buildValidator(EventInterface $event, Validator $validator, string $name)
+    {
+        $schema = $this->_table->getSchema();
+        foreach ($this->_table->associations() as $assoc) {
+            if ($assoc->type() !== 'manyToOne') {
+                continue;
+            }
+            if (strpos((string)$assoc->getClassName(), 'Health.') !== 0) {
+                continue;
+            }
+            $foreignKey = $assoc->getForeignKey();
+            if (!$schema->hasColumn($foreignKey) || !empty($schema->getColumn($foreignKey)['null'])) {
+                continue;
+            }
+            $validator->notEmptyString($foreignKey, __('Please select a value to save.'));
+        }
     }
 
     //POCOR-9718: stop the default redirect and emit one carrying pass[1].
@@ -41,6 +67,14 @@ class HealthBehavior extends Behavior
     //the user arrived with.
     public function forcePassOnRedirect(EventInterface $event, Entity $entity, ArrayObject $data)
     {
+        //POCOR-9718: only force the redirect on a genuine successful save. add.afterSave also
+        //fires when the save was rejected (e.g. a required lookup left on "--Select--"); without
+        //this guard we would redirect to index and hide the inline field error, leaving the user
+        //with only a generic "record not added" message instead of "Please select a value to save".
+        if ($entity->hasErrors() || $entity->isNew()) {
+            return;
+        }
+
         $payload = $this->buildContextPayload();
         if (empty($payload)) {
             return;
