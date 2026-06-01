@@ -840,8 +840,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             }
 
         }).catch(function(err) {
-            console.error('Error in saveStaffAttendance:', err);
-            if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            //POCOR-9729: these rejections are controlled validations that already showed a
+            // specific, user-friendly AlertSvc message above. Don't overwrite that with the
+            // generic "timezone" error — only surface it for genuinely unexpected failures.
+            var handled = ['FUTURE_DATE', 'FUTURE_TIME_TODAY', 'TIME_ORDER_INVALID'];
+            if (handled.indexOf(err) === -1) {
+                console.error('Error in saveStaffAttendance:', err);
+                if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            }
             return false;
         });
     }
