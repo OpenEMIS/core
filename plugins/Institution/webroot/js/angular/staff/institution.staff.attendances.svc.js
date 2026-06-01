@@ -792,7 +792,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                     ? dataValue
                     : (dataKey === 'time_in' || dataKey === 'time_out' ? dataValue : null);
                 if (attemptedTime) {
-                    var nowHms = (d.hour || '00') + ':' + (d.minute || '00') + ':' + (d.second || '00');
+                    //POCOR-9729: allow any time today (threshold = end of day). Teachers arrive
+                    // early / leave late, so the time-of-day must not be hard-blocked against the
+                    // current clock — only genuine future *dates* are rejected (FUTURE_DATE above).
+                    var nowHms = '23:59:59';
                     if (attemptedTime > nowHms) {
                         if ($scope) {
                             AlertSvc.warning($scope, 'Cannot mark a time in the future');
