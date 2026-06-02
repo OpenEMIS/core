@@ -19,6 +19,15 @@ class AlertsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    // POCOR-9509: Alert types without Laravel command implementations
+    // These alerts cannot be sent, so they should only have "Never" frequency
+    // Values are the 'name' field from alerts table (feature names), NOT process_name
+    //POCOR-9509: start - updated as new Laravel commands are implemented
+    public const NON_IMPLEMENTED_ALERTS = [
+        'StaffAttendance', // POCOR-9509: No shell exists, no Laravel command
+    ];
+    //POCOR-9509: end
+
     private $statusTypes = [];
 
     public function initialize(array $config): void
@@ -375,14 +384,22 @@ class AlertsTable extends ControllerActionTable
     {
         // POCOR-8286 start
         $entity = $attr['entity'];
+        // POCOR-9509: Event-based alerts fire on afterSave — daily schedule makes no sense for them
         $oneTimeProcesses = [
             'AlertAttendance',
-            'AlertStudentAbsence', // POCOR-9391
+            'AlertStudentAbsence',      // POCOR-9391
             'AlertStudentAdmission',
-            'AlertStudentEnrolment'
+            'AlertStudentEnrolment',
+            'AlertStudentStatus',       // POCOR-9509: event-based (afterSave)
+            'AlertStaffType',           // POCOR-9509: event-based (afterSave)
         ];
 
-        if (in_array($entity->process_name, $oneTimeProcesses, true)) {
+        // POCOR-9509: Non-implemented alerts can only be "Never"
+        if (in_array($entity->process_name, self::NON_IMPLEMENTED_ALERTS, true)) {
+            $freqOptions = [
+                "Never" => __("Never")
+            ];
+        } elseif (in_array($entity->process_name, $oneTimeProcesses, true)) {
             $freqOptions = [
                 "Never" => __("Never"), // POCOR-8286
                 "Once" => __("Once")

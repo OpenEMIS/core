@@ -729,8 +729,8 @@
                                                         "example": null
                                                     },
                                                     "status": {
-                                                        "type": "string",
-                                                        "example": null
+                                                        "type": "integer",
+                                                        "example": 0
                                                     },
                                                     "subject": {
                                                         "type": "string",
@@ -802,8 +802,8 @@
                                         "example": null
                                     },
                                     "status": {
-                                        "type": "string",
-                                        "example": null
+                                        "type": "integer",
+                                        "example": 0
                                     },
                                     "subject": {
                                         "type": "string",
@@ -25045,10 +25045,6 @@
                                                         "type": "string",
                                                         "example": null
                                                     },
-                                                    "fax": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
                                                     "email": {
                                                         "type": "string",
                                                         "example": null
@@ -25135,10 +25131,6 @@
                                         "example": null
                                     },
                                     "telephone": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "fax": {
                                         "type": "string",
                                         "example": null
                                     },
@@ -49689,10 +49681,6 @@
                                                         "type": "string",
                                                         "example": null
                                                     },
-                                                    "fax": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
                                                     "email": {
                                                         "type": "string",
                                                         "example": null
@@ -49771,10 +49759,6 @@
                                         "example": null
                                     },
                                     "mobile_number": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "fax": {
                                         "type": "string",
                                         "example": null
                                     },
@@ -72613,6 +72597,14 @@
                                                         "type": "integer",
                                                         "example": null
                                                     },
+                                                    "vision": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
+                                                    "mission": {
+                                                        "type": "string",
+                                                        "example": null
+                                                    },
                                                     "area_id": {
                                                         "type": "integer",
                                                         "example": null
@@ -72778,6 +72770,14 @@
                                     },
                                     "classification": {
                                         "type": "integer",
+                                        "example": null
+                                    },
+                                    "vision": {
+                                        "type": "string",
+                                        "example": null
+                                    },
+                                    "mission": {
+                                        "type": "string",
                                         "example": null
                                     },
                                     "area_id": {
@@ -92998,10 +92998,6 @@
                                                         "type": "integer",
                                                         "example": null
                                                     },
-                                                    "security_user_id": {
-                                                        "type": "integer",
-                                                        "example": null
-                                                    },
                                                     "verification_otp": {
                                                         "type": "string",
                                                         "example": null
@@ -93039,10 +93035,6 @@
                             "schema": {
                                 "properties": {
                                     "id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "security_user_id": {
                                         "type": "integer",
                                         "example": null
                                     },
@@ -93622,10 +93614,6 @@
                                                         "type": "string",
                                                         "example": null
                                                     },
-                                                    "password": {
-                                                        "type": "string",
-                                                        "example": null
-                                                    },
                                                     "openemis_no": {
                                                         "type": "string",
                                                         "example": null
@@ -93702,10 +93690,6 @@
                                                     },
                                                     "external_reference": {
                                                         "type": "string",
-                                                        "example": null
-                                                    },
-                                                    "super_admin": {
-                                                        "type": "integer",
                                                         "example": null
                                                     },
                                                     "status": {
@@ -93878,10 +93862,6 @@
                                     },
                                     "external_reference": {
                                         "type": "string",
-                                        "example": null
-                                    },
-                                    "super_admin": {
-                                        "type": "integer",
                                         "example": null
                                     },
                                     "status": {
@@ -140703,8 +140683,8 @@
                                         "example": null
                                     },
                                     "status": {
-                                        "type": "string",
-                                        "example": null
+                                        "type": "integer",
+                                        "example": 0
                                     },
                                     "subject": {
                                         "type": "string",
@@ -158261,10 +158241,6 @@
                                         "type": "string",
                                         "example": null
                                     },
-                                    "fax": {
-                                        "type": "string",
-                                        "example": null
-                                    },
                                     "email": {
                                         "type": "string",
                                         "example": null
@@ -175327,10 +175303,6 @@
                                         "type": "string",
                                         "example": null
                                     },
-                                    "fax": {
-                                        "type": "string",
-                                        "example": null
-                                    },
                                     "email": {
                                         "type": "string",
                                         "example": null
@@ -191835,6 +191807,14 @@
                                         "type": "integer",
                                         "example": null
                                     },
+                                    "vision": {
+                                        "type": "string",
+                                        "example": null
+                                    },
+                                    "mission": {
+                                        "type": "string",
+                                        "example": null
+                                    },
                                     "area_id": {
                                         "type": "integer",
                                         "example": null
@@ -206128,10 +206108,6 @@
                                         "type": "integer",
                                         "example": null
                                     },
-                                    "security_user_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
                                     "verification_otp": {
                                         "type": "string",
                                         "example": null
@@ -206693,10 +206669,6 @@
                                     },
                                     "external_reference": {
                                         "type": "string",
-                                        "example": null
-                                    },
-                                    "super_admin": {
-                                        "type": "integer",
                                         "example": null
                                     },
                                     "status": {
