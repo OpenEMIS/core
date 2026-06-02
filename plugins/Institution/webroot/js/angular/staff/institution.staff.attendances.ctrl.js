@@ -91,6 +91,12 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         UtilsSvc.isAppendLoader(true);
         InstitutionStaffAttendancesSvc.getTranslatedText().
         then(function(isTranslated) {
+            //POCOR-9700: warm the time_format cache BEFORE the grid renders so AM/PM appears on first paint.
+            // Without this, the lazy fetch in createTimeElement resolves after the first render and
+            // the AM/PM only shows after a shift change triggers a grid refresh.
+            return InstitutionStaffAttendancesSvc.getTimeFormatIs12h();
+        }, vm.error)
+        .then(function() {
             return InstitutionStaffAttendancesSvc.getAcademicPeriodOptions();
         }, vm.error)
         .then(function(academicPeriods) {
@@ -206,6 +212,9 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
         vm.initGrid();
         var shiftObj = vm.shiftListOptions.find(obj => obj.id == vm.selectedShift);
         vm.gridOptions.context.date = vm.selectedShift;
+        //POCOR-9700: expose shift bounds so the cell editor can soft-warn on out-of-window times
+        vm.gridOptions.context.shiftStartTime = vm.selectedShiftStartTime;
+        vm.gridOptions.context.shiftEndTime = vm.selectedShiftEndTime;
 
         InstitutionStaffAttendancesSvc.getAllStaffAttendances(vm.getAllStaffAttendancesParams())
         .then(function(allStaffAttendances) {
@@ -304,13 +313,25 @@ function InstitutionStaffAttendancesController($scope,$timeout, $q, $window, $ht
 
     vm.setShiftListOptions = function(shiftListOptions) {
         vm.shiftListOptions = shiftListOptions;
-        if (shiftListOptions.length > 0) {
+        //POCOR-9700: when there is exactly one real shift, auto-select it so users do not have to.
+        // When there are multiple shifts, leave the "-- All --" placeholder selected; the Edit button
+        // is gated on a real shift (see ng-disabled in the template) so users see the disabled state
+        // instead of an after-click "Please select shift" warning.
+        var realShifts = (shiftListOptions || []).filter(function(s) { return s && s.id != -1 && s.id !== '-1'; });
+        if (realShifts.length === 1) {
+            var only = realShifts[0];
+            vm.selectedShift = only.id;
+            vm.selectedShiftStartTime = only.start_time || '';
+            vm.selectedShiftEndTime = only.end_time || '';
+            vm.gridOptions.context.date = vm.selectedShift;
+            vm.gridOptions.context.shiftStartTime = vm.selectedShiftStartTime;
+            vm.gridOptions.context.shiftEndTime = vm.selectedShiftEndTime;
+            vm.changeShift();
+        } else if (shiftListOptions.length > 0) {
             angular.forEach(shiftListOptions, function(shift) {
                 if (shift.id == '-1') {
-                   vm.selectedShift = shift.id;
-                //    vm.selectedFormattedDayDate = shift.name;
-                   vm.gridOptions.context.date = vm.selectedShift;
-
+                    vm.selectedShift = shift.id;
+                    vm.gridOptions.context.date = vm.selectedShift;
                 }
             });
         }

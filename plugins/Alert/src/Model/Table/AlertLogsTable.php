@@ -876,9 +876,27 @@ class AlertLogsTable extends ControllerActionTable
                 'action' => 'processQueue',
             ]
         ];
+        //POCOR-9694: cross-link to Async Services → Queue Backlog dashboard.
+        $checkBacklog = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-tasks"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Check backlog'),
+            ],
+            'url' => [
+                'plugin' => 'System', 'controller' => 'Systems',
+                'action' => 'QueueBacklog',
+            ],
+        ];
+
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarButtonsArray['alertCheck'] = $checkButton;
         $toolbarButtonsArray['alertSend'] = $sendButton;
+        $toolbarButtonsArray['checkBacklog'] = $checkBacklog;
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         $this->controller->set('toolbarButtons', $extra['toolbarButtons']);
