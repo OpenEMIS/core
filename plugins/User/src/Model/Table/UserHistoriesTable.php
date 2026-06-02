@@ -35,4 +35,31 @@ class UserHistoriesTable extends ControllerActionTable
     public function beforeAction(EventInterface $event) {
         $this->field('security_user_id', ['visible' => false]);
     }
+
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $getQueryString  = $this->getQueryString();
+        $institutionId   = $getQueryString['institution_id'] ?? null;
+        $userId          = $getQueryString['security_user_id'] ?? null;
+
+        $queryString = $this->paramsEncode([
+            'institution_id'   => $institutionId,
+            'security_user_id' => $userId,
+            'model'            => 'User',
+        ]);
+        //POCOR-4681
+        $pdfButton = [
+            'url' => [
+                'plugin'     => 'Institution',
+                'controller' => 'Institutions',
+                'action'     => 'HistoryPdf',
+                0            => $queryString,
+            ],
+            'type'  => 'button',
+            'label' => '<i class="fa fa-file-pdf-o"></i>',
+            'attr'  => $this->getButtonAttr(),
+        ];
+        $pdfButton['attr']['title'] = __('Export PDF');
+        $extra['toolbarButtons']['pdfExport'] = $pdfButton;
+    }
 }
