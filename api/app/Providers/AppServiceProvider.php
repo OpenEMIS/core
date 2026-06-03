@@ -6,7 +6,6 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
-use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,8 +44,11 @@ class AppServiceProvider extends ServiceProvider
                 return ($row && @timezone_open($row) !== false) ? $row : 'UTC'; //POCOR-9509: invalid/missing → Greenwich (UTC)
             });
             config(['app.timezone' => $tz]);
-            date_default_timezone_set($tz);
-            Carbon::setTimezone($tz);
+            date_default_timezone_set($tz); //POCOR-9509: Carbon honours PHP default tz so no explicit Carbon call needed.
+            //POCOR-9719: align MySQL session TZ with PHP TZ so DATETIME columns
+            //and CURRENT_TIMESTAMP defaults round-trip in the same wallclock —
+            //Tonga drift +13h root cause when these disagree.
+            DB::statement('SET time_zone = ?', [$tz]);
         } catch (\Throwable $e) {
             // DB not ready (e.g. during migrations) — stay on default timezone
         }
