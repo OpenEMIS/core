@@ -460,4 +460,49 @@ class AttendanceService extends Controller
         }
     }
 
+    //POCOR-8630 STARTS
+    public function getStaffAttendancesImportTemplateData(int $institutionId): array
+    {
+        try {
+            return $this->attendanceRepository->getStaffAttendancesImportTemplateData($institutionId);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch staff attendances import template data from DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            throw $e;
+        }
+    }
+
+
+    public function staffAttendancesImport(array $params)
+    {
+        try {
+            return $this->attendanceRepository->staffAttendancesImport($params);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import staff attendances in DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import staff attendances in DB.');
+        }
+    }
+
+
+    public function getStaffAttendancesExport(array $params): array
+    {
+        try {
+            return $this->attendanceRepository->getStaffAttendancesExport($params);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export staff attendances from DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            throw $e;
+        }
+    }
+
+    //POCOR-8630 ENDS
+
 }
