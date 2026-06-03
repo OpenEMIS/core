@@ -31,6 +31,8 @@ class StudentFeesTable extends ControllerActionTable
     protected $InstitutionFees = null;
     protected $InstitutionFeeEntity = null;
     protected $StudentFeesAbstract = null;
+    /** @var array|null Cached modified audit for view (institution fee or latest payment). */
+    protected $studentFeeAuditContext = null;
 
     public function initialize(array $config): void
     {
@@ -300,6 +302,11 @@ class StudentFeesTable extends ControllerActionTable
     ** view action methods
     **
     ******************************************************************************************************************/
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['CreatedUser', 'ModifiedUser']);
+    }
+
     public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -331,6 +338,8 @@ class StudentFeesTable extends ControllerActionTable
             'InstitutionFees.created'
         ])
         ->contain([
+            'CreatedUser',
+            'ModifiedUser',
             'InstitutionFeeTypes' => function ($q) {
                 return $q  //POCOR-8024 and POCOR-8255
                     ->select([
@@ -370,6 +379,109 @@ class StudentFeesTable extends ControllerActionTable
         $this->setFieldOrder([
             'academic_period_id', 'education_programme', 'education_grade_id', 'openemis_no', 'student_id', 'fee_types', 'payments', 'outstanding_fee'
         ]);
+
+        $this->studentFeeAuditContext = $this->buildStudentFeeAuditContext($entity);
+    }
+
+    public function onGetModifiedUserId(EventInterface $event, Entity $entity)
+    {
+        if (!empty($entity->modified_user_id)) {
+            if ($entity->has('modified_user') && $entity->modified_user) {
+                return $entity->modified_user->name;
+            }
+
+            $user = TableRegistry::getTableLocator()->get('User.Users')->find()
+                ->where(['id' => $entity->modified_user_id])
+                ->first();
+            if ($user) {
+                return $user->name;
+            }
+        }
+
+        $context = $this->getStudentFeeAuditContext($entity);
+
+        return $context['modified_user_name'] ?? '';
+    }
+
+    public function onGetModified(EventInterface $event, Entity $entity)
+    {
+        if (!empty($entity->modified)) {
+            return $this->formatDateTime($entity->modified);
+        }
+
+        $context = $this->getStudentFeeAuditContext($entity);
+        if (!empty($context['modified'])) {
+            return $this->formatDateTime($context['modified']);
+        }
+
+        return '';
+    }
+
+    /**
+     * Modified audit for student fee view: institution_fees record, else latest payment row.
+     */
+    protected function buildStudentFeeAuditContext(Entity $entity): array
+    {
+        $context = [
+            'modified_user_name' => '',
+            'modified' => null,
+        ];
+
+        if (empty($this->InstitutionFeeEntity)) {
+            return $context;
+        }
+
+        $fee = $this->InstitutionFeeEntity;
+        if (!empty($fee->modified_user_id)) {
+            if ($fee->has('modified_user') && $fee->modified_user) {
+                $context['modified_user_name'] = $fee->modified_user->name;
+            } else {
+                $user = TableRegistry::getTableLocator()->get('User.Users')->find()
+                    ->where(['id' => $fee->modified_user_id])
+                    ->first();
+                if ($user) {
+                    $context['modified_user_name'] = $user->name;
+                }
+            }
+            $context['modified'] = $fee->modified;
+        }
+
+        if (!empty($context['modified_user_name'])) {
+            return $context;
+        }
+
+        $latestPayment = $this->StudentFeesAbstract->find()
+            ->contain(['CreatedBy', 'ModifiedUser'])
+            ->where([
+                $this->StudentFeesAbstract->aliasField('institution_fee_id') => $fee->id,
+                $this->StudentFeesAbstract->aliasField('student_id') => $entity->student_id,
+            ])
+            ->orderDesc($this->StudentFeesAbstract->aliasField('modified'))
+            ->orderDesc($this->StudentFeesAbstract->aliasField('created'))
+            ->first();
+
+        if (!$latestPayment) {
+            return $context;
+        }
+
+        if (!empty($latestPayment->modified_user_id) && $latestPayment->has('modified_user') && $latestPayment->modified_user) {
+            $context['modified_user_name'] = $latestPayment->modified_user->name;
+            $context['modified'] = $latestPayment->modified;
+        } elseif ($latestPayment->has('created_by') && $latestPayment->created_by) {
+            $context['modified_user_name'] = $latestPayment->created_by->name;
+            $context['modified'] = $latestPayment->modified ?? $latestPayment->created;
+        }
+
+        return $context;
+    }
+
+    protected function getStudentFeeAuditContext(Entity $entity): array
+    {
+        if ($this->studentFeeAuditContext === null) {
+            $this->studentFeeAuditContext = $this->buildStudentFeeAuditContext($entity);
+        }
+
+        return $this->studentFeeAuditContext;
     }
 
 
