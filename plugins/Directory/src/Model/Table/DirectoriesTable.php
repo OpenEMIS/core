@@ -2572,19 +2572,6 @@ public function getIdentityTypeData($value_selection)
         $this->setupTabElements($entity);
     }
 
-    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-       
-        $plugin = $toolbarButtons['back']['url']['plugin'];
-        $controller = $toolbarButtons['back']['url']['controller'];
-        if ($plugin == 'Directory' || $plugin == 'Profile') {
-            $toolbarButtons['back']['url']['action'] = 'StaffSalaries';
-        } else if ($plugin == 'Staff') {
-            $toolbarButtons['back']['url']['action'] = 'Salaries';
-        }
-    }
-
-
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //POCOR-8059::start
