@@ -87,8 +87,16 @@ class QualificationsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
+        $emptyMsg = __('This field cannot be left empty');
+
         return $validator
             ->requirePresence('qualification_country_id')
+            ->requirePresence('qualification_title_id', true)
+            ->requirePresence('education_field_of_study_id', true)
+            ->requirePresence('qualification_institution', true)
+            ->notEmptyString('qualification_title_id', $emptyMsg)
+            ->notEmptyString('education_field_of_study_id', $emptyMsg)
+            ->notEmptyString('qualification_institution', $emptyMsg)
             ->allowEmpty('graduate_year')
             ->add('graduate_year', 'ruleNumeric', [
                     'rule' => ['numeric'],
@@ -97,6 +105,29 @@ class QualificationsTable extends ControllerActionTable
                     }
             ])
             ->allowEmpty('file_content');
+    }
+
+    /**
+     * Chosen institution posts as Qualifications[qualification_institution][_ids][].
+     * Normalize to a scalar so validation and entity patching apply to qualification_institution.
+     */
+    public function beforeMarshal(EventInterface $event, \ArrayObject $data, \ArrayObject $options)
+    {
+        if (!isset($data['qualification_institution'])) {
+            return;
+        }
+        $value = $data['qualification_institution'];
+        if (is_array($value) && isset($value['_ids'])) {
+            $ids = $value['_ids'];
+            if (is_array($ids) && $ids !== []) {
+                $first = reset($ids);
+                $data['qualification_institution'] = ($first !== null && $first !== '')
+                    ? (string)$first
+                    : '';
+            } else {
+                $data['qualification_institution'] = '';
+            }
+        }
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
@@ -265,7 +296,7 @@ class QualificationsTable extends ControllerActionTable
         $this->setupFields($entity);
         $this->field('qualification_institution_id', [
             'type' => 'element',
-            'element' => 'qualification_institution',
+            'element' => 'Staff.qualification_institution',
             'visible' => ['add'=>true, 'edit'=>true],
         ]);
     }
@@ -523,11 +554,19 @@ class QualificationsTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
-        $this->field('qualification_title_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('qualification_title_id', [
+            'type' => 'select',
+            'entity' => $entity,
+            'attr' => ['required' => true],
+        ]);
 
         $this->field('qualification_level', ['type' => 'readonly', 'entity' => $entity, 'attr' => ['label' => __('Level')]]);
 
-        $this->field('education_field_of_study_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('education_field_of_study_id', [
+            'type' => 'select',
+            'entity' => $entity,
+            'attr' => ['required' => true],
+        ]);
 
         $this->field('qualification_specialisations', [
             'type' => 'chosenSelect',
@@ -538,7 +577,8 @@ class QualificationsTable extends ControllerActionTable
         $this->field('qualification_institution', [
             'type' => 'chosenSelect',
             'placeholder' => __('Select Institution'),
-            'entity' => $entity
+            'entity' => $entity,
+            'attr' => ['required' => true],
         ]); //POCOR-9531
 
         $this->field('education_subjects', [
@@ -547,7 +587,11 @@ class QualificationsTable extends ControllerActionTable
             'entity' => $entity
         ]);
 
-        $this->field('qualification_country_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('qualification_country_id', [
+            'type' => 'select',
+            'entity' => $entity,
+            'attr' => ['required' => true],
+        ]);
 
         $this->field('graduate_year', ['type' => 'select', 'entity' => $entity]);
 
@@ -732,7 +776,11 @@ class QualificationsTable extends ControllerActionTable
 
     //POCOR-9531
     public function beforeSave(EventInterface  $event, Entity $entity, ArrayObject $data){
-        $qualificationInstitution = $this->request->getData()['Qualifications']['qualification_institution']['_ids'][0];
+        $qualifications = $this->request->getData('Qualifications');
+        if (empty($qualifications['qualification_institution']['_ids'])) {
+            return;
+        }
+        $qualificationInstitution = $qualifications['qualification_institution']['_ids'][0];
         if (is_numeric($qualificationInstitution)) {
             $record = $this->find()
                 ->select(['qualification_institution'])
