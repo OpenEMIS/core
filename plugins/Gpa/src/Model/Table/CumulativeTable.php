@@ -468,6 +468,7 @@ class CumulativeTable extends ControllerActionTable {
         }
     }
 
+    //POCOR-9078 - Restrict delete if associated InstitutionStudentsGpa records exist and delete associated cumulative GPA grades on deletion of Cumulative GPA Education Grade record
     public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $InstitutionStudentsGpa = TableRegistry::getTableLocator()
@@ -507,13 +508,30 @@ class CumulativeTable extends ControllerActionTable {
 
     public function checkGpaRecords($entity): bool
     {
-        return $this->InstitutionStudentsGpa->find()
+        $educationGradeIds = $this->find()
+            ->select(['education_grade_id'])
             ->where([
-                'education_grade_id' => $entity->main_education_grade_id,
-                'cumulative_gpa IS NOT' => null
+                'main_education_grade_id' => $entity->main_education_grade_id
             ])
-            ->count() > 0;
+            ->extract('education_grade_id')
+            ->toArray();
+
+        return $this->InstitutionStudentsGpa->exists([
+            'education_grade_id IN' => $educationGradeIds,
+            'cumulative_gpa IS NOT' => null
+        ]);
     }
+
+    public function afterDelete(
+        EventInterface $event,
+        Entity $entity,
+        ArrayObject $options
+    ) {
+        $this->deleteAll([
+            'main_education_grade_id' => $entity->main_education_grade_id
+        ]);
+    }
+    //POCOR-9078 -- End
 
     //POCOR-8962
     public function onGetGpaEducationProgrammeId(EventInterface $event, Entity $entity)
