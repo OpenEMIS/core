@@ -2562,9 +2562,28 @@ public function getIdentityTypeData($value_selection)
                 return $this->controller->redirect($urlParams);
             }
         }
+        //POCOR-9735 start
+        $session = $this->request->getSession();
+        $referer = $this->request->referer();
+        if (!empty($referer) &&strpos($referer, '/Student/') !== false) {
+            $extra['toolbarButtons']['back']['url'] =   $referer;
+        } //POCOR-9735 end
 
         $this->setupTabElements($entity);
     }
+
+    public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+       
+        $plugin = $toolbarButtons['back']['url']['plugin'];
+        $controller = $toolbarButtons['back']['url']['controller'];
+        if ($plugin == 'Directory' || $plugin == 'Profile') {
+            $toolbarButtons['back']['url']['action'] = 'StaffSalaries';
+        } else if ($plugin == 'Staff') {
+            $toolbarButtons['back']['url']['action'] = 'Salaries';
+        }
+    }
+
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
