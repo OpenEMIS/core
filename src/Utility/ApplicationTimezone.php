@@ -5,6 +5,7 @@ namespace App\Utility;
 
 use Cake\Cache\Cache;
 use Cake\Core\Configure;
+use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -53,6 +54,36 @@ class ApplicationTimezone
                 (string)(Configure::read('App.displayTimezoneFallback') ?? 'UTC')
             );
             Configure::write('App.displayTimezone', $fallback);
+        }
+    }
+
+    /**
+     * POCOR-9719 — single entrypoint for unifying PHP, CakePHP, and every
+     * MySQL connection on the deployment's timezone. Called once from
+     * config/bootstrap.php after ConnectionManager::setConfig.
+     *
+     * Reads config_items.time_zone (cached via registerDisplayTimezone), then:
+     *   - mirrors it into App.defaultTimezone (storage = display)
+     *   - calls date_default_timezone_set() so Carbon and PHP date_* agree
+     *   - patches every MySQL connection's session timezone, overriding any
+     *     hardcoded 'UTC' from app_local.php — deployers only edit the DB row
+     *
+     * Laravel's AppServiceProvider::applySystemTimezone does the equivalent
+     * for the api/ side from the same DB row.
+     */
+    public static function applyToSystem(): void
+    {
+        self::registerDisplayTimezone();
+        $tz = self::getDisplayTimezone();
+        Configure::write('App.defaultTimezone', $tz);
+        date_default_timezone_set($tz);
+        foreach (ConnectionManager::configured() as $name) {
+            $cfg = ConnectionManager::getConfig($name);
+            if (isset($cfg['driver']) && str_contains((string)$cfg['driver'], 'Mysql')) {
+                $cfg['timezone'] = $tz;
+                ConnectionManager::drop($name);
+                ConnectionManager::setConfig($name, $cfg);
+            }
         }
     }
 
