@@ -74,7 +74,7 @@ class AuthenticationBehavior extends Behavior
     public function buildSystemConfigFilters($action = null)
     { 
         $toolbarElements = [
-            ['name' => 'Configuration.idp_controls', 'data' => [], 'options' => []]
+            ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
         ];
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $typeList = $ConfigItem
@@ -110,7 +110,10 @@ class AuthenticationBehavior extends Behavior
         }//POCOR-7156 Ends
         $this->model->controller->set('authenticationTypeOptions', $authenticationTypeOptions);
         $controlElement = $toolbarElements[0];
-        $controlElement['data'] = ['typeOptions' => $typeOptions];
+        $controlElement['data'] = [
+            'typeOptions' => $typeOptions,
+            'authenticationTypeOptions' => $authenticationTypeOptions,
+        ];
         $controlElement['order'] = 1;
 
         return $controlElement;
