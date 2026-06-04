@@ -51,6 +51,29 @@ class AttendanceService extends Controller
         }
     }
 
+    //POCOR-8630 start
+    /**
+     * @return array<string, int>|false
+     */
+    public function validateStaffAttendancePermissions(int $institutionId, array $params): array|false
+    {
+        return $this->attendanceRepository->validateStaffAttendancePermissions($institutionId, $params);
+    }
+
+
+    public function getStaffAttendancesArchive($request)
+    {
+        try {
+            return $this->attendanceRepository->getStaffAttendancesArchive($request);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Attendances Archive List from DB',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Attendances Archive List Not Found');
+        }
+    }
+    //POCOR-8630 end
 
     public function getInstitutionShiftOption($request, $institutionId)
     {
