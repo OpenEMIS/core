@@ -7,9 +7,7 @@ use Cake\Console\ConsoleIo;
 use Cake\I18n\FrozenDate;
 use Cake\ORM\TableRegistry;
 use Cake\Console\ConsoleOptionParser;
-use Cake\ORM\Query;
-
-// POCOR-9320
+use Cake\ORM\Query; // POCOR-9320
 
 /**
  * Command to send alerts for staff leave reminders.
@@ -74,7 +72,8 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
             'AcademicPeriods',
             'Institutions',
             'EducationGrades'])
-            ->where($where)//            ->group($this->StudentAdmission->aliasField('student_id'))
+            ->where($where)
+//            ->group($this->StudentAdmission->aliasField('student_id'))
         ;
         $query = $this->addStudentGuardianFields($query);
 
@@ -136,7 +135,8 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
             'guardian_name' => "CONCAT(`guardians`.`first_name`, ' ', `guardians`.`last_name`)",
             'guardian_relation' => $guardian_relations->aliasField('name'),
             'guardian_contact' => $guardian_contacts->aliasField('value'),
-        ]);
+        ])
+        ;
 
         return $query;
         // POCOR-9320 end
@@ -222,6 +222,7 @@ class AlertStudentAdmissionCommand extends AlertCommandBase
             '${guardian.contact}' => $item['guardian_contact'] ?? '', // POCOR-9320 end
         ];
     }
+
 
 
     public function getOptionParser(): ConsoleOptionParser

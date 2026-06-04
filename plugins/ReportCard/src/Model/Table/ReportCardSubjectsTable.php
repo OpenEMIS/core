@@ -7,7 +7,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardSubjectsTable extends ControllerActionTable
@@ -31,6 +31,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
         $checkType = $options['type'];
         $staffType = $options['staffType'];
         $staffSubject = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+        $reportCard = TableRegistry::getTableLocator()->get('ReportCard.ReportCards');
         $reportCardId = $options['report_card_id'];
         $classId = $options['institution_class_id'];
         $InstitutionClassSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
@@ -40,7 +41,12 @@ class ReportCardSubjectsTable extends ControllerActionTable
            $orWhere[$staffSubject->aliasField('staff_id')] = $staffId;
            //$orWhere[$InstitutionClasses->aliasField('staff_id')] = $staffId;//POCOR-6809 - commented condition as it's not compulsory to have same staff for class and subject
         }
-        
+        $reportCardData = $reportCard->find()
+                            ->select(['education_grade_id'])
+                            ->where(['id' => $reportCardId])
+                            ->first();
+
+        $educationGradeId = $reportCardData->education_grade_id ?? null; //POCOR-9681
         return $query
                 ->select([
                     'education_subject_id' => $this->aliasField('education_subject_id'),
@@ -66,6 +72,7 @@ class ReportCardSubjectsTable extends ControllerActionTable
                 ])
                 ->where([
                     $this->aliasField('report_card_id') => $reportCardId,
+                    $InstitutionSubjects->aliasField('education_grade_id') => $educationGradeId //POCOR-9681
                 ])
                 // ->orWhere([$orWhere])
                 //->group([$InstitutionSubjects->aliasField('name')]) //POCOR-9032

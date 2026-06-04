@@ -602,6 +602,18 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.General',
                 'selected' => ['Institutions.Shifts'],
             ],
+            //POCOR-9610: start - Registrations and Accreditations sidebar tabs under General
+            'Institutions.Registrations.index' => [
+                'title' => 'Registrations',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Registrations'],
+            ],
+            'Institutions.Accreditations.index' => [
+                'title' => 'Accreditations',
+                'parent' => 'Institution.General',
+                'selected' => ['Institutions.Accreditations'],
+            ],
+            //POCOR-9610: end
             'Institution.Academic' => [
                 'title' => 'Academic',
                 'parent' => 'Institutions.Institutions.index',
@@ -2763,6 +2775,7 @@ class NavigationComponent extends Component
         $ScholarshipNav = $this->getAdminstrationScholarshipNav();
         $MoodleNav = $this->getAdminstrationMoodleNav();
         $dataMgtNav = $this->getAdminstrationdataMgtNav();
+        $AsyncServicesNav = $this->getAdministrationAsyncServicesNav(); //POCOR-9694
         //POCOR-7527 end
         $navigation = [
 
@@ -2820,6 +2833,8 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'selected' => ['Calendars.Calendars']
             ],
+            //POCOR-9694: 'Systems.SystemProcesses' relocated under
+            //Administration → System Activities. See getAdministrationAsyncServicesNav().
 
         ];
 
@@ -2837,7 +2852,8 @@ class NavigationComponent extends Component
             $ScholarshipNav,
             $navigation,
             $MoodleNav,
-            $dataMgtNav
+            $dataMgtNav,
+            $AsyncServicesNav //POCOR-9694
         ); //POCOR-7527
         // POCOR-8128 end
         return $getallNavigation;
@@ -3843,19 +3859,23 @@ class NavigationComponent extends Component
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Alerts']
                     ],
-
                     'Alerts.AlertRules' => [
                         'title' => 'Alert Rules',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.AlertRules']
                     ],
-
                     'Alerts.Logs' => [
                         'title' => 'Logs',
                         'parent' => 'Administration.Communications',
                         'params' => ['plugin' => 'Alert'],
                         'selected' => ['Alerts.Logs']
+                    ],
+                    'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
+                        'title' => 'Queue',
+                        'parent' => 'Administration.Communications',
+                        'params' => ['plugin' => 'Alert'],
+                        'selected' => ['Alerts.Queue']
                     ],
                     'Alerts.Notices' => [
                         'title' => 'Notices',
@@ -3892,6 +3912,12 @@ class NavigationComponent extends Component
                     'parent' => 'Administration.Communications',
                     'params' => ['plugin' => 'Alert'],
                     'selected' => ['Alerts.Logs']
+                ],
+                'Alerts.Queue' => [ //POCOR-9509: Alert queue monitoring tab
+                    'title' => 'Queue',
+                    'parent' => 'Administration.Communications',
+                    'params' => ['plugin' => 'Alert'],
+                    'selected' => ['Alerts.Queue']
                 ],
                 'Alerts.Notices' => [
                     'title' => 'Notices',
@@ -3957,6 +3983,108 @@ class NavigationComponent extends Component
             $users->aliasField('id') => $user_id
         ])->first();
         return $is_super_user;
+    }
+
+    /**
+     * POCOR-9694 — returns the distinct role ids assigned to the current user.
+     *
+     * Replaces the inline `SecurityGroupUsers->matching('SecurityRoles')` block
+     * that is duplicated across every {{getAdminstration*Nav()}} method. New
+     * Administration nav methods should call this helper instead of inlining.
+     *
+     * @return int[]
+     */
+    private function getCurrentUserRoleIds(): array
+    {
+        $userId = $this->getCurrentUserId();
+        if (empty($userId)) {
+            return [];
+        }
+        $groupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $rows = $groupUsers->find()
+            ->matching('SecurityRoles')
+            ->where([$groupUsers->aliasField('security_user_id') => $userId])
+            ->select(['role_id' => 'SecurityRoles.id'])
+            ->distinct(['SecurityRoles.id'])
+            ->disableHydration()
+            ->toArray();
+        return array_column($rows, 'role_id');
+    }
+
+    /**
+     * POCOR-9694 — returns true when the current user can see at least one
+     * `_view = 1` security_function row whose {{module = 'Administration'}}
+     * and {{category}} matches the argument.
+     *
+     * Super admins always pass. Used as the gate for new Administration
+     * sub-sections so that new nav groups appear only to roles that have
+     * been granted at least one matching permission.
+     */
+    private function userHasAdministrationAccessTo(string $category): bool
+    {
+        $userId = $this->getCurrentUserId();
+        if (self::isSuperUser($userId)) {
+            return true;
+        }
+        $roleIds = $this->getCurrentUserRoleIds();
+        if (empty($roleIds)) {
+            return false;
+        }
+        $roleFunctions = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $functions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        return $roleFunctions->find()
+            ->leftJoin(
+                [$functions->getAlias() => $functions->getTable()],
+                [$functions->aliasField('id') . ' = ' . $roleFunctions->aliasField('security_function_id')]
+            )
+            ->where([
+                $roleFunctions->aliasField('security_role_id IN') => $roleIds,
+                $roleFunctions->aliasField('_view') => 1,
+                $functions->aliasField('module') => 'Administration',
+                $functions->aliasField('category') => $category,
+            ])
+            ->select([$functions->aliasField('id')])
+            ->disableHydration()
+            ->first() !== null;
+    }
+
+    /**
+     * POCOR-9694 — assembles the {{Administration → System Activities}} group.
+     *
+     * Single sidebar location for every queue/async monitoring surface.
+     * The existing {{Systems.SystemProcesses}} page is relocated under this
+     * group; the rest are POCOR-9694 follow-up screens (Overview, Failed
+     * Jobs, Frozen Jobs, Failed Webhooks, Waiting Jobs).
+     *
+     * Gated by {{security_functions.category = 'System Activities'}}, seeded
+     * by {{config/Migrations/20260519160000_POCOR9694.php}}. Returns an
+     * empty array when no role grants the user at least one `_view = 1`.
+     */
+    private function getAdministrationAsyncServicesNav(): array
+    {
+        if (!$this->userHasAdministrationAccessTo('System Activities')) {
+            return [];
+        }
+        //POCOR-9694: v5 menu labels — user-visible titles only; internal nav keys kept stable.
+        //POCOR-9719: ONE sidebar entry — no sub-menu. The page itself renders a horizontal
+        //tab bar with all 6 actions (Overview / Completed / Failed / Stuck / Webhook Failures /
+        //Waiting). selected[] keeps the sidebar entry highlighted on every tab.
+        return [
+            'Systems.AsyncServicesOverview' => [
+                'title' => 'System Activities',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'System'],
+                'selected' => [
+                    'Systems.AsyncServicesOverview',
+                    'Systems.SystemProcesses',
+                    'Systems.FailedJobs',
+                    'Systems.StuckProcesses',
+                    'Systems.WebhookFailures',
+                    'Systems.QueueBacklog',
+                ],
+            ],
+        ];
+        //POCOR-9694: end
     }
 
     //POCOR-7527
