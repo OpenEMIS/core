@@ -334,6 +334,57 @@ class AttendanceController extends Controller
         }
     }
 
+    //POCOR-8630 start
+    /**
+     * @OA\Get(
+     *     path="/api/v4/staff/attendance/archive",
+     *     summary="Get archived staff attendances",
+     *     description="Returns archived staff attendance records for an institution and date window, matching the Staff Attendance Archived web screen.",
+     *     tags={"Attendance"},
+     *     @OA\Parameter(name="institution_id", in="query", required=true, @OA\Schema(type="integer", example=6)),
+     *     @OA\Parameter(name="academic_period_id", in="query", required=true, @OA\Schema(type="integer", example=33)),
+     *     @OA\Parameter(name="week_id", in="query", required=true, @OA\Schema(type="integer", example=41)),
+     *     @OA\Parameter(name="week_start_day", in="query", required=true, @OA\Schema(type="string", format="date", example="2024-10-07")),
+     *     @OA\Parameter(name="week_end_day", in="query", required=true, @OA\Schema(type="string", format="date", example="2024-10-13")),
+     *     @OA\Parameter(name="day_id", in="query", required=true, @OA\Schema(type="integer", example=2)),
+     *     @OA\Parameter(name="shift_id", in="query", required=true, @OA\Schema(type="integer", example=-1)),
+     *     @OA\Parameter(name="day_date", in="query", required=true, @OA\Schema(type="string", format="date", example="2024-10-08")),
+     *     @OA\Parameter(name="own_attendance_view", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="own_attendance_edit", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="other_attendance_view", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="other_attendance_edit", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Response(response=200, description="Successful."),
+     *     @OA\Response(response=403, description="Unauthorized."),
+     *     @OA\Response(response=422, description="Validation error.")
+     * )
+     */
+    public function getStaffAttendancesArchive(StaffAttendanceRequest $request)
+    {
+        try {
+            $institutionId = (int) $request->input('institution_id');
+            $flags = $this->attendanceService->validateStaffAttendancePermissions(
+                $institutionId,
+                $request->all()
+            );
+
+            if ($flags === false) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            $request->merge($flags);
+            $data = $this->attendanceService->getStaffAttendancesArchive($request);
+
+            return $this->sendSuccessResponse('Staff Attendances Archive List Found', $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Attendances Archive List from DB',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Staff Attendances Archive List Not Found');
+        }
+    }
+    //POCOR-8630 end
     
     /**
      * @OA\Get(

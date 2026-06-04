@@ -7,6 +7,7 @@ use App\Models\AcademicPeriod;
 use App\Models\ConfigItem;
 use App\Models\CalendarEventDate;
 use App\Models\InstitutionStaffAttendances;
+use App\Models\InstitutionStaffAttendancesArchived;//POCOR-8630
 use App\Models\InstitutionStaffLeave;
 use App\Models\InstitutionStaffLeaveArchive;
 use App\Models\InstitutionPositions;
@@ -417,8 +418,90 @@ class AttendanceRepository extends Controller
         }
     }
 
+    //POCOR-8630 start
+    /**
+     * Validate staff attendance view/edit flags against role permissions and institution scope.
+     *
+     * @return array<string, int>|false Server-resolved flags, or false when access is denied.
+     */
+    public function validateStaffAttendancePermissions(int $institutionId, array $params): array|false
+    {
+        $user = JWTAuth::user();
+        if (!$user) {
+            return false;
+        }
 
-    public function getStaffAttendances($request, $institutionId)
+        if (($user->super_admin ?? 0) != 1) {
+            $hasAccess = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'view'],
+                ['institution_id' => $institutionId]
+            );
+            if (!$hasAccess) {
+                $hasAccess = checkPermission(
+                    ['Institutions', 'InstitutionStaffAttendances', 'index'],
+                    ['institution_id' => $institutionId]
+                );
+            }
+            if (!$hasAccess) {
+                return false;
+            }
+        }
+
+        if (($user->super_admin ?? 0) == 1) {
+            $ownView = (int) ($params['own_attendance_view'] ?? 1);
+            $otherView = (int) ($params['other_attendance_view'] ?? 1);
+            $ownEdit = (int) ($params['own_attendance_edit'] ?? 1);
+            $otherEdit = (int) ($params['other_attendance_edit'] ?? 1);
+        } else {
+            $ownView = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'ownview'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+            $otherView = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'otherview'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+            $ownEdit = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'ownedit'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+            $otherEdit = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'otheredit'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+        }
+
+        if ($ownView === 0 && $otherView === 0) {
+            return false;
+        }
+
+        if ((int) ($params['own_attendance_view'] ?? 0) === 1 && $ownView === 0) {
+            return false;
+        }
+        if ((int) ($params['other_attendance_view'] ?? 0) === 1 && $otherView === 0) {
+            return false;
+        }
+        if ((int) ($params['own_attendance_edit'] ?? 0) === 1 && $ownEdit === 0) {
+            return false;
+        }
+        if ((int) ($params['other_attendance_edit'] ?? 0) === 1 && $otherEdit === 0) {
+            return false;
+        }
+
+        return [
+            'own_attendance_view' => $ownView,
+            'other_attendance_view' => $otherView,
+            'own_attendance_edit' => $ownEdit,
+            'other_attendance_edit' => $otherEdit,
+        ];
+    }
+
+    public function getStaffAttendancesArchive($request)
+    {
+        return $this->getStaffAttendances($request, (int) $request->input('institution_id'), true);
+    }
+
+    public function getStaffAttendances($request, $institutionId, $archive = false)
     {
         try {
             $params = $request->all();
@@ -467,20 +550,48 @@ class AttendanceRepository extends Controller
             list($weekStartDate, $weekEndDate) =
                 $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
 
-            
+            if ($archive && ($dayId === null || $dayId === '')) {
+                $weekStartDate = $params['week_start_day'];
+                $weekEndDate = $params['week_end_day'];
+            }
 
-            $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId);
-            
+            $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
+                $institutionId,
+                $academicPeriodId,
+                $weekStartDate,
+                $weekEndDate,
+                $shiftId,
+                $archive
+            );
 
-            $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate);
+            $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray(
+                $institutionId,
+                $academicPeriodId,
+                $weekStartDate,
+                $weekEndDate,
+                $archive
+            );
 
+            if ($archive) {
+                $staffIdsWithArchivedAttendance = array_values(array_unique(array_map(
+                    'intval',
+                    array_keys($attendanceByStaffIdRecords)
+                )));
+                if ($staffIdsWithArchivedAttendance === []) {
+                    return ['data' => [], 'total' => 0];
+                }
+            }
 
-            $conditionQueryArray = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+            if (!$archive) {
+                $conditionQueryArray = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+                $conditionQuery = $conditionQueryArray[0] ?? [];
+                $conditionQueryOR = $conditionQueryArray[1] ?? [];
+            }
 
-            $conditionQuery = $conditionQueryArray[0]??[];
-            $conditionQueryOR = $conditionQueryArray[1]??[];
-
-            
+            $absenceTypes = [];
+            if ($archive) {
+                $absenceTypes = AbsenceTypes::query()->pluck('name', 'id')->toArray();
+            }
 
             //Gets all the days in the selected week based on its start date end date
             $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
@@ -498,27 +609,29 @@ class AttendanceRepository extends Controller
             $query = $query->with('user')->join('security_users', 'security_users.id', '=', 'institution_staff.staff_id')->where('institution_staff.institution_id', $institutionId);
 
             if ($superAdmin == 0) {
-                if ($ownAttendanceView == 0 && $otherAttendanceView == 0) {
-                    //
-                }
                 if ($ownAttendanceView == 1 && $otherAttendanceView == 0) {
                     $query = $query->where('institution_staff.staff_id', $user_id);
                 } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 1) {
                     $query = $query->where('institution_staff.staff_id', '!=', $user_id);
+                } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 0) {
+                    $query = $query->whereRaw('1 = 0');
                 }
             }
 
-            if($weekStartDate == $weekEndDate){
-                $query = $query->where('start_date', '<=', $weekStartDate);
+            if ($archive) {
+                $query = $query->whereIn('institution_staff.staff_id', $staffIdsWithArchivedAttendance);
             } else {
-                $query = $query->where('start_date', '<=', $weekStartDate)
+                if ($weekStartDate == $weekEndDate) {
+                    $query = $query->where('start_date', '<=', $weekStartDate);
+                } else {
+                    $query = $query->where('start_date', '<=', $weekStartDate)
                         ->where('start_date', '<=', $weekEndDate);
-            }
-            
+                }
 
-            $query = $query->where(function ($q) use($weekStartDate, $weekEndDate) {
-                $q->where('end_date', Null)->orWhere('end_date', '>=', $weekEndDate);
-            });
+                $query = $query->where(function ($q) use ($weekStartDate, $weekEndDate) {
+                    $q->where('end_date', null)->orWhere('end_date', '>=', $weekEndDate);
+                });
+            }
 
 
             /*$data = $query->orderBy('security_users.first_name')
@@ -598,16 +711,26 @@ class AttendanceRepository extends Controller
 
                         if ($dateStr == $staffAttendanceDate) {
                             $found = true;
+                            $absenceTypeId = $attendanceRecord['absence_type_id'] ?? null;
                             //isNew determines if record is existing data
                             $attendanceData = [
                                 'dateStr' => $dateStr,
                                 'date' => date('F d, Y', strtotime($attendanceRecord['date'])),
-                                'time_in' => date('H:i:s', strtotime($attendanceRecord['time_in'])),
-                                'time_out' => date('H:i:s', strtotime($attendanceRecord['time_out'])),
+                                'time_in' => $attendanceRecord['time_in']
+                                    ? date('H:i:s', strtotime($attendanceRecord['time_in']))
+                                    : null,
+                                'time_out' => $attendanceRecord['time_out']
+                                    ? date('H:i:s', strtotime($attendanceRecord['time_out']))
+                                    : null,
                                 'comment' => $attendanceRecord['comment'],
-                                'absence_type_id' => $attendanceRecord['absence_type_id'],
-                                'isNew' => false
+                                'absence_type_id' => $absenceTypeId,
+                                'isNew' => false,
                             ];
+                            if ($archive) {
+                                $attendanceData['absence_type'] = ($absenceTypeId !== null && isset($absenceTypes[$absenceTypeId]))
+                                    ? $absenceTypes[$absenceTypeId]
+                                    : '';
+                            }
                             break;
                         }
                     }
@@ -620,8 +743,11 @@ class AttendanceRepository extends Controller
                             'time_out' => null,
                             'comment' => null,
                             'absence_type_id' => null,
-                            'isNew' => true
+                            'isNew' => true,
                         ];
+                        if ($archive) {
+                            $attendanceData['absence_type'] = '';
+                        }
                     }
 
                     $staffTimeRecords[$dateStr] = $attendanceData;
@@ -650,33 +776,52 @@ class AttendanceRepository extends Controller
                         
                         if ($dateFrom <= $key && $dateTo >= $key) {
                             $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
-                            $leaveRecord['startTime'] = isset($staffLeaveRecord['start_time']) ? date('H:i:s', strtotime($staffLeaveRecord['start_time'])) : "";
-                            $leaveRecord['endTime'] = isset($staffLeaveRecord['end_time']) ? date('H:i:s', strtotime($staffLeaveRecord['end_time'])) : "";
-                            $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['leave_type_name']??"";
+                            $leaveRecord['comment'] = $staffLeaveRecord['comments'] ?? null;
+                            $leaveRecord['startTime'] = isset($staffLeaveRecord['start_time'])
+                                ? date('H:i:s', strtotime($staffLeaveRecord['start_time']))
+                                : '';
+                            $leaveRecord['endTime'] = isset($staffLeaveRecord['end_time'])
+                                ? date('H:i:s', strtotime($staffLeaveRecord['end_time']))
+                                : '';
+                            $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['leave_type_name'] ?? '';
                             $leaveRecords[] = $leaveRecord;
+
+                            if ($archive && !empty($staffLeaveRecord['comments'])) {
+                                $existingComment = trim((string) ($staffTimeRecords[$key]['comment'] ?? ''));
+                                $staffTimeRecords[$key]['comment'] = trim(
+                                    $existingComment . ' ' . $staffLeaveRecord['comments']
+                                );
+                            }
                         }
                     }
 
-                    
-                    //dd($base_url);
-                    /*$url = [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'StaffLeave',
-                        'index',
-                        'user_id' => $staffId
-                    ];*/
-                    $url = "/".$base_url."/Institution/Institutions/StaffLeave/index?user_id=".$staffId;
+                    if ($archive) {
+                        $url = '/' . $base_url . '/Institution/Institutions/ArchivedStaffLeave/index?user_id=' . $staffId;
+                    } else {
+                        $url = '/' . $base_url . '/Institution/Institutions/StaffLeave/index?user_id=' . $staffId;
+                    }
                     $staffTimeRecords[$key]['leave'] = $leaveRecords;
                     $staffTimeRecords[$key]['url'] = $url;
                 }
 
                 $resp[$k]['attendance'] = $staffTimeRecords;
+
+                if ($archive && isset($d['user'])) {
+                    $userData = $d['user'];
+                    $resp[$k]['name'] = $userData['full_name'] ?? trim(
+                        ($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? '')
+                    );
+                    $resp[$k]['staff_name'] = $userData['name_with_id'] ?? '';
+                    $resp[$k]['photo_content'] = '';
+                }
             }
 
             $data['data'] = $resp;
 
-            //$list['total'] = $total;
+            if ($archive) {
+                $data['total'] = count($resp);
+                return $data;
+            }
 
             //For POCOR-8291 start...
             $insId = '{"id":'.$institutionId.'}';
@@ -700,7 +845,7 @@ class AttendanceRepository extends Controller
             return $this->sendErrorResponse('Staff Attendances List Not Found');
         }
     }
-
+    //POCOR-8630 end
 
     public function setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, array $conditionQuery)
     {
@@ -835,10 +980,21 @@ class AttendanceRepository extends Controller
             $allStaffLeaves = $allStaffLeaves->get()->toArray();
         }
         if ($archive) {
-            $allStaffLeaves = new InstitutionStaffLeaveArchive();
-            $allStaffLeaves = $allStaffLeaves->where('institution_id', $institutionId)
-                    ->where('academic_period_id', $academicPeriodId);
-
+            //POCOR-8630 start
+            $allStaffLeaves = InstitutionStaffLeaveArchive::query()
+                ->select(
+                    'institution_staff_leave_archived.*',
+                    'staff_leave_types.name as leave_type_name'
+                )
+                ->join(
+                    'staff_leave_types',
+                    'staff_leave_types.id',
+                    '=',
+                    'institution_staff_leave_archived.staff_leave_type_id'
+                )
+                ->where('institution_staff_leave_archived.institution_id', $institutionId)
+                ->where('institution_staff_leave_archived.academic_period_id', $academicPeriodId);
+            //POCOR-8630 end
             if ($weekEndDate == $weekStartDate) {
             
                 $allStaffLeaves = $allStaffLeaves->where('date_to', '>=', $weekEndDate)->where('date_from', '<=', $weekStartDate);
