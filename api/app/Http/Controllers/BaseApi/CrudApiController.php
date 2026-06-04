@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
+use App\Services\Security\SuperAdminProbeGuard; //POCOR-9710
 use Illuminate\Support\Carbon;
 
 class CrudApiController extends Controller
@@ -697,9 +698,13 @@ class CrudApiController extends Controller
         //...
     ];
 
-    public function __construct(PermissionService $permissionService)
+    //POCOR-9710: probe-detection + password carve-out for security-users.
+    protected $probeGuard;
+
+    public function __construct(PermissionService $permissionService, SuperAdminProbeGuard $probeGuard)
     {
         $this->permissionService = $permissionService;
+        $this->probeGuard = $probeGuard;
     }
     /**
      * Common entry point for all CRUD operations.
@@ -740,6 +745,27 @@ class CrudApiController extends Controller
         // POCOR-8966 end
 
 //        Log::info("User authorized for {$model}:{$action}");
+
+        //POCOR-9710: security-users single-target probe gate. Runs ONLY for
+        //the security-users resource and only on GET / PUT / DELETE with a
+        //single id segment. If the target id is a super_admin = 1 row and
+        //the caller isn't super-admin, log the probe + return 404 — never
+        //leak that the row exists. List GETs are not gated here; the
+        //HidesSuperAdmins global scope filters the result naturally and the
+        //two-count list-probe fingerprint runs after parseFilters in
+        //handleGetRequest.
+        if ($resource === 'security-users' && !SuperAdminProbeGuard::isSuperAdmin(auth()->user())) {
+            if (in_array($action, ['view', 'edit', 'delete'], true)
+                && $this->probeGuard->probesSingleSuperAdminTarget($model, $segments)
+            ) {
+                $this->probeGuard->logProbe($request, auth()->user(), [
+                    'resource' => $resource,
+                    'action'   => $action,
+                    'target'   => $segments[0] ?? null,
+                ]);
+                return response()->json(['error' => 'Record not found'], 404);
+            }
+        }
 
         // Handle the request based on method
         return $this->handleRequestByMethod($request, $model, $segments, $method);
@@ -832,6 +858,26 @@ class CrudApiController extends Controller
         $query = $this->applyOrder($query, $order, $model);
         $query = $this->applyInstitutionFilter($query, $model);
 
+        //POCOR-9710: list-probe fingerprint for security-users. The
+        //HidesSuperAdmins scope filters the response naturally; here we just
+        //add the audit log when the caller's filter targets super-admins
+        //exclusively (two-count: scope-bypassed total == scope-bypassed
+        //super_admin = 1 total, and total > 0).
+        $modelClass = is_object($model) ? get_class($model) : $model;
+        if ($modelClass === \App\Models\Api5\SecurityUsers::class
+            && !SuperAdminProbeGuard::isSuperAdmin(auth()->user())
+            && !empty($filters)
+        ) {
+            $probeQuery = (clone $query)->withoutGlobalScope('hideSuperAdmins');
+            if ($this->probeGuard->probesOnlySuperAdmins($probeQuery)) {
+                $this->probeGuard->logProbe($request, auth()->user(), [
+                    'resource' => 'security-users',
+                    'action'   => 'list',
+                    'filters'  => $filters,
+                ]);
+            }
+        }
+
         return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
     }
 
@@ -846,11 +892,38 @@ class CrudApiController extends Controller
     {
         $data = $request->all();
 
+        //POCOR-9710: Q1 password carve-out. On security-users create, only
+        //super-admin callers may set `password`; otherwise strip silently +
+        //log. The setPasswordAttribute() mutator still hashes anything that
+        //survives — this is defense-in-depth, not the only layer.
+        $data = $this->maybeStripPasswordForSecurityUsers($request, $model, $data);
+
         if ($this->isBatchRequest($data)) {
             return $this->handleBatchCreate($model, $data);
         }
 
         return $this->handleSingleCreate($model, $data);
+    }
+
+    //POCOR-9710: shared helper for the two CRUD paths that mass-assign user
+    //input into security_users. Batch payloads are arrays-of-objects, so the
+    //strip walks every row.
+    private function maybeStripPasswordForSecurityUsers(Request $request, $model, array $data): array
+    {
+        $modelClass = is_object($model) ? get_class($model) : $model;
+        if ($modelClass !== \App\Models\Api5\SecurityUsers::class) {
+            return $data;
+        }
+        $caller = auth()->user();
+        if ($this->isBatchRequest($data)) {
+            foreach ($data as $i => $row) {
+                if (is_array($row)) {
+                    $data[$i] = $this->probeGuard->stripPasswordIfNotSuperAdmin($row, $caller, $request);
+                }
+            }
+            return $data;
+        }
+        return $this->probeGuard->stripPasswordIfNotSuperAdmin($data, $caller, $request);
     }
 
     /**
@@ -873,6 +946,8 @@ class CrudApiController extends Controller
         }
 
         $data = $request->all();
+        //POCOR-9710: Q1 password carve-out — applies symmetrically on update.
+        $data = $this->maybeStripPasswordForSecurityUsers($request, $model, $data);
         $current_user_id = auth()->id(); // Assuming you have a way to get the current user ID
         if (is_string($model)) {
             $model = new $model;
