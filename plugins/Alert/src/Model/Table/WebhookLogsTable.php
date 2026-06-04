@@ -46,6 +46,25 @@ class WebhookLogsTable extends ControllerActionTable
         $this->field('retry_attempt', ['after' => 'duration_ms']);
         $this->field('created', ['after' => 'retry_attempt']);
 
+        //POCOR-9694: cross-link to Async Services → Webhook Failures dashboard.
+        $checkFailures = [
+            'type' => 'button',
+            'label' => '<i class="fa fa-exclamation-triangle"></i>',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Check failures'),
+            ],
+            'url' => [
+                'plugin' => 'System', 'controller' => 'Systems',
+                'action' => 'WebhookFailures',
+            ],
+        ];
+        $toolbarButtons = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarButtons['checkFailures'] = $checkFailures;
+        $extra['toolbarButtons']->exchangeArray($toolbarButtons);
     }
 
     public function onGetSuccess(EventInterface $event, Entity $entity): string
