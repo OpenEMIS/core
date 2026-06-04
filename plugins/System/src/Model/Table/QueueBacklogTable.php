@@ -25,6 +25,8 @@ use Cake\ORM\Query;
  */
 class QueueBacklogTable extends AsyncServicesAdminTable
 {
+    use AsyncTabsTrait; //POCOR-9719
+
     /** Status code: a row that has not yet been picked up for delivery. */
     private const PENDING_STATUS = 0;
 
@@ -39,16 +41,9 @@ class QueueBacklogTable extends AsyncServicesAdminTable
         return 'Waiting Background Tasks';
     }
 
-    protected function describeScreen(): string
-    {
-        return 'Pending alert_queue rows ordered by oldest first. Each tick'
-            . ' of openemis-core:run consumes from this table; a backlog'
-            . ' that grows over multiple ticks signals a wedged dispatcher.';
-    }
-
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        parent::indexBeforeAction($event, $extra);
+        $this->setupAsyncTabs(); //POCOR-9719: horizontal tab bar
 
         foreach (['payload', 'last_error', 'sent_at', 'modified', 'message_body',
                   'status', 'retry_count'] as $hide) {
