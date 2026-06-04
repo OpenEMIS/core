@@ -18,6 +18,8 @@ use Cake\ORM\Query;
  */
 class WebhookFailuresTable extends AsyncServicesAdminTable
 {
+    use AsyncTabsTrait; //POCOR-9719
+
     /** Status code in {{webhook_queue}} that marks a final delivery failure. */
     private const FAILED_STATUS = -1;
 
@@ -35,17 +37,9 @@ class WebhookFailuresTable extends AsyncServicesAdminTable
         return 'Webhook Failures';
     }
 
-    protected function describeScreen(): string
-    {
-        return 'webhook_queue rows whose final status is FAILED. Each row'
-            . ' represents a delivery that exhausted its retry budget;'
-            . ' inspect the response body and target URL before deciding'
-            . ' whether to retry or blacklist the receiver.';
-    }
-
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        parent::indexBeforeAction($event, $extra);
+        $this->setupAsyncTabs(); //POCOR-9719: horizontal tab bar
 
         // Hide noisy / sensitive columns on the index — visible on view page.
         // {{status}} is always FAILED here (we filter by it) so it's redundant;
