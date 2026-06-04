@@ -71,29 +71,29 @@ class AlertsTable extends ControllerActionTable
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $params = $this->request->getQuery();
+         $params = $this->request->getQuery();
         if(empty($params)){
             $extra['options']['direction'] = 'asc';
             // Do not set limit here; IndexBehavior handles "Display" (Search.limit)

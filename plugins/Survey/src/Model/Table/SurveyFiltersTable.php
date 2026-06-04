@@ -57,7 +57,13 @@ class SurveyFiltersTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
-    {
+    {   
+        //POCOR-9640 start
+        $params = $this->request->getQuery();
+        if (empty($params)) {
+            $extra['options']['direction'] = 'asc';
+            $extra['options']['sort'] = 'name';
+        } //POCOR-9640 end
         $serverRequest = $this->request;
         $search = $this->getSearchKey(); //POCOR-7271
         if (!empty($search)) {
