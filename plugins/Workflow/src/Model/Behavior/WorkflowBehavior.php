@@ -535,16 +535,9 @@ class WorkflowBehavior extends Behavior
                     $filterOptions = $newEvent->getResult();
                 }
                 // End
-                //POCOR-7263::Start
                 $filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
-                $url = $_SERVER['QUERY_STRING'];
-                $data = explode('=', $url);
-                $filterOne = $data[1];
-                // $filterTwo = $data[2];
-                $firstVal = preg_replace('/\D/', '', $filterOne);
-                $selectedFilter = $firstVal;
-                //POCOR-7263::End
-               // $selectedFilter = $this->_table->queryString('filter', $filterOptions);
+                // Use request query + valid options (QUERY_STRING parsing breaks when institution_id and other params precede filter).
+                $selectedFilter = $this->_table->queryString('filter', $filterOptions);
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
@@ -636,6 +629,9 @@ class WorkflowBehavior extends Behavior
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
+            if ($selectedFilter === null || $selectedFilter === '') {
+                $selectedFilter = $this->_table->request->getQuery('filter');
+            }
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
@@ -863,6 +859,7 @@ class WorkflowBehavior extends Behavior
 
             $workflowModel = isset($modelName) ? $modelName : $this->getConfig('model');
             $workflow = $this->getWorkflow($workflowModel, $entity);
+            $workflowId = $entity['status']['workflow_id'];
 
             if (!empty($workflow)) {
                 $ControllerAction->field('status_id', ['visible' => false]);
@@ -925,14 +922,50 @@ class WorkflowBehavior extends Behavior
                         $rowData[] = $transitionDisplay;
                         $rowData[] = __($transition->workflow_action_name);
                         $rowData[] = nl2br(htmlspecialchars($transition->comment));
-                        $rowData[] = $transition->created_user->name;
-                        $rowData[] = $transition->created->format('Y-m-d H:i:s');
+                      //  $rowData[] = $transition->created_user->name;
 
+                        // POCOR-9677 Get user from role in the transition (based on step)
+                        $executerName = '';
+                        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+                        $WorkflowStepRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
+                        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                        $step = $WorkflowSteps->find()
+                            ->where([
+                                'name' => $transition->workflow_step_name,
+                                'workflow_id' => $workflowId
+                            ])
+                            ->first();
+
+                         if (!empty($step)) { 
+                            $stepRole = $WorkflowStepRoles->find()
+                                ->where([
+                                    'workflow_step_id' => $step->id
+                                ])
+                                ->first();
+                            if (!empty($stepRole)) { 
+                                $user = $SecurityGroupUsers->find()
+                                    ->contain(['Users'])
+                                    ->where([
+                                        'security_role_id' => $stepRole->security_role_id,
+                                    ])
+                                    ->order(['SecurityGroupUsers.id ASC'])
+                                    ->first();
+                                if ($user && $user->user) {
+                                    $executerName = $user->user->name;
+                                }else{
+                                    $executerName = $transition->created_user->name;
+                                }
+                            }
+                        }
+                        $rowData[] = $executerName;
+                        if ($key === 0) {
+                            $rowData[] = $entity->created->format('Y-m-d H:i:s');
+                        } else {
+                            $rowData[] = $transition->created->format('Y-m-d H:i:s');
+                        } //end POCOR-9677
                         $tableCells[$key] = $rowData;
                     }
                 }
-
-
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
                     'element' => 'Workflow.transitions',

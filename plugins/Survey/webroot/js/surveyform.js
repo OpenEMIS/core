@@ -15,9 +15,9 @@ var SurveyForm = {
 			prependHTML += "<td>";
 			prependHTML += "<div class=section-header>" + sectionName +"</div>";
 			prependHTML += "</td>";
+			prependHTML += "<td></td>";
 			prependHTML += "<td><button onclick='jsTable.doRemove(this); SurveyForm.updateSection();' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button></td>";
 			prependHTML += "<td class='sorter rowlink-skip' onmousedown='Reorder.enableSortable(this);'><div class='reorder-icon'><a><i class='fa fa-arrows-alt'></i></a></div></td>";
-			prependHTML += "</td>";
 			prependHTML += "</tr>";
 			$('#sortable').find('tbody').first().prepend(prependHTML);
 			SurveyForm.updateSection();
@@ -77,5 +77,23 @@ var SurveyForm = {
 				return false;
 			}
 		});
+	},
+
+	//POCOR-9638[START]
+	prepareAddQuestion: function(){
+		SurveyForm.updateSection();
+		var $inp = $('#sectionTxt');
+		if (!$inp.length) {
+			return;
+		}
+		var v = ($inp.val() || '').replace(/^\s+|\s+$/g, '');
+		if (v !== '') {
+			return;
+		}
+		var $hdrs = $('#sortable .section-header');
+		if ($hdrs.length) {
+			$inp.val($hdrs.last().text());
+		}
 	}
+	//POCOR-9638[END]
 };

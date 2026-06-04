@@ -370,32 +370,23 @@ function InstitutionStaffAttendancesArchiveSvc($http, $q, $filter, KdDataSvc, Al
             conditionStatus = 1;
         }
         
-        if (action == 'edit' && conditionStatus == 1) {
-            var divElement = document.createElement('div');
-            var timeInInputDivElement = createTimeElement(params, 'time_in', rowIndex);
-            var timeOutInputDivElement = createTimeElement(params, 'time_out', rowIndex);
-            divElement.appendChild(timeInInputDivElement);
-            divElement.appendChild(timeOutInputDivElement);
-            return divElement;
-        } else {
-            // always clear error data here.
-            clearError(data, 'time_out');
-            clearError(data, 'time_in');
-            if (timeIn) {
-                time = '<div class="time-view"><font color="#77B576"><i class="fa fa-external-link-square"></i> ' + convert12Timeformat(timeIn) + '</font></div>';
-                if (timeOut) {
-                    time += '<div class="time-view"><font color="#77B576"><i class=" fa fa-external-link"></i> ' + convert12Timeformat(timeOut) + '</font></div>';
-                } else {
-                    time += '<div class="time-view"><font color="#77B576"><i class="fa fa-external-link"></i></font></div>';
-                }
-                if (params.context.history) {
-                    time += '<div class="time-view"><i class="fa fa-file-text-o" style="color: #72C6ED;"></i><a href= "'+ historyUrl + '"target="_blank">View History Log </a></div>';
-                }
+        //POCOR-9700: archive is by definition immutable — render display-only regardless of action.
+        clearError(data, 'time_out');
+        clearError(data, 'time_in');
+        if (timeIn) {
+            time = '<div class="time-view"><font color="#77B576"><i class="fa fa-external-link-square"></i> ' + convert12Timeformat(timeIn) + '</font></div>';
+            if (timeOut) {
+                time += '<div class="time-view"><font color="#77B576"><i class=" fa fa-external-link"></i> ' + convert12Timeformat(timeOut) + '</font></div>';
             } else {
-                time = '<i class="fa fa-minus"></i>';
+                time += '<div class="time-view"><font color="#77B576"><i class="fa fa-external-link"></i></font></div>';
             }
-            return time;
+            if (params.context.history) {
+                time += '<div class="time-view"><i class="fa fa-file-text-o" style="color: #72C6ED;"></i><a href= "'+ historyUrl + '"target="_blank">View History Log </a></div>';
+            }
+        } else {
+            time = '<i class="fa fa-minus"></i>';
         }
+        return time;
     }
 
     function getAllDayTimeInTimeOutElement(params) {
