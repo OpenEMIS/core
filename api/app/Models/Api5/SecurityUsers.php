@@ -7,6 +7,7 @@ namespace App\Models\Api5;
 use App\Models\Concerns\WebhookQueueTrait;//use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Concerns\UserActivityLog; //POCOR-9697: Wave-3 audit-log trait
+use App\Models\Concerns\HidesSuperAdmins; //POCOR-9710: row-level super_admin visibility lock
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
@@ -24,6 +25,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     use Notifiable;
     use NumericId;
     use UserActivityLog; //POCOR-9697: log every create/update/delete to user_activities
+    use HidesSuperAdmins; //POCOR-9710: super_admin = 1 rows invisible to non-super-admin callers
 
     public $timestamps = false;
     protected $casts = [

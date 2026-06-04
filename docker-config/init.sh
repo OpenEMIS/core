@@ -31,6 +31,16 @@ if [ -f "$PERSIST_CONFIG_PATH/app_local.php" ]; then
     cp "$PERSIST_CONFIG_PATH/app_local.php" "$CONFIG_PATH/app_local.php"
 fi
 
+# POCOR-9694: ensure OpenEMIS Runtime log file exists and is writable by www-data
+RUNTIME_LOG="$API_PATH/storage/logs/openemis-core-run.log"
+mkdir -p "$(dirname "$RUNTIME_LOG")"
+touch "$RUNTIME_LOG"
+chown www-data:www-data "$RUNTIME_LOG"
+chmod 664 "$RUNTIME_LOG"
+
+# POCOR-9694: start cron daemon for openemis-core:run single-cron entry-point
+service cron start || /usr/sbin/cron
+
 apache2-foreground &
 
 # === Watch for app_local.php creation ===
