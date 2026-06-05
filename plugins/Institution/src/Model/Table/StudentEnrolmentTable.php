@@ -67,7 +67,6 @@ class StudentEnrolmentTable extends ControllerActionTable
             'Dashboard' => ['index'],
             'Students' => ['index', 'add']
         ]);
-
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             //['appliedAction' => ['StudentAdmission' => ['id']]
