@@ -18,7 +18,7 @@
             "url": "https://demo.openemis.org/core"
         },
         {
-            "url": "https://localhost:8486/core"
+            "url": "app/Http"
         }
     ],
     "paths": {
@@ -5546,10 +5546,6 @@
                                                                         "type": "string",
                                                                         "example": "1611035663"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": "$2y$10$g2iBADn0H/kqBwsHkf66xOgJIBDRLHN396FTdcSr/VIFiib4OPjzy"
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1611035663"
@@ -5629,10 +5625,6 @@
                                                                         "type": "string",
                                                                         "example": null,
                                                                         "nullable": true
-                                                                    },
-                                                                    "super_admin": {
-                                                                        "type": "boolean",
-                                                                        "example": 0
                                                                     },
                                                                     "status": {
                                                                         "type": "integer",
@@ -6772,10 +6764,6 @@
                                                                 "type": "string",
                                                                 "example": 1522271967
                                                             },
-                                                            "password": {
-                                                                "type": "string",
-                                                                "example": ""
-                                                            },
                                                             "openemis_no": {
                                                                 "type": "string",
                                                                 "example": "1522271967"
@@ -6855,10 +6843,6 @@
                                                                 "type": "integer",
                                                                 "example": null,
                                                                 "nullable": true
-                                                            },
-                                                            "super_admin": {
-                                                                "type": "integer",
-                                                                "example": 0
                                                             },
                                                             "status": {
                                                                 "type": "integer",
@@ -23334,10 +23318,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -23413,10 +23393,6 @@
                                                                     "external_reference": {
                                                                         "type": "string",
                                                                         "example": null
-                                                                    },
-                                                                    "super_admin": {
-                                                                        "type": "integer",
-                                                                        "example": 1
                                                                     },
                                                                     "status": {
                                                                         "type": "integer",
@@ -27265,13 +27241,13 @@
             }
         },
         "/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/pdf": {
-            "get": {
+            "post": {
                 "tags": [
-                    "Report card"
+                    "Report Card"
                 ],
-                "summary": "Get a student's report card in PDF format",
+                "summary": "Download a student's report card in PDF format",
                 "description": "Retrieve a student's report card for a specific academic period and report card ID in PDF format.",
-                "operationId": "0dc8ecef80fcdc62e84cbc98660b297d",
+                "operationId": "13df0d34c55afb4aaa88dff680dc6ecf",
                 "parameters": [
                     {
                         "name": "institutionId",
@@ -27290,7 +27266,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 591
+                            "example": 609
                         }
                     },
                     {
@@ -27302,31 +27278,61 @@
                             "type": "integer",
                             "example": 13685
                         }
-                    },
-                    {
-                        "name": "academic_period_id",
-                        "in": "query",
-                        "description": "The ID of the academic period",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 33
-                        }
-                    },
-                    {
-                        "name": "report_card_id",
-                        "in": "query",
-                        "description": "The ID of the report card",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 8
-                        }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "academic_period_id",
+                                    "institution_id",
+                                    "education_grade_id",
+                                    "institution_class_id",
+                                    "student_id",
+                                    "report_card_id"
+                                ],
+                                "properties": {
+                                    "academic_period_id": {
+                                        "description": "The ID of the academic period",
+                                        "type": "integer",
+                                        "example": 34
+                                    },
+                                    "institution_id": {
+                                        "description": "The ID of the institution",
+                                        "type": "integer",
+                                        "example": 6
+                                    },
+                                    "education_grade_id": {
+                                        "description": "The ID of the education grade",
+                                        "type": "integer",
+                                        "example": 223
+                                    },
+                                    "institution_class_id": {
+                                        "description": "The ID of the institution class",
+                                        "type": "integer",
+                                        "example": 609
+                                    },
+                                    "student_id": {
+                                        "description": "The ID of the student",
+                                        "type": "integer",
+                                        "example": 13685
+                                    },
+                                    "report_card_id": {
+                                        "description": "The ID of the report card",
+                                        "type": "integer",
+                                        "example": 12
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Successful.",
+                        "description": "Report card PDF generated successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -27337,17 +27343,13 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 75
-                                                },
                                                 "file_name": {
                                                     "type": "string",
-                                                    "example": "P1002_Report Card_2382817301_Asher Ayers.pdf"
+                                                    "example": "ReportCard_13685.pdf"
                                                 },
-                                                "file_content": {
+                                                "file_url": {
                                                     "type": "string",
-                                                    "example": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl"
+                                                    "example": "https://example.com/storage/reports/ReportCard_13685.pdf"
                                                 }
                                             },
                                             "type": "object"
@@ -27358,20 +27360,23 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Invalid request."
+                    },
                     "404": {
-                        "description": "Unsuccessful."
+                        "description": "Report card not found."
                     }
                 }
             }
         },
         "/api/v4/institutions/{institutionId}/classes/{classId}/student-report-cards/{studentId}/xls": {
-            "get": {
+            "post": {
                 "tags": [
                     "Report card"
                 ],
-                "summary": "Get a student's report card in excel format",
-                "description": "Retrieve a student's report card for a specific academic period and report card ID in excel format.",
-                "operationId": "f06bcdd6d71a436b96e5058573496f94",
+                "summary": "Download a student's report card in Excel format",
+                "description": "Retrieve a student's report card for a specific academic period and report card ID in Excel format.",
+                "operationId": "f209c150452f53a0e59196b574d625e7",
                 "parameters": [
                     {
                         "name": "institutionId",
@@ -27390,7 +27395,7 @@
                         "required": true,
                         "schema": {
                             "type": "integer",
-                            "example": 591
+                            "example": 609
                         }
                     },
                     {
@@ -27402,31 +27407,61 @@
                             "type": "integer",
                             "example": 13685
                         }
-                    },
-                    {
-                        "name": "academic_period_id",
-                        "in": "query",
-                        "description": "The ID of the academic period",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 33
-                        }
-                    },
-                    {
-                        "name": "report_card_id",
-                        "in": "query",
-                        "description": "The ID of the report card",
-                        "required": true,
-                        "schema": {
-                            "type": "integer",
-                            "example": 8
-                        }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "academic_period_id",
+                                    "institution_id",
+                                    "education_grade_id",
+                                    "institution_class_id",
+                                    "student_id",
+                                    "report_card_id"
+                                ],
+                                "properties": {
+                                    "academic_period_id": {
+                                        "description": "The ID of the academic period",
+                                        "type": "integer",
+                                        "example": 34
+                                    },
+                                    "institution_id": {
+                                        "description": "The ID of the institution",
+                                        "type": "integer",
+                                        "example": 6
+                                    },
+                                    "education_grade_id": {
+                                        "description": "The ID of the education grade",
+                                        "type": "integer",
+                                        "example": 223
+                                    },
+                                    "institution_class_id": {
+                                        "description": "The ID of the institution class",
+                                        "type": "integer",
+                                        "example": 609
+                                    },
+                                    "student_id": {
+                                        "description": "The ID of the student",
+                                        "type": "integer",
+                                        "example": 13685
+                                    },
+                                    "report_card_id": {
+                                        "description": "The ID of the report card",
+                                        "type": "integer",
+                                        "example": 12
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
-                        "description": "Successful.",
+                        "description": "Report card Excel file generated successfully.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -27437,17 +27472,13 @@
                                         },
                                         "data": {
                                             "properties": {
-                                                "id": {
-                                                    "type": "integer",
-                                                    "example": 75
-                                                },
                                                 "file_name": {
                                                     "type": "string",
-                                                    "example": "P1002_Report Card_2382817301_Asher Ayers.xlsx"
+                                                    "example": "ReportCard_13685.xlsx"
                                                 },
-                                                "file_content": {
+                                                "file_url": {
                                                     "type": "string",
-                                                    "example": "JVBERi0xLjQKJeLjz9MKMyAwIG9iago8PC9UeXBlIC9QYWdlCi9QYXJlbnQgMSAwIFIKL01lZGlhQm94IFswIDAgNjIzLjYyMiAxMTMzLjg1OF0KL1RyaW1Cb3ggWzAuMDAwIDAuMDAwIDYyMy42MjIgMTEzMy44NThdCi9SZXNvdXJjZXMgMiAwIFIKL0dyb3VwIDw8IC9UeXBlIC9Hcm91cCAvUyAvVHJhbnNwYXJlbmN5IC9DUyAvRGV2aWNlUkdCID4+IAovQ29udGVudHMgNCAwIFIl"
+                                                    "example": "https://example.com/storage/reports/ReportCard_13685.xlsx"
                                                 }
                                             },
                                             "type": "object"
@@ -27458,8 +27489,11 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Invalid request."
+                    },
                     "404": {
-                        "description": "Unsuccessful."
+                        "description": "Report card not found."
                     }
                 }
             }
@@ -34776,10 +34810,6 @@
                                                                 "type": "string",
                                                                 "example": "admin"
                                                             },
-                                                            "password": {
-                                                                "type": "string",
-                                                                "example": ""
-                                                            },
                                                             "openemis_no": {
                                                                 "type": "string",
                                                                 "example": "1522271965"
@@ -35195,10 +35225,6 @@
                                                     "username": {
                                                         "type": "string",
                                                         "example": "admin"
-                                                    },
-                                                    "password": {
-                                                        "type": "string",
-                                                        "example": ""
                                                     },
                                                     "openemis_no": {
                                                         "type": "string",
@@ -37459,10 +37485,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -37538,10 +37560,6 @@
                                                                     "external_reference": {
                                                                         "type": "string",
                                                                         "example": null
-                                                                    },
-                                                                    "super_admin": {
-                                                                        "type": "integer",
-                                                                        "example": 1
                                                                     },
                                                                     "status": {
                                                                         "type": "integer",
@@ -37647,10 +37665,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -37726,10 +37740,6 @@
                                                                     "external_reference": {
                                                                         "type": "string",
                                                                         "example": null
-                                                                    },
-                                                                    "super_admin": {
-                                                                        "type": "integer",
-                                                                        "example": 1
                                                                     },
                                                                     "status": {
                                                                         "type": "integer",
@@ -37965,10 +37975,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -38122,10 +38128,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -38199,10 +38201,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -38357,10 +38355,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -38434,10 +38428,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -38617,10 +38607,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -38698,10 +38684,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -38881,10 +38863,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -38958,10 +38936,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -39116,10 +39090,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -39193,10 +39163,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -39351,10 +39317,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -39432,10 +39394,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -39590,10 +39548,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -39671,10 +39625,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -39926,10 +39876,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -39974,10 +39920,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -40182,10 +40124,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -40259,10 +40197,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -40467,10 +40401,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -40544,10 +40474,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -40702,10 +40628,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -40779,10 +40701,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -40983,10 +40901,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -41060,10 +40974,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -41231,10 +41141,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -41308,10 +41214,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -41499,10 +41401,6 @@
                                                                         "type": "string",
                                                                         "example": "admin"
                                                                     },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
-                                                                    },
                                                                     "openemis_no": {
                                                                         "type": "string",
                                                                         "example": "1522271965"
@@ -41688,10 +41586,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -41891,10 +41785,6 @@
                                                                     "username": {
                                                                         "type": "string",
                                                                         "example": "admin"
-                                                                    },
-                                                                    "password": {
-                                                                        "type": "string",
-                                                                        "example": ""
                                                                     },
                                                                     "openemis_no": {
                                                                         "type": "string",
@@ -43297,6 +43187,10 @@
         {
             "name": "Report card",
             "description": "Report card"
+        },
+        {
+            "name": "Report Card",
+            "description": "Report Card"
         },
         {
             "name": "Scanned",

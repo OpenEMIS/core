@@ -67,6 +67,9 @@ return [
     |
     */
 
+    //POCOR-9719: static fallback only. AppServiceProvider::applySystemTimezone()
+    //overrides this at boot using config_items.time_zone — the single source of
+    //truth shared with CakePHP. Env removed; cron does not inherit FPM env anyway.
     'timezone' => 'UTC',
 
     /*
