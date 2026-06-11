@@ -42,13 +42,13 @@ trait SyncUserTrait
                 $user->sync_status = UserBehavior::SYNC_STATUS_SYNCED;
                 $SecurityUsers->save($user);
             }
-            $this->Alert->ok(__('Already in sync — registry data matches.'), ['type' => 'string', 'reset' => true]);
+            $this->Alert->success(__('Already in sync — registry data matches.'), ['type' => 'string', 'reset' => true]); //POCOR-9590: Alert->ok() is a no-op in AlertComponent — only success/error/warning/info render
             return $this->redirect($this->referer());
         }
 
         $SecurityUsers->applySyncToUser($user, $externalValues, $externalGenderId); //POCOR-9590
         if ($SecurityUsers->save($user)) {
-            $this->Alert->ok(__('User synced from external registry — ') . count($diff) . __(' field(s) updated.'), ['type' => 'string', 'reset' => true]);
+            $this->Alert->success(__('User synced from external registry — ') . count($diff) . __(' field(s) updated.'), ['type' => 'string', 'reset' => true]); //POCOR-9590: Alert->ok() is a no-op in AlertComponent — only success/error/warning/info render
         } else {
             $errors = $user->getErrors();
             $detail = $errors ? json_encode($errors) : 'unknown';
