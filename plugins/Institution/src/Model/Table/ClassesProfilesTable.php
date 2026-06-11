@@ -14,6 +14,7 @@ use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use Institution\Model\Traits\ProfilePermissionTrait; //POCOR-9598: centralised profile permission check
+use Institution\Model\Traits\StaleProfileBannerTrait; //POCOR-9593: stale-profile alert banner
 
 /**
  *
@@ -25,6 +26,7 @@ use Institution\Model\Traits\ProfilePermissionTrait; //POCOR-9598: centralised p
 class ClassesProfilesTable extends ControllerActionTable
 {
     use ProfilePermissionTrait; //POCOR-9598: security_role_functions execute-permission check
+    use StaleProfileBannerTrait; //POCOR-9593: stale-profile alert banner
 
     private $statusOptions = [];
     private $reportProcessList = [];
@@ -237,6 +239,7 @@ class ClassesProfilesTable extends ControllerActionTable
         $this->field('status', ['sort' => ['field' => 'report_card_status']]);
         $this->field('started_on');
         $this->field('completed_on');
+        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
         $this->fields['institution_class_id']['visible'] = false;
         $this->fields['next_institution_class_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
@@ -246,8 +249,8 @@ class ClassesProfilesTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['class_name', 'institution_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
-        $this->setFieldVisible(['index'], ['class_name', 'institution_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']);
+        $this->setFieldOrder(['age', 'class_name', 'institution_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']); //POCOR-9593: age first, no label
+        $this->setFieldVisible(['index'], ['age', 'class_name', 'institution_name', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue']); //POCOR-9593: age first, no label
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->ClassProfileProcesses
@@ -343,7 +346,7 @@ class ClassesProfilesTable extends ControllerActionTable
     {
         $reportCardId = $this->request->getQuery('class_profile_template_id');
         $academicPeriodId = $this->request->getQuery('academic_period_id');
-        $institutionId = $this->request->getQuery('institution_id');
+        $institutionId = $this->request->getQuery('institution_id') ?? $this->getInstitutionID(); //POCOR-9593: fallback to session institution_id
 
         //Log::debug('@ClassesProfilesTable::indexAfterAction ENTRY reportCardId=' . ($reportCardId ?? 'NULL') . ' academicPeriodId=' . ($academicPeriodId ?? 'NULL') . ' institutionId=' . ($institutionId ?? 'NULL')); //[TEMP-LOG]
 
@@ -428,6 +431,13 @@ class ClassesProfilesTable extends ControllerActionTable
                     $this->Alert->warning(__('This profile template generation is not enabled. Consult with system administrator to check the dates.'), ['type' => 'string', 'reset' => true]);
                     //POCOR-9598: end
                 }
+
+                //POCOR-9593: start - stale profile banner (runs after POCOR-9598 so it overwrites with richer message)
+                $staleTemplate = $this->ReportCards->find()
+                    ->where([$this->ReportCards->aliasField('id') => $this->request->getQuery('class_profile_template_id')])
+                    ->first();
+                $this->showStaleProfileBanner($data, $staleTemplate, 'report_card_completed_on', 'report_card_status');
+                //POCOR-9593: end
 
                 // Publish all button
                 if ($generatedCount > 0) {
@@ -516,9 +526,9 @@ class ClassesProfilesTable extends ControllerActionTable
     public function onGetStartedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('report_card_started_on')) {
+        if ($entity->has('report_card_started_on') && !empty($entity->report_card_started_on)) {
             $startedOnValue = new FrozenTime($entity->report_card_started_on);
-            $value = $this->formatDateTime($startedOnValue);
+            $value = $startedOnValue->format('Y-m-d H:i:s'); //POCOR-9593: direct format — formatDateTime() not available on this branch
         }
         return $value;
     }
@@ -526,12 +536,39 @@ class ClassesProfilesTable extends ControllerActionTable
     public function onGetCompletedOn(EventInterface $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('report_card_completed_on')) {
+        if ($entity->has('report_card_completed_on') && !empty($entity->report_card_completed_on)) {
             $completedOnValue = new FrozenTime($entity->report_card_completed_on);
-            $value = $this->formatDateTime($completedOnValue);
+            $value = $completedOnValue->format('Y-m-d H:i:s'); //POCOR-9593: direct format — formatDateTime() not available on this branch
         }
         return $value;
     }
+
+    //POCOR-9593: start - profile age indicator square
+    public function onGetAge(EventInterface $event, Entity $entity)
+    {
+        $completedOn = $entity->has('report_card_completed_on') ? $entity->report_card_completed_on : null;
+        $status = $entity->has('report_card_status') ? $entity->report_card_status : self::NEW_REPORT;
+
+        if (empty($completedOn) || !in_array($status, [self::GENERATED, self::PUBLISHED])) {
+            return '<span style="display:inline-block;width:14px;height:14px;border:2px solid #aaa;background:transparent;vertical-align:middle;" title="' . __('Not yet generated') . '"></span>';
+        }
+
+        $now = FrozenTime::now(); //POCOR-9593: use diffInDays for correct future-date handling
+        $completed = new FrozenTime($completedOn);
+        $days = $now->greaterThan($completed) ? (int) $now->diffInDays($completed) : 0; //POCOR-9593: 0 if completed_on is in the future
+
+        if ($days < 30) {
+            $color = '#2196F3';
+        } elseif ($days < 365) {
+            $color = '#FFC107';
+        } else {
+            $color = '#F44336';
+        }
+
+        $title = __('Generated %d days ago', $days); //POCOR-9593: single translatable string
+        return '<span style="display:inline-block;width:14px;height:14px;background:' . $color . ';vertical-align:middle;" title="' . $title . '"></span>';
+    }
+    //POCOR-9593: end
 
     public function onGetReportQueue(EventInterface $event, Entity $entity)
     {
@@ -1107,7 +1144,9 @@ class ClassesProfilesTable extends ControllerActionTable
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'institution_name') {
+        if ($field == 'age') {
+            return ''; //POCOR-9593: age indicator column has no header
+        } else if ($field == 'institution_name') {
             return __('Institution Name');
         } else if ($field == 'class_name') {
             return  __('Class Name');
