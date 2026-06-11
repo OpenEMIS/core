@@ -605,22 +605,26 @@ class StaffController extends AppController
         $staffId = $this->getStaffID();
 
         $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $activeInstitution = $this->Institutions->get($institutionId);
-        $institutionName = $activeInstitution->name;
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId ,'institution_id' => $institutionId]);
-        $this->Navigation->addCrumb($institutionName,
-            ['plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'dashboard',
-                'institutionId' => $institutionId,
-                $encodedInstitutionId]);
-        $this->Navigation->addCrumb('Staff',
-            ['plugin' => 'Institution',
-                'institutionId' => $institutionId,
-                'controller' => 'Institutions',
-                'action' => 'Staff',
-                'index',
-                $encodedInstitutionId]);
+        //POCOR-9715
+        if (!empty($institutionId)) {
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
+            $this->Navigation->addCrumb($institutionName,
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'dashboard',
+                    'institutionId' => $institutionId,
+                    $encodedInstitutionId]);
+            $this->Navigation->addCrumb('Staff',
+                ['plugin' => 'Institution',
+                    'institutionId' => $institutionId,
+                    'controller' => 'Institutions',
+                    'action' => 'Staff',
+                    'index',
+                    $encodedInstitutionId]);
+        }
+        //POCOR-9715
         $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
 

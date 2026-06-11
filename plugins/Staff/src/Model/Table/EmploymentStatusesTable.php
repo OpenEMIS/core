@@ -35,7 +35,10 @@ class EmploymentStatusesTable extends ControllerActionTable {
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
+        //POCOR-9715
         return $validator
+            ->requirePresence('status_type_id', true)
+            ->notEmptyString('status_type_id', __('Please select a Type'))
             ->allowEmpty('file_content');
     }
 
@@ -43,7 +46,7 @@ class EmploymentStatusesTable extends ControllerActionTable {
         if($this->action == 'download'){
             return;
         }
-        $this->field('status_type_id', ['type' => 'select', 'before' => 'status_date']);
+        $this->field('status_type_id', ['type' => 'select', 'before' => 'status_date', 'null' => false]);//POCOR-9715
 
 		$visible = ['index' => false, 'view' => true, 'add' => true, 'edit' => true];
         $this->field('file_content', ['visible' => $visible, 'attr' => ['label' => __('Attachment')]]);

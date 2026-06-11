@@ -62,7 +62,16 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
+        //POCOR-9715
         return $validator
+            ->requirePresence('academic_period_id', true)
+            ->notEmptyString('academic_period_id', __('Please select an Academic Period'))
+            ->requirePresence('referrer_id', true)
+            ->notEmptyString('referrer_id', __('This field cannot be left empty'))
+            ->requirePresence('special_needs_referrer_type_id', true)
+            ->notEmptyString('special_needs_referrer_type_id', __('Please select a Referrer Type'))
+            ->requirePresence('reason_type_id', true)
+            ->notEmptyString('reason_type_id', __('Please select a Reason for Referral'))
             // ->add('date', [
             //     'ruleInAcademicPeriod' => [
             //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
@@ -373,11 +382,11 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
-        $this->field('referrer_id', ['entity' => $entity]);
-        $this->field('special_needs_referrer_type_id', ['type' => 'select']);
+        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity, 'null' => false]);//POCOR-9715
+        $this->field('referrer_id', ['entity' => $entity, 'null' => false]);//POCOR-9715
+        $this->field('special_needs_referrer_type_id', ['type' => 'select', 'null' => false]);//POCOR-9715
         $this->field('date');
-        $this->field('reason_type_id', ['type' => 'select']);
+        $this->field('reason_type_id', ['type' => 'select', 'null' => false]);//POCOR-9715
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);

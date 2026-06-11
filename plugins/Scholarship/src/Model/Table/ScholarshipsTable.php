@@ -661,28 +661,42 @@ class ScholarshipsTable extends ControllerActionTable
         }
         return $attr;
     }
-
-    public function addEditOnSelectAttachmentType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    //POCOR-9715 : Initially function name addEditOnSelectAttachmentType
+    public function addEditOnSelectAttachment(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $fieldKey = 'attachment_types';
+        $alias = $this->getAlias();
 
-        if (!isset($data[$this->getAlias()][$fieldKey])) {
-            $data[$this->getAlias()][$fieldKey] = [];
+        if (!isset($data[$alias][$fieldKey])) {
+            $data[$alias][$fieldKey] = [];
         }
 
-        if (isset($data[$this->getAlias()]['attachment_type_id'])) {
-            $selectedAttachmentType = $data[$this->getAlias()]['attachment_type_id'];
+        if (!empty($data[$alias]['attachment_type_id'])) {
+            $selectedAttachmentType = $data[$alias]['attachment_type_id'];
             $attachmentTypeEntity = $this->AttachmentTypes->get($selectedAttachmentType);
 
-            $data[$this->getAlias()][$fieldKey][] = [
-                'id' => $attachmentTypeEntity->id,
-                'name' => $attachmentTypeEntity->name,
-                'visible' => $attachmentTypeEntity->visible,
-                '_joinData' => [
-                    'is_mandatory' => 0
-                ]
-            ];
+            $exists = false;
+            foreach ($data[$alias][$fieldKey] as $existing) {
+                if ((int)$existing['id'] === (int)$attachmentTypeEntity->id) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            if (!$exists) {
+                $data[$alias][$fieldKey][] = [
+                    'id' => $attachmentTypeEntity->id,
+                    'name' => $attachmentTypeEntity->name,
+                    'visible' => $attachmentTypeEntity->visible,
+                    '_joinData' => [
+                        'is_mandatory' => 0
+                    ]
+                ];
+            }
         }
+
+        $data[$alias]['attachment_type_id'] = '';
+        $this->request = $this->request->withData($alias, $data[$alias]);
     }
 
     public function onGetCustomAttachmentTypeElement(EventInterface $event, $action, $entity, $attr, $options = [])
@@ -966,6 +980,12 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function getUsedAttachmentTypes($scholarshipId)
     {
+        //POCOR-9715
+        if (empty($scholarshipId)) {
+            return [];
+        }
+        //POCOR-9715
+
         $types = $this->AttachmentTypes->find()
             ->innerJoinWith('ApplicationAttachments', function ($q) use ($scholarshipId) {
                 return $q->where(['ApplicationAttachments.scholarship_id' => $scholarshipId]);

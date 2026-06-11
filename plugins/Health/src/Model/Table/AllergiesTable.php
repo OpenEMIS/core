@@ -159,8 +159,9 @@ class AllergiesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
+        $this->field('description', ['null' => false]); //POCOR-9715
         $this->field('severe', ['after' => 'description']);
-        $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
+        $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment', 'null' => false]); //POCOR-9715
         $this->field('file_content', ['after' => 'health_allergy_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
@@ -169,8 +170,13 @@ class AllergiesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
-        return $validator;
+        //POCOR-9715
+        return $validator
+            ->requirePresence('description', true)
+            ->notEmptyString('description', __('This field cannot be left empty'))
+            ->requirePresence('health_allergy_type_id', true)
+            ->notEmptyString('health_allergy_type_id', __('Please select a Health Allergy Type'))
+            ->allowEmpty('file_content');
     }
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
