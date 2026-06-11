@@ -89,6 +89,16 @@ class StaffLeaveTable extends ControllerActionTable
 
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $allowOutAcademicYear = $ConfigItems->value('allow_out_academic_year');
+        //POCOR-9715
+        $validator
+            ->requirePresence('staff_leave_type_id', true)
+            ->notEmptyString('staff_leave_type_id', __('Please select a Staff Leave Type'))
+            ->requirePresence('academic_period_id', true)
+            ->notEmptyString('academic_period_id', __('Please select an Academic Period'))
+            ->requirePresence('date_from', true)
+            ->notEmptyDate('date_from', __('This field cannot be left empty'))
+            ->requirePresence('date_to', true)
+            ->notEmptyDate('date_to', __('This field cannot be left empty'));
 
         if ($allowOutAcademicYear == 1) {
             $validator
@@ -400,14 +410,17 @@ class StaffLeaveTable extends ControllerActionTable
 
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('staff_leave_type_id');
+        $this->field('staff_leave_type_id', ['null' => false]); //POCOR-9715
         $this->field('assignee_id', ['entity' => $entity]); //send entity information
         $this->field('start_time', ['entity' => $entity]);
         $this->field('end_time', ['entity' => $entity]);
         $this->field('academic_period_id', [
             'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true],
-            'entity' => $entity
+            'entity' => $entity, //POCOR-9715
+            'null' => false,
         ]);
+        $this->field('date_from', ['null' => false]); //POCOR-9715
+        $this->field('date_to', ['null' => false]); //POCOR-9715
 
         // after $this->field(), field ordering will mess up, so need to reset the field order
         $this->setFieldOrder(['staff_leave_type_id',

@@ -52,12 +52,16 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
+        //POCOR-9715
         return $validator
-                ->add('comment', 'length', [
+            ->requirePresence('special_needs_diagnostics_type_id', true)
+            ->notEmptyString('special_needs_diagnostics_type_id', __('Please select a Type of disability'))
+            ->requirePresence('special_needs_diagnostics_degree_id', true)
+            ->notEmptyString('special_needs_diagnostics_degree_id', __('Please select a Disability Degree'))
+            ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
                 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                ])
-                ; //POCOR-9584: Removed academic period range validation
+            ]); //POCOR-9584: Removed academic period range validation
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -163,8 +167,8 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('special_needs_diagnostics_type_id', ['type' => 'select']);
-        $this->field('special_needs_diagnostics_degree_id', ['type' => 'select']);
+        $this->field('special_needs_diagnostics_type_id', ['type' => 'select', 'null' => false]); //POCOR-9715
+        $this->field('special_needs_diagnostics_degree_id', ['type' => 'select', 'null' => false]); //POCOR-9715
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => true, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //Modify for POCOR-7147
