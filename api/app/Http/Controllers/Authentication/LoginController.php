@@ -65,32 +65,55 @@ class LoginController extends Controller
         try {
 
             $userCheck = SecurityUsers::where('username', $request->username)->first();
-
-            if (isset($userCheck)) {
-                $input = $request->only('username', 'password');
-                $token = null;
-                $api_key = $request->api_key ?? "";
-
-                $apiCredentials = ApiCredentials::where('api_key', $api_key)->first();
-                if (!$apiCredentials) {
-                    return $this->sendErrorResponse("Invalid API key provided.");
-                }
-
-
-                if (!$token = JWTAuth::attempt($input)) {
-                    return $this->sendErrorResponse('Invalid Username or Password.');
-                }
-
-
-                return $this->sendSuccessResponse('Logged In successfully', ['token' => $token, 'client_id' => $apiCredentials->client_id ?? ""]);
-            } else {
+            if (!$userCheck) {
                 return $this->sendErrorResponse("Invalid Username or Password.");
             }
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to login.',
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            // Validate API key
+            $apikey = $request->api_key ?? "";
+            $apiCredentials = ApiCredentials::where('api_key', $apikey)->first();
+            if (!$apiCredentials) {
+                return $this->sendErrorResponse("Invalid API key provided.");
+            }
+            $password = $request->password;
+            //POCOR-9745 Check encryption type
+            if ($request->has('enc') && !empty($request->enc)) {
+                switch ($request->enc) {
+                    case 'RSA-OAEP-256':
+                        $privateKey = file_get_contents(storage_path('keys/private.pem'));
+                        openssl_private_decrypt(
+                            base64_decode($password),
+                            $decryptedPassword,
+                            $privateKey,
+                            OPENSSL_PKCS1_OAEP_PADDING
+                        );
+                        $password = $decryptedPassword;
+                        break;
+                    default:
+                        return $this->sendErrorResponse('Unsupported encryption type.');
+                }
+            }
+            $input = [
+                'username' => $request->username,
+                'password' => $password
+            ];
+
+            if (!$token = JWTAuth::attempt($input)) {
+                return $this->sendErrorResponse('Invalid Username or Password.');
+            }
+            return $this->sendSuccessResponse(
+                'Logged In successfully',
+                [
+                    'token' => $token,
+                    'client_id' => $apiCredentials->client_id ?? ''
+                ]
             );
+        } catch (\Exception $e) {
+
+            Log::error('Failed to login.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return $this->sendErrorResponse("You Are Not Authorized To Access This Page");
         }
     }

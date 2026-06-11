@@ -12,7 +12,7 @@ class Themes extends Model
     protected $table = 'themes';
 
     // ✅ Allow mass assignment
-    protected $fillable = ['id', 'name', 'value', 'content', 'default_value', 'default_content', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+    protected $fillable = ['id', 'name', 'value', 'content', 'default_value', 'default_content', 'config_item_id','modified_user_id', 'modified', 'created_user_id', 'created'];
 
     // ✅ Disable Laravel's default timestamps
     public $timestamps = false;
