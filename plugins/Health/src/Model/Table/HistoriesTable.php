@@ -157,8 +157,9 @@ class HistoriesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
-        $this->field('current');
+        
         $this->field('health_condition_id', ['type' => 'select', 'before' => 'comment']); 
+        $this->field('current');
         $this->field('file_content', ['after' => 'health_condition_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
@@ -169,7 +170,8 @@ class HistoriesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator
             ->allowEmpty('file_content')
-            ->notEmpty('health_condition_id'); //POCOR-9507
+            ->notEmpty('health_condition_id') //POCOR-9507
+            ->notEmpty('current'); //POCOR-9507
         return $validator;
     }
 
@@ -248,5 +250,26 @@ class HistoriesTable extends ControllerActionTable
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
+    }
+
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Medications.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
     }
 }
