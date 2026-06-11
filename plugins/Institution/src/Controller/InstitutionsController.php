@@ -7038,7 +7038,7 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
-        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData, 'Student');
         if ($identityValidationError instanceof Response) {
             return $identityValidationError;
         }
@@ -7054,7 +7054,7 @@ class InstitutionsController extends AppController
         if ($securityUserResult instanceof \Cake\ORM\Entity || $securityUserResult instanceof EntityInterface) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
-            $identityResult = $this->handleIdentities($requestData, $userRecordId, $userId);
+            $identityResult = $this->handleIdentities($requestData, $userRecordId, $userId, 'Student');
             if ($identityResult instanceof Response) {
                 return $identityResult;
             }
@@ -7092,7 +7092,7 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
-        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData, 'Staff');
         if ($identityValidationError instanceof Response) {
             return $identityValidationError;
         }
@@ -7109,7 +7109,7 @@ class InstitutionsController extends AppController
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $this->handleNationalities($requestData, $userRecordId, $userId);
-            $identityResult = $this->handleIdentities($requestData, $userRecordId, $userId);
+            $identityResult = $this->handleIdentities($requestData, $userRecordId, $userId, 'Staff');
             if ($identityResult instanceof Response) {
                 return $identityResult;
             }
@@ -7388,13 +7388,13 @@ class InstitutionsController extends AppController
      * @param int $userId
      *
      */
-    private function handleIdentities($requestData, $userRecordId, $userId)
+    private function handleIdentities($requestData, $userRecordId, $userId, string $userRole = 'Student')
     {
         // POCOR-9027 start
         $identity_number = $requestData['identity_number'] ?? null;
         $identity_type_id = $requestData['identity_type_id'] ?? null;
         $nationality_id = $requestData['nationality_id'] ?? null;
-        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData, $userRole);
         if ($identityValidationError instanceof Response) {
             return $identityValidationError;
         }
@@ -8444,7 +8444,7 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
-        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData, 'Guardian');
         if ($identityValidationError instanceof Response) {
             return $identityValidationError;
         }
@@ -8459,7 +8459,7 @@ class InstitutionsController extends AppController
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
-            $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
+            $r2 = $this->handleIdentities($requestData, $userRecordId, $userId, 'Guardian');
             if ($r2 instanceof Response) {
                 return $r2;
             }
@@ -8501,7 +8501,7 @@ class InstitutionsController extends AppController
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
-        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData);
+        $identityValidationError = $this->validateIdentityByTypePatternOrResponse($requestData, 'Other');
         if ($identityValidationError instanceof Response) {
             return $identityValidationError;
         }
@@ -8516,7 +8516,7 @@ class InstitutionsController extends AppController
         if ($securityUserResult instanceof \Cake\ORM\Entity) { // POCOR-9011
             $userRecordId = $securityUserResult->id;
             $r1 = $this->handleNationalities($requestData, $userRecordId, $userId);
-            $r2 = $this->handleIdentities($requestData, $userRecordId, $userId);
+            $r2 = $this->handleIdentities($requestData, $userRecordId, $userId, 'Other');
             if ($r2 instanceof Response) {
                 return $r2;
             }
@@ -8717,24 +8717,53 @@ class InstitutionsController extends AppController
         return "";
     }
 
-    private function validateIdentityByTypePatternOrResponse(array $requestData): ?Response
+    private function validateIdentityByTypePatternOrResponse(array $requestData, string $userRole = 'Student'): ?Response
     {
         $identityTypeId = isset($requestData['identity_type_id']) ? trim((string)$requestData['identity_type_id']) : '';
         $identityNumber = isset($requestData['identity_number']) ? trim((string)$requestData['identity_number']) : '';
         $nationalityId = isset($requestData['nationality_id']) ? trim((string)$requestData['nationality_id']) : '';
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $ConfigItemOptions = TableRegistry::getTableLocator()->get('Configuration.ConfigItemOptions');
+        $configValues = $ConfigItems
+            ->find()
+            ->select([
+                'code' => $ConfigItems->aliasField('code'),
+                'value' => $ConfigItems->aliasField('value'),
+                'config_option' => $ConfigItemOptions->aliasField('option')
+            ])
+            ->leftJoin([$ConfigItemOptions->getAlias() => $ConfigItemOptions->getTable()], [
+                $ConfigItemOptions->aliasField('option_type') . ' = ' . $ConfigItems->aliasField('option_type'),
+                $ConfigItemOptions->aliasField('value') . ' = ' . $ConfigItems->aliasField('value')
+            ])
+            ->where([$ConfigItems->aliasField('code IN') => [$userRole . 'Identities', $userRole . 'Nationalities']])
+            ->disableHydration()
+            ->all()
+            ->combine('code', function ($row) {
+                return $row['config_option'] ?? $row['value'];
+            })
+            ->toArray();
 
-        // If any identity info is provided, require the full identity tuple.
-        $hasAnyIdentityValue = ($identityTypeId !== '' || $identityNumber !== '' || $nationalityId !== '');
-        if ($hasAnyIdentityValue) {
-            if ($identityTypeId === '') {
-                return $this->sendJsonResponse(['message' => __('Please enter value')], 422);
-            }
-            if ($identityNumber === '') {
-                return $this->sendJsonResponse(['message' => __('Please enter value')], 422);
-            }
-            if ($nationalityId === '') {
-                return $this->sendJsonResponse(['message' => __('Please enter value')], 422);
-            }
+        $isMandatoryConfig = function ($value): bool {
+            return $value === 'Mandatory' || (string)$value === '1';
+        };
+        $isIdentityMandatory = $isMandatoryConfig($configValues[$userRole . 'Identities'] ?? null);
+        $isNationalityMandatory = $isMandatoryConfig($configValues[$userRole . 'Nationalities'] ?? null);
+
+        if ($isIdentityMandatory && ($identityTypeId === '' || $identityNumber === '')) {
+            return $this->sendJsonResponse(['message' => __('Please enter Identity Type and Identity Number value')], 422);
+        }
+
+        if ($identityTypeId !== '' && $identityNumber === '') {
+            return $this->sendJsonResponse(['message' => __('Please enter Identity Number value')], 422);
+        }
+
+        if ($identityNumber !== '' && $identityTypeId === '') {
+            return $this->sendJsonResponse(['message' => __('Please enter Identity Type value')], 422);
+        }
+
+        // Nationality is mandatory when configured, and also when saving an identity.
+        if (($isNationalityMandatory || ($identityTypeId !== '' && $identityNumber !== '')) && $nationalityId === '') {
+            return $this->sendJsonResponse(['message' => __('Please enter Nationality value')], 422);
         }
 
         $message = $this->validateCustomIdentityNumber($requestData);
