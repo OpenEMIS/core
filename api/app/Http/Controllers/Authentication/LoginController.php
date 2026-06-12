@@ -79,7 +79,7 @@ class LoginController extends Controller
             if ($request->has('enc') && !empty($request->enc)) {
                 switch ($request->enc) {
                     case 'RSA-OAEP-256':
-                        $privateKey = file_get_contents(storage_path('keys/private.pem'));
+                        $privateKey = file_get_contents(storage_path('private.pem'));
                         openssl_private_decrypt(
                             base64_decode($password),
                             $decryptedPassword,
@@ -108,7 +108,6 @@ class LoginController extends Controller
                 ]
             );
         } catch (\Exception $e) {
-
             Log::error('Failed to login.', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
