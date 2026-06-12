@@ -63,7 +63,6 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         try {
-
             $userCheck = SecurityUsers::where('username', $request->username)->first();
             if (!$userCheck) {
                 return $this->sendErrorResponse("Invalid Username or Password.");
