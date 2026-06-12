@@ -792,7 +792,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                     ? dataValue
                     : (dataKey === 'time_in' || dataKey === 'time_out' ? dataValue : null);
                 if (attemptedTime) {
-                    var nowHms = (d.hour || '00') + ':' + (d.minute || '00') + ':' + (d.second || '00');
+                    //POCOR-9729: allow any time today (threshold = end of day). Teachers arrive
+                    // early / leave late, so the time-of-day must not be hard-blocked against the
+                    // current clock — only genuine future *dates* are rejected (FUTURE_DATE above).
+                    var nowHms = '23:59:59';
                     if (attemptedTime > nowHms) {
                         if ($scope) {
                             AlertSvc.warning($scope, 'Cannot mark a time in the future');
@@ -837,8 +840,14 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             }
 
         }).catch(function(err) {
-            console.error('Error in saveStaffAttendance:', err);
-            if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            //POCOR-9729: these rejections are controlled validations that already showed a
+            // specific, user-friendly AlertSvc message above. Don't overwrite that with the
+            // generic "timezone" error — only surface it for genuinely unexpected failures.
+            var handled = ['FUTURE_DATE', 'FUTURE_TIME_TODAY', 'TIME_ORDER_INVALID'];
+            if (handled.indexOf(err) === -1) {
+                console.error('Error in saveStaffAttendance:', err);
+                if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            }
             return false;
         });
     }
