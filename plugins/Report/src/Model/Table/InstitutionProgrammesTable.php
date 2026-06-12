@@ -50,8 +50,8 @@ class InstitutionProgrammesTable extends AppTable
 		}
 
 		$query
-			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems.AcademicPeriods'])
-			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'programmes' => 'EducationProgrammes.name', 'academic_period' => 'AcademicPeriods.name'])
+			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems.AcademicPeriods', 'Institutions.InstitutionTypes'])
+			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'programmes' => 'EducationProgrammes.name', 'academic_period' => 'AcademicPeriods.name', 'institution_type' => 'InstitutionTypes.name'])
 			->where(['AcademicPeriods.id' => $periodId, $where]);
 	}
 
@@ -117,6 +117,12 @@ class InstitutionProgrammesTable extends AppTable
 					'field' => 'area_administrative_name',
 					'type' => 'string',
 					'label' => __('Area Administrative')
+				];
+				$newFields[] = [
+					'key' => 'InstitutionTypes.name',
+					'field' => 'institution_type',
+					'type' => 'string',
+					'label' => __('Institution Type')
 				];
 
 				//POCOR-9302 start

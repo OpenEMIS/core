@@ -11,7 +11,8 @@
   font-style: normal;
 }
 
-[class^="kd-"], [class*=" kd-"] {
+[class^="kd-"], [class*=" kd-"],
+.oe-check, .oe-close { /* POCOR-9652: oe- alias — enumerate ONLY the icon classes; never [class^="oe-"], it bleeds onto oe-cell-*, oe-select-wrapper, etc. */
   /* use !important to prevent issues with browser extensions that change fonts */
   font-family: 'kordit-fonts' !important;
   speak: none;
@@ -116,7 +117,8 @@
 .kd-bubble:before {
   content: "\e91d";
 }
-.kd-check:before {
+.kd-check:before,
+.oe-check:before { /* POCOR-9652: oe- alias for kd-check */
   content: "\e91e";
 }
 .kd-class:before {
@@ -128,7 +130,8 @@
 .kd-close-round:before {
   content: "\e921";
 }
-.kd-close:before {
+.kd-close:before,
+.oe-close:before { /* POCOR-9652: oe- alias for kd-close */
   content: "\e922";
 }
 .kd-comment:before {
