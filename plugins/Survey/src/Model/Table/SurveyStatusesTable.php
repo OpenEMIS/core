@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Http\ServerRequest;
 use Cake\Event\EventInterface;
+use Cake\Validation\Validator; //POCOR-9703
 use Cake\I18n\Time;
 
 class SurveyStatusesTable extends ControllerActionTable
@@ -43,6 +44,18 @@ class SurveyStatusesTable extends ControllerActionTable
         $this->setFieldOrder([
             'survey_form_id', 'survey_filter_id', 'date_enabled', 'date_disabled', 'academic_period_level', 'academic_periods'
         ]);
+    }
+    //POCOR-9703::Start - Validation for survey_filter_id field
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator
+            ->requirePresence('survey_filter_id', 'create')
+            ->notEmptyString(
+                'survey_filter_id',
+                __('Survey Filter is required')
+            );
+
+        return $validator;
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -579,6 +592,9 @@ class SurveyStatusesTable extends ControllerActionTable
             $attr['type'] = 'select';
             $attr['options'] = $filterOptions;
             $attr['select'] = false;
+            $attr['null'] = false;
+            $attr['required'] = 'required';
+            $attr['attr']['required'] = 'required';
             $attr['onChangeReload'] = 'changeModule';
             return $attr;
         }

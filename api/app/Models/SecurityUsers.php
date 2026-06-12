@@ -7,15 +7,20 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\NumericId;
+use App\Models\Concerns\UserActivityLog; //POCOR-9697: Wave-3 audit-log trait
+use App\Models\Concerns\HidesSuperAdmins; //POCOR-9710: row-level super_admin visibility lock
 
 class SecurityUsers extends Authenticatable implements JWTSubject
 {
     use HasFactory;
     use Notifiable;
     use NumericId;
+    use UserActivityLog; //POCOR-9697: log every create/update/delete to user_activities
+    use HidesSuperAdmins; //POCOR-9710: super_admin = 1 rows invisible to non-super-admin callers
 
     public $timestamps = false;
     protected $casts = [
@@ -26,6 +31,9 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     protected $appends = ['full_name', 'name_with_id'];
 
 
+    //POCOR-9697: super_admin removed from $fillable — only a dedicated, audited
+    //promotion endpoint should ever set it. Direct DB updates remain possible
+    //for migrations / seeders that use forceFill() or raw queries.
     protected $fillable = [
         'id', 'username', 'password',
         'openemis_no', 'first_name',
@@ -36,15 +44,18 @@ class SecurityUsers extends Authenticatable implements JWTSubject
         'gender_id', 'date_of_birth',
         'date_of_death', 'nationality_id',  'identity_type_id',
         'identity_number', 'external_reference',
-        'super_admin', 'status', 'last_login',
+        'status', 'last_login',
         'failed_logins', 'photo_name',
         'photo_content', 'preferred_language',
         'is_student', 'is_staff', 'is_guardian',
         'modified_user_id', 'modified',
         'created_user_id', 'created'
     ];
+    //POCOR-9697: super_admin hidden from API responses — knowing who is a
+    //super_admin is itself sensitive information (it tells an attacker which
+    //accounts to phish).
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'super_admin',
     ];
 
     protected $primaryKey = 'id';
@@ -62,6 +73,17 @@ class SecurityUsers extends Authenticatable implements JWTSubject
 
 
 
+
+    //POCOR-9697: hash plaintext passwords on assignment. Bcrypt hashes
+    //($2y$/$2a$/$2b$ with the standard 60-char length) pass through unchanged
+    //so seeders, imports, and re-saves of an already-loaded row remain safe.
+    public function setPasswordAttribute($value): void
+    {
+        if (is_string($value) && $value !== '' && !preg_match('/^\$2[aby]\$/', $value)) {
+            $value = Hash::make($value);
+        }
+        $this->attributes['password'] = $value;
+    }
 
     public function getJWTIdentifier()
     {

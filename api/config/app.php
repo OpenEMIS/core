@@ -67,7 +67,10 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'), //POCOR-9509: set APP_TIMEZONE in .env to match server local timezone
+    //POCOR-9719: static fallback only. AppServiceProvider::applySystemTimezone()
+    //overrides this at boot using config_items.time_zone — the single source of
+    //truth shared with CakePHP. Env removed; cron does not inherit FPM env anyway.
+    'timezone' => 'UTC',
 
     /*
     |--------------------------------------------------------------------------
