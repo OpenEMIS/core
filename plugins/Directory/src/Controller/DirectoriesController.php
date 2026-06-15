@@ -2182,8 +2182,16 @@ class DirectoriesController extends AppController
         $grantType = $attributes['grant_type'];
         $scopes    = $attributes['scopes'];
 
-        //POCOR-9590: full_name is wizard-only — strict mapping done via shared ExternalIdentityMapper below
-        $mapFull = trim((string)($attributes['full_name_mapping'] ?? 'fullname'));
+        //POCOR-9590: restore prev lenient Seychelles mapping — the source returns keys with
+        //different casing between its test and production payloads, so normalize keys and
+        //default to the well-known Seychelles field names when a mapping is not configured.
+        //(The strict ExternalIdentityMapper consolidation dropped first_name/last_name here.)
+        $mapFirst       = strtolower(trim($attributes['first_name_mapping']     ?? 'givennames'));
+        $mapLast        = strtolower(trim($attributes['last_name_mapping']      ?? 'presentsurname'));
+        $mapFull        = strtolower(trim($attributes['full_name_mapping']      ?? 'fullname'));
+        $mapDob         = strtolower(trim($attributes['date_of_birth_mapping']  ?? 'dob'));
+        $mapGender      = strtolower(trim($attributes['gender_mapping']         ?? 'sex'));
+        $mapNationality = strtolower(trim($attributes['nationality_mapping']    ?? 'nationality'));
 
         // ------------------------------------------------------------
         // TOKEN REQUEST
@@ -2225,16 +2233,17 @@ class DirectoriesController extends AppController
             return $responseData;
         }
 
-        //POCOR-9590: same strict mapper as SyncUser — no silent case-fixups
-        ['mapped' => $core] = \User\Lib\ExternalIdentityMapper::map($record, $attributes);
+        //POCOR-9590: restore prev lenient mapping — normalize payload keys to lowercase
+        //then read via the (lowercased) configured/default mapping keys.
+        $raw = $this->normalizeKeys($record);
         $mapped = [
             'identity_number' => $identityNumber,
-            'first_name'      => $core['first_name'] ?? '',
-            'last_name'       => $core['last_name'] ?? '',
-            'full_name'       => $record[$mapFull] ?? '',
-            'date_of_birth'   => $core['date_of_birth'] ?? '',
-            'gender'          => $core['gender'] ?? '',
-            'nationality'     => $core['nationality'] ?? '',
+            'first_name'      => $raw[$mapFirst] ?? '',
+            'last_name'       => $raw[$mapLast] ?? '',
+            'full_name'       => $raw[$mapFull] ?? '',
+            'date_of_birth'   => isset($raw[$mapDob]) ? substr((string)$raw[$mapDob], 0, 10) : '',
+            'gender'          => $raw[$mapGender] ?? '',
+            'nationality'     => $raw[$mapNationality] ?? '',
         ];
 
         if (empty($mapped['full_name'])) {
@@ -2244,11 +2253,11 @@ class DirectoriesController extends AppController
         $mapped['gender_id']      = $this->matchGenderId($mapped['gender']);
         $mapped['nationality_id'] = $this->matchOrCreateNationalityId($mapped['nationality']);
 
-        if (isset($record['postaladdress1'])) {
-            $mapped['address'] = $record['postaladdress1'];
+        if (isset($raw['postaladdress1'])) {
+            $mapped['address'] = $raw['postaladdress1'];
         }
-        if (isset($record['district'])) {
-            $mapped['district'] = $record['district'];
+        if (isset($raw['district'])) {
+            $mapped['district'] = $raw['district'];
         }
 
 //        Log::debug(print_r(['SeychellesMapped' => $mapped], true));
@@ -2257,6 +2266,17 @@ class DirectoriesController extends AppController
             'data'  => [$mapped],
             'total' => 1
         ];
+    }
+
+    //POCOR-9590: restore prev helper — lowercases every payload key so mapping is
+    //case-insensitive (the external source varies key casing between test and production).
+    private function normalizeKeys(array $arr): array
+    {
+        $normalized = [];
+        foreach ($arr as $key => $value) {
+            $normalized[strtolower((string)$key)] = $value;
+        }
+        return $normalized;
     }
 
     //POCOR-5673 starts
