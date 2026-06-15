@@ -654,9 +654,15 @@ class UserBehavior extends Behavior
             return 'Failed to retrieve data from external identity source.';
         }
 
-        //POCOR-9590: shared strict mapper — same code path the add-from-external wizard uses
-        $apiData = $apiResponse->getJson();
-        ['mapped' => $externalValues, 'missing' => $missingMappings] = \User\Lib\ExternalIdentityMapper::map($apiData, $configs);
+        //POCOR-9590: shared lenient mapper — same code path the add-from-external wizard uses.
+        //Seychelles returns name keys with inconsistent casing and the source row often omits the
+        //first_name/last_name mappings, so pass the well-known Seychelles defaults (mapper matching
+        //is case-insensitive). Without this, sync left first_name/last_name empty / hard-failed.
+        $apiData  = $apiResponse->getJson();
+        $defaults = ($sourceName === 'Seychelles Civil Status')
+            ? \User\Lib\ExternalIdentityMapper::SEYCHELLES_DEFAULT_MAPPINGS
+            : [];
+        ['mapped' => $externalValues, 'missing' => $missingMappings] = \User\Lib\ExternalIdentityMapper::map($apiData, $configs, $defaults);
         if (!empty($missingMappings)) {
             $missingDetail = implode(', ', array_map(fn($f, $p) => "$f→$p", array_keys($missingMappings), $missingMappings));
             return 'External source response is missing keys for configured mappings: ' . $missingDetail;
