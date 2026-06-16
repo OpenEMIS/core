@@ -168,6 +168,21 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         }
 
         // Behind schedule — surface the most likely reason.
+        //POCOR-9734: a log file the cron user cannot write to is the prime suspect —
+        // the runtime fatals on its first write. Most often a root-owned log left
+        // behind by a manual root run (the very thing the wrapper now prevents).
+        if (($blocked = $this->blockedLogFile()) !== null) {
+            return [
+                'text' => $base . ' — ' . sprintf(
+                    /* %1$s = log path, %2$s = owning user */
+                    (string) __('the runtime cannot write its log file %1$s (blocked — owned by "%2$s"). The cron user has no write access; consult your system administrator.'),
+                    $blocked['path'],
+                    $blocked['owner']
+                ),
+                'severity' => 'stale',
+            ];
+        }
+
         if ($this->tickInProgress()) {
             return [
                 'text' => $base . ' — ' . __('a previous tick is still running (lock held); this minute was skipped to prevent overlap. Normal during a large send.'),
@@ -228,6 +243,50 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         @fclose($fp);
 
         return $held;
+    }
+
+    /**
+     * POCOR-9734: is any runtime log file unwritable by the web/cron user?
+     *
+     * is_writable() reflects the effective user running PHP (www-data), so a
+     * root-owned log left by a manual root run shows up here as not-writable.
+     * Returns {{ ['path' => ..., 'owner' => ...] }} for the first offending file,
+     * or null when everything is writable. Only existing files are checked — a
+     * missing log is created on first write, not a permission problem.
+     */
+    private function blockedLogFile(): ?array
+    {
+        $logDir = ROOT . DS . 'api' . DS . 'storage' . DS . 'logs';
+        $candidates = [
+            $logDir . DS . 'openemis-core-cron.log',
+            $logDir . DS . 'laravel-' . FrozenTime::now()->format('Y-m-d') . '.log',
+            $logDir,
+        ];
+
+        foreach ($candidates as $path) {
+            if (file_exists($path) && !is_writable($path)) {
+                return ['path' => $path, 'owner' => $this->fileOwnerName($path)];
+            }
+        }
+
+        return null;
+    }
+
+    /** POCOR-9734: resolve a path's owning username (falls back to numeric uid). */
+    private function fileOwnerName(string $path): string
+    {
+        $uid = @fileowner($path);
+        if ($uid === false) {
+            return (string) __('unknown');
+        }
+        if (function_exists('posix_getpwuid')) {
+            $info = @posix_getpwuid($uid);
+            if (!empty($info['name'])) {
+                return $info['name'];
+            }
+        }
+
+        return (string) $uid;
     }
 
     private function scalar($conn, string $sql)
