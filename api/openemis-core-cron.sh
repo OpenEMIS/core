@@ -76,7 +76,19 @@ fi
 #POCOR-9734: discover the interpreter instead of hardcoding an absolute path.
 PHP_BIN="${PHP_BIN:-$(command -v php || true)}"
 [ -n "$PHP_BIN" ] || { echo "openemis-core-cron: php not found in PATH" >&2; exit 127; }
-mkdir -p "$(dirname "$LOG_FILE")"
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+
+#POCOR-9734: zip-unzip installs (as opposed to a git checkout) frequently leave
+# storage/ owned by whoever ran unzip — often root — so the cron user cannot create
+# the lock/log and the tick silently does nothing. Fail LOUDLY instead: the message
+# lands in cron's mail/log and mirrors the Async Services heartbeat diagnostic, so the
+# cause is obvious rather than a mysteriously dead queue.
+LOG_DIR=$(dirname "$LOG_FILE")
+if [ ! -w "$LOG_DIR" ]; then
+    DIR_OWNER=$(stat -c '%U' "$LOG_DIR" 2>/dev/null || stat -f '%Su' "$LOG_DIR" 2>/dev/null || echo '?')
+    echo "openemis-core-cron: cannot write $SCRIPT_DIR/$LOG_DIR (owned by '$DIR_OWNER'); the cron user '$(id -un)' has no write access. chown the storage tree to the runtime user — see POCOR-9734." >&2
+    exit 1
+fi
 
 run_tick() {
     "$PHP_BIN" artisan openemis-core:run >> "$LOG_FILE" 2>&1
