@@ -16,6 +16,9 @@ set -euo pipefail
 # and fails on macOS/BSD; this POSIX form works everywhere.
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 cd "$SCRIPT_DIR"
+#POCOR-9734: absolute path to self — needed when we re-exec after cd, so the
+# drop-privilege tools don't resolve $0 against the new (changed) working dir.
+SCRIPT_PATH="$SCRIPT_DIR/$(basename -- "$0")"
 
 LOCK_FILE="storage/openemis-core-cron.lock"
 LOG_FILE="storage/logs/openemis-core-cron.log"
@@ -27,11 +30,16 @@ detect_run_user() {
     if [ -n "${OPENEMIS_RUN_USER:-}" ]; then
         printf '%s' "$OPENEMIS_RUN_USER"; return
     fi
-    local owner
-    owner=$(stat -c '%U' . 2>/dev/null || stat -f '%Su' . 2>/dev/null || true)
-    if [ -n "$owner" ] && [ "$owner" != "root" ]; then
-        printf '%s' "$owner"; return
-    fi
+    #POCOR-9734: key off whoever owns storage/ — that is where the lock and log
+    # live and who the web server/cron runs as. The app root may be owned by the
+    # deploy user (e.g. a person's account), so it is the wrong signal.
+    local owner target
+    for target in storage storage/logs .; do
+        owner=$(stat -c '%U' "$target" 2>/dev/null || stat -f '%Su' "$target" 2>/dev/null || true)
+        if [ -n "$owner" ] && [ "$owner" != "root" ]; then
+            printf '%s' "$owner"; return
+        fi
+    done
     local u
     for u in www-data apache nginx http; do
         if id "$u" >/dev/null 2>&1; then printf '%s' "$u"; return; fi
@@ -47,11 +55,11 @@ if [ "$(id -u)" = "0" ]; then
     RUN_USER=$(detect_run_user)
     if [ "$RUN_USER" != "root" ] && id "$RUN_USER" >/dev/null 2>&1; then
         if command -v runuser >/dev/null 2>&1; then
-            exec runuser -u "$RUN_USER" -- "$0" "$@"
+            exec runuser -u "$RUN_USER" -- "$SCRIPT_PATH" "$@"
         elif command -v setpriv >/dev/null 2>&1; then
-            exec setpriv --reuid "$RUN_USER" --regid "$RUN_USER" --init-groups "$0" "$@"
+            exec setpriv --reuid "$RUN_USER" --regid "$RUN_USER" --init-groups "$SCRIPT_PATH" "$@"
         elif command -v su >/dev/null 2>&1; then
-            exec su -s /bin/bash "$RUN_USER" "$SCRIPT_DIR/$(basename "$0")"
+            exec su -s /bin/bash "$RUN_USER" "$SCRIPT_PATH"
         fi
         # No privilege-drop tool available: fall through and self-heal ownership
         # of the artifacts after the run so the next www-data tick isn't blocked.
