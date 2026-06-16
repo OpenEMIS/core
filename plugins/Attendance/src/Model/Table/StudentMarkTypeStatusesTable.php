@@ -115,40 +115,46 @@ class StudentMarkTypeStatusesTable extends ControllerActionTable
 		}
 	}
 
-
-    //POCOR-9353
+    //POCOR-9353, POCOR-9746
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
-    {  
-        if (!empty($entity->education_grades) 
-            && !empty($entity->academic_period_id) 
-            && !empty($entity->student_attendance_mark_type_id) 
-            && !empty($entity->date_enabled)) {
+    {
+        if (
+            !empty($entity->education_grades) &&
+            !empty($entity->academic_period_id) &&
+            !empty($entity->date_enabled) &&
+            !empty($entity->date_disabled)
+        ) {
 
             $educationGrades = [];
             foreach ($entity->education_grades as $educationGrade) {
-                $educationGrades[] = $educationGrade->id;   
+                $educationGrades[] = $educationGrade->id;
             }
+            $conditions = [
+                $this->aliasField('academic_period_id') => $entity->academic_period_id,
+                'StudentMarkTypeStatusGrades.education_grade_id IN' => $educationGrades,
+                // Date overlap check
+                $this->aliasField('date_enabled <=') => $entity->date_disabled,
+                $this->aliasField('date_disabled >=') => $entity->date_enabled,
+            ];
 
+            // Exclude current record while editing
+            if (!$entity->isNew()) {
+                $conditions[$this->aliasField('id !=')] = $entity->id;
+            }
             $existingStatusCount = $this->find()
                 ->innerJoinWith('StudentMarkTypeStatusGrades')
-                ->where([
-                    $this->aliasField('academic_period_id') => $entity->academic_period_id,
-                    'StudentMarkTypeStatusGrades.education_grade_id IN' => $educationGrades,
-                    $this->aliasField('date_enabled <=') => $entity->date_disabled,
-                    $this->aliasField('date_disabled >=') => $entity->date_enabled,
-                ])
+                ->where($conditions)
                 ->count();
 
-            if ($existingStatusCount) {
-                $message = __('Attendance for the selected Education Grade already added.');
+            if ($existingStatusCount > 0) {
+                $message = __('Attendance for the selected Education Grade already added with in the date Range.');
                 $this->Alert->error($message, ['type' => 'string', 'reset' => true]);
-                // stop saving entity
                 $event->stopPropagation();
                 return false;
             }
         }
 
-        return $entity; // continue save if all ok
+        return $entity;
     }
 	
 	public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
