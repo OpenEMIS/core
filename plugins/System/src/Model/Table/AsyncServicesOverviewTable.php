@@ -36,6 +36,11 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
     private const STUCK_THRESHOLD_HOURS = 1;
     private const ACTIVE_STATUSES = [1, 2];
 
+    //POCOR-9734: heartbeat freshness tiers. The tick runs every minute, so a gap
+    // beyond BEHIND means it skipped at least one minute and we explain why.
+    private const HEARTBEAT_BEHIND_MINUTES = 2;
+    private const HEARTBEAT_STALE_MINUTES = 5;
+
     public function initialize(array $config): void
     {
         $this->setTable('system_processes');
@@ -104,6 +109,12 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         $webhookFailureCount = (int) $this->scalar($conn, 'SELECT COUNT(*) FROM webhook_queue WHERE status = -1');
         $queueBacklogCount   = (int) $this->scalar($conn, 'SELECT COUNT(*) FROM alert_queue WHERE status = 0');
         $latestHeartbeat     = $this->scalar($conn, 'SELECT MAX(created) FROM system_processes');
+        //POCOR-9734: jobs the runtime is actively working right now — a tick that
+        // overruns a minute is usually busy clearing one of these.
+        $activeProcessCount  = (int) $this->scalar(
+            $conn,
+            sprintf('SELECT COUNT(*) FROM system_processes WHERE status IN (%s)', implode(',', self::ACTIVE_STATUSES))
+        );
 
         return [
             'tiles' => [
@@ -112,7 +123,8 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
                 $this->tile('Failed Webhooks', $webhookFailureCount,['action' => 'WebhookFailures']),
                 $this->tile('Waiting Jobs',    $queueBacklogCount,  ['action' => 'QueueBacklog']),
             ],
-            'heartbeat' => $this->describeHeartbeat($latestHeartbeat),
+            //POCOR-9734: heartbeat now explains *why* it is behind, not just when it last beat.
+            'heartbeat' => $this->describeHeartbeat($latestHeartbeat, $activeProcessCount, $queueBacklogCount),
         ];
     }
 
@@ -130,20 +142,92 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
      * Returns a tuple {{ ['text' => ..., 'severity' => ok|attention|stale] }}
      * describing how fresh the last system_processes write is — a proxy for
      * "is the runtime ticking?".
+     *
+     * POCOR-9734: when the heartbeat is behind (the tick should fire every
+     * minute), a bare timestamp is unhelpful. We now say *why* it is behind:
+     *   - a previous tick is still running (lock held) — overlap was prevented;
+     *   - a large batch is being processed, so a tick runs longer than a minute;
+     *   - the tick is not running at all (cron stopped / not installed).
      */
-    private function describeHeartbeat(?string $latestHeartbeat): array
+    private function describeHeartbeat(?string $latestHeartbeat, int $activeProcessCount, int $queueBacklogCount): array
     {
         if ($latestHeartbeat === null) {
-            return ['text' => __('No heartbeat recorded yet.'), 'severity' => 'stale'];
+            return [
+                'text' => __('No heartbeat recorded yet — the runtime tick has never run. Check that the openemis-core cron is installed.'),
+                'severity' => 'stale',
+            ];
         }
-        $time = FrozenTime::parse($latestHeartbeat);
-        $minutesAgo = $time->diffInMinutes(FrozenTime::now());
-        $severity = $minutesAgo > 5 ? 'stale' : 'ok';
 
+        $time = FrozenTime::parse($latestHeartbeat);
+        $minutesAgo = (int) $time->diffInMinutes(FrozenTime::now());
+        $base = __('Last heartbeat: ') . $this->formatDateTime($time) . ' (' . $time->timeAgoInWords(['accuracy' => 'minute']) . ')';
+
+        // Beating on schedule — nothing to explain.
+        if ($minutesAgo < self::HEARTBEAT_BEHIND_MINUTES) {
+            return ['text' => $base, 'severity' => 'ok'];
+        }
+
+        // Behind schedule — surface the most likely reason.
+        if ($this->tickInProgress()) {
+            return [
+                'text' => $base . ' — ' . __('a previous tick is still running (lock held); this minute was skipped to prevent overlap. Normal during a large send.'),
+                'severity' => 'attention',
+            ];
+        }
+
+        $inFlight = $activeProcessCount + $queueBacklogCount;
+        if ($inFlight > 0) {
+            return [
+                'text' => $base . ' — ' . sprintf(
+                    /* %1$d active, %2$d waiting */
+                    (string) __('a large batch is being processed (%1$d active, %2$d waiting); ticks are running longer than a minute.'),
+                    $activeProcessCount,
+                    $queueBacklogCount
+                ),
+                'severity' => 'attention',
+            ];
+        }
+
+        // Nothing running and nothing queued, yet no recent tick → the cron is not firing.
         return [
-            'text' => __('Last heartbeat: ') . $this->formatDateTime($time), //POCOR-9719
-            'severity' => $severity,
+            'text' => $base . ' — ' . __('the runtime tick is not running. Check that the openemis-core cron is installed and active.'),
+            'severity' => $minutesAgo > self::HEARTBEAT_STALE_MINUTES ? 'stale' : 'attention',
         ];
+    }
+
+    /**
+     * POCOR-9734: is a runtime tick holding the cron lock right now?
+     *
+     * The wrapper (api/openemis-core-cron.sh) guards each tick with flock on
+     * `api/storage/openemis-core-cron.lock`, falling back to an atomic mkdir
+     * mutex (`*.lock.d`) on hosts without flock. We detect either: a held flock
+     * (non-blocking acquire fails) or the presence of the mkdir mutex dir.
+     * Best-effort — any failure means "cannot tell", so we report not-in-progress.
+     */
+    private function tickInProgress(): bool
+    {
+        $lock = ROOT . DS . 'api' . DS . 'storage' . DS . 'openemis-core-cron.lock';
+
+        // mkdir-mutex fallback (no-flock hosts): the dir exists only while a tick runs.
+        if (is_dir($lock . '.d')) {
+            return true;
+        }
+        if (!is_file($lock)) {
+            return false;
+        }
+
+        $fp = @fopen($lock, 'r');
+        if ($fp === false) {
+            return false;
+        }
+        // If we cannot take the lock non-blocking, a tick currently holds it.
+        $held = !@flock($fp, LOCK_EX | LOCK_NB);
+        if (!$held) {
+            @flock($fp, LOCK_UN);
+        }
+        @fclose($fp);
+
+        return $held;
     }
 
     private function scalar($conn, string $sql)
