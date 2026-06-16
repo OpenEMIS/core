@@ -12,6 +12,11 @@
 
 set -euo pipefail
 
+#POCOR-9734: create artifacts group-writable (lock/log => 664, mutex dir => 775)
+# to match the 775 storage tree. Any member of the storage group (www-data) can
+# then write — robust without the security smell of world-writable files.
+umask 0002
+
 #POCOR-9734: portable script-dir resolution. The old `readlink -f` is GNU-only
 # and fails on macOS/BSD; this POSIX form works everywhere.
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
