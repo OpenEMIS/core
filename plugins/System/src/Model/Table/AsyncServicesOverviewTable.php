@@ -20,7 +20,7 @@ use Cake\ORM\Query;
  *   2. Stuck Processes    — {{system_processes}} status IN (1,2) older than 1h
  *   3. Webhook Failures   — {{webhook_queue}} status = -1
  *   4. Queue Backlog      — {{alert_queue}} status = 0
- *   5. Heartbeat          — time since the most recent system_processes row
+ *   5. Heartbeat          — time since the last runtime_heartbeat tick ({{tasks}})
  *
  * Each tile links to its dedicated detail screen. The activity table
  * underneath shows the last system_processes rows so operators can see
@@ -108,7 +108,14 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         );
         $webhookFailureCount = (int) $this->scalar($conn, 'SELECT COUNT(*) FROM webhook_queue WHERE status = -1');
         $queueBacklogCount   = (int) $this->scalar($conn, 'SELECT COUNT(*) FROM alert_queue WHERE status = 0');
-        $latestHeartbeat     = $this->scalar($conn, 'SELECT MAX(created) FROM system_processes');
+        //POCOR-9734: read the real heartbeat — the dedicated runtime_heartbeat row that
+        // openemis-core:run rewrites every tick (api OpenemisCoreRunCommand::recordHeartbeat).
+        // The old MAX(created) FROM system_processes only saw generic job rows, so it kept
+        // reporting "tick not running" even while the cron beat every minute.
+        $latestHeartbeat     = $this->scalar(
+            $conn,
+            "SELECT MAX(COALESCE(completed_at, started_at)) FROM tasks WHERE task_type = 'runtime_heartbeat'"
+        );
         //POCOR-9734: jobs the runtime is actively working right now — a tick that
         // overruns a minute is usually busy clearing one of these.
         $activeProcessCount  = (int) $this->scalar(
@@ -140,8 +147,8 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
 
     /**
      * Returns a tuple {{ ['text' => ..., 'severity' => ok|attention|stale] }}
-     * describing how fresh the last system_processes write is — a proxy for
-     * "is the runtime ticking?".
+     * describing how fresh the last runtime_heartbeat tick is — i.e. whether the
+     * openemis-core runtime is actually ticking.
      *
      * POCOR-9734: when the heartbeat is behind (the tick should fire every
      * minute), a bare timestamp is unhelpful. We now say *why* it is behind:
