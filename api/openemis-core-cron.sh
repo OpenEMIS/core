@@ -29,8 +29,8 @@ LOCK_FILE="storage/openemis-core-cron.lock"
 LOG_FILE="storage/logs/openemis-core-cron.log"
 
 #POCOR-9734: determine the runtime user that *should* own the artifacts.
-# Override with OPENEMIS_RUN_USER; otherwise take the owner of the app root,
-# then fall back to the first web user that exists on this host.
+# Override with OPENEMIS_RUN_USER; otherwise take the owner of storage/,
+# then fall back to the first known web user that exists on this host.
 detect_run_user() {
     if [ -n "${OPENEMIS_RUN_USER:-}" ]; then
         printf '%s' "$OPENEMIS_RUN_USER"; return
@@ -45,8 +45,10 @@ detect_run_user() {
             printf '%s' "$owner"; return
         fi
     done
+    #POCOR-9734: last resort only (storage owner was root/undetectable) — cover the
+    # common web users across distros: Debian/Ubuntu, RHEL, Alpine, Arch, BSD, macOS.
     local u
-    for u in www-data apache nginx http; do
+    for u in www-data apache httpd nginx http www _www; do
         if id "$u" >/dev/null 2>&1; then printf '%s' "$u"; return; fi
     done
     printf '%s' "www-data"
