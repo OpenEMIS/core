@@ -417,7 +417,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
         } else {
 
             if ($requestedStaffChangeCode == 'CHANGE_OF_SHIFT') {
-                $entity->status_id = $approved_status;
+                //$entity->status_id = $approved_status;
+                $entity->status_id = $entity->status_id; // POCOR-9722
                 $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
@@ -426,6 +427,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $InstitutionPositions->updateAll(
                         [
                             'shift_id' => $entity->new_shift,
+                            'assignee_id' => $entity->assignee_id, // POCOR-9722
                             'modified_user_id' => 1,
                             'modified' => new Time('NOW')
                         ],
@@ -1647,7 +1649,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $staff_change_type_code = $this->getStaffChangeCodeFromRequest();
-        if(($staff_change_type_code == 'CHANGE_OF_SHIFT') || ($staff_change_type_code == 'HOMEROOM_TEACHER')){
+        if(($staff_change_type_code == 'HOMEROOM_TEACHER')){
             $entity->assignee_id = -1;
             return $entity->assignee_id;
         }

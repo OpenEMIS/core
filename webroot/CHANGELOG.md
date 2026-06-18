@@ -1,3 +1,25 @@
+### [5.13.0] - 2026-06-10
+- Implemented: Develop change to Reports > Institutions and Reports > Students and and Reports > Staff to include the option to select multiple institutions 
+- Bug Fixed: Institution>Attendance>Staff>Edit: Unable to save record
+- Bug Fixed: Institutitions> Students > Withdraw/Enroll : Error seen "Please add value".
+- Bug Fixed: Administration > Communication > Alert Rules > Create Alert rule for student enrollment > View/Edit : Gives 404
+- Bug Fixed: Institutions>Attendance>Students>Edit>Mark attendance>Return: On a day when No Scheduled Classes were already chosen, the users are unable to mark attendance later.
+- Bug Fixed: Institutions>Performance>GPA: Unable to delete cumulative gpa
+- Bug Fixed: Reports > Institutions > Institutions > View : Unable to view a report generated for single institution.
+- Bug Fixed: Institution>Staff>Edit: The shift change request automatically goes to the Approved Status without any manual approval.
+- Bug Fixed: Administrations > System Configurations > Columns for Student List: should be able to choose the Identity Type from System Configurations page.
+- Bug Fixed: C1. SQL injection via ORDER BY in the v5 CRUD API
+
+### [5.12.0] - 2026-06-03
+- Implemented: Develop Async Runtime Consolidation - Part 2
+- Implemented: Develop notification banner for all profile features
+- Implemented: Develop changes to the Reports > Institution > Programmes Report to include institution type
+- Bug Fixed: Security fix for v5 API-Core Part Two
+- Bug Fixed: Institutions>Students>Add: OpenEMIS ID is not being generated correctly
+- Bug Fixed: Institution>Students>Add: No other country but Turks & Caicos is visible.
+- Bug Fixed: Registrations:When creating an user from registration, last executed user is not showing correctly
+- Bug Fixed: Administration>system>survey>forms>status>add: the forms not having filters is giving error on submitting.
+
 ### [5.11.1] - 2026-05-22
 - Bug Fixed: Institution>Attendance>Staff>Edit: The changed time values did not take.
 - Bug Fixed: Institutions>Add: Giving message "For Developer: You should put institution_id into query string first"
