@@ -37,11 +37,23 @@ class ExpenditureTable extends AppTable  {
         $endDate = (!empty($requestData->to_date))? date('Y-m-d',strtotime($requestData->to_date)): null;
         
         $conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['Institutions.id'] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions['Institutions.id IN'] = $filterInstitutionIds;
         }
         if ($areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId;

@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class TextbooksTable extends AppTable  {
 
@@ -37,6 +38,42 @@ class TextbooksTable extends AppTable  {
             'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
+    }
+
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->getAlias()]['feature'] == 'Report.InstitutionTextbooks') {
+            $options['validate'] = 'institutionTextbooks';
+        }
+    }
+
+    public function validationInstitutionTextbooks(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
     }
 
     public function beforeAction(EventInterface $event)
@@ -240,7 +277,8 @@ class TextbooksTable extends AppTable  {
 
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
-                    $attr['attr']['multiple'] = false;
+                    $attr['attr']['multiple'] = true;
+                    unset($institutionOptions['']);
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }

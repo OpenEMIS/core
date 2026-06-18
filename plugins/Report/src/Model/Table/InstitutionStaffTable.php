@@ -64,6 +64,19 @@ class InstitutionStaffTable extends AppTable
         $areaLevelId = $requestData->area_level_id; //POCOR-7794
         $academicPeriodId = $requestData->academic_period_id;
 
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $institutionIds = [(int)$institutionId];
+        }
+
         if ($statusId != 0 && $statusId != -1) {
             $query->where([
                 $this->aliasField('staff_status_id') => $statusId
@@ -75,9 +88,9 @@ class InstitutionStaffTable extends AppTable
                 $this->aliasField('staff_type_id') => $typeId
             ]);
         }
-        if ($institutionId != 0) {
+        if (!empty($institutionIds)) {
             $query->where([
-                $this->aliasField('institution_id') => $institutionId
+                $this->aliasField('institution_id') . ' IN' => $institutionIds
             ]);
         }
         //POCOR-7794 start

@@ -47,10 +47,23 @@ class StaffLeaveTable extends AppTable {
         $reportStartDate = $requestData->report_start_date;
         $reportEndDate = $requestData->report_end_date;
         $areaId = $requestData->area_education_id;
-        $condition = [];
+        $conditions = [];
 
-        if(isset($institutionId) && !empty($institutionId) && $institutionId > 0){
-            $conditions[$this->aliasfield('institution_id')] = $institutionId;
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $institutionIds = [(int)$institutionId];
+        }
+
+        if (!empty($institutionIds)) {
+            $conditions[$this->aliasfield('institution_id') . ' IN'] = $institutionIds;
         }
         if(isset($position) && !empty($position)){
             $conditions['InstitutionPositions.staff_position_title_id'] = $position;

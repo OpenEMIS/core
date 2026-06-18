@@ -56,12 +56,26 @@ class ExaminationsTable extends AppTable
                     }
                     return false;
                 })
-                ->notEmpty('institution_id', __('This field cannot be left empty'), function ($context) {
-                    if (isset($context['data']['feature'])) {
-                        return in_array($context['data']['feature'], ['Report.NotRegisteredStudents', 'Report.ExaminationResults']);
-                    }
-                    return false;
-                });
+                ->add('institution_id', 'required', [
+                    'rule' => function ($value, $context) {
+                        if (!isset($context['data']['feature']) || !in_array($context['data']['feature'], ['Report.NotRegisteredStudents', 'Report.ExaminationResults'])) {
+                            return true;
+                        }
+                        if (!empty($context['data']['reload'])) {
+                            return true;
+                        }
+                        if (empty($value) || !isset($value['_ids'])) {
+                            return false;
+                        }
+                        $ids = (array)$value['_ids'];
+                        $ids = array_filter($ids, function ($v) {
+                            return $v !== '' && $v !== null;
+                        });
+
+                        return !empty($ids);
+                    },
+                    'message' => __('This field cannot be left empty')
+                ]);
     }
 
     public function beforeAction(EventInterface $event)
@@ -307,7 +321,13 @@ class ExaminationsTable extends AppTable
 
                 $attr['options'] = !empty($institutionOptions)? $institutionOptions: [];
                 $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
+                if (in_array($feature, ['Report.ExaminationResults', 'Report.NotRegisteredStudents'])) { //POCOR-8417
+                    $attr['attr']['multiple'] = true;
+                    unset($institutionOptions['']);
+                    $attr['options'] = $institutionOptions;
+                } else {
+                    $attr['attr']['multiple'] = false;
+                }
                 $attr['select'] = false;
 
             } else if (in_array($feature, ['Report.NotRegisteredStudents'])) {
@@ -337,7 +357,13 @@ class ExaminationsTable extends AppTable
 
                 $attr['options'] = !empty($institutionOptions)? $institutionOptions: [];
                 $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
+                if (in_array($feature, ['Report.ExaminationResults', 'Report.NotRegisteredStudents'])) { //POCOR-8417
+                    $attr['attr']['multiple'] = true;
+                    unset($institutionOptions['']);
+                    $attr['options'] = $institutionOptions;
+                } else {
+                    $attr['attr']['multiple'] = false;
+                }
                 $attr['select'] = false;
 
             } else {
