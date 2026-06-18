@@ -7,7 +7,7 @@ use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table; // POCOR-8929
@@ -70,7 +70,7 @@ class InstitutionClassesTable extends AppTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
         return $attr;
