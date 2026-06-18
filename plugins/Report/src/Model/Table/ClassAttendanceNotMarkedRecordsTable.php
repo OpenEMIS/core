@@ -78,10 +78,11 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $startDay = $sheetData['startDay'];
         $endDay = $sheetData['endDay'];
         $schoolClosedDays = $this->schoolClosedDays;
-        $institution_id = $requestData->institution_id;
+        $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $selectedArea = $requestData->area_education_id;
         $where = [];
+
         //POCOR-8825 start
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
@@ -94,8 +95,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             }
                 $where['Institutions.area_id IN'] = $allselectedAreas;
         } //POCOR-8825 end
-        if ($institution_id != 0) {
-            $where['Institutions.id'] = $institution_id;
+        if ($institutionId != 0 && $institutionId != '0' && $institutionId != '') {
+            $where['Institutions.id'] = $institutionId;
         }
         $query
             ->find('byGrades', [

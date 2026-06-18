@@ -75,6 +75,19 @@ class StudentAbsencesTable extends AppTable
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
 
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1';
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1';
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0' && $institutionId != '-1') {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
         // POCOR-7479
         $institutionTypeId = $requestData->institution_type_id;
         $educationGradeId = $requestData->education_grade_id;
@@ -92,8 +105,8 @@ class StudentAbsencesTable extends AppTable
                                                 ])
                         ->where(['institution_type_id' => $institutionTypeId])
                         ->toArray();
-        if ($institutionId > 0) {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
         }
 
         if ($educationGradeId != -1) {
@@ -114,9 +127,6 @@ class StudentAbsencesTable extends AppTable
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
 
-        if (!empty($institutionId) && $institutionId != '-1') {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
-        }
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);

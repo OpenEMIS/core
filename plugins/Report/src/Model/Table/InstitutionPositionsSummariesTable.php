@@ -48,24 +48,38 @@ class InstitutionPositionsSummariesTable extends AppTable
         $areaId = $requestData->area_education_id;
         $selectedArea = $requestData->area_education_id;
         $where = [];
-        
 
         if ($statusFilter == 0) {
-            $where = NULL;
-            $statusFilters = NULL;
-        }else{
-            $where[$this->aliasField('status_id')] = $statusFilter;  
-           $statusFilters = "AND institution_positions.status_id = ".$statusFilter;
+            $where = null;
+            $statusFilters = null;
+        } else {
+            $where[$this->aliasField('status_id')] = $statusFilter;
+            $statusFilters = 'AND institution_positions.status_id = ' . $statusFilter;
         }
         if ($academicperiodid != -1) {
             // Join uses table name 'academic_periods' as alias, not the model alias AcademicPeriods
             $where['academic_periods.id'] = $academicperiodid;
         }
-        if ($institutionId == 0) { 
-           $condition = NULL;
-        }else{
-            $where['institutions.id'] = $institutionId; 
-            $condition = "AND institution_staff.institution_id = ".$institutionId;
+
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $institutionIds = [(int)$institutionId];
+        }
+
+        if (empty($institutionIds)) {
+            $condition = null;
+        } else {
+            $where['institutions.id IN'] = $institutionIds;
+            $idsList = implode(',', array_map('intval', $institutionIds));
+            $condition = 'AND institution_staff.institution_id IN (' . $idsList . ')';
         }
 
         //POCOR-7407 start

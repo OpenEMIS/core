@@ -68,7 +68,23 @@ class SurveysTable extends AppTable
             ->notEmptyString('academic_period_id')
             ->notEmptyString('survey_form_id')
             ->notEmptyString('institution_status')
-            ->notEmptyString('institution_id');
+            ->add('institution_id', 'required', [
+                'rule' => function ($value, $context) {
+                    if (!empty($context['data']['reload'])) {
+                        return true;
+                    }
+                    if (empty($value) || !isset($value['_ids'])) {
+                        return false;
+                    }
+                    $ids = (array)$value['_ids'];
+                    $ids = array_filter($ids, function ($v) {
+                        return $v !== '' && $v !== null;
+                    });
+
+                    return !empty($ids);
+                },
+                'message' => __('This field cannot be left empty')
+            ]);
 
         $feature = $this->request->getData($this->getAlias())['feature'];
         $registryAlias = $this->getRegistryAlias();
@@ -476,10 +492,22 @@ class SurveysTable extends AppTable
     private function conditionsWithInstitutionAndArea(array $conditions, mixed $requestData): array
     {
         $institutions = self::getDynamicTableInstance('Institution.Institutions');
-        $institutionID = $requestData->institution_id;
+        $institutionId = $requestData->institution_id;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
 
-        if ($institutionID > 0) {
-            $conditions['Institutions.id'] = $institutionID;
+        if (!empty($filterInstitutionIds)) {
+            $conditions['Institutions.id IN'] = $filterInstitutionIds;
         } else {
             $areaId = $requestData->area_id;
             $selectedArea = $requestData->area_id;
@@ -1069,7 +1097,12 @@ public function getChildren($id, $idArray)
 
                 $attr['type'] = 'chosenSelect';
                 $attr['onChangeReload'] = true;
-                $attr['attr']['multiple'] = false;
+                if (in_array($feature, ['Report.Surveys', 'Report.SurveysReport'])) { //POCOR-8417
+                    $attr['attr']['multiple'] = true;
+                    unset($institutionOptions['']);
+                } else {
+                    $attr['attr']['multiple'] = false;
+                }
                 $attr['options'] = $institutionOptions;
                 $attr['attr']['required'] = true;
             }

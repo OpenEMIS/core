@@ -17,6 +17,20 @@ class WorkflowsTable extends AppTable
 {
     use OptionsTrait;
 
+    private $institutionWorkflowModels = [
+        'Report.WorkflowInstitution',
+        'Report.WorkflowInstitutionPosition',
+        'Report.WorkflowStaffPositionProfile',
+        'Report.WorkflowVisitRequest',
+        'Report.WorkflowInstitutionCase',
+        'Report.WorkflowStaffTransferIn',
+        'Report.WorkflowStaffTransferOut',
+        'Report.WorkflowStudentWithdraw',
+        'Report.WorkflowStudentAdmission',
+        'Report.WorkflowStudentTransferIn',
+        'Report.WorkflowStudentTransferOut',
+    ];
+
     private $modelList = [
         'Report.WorkflowRecords' => [
             'Report.WorkflowStaffLeave' => 'Staff > Career > Leave',
@@ -92,22 +106,7 @@ class WorkflowsTable extends AppTable
         } else {
             $selectedFeature = $this->request->getData($this->getAlias())['model'];
         }
-        if (in_array($selectedFeature,
-        [
-            'Report.WorkflowStudentTransferIn',
-            'Report.WorkflowStudentTransferOut',
-            'Report.WorkflowInstitutionCase',
-            'Report.WorkflowInstitution',
-            'Report.WorkflowInstitutionPosition',
-            'Report.WorkflowStaffPositionProfile',
-            'Report.WorkflowVisitRequest',
-            'Report.WorkflowStaffTransferIn',
-            'Report.WorkflowStaffTransferOut',
-            'Report.WorkflowStudentWithdraw',
-            'Report.WorkflowStudentAdmission',
-            'Report.WorkflowStudentTransferIn'
-        ])
-        ) {
+        if (in_array($selectedFeature, $this->institutionWorkflowModels)) {
         $this->ControllerAction->field('institution_id', [
             'select' => false,
             'type' => 'select'
@@ -167,10 +166,7 @@ class WorkflowsTable extends AppTable
     {
         if (isset($request->getData($this->getAlias())['model'])) {
             $feature = $this->request->getData($this->getAlias())['model'];
-            if (in_array($feature, ['Report.WorkflowInstitution', 'Report.WorkflowInstitutionPosition', 'Report.WorkflowStaffPositionProfile'
-                , 'Report.WorkflowVisitRequest', 'Report.WorkflowInstitutionCase', 'Report.WorkflowStaffTransferIn',
-                'Report.WorkflowStaffTransferOut', 'Report.WorkflowStudentWithdraw', 'Report.WorkflowStudentAdmission',
-                'Report.WorkflowStudentTransferIn', 'Report.WorkflowStudentTransferOut'])) {
+            if (in_array($feature, $this->institutionWorkflowModels)) {
                 $attr['options'] = $this->AcademicPeriods->getYearList();
                 $attr['default'] = $this->AcademicPeriods->getCurrent();
             }
@@ -181,10 +177,7 @@ class WorkflowsTable extends AppTable
     {
         if (isset($request->getData($this->getAlias())['model'])) {
             $feature = $this->request->getData($this->getAlias())['model'];
-            if (in_array($feature, ['Report.WorkflowInstitution','Report.WorkflowInstitutionPosition','Report.WorkflowStaffPositionProfile'
-                ,'Report.WorkflowVisitRequest','Report.WorkflowInstitutionCase','Report.WorkflowStaffTransferIn',
-                'Report.WorkflowStaffTransferOut','Report.WorkflowStudentWithdraw','Report.WorkflowStudentAdmission',
-                'Report.WorkflowStudentTransferIn','Report.WorkflowStudentTransferOut'])) {
+            if (in_array($feature, $this->institutionWorkflowModels)) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
 
@@ -210,10 +203,7 @@ class WorkflowsTable extends AppTable
     {
         if (isset($request->getData($this->getAlias())['model'])) {
             $feature = $this->request->getData($this->getAlias())['model'];
-            if (in_array($feature, ['Report.WorkflowInstitution', 'Report.WorkflowInstitutionPosition', 'Report.WorkflowStaffPositionProfile'
-                , 'Report.WorkflowVisitRequest', 'Report.WorkflowInstitutionCase', 'Report.WorkflowStaffTransferIn',
-                'Report.WorkflowStaffTransferOut', 'Report.WorkflowStudentWithdraw', 'Report.WorkflowStudentAdmission',
-                'Report.WorkflowStudentTransferIn', 'Report.WorkflowStudentTransferOut'])) {
+            if (in_array($feature, $this->institutionWorkflowModels)) {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
                 $entity = $attr['entity'];
                 $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
@@ -281,17 +271,19 @@ class WorkflowsTable extends AppTable
             
             $institutionList = $institutionQuery->toArray();
         }
-        if (in_array($feature, ['Report.WorkflowInstitution','Report.WorkflowInstitutionPosition','Report.WorkflowStaffPositionProfile'
-                ,'Report.WorkflowVisitRequest','Report.WorkflowInstitutionCase','Report.WorkflowStaffTransferIn',
-                'Report.WorkflowStaffTransferOut','Report.WorkflowStudentWithdraw','Report.WorkflowStudentAdmission',
-                'Report.WorkflowStudentTransferIn','Report.WorkflowStudentTransferOut']) && count($institutionList) > 1) {
-            $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
+        if (in_array($feature, $this->institutionWorkflowModels) && count($institutionList) > 1) {
+            $institutionOptions = ['0' => __('All Institutions')] + $institutionList;
         } else {
-            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
+            $institutionOptions = $institutionList;
+        }
+        if (in_array($feature, $this->institutionWorkflowModels)) { //POCOR-8417
+            $attr['attr']['multiple'] = true;
+        } else {
+            $attr['attr']['multiple'] = false;
+            $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionOptions;
         }
         $attr['type'] = 'chosenSelect';
         $attr['onChangeReload'] = true;
-        $attr['attr']['multiple'] = false;
         $attr['options'] = $institutionOptions;
         $attr['attr']['required'] = true;
         return $attr;
@@ -369,11 +361,65 @@ class WorkflowsTable extends AppTable
                 ];
             }
         }
+
+        //POCOR-8417
+        if (isset($requestData[$this->getAlias()]['model'])
+            && in_array($requestData[$this->getAlias()]['model'], $this->institutionWorkflowModels)) {
+            $patchOptions['validate'] = 'WorkflowInstitution';
+        }
+    }
+
+    public function validationWorkflowInstitution(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    private function parseFilterInstitutionIds($institutionId): array
+    {
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        return $filterInstitutionIds;
+    }
+
+    private function isAllInstitutionsSelected($institutionId): bool
+    {
+        return empty($this->parseFilterInstitutionIds($institutionId));
     }
 
      public function onUpdateFieldReportStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        if ($request->getData()['Workflows']['institution_id'] == 0) {
+        $institutionId = $request->getData()['Workflows']['institution_id'] ?? null;
+        if ($this->isAllInstitutionsSelected($institutionId)) {
             $attr['type'] = 'date';
             $attr['null'] = false;
             $attr['label'] = __('Start Date');
@@ -385,7 +431,8 @@ class WorkflowsTable extends AppTable
 
     public function onUpdateFieldReportEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-       if ($request->getData()['Workflows']['institution_id'] == 0) {
+        $institutionId = $request->getData()['Workflows']['institution_id'] ?? null;
+        if ($this->isAllInstitutionsSelected($institutionId)) {
             $attr['type'] = 'date';
             $attr['null'] = false;
             $attr['label'] = __('End Date');

@@ -139,8 +139,24 @@ class MealsTable extends AppTable
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            ->notEmpty('institution_id')
             ->notEmpty('area_education_id');
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
         return $validator;
     }
     //POCOR-9268 Starts
@@ -148,8 +164,24 @@ class MealsTable extends AppTable
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            ->notEmpty('institution_id')
             ->notEmpty('area_education_id');
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
         return $validator;
     }//POCOR-9268 Ends
 
@@ -291,15 +323,20 @@ class MealsTable extends AppTable
                     $attr['attr']['required'] = true;
                 } else {
 
-                    if (in_array($feature, ['Report.MealSummary']) && count($institutionList) > 1) {
+                    if (in_array($feature, ['Report.MealSummary', 'Report.MealDetails']) && count($institutionList) > 1) {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', '0' => __('All Institutions')] + $institutionList;
                     } else {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
-                   
+
+                    if (in_array($feature, ['Report.MealSummary', 'Report.MealDetails'])) { //POCOR-8417
+                        $attr['attr']['multiple'] = true;
+                        unset($institutionOptions['']);
+                    } else {
+                        $attr['attr']['multiple'] = false;
+                    }
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
-                    $attr['attr']['multiple'] = false;
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }
