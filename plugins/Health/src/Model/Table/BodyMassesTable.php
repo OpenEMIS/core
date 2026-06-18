@@ -73,7 +73,7 @@ class BodyMassesTable extends ControllerActionTable
         }
     }//POCOR-6255 end
 
-    public function validationDefaultbkp(Validator $validator): Validator
+   /* public function validationDefaultbkp(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
@@ -156,115 +156,116 @@ class BodyMassesTable extends ControllerActionTable
                     },
                 ],
             ]);
-    }
+    }*/
     public function validationDefault(Validator $validator): Validator
-{
-    $validator = parent::validationDefault($validator);
-    $validator->setProvider('custom', $this);
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
 
-    $validator
-        ->add('height', [
-            'notZero' => [
-                'rule' => ['comparison', '>', 0],
-                'message' => __('Height must be greater than 0'),
-                'last' => true
-            ],
-            'validHeight' => [
-                'rule' => ['range', 0, 300],
-                'message' => __('Height must be between 0 and 300'),
-                'last' => true
-            ],
-            'validateDecimal' => [
-                'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
-                'message' => __('Height can have up to 2 decimal places')
-            ],
-            'validateMinHeight' => [
-                'rule' => ['validateMinHeightValue', 'StudentMinimumHeight'],
-                'provider' => 'table'
-            ],
-            'validateMaxHeight' => [
-                'rule' => ['validateMaxHeightValue', 'StudentMaximumHeight'],
-                'provider' => 'table'
-            ],
-        ])
+        $validator
+            ->notEmpty('academic_period_id')
+            ->add('height', [
+                'notZero' => [
+                    'rule' => ['comparison', '>', 0],
+                    'message' => __('Height must be greater than 0'),
+                    'last' => true
+                ],
+                'validHeight' => [
+                    'rule' => ['range', 0, 300],
+                    'message' => __('Height must be between 0 and 300'),
+                    'last' => true
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                    'message' => __('Height can have up to 2 decimal places')
+                ],
+                'validateMinHeight' => [
+                    'rule' => ['validateMinHeightValue', 'StudentMinimumHeight'],
+                    'provider' => 'table'
+                ],
+                'validateMaxHeight' => [
+                    'rule' => ['validateMaxHeightValue', 'StudentMaximumHeight'],
+                    'provider' => 'table'
+                ],
+            ])
 
-        ->add('weight', [
-            'notZero' => [
-                'rule' => ['comparison', '>', 0],
-                'message' => __('Weight must be greater than 0'),
-                'last' => true
-            ],
-            'validWeight' => [
-                'rule' => ['range', 0, 700],
-                'message' => __('Weight must be between 0 and 700'),
-                'last' => true
-            ],
-            'validateDecimal' => [
-                'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
-                'message' => __('Weight can have up to 2 decimal places')
-            ],
-            'validateMinWeight' => [
-                'rule' => ['validateMinWeightValue', 'StudentMinimumWeight'],
-                'provider' => 'table'
-            ],
-            'validateMaxWeight' => [
-                'rule' => ['validateMaxWeightValue', 'StudentMaximumWeight'],
-                'provider' => 'table'
-            ],
-        ])
+            ->add('weight', [
+                'notZero' => [
+                    'rule' => ['comparison', '>', 0],
+                    'message' => __('Weight must be greater than 0'),
+                    'last' => true
+                ],
+                'validWeight' => [
+                    'rule' => ['range', 0, 700],
+                    'message' => __('Weight must be between 0 and 700'),
+                    'last' => true
+                ],
+                'validateDecimal' => [
+                    'rule' => ['decimal', null, '/^[0-9]+(\.[0-9]{1,2})?$/'],
+                    'message' => __('Weight can have up to 2 decimal places')
+                ],
+                'validateMinWeight' => [
+                    'rule' => ['validateMinWeightValue', 'StudentMinimumWeight'],
+                    'provider' => 'table'
+                ],
+                'validateMaxWeight' => [
+                    'rule' => ['validateMaxWeightValue', 'StudentMaximumWeight'],
+                    'provider' => 'table'
+                ],
+            ])
 
-        ->add('date', [
-            'ruleUnique' => [
-                'rule' => ['validateUnique', ['scope' => ['security_user_id', 'date']]],
-                'provider' => 'table',
-                'message' => __('A record already exists for this date.')
-            ],
-            'dateWithinPeriod' => [
-                'rule' => function ($value, $context) {
+            ->add('date', [
+                'ruleUnique' => [
+                    'rule' => ['validateUnique', ['scope' => ['security_user_id', 'date']]],
+                    'provider' => 'table',
+                    'message' => __('A record already exists for this date.')
+                ],
+                'dateWithinPeriod' => [
+                    'rule' => function ($value, $context) {
 
-                    $inputDate = new Date($value);
+                        $inputDate = new Date($value);
 
-                    if (!empty($context['data']['academic_period_id'])) {
+                        if (!empty($context['data']['academic_period_id'])) {
 
-                        $academicPeriodEntity = $this->AcademicPeriods
-                            ->find()
-                            ->where([
-                                $this->AcademicPeriods->aliasField('id') =>
-                                $context['data']['academic_period_id']
-                            ])
-                            ->first();
+                            $academicPeriodEntity = $this->AcademicPeriods
+                                ->find()
+                                ->where([
+                                    $this->AcademicPeriods->aliasField('id') =>
+                                    $context['data']['academic_period_id']
+                                ])
+                                ->first();
 
-                        if ($academicPeriodEntity) {
+                            if ($academicPeriodEntity) {
 
-                            $academicStartDate = $academicPeriodEntity->start_date;
-                            $academicEndDate = $academicPeriodEntity->end_date;
+                                $academicStartDate = $academicPeriodEntity->start_date;
+                                $academicEndDate = $academicPeriodEntity->end_date;
 
-                            if ($inputDate >= $academicStartDate &&
-                                $inputDate <= $academicEndDate) {
-                                return true;
+                                if ($inputDate >= $academicStartDate &&
+                                    $inputDate <= $academicEndDate) {
+                                    return true;
+                                }
+
+                                return $this->getMessage(
+                                    'UserBodyMasses.dateNotWithinPeriod',
+                                    [
+                                        'sprintf' => [
+                                            date('d-m-Y', strtotime($academicStartDate)),
+                                            date('d-m-Y', strtotime($academicEndDate))
+                                        ]
+                                    ]
+                                );
                             }
 
-                            return $this->getMessage(
-                                'UserBodyMasses.dateNotWithinPeriod',
-                                [
-                                    'sprintf' => [
-                                        date('d-m-Y', strtotime($academicStartDate)),
-                                        date('d-m-Y', strtotime($academicEndDate))
-                                    ]
-                                ]
-                            );
+                            return __('Invalid academic period');
                         }
 
-                        return __('Invalid academic period');
+                        return true;
                     }
+                ]
+            ]);
 
-                    return true;
-                }
-            ]
-        ]);
-
-    return $validator;
-}
+        return $validator;
+    }
 
     public function findIndex(Query $query, array $options)
     {
@@ -479,7 +480,7 @@ class BodyMassesTable extends ControllerActionTable
     //POCOR-9507
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $file = $this->request->getData('Medications.file_content');
+        $file = $this->request->getData('BodyMasses.file_content');
 
         if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) 
         {

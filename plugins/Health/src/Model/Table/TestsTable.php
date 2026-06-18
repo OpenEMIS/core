@@ -47,7 +47,7 @@ class TestsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']); //POCOR-8293
-        $this->field('file_content', ['after' => 'health_test_type_id','attr' => ['value' => $userID, 'label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['value' => $userID, 'label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -242,7 +242,7 @@ class TestsTable extends ControllerActionTable
     //POCOR-9507
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $file = $this->request->getData('Medications.file_content');
+        $file = $this->request->getData('Tests.file_content');
 
         if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) 
         {
