@@ -337,7 +337,7 @@ class WorkflowBehavior extends Behavior
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         /** POCOR-6928 - added staff_change_type_id condition to skip Change-of-shift from workflow steps*/
-        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN && $entity->staff_change_type_id != 5) {
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) { //POCOR-9722 - removed && $entity->staff_change_type_id != 5 condition
             $this->setStatusAsOpen($entity);
         }
 
@@ -859,6 +859,7 @@ class WorkflowBehavior extends Behavior
 
             $workflowModel = isset($modelName) ? $modelName : $this->getConfig('model');
             $workflow = $this->getWorkflow($workflowModel, $entity);
+            $workflowId = $entity['status']['workflow_id'];
 
             if (!empty($workflow)) {
                 $ControllerAction->field('status_id', ['visible' => false]);
@@ -921,14 +922,50 @@ class WorkflowBehavior extends Behavior
                         $rowData[] = $transitionDisplay;
                         $rowData[] = __($transition->workflow_action_name);
                         $rowData[] = nl2br(htmlspecialchars($transition->comment));
-                        $rowData[] = $transition->created_user->name;
-                        $rowData[] = $transition->created->format('Y-m-d H:i:s');
+                      //  $rowData[] = $transition->created_user->name;
 
+                        // POCOR-9677 Get user from role in the transition (based on step)
+                        $executerName = '';
+                        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+                        $WorkflowStepRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
+                        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                        $step = $WorkflowSteps->find()
+                            ->where([
+                                'name' => $transition->workflow_step_name,
+                                'workflow_id' => $workflowId
+                            ])
+                            ->first();
+
+                         if (!empty($step)) { 
+                            $stepRole = $WorkflowStepRoles->find()
+                                ->where([
+                                    'workflow_step_id' => $step->id
+                                ])
+                                ->first();
+                            if (!empty($stepRole)) { 
+                                $user = $SecurityGroupUsers->find()
+                                    ->contain(['Users'])
+                                    ->where([
+                                        'security_role_id' => $stepRole->security_role_id,
+                                    ])
+                                    ->order(['SecurityGroupUsers.id ASC'])
+                                    ->first();
+                                if ($user && $user->user) {
+                                    $executerName = $user->user->name;
+                                }else{
+                                    $executerName = $transition->created_user->name;
+                                }
+                            }
+                        }
+                        $rowData[] = $executerName;
+                        if ($key === 0) {
+                            $rowData[] = $entity->created->format('Y-m-d H:i:s');
+                        } else {
+                            $rowData[] = $transition->created->format('Y-m-d H:i:s');
+                        } //end POCOR-9677
                         $tableCells[$key] = $rowData;
                     }
                 }
-
-
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
                     'element' => 'Workflow.transitions',
@@ -1294,7 +1331,7 @@ class WorkflowBehavior extends Behavior
                 $attr['attr']['value'] = $userEntity->name_with_id;
 
             }
-            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4){
+            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 5 ){ //POCOR-9722
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;

@@ -20,6 +20,8 @@ use Cake\ORM\Query;
  */
 class StuckProcessesTable extends AsyncServicesAdminTable
 {
+    use AsyncTabsTrait; //POCOR-9719
+
     /** A row older than this with status IN (1,2) is considered stuck. */
     private const STUCK_THRESHOLD_HOURS = 1;
 
@@ -46,20 +48,9 @@ class StuckProcessesTable extends AsyncServicesAdminTable
         return 'Frozen Background Tasks';
     }
 
-    protected function describeScreen(): string
-    {
-        return sprintf(
-            'Showing system_processes rows still in NEW or RUNNING state'
-            . ' for more than %d hour. The global 1-day stale-sweep will'
-            . ' eventually reap these, but operators should investigate'
-            . ' first — these are typically worker crashes or hung calls.',
-            self::STUCK_THRESHOLD_HOURS
-        );
-    }
-
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
     {
-        parent::indexBeforeAction($event, $extra);
+        $this->setupAsyncTabs(); //POCOR-9719: horizontal tab bar
 
         $this->field('process_id',       ['visible' => false]);
         $this->field('callable_event',   ['visible' => false]);

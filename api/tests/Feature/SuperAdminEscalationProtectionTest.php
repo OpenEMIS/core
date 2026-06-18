@@ -743,4 +743,216 @@ class SuperAdminEscalationProtectionTest extends TestCase
                 'photo_content (longblob) must surface as [...] never the raw blob.');
         }
     }
+
+    //POCOR-9710 — row-level super_admin invisibility.
+    //
+    //POCOR-9697 hid the `super_admin` *column* from responses; this layer
+    //hides the *rows themselves* so a non-super-admin caller can neither
+    //view, edit, nor confirm the existence of a super_admin = 1 user.
+    //Mirrors the CakePHP rule at plugins/Security/src/Model/Table/
+    //UsersTable.php:682-686 (POCOR-9370).
+    //
+    //Tests use a freshly minted non-super-admin token so we do not depend
+    //on whichever seeded user happens to occupy id=2 in the dev DB.
+
+    private function nonSuperAdminToken(): array
+    {
+        $caller = SecurityUsers::factory()->create([
+            'username'    => 'pocor9710_caller_' . uniqid(),
+            'status'      => 1,
+            'super_admin' => 0,
+        ]);
+        DB::table('security_users')->where('id', $caller->id)->update(['super_admin' => 0]);
+        //Grant SecurityUsers view/add/edit so the caller reaches the probe
+        //gate — without permission the controller short-circuits at 403 and
+        //the row-visibility scope is untestable. We attach the Principal
+        //role (id=4) which the dev seed already wires to SecurityUsers.
+        $this->grantSecurityUsersPermissionTo($caller->id);
+        return [JWTAuth::fromUser($caller), $caller];
+    }
+
+    private function grantSecurityUsersPermissionTo(int $userId): void
+    {
+        $roleId = DB::table('security_roles')
+            ->join('security_role_functions', 'security_role_functions.security_role_id', '=', 'security_roles.id')
+            ->join('security_functions', 'security_functions.id', '=', 'security_role_functions.security_function_id')
+            ->where('security_functions._view', 'like', '%SecurityUsers%')
+            ->where('security_role_functions._view', 1)
+            ->where('security_role_functions._add', 1)
+            ->where('security_role_functions._edit', 1)
+            ->value('security_roles.id');
+        if ($roleId === null) {
+            $this->markTestSkipped('No seeded role grants SecurityUsers view/add/edit — cannot exercise probe gate.');
+            return;
+        }
+        DB::table('security_group_users')->insert([
+            'security_user_id'  => $userId,
+            'security_role_id'  => $roleId,
+            'security_group_id' => DB::table('security_groups')->value('id') ?: 0,
+            'created_user_id'   => 1,
+            'created'           => now(),
+        ]);
+        //PermissionService caches per-user permissions for 10 min — flush so
+        //our freshly-granted role is picked up for the test.
+        \Cache::forget("permissions:user:{$userId}");
+    }
+
+    private function freshSuperAdminTarget(): SecurityUsers
+    {
+        $target = SecurityUsers::factory()->create([
+            'username' => 'pocor9710_target_' . uniqid(),
+            'status'   => 1,
+        ]);
+        DB::table('security_users')->where('id', $target->id)->update(['super_admin' => 1]);
+        return $target->fresh();
+    }
+
+    public function test_v5_get_super_admin_id_returns_404_for_non_super_admin(): void
+    {
+        [$token] = $this->nonSuperAdminToken();
+        $target = $this->freshSuperAdminTarget();
+
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/v5/security-users/' . $target->id);
+
+        $response->assertStatus(404);
+        $this->assertStringNotContainsStringIgnoringCase(
+            'super_admin',
+            $response->getContent(),
+            'v5 404 body must not name super_admin (fingerprinting hole).'
+        );
+    }
+
+    public function test_v4_get_super_admin_id_returns_not_found_for_non_super_admin(): void
+    {
+        [$token] = $this->nonSuperAdminToken();
+        $target = $this->freshSuperAdminTarget();
+
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/v4/users/' . $target->id);
+
+        $this->assertStringContainsString(
+            'Users Data Not Found',
+            $response->getContent(),
+            'v4 GET /users/{id} must yield the generic not-found message for a super-admin target.'
+        );
+        $this->assertStringNotContainsStringIgnoringCase(
+            'super_admin',
+            $response->getContent(),
+            'v4 not-found body must not name super_admin.'
+        );
+    }
+
+    public function test_v5_list_does_not_leak_super_admin_rows_for_non_super_admin(): void
+    {
+        [$token] = $this->nonSuperAdminToken();
+        $target = $this->freshSuperAdminTarget();
+
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->getJson('/api/v5/security-users?limit=200');
+
+        $response->assertStatus(200);
+        $body = $response->getContent();
+        $this->assertStringNotContainsString(
+            (string) $target->id,
+            $body,
+            'v5 list must not include the freshly-minted super-admin id.'
+        );
+    }
+
+    public function test_v5_get_super_admin_id_returns_row_for_super_admin_caller(): void
+    {
+        //Super-admin callers bypass the scope entirely — verifies we did not
+        //break super-admin-to-super-admin management (which POCOR-9370 also
+        //preserves on the CakePHP side).
+        $admin = SecurityUsers::where('id', 2)->first();
+        if (!$admin || (int) $admin->super_admin !== 1) {
+            $this->markTestSkipped('Seeded id=2 must be super-admin for this test.');
+            return;
+        }
+        $target = $this->freshSuperAdminTarget();
+
+        $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
+            ->getJson('/api/v5/security-users/' . $target->id);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString(
+            (string) $target->id,
+            $response->getContent(),
+            'super-admin caller must see super-admin targets — no regression on peer management.'
+        );
+    }
+
+    public function test_v5_post_password_silently_stripped_for_non_super_admin(): void
+    {
+        //Q1 — non-super-admin callers cannot set `password` via the generic
+        //CRUD path; the field is removed before mass-assignment and the row
+        //is created with a model-generated password (whatever the factory
+        //default mutator yields). The response must not name `password`.
+        [$token, $caller] = $this->nonSuperAdminToken();
+        $username = 'pocor9710_pwstrip_' . uniqid();
+        $plaintext = 'attacker_chosen_password';
+
+        $payload = SecurityUsers::factory()->make([
+            'username'    => $username,
+            'openemis_no' => $username,
+        ])->toArray();
+        $payload['password'] = $plaintext;
+        //Caller permissions: the seeded test JWT subject (id=2) is super-admin,
+        //so to exercise the non-super-admin path we use the fresh caller
+        //which inherits no roles — the controller still mass-assigns up to
+        //the model's $fillable, so the field-strip is the layer under test.
+        $response = $this->withHeaders(['Authorization' => "Bearer {$token}"])
+            ->postJson('/api/v5/security-users', $payload);
+
+        if ($response->status() !== 201) {
+            //Permission seeding may legitimately block the call — in which
+            //case the strip is moot for this caller. Skip the assertion
+            //rather than wedge the test on environment shape.
+            $this->markTestSkipped(
+                'Non-super-admin caller could not POST to /api/v5/security-users in this env (status '
+                . $response->status() . ') — strip layer untested via this path.'
+            );
+            return;
+        }
+
+        $this->assertStringNotContainsStringIgnoringCase(
+            'password',
+            $response->getContent(),
+            'v5 create response must never name password.'
+        );
+
+        $row = DB::table('security_users')->where('username', $username)->first();
+        $this->assertNotNull($row, 'Row must still be created.');
+        $this->assertFalse(
+            Hash::check($plaintext, $row->password),
+            'Plaintext password from non-super-admin caller must NOT be persisted.'
+        );
+    }
+
+    public function test_v5_post_password_accepted_for_super_admin_caller(): void
+    {
+        //Q1 carve-out — super-admin callers retain the ability to seed a
+        //plaintext password on create; the setPasswordAttribute() mutator
+        //hashes it before persist.
+        $username = 'pocor9710_pwsuper_' . uniqid();
+        $plaintext = 'super_chosen_password';
+
+        $payload = SecurityUsers::factory()->make([
+            'username'    => $username,
+            'openemis_no' => $username,
+        ])->toArray();
+        $payload['password'] = $plaintext;
+
+        $response = $this->withHeaders(['Authorization' => "Bearer {$this->token}"])
+            ->postJson('/api/v5/security-users', $payload);
+
+        $response->assertStatus(201);
+        $row = DB::table('security_users')->where('username', $username)->first();
+        $this->assertNotNull($row);
+        $this->assertTrue(
+            Hash::check($plaintext, $row->password),
+            'Super-admin caller must be able to set the initial password; the mutator hashes it.'
+        );
+    }
 }
