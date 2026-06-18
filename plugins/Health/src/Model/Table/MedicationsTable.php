@@ -2,7 +2,7 @@
 namespace Health\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;

@@ -251,7 +251,7 @@ class AllergiesTable extends ControllerActionTable
     //POCOR-9507
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $file = $this->request->getData('Medications.file_content');
+        $file = $this->request->getData('Allergies.file_content');
 
         if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
 

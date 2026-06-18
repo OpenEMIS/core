@@ -7,6 +7,7 @@ use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Entity;
 
 class ImmunizationsTable extends ControllerActionTable
 {
@@ -234,7 +235,7 @@ class ImmunizationsTable extends ControllerActionTable
     //POCOR-9507
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $file = $this->request->getData('Medications.file_content');
+        $file = $this->request->getData('Immunizations.file_content');
 
         if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
 
