@@ -518,7 +518,9 @@ class ProgrammesTable extends ControllerActionTable
 
 			// Set values
 			$institutionStudentProgramme->student_id = $entity->student_id;
-			$institutionStudentProgramme->registration_number = $entity->registration_number;
+			if (!empty($entity->registration_number)) {
+			    $institutionStudentProgramme->registration_number = $entity->registration_number;
+			} 
 			$institutionStudentProgramme->institution_id = $entity->institution_id;
 
 			$InstitutionStudentProgrammesTable->save($institutionStudentProgramme);
