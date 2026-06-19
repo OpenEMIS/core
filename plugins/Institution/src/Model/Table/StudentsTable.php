@@ -97,7 +97,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByYear',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_students_by_stage' => [
@@ -343,8 +343,14 @@ class StudentsTable extends ControllerActionTable
      */
     private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
     {
-        if ($tableName = 'genders') {
+        if ($tableName === 'genders') {
             $tableName = 'User.Genders';
+        } elseif ($tableName === 'area_administratives') {
+            $tableName = 'Area.AreaAdministratives';
+        } elseif ($tableName === 'identity_types') {
+            $tableName = 'FieldOption.IdentityTypes';
+        } elseif ($tableName === 'nationalities') {
+            $tableName = 'FieldOption.Nationalities';
         }
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
@@ -359,6 +365,7 @@ class StudentsTable extends ControllerActionTable
             null;
         }
         return null;
+        
     }
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
@@ -2416,6 +2423,7 @@ class StudentsTable extends ControllerActionTable
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();
+        $params['options']['title'] = ['text' => __('Number of Students')]; //POCOR-9636: Rename chart label
 
         return $params;
     }

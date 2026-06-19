@@ -38,7 +38,7 @@
 				echo $this->HtmlField->chosenSelectInput($attr, [
 					'label' => $attr['add_field'],
 					'multiple' => false,
-					'onchange' => "$('#reload').val('addField').click();"
+					'onchange' => "if (typeof CustomForm !== 'undefined' && CustomForm.prepareAddField) { CustomForm.prepareAddField(); } $('#reload').val('addField').click();" //POCOR-9638
 				]);
 
 				if(isset($attr2['add_steps_field'])) {

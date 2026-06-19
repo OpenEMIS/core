@@ -80,6 +80,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->belongsTo('Sectors', ['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Genders', ['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
+        $this->belongsTo('InstitutionTypes', ['className' => 'FieldOption.InstitutionTypes', 'foreignKey' => 'institution_type_id']);
         /**
          * end fieldOption tables
          */
@@ -353,6 +354,13 @@ class InstitutionsTable extends ControllerActionTable
                 'last' => true
             ])
             ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])
             ->notEmptyString('institution_locality_id') //POCOR-9407
             ->add('email', [
                 'ruleValidEmail' => [
