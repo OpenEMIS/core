@@ -459,7 +459,22 @@ class DirectoriesTable extends ControllerActionTable
         $account_type = !empty($accountTypes) ? implode(', ', $accountTypes) : 'Others';
         $contactData = self::getContactData($securityUser['id']);
         // POCOR-8231 for photo
+        //POCOR-9726 Start
+        $nationalityId = !empty($securityUser['MainNationalities_id'])
+            ? intval($securityUser['MainNationalities_id'])
+            : (!empty($securityUser['nationality_id']) ? intval($securityUser['nationality_id']) : null);
+        $nationalityName = $securityUser['MainNationalities_name'] ?? null;
 
+        if (empty($nationalityName) && $nationalityId) {
+            $nationality = $nationalitiesTable
+                ->find()
+                ->select(['name' => $nationalitiesTable->aliasField('name')])
+                ->where([$nationalitiesTable->aliasField('id') => $nationalityId])
+                ->disableHydration()
+                ->first();
+            $nationalityName = $nationality['name'] ?? null;
+        }
+        //POCOR-9726 End
         $userInternalSearchResult = [
             'id' => $securityUser['id'],
             'username' => $securityUser['username'],
@@ -473,8 +488,8 @@ class DirectoriesTable extends ControllerActionTable
             'gender_id' => $securityUser['gender_id'],
             'gender' => $securityUser['Genders_name'] ? __($securityUser['Genders_name']) : null,
             'gender_name' => $securityUser['Genders_name'] ? __($securityUser['Genders_name']) : null,
-            'nationality' => $securityUser['MainNationalities_name'] ? __($securityUser['MainNationalities_name']) : null,
-            'nationality_id' => $securityUser['MainNationalities_id'] ? intval($securityUser['MainNationalities_id']) : null,
+            'nationality' => $nationalityName ? __($nationalityName) : null, //POCOR-9726 updated
+            'nationality_id' => $nationalityId,//POCOR-9726 updated
             'identity_type' => $securityUser['MainIdentityTypes_name'] ? __($securityUser['MainIdentityTypes_name']) : null,
             'identity_type_id' => $securityUser['MainIdentityTypes_id'] ? intval($securityUser['MainIdentityTypes_id']) : null,
             'identity_number' => $securityUser['MainIdentityTypes_number'] ? __($securityUser['MainIdentityTypes_number']) : null,
@@ -1401,7 +1416,20 @@ class DirectoriesTable extends ControllerActionTable
                 'provider' => 'table',
                 'last' => true
             ])
-            ->notEmpty('nationality');
+            ->notEmpty('nationality')
+        ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+        ->allowEmptyString('mobile_number')
+        ->add('mobile_number', 'numeric', [
+            'rule' => 'numeric',
+            'message' => 'Only numbers are allowed'
+        ]); //POCOR-9680
         $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
