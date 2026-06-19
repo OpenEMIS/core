@@ -164,6 +164,7 @@ class BodyMassesTable extends ControllerActionTable
 
         $validator
             ->notEmpty('academic_period_id')
+            ->notEmpty('date')
             ->add('height', [
                 'notZero' => [
                     'rule' => ['comparison', '>', 0],
@@ -333,25 +334,25 @@ class BodyMassesTable extends ControllerActionTable
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
 
-		// Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Institutions','Student Body Mass','Students - Health');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Institutions','Student Body Mass','Students - Health');
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
 
 
     }
@@ -495,6 +496,9 @@ class BodyMassesTable extends ControllerActionTable
                 $event->stopPropagation();
                 return false;
             }
+        }
+        if (isset($entity->date)) {
+            $entity->date = date('Y-m-d', strtotime($entity->date));
         }
     }
 
