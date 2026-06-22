@@ -11,9 +11,18 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use User\Controller\SyncUserTrait; //POCOR-9590
 
 class StaffController extends AppController
 {
+    use SyncUserTrait; //POCOR-9590
+
+    //POCOR-9590: public — also called by StaffUserTable::addSyncButton to avoid duplicating the ACL triple
+    public function syncUserPermission(): array
+    {
+        return ['Institutions', 'Staff', 'add'];
+    }
+
     const APPROVED = 1;
     private $features = [
         // General
