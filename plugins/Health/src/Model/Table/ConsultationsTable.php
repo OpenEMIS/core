@@ -10,6 +10,8 @@ use Cake\ORM\Entity;
 
 class ConsultationsTable extends ControllerActionTable
 {
+    use HealthLookupTrait; //POCOR-9718
+
     public function initialize(array $config): void
     {
         $this->setTable('user_health_consultations');
@@ -211,6 +213,11 @@ class ConsultationsTable extends ControllerActionTable
         return $query;
     }
 
+    //POCOR-9718: populate health_consultation_type_id select from Health.ConsultationTypes.
+    public function onUpdateFieldHealthConsultationTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.ConsultationTypes');
+    }
 
 
 }
