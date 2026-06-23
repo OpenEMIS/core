@@ -218,6 +218,14 @@ unset($fullBaseUrl);
 
 Cache::setConfig(Configure::consume('Cache'));
 ConnectionManager::setConfig(Configure::consume('Datasources'));
+
+//POCOR-9719: unify PHP, CakePHP App.defaultTimezone, and every MySQL
+//connection's session timezone on config_items.time_zone. Shared source with
+//Laravel (api/app/Providers/AppServiceProvider::applySystemTimezone). Env
+//vars APP_TIMEZONE / APP_DEFAULT_TIMEZONE removed — cron and queue workers
+//don't inherit FPM env, the root cause of the Tonga +13h alert drift.
+\App\Utility\ApplicationTimezone::applyToSystem();
+
 TransportFactory::setConfig(Configure::consume('EmailTransport'));
 Mailer::setConfig(Configure::consume('Email'));
 Log::setConfig(Configure::consume('Log'));

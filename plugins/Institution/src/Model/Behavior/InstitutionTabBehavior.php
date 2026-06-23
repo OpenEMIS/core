@@ -42,6 +42,7 @@ class InstitutionTabBehavior extends Behavior
             $toolbarButtons = new ArrayObject([]);
         }
         //POCOR-9661
+        $toolbarButtons = $extra['toolbarButtons'];
         $redirectURL = $extra['redirect'];
 
         if ($model->action == 'edit' || $model->action == 'remove') {
@@ -142,6 +143,8 @@ class InstitutionTabBehavior extends Behavior
     public function fixAddDeleteRedirectURL()
     {
         $model = $this->_table;
+        // $url = $model->url('index');
+        // $queryString = $model->getQueryString();
         //POCOR-9661
         if (method_exists($model, 'url')) {
             $url = $model->url('index');
@@ -172,6 +175,7 @@ class InstitutionTabBehavior extends Behavior
             $url['?'] = $queryString;
         }
         //POCOR-9661
+        // $url['1'] = $model->paramsEncode($queryString);
         return $url;
     }
 
@@ -382,36 +386,19 @@ class InstitutionTabBehavior extends Behavior
 
     public function addDeleteBeforeAction(EventInterface $event = null, ArrayObject $extra = null)
     {
+        //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
         if ($extra == null) {
             return;
         }
         $model = $this->_table;
-        //POCOR-9661
-        if (method_exists($model, 'url')) {
-            $url = $model->url('index');
-        } else {
-            $request = $model->request ?? null;
-            $url = [
-                'plugin' => $request ? $request->getParam('plugin') : null,
-                'controller' => $request ? $request->getParam('controller') : null,
-                'action' => $request ? $request->getParam('action') : 'index',
-            ];
-        }
-        //POCOR-9661
+        $url = $model->url('index');
         $institutionID = $this->getInstitutionID();
-        $queryString = method_exists($model, 'getQueryString') ? $model->getQueryString() : [];
-        if (!is_array($queryString)) {
-            $queryString = [];
-        }
+        $queryString = $model->getQueryString();
         if (isset($url[2])) {
             unset($url[2]);
         }
         $queryString['institution_id'] = $institutionID;
-        if (method_exists($model, 'paramsEncode')) {
-            $url[1] = $model->paramsEncode($queryString);
-        } else {
-            $url['?'] = $queryString;
-        }
+        $url[1] = $model->paramsEncode($queryString);
         $extra['redirect'] = $url;
     }
 

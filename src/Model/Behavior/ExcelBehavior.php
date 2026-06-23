@@ -281,8 +281,13 @@ class ExcelBehavior extends Behavior
                 } else {
                     $this->setConfig('orientation', 'portrait');
                 }
-            } elseif ($count == 1) {
-                $this->setConfig('orientation', 'portrait');
+            }elseif ($count == 1) {
+                $params = json_decode($settings['process']->params, true); //POCOR-9731
+                if (isset($params['feature']) && str_contains($params['feature'], 'Report')) {
+                    $this->setConfig('orientation', 'landscape');
+                }else{
+                    $this->setConfig('orientation', 'portrait');
+                } 
             }
 
             $this->dispatchEvent($table, $this->eventKey('onExcelStartSheet'), 'onExcelStartSheet', [$settings, $count], true);

@@ -240,6 +240,8 @@ class RemoveBehavior extends Behavior
                     }
                 }
                 /** End POCOR-7253 */
+                // Re-index so Cake HtmlHelper::tableCells() sees $data[0]; sparse keys after unset break row detection (wraps whole array as one row → TypeError).
+                $cells = array_values($cells);
                 $extra['cells'] = $cells;
 
                 // check if force delete fields should be displayed
