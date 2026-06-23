@@ -4065,29 +4065,24 @@ class NavigationComponent extends Component
         if (!$this->userHasAdministrationAccessTo('System Activities')) {
             return [];
         }
-        $childParent = 'Administration.AsyncServices';
-        $systemPlugin = ['plugin' => 'System'];
-        $child = static function (string $title, string $key) use ($childParent, $systemPlugin): array {
-            return [
-                'title' => $title,
-                'parent' => $childParent,
-                'params' => $systemPlugin,
-                'selected' => [$key],
-            ];
-        };
         //POCOR-9694: v5 menu labels — user-visible titles only; internal nav keys kept stable.
+        //POCOR-9719: ONE sidebar entry — no sub-menu. The page itself renders a horizontal
+        //tab bar with all 6 actions (Overview / Completed / Failed / Stuck / Webhook Failures /
+        //Waiting). selected[] keeps the sidebar entry highlighted on every tab.
         return [
-            'Administration.AsyncServices' => [
+            'Systems.AsyncServicesOverview' => [
                 'title' => 'System Activities',
                 'parent' => 'Administration',
-                'link' => false,
+                'params' => ['plugin' => 'System'],
+                'selected' => [
+                    'Systems.AsyncServicesOverview',
+                    'Systems.SystemProcesses',
+                    'Systems.FailedJobs',
+                    'Systems.StuckProcesses',
+                    'Systems.WebhookFailures',
+                    'Systems.QueueBacklog',
+                ],
             ],
-            'Systems.AsyncServicesOverview' => $child('Overview',         'Systems.AsyncServicesOverview'),
-            'Systems.SystemProcesses'       => $child('Completed Jobs',   'Systems.SystemProcesses'),
-            'Systems.FailedJobs'            => $child('Failed Jobs',      'Systems.FailedJobs'),
-            'Systems.StuckProcesses'        => $child('Frozen Jobs',      'Systems.StuckProcesses'),
-            'Systems.WebhookFailures'       => $child('Failed Webhooks',  'Systems.WebhookFailures'),
-            'Systems.QueueBacklog'          => $child('Waiting Jobs',     'Systems.QueueBacklog'),
         ];
         //POCOR-9694: end
     }
