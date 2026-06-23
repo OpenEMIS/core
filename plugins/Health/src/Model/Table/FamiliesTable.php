@@ -14,6 +14,7 @@ use App\Model\Traits\OptionsTrait;
 class FamiliesTable extends ControllerActionTable
 {
     use OptionsTrait;
+    use HealthLookupTrait; //POCOR-9718
 
     public function initialize(array $config): void
     {
@@ -157,6 +158,17 @@ class FamiliesTable extends ControllerActionTable
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
+    }
+
+    //POCOR-9718: populate Health Family selects from their lookup tables.
+    public function onUpdateFieldHealthRelationshipId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.Relationships');
+    }
+
+    public function onUpdateFieldHealthConditionId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.Conditions');
     }
 
     private function setupFields(Entity $entity)
