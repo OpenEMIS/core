@@ -1,3 +1,14 @@
+### [5.14.0] - 2026-06-23
+- Implemented: Develop behaviour placeholders for institution profiles report - part 2
+- Implemented: Develop External Data Source - Sync function
+- Implemented: Develop Staff Attendance feature v4 APIs - Part 2
+- Bug Fixed: Core>Institution>Performance>Assessment:Deleted Marks do not stay deleted
+- Bug Fixed: Institutions>Staff>Health>Allergies, Consultation, Insurances: 404 when adding
+- Bug Fixed: Core>Institutions>Attendance>Student >Edit : When switching between All days and Single Day ,The attendance mark type behaviour does not reflect the same.
+- Bug Fixed: Institution>Students>Select Student>Guardians tab: When clicking on Select > View, the system doesn't show all the guardian information; it shows only the name and the relation
+- Bug Fixed: Directory/Personal > Students > Academic > Assessments: Assessments are not showing up
+- Bug Fixed: DB: Index statuses for report_card_processes and institution_students_report_cards
+
 ### [5.13.0] - 2026-06-10
 - Implemented: Develop change to Reports > Institutions and Reports > Students and and Reports > Staff to include the option to select multiple institutions 
 - Bug Fixed: Institution>Attendance>Staff>Edit: Unable to save record
