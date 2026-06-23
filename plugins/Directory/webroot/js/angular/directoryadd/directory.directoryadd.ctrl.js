@@ -1182,6 +1182,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
+            sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             custom: [],
         };
         if(scope.selectedUserData.user_type_id === USER_TYPES.STUDENT) { // POCOR-9427
@@ -1313,7 +1314,23 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 return;
             }
 
-            userCtrl.message = serverMessage || error.statusText || error.toString();
+            //POCOR-9590: surface server-side field validation errors on the actual fields
+            //and roll the first one into the toast so the user knows which field failed.
+            const fieldErrors = (error && error.data && error.data.errors) ? error.data.errors : null;
+            const firstFieldMessage = (() => {
+                if (!fieldErrors || typeof fieldErrors !== 'object') return '';
+                for (const field of Object.keys(fieldErrors)) {
+                    const rules = fieldErrors[field];
+                    const msg = (rules && typeof rules === 'object') ? Object.values(rules)[0] : rules;
+                    if (msg) {
+                        userCtrl.setError(field, msg);
+                        return `${field}: ${msg}`;
+                    }
+                }
+                return '';
+            })();
+
+            userCtrl.message = firstFieldMessage || serverMessage || error.statusText || error.toString();
             userCtrl.messageClass = 'alert-danger';
             UtilsSvc.isAppendLoader(false);
         });

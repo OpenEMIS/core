@@ -13,6 +13,8 @@ use App\Model\Table\ControllerActionTable;
 use Laminas\Diactoros\UploadedFile;
 class InsurancesTable extends ControllerActionTable
 {
+    use HealthLookupTrait; //POCOR-9718
+
     public function initialize(array $config): void
     {
         $this->setTable('user_insurances');
@@ -239,6 +241,17 @@ class InsurancesTable extends ControllerActionTable
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
+    }
+
+    //POCOR-9718: populate Insurance selects from their lookup tables.
+    public function onUpdateFieldInsuranceProviderId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.InsuranceProviders');
+    }
+
+    public function onUpdateFieldInsuranceTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.InsuranceTypes');
     }
 
 
