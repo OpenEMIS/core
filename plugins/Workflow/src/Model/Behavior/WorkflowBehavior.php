@@ -852,6 +852,7 @@ class WorkflowBehavior extends Behavior
         // setup workflow
         if ($this->attachWorkflow) {
             $workflowStep = $this->getWorkflowStep($entity);
+            $institutionId = $model->getQueryString('institution_id');
             if (!is_null($workflowStep)) {
                 // used to get correct workflow model for StaffTransferIn and StaffTransferOut
                 $modelName = $workflowStep->_matchingData['WorkflowModels']->model;
@@ -942,15 +943,32 @@ class WorkflowBehavior extends Behavior
                                     'workflow_step_id' => $step->id
                                 ])
                                 ->first();
-                            if (!empty($stepRole)) { 
-                                $user = $SecurityGroupUsers->find()
+                           if (!empty($stepRole)) { 
+                                /*$user = $SecurityGroupUsers->find()
                                     ->contain(['Users'])
                                     ->where([
                                         'security_role_id' => $stepRole->security_role_id,
                                     ])
                                     ->order(['SecurityGroupUsers.id ASC'])
-                                    ->first();
-                                if ($user && $user->user) {
+                                    ->first();*/
+                                $user = $SecurityGroupUsers->find()
+                                        ->contain(['Users'])
+                                        ->innerJoin(
+                                            ['SecurityGroupInstitutions' => 'security_group_institutions'],
+                                            'SecurityGroupInstitutions.security_group_id = SecurityGroupUsers.security_group_id'
+                                        )
+                                        ->where([
+                                            'SecurityGroupUsers.security_role_id' => $stepRole->security_role_id,
+                                            'SecurityGroupInstitutions.institution_id' => $institutionId
+                                        ])
+                                        ->order(['SecurityGroupUsers.id' => 'ASC'])
+                                        ->first();
+                                if ($user && $user->user &&
+                                        (
+                                            $workflowModel == 'Institution.StudentAdmission' ||
+                                            $workflowModel == 'Institution.StudentEnrolment'
+                                        )
+                                ) {
                                     $executerName = $user->user->name;
                                 }else{
                                     $executerName = $transition->created_user->name;
