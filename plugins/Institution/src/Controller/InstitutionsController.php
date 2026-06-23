@@ -7173,6 +7173,10 @@ class InstitutionsController extends AppController
         if ($is_guardian) {
             $userData['is_guardian'] = 1;
         }
+        //POCOR-9590: sync_status sent by JS (1 = came from External Search, 0 = manual add)
+        if (isset($requestData['sync_status'])) {
+            $userData['sync_status'] = (int)$requestData['sync_status'];
+        }
         return $userData;
     }
 
@@ -8638,7 +8642,10 @@ class InstitutionsController extends AppController
                 return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989
             }
 
-            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]); // POCOR-8989 invalid ID by configuration
+            //POCOR-9590: identity is well-formed, no DB collision, and pattern check (POCOR-9688) passed —
+            //this is a new identity the wizard is allowed to create. The previous 400 here blocked
+            //every IdentityType without a validation_pattern (e.g. NIN), breaking add-from-external-source.
+            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
         } else {
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]);
         }

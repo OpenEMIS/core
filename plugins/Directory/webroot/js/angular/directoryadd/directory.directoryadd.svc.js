@@ -584,7 +584,32 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
 
+    //POCOR-9590: shared reset for the External Search step.
+    //All four wizards (Directory / Student / Staff / Guardian) call
+    //directorySvc.goToExternalSearch(scope), so wiping the prior grid state
+    //here re-arms the search for everyone in one place. Without this, going
+    //Back to change the identity inputs and clicking Next again would either
+    //show the cached first hit or, after a single page returns, leave the
+    //grid stuck in "no more pages" mode for every subsequent identity.
+    function resetExternalSearchGrid(scope) {
+        var prior = scope.externalGridOptions;
+        if (prior && prior.api) {
+            if (typeof prior.api.purgeInfiniteCache === 'function') {
+                try { prior.api.purgeInfiniteCache(); } catch (e) { /* api torn down */ }
+            }
+            if (typeof prior.api.setRowData === 'function') {
+                try { prior.api.setRowData([]); } catch (e) { /* infinite model */ }
+            }
+        }
+        scope.rowsThisPage = [];
+        scope.isExternalSearchSelected = false;
+        if ('selectedGuardian' in scope) {
+            scope.selectedGuardian = undefined;
+        }
+    }
+
     function goToExternalSearch(scope) {
+        resetExternalSearchGrid(scope);
         UtilsSvc.isAppendLoader(true);
         var externalSearchParams = {
             first_name: scope.selectedUserData.first_name,
