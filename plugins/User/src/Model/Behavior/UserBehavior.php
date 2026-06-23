@@ -16,10 +16,19 @@ use Cake\Routing\Router;
 use Cake\ORM\Locator\TableLocator;
 use Cake\Chronos\Chronos;
 use Cake\Log\Log;
+use Cake\Http\Client;
 
 
 class UserBehavior extends Behavior
 {
+    //POCOR-9590: General-tab fields that, when edited, signal drift from the external registry
+    const GENERAL_SYNC_FIELDS = ['first_name', 'middle_name', 'third_name', 'last_name', 'gender_id', 'date_of_birth'];
+
+    //POCOR-9590: sync_status values — single source of truth for CakePHP layer
+    const SYNC_STATUS_LOCAL   = 0; //POCOR-9590: never been synced with an external registry
+    const SYNC_STATUS_SYNCED  = 1; //POCOR-9590: confirmed match with external registry
+    const SYNC_STATUS_DRIFTED = 2; //POCOR-9590: was synced; General fields have changed since
+
     private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
     private $defaultStaffProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-staff'></i></div></div>";
     private $defaultGuardianProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-guardian'></i></div></div>";
@@ -112,6 +121,22 @@ class UserBehavior extends Behavior
                 $entity->dod_range = "greater";
             }
         }
+
+        //POCOR-9590: drift detection — Synced (1) → Not Synced (2) when any General field changes. Local (0) and Not Synced (2) stay where they are.
+        //POCOR-9590: skip when sync_status itself is dirty — that means the SyncUser action just set it to 1, the field changes ARE the sync, don't immediately flip back to 2
+        if ($this->_table->getTable() === 'security_users' && !$entity->isNew() && (int)$entity->sync_status === self::SYNC_STATUS_SYNCED && !$entity->isDirty('sync_status')) {
+            foreach (self::GENERAL_SYNC_FIELDS as $f) { //POCOR-9590
+                if ($entity->isDirty($f)) {
+                    $entity->sync_status = self::SYNC_STATUS_DRIFTED;
+                    break;
+                }
+            }
+        }
+
+        //POCOR-9590: inception sync — new user created from external search (external_reference populated) starts as Synced
+        if ($this->_table->getTable() === 'security_users' && $entity->isNew() && !empty($entity->external_reference)) {
+            $entity->sync_status = self::SYNC_STATUS_SYNCED;
+        }
     }
 
     private function isCAv4()
@@ -121,6 +146,10 @@ class UserBehavior extends Behavior
 
     public function beforeAction(EventInterface $event)
     {
+        //POCOR-9590: hide system-managed sync_status from view/edit/add — the visual indicator lives in the Identities-tab badge
+        if (isset($this->_table->fields['sync_status'])) {
+            $this->_table->fields['sync_status']['visible'] = false;
+        }
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $configData = $ConfigItems->find('all', ['conditions' => ['name LIKE' => '%' . 'Date of Death' . '%']])->first();
         $schema = $this->_table->getSchema();
@@ -380,7 +409,7 @@ class UserBehavior extends Behavior
                 $UserIdentities->aliasField('number'),
                 $UserIdentities->aliasField('nationality_id'),
                 $Nationalities->aliasField('name'),
-                $UserNationalities->aliasField('preferred')
+                $UserIdentities->aliasField('preferred')
             ])
             ->leftJoin(
                 [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
@@ -405,8 +434,287 @@ class UserBehavior extends Behavior
                 $UserIdentities->aliasField('security_user_id') => $security_users_id,
             ])
             ->toArray();
-        return $data;
+
+        //POCOR-9590: stored sync_status on the user (0=Local, 1=Synced, 2=Not Synced)
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $userRow = $SecurityUsers->find()->select(['sync_status'])->where(['id' => $security_users_id])->first();
+        $syncStatus = $userRow ? (int)$userRow->sync_status : self::SYNC_STATUS_LOCAL;
+
+        //POCOR-9590: identity_type_id of the currently active external data source — used to decide which row in the Identities table is sync-eligible
+        $activeIdentityTypeId = $this->getActiveExternalSourceIdentityTypeId();
+
+        return [
+            'data' => $data,
+            'sync_status' => $syncStatus,
+            'active_source_identity_type_id' => $activeIdentityTypeId,
+        ];
     }
+
+    //POCOR-9590: returns identity_type_id of the (first) enabled external data source whose
+    //identity_type_id attribute is configured, or null if no source is enabled / no identity_type set.
+    //
+    //OpenEMIS represents enabled external sources as per-source rows in config_items:
+    //   type = 'External Data Source - Identity', value = '1' (enabled), name = 'Seychelles Civil Status' / 'OpenEMIS Core' / 'UNHCR' / ...
+    //There is no separate single-active-source pointer row to query — earlier revisions of this helper
+    //expected one (code='external_data_source_type'), which only exists on instances where the admin
+    //has saved the legacy "External Data Source" config form. On a fresh install (and on the dmo-dev
+    //remote we tested against) that row is absent, so the badge silently never lit up. The fix is to
+    //read the same per-source enable flags the wizards already use.
+    //
+    //Public so the 3 user-tables (StudentUser / StaffUser / Directories) can call it via behavior __call proxy.
+    public function getActiveExternalSourceIdentityTypeId()
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $enabledSourceNames = $ConfigItems->find()
+            ->where([
+                'type' => 'External Data Source - Identity',
+                'value' => '1',
+            ])
+            ->extract('name')
+            ->toArray();
+        if (empty($enabledSourceNames)) {
+            return null;
+        }
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $row = $ExternalAttrs->find()
+            ->where([
+                'external_data_source_type IN' => $enabledSourceNames,
+                'attribute_field' => 'identity_type_id',
+                'value IS NOT' => null,
+                'value !=' => '',
+            ])
+            ->first();
+        return ($row && !empty($row->value)) ? (int)$row->value : null;
+    }
+
+    //POCOR-9590: a user is sync-eligible iff an external source is active AND
+    //   (a) they already have an external_reference (synced before, can re-sync), OR
+    //   (b) they have at least one preferred user_identities row (Local user — first-time inception sync).
+    //   The source-side `identity_type_id` attribute is intentionally NOT consulted here: it is enforced
+    //   at sync-execution time inside buildExternalUserDiff(), so a missing config row never silently
+    //   hides the button. This keeps the feature usable even on instances whose UI form omits the field.
+    public function isSyncEligibleUser($securityUserId): bool
+    {
+        if (!$this->hasActiveExternalSource()) {
+            return false;
+        }
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $user = $SecurityUsers->find()
+            ->select(['external_reference'])
+            ->where(['id' => $securityUserId])
+            ->first();
+        if ($user && !empty($user->external_reference)) {
+            return true;
+        }
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        return $UserIdentities->find()
+            ->where(['security_user_id' => $securityUserId, 'preferred' => 1])
+            ->count() > 0;
+    }
+
+    //POCOR-9590: thin probe used by isSyncEligibleUser — returns true iff at least one
+    //External Data Source Identity is enabled. Uses the same per-source enable convention
+    //(type='External Data Source - Identity', value='1') as the wizards, so the badge
+    //works on fresh installs without an admin needing to first save the legacy form.
+    private function hasActiveExternalSource(): bool
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        return $ConfigItems->find()
+            ->where([
+                'type' => 'External Data Source - Identity',
+                'value' => '1',
+            ])
+            ->count() > 0;
+    }
+    //POCOR-9590: fetches and diffs a user against the active external identity source.
+    //Returns an array on success or a plain-string error message on failure — callers check is_string($result).
+    public function buildExternalUserDiff(int $userId): array|string
+    {
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        $ConfigItems   = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $Genders       = TableRegistry::getTableLocator()->get('User.Genders');
+
+        $user = $SecurityUsers->get($userId, ['contain' => ['Genders']]);
+
+        //POCOR-9590: pick the enabled External Data Source Identity whose configured
+        //identity_type_id matches the user's preferred identity. Per-source enable flag is
+        //(type='External Data Source - Identity', value='1', name=source label) — same
+        //convention the wizards use.
+        $enabledSourceNames = $ConfigItems->find()
+            ->where([
+                'type' => 'External Data Source - Identity',
+                'value' => '1',
+            ])
+            ->extract('name')
+            ->toArray();
+        if (empty($enabledSourceNames)) {
+            return 'No external identity source is enabled.';
+        }
+
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $preferredIdentity = $UserIdentities->find()
+            ->select(['identity_type_id'])
+            ->where(['security_user_id' => $userId, 'preferred' => 1])
+            ->first();
+        $preferredTypeId = $preferredIdentity ? (int)$preferredIdentity->identity_type_id : null;
+
+        //Match enabled source by its configured identity_type_id attribute; fall back to the first
+        //source that has any attribute rows if no semantic match is found.
+        $configs = [];
+        $sourceName = null;
+        if ($preferredTypeId) {
+            $matchRow = $ExternalAttrs->find()
+                ->where([
+                    'external_data_source_type IN' => $enabledSourceNames,
+                    'attribute_field' => 'identity_type_id',
+                    'value' => (string)$preferredTypeId,
+                ])
+                ->first();
+            if ($matchRow) {
+                $sourceName = $matchRow->external_data_source_type;
+                $configs = $ExternalAttrs->find()
+                    ->where(['external_data_source_type' => $sourceName])
+                    ->all()
+                    ->combine('attribute_field', 'value')
+                    ->toArray();
+            }
+        }
+        if (empty($configs)) {
+            foreach ($enabledSourceNames as $candidate) {
+                $candidateConfigs = $ExternalAttrs->find()
+                    ->where(['external_data_source_type' => $candidate])
+                    ->all()
+                    ->combine('attribute_field', 'value')
+                    ->toArray();
+                if (!empty($candidateConfigs)) {
+                    $configs = $candidateConfigs;
+                    $sourceName = $candidate;
+                    break;
+                }
+            }
+        }
+        if (empty($configs)) {
+            return 'No external identity source has attributes configured.';
+        }
+
+        $tokenUrl     = $configs['token_uri'] ?? null;
+        //POCOR-9590: fall back to api_url for sources (e.g. Seychelles) that store the endpoint there instead of user_endpoint_uri
+        $userEndpoint = $configs['user_endpoint_uri'] ?: ($configs['api_url'] ?? null);
+        if ($userEndpoint && strpos($userEndpoint, '{external_reference}') === false) {
+            $userEndpoint = rtrim($userEndpoint, '/') . '/{external_reference}';
+        }
+        $clientId   = $configs['client_id'] ?? null;
+        //POCOR-9590: OAuth2 client_credentials grant uses client_secret (Seychelles, plain OAuth).
+        //JWT-bearer grants use the long signed-assertion private_key (legacy OpenEMIS Core).
+        //Pick by grant_type so the right secret reaches the IdP, regardless of which extra
+        //fields happen to be filled on the source row.
+        $grantType  = $configs['grant_type'] ?? '';
+        $privateKey = ($grantType === 'client_credentials')
+            ? ($configs['client_secret'] ?? ($configs['private_key'] ?? null))
+            : ($configs['private_key'] ?? ($configs['client_secret'] ?? null));
+
+        if (!$tokenUrl || !$userEndpoint) {
+            return 'External identity source is not configured.';
+        }
+
+        //POCOR-9590: OAuth2 client_credentials — form-encoded + scope required by Seychelles Civil Status
+        $http          = new Client();
+        $tokenResponse = $http->post($tokenUrl, [
+            'grant_type'    => 'client_credentials',
+            'client_id'     => $clientId,
+            'client_secret' => $privateKey,
+            'scope'         => $configs['scope'] ?? ($configs['scopes'] ?? ''),
+        ], ['headers' => ['Content-Type' => 'application/x-www-form-urlencoded']]);
+
+        if (!$tokenResponse->isOk()) {
+            return 'Failed to authenticate with external identity source.';
+        }
+        $accessToken = $tokenResponse->getJson()['access_token'] ?? null;
+        if (!$accessToken) {
+            return 'External identity source did not return a valid token.';
+        }
+
+        //POCOR-9590: external_reference is set on users created via External Search; fall back to preferred identity number for users added manually
+        $externalRef = $user->external_reference;
+        if (empty($externalRef)) {
+            $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+            $idRow = $UserIdentities->find()
+                ->where(['security_user_id' => $userId, 'identity_type_id' => $configs['identity_type_id'] ?? 0, 'preferred' => 1])
+                ->first();
+            $externalRef = $idRow ? $idRow->number : null;
+        }
+        if (empty($externalRef)) {
+            return 'No external reference found for this user.';
+        }
+
+        $apiUrl      = str_replace('{external_reference}', $externalRef, $userEndpoint);
+        $apiResponse = $http->get($apiUrl, [], ['headers' => ['Authorization' => 'Bearer ' . $accessToken]]);
+        if (!$apiResponse->isOk()) {
+            return 'Failed to retrieve data from external identity source.';
+        }
+
+        //POCOR-9590: shared lenient mapper — same code path the add-from-external wizard uses.
+        //Seychelles returns name keys with inconsistent casing and the source row often omits the
+        //first_name/last_name mappings, so pass the well-known Seychelles defaults (mapper matching
+        //is case-insensitive). Without this, sync left first_name/last_name empty / hard-failed.
+        $apiData  = $apiResponse->getJson();
+        $defaults = ($sourceName === 'Seychelles Civil Status')
+            ? \User\Lib\ExternalIdentityMapper::SEYCHELLES_DEFAULT_MAPPINGS
+            : [];
+        ['mapped' => $externalValues, 'missing' => $missingMappings] = \User\Lib\ExternalIdentityMapper::map($apiData, $configs, $defaults);
+        if (!empty($missingMappings)) {
+            $missingDetail = implode(', ', array_map(fn($f, $p) => "$f→$p", array_keys($missingMappings), $missingMappings));
+            return 'External source response is missing keys for configured mappings: ' . $missingDetail;
+        }
+
+        $externalGenderId = null;
+        if (!empty($externalValues['gender'])) {
+            $genderRow        = $Genders->find()->where(['name' => $externalValues['gender']])->first();
+            $externalGenderId = $genderRow ? $genderRow->id : null;
+        }
+
+        $userDob = $user->date_of_birth instanceof \DateTimeInterface
+            ? $user->date_of_birth->format('Y-m-d')
+            : (string)$user->date_of_birth;
+
+        $diff = [];
+        foreach (['first_name', 'middle_name', 'third_name', 'last_name'] as $field) {
+            if (isset($externalValues[$field]) && (string)$externalValues[$field] !== (string)$user->$field) {
+                $diff[$field] = ['current' => $user->$field, 'external' => $externalValues[$field]];
+            }
+        }
+        if (isset($externalValues['date_of_birth']) && $externalValues['date_of_birth'] !== '' && $externalValues['date_of_birth'] !== $userDob) {
+            $diff['date_of_birth'] = ['current' => $userDob, 'external' => $externalValues['date_of_birth']];
+        }
+        if ($externalGenderId && $externalGenderId !== $user->gender_id) {
+            $diff['gender'] = [
+                'current'  => $user->has('gender') ? $user->gender->name : '',
+                'external' => $externalValues['gender'],
+            ];
+        }
+
+        return compact('user', 'configs', 'externalValues', 'externalGenderId', 'diff');
+    }
+
+    //POCOR-9590: applies external values onto $user and marks sync_status=SYNCED; caller is responsible for saving
+    public function applySyncToUser(Entity $user, array $externalValues, ?int $externalGenderId): void
+    {
+        foreach (['first_name', 'middle_name', 'third_name', 'last_name'] as $field) {
+            if (isset($externalValues[$field])) {
+                $user->$field = $externalValues[$field];
+            }
+        }
+        if (!empty($externalValues['date_of_birth'])) {
+            $user->date_of_birth = $externalValues['date_of_birth'];
+        }
+        if ($externalGenderId) {
+            $user->gender_id = $externalGenderId;
+        }
+        $user->sync_status = self::SYNC_STATUS_SYNCED;
+    }
+
+
     //POCOR-5668 add identity section ends
 
     public function addBeforeAction(EventInterface $event)

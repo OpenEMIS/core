@@ -509,8 +509,10 @@ class GuardiansTable extends ControllerActionTable
             if (isset($viewUrl['queryString'])) {
                 unset($viewUrl['queryString']);
             }
+            
             $newButtons['view'] = $buttons['view'];
             $newButtons['view']['url'] = $viewUrl;
+            $newButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View Relation');
 //            die(print_r( $newButtons['view'], true));
         }
         if (isset($buttons['edit'])) {
@@ -556,7 +558,7 @@ class GuardiansTable extends ControllerActionTable
                 unset($editUrl['queryString']);
             }
             $newButtons['viewProfile'] = $buttons['edit'];
-            $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
+            $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('View Profile');
             $newButtons['viewProfile']['url'] = $editUrl;
 //            die(print_r( $newButtons['view'], true));
         }
