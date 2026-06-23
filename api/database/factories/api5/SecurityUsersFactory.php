@@ -35,7 +35,8 @@ class SecurityUsersFactory extends Factory
     'nationality_id' =>  \App\Models\Nationalities::factory()->create()->id,
     'identity_type_id' =>  \App\Models\IdentityTypes::factory()->create()->id,
     'identity_number' => $this->faker->lexify(str_repeat("?", 50)),
-    'external_reference' => $this->faker->lexify(str_repeat("?", 50)),
+    'external_reference' => null, //POCOR-9590: null by default so boot() inception-sync does not fire; set explicitly when testing sync flows
+    'sync_status' => SecurityUsers::SYNC_STATUS_LOCAL, //POCOR-9590: explicit default; may be overridden by inception-sync if external_reference is set
     'super_admin' => 0,
     'status' => $this->faker->numberBetween(0, 1),
     'last_login' => \Carbon\Carbon::now()->format("Y-m-d H:i:s"),
