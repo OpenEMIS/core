@@ -886,7 +886,7 @@ class CrudApiController extends Controller
             }
         }
         
-        if ($modelClass === \App\Models\Api5\LocaleContentTranslations::class) {
+       if ($modelClass === \App\Models\Api5\LocaleContentTranslations::class && $segments == NULL) {
             $results = $query->get();
             return response()->json([
                 'message' => 'Data retrieved successfully.',
