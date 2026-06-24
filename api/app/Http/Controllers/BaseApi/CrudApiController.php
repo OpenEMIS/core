@@ -885,6 +885,17 @@ class CrudApiController extends Controller
                 ]);
             }
         }
+        
+        if ($modelClass === \App\Models\Api5\LocaleContentTranslations::class) {
+            $results = $query->get();
+            return response()->json([
+                'message' => 'Data retrieved successfully.',
+                'data' => [
+                    'data' => $results,
+                    'total' => $results->count(),
+                ]
+            ]);
+        }
 
         return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
     }
