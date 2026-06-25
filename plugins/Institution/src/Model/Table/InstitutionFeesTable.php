@@ -1,0 +1,506 @@
+<?php
+namespace Institution\Model\Table;
+
+use ArrayObject;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\Event\EventInterface;
+use Cake\Utility\Text;
+use Cake\Http\ServerRequest;
+use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
+
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
+
+class InstitutionFeesTable extends ControllerActionTable
+{
+    use MessagesTrait;
+
+    private $institutionId = 0;
+    private $_selectedAcademicPeriodId = 0;
+    private $_academicPeriodOptions = [];
+    private $_gradeOptions = [];
+    public $currency = '';
+
+
+    /******************************************************************************************************************
+    **
+    ** CakePHP default methods
+    **
+    ******************************************************************************************************************/
+    public function initialize(array $config): void
+    {
+        parent::initialize($config);
+
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+
+        $this->hasMany('InstitutionFeeTypes', ['className' => 'Institution.InstitutionFeeTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract']);
+        $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        $this->addBehavior('RestrictAssociatedDelete', ['message' => 'InstitutionFees.fee_payments_exists']);
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => ['Expenditure'=>['id']]
+        ]);
+    }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator;
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $session = $this->request->getSession();
+        $this->institutionId = $this->getInstitutionID();
+
+        $this->field('total', ['type' => 'float', 'visible' => ['add' => false, 'edit' => false, 'index' => true, 'view' => true]]);
+        $this->field('institution_id', ['type' => 'hidden', 'visible' => ['edit'=>true]]);
+        $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true], 'onChangeReload'=>true]);
+        $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
+        $this->field('education_programme', ['type' => 'select', 'visible' => ['index'=>true]]);
+
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $this->currency = $ConfigItems->value('currency');
+        $this->field('fee_types', ['type' => 'element', 'element' => 'Institution.Fees/fee_types', 'currency' => $this->currency, 'visible' => ['view'=>true, 'edit'=>true]]);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Institutions','Students','Finance');
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
+    }
+
+    public function onUpdateIncludes(EventInterface $event, ArrayObject $includes, $action)
+    {
+        if ($action == 'edit' || $action == 'add') {
+            $includes['fees'] = [
+                'include' => true,
+                'js' => ['Institution.../js/fees']
+            ];
+        }
+    }
+
+
+    /******************************************************************************************************************
+    **
+    ** index action methods
+    **
+    ******************************************************************************************************************/
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder([
+            'education_programme', 'education_grade_id', 'total'
+        ]);
+    }
+
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        if (empty($this->request->getQuery('academic_period_id'))) {
+            //$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
+        }
+
+        $selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+        $Fees = $this;
+        $institutionId = $this->institutionId;
+
+        $this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
+            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noProgrammeGradeFees')),
+            'callable' => function ($id) use ($Fees, $institutionId) {
+                return $Fees->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+            }
+        ]);
+
+        $this->controller->set('selectedOption', $selectedOption);
+        $this->controller->set(compact('academicPeriodOptions'));
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $extra['elements']['custom'] = [
+            'name' => 'Institution.Fees/controls',
+            'data' => [
+                'encodedQueryString' => $encodedQueryString,
+            ],
+            'order' => 0
+        ];
+
+        $academicPeriodId = $selectedOption;
+        $query
+            ->contain(['InstitutionFeeTypes'])
+            ->find('withProgrammes')
+            ->where([$this->aliasField('academic_period_id') => $academicPeriodId]);
+    }
+
+    public function findWithProgrammes(Query $query, array $options)
+    {
+        return $query->contain(['EducationGrades'=>['EducationProgrammes']]);
+    }
+
+
+    /******************************************************************************************************************
+    **
+    ** view action methods
+    **
+    ******************************************************************************************************************/
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder([
+            'academic_period_id', 'education_grade_id', 'fee_types'
+        ]);
+    }
+
+    public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'EducationGrades',
+            'InstitutionFeeTypes.FeeTypes'
+        ]);
+    }
+
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $feeTypes = [];
+        $amount = 0.00;
+        foreach ($entity->institution_fee_types as $key=>$obj) {
+            if ($obj->amount > 0) { //POCOR-8177
+                $feeTypes[$obj->fee_type->order] = [
+                    'id' => $obj->id,
+                    'type' => $obj->fee_type->name,
+                    'fee_type_id' => $obj->fee_type_id,
+                    'amount' => number_format($obj->amount, 2)
+                ];
+                $amount = (float)$amount + (float)$obj->amount;
+            }
+        }
+        ksort($feeTypes);
+        $this->fields['fee_types']['data'] = $feeTypes;
+        $this->fields['fee_types']['total'] = $this->currency.' '.number_format($amount, 2);
+    }
+
+
+    /******************************************************************************************************************
+    **
+    ** edit action methods
+    **
+    ******************************************************************************************************************/
+    public function editBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder([
+            'academic_period_id', 'education_grade_id'
+        ]);
+
+        $this->fields['academic_period_id']['type'] = 'readonly';
+        $this->fields['education_grade_id']['type'] = 'readonly';
+        $this->field('total', ['visible' => false]);
+    }
+
+    public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $this->cleanFeeTypes($data);
+    }
+
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $feeTypes = [];
+        foreach ($this->fields['fee_types']['options'] as $key=>$obj) {
+            $feeTypes[] = [
+                'id' => Text::uuid(),
+                'type' => $obj,
+                'fee_type_id' => $key,
+                'amount' => '',
+                // 'error' => ''
+            ];
+        }
+        $this->fields['fee_types']['data'] = $feeTypes;
+
+        $exists = [];
+        $types = $this->fields['fee_types']['options']->toArray();
+        foreach ($entity->institution_fee_types as $key=>$obj) {
+            $exists[] = [
+                'id' => $obj->id,
+                'type' => $types[$obj->fee_type_id],
+                'fee_type_id' => $obj->fee_type_id,
+                'amount' => $obj->amount,
+                'error' => $obj->getErrors('amount')
+            ];
+        }
+        $this->fields['fee_types']['exists'] = $exists;
+        $this->fields['fee_types']['currency'] = $this->currency;
+
+        // $this->fields['academic_period_id']['attr']['value'] = $this->_academicPeriodOptions[$entity->academic_period_id];
+        $this->fields['academic_period_id']['value'] = $entity->academic_period_id;
+        $this->fields['academic_period_id']['attr']['value'] = $this->AcademicPeriods->get($entity->academic_period_id)->name;
+        $this->fields['education_grade_id']['attr']['value'] = isset($this->_gradeOptions[$entity->education_grade_id]) ? $this->_gradeOptions[$entity->education_grade_id] : $entity->education_grade->name;
+        // $this->fields['education_grade_id']['attr']['value'] = $this->_gradeOptions[$entity->education_grade_id];
+    }
+
+
+    /******************************************************************************************************************
+    **
+    ** add action methods
+    **
+    ******************************************************************************************************************/
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder([
+            'academic_period_id', 'education_grade_id'
+        ]);
+
+        $this->fields['academic_period_id']['options'] = $this->_academicPeriodOptions;
+
+        // find the grades that already has fees
+        $existedGrades = $this->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
+                            ->where([
+                                $this->aliasField('institution_id') => $this->institutionId,
+                                $this->aliasField('academic_period_id') => $this->_selectedAcademicPeriodId
+                            ])
+                            ->toArray();
+        // remove the existed grades from the options
+        $gradeOptions = array_diff_key($this->_gradeOptions, $existedGrades);
+        $this->fields['education_grade_id']['options'] = $gradeOptions;
+        $this->fields['institution_id']['value'] = $this->institutionId;
+        // $attr['attr']['value'] = $this->institutionId;
+    }
+
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $this->cleanFeeTypes($data);
+        $newOptions = ['InstitutionFeeTypes'=>['validate'=>false]];
+        if (isset($options['associated'])) {
+            $options['associated'] = array_merge($options['associated'], $newOptions);
+        } else {
+            $options['associated'] = $newOptions;
+        }
+    }
+
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $feeTypes = [];
+        foreach ($this->fields['fee_types']['options'] as $key=>$obj) {
+            $feeTypes[] = [
+                'id' => Text::uuid(),
+                'type' => $obj,
+                'fee_type_id' => $key,
+                'amount' => ''
+            ];
+        }
+        $this->fields['fee_types']['data'] = $feeTypes;
+        $this->fields['fee_types']['currency'] = $this->currency;
+    }
+
+
+
+    /******************************************************************************************************************
+    **
+    ** delete action events
+    **
+    ******************************************************************************************************************/
+
+    public function onBeforeDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->InstitutionFeeTypes->getAlias()
+        ];
+    }
+
+    /******************************************************************************************************************
+    **
+    ** field specific methods
+    **
+    ******************************************************************************************************************/
+    public function onGetEducationProgramme(EventInterface $event, Entity $entity)
+    {
+        return $entity->education_grade->education_programme->name;
+    }
+
+    public function onGetTotal(EventInterface $event, Entity $entity)
+    {
+        return $this->currency.' '.number_format($this->getTotal($entity), 2);
+    }
+
+    public function getTotal(Entity $entity)
+    {
+        /**
+         * PHPOE-1414
+         * Not using $this->total anymore since it only saves till 11 digits with 2 decimal places
+         * and when a feeType is for example, 999,999,999.99, the rest of the fee types cannot be added saved into the "total" record.
+         * Implements a manual count of the extracted feeTypes.
+         */
+        $amount = 0.00;
+        foreach ($entity->institution_fee_types as $key=>$feeType) {
+            $amount = (float)$amount + (float)$feeType->amount;
+        }
+        return $amount;
+    }
+
+    public function onUpdateFieldFeeTypes(EventInterface $event, array $attr, $action, $request)
+    {
+        $attr['options'] = $this->InstitutionFeeTypes->FeeTypes->getList();
+        return $attr;
+    }
+
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, $request)
+    {
+        $this->_academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $this->_selectedAcademicPeriodId = $this->postString('academic_period_id');
+        if ($this->_selectedAcademicPeriodId == 0 || is_null($this->_selectedAcademicPeriodId)) {
+            $this->_selectedAcademicPeriodId = $this->AcademicPeriods->getCurrent();
+        }
+        $this->advancedSelectOptions($this->_academicPeriodOptions, $this->_selectedAcademicPeriodId);
+
+        $attr['options'] = $this->_academicPeriodOptions;
+        return $attr;
+    }
+
+    public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, $request)
+    {
+        if (empty($this->request->getData()[$this->getAlias()]['academic_period_id'])) {
+            $this->request->getData()[$this->getAlias()]['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        }
+        //$this->_selectedAcademicPeriodId = $this->request->getData()[$this->getAlias()]['academic_period_id'];
+        $this->_selectedAcademicPeriodId = isset($this->request->getData()[$this->getAlias()]['academic_period_id'])
+        ? $this->request->getData()[$this->getAlias()]['academic_period_id']
+        : $this->AcademicPeriods->getCurrent(); //POCOR-8360
+
+        $this->_gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptions($this->institutionId, $this->_selectedAcademicPeriodId);
+        $attr['options'] = $this->_gradeOptions;
+        return $attr;
+    }
+
+
+    /******************************************************************************************************************
+    **
+    ** essential methods
+    **
+    ******************************************************************************************************************/
+    private function cleanFeeTypes(&$data)
+    {
+        if (isset($data[$this->getAlias()]['institution_fee_types'])) {
+            $types = $data[$this->getAlias()]['institution_fee_types'];
+            $total = 0;
+            foreach ($types as $i => $obj) {
+                if (empty($obj['amount'])) {
+                    unset($data[$this->getAlias()]['institution_fee_types'][$i]);
+                } else {
+                    $total = $total + $obj['amount'];
+                }
+            }
+            $data[$this->getAlias()]['total'] = $total;
+        }
+    }
+
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    {
+        //$institutionId = $this->Session->read('Institution.Institutions.id');
+        $institutionId  = $this->getInstitutionID();
+        $academicPeriod = $this->request->getQuery('academic_period_id');
+
+        if (empty($academicPeriod)) {
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+            if (empty($this->request->getQuery('academic_period_id'))) {
+                //$request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+                $this->request = $this->request->withQueryParams(['academic_period_id' => $this->AcademicPeriods->getCurrent()]);
+            }
+
+            $selectedOption = $this->queryString('academic_period_id', $academicPeriodOptions);
+            $Fees = $this;
+
+            $this->advancedSelectOptions($academicPeriodOptions, $selectedOption, [
+                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noProgrammeGradeFees')),
+                'callable' => function ($id) use ($Fees, $institutionId) {
+                    return $Fees->find()->where(['institution_id'=>$institutionId, 'academic_period_id'=>$id])->count();
+                }
+            ]);
+
+            $academicPeriod = $selectedOption;
+        }
+
+		$educationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+		$query
+		->select([
+            'total_fee' => 'InstitutionFees.total',
+            'education_grade' => 'EducationGrades.name',
+            'education_programme' => 'EducationProgrammes.name'
+        ])
+		->LeftJoin([$this->EducationGrades->getAlias() => $this->EducationGrades->getTable()],[
+			$this->EducationGrades->aliasField('id = '). 'InstitutionFees.education_grade_id'
+		])
+
+		->LeftJoin([$educationProgrammes->getAlias() => $educationProgrammes->getTable()],[
+			$educationProgrammes->aliasField('id = '). 'EducationGrades.education_programme_id '
+		])
+        ->where([
+            'InstitutionFees.academic_period_id' =>  $academicPeriod,
+            'InstitutionFees.institution_id' =>  $institutionId
+        ]);
+    }
+
+	public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
+    {
+
+        $extraField[] = [
+            'key' => 'EducationProgrammes.name',
+            'field' => 'education_programme',
+            'type' => 'string',
+            'label' => __('Education Programme')
+        ];
+
+        $extraField[] = [
+            'key' => 'EducationGrades.name',
+            'field' => 'education_grade',
+            'type' => 'string',
+            'label' => __('Education Grade')
+        ];
+
+        $extraField[] = [
+            'key' => 'InstitutionFees.total',
+            'field' => 'total_fee',
+            'type' => 'integer',
+            'label' => __('Total Fee')
+        ];
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'academic_period_id') {
+            return  __('Academic Period');
+            // POCOR-9065 removed education grades to work with labels table
+        } else if ($field == 'total') {
+            return  __('Total Fee');
+        } else if ($field == 'fee_types') {
+            return  __('Fee Types');
+        } else if ($field == 'modified_user_id') {
+            return __('Modified By');
+        } else if ($field == 'modified') {
+            return __('Modified On');
+        } else if ($field == 'created_user_id') {
+            return __('Created By');
+        } else if ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+}

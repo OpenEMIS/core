@@ -1,0 +1,12 @@
+# POCOR-9694: OpenEMIS Runtime — single-cron entry-point.
+#
+# This file is installed at /etc/cron.d/openemis-core in the Docker image.
+# The shell script wraps `php artisan openemis-core:run` under flock so
+# overlapping ticks never stack. All scheduled work (webhooks:process,
+# alerts:check, alerts:send, …) is dispatched from ONE entry-point.
+#
+# Format for /etc/cron.d/: minute hour dom month dow USER command
+#POCOR-9719: cron now invokes the shell script (lives next to artisan).
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*  *  *  *  *  www-data  /var/www/html/core/api/openemis-core-cron.sh

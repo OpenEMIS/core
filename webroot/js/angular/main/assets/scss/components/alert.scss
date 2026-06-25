@@ -1,0 +1,170 @@
+@charset "UTF-8";
+
+/* Alert V1.1.0 */
+
+$alerts: (info, $infoColor),
+(success, $successColor),
+(error, $errorColor),
+(warning, $warningColor);
+
+@each $alertName,
+$alertColor in $alerts {
+    .toast-#{$alertName},
+    .btn-#{$alertName} {
+        background-color: $alertColor !important;
+        border: 1px solid mix(black, $alertColor, 10%) !important;
+
+        &:hover,
+        &:before,
+        &:focus {
+            background-color: mix(black, $alertColor, 10%) !important;
+            border: 1px solid mix(black, $alertColor, 10%) !important;
+        }
+    }
+
+    .toast-outline-#{$alertName},
+    .btn-outline-#{$alertName} {
+        background-color: $whiteColor !important;
+        border: 1px solid mix(black, $alertColor, 10%) !important;
+        color: mix(black, $alertColor, 10%) !important;
+
+        &:hover {
+            background-color: mix(black, $alertColor, 10%) !important;
+            color: $whiteColor !important;
+        }
+    }
+
+    .btn.btn-#{$alertName}:focus {
+        background-color: mix(black, $alertColor, 10%) !important;
+        border: 1px solid mix(black, $alertColor, 10%) !important;
+    }
+}
+
+.toast-top-right {
+    top: 62px !important;
+    margin-bottom: $margin10 !important;
+
+    @media #{$tabletLandscape} {
+        top: 100px !important;
+    }
+    @media #{$mobileLandscape} {
+        width: 95%;
+    }
+
+    .toast {
+        opacity: 0.95 !important;
+        box-shadow: -3px 3px 1px rgba(0, 0, 0, .1) !important;
+
+        @media #{$mobileLandscape} {
+            width: 100% !important;
+        }
+
+        .icon-info {
+            background-image: none !important;
+            width: 50px !important;
+
+            &:after {
+                content: "\f05a";
+                @extend .toast-icon;
+                @extend .centralised-element;
+            }
+        }
+
+        .icon-success {
+            background-image: none !important;
+            width: 50px !important;
+
+            &:after {
+                content: "\f058";
+                @extend .toast-icon;
+                @extend .centralised-element;
+            }
+        }
+
+        .icon-error {
+            background-image: none !important;
+            width: 50px !important;
+
+            &:after {
+                content: "\f06a";
+                @extend .toast-icon;
+                @extend .centralised-element;
+            }
+        }
+
+        .icon-warning {
+            background-image: none !important;
+            width: 50px !important;
+
+            &:after {
+                content: "\f071";
+                @extend .toast-icon;
+                @extend .centralised-element;
+            }
+        }
+
+        .toast-content {
+            .toast-title {
+                font-size: $textSizeXS;
+                opacity: 0.8;
+            }
+
+            .toast-message {
+                font-size: $textSizeXS;
+                line-height: $textSizeM;
+            }
+        }
+
+        .toast-close-button {
+            position: absolute;
+            color: #000 !important;
+            opacity: 0.5 !important;
+            top: 0 !important;
+            right: 5px !important;
+
+            &:hover {
+                opacity: 0.6 !important;
+            }
+
+            &:focus {
+                outline: none !important;
+            }
+        }
+    }
+}
+
+.text-red {
+    color: $errorColor;
+}
+
+.text-blue {
+    color: $infoColor;
+}
+
+.text-yellow {
+    color: $warningColor;
+}
+
+.text-green {
+    color: $successColor;
+}
+
+.rtl {
+    .toast-top-right {
+        right: auto !important;
+        left: 12px;
+
+        .toast {
+            padding: $padding15 50px $padding15 $padding15 !important;
+            .toaster-icon {
+                left: auto !important;
+                right: 0;
+            }
+        }
+
+        .toast-close-button {
+            right: auto !important;
+            left: 5px !important;
+        }
+    }
+}

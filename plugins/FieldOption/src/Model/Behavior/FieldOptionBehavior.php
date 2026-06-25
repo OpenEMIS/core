@@ -1,0 +1,248 @@
+<?php
+/*
+@OPENEMIS LICENSE LAST UPDATED ON 2013-05-16
+
+OpenEMIS
+Open Education Management Information System
+
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by the Free Software Foundation
+, either version 3 of the License, or any later version.  This program is distributed in the hope
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
+<http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
+*/
+
+namespace FieldOption\Model\Behavior;
+
+use ArrayObject;
+use Cake\Event\EventInterface;
+use Cake\ORM\Behavior;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
+
+class FieldOptionBehavior extends Behavior
+{
+    public function initialize(array $config): void
+    {
+        $this->_table->setDeleteStrategy('restrict');
+    }
+
+    public function getDefaultValue()
+    {
+        $value = '';
+        $primaryKey = $this->_table->getPrimaryKey();
+        $entity = $this->getDefaultEntity();
+        return $entity->{$primaryKey};
+    }
+
+    public function getDefaultEntity()
+    {
+        $query = $this->_table->find();
+        $entity = $query
+            ->where([$this->_table->aliasField('default') => 1])
+            ->first();
+
+        if (is_null($entity)) {
+            $query = $this->_table->find();
+            $entity = $query->first();
+        }
+
+        return $entity;
+    }
+
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
+        $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction'];
+        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
+        $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch'];
+        $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
+        return $events;
+    }
+
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (!$data->offsetExists('default')) {
+            $data['default'] = '0';
+        }
+        //POCOR-7485 starts
+        if (!$data->offsetExists('visible')) {
+            $data['visible'] = '0';
+        }//POCOR-7485 ends
+    }
+
+    public function buildValidator(EventInterface $event, Validator $validator, $name)
+    {
+        $model = $this->_table; // POCOR-8696
+        $validator = $model->validationDefault($validator); // POCOR-8696
+        //POCOR-8166 [Remove validation for contact types of unique name rule] STARTS
+        $tableAlias = $model->getAlias(); // POCOR-8696
+        $addUniqueName = false;
+        if ($validator->hasField('name')) {
+            $set = $validator->field('name');
+            if (!$set->rule('ruleUnique')) {
+                $addUniqueName = true;
+            }
+        } else {
+            $addUniqueName = true;
+        }
+
+
+
+        if(isset($tableAlias) && $tableAlias != 'ContactTypes'){
+
+            if ($addUniqueName) {
+                $validator
+                    ->add('name', [
+                        'ruleUnique' => [
+                            'rule' => 'validateUnique',
+                            'provider' => 'table',
+                            'message' => __('This field has to be unique')
+                        ]
+                    ]);
+            }
+        }
+        //POCOR-8166 [Remove validation for contact types of unique name rule] END
+
+
+        $validator
+            ->requirePresence('visible')
+            ->requirePresence('default');
+    }
+
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options) {
+        // only perform for v4
+        if ($this->_table->hasBehavior('ControllerAction')) {
+            if ($entity->has('default') && $entity->default == 1) {
+                $this->_table->updateAll(['default' => 0], [$this->_table->getPrimaryKey().' != ' => $entity->{$this->_table->getPrimaryKey()}]);
+            }
+        }
+    }
+
+    private function buildFieldOptions() {
+        $data = $this->_table->FieldOption->getFieldOptions();
+        $fieldOptions = [];
+        foreach ($data as $key => $obj) {
+            $parent = __($obj['parent']);
+            if (!array_key_exists($parent, $fieldOptions)) {
+                $fieldOptions[$parent] = [];
+            }
+
+            if (isset($obj['title'])) {
+                $keyName = $obj['title'];
+            } else {
+                $keyName = Inflector::humanize(Inflector::underscore($key));
+            }
+            $fieldOptions[$parent][$key] = __($keyName);
+            asort($fieldOptions[$parent]); // POCOR-8147
+        }
+        return $fieldOptions;
+    }
+
+    public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    {
+
+    }
+
+    public function onGetEditable(EventInterface $event, Entity $entity)
+    {
+        return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+    }
+
+    public function onGetDefault(EventInterface $event, Entity $entity)
+    {
+        return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+    }
+
+    // for CA v4
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        $fieldOptions = $this->buildFieldOptions();
+        $selectedOption = $model->alias;
+        $this->addFieldOptionControl($extra, ['fieldOptions' => $fieldOptions, 'selectedOption' => $selectedOption]);
+
+        $model->field('default', ['options' => $model->getSelectOptions('general.yesno'), 'after' => 'visible']);
+        //POCOR-5668 add external validation starts, POCOR-7981
+        if ($model->alias == 'Nationalities') {
+            $defaultOptions = ['' => '-- '.__('Select').' --'];
+            $zeroOptions = ['0' =>__('None')];
+            $externalTypes = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $externalTypeOptions = $externalTypes
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->where(['type' => 'External Data Source - Identity',
+                    'value' => 1])
+                ->toArray();
+            $externalTypeOptions = $zeroOptions + $externalTypeOptions;
+            $options = $defaultOptions + $externalTypeOptions;
+            $model->field('external_validation',
+                ['options' =>
+                    $options,
+                    'after' => 'default',
+                    'default' => 0
+                ]
+            );
+            $model->field('is_refugee',
+                ['options' =>
+                    $model->getSelectOptions('general.yesno'),
+                    'attr' => ['label' => __('Refugee')],
+                    'before' => 'international_code',
+                    'after' => 'external_validation',
+                    'default' => 0
+                ]); //POCOR-7980
+        }
+        //POCOR-5668 add external validation ends
+        $model->field('editable', ['options' => $model->getSelectOptions('general.yesno'), 'visible' => ['index' => true], 'after' => 'default']);
+
+        $extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
+    }
+
+    private function addFieldOptionControl(ArrayObject $extra, $data = [])
+    {
+        $extra['elements']['controls'] = ['name' => 'FieldOption.controls', 'data' => $data, 'order' => 2];
+    }
+
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        if ($entity->has('editable') && $entity->editable == false) {
+            $model->fields['name']['type'] = 'disabled';
+            $model->fields['visible']['type'] = 'disabled';
+            $model->fields['international_code']['type'] = 'disabled';
+            $model->fields['national_code']['type'] = 'disabled';
+            //POCOR-5668 starts
+            $model->fields['external_validation']['type'] = 'disabled';
+            //POCOR-5668 ends
+        }
+    }
+
+    public function indexBeforeAction(EventInterface $event)
+    {
+        $model = $this->_table;
+        $model->field('name', ['after' => 'editable']);
+        $fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code', 'external_validation'];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $model->fields)) {
+                if (is_array($model->fields[$field]['visible'])) {
+                    $model->fields[$field]['visible']['index'] = true;
+                } else {
+                    if ($model->fields[$field]['visible']) {
+                        $model->fields[$field]['visible'] = [
+                            'view' => true,
+                            'edit' => true,
+                            'index' => true
+                        ];
+                    } else {
+                        $model->fields[$field]['visible'] = ['index' => true];
+                    }
+                }
+            }
+        }
+    }
+}

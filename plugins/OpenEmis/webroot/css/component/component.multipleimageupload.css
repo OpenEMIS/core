@@ -1,0 +1,68 @@
+/* MULTIPLE IMAGE UPLOAD v.1.0.0 */
+
+.multifileinput {
+	display: inline-block;
+}
+
+.files.box {
+	border: 1px solid #CCC;
+    border-radius: 3px;
+    padding: 0;
+    margin: 0 0 15px;
+    max-height: 135px;
+    overflow: auto;
+}
+
+.files .file-row {
+	padding: 5px 10px;
+	border-bottom: 1px solid #EEE;
+}
+
+.files .file-row:last-child {
+	border-bottom: 0;
+}
+
+.files .files-wrapper {
+	display: flex;
+	align-items: center;
+}
+
+.files .files-wrapper i,
+.files .files-wrapper .name {
+	color: #555;
+}
+
+.files .files-wrapper i {
+	font-size: 12px;
+	padding: 2px 0;
+}
+
+.files .files-wrapper span.btn {
+	padding: 0;
+	margin-right: 0 !important;
+}
+
+.files .files-wrapper span.btn:active {
+	box-shadow: none;
+}
+
+.files .files-wrapper .name {
+	padding: 0 10px;
+	margin: 0;
+	text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.fileinput .files.box p.file-label {
+    margin: 0;
+    padding: 10px 0;
+    text-align: center;
+    color: #999;
+}
+
+@media only screen and (max-width: 800px) {
+	.fileinput {
+		width: 100%;
+	}
+}

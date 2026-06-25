@@ -1,0 +1,30 @@
+@media only screen and (min-width: 1025px) {
+    .student-table-data {
+        position: unset !important;
+        height: 100vh !important;
+    }
+    
+}
+
+@media only screen and (min-width: 1025px) {
+    ::ng-deep .kdx-table.full-grid .kdx-ag-grid-wrapper {
+        top: 40px !important;
+    }
+
+}
+
+/* To display table minimum height is required */
+.kdx-table,
+.kdx-multiselect-table {
+    .stg-theme {
+        min-height: 1000px !important;
+    }
+}
+
+::ng-deep .ag-root-wrapper-body.ag-layout-normal.ag-focus-managed {
+    padding-top: 7px !important;
+}
+
+.kdx-tabs {
+    z-index: 0 !important;
+}

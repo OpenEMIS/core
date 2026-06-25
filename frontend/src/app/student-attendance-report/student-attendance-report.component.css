@@ -1,0 +1,3 @@
+::ng-deep kd-view .section-header {
+    display: none !important;
+}

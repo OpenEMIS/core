@@ -1,0 +1,5 @@
+export const environment = {
+  production: true,
+  // POCOR-9594: apiV4BaseUrl/apiV5BaseUrl removed from env — ApiService and DataService
+  // now compute the base URL dynamically from window.location.origin at runtime.
+};

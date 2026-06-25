@@ -1,0 +1,78 @@
+/* Calendar v1.0.0 */
+
+.kd-calendar {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    overflow: visible;
+    clear: both;
+    min-width: 285px;
+}
+
+.kdx-calendar .cal-month-view .cal-day-cell.cal-today .cal-day-number {
+    background-color: #999;
+    border: 1px solid #555;
+}
+
+.kdx-calendar .cal-month-view .cal-day-cell.cal-in-month.cal-today .cal-day-number {
+    margin-top: 17px;
+    margin-bottom: 8px;
+    font-size: 18px;
+    line-height: 23px;
+}
+
+.kdx-calendar .cal-cell-row .cal-cell:hover .cal-day-number {
+    color: #999;
+}
+
+.kdx-calendar .kdx-cal-day-event {
+    font-weight: bold;
+} 
+
+.kdx-calendar .cal-cell-row .kdx-cal-day-event {
+    line-height: 18px;
+}
+
+.kdx-calendar .btn-info {
+    background-color: #2F79C3;
+    border: 1px solid #2A6DB0;
+}
+
+.kdx-calendar .btn-success {
+    background-color: #17B090;
+    border: 1px solid #159E82;
+}
+
+.kdx-calendar .btn-warning {
+    background-color: #EF9F38;
+    border: 1px solid #D78F32;
+}
+
+.kdx-calendar .btn-error {
+    background-color: #CC4949;
+    border: 1px solid #B84242;
+}
+
+@media screen and (max-width: 767px) {
+    .kdx-calendar .cal-month-view .cal-cell-row .cal-day-cell.cal-in-month.cal-today .cal-day-number {
+        margin-top: 18px;
+        margin-bottom: 12px;
+        font-size: 19px;
+    }
+
+    .rtl .kdx-calendar .cal-month-view .cal-cell-row .cal-day-cell.cal-in-month.cal-today .cal-day-number {
+        margin-top: 18px;
+        margin-bottom: 13px;
+        font-size: 19px;
+    }
+
+    .kdx-calendar .cal-cell-row .kdx-cal-day-event {
+        line-height: 5px;
+    }
+}
+
+@-moz-document url-prefix() { 
+    .kdx-calendar .cal-month-view .cal-day-cell.cal-in-month.cal-today .cal-day-number {
+        line-height: 22px;
+    }
+}

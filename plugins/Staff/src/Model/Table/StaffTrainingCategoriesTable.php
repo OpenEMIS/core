@@ -1,0 +1,106 @@
+<?php
+namespace Staff\Model\Table;
+
+use ArrayObject;
+
+use Cake\Event\EventInterface;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+
+use App\Model\Table\ControllerActionTable;
+
+class StaffTrainingCategoriesTable extends ControllerActionTable
+{
+    public function initialize(array $config): void
+    {
+        $this->setTable('staff_training_categories');
+        parent::initialize($config);
+
+        $this->hasMany('StaffTrainings', ['className' => 'Staff.StaffTrainings', 'foreignKey' => 'staff_training_category_id']);
+
+        $this->addBehavior('FieldOption.FieldOption');
+    }
+
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $AlertRules = TableRegistry::getTableLocator()->get('Alert.AlertRules');
+        $alertRuleTypes = $AlertRules->getAlertRuleTypes();
+        foreach ($alertRuleTypes as $feature => $config) {
+            if (isset($config['threshold']) && !empty($config['threshold'])) {
+                foreach ($config['threshold'] as $field => $attr) {
+                    if (isset($attr['lookupModel']) && $attr['lookupModel'] == $this->registryAlias()) {
+                        $records = $AlertRules->find()
+                            ->where([
+                                $AlertRules->aliasField('feature') => $feature,
+                                $AlertRules->aliasField('threshold') . ' LIKE ' => '%"'. $field .'"%'
+                            ])
+                            ->all();
+
+                        $recordCount = 0;
+                        if (!$records->isEmpty() && isset($attr['type'])) {
+                            if ($attr['type'] == 'select') {
+                                foreach ($records as $obj) {
+                                    $thresholdData = json_decode($obj->threshold, true);
+                                    if (array_key_exists($field, $thresholdData) && ($thresholdData[$field] == $entity->id)) {
+                                        $recordCount++;
+                                    }
+                                }
+                            } else if ($attr['type'] == 'chosenSelect') {
+                                foreach ($records as $obj) {
+                                    $thresholdData = json_decode($obj->threshold, true);
+                                    if (array_key_exists($field, $thresholdData) && in_array($entity->id, $thresholdData[$field])) {
+                                        $recordCount++;
+                                    }
+                                }
+                            }
+                        }
+
+                        $modelAlias = __('AlertRules') . ': ' . $feature;
+                        $extra['associatedRecords'][] = ['model' => $modelAlias, 'count' => $recordCount];
+                    }
+                }
+            }
+        }
+    }
+
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(EventInterface $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified By');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                return __('Created By');
+            case 'visible':
+                return __('Visible');
+            case 'name':
+                return __('Name');
+            case 'international_code':
+                return __('International Code');
+            case 'national_code':
+                return __('National Code');
+            case 'editable':
+                return __('Editable');
+            case 'default':
+                return __('Default');
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+}

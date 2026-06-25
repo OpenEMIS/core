@@ -1,0 +1,5182 @@
+<?php
+
+namespace Institution\Model\Table;
+
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\OptionsTrait;
+use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
+use ArrayObject;
+use Cake\Collection\Collection;
+use Cake\Core\Configure;
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Event\EventInterface;
+use Cake\I18n\Date;
+use Cake\I18n\Time;
+use Cake\Log\Log;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
+use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
+use Cake\Utility\Hash;
+use Cake\Validation\Validator;
+use DateInterval;
+use DatePeriod;
+use DateTime;
+use Cake\Http\ServerRequest;
+use Cake\Utility\Text;
+use Cake\ORM\Locator\TableLocator;
+use Cake\I18n\FrozenDate;
+use Cake\I18n\FrozenTime;
+use Cake\Collection\CollectionInterface;
+
+
+class StaffTable extends ControllerActionTable
+{
+
+    use OptionsTrait;
+    private $assigned;
+    private $endOfAssignment;
+    const PENDING = 0;
+    const APPROVED = 1;
+    const REJECTED = 2;
+    const CLOSED = 3;
+    const PENDING_PROFILE = -1;
+    const PENDING_TRANSFERIN = -2;
+    const PENDING_TRANSFEROUT = -3;
+    const PENDING_RELEASEIN = -4;
+    const PENDING_RELEASEOUT = -5;
+    private $dashboardQuery = null;
+    private $institution_id;
+    private $academic_period_id;
+    private $_dynamicFieldName = 'custom_field_data';
+    private $customFieldData = null;
+    private $customFieldTableName = 'StaffCustomField.StaffCustomFields';
+
+    public function initialize(array $config): void
+    {
+        $this->setTable('institution_staff');
+        parent::initialize($config);
+
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes', 'foreignKey' => 'staff_type_id']);
+        $this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
+        $this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
+        $this->belongsTo('InstitutionStaffShifts', ['className' => 'Institution.InstitutionStaffShifts', 'foreignKey' => 'staff_id']);
+        $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffTransferOut', ['className' => 'Institution.StaffTransferOut', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffRelease', ['className' => 'Institution.StaffRelease', 'foreignKey' => 'previous_institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        // $this->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('SecondaryStaff', ['className' => 'Institution.InstitutionClassesSecondaryStaff', 'foreignKey' => 'secondary_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('DepartmentStaff', ['className' => 'Institution.DepartmentStaff', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->addBehavior('Security.SecurityAccess');
+        $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
+        $this->addBehavior('AcademicPeriod.Period');
+        // to handle field type (autocomplete)
+        $this->addBehavior('OpenEmis.Autocomplete');
+        $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('AcademicPeriod.AcademicPeriod');
+        //POCOR-9532 start
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($requestUri, 'ImportStaff') === false) {
+            $this->addBehavior('User.MoodleCreateUser');
+        } //POCOR-9523 end
+
+        $this->addBehavior('Excel', [  //POCOR-6898 change Excel to ContactExcel Behaviour
+            'excludes' => ['start_year', 'end_year', 'security_group_user_id'],
+            'pages' => ['index'],
+            'autoFields' => false
+        ]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StaffRoom' => ['index', 'edit'],
+            'Staff' => ['index', 'add'],
+            'ClassStudents' => ['index'],
+            'SubjectStudents' => ['index'],
+            'ReportCardComments' => ['index'],
+            'InstitutionStaffAttendances' => ['index', 'view']
+        ]);
+
+        $this->addBehavior('HighChart', [
+            'staff_attendance' => [
+                '_function' => 'getNumberOfStaffByAttendanceType',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
+            'number_of_staff_by_type' => [
+                '_function' => 'getNumberOfStaffByType',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Position Type')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
+            'number_of_staff_by_position' => [
+                '_function' => 'getNumberOfStaffByPosition',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Position Title')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
+            'number_of_staff_by_year' => [
+                '_function' => 'getNumberOfStaffByYear',
+                '_defaultColors' => false,
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
+            'institution_staff_gender' => [
+                '_function' => 'getNumberOfStaffsByGender',
+                '_defaultColors' => false,
+            ],
+            'institution_staff_qualification' => [
+                '_function' => 'getNumberOfStaffsByQualification'
+            ],
+        ]);
+
+        /**
+         * Advance Search Types.
+         * AdvanceSearchBehavior must be included first before adding other types of advance search.
+         * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
+         */
+        $advancedSearchFieldOrder = [
+            'first_name', 'middle_name', 'third_name', 'last_name',
+            'contact_number', 'identity_type', 'identity_number'
+        ];
+
+        $this->addBehavior('AdvanceSearch', [
+            'exclude' => [
+                'staff_id',
+                'institution_id',
+                'staff_type_id',
+                'staff_status_id',
+                'institution_position_id',
+                'security_group_user_id'
+            ],
+            'order' => $advancedSearchFieldOrder
+        ]);
+        $this->addBehavior('User.AdvancedIdentitySearch', [
+            'associatedKey' => $this->aliasField('staff_id')
+        ]);
+        $this->addBehavior('User.AdvancedContactNumberSearch', [
+            'associatedKey' => $this->aliasField('staff_id')
+        ]);
+        $this->addBehavior('User.AdvancedSpecificNameTypeSearch', [
+            'modelToSearch' => $this->Users
+        ]);
+
+        $this->addBehavior('Institution.StaffValidation');
+        /**
+         * End Advance Search Types
+         */
+
+        $this->StaffStatuses = new StaffStatusesTable();
+
+        // $this->StaffStatuses = TableRegistry::getTableLocator()->get('Staff.StaffStatuses');
+        $statuses = $this->StaffStatuses->findCodeList();
+        $this->assigned = $statuses['ASSIGNED'];
+        $this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
+
+        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('ControllerAction.Image');
+
+        $this->setDeleteStrategy('restrict');
+
+        $custom_fields = TableRegistry::getTableLocator()->get($this->customFieldTableName);
+        $bigCustomFieldData = $custom_fields->find('all')->select([
+            'custom_field_id' => $custom_fields->aliasfield('id'),
+            'custom_field_name' => $custom_fields->aliasfield('name'),
+            'custom_field_type' => $custom_fields->aliasfield('field_type'),
+            'custom_field_description' => $custom_fields->aliasfield('description')
+        ])->innerJoin(
+            ['StaffCustomFormsFields' => 'staff_custom_forms_fields'], // Class Object => table_name
+            ['StaffCustomFormsFields.staff_custom_field_id = ' . $custom_fields->aliasField('id'), // Where
+            ])
+            ->group($custom_fields->aliasfield('id'))
+            ->toArray();
+        $customFieldData = [];
+        foreach ($bigCustomFieldData as $customFieldDatum) {
+            $customFieldData[$customFieldDatum->custom_field_id] = $customFieldDatum;
+        }
+//        $this->log('$customFieldData', 'debug');
+//        $this->log($customFieldData, 'debug');
+        $this->customFieldData = $customFieldData;
+        $this->addBehavior('Institution.InstitutionTab',
+            ['appliedAction' => ['Staff' =>
+                [
+                    'staff_status_id',
+                    'academic_period_id',
+                    'staff_id'
+                ],
+                'StaffUser' =>
+                    [
+                        'staff_status_id',
+                        'academic_period_id',
+                    ]
+            ]
+            ]
+        );
+
+        $this->addBehavior('Staff.StaffTab');
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'staff_create',
+                'entity_delete' => 'staff_delete',
+                'entity_update' => 'staff_update',
+                'table_alias' => 'Institution.InstitutionStaff',
+                'contain' => []
+            ]
+        ); // for webhook
+    }
+
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        $events['Restful.Model.isAuthorized'] = ['callable' => 'isAuthorized', 'priority' => 1]; //POCOR-6749: to enable Staff api
+        return $events;
+    }
+
+    /*
+    * Function to enable staff api call for view and add
+    * @author Ehteram Ahmad <ehteram.ahmad@mail.valuecoders.com>
+    * return boolean
+    * @ticket POCOR-6749
+    */
+
+    public function isAuthorized(EventInterface $event, $scope, $action, $extra)
+    {
+        if ($action == 'index' || $action == 'add') {
+            // check for the user permission to view here
+            $event->stopPropagation();
+            return true;
+        }
+    }
+
+    public function getSearchableFields(EventInterface $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'staff_id';
+        $searchableFields[] = 'openemis_no';
+    }
+
+    public function validationAllowEmptyName(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator->remove('staff_name');
+        return $validator;
+    }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+
+        $validator = $this->buildStaffValidation();
+        return $validator
+            ->allowEmpty('staff_name')
+            ->add('staff_name', 'ruleInstitutionStaffId', [
+                'rule' => ['institutionStaffId'],
+                'on' => 'create'
+            ])
+            ->add('staff_assignment', 'ruleTransferRequestExists', [
+                'rule' => ['checkPendingStaffTransfer'],
+                'on' => 'create'
+            ])
+            ->add('staff_assignment', 'ruleReleaseRequestExists', [
+                'rule' => ['checkPendingStaffRelease'],
+                'on' => 'create'
+            ])
+            ->add('staff_assignment', 'ruleCheckStaffAssignment', [
+                'rule' => ['checkStaffAssignment'],
+                'on' => 'create'
+            ])
+            ->requirePresence('FTE')
+            ->requirePresence('position_type')
+            ->add('start_date', 'ruleInAllPeriod', [
+                'rule' => function ($value, $context) {
+                    $checkDate = date('Y-m-d', strtotime($value));
+                    $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+                    // check for staff import start date must be within the range of the academic period - POCOR-4576
+                    $academicPeriodList = $AcademicPeriods
+                        ->find('years')
+                        ->select([
+                            $AcademicPeriods->aliasField('start_date'),
+                            $AcademicPeriods->aliasField('end_date')
+                        ])
+                        ->toArray();
+
+                    foreach ($academicPeriodList as $academicPeriod) {
+                        $startDate = date('Y-m-d', strtotime($academicPeriod->start_date));
+                        $endDate = date('Y-m-d', strtotime($academicPeriod->end_date));
+
+                        if ($startDate <= $checkDate && $endDate >= $checkDate) {
+                            return true;
+                        }
+                    }
+                    return false;
+                },
+                'on' => function ($context) {
+                    // check for staff import on create operations - where academic_period_id do not exist in the context data
+                    return ($context['newRecord'] && !array_key_exists('academic_period_id', $context['data']));
+                }
+            ]);
+    }
+
+    public function validationAllowPositionType(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator->requirePresence('position_type', false);
+        return $validator;
+    }
+
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    {
+        $institutionId = $this->getInstitutionID();
+        $periodId = $this->request->getQuery('academic_period_id');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $academicPeriodId = $AcademicPeriods->getCurrent();
+        if (!$periodId) {
+            $periodId = $academicPeriodId;
+        }
+
+        $this->institution_id = $institutionId;
+        $this->academic_period_id = $periodId;
+
+        $query = $this->setBasicQuery($query);
+
+        $query = $this->addInstitutionFields($query);
+
+        $query = $this->addStaffStatusField($query);
+
+        $query->contain(['Users']);
+
+        $query = $this->addUserBasicFields($query);
+
+        $query = $this->addStaffContactFields($query);
+
+        $query = $this->addStaffPositionField($query);
+
+        $query = $this->addStaffTypeField($query);
+
+        $query = $this->addStaffIdentityTypeField($query);
+
+        $query = $this->addStaffNationalityField($query);
+
+        $query = $this->addStaffCustomFields($query);
+        // POCOR-8790 Start
+        $query = $this->setStaffStatusID($query);
+
+        if(!empty($this->request->getQuery('position'))) {
+            $query = $this->setPoitionID($query);
+        }
+
+        $query = $query->distinct(['staff_id']); // remove duplicate staff record
+        //POCOR-8790 End
+        return $query;
+
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function setBasicQuery(Query $query)
+    {
+
+        $condition = [
+            $this->aliasField('institution_id') => $this->institution_id,
+        ];
+
+        $query->find('academicPeriod', ['academic_period_id' => $this->academic_period_id])
+            ->select(
+                [
+                    $this->aliasField('id'),
+                    $this->aliasField('staff_id'),
+                    $this->aliasField('FTE'),
+                    $this->aliasField('staff_status_id'),
+                    $this->aliasField('staff_type_id'),
+                    $this->aliasField('is_homeroom'),
+                    $this->aliasField('start_date'),
+                    $this->aliasField('end_date'),
+                ]
+            )
+            ->where([
+                $condition
+            ]); // POCOR-7972
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addInstitutionFields(Query $query)
+    {
+        $institutionId = $this->institution_id;
+        $institution = self::getRelatedRecord('Institution.Institutions', $institutionId);
+        $institution_code = $institution['code'];
+        $institution_name = $institution['name'];
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($institution_name, $institution_code) {
+            return $results->map(function ($row) use ($institution_name, $institution_code) {
+                $row['institution_code'] = $institution_code;
+                $row['institution_name'] = $institution_name;
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     *
+     */
+    public static function getRelatedRecord($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::getTableLocator()->get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->toArray();
+        } catch (RecordNotFoundException $e) {
+            return null;
+        }
+        return null;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addStaffStatusField(Query $query)
+    {
+        $statuses = self::getRelatedOptions('Institution.StaffStatuses', '`id`');
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($statuses) {
+            return $results->map(function ($row) use ($statuses) {
+                $row['staff_status'] = $statuses[$row->staff_status_id];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    /**
+     * @param $tableName
+     * @param string $order
+     * @param array $where
+     * @return array|null
+     */
+    private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
+    {
+        $Table = TableRegistry::getTableLocator()->get($tableName);
+        try {
+            $related = $Table->find('list')
+                ->select(['id', 'name'])
+                ->where($where)
+                ->orderAsc($order);
+            $options = $related->toArray();
+            $options = array_unique($options);
+            return $options;
+        } catch (RecordNotFoundException $e) {
+            null;
+        }
+        return null;
+    }
+
+    //POCOR-6248 starts
+
+    /**
+     * @param Query $query
+     * @return Query
+     */
+    private function addUserBasicFields(Query $query)
+    {
+        // POCOR-7972:start
+        $query = $query->select([
+            'first_name' => 'Users.first_name',
+            'middle_name' => 'Users.middle_name',
+            'third_name' => 'Users.third_name',
+            'last_name' => 'Users.last_name',
+            'staff_openemis_no' => 'Users.openemis_no',
+            'staff_username' => 'Users.username',
+            'staff_date_of_birth' => 'Users.date_of_birth',
+            'staff_address' => 'Users.address',
+            'staff_identity_number' => 'Users.identity_number',
+            //POCOR-8656 start
+            'staff_email' => 'Users.email',
+            //POCOR-8656 end
+        ])
+            ->formatResults(function ($results) {
+                return $results->map(function ($row) {
+                    $staff_name = "$row->first_name $row->middle_name $row->third_name $row->last_name";
+                    $staff_name = str_replace('  ', ' ', $staff_name);
+                    $staff_name = str_replace('  ', ' ', $staff_name);
+                    $row['staff_names'] = str_replace('  ', ' ', $staff_name);
+//            unset($row['first_name']);
+                    unset($row['middle_name']);
+                    unset($row['third_name']);
+//            unset($row['last_name']);
+                    return $row;
+                });
+            })->order(['first_name', 'last_name']);
+        // POCOR-7972:end
+        return $query;
+    } //POCOR-6248 ends
+
+    private function addStaffContactFields(Query $query)
+    {
+        $staff_contacts = TableRegistry::getTableLocator()->get('UserContacts');
+        $contact_types = TableRegistry::getTableLocator()->get('User.ContactTypes');
+        $contact_options = TableRegistry::getTableLocator()->get('User.ContactOptions');
+        $staff_contacts->getAlias('staff_contacts');
+        $contact_types->getAlias('contact_types');
+        $contact_options->getAlias('contact_options');
+        $query
+            ->leftJoin([$staff_contacts->getAlias() => $staff_contacts->getTable()], [
+                $staff_contacts->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+            ])
+            ->leftJoin([$contact_types->getAlias() => $contact_types->getTable()], [
+                $contact_types->aliasField('id = ')
+                . $staff_contacts->aliasField('contact_type_id'),
+            ])
+            ->leftJoin([$contact_options->getAlias() => $contact_options->getTable()], [
+                $contact_options->aliasField('id = ')
+                . $contact_types->aliasField('contact_option_id'),
+            ])
+            ->orderDesc($staff_contacts->aliasField('preferred'));
+        $contact_type = $contact_types->aliasField('name');
+        $contact_option = $contact_options->aliasField('name');
+        $query = $query->select([
+            'staff_contact' => $staff_contacts->aliasField('value'),
+            'staff_contact_type' => "CONCAT($contact_option, ' - ', $contact_type)",
+        ]);
+        return $query;
+    }
+
+    private function addStaffPositionField(Query $query)
+    {
+        $positions = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $institution_positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $options = array(
+            0 => __('Non-Teaching'),
+            1 => __('Teaching')
+        );
+        $query->leftJoin([$institution_positions->getAlias() => $institution_positions->getTable()], [
+            $institution_positions->aliasField('id = ') . $this->aliasField('institution_position_id')])
+            ->leftJoin([$positions->getAlias() => $positions->getTable()], [
+                $positions->aliasField('id = ') . $institution_positions->aliasField('staff_position_title_id')
+            ]);
+
+        $query = $query->select([
+                'staff_position' => $positions->aliasField('name'),
+                'staff_position_teaching_type' => $positions->aliasField('type')
+            ]
+        )
+            ->group([
+                $this->aliasField('id'),
+            ]);  // POCOR-7972
+        $source_field = 'staff_position_teaching_type';
+        $destination_field = 'staff_teaching_type';
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($options, $source_field, $destination_field) {
+            return $results->map(function ($row) use ($options, $source_field, $destination_field) {
+                $row[$destination_field] = $options[intval($row[$source_field])];
+                return $row;
+            });
+        });
+
+        return $query;
+    }
+
+    // IMPORTANT: when editing this method, need to consider impact on removeInactiveStaffSecurityRole()
+
+    private function addStaffTypeField(Query $query)
+    {
+        $query->contain(['StaffTypes']);
+        $query = $query->select([
+            'staff_type' => 'StaffTypes.name',
+        ]);
+        return $query;
+    }
+
+    private function addStaffIdentityTypeField(Query $query)
+    {
+        $table = 'FieldOption.IdentityTypes';
+        $options = self::getRelatedOptions($table);
+        $source_field = 'staff_identity_type_id';
+        $destination_field = 'staff_identity_type';
+        $query->select([$source_field => 'Users.identity_type_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($options, $source_field, $destination_field) {
+            return $results->map(function ($row) use ($options, $source_field, $destination_field) {
+                $row[$destination_field] = $options[$row[$source_field]];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffNationalityField(Query $query)
+    {
+
+        $table = 'FieldOption.Nationalities';
+        $options = self::getRelatedOptions($table);
+        $source_field = 'staff_nationality_id';
+        $destination_field = 'staff_nationality';
+        $query->select([$source_field => 'Users.nationality_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($options, $source_field, $destination_field) {
+            return $results->map(function ($row) use ($options, $source_field, $destination_field) {
+                $row[$destination_field] = $options[$row[$source_field]];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffCustomFields(Query $query)
+    {
+        $institution_staffs = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $the_staffs = $institution_staffs
+            ->find('all')
+            ->select('staff_id')
+            ->distinct('staff_id')
+            ->where([
+                'institution_id' => $this->institution_id])->toArray();
+        $staff_ids = array_column($the_staffs, 'staff_id');
+        if (empty($staff_ids)) {
+            return;
+        }
+        $custom_field_values = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
+        $custom_fields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
+        $custom_options = self::getRelatedOptions('StaffCustomField.StaffCustomFieldOptions');
+        $customFieldData = $this->customFieldData;
+        $custom_values = $custom_field_values->find('all')->select([
+            'staff_id' => $custom_field_values->aliasField('staff_id'),
+            'custom_field_id' => $custom_field_values->aliasField('staff_custom_field_id'),
+            'custom_field_value_id' => $custom_field_values->aliasField('id'),
+            'custom_text_value' => $custom_field_values->aliasField('text_value'),
+            'custom_number_value' => $custom_field_values->aliasField('number_value'),
+            'custom_decimal_value' => $custom_field_values->aliasField('decimal_value'),
+            'custom_textarea_value' => $custom_field_values->aliasField('textarea_value'),
+            'custom_date_value' => $custom_field_values->aliasField('date_value'),
+            'custom_time_value' => $custom_field_values->aliasField('time_value'),
+        ])->innerJoin([$institution_staffs->getAlias() => $institution_staffs->getTable()],
+            [$custom_field_values->aliasField('staff_id = ') . $institution_staffs->aliasField('staff_id'),
+                $institution_staffs->aliasField('institution_id = ') . $this->institution_id])
+            ->toArray();
+
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($custom_options, $custom_values, $customFieldData) {
+            return $results->map(function ($row) use ($custom_options, $custom_values, $customFieldData) {
+                foreach ($custom_values as $custom_row) {
+                    $custom_field = $customFieldData[intval($custom_row->custom_field_id)];
+                    if ($custom_row->staff_id == $row->staff_id) {
+                        $fieldType = $custom_field->custom_field_type;
+                        if ($fieldType == 'TEXT') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
+                        }
+                        if ($fieldType == 'CHECKBOX') {
+                            $id = $custom_row->custom_number_value;
+                            $custom_option = $custom_options[$id];
+                            if (empty($row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id])) {
+                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
+                            } else {
+                                $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] .= ', ' . $custom_option;
+                            }
+                        }
+                        if ($fieldType == 'NUMBER') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_number_value;
+                        }
+                        if ($fieldType == 'DECIMAL') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_decimal_value;
+                        }
+                        if ($fieldType == 'TEXTAREA') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_textarea_value;
+                        }
+                        if ($fieldType == 'DROPDOWN') {
+                            $id = $custom_row->custom_number_value;
+                            $custom_option = $custom_options[$id];
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_option;
+                        }
+                        if ($fieldType == 'DATE') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = date('Y-m-d', strtotime($custom_row->custom_date_value));
+                        }
+                        if ($fieldType == 'TIME') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = date('h:i A', strtotime($custom_row->custom_time_value));
+                        }
+                        if ($fieldType == 'COORDINATES') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_row->custom_text_value;
+                        }
+                        if ($fieldType == 'NOTE') {
+                            $row[$this->_dynamicFieldName . '_' . $custom_row->custom_field_id] = $custom_field->custom_field_description;
+                        }
+                    }
+                }
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    public function onExcelGetFTE(EventInterface $event, Entity $entity)
+    {
+        return ($entity->FTE * 100) . '%';
+    }
+
+    public function onExcelGetPositionTitleTeaching(EventInterface $event, Entity $entity)
+    {
+        $yesno = $this->getSelectOptions('general.yesno');
+        return (array_key_exists($entity->position_title_teaching, $yesno)) ? $yesno[$entity->position_title_teaching] : '';
+    }
+
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        //redeclare fields for sorting purpose.
+        $extraField[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'staff_openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+//            'staff_name' => 'CONCAT(`Users`.`first_name`, " ", `Users`.`last_name`)',
+//            'staff_openemis_no' => 'Users.openemis_no',
+//            'staff_username' => 'Users.username',
+//            'staff_date_of_birth' => 'Users.date_of_birth',
+//            'staff_address' => 'Users.address',
+//            'staff_identity_number' => 'Users.identity_number',
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'staff_names',
+            'type' => 'string',
+            'label' => __('Staff')
+        ];
+
+        //POCOR-8656 start
+         $extraField[] = [
+            'key' => '',
+            'field' => 'staff_email',
+            'type' => 'string',
+            'label' => __('Staff Email')
+        ];
+        //POCOR-8656 end
+//
+//        $extraField[] = [
+//            'key' => '',
+//            'field' => 'staff_username',
+//            'type' => 'string',
+//            'label' => __('Username')
+//        ];
+
+//        $extraField[] = [
+//            'key' => '',
+//            'field' => 'staff_date_of_birth',
+//            'type' => 'string',
+//            'label' => __('Date of birth')
+//        ];
+
+        $extraField[] = [
+            'key' => 'staff_position',
+            'field' => 'staff_position',
+            'type' => 'string',
+            'label' => __('Position')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_type',
+            'field' => 'staff_type',
+            'type' => 'string',
+            'label' => __('Staff Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.FTE',
+            'field' => 'FTE',
+            'type' => 'string',
+            'label' => __('FTE')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'staff_teaching_type',
+            'type' => 'string',
+            'label' => __('Teaching')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_contact_type',
+            'field' => 'staff_contact_type',
+            'type' => 'string',
+            'label' => __('Contact Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_contact',
+            'field' => 'staff_contact',
+            'type' => 'string',
+            'label' => __('Contact Number')
+        ];
+
+        $extraField[] = [
+            'key' => '',
+            'field' => 'staff_address',
+            'type' => 'string',
+            'label' => __('Address')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_status',
+            'field' => 'staff_status',
+            'type' => 'string',
+            'label' => __('Staff Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.start_date',
+            'field' => 'start_date',
+            'type' => 'date',
+            'label' => __('Start Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.end_date',
+            'field' => 'end_date',
+            'type' => 'date',
+            'label' => __('End Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'Institutions.name',
+            'field' => 'institution_name',
+            'type' => 'string',
+            'label' => __('Institution')
+        ];
+
+        $extraField[] = [
+            'key' => 'Institutions.code',
+            'field' => 'institution_code',
+            'type' => 'string',
+            'label' => __('Institution Code')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_identity_type',
+            'field' => 'staff_identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_identity_number',
+            'field' => 'staff_identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+
+        $extraField[] = [
+            'key' => 'staff_nationality',
+            'field' => 'staff_nationality',
+            'type' => 'string',
+            'label' => __('Nationality')
+        ];
+
+        /**
+         * Get all those custom fields of a student
+         * Page: Administartion > System Setup > Custom Fields > Student > Page
+         * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+         *
+         * Ticket: POCOR-6531
+         * Ticket: POCOR-7732
+         */
+
+        $customFieldData = $this->customFieldData;
+        if (!empty($customFieldData)) {
+            foreach ($customFieldData as $data) {
+                $custom_field_id = $data->custom_field_id;
+                $custom_field_name = $data->custom_field_name;
+                $extraField[] = [
+                    'key' => 'staff_id',
+                    'field' => $this->_dynamicFieldName . '_' . $custom_field_id,
+                    'type' => 'string',
+                    'label' => __($custom_field_name)
+                ];
+            }
+        }
+
+        $fields->exchangeArray($extraField);
+    }
+
+    public function indexBeforeAction(EventInterface $event, ArrayObject $settings)
+    {
+        $session = $this->Session;
+        $institutionId = $this->getInstitutionID();
+
+        $this->fields['staff_id']['order'] = 5;
+        $this->fields['institution_position_id']['type'] = 'integer';
+        $this->fields['staff_id']['type'] = 'integer';
+        $this->fields['start_date']['type'] = 'date';
+        $this->fields['institution_position_id']['order'] = 6;
+        $this->fields['staff_position_grade_id']['visible'] = false;//PCOOR-7238
+        $this->fields['is_homeroom']['visible'] = false; //POCOR-7233
+        $this->fields['FTE']['visible'] = false;
+        //$this->fields['is_homeroom']['type'] = 'integer'; //POCOR-7233 visible column
+        $this->fields['is_homeroom']['visible'] = false; //POCOR-7233
+
+        $this->controller->set('ngController', 'AdvancedSearchCtrl');
+
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $selectedStatus = $this->request->getQuery('staff_status_id');
+
+        switch ($selectedStatus) {
+            case self::PENDING_PROFILE:
+                $event->stopPropagation();
+                return $this->controller->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffPositionProfiles', '0' => 'index', '1' => $encodedQueryString]);
+                break;
+            case self::PENDING_TRANSFERIN:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin' => 'Institution',
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffTransferIn',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
+                ]);
+                break;
+            case self::PENDING_TRANSFEROUT:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin' => 'Institution',
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffTransferOut',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
+                ]);
+                break;
+            case self::PENDING_RELEASEIN:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin' => 'Institution',
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffReleaseIn',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
+                ]);
+                break;
+            case self::PENDING_RELEASEOUT:
+                $event->stopPropagation();
+                return $this->controller->redirect([
+                    'plugin' => 'Institution',
+                    //'institutionId' => $this->paramsEncode(['id' => $institutionId]),
+                    'controller' => 'Institutions',
+                    'action' => 'StaffRelease',
+                    '0' => 'index',
+                    '1' => $encodedQueryString
+                ]);
+                break;
+        }
+
+        //POCOR-6248 starts
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $ConfigItem = $ConfigItemTable
+            ->find()
+            ->where([
+                $ConfigItemTable->aliasField('type') => 'Columns for Staff List Page'
+            ])
+            ->all();
+
+        foreach ($ConfigItem as $item) {
+            if ($item->code == 'staff_photo') {
+                $this->field('photo_name', ['visible' => false]);
+                if ($item->value == 1) {
+                    $this->field('photo_content', ['visible' => true]);
+                } else {
+                    $this->field('photo_content', ['visible' => false]);
+                }
+            }
+
+            if ($item->code == 'staff_openEMIS_ID') {
+
+                if ($item->value == 1) {
+                    $this->field('openemis_no', ['visible' => true, 'before' => 'staff_id']);
+                } else {
+                    $this->field('openemis_no', ['visible' => false, 'before' => 'staff_id']);
+                }
+            }
+
+            if ($item->code == 'staff_name') {
+                if ($item->value == 1) {
+                    $this->field('staff_id', ['visible' => true, 'before' => 'institution_position_id']);
+                } else {
+                    $this->field('staff_id', ['visible' => false, 'before' => 'institution_position_id']);
+                }
+            }
+
+            if ($item->code == 'staff_position') {
+                if ($item->value == 1) {
+                    $this->field('institution_position_id', ['visible' => true, 'before' => 'start_date']);
+                } else {
+                    $this->field('institution_position_id', ['visible' => false, 'before' => 'start_date']);
+                }
+            }
+
+            if ($item->code == 'staff_start_date') {
+                if ($item->value == 1) {
+                    $this->field('start_date', ['visible' => true, 'before' => 'end_date']);
+                } else {
+                    $this->field('start_date', ['visible' => false, 'before' => 'end_date']);
+                }
+            }
+
+            if ($item->code == 'staff_end_date') {
+                if ($item->value == 1) {
+                    $this->field('end_date', ['visible' => true, 'before' => 'staff_status_id']);
+                } else {
+                    $this->field('end_date', ['visible' => false, 'before' => 'staff_status_id']);
+                }
+            }
+
+            if ($item->code == 'staff_status') {
+                if ($item->value == 1) {
+                    $this->field('staff_status_id', ['visible' => true, 'after' => 'end_date']);
+                } else {
+                    $this->field('staff_status_id', ['visible' => false, 'after' => 'end_date']);
+                }
+            }
+
+            if ($item->code == 'staff_identity_number') {
+                if ($item->value == 1) {
+                    if (!empty($item->value_selection)) {
+                        //get data from Identity Type table
+                        $typesIdentity = $this->getIdentityTypeData($item->value_selection);
+                        if (isset($typesIdentity)) { //POCOR-6679
+                            $this->field($typesIdentity->identity_type, ['visible' => true, 'after' => 'staff_status_id']);
+                        }
+                    }
+                } else {
+                    $typesIdentity = $this->getIdentityTypeData($item->value_selection); ////POCOR-6679
+                    if (isset($typesIdentity)) { //POCOR-6679
+                        $this->field($typesIdentity->identity_type, ['visible' => false, 'after' => 'staff_status_id']);
+                    }
+                }
+            }
+
+        } //POCOR-6248 ends
+        //print_r($this->fields);die;
+    }
+
+    public function getIdentityTypeData($value_selection)
+    {
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $typesIdentity = $IdentityTypes
+            ->find()
+            ->select([
+                'id' => $IdentityTypes->aliasField('id'),
+                'identity_type' => $IdentityTypes->aliasField('name')
+            ])
+            ->where([
+                $IdentityTypes->aliasField('id') => $value_selection
+            ])
+            ->first();
+        return $typesIdentity;
+    }
+
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $request = $this->request;
+        $query->contain(['Positions']);
+
+        //POCOR-9410 -- Only fetch ACTIVE users from security_users
+        $query->where([
+            $this->Users->aliasField('status') => 1
+        ]);
+
+
+        $sortList = ['start_date', 'end_date'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        // Academic Periods
+        $periodOptions = $AcademicPeriodTable->getYearList();
+
+        if (empty($request->getQuery('academic_period_id'))) {
+            // $request->query['academic_period_id'] = $AcademicPeriodTable->getCurrent();
+            $this->request = $this->request->withQueryParams(['academic_period_id' => $AcademicPeriodTable->getCurrent()]);
+        }
+
+        // Positions
+        $session = $request->getSession();
+        $institutionId = $this->getInstitutionID();
+
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $activeStatusId = $this->Workflow->getStepsByModelCode('Institution.InstitutionPositions', 'ACTIVE');
+
+        $positionData = $StaffPositionTitles->find('list')
+            ->matching('InstitutionPositions', function ($q) use ($institutionId, $activeStatusId) {
+                $q->where([
+                    'InstitutionPositions.institution_id' => $institutionId,
+                    'InstitutionPositions.status_id IN ' => $activeStatusId
+                ]);
+                return $q;
+            })
+            ->group([$StaffPositionTitles->aliasField($StaffPositionTitles->getPrimaryKey())])
+            ->order([$StaffPositionTitles->aliasField('order')])
+            ->toArray();
+
+        $positionOptions = [0 => __('All Positions')] + $positionData;
+
+        // Query Strings
+        $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
+        $selectedPosition = $this->queryString('position', $positionOptions);
+
+        $Staff = $this;
+
+        // Advanced Select Options
+        $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+            'message' => '{{label}} - ' . $this->getMessage('general.noStaff'),
+            'callable' => function ($id) use ($Staff, $institutionId) {
+                return $Staff
+                    ->findByInstitutionId($institutionId)
+                    ->find('academicPeriod', ['academic_period_id' => $id])
+                    ->count();
+            }
+        ]);
+
+        // To add the academic_period_id to export
+        if (isset($extra['toolbarButtons']['export']['url'])) {
+            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedPeriod;
+        }
+
+        // $request->query['academic_period_id'] = $selectedPeriod;
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['academic_period_id'] = $selectedPeriod;
+        $this->request = $this->request->withQueryParams($queryParams);
+
+        $this->advancedSelectOptions($positionOptions, $selectedPosition);
+
+        $query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
+        if ($selectedPosition != 0) {
+            $query->matching('Positions', function ($q) use ($selectedPosition) {
+                return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
+            });
+        }
+        //PCOOR-7115 comment code starts
+        /*$search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        }*///PCOOR-7115 comment code ends
+
+        $statusOptions = $this->StaffStatuses->find('list')->toArray();
+
+        $approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
+        $closedStatus = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'CLOSED');
+        $staffPositionProfileStatuses = array_merge($approvedStatus, $closedStatus);
+
+        $StaffPositionProfilesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionProfiles');
+        $staffPositionProfilesRecordCount = $StaffPositionProfilesTable->find()
+            ->where([
+                $StaffPositionProfilesTable->aliasField('institution_id') => $institutionId,
+                $StaffPositionProfilesTable->aliasField('status_id') . ' NOT IN ' => $staffPositionProfileStatuses
+            ])
+            ->count();
+
+        $InstitutionStaffTransfersTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
+        $staffTransferInRecord = $InstitutionStaffTransfersTable
+            ->find('InstitutionStaffTransferIn', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+        $staffTransferOutRecord = $InstitutionStaffTransfersTable
+            ->find('InstitutionStaffTransferOut', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+        $statusOptions[self::PENDING_PROFILE] = __('Pending Change in Assignment') . ' - ' . $staffPositionProfilesRecordCount;
+        $statusOptions[self::PENDING_TRANSFERIN] = __('Pending Transfer In') . ' - ' . $staffTransferInRecord;
+        $statusOptions[self::PENDING_TRANSFEROUT] = __('Pending Transfer Out') . ' - ' . $staffTransferOutRecord;
+
+        // Display Staff Release if staff release records
+        $ConfigStaffReleaseTable = TableRegistry::getTableLocator()->get('Configuration.ConfigStaffReleases');
+
+        $InstitutionStaffReleasesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffReleases');
+        $staffReleaseInRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffReleaseIn', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+        $staffReleaseOutRecord = $InstitutionStaffReleasesTable
+            ->find('InstitutionStaffRelease', ['institution_id' => $institutionId, 'pending_records' => true])
+            ->count();
+
+        $statusOptions[self::PENDING_RELEASEIN] = __('Pending Release In') . ' - ' . $staffReleaseInRecord;
+        $statusOptions[self::PENDING_RELEASEOUT] = __('Pending Release Out') . '-' . $staffReleaseOutRecord;
+
+
+        $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
+        $this->advancedSelectOptions($statusOptions, $selectedStatus);
+        // $request->query['staff_status_id'] = $selectedStatus;
+        $queryParams = $this->request->getQueryParams();
+        $queryParams['staff_status_id'] = $selectedStatus;
+        $this->request = $this->request->withQueryParams($queryParams);
+
+        $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($request->getQuery['sort'])) {
+            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        }
+        //PCOOR-7115 starts
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            // Starts POCOR-6532
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+            // Ends POCOR-6532 //POCOR-7278
+            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+        } else {
+            //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
+            //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
+            if ($selectedStatus != -1) {
+                $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+            }
+        }//PCOOR-7115 ends
+        //POCOR-6248 starts
+        $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
+        $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
+        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $ConfigItem = $ConfigItemTable
+            ->find()
+            ->where([
+                $ConfigItemTable->aliasField('code') => 'staff_identity_number',
+                $ConfigItemTable->aliasField('value') => 1
+            ])
+            ->first();
+        if (!empty($ConfigItem)) {
+            //value_selection
+            //get data from Identity Type table
+            $typesIdentity = $this->getIdentityTypeData($ConfigItem->value_selection);
+            if (!empty($typesIdentity)) {
+                $query
+                    ->select([
+                        'Staff.id',
+                        'Staff.FTE',
+                        'Staff.start_year',
+                        'Staff.start_date',
+                        'Staff.end_year',
+                        'Staff.end_date',
+                        'Staff.staff_id',
+                        'Staff.staff_type_id',
+                        'Staff.staff_status_id',
+                        'Staff.institution_id',
+                        'Staff.institution_position_id',
+                        'Staff.security_group_user_id',
+                        'Staff.is_homeroom',
+                        'Positions.id',
+                        'Positions.status_id',
+                        'Positions.position_no',
+                        'Positions.staff_position_title_id',
+                        // 'Positions.staff_position_grade_id',
+                        'Positions.position_no',
+                        'Positions.institution_id',
+                        'Positions.assignee_id',
+
+                        'Users.id',
+                        'Users.username',
+                        'Users.openemis_no',
+                        'Users.first_name',
+                        'Users.middle_name',
+                        'Users.third_name',
+                        'Users.last_name',
+                        'Users.preferred_name',
+                        'Users.photo_name',
+                        'Users.photo_content',
+                        'identity_type' => $IdentityTypes->aliasField('name'),
+                        "`" . $typesIdentity->identity_type . "`" => $UserIdentities->aliasField('number') //POCRO-6583 added single quote as identity_type was not working for some clients
+                    ])
+                    ->leftJoin(
+                        [$UserIdentities->getAlias() => $UserIdentities->getTable()],
+                        [
+                            $UserIdentities->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+                            $UserIdentities->aliasField('identity_type_id = ') . $typesIdentity->id
+                        ]
+                    )
+                    ->leftJoin(
+                        [$IdentityTypes->getAlias() => $IdentityTypes->getTable()],
+                        [
+                            $IdentityTypes->aliasField('id = ') . $UserIdentities->aliasField('identity_type_id'),
+                            //$IdentityTypes->aliasField('id = ') . $typesIdentity->id
+                        ]
+                    );
+            }
+        }  //POCOR-6248 ends
+        $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
+        // echo "<pre>"; print_r($query->toArray());die;
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Institutions', 'Staff', 'Staff');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+        $query->group([$this->aliasField('id')]); // POCOR-7899
+    }
+
+    public function indexAfterAction(EventInterface $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+    {
+        $this->dashboardQuery = clone $query;
+    }
+
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $queryString = $this->getQueryString();
+        $institutionId = $this->getQueryString('institution_id');
+        $encodedQueryString = $this->paramsEncode($queryString);
+
+        if (isset($extra['toolbarButtons'])) {
+            $toolbarButtons = $extra['toolbarButtons'];
+            if (isset($toolbarButtons['edit'])) {
+                $url = $toolbarButtons['edit']['url'];
+                $staffId = $url[1];
+                unset($url[1]);
+                if(isset($url[2])) { //POCOR-8447
+                    unset($url[2]);
+                }
+                $url[0] = 'add';
+                $url['institution_staff_id'] = $staffId;
+                $url['action'] = 'StaffPositionProfiles';
+                $url[1] = $encodedQueryString;
+                $toolbarButtons['edit']['url'] = $url;
+            }
+        }
+        $this->Session->write('Staff.Staff.id', $entity->staff_id);
+        $this->Session->write('Staff.Staff.name', $entity->user->name);
+        $this->setupTabElements($entity);
+    }
+
+    private function setupTabElements($entity)
+    {
+        if($this->action == 'view'){
+            $url = $this->url('view');
+        }
+        else{
+            $options = [
+                'userRole' => 'Staff',
+                'action' => $this->action,
+                'id' => $entity->id,
+                'user_id' => $entity->staff_id,
+                'staff_id' => $entity->staff_id,
+                'institution_id' => $entity->institution_id
+            ];
+            $tabElements = $this->getCareerTabElements($options);
+
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', 'Positions');
+        }
+    }
+
+    public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
+    {
+        if ($this->action == 'add') {
+            $buttons[0]['name'] = '<i class="fa kd-add"></i> ' . __('Create New');
+            $buttons[0]['attr']['value'] = 'new';
+        }
+    }
+
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+
+        if (!$entity->isNew() && $entity->getDirty('FTE')) {
+            if ($entity->staff_change_type_id == 1) { //POCOR-8760 add if condition
+                $newFTE = $entity->FTE;
+                $newEndDate = $entity->end_date;
+                $entity->FTE = $entity->getOriginal('FTE');
+                $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
+                $entity->newFTE = $newFTE;
+                $todayDate = new Date();
+
+                if (empty($newEndDate)) {
+                    if ($entity->start_date < $todayDate) {
+                        $entity->end_date = $todayDate;
+                    } else {
+                        $entity->end_date = $entity->start_date;
+                    }
+                } else {
+                    // If end date is of a past date, set the user status to end of assignment
+                    if ($entity->end_date < $todayDate) {
+                        $entity->staff_status_id = $this->endOfAssignment;
+                    }
+                }
+            }
+        }
+        $entity->start_year = $entity->getOriginal('start_year'); //POCOR-6749
+
+    }
+
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $institutionPositionId = $entity->institution_position_id;
+        $staffId = $entity->staff_id;
+        $institutionId = $entity->institution_id;
+        $securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+
+        if (!$entity->isNew()) { // edit operation
+            if ($entity->has('newFTE')
+                && ($entity->FTE != $entity->newFTE) // POCOR-8532 avoid duplicates
+            ) {
+                unset($entity->id);
+                $entity->FTE = $entity->newFTE;
+                $entity->start_date = $entity->end_date;
+                if ($entity->start_date instanceof Date) {
+                    $entity->start_date->modify('+1 days');
+                } else {
+                    $startDate = $entity->start_date->format('Y-m-d');
+                    $date = date_create($startDate);
+                    date_add($date, date_interval_create_from_date_string('1 day'));
+                    $entity->start_date = $date->format('Y-m-d');
+                }
+                $entity->end_date = null;
+                $entity->end_year = null;
+                unset($entity->staff_type);
+                unset($entity->staff_status);
+                unset($entity->position);
+                unset($entity->user);
+                $newEntity = $this->newEntity($entity->toArray(), ['validate' => 'AllowPositionType']);
+                $this->save($newEntity);
+                // if ($this->save($newEntity)) {
+                //  $url = [
+                //      'plugin' => 'Institution',
+                //      'controller' => 'Institutions',
+                //      'action' => 'Staff',
+                //      '0' => 'view',
+                //      '1' => $newEntity->id
+                //  ];
+                //  $url = array_merge($url, $this->ControllerAction->params());
+                //  $event->stopPropagation();
+                //  return $this->controller->redirect($url);
+                // }
+            } else {
+                if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
+                    $this->addStaffRole($entity);
+                    $this->updateStaffStatus($entity, $this->assigned);
+                } else {
+                    $this->removeStaffRole($entity);
+                    $this->updateStaffStatus($entity, $this->endOfAssignment);
+                }
+            }
+        } else { // add operation
+
+            $this->addStaffRole($entity);
+            if (empty($entity->end_date) || $entity->end_date->isToday() || $entity->end_date->isFuture()) {
+                $this->updateStaffStatus($entity, $this->assigned);
+            } else {
+                $this->updateStaffStatus($entity, $this->endOfAssignment);
+            }
+        }
+
+        $listeners = [
+            TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff'),
+            TableRegistry::getTableLocator()->get('Institution.StaffUser')
+        ];
+        $this->dispatchEventToModels('Model.Staff.afterSave', [$entity], $this, $listeners);
+    }
+
+    public function addStaffRole($staffEntity)
+    {
+
+        $positionEntity = null;
+        if (empty($staffEntity->security_group_user_id)) {
+            // every staff record in school will be linked to a security role record in security_group_users
+            $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+            $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+            $securityGroupUserId = $staffEntity->security_group_user_id;
+
+            $positionEntity = $this->Positions->find()
+                ->where([
+                    $this->Positions->aliasField('id') => $staffEntity->institution_position_id
+                ])
+                ->matching('StaffPositionTitles.SecurityRoles')
+                ->contain(['Institutions'])
+                ->select(['security_role_id' => 'SecurityRoles.id', 'Institutions.security_group_id'])
+                ->first();
+
+            $securityGroupId = $positionEntity->institution->security_group_id;
+            // POCOR-7870 commented out redundant checks
+            // $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom; //POCOR-7257
+            //POCOR-7309 starts
+//            $InstitutionStaffTbl = TableRegistry::getTableLocator()->get('institution_staff');
+//            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
+//                ->where([
+//                    $InstitutionStaffTbl->aliasField('institution_id') => $staffEntity->staff_id,
+//                    $InstitutionStaffTbl->aliasField('staff_id') => $staffEntity->staff_id,
+//                    $InstitutionStaffTbl->aliasField('staff_status_id') => 1
+//                ])->first();
+//            $isHomeroomRole = '';
+//            if (!empty($InstitutionStaffEntity)) {
+            $isHomeroomRole = $staffEntity->is_homeroom;
+            $isActive = ($staffEntity->staff_status_id == 1);
+//            }
+            if (!empty($homeroomSecurityRoleId) && ($isHomeroomRole) && ($isActive)) { //POCOR-7309 ends
+                $securityGroupUsersRecord = [
+                    'security_role_id' => $homeroomSecurityRoleId,
+                    'security_group_id' => $securityGroupId,
+                    'security_user_id' => $staffEntity->staff_id
+                ];
+
+                $newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
+                $newSecurityGroupEntity->updateWorkflowAssignee = false;
+                $SecurityGroupUsersTable->save($newSecurityGroupEntity);
+            }
+
+            $securityRoleId = $positionEntity->security_role_id;
+
+            $securityGroupUsersRecord = [
+                'security_role_id' => $securityRoleId,
+                'security_group_id' => $securityGroupId,
+                'security_user_id' => $staffEntity->staff_id
+            ];
+
+            $newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
+            $entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
+            $this->updateSecurityGroupUserId($staffEntity, $entity->id);
+        }
+    }
+
+    private function updateSecurityGroupUserId($entity, $groupUserId)
+    {
+        $this->updateAll(
+            ['security_group_user_id' => $groupUserId],
+            ['id' => $entity->id]
+        );
+    }
+
+    private function updateStaffStatus($entity, $staffStatuses)
+    {
+        $this->updateAll(
+            ['staff_status_id' => $staffStatuses],
+            ['id' => $entity->id]
+        );
+    }
+
+    public function removeStaffRole($staffEntity)
+    {
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityGroupUsersTable = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+        $securityGroupUserId = $staffEntity->security_group_user_id;
+
+        $positionEntity = $this->Positions->find()
+            ->where([
+                $this->Positions->aliasField('id') => $staffEntity->institution_position_id
+            ])
+            ->matching('StaffPositionTitles.SecurityRoles')
+            ->contain(['Institutions'])
+            ->select(['security_role_id' => 'SecurityRoles.id'/*, 'is_homeroom'*/, 'Institutions.security_group_id'])//POCOR-7238 remove is_homeroom
+            ->first();
+        /*$isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
+        if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
+            $securityGroupId = $positionEntity->institution->security_group_id;
+
+            $deleteEntity = $SecurityGroupUsersTable->find()
+                ->where([
+                    $SecurityGroupUsersTable->aliasField('security_group_id') => $securityGroupId,
+                    $SecurityGroupUsersTable->aliasField('security_user_id') => $staffEntity->staff_id,
+                    $SecurityGroupUsersTable->aliasField('security_role_id') => $homeroomSecurityRoleId
+                ])
+                ->first();
+            if (!empty($deleteEntity)) {
+                $deleteEntity->updateWorkflowAssignee = false;
+                $SecurityGroupUsersTable->delete($deleteEntity);
+            }
+        }
+        *///POCOR-7238 Starts
+        $InstitutionStaffTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $InstitutionStaffEntity = []; //
+        if ($securityGroupUserId) { //
+            $InstitutionStaffEntity = $InstitutionStaffTbl->find()
+                ->where([
+                    $InstitutionStaffTbl->aliasField('security_group_user_id') => $securityGroupUserId
+                ])
+                ->disableHydration()
+                ->toArray();
+        } //
+        $countSecurityGroupUserId = [];
+        $countIsHomeroom = [];
+        foreach ($InstitutionStaffEntity as $skey => $sval) {
+            $countSecurityGroupUserId[] = $sval['security_group_user_id'];
+            if ($sval['is_homeroom'] == 1) {
+                $countIsHomeroom[] = $sval['is_homeroom'];
+            }
+        }
+        if ((count($countSecurityGroupUserId) > 1) && (count($countIsHomeroom) > 1)) {
+            $this->updateSecurityGroupUserId($staffEntity, null);
+        } else if ((count($countSecurityGroupUserId) > 1) && (count($countIsHomeroom) < 2)) {
+            if ($staffEntity->is_homeroom == 1) {
+                $securityGroupId = $positionEntity->institution->security_group_id;
+                if (!empty($positionEntity)) {
+                    $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                    $conditions = [
+                        $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
+                        $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
+                        $SecurityGroupUserTbl->aliasField('security_role_id') => $homeroomSecurityRoleId
+                    ];
+                    $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($conditions)
+                        ->disableHydration() // POCOR-8532
+                        ->first();
+                    if (!is_null($SecurityGroupUserData)) {
+                        $groupUserEntity = $SecurityGroupUsersTable->get($SecurityGroupUserData['id']);
+                        $SecurityGroupUsersTable->delete($groupUserEntity);
+                        $this->updateSecurityGroupUserId($staffEntity, null);
+                    }
+                }
+            } else {
+                $this->updateSecurityGroupUserId($staffEntity, null);
+            }
+        } else if ((count($countSecurityGroupUserId) == 1) && (count($countIsHomeroom) == 1)) {
+            $conditions = [$SecurityGroupUsersTable->aliasField('id') => $securityGroupUserId];
+            if (!is_null($securityGroupUserId) && $SecurityGroupUsersTable->exists($conditions)) {
+                $groupUserEntity = $SecurityGroupUsersTable->get($securityGroupUserId);
+                $SecurityGroupUsersTable->delete($groupUserEntity);
+            }
+
+            $securityGroupId = $positionEntity->institution->security_group_id;
+            if (!empty($positionEntity) && ($staffEntity->is_homeroom == 1)) {
+                $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                $homeroom_conditions = [
+                    $SecurityGroupUserTbl->aliasField('security_group_id') => $securityGroupId,
+                    $SecurityGroupUserTbl->aliasField('security_user_id') => $staffEntity->staff_id,
+                    $SecurityGroupUserTbl->aliasField('security_role_id') => $homeroomSecurityRoleId
+                ];
+                $SecurityGroupUserData = $SecurityGroupUserTbl->find()->where($homeroom_conditions)->enableHydration(false)->first();
+                if (!is_null($SecurityGroupUserData)) {
+                    $homegroupUserEntity = $SecurityGroupUsersTable->get($SecurityGroupUserData['id']);
+                    $SecurityGroupUsersTable->delete($homegroupUserEntity);
+                }
+            }
+            $this->updateSecurityGroupUserId($staffEntity, null);
+        }//POCOR-7238 Ends
+    }
+
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
+    {
+        $queryString = $this->getQueryString();
+        $encodedQueryString = $this->paramsEncode($queryString);
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        if (isset($buttons['view'])) {
+            // $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->primaryKey()];
+            // $entityArr = $entity->getOriginalValues();
+            // $primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
+            // $encodeValue = $this->paramsEncode($primaryKeyValues);
+
+            $url = $this->url('view');
+            // $url['action'] = 'StaffUser';
+            // $url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
+            // $url['id'] = $encodeValue;
+            // $buttons['view']['url'] = $url;
+            //this code for cakephp 4 starts
+            $userId = $this->paramsEncode([
+                'staff_id' => $entity->_matchingData['Users']->id,
+                'id' => $entity->_matchingData['Users']->id,
+                'institution_id' => $entity->institution->id,
+                'institution_staff_id' => $entity->id]);
+            $buttons['view']['url'] = array_merge($url, [
+                'action' => 'StaffUser',
+                '0' => $userId,
+            ]);//this code for cakephp 4 ends
+            // POCOR-3125 history button permission to hide and show the link
+            if ($this->AccessControl->check(['StaffHistories', 'index'])) {
+                $institutionId = $this->paramsEncode(['id' => $entity->institution->id]);
+                $userId = $entity->_matchingData['Users']->id;
+
+                //POCOR-3128[START]
+                $icon = '<i class="fa fa-history"></i>';
+                // $url = [
+                //     'plugin' => 'Institution',
+                //     'institutionId' => $institutionId,
+                //     'controller' => 'StaffHistories',
+                //     'action' => 'index'
+                // ];
+                $url = [
+                    'plugin' => 'Institution',
+                    'institution_id' => $institutionId,
+                    //'controller' => 'StudentHistories',
+                    //'action' => 'index',
+                    'controller' => 'Institutions',//POCOR-8333
+                    'action' => 'StaffHistories',//POCOR-8333
+                    '0' => 'index',//POCOR-8333
+                    '1' => $encodedQueryString
+                ];
+
+                $buttons['history'] = $buttons['view'];
+                $buttons['history']['label'] = $icon . __('History');
+                $buttons['history']['url'] = $this->ControllerAction->setQueryString($url, [
+                    'security_user_id' => $userId,
+                    'user_type' => 'Staff',
+                    'institution_id' => $entity->institution->id
+                ]);
+                //POCOR-3128[END]
+            }
+            // end POCOR-3125 history button permission
+        }
+
+        if (isset($buttons['edit'])) {
+            $primaryKey = is_array($this->getPrimaryKey()) ? array_flip($this->getPrimaryKey()) : [0 => $this->getPrimaryKey()];
+            $url = $this->url('add');
+            $url['action'] = 'StaffPositionProfiles';
+            $url[1] = $encodedQueryString;
+            $url['institution_staff_id'] = $this->paramsEncode(['id' => $entity->id]);
+            $url['action'] = 'StaffPositionProfiles';
+            $buttons['edit']['url'] = $url;
+        }
+
+        if ($this->Session->read('Auth.User.id') == $entity->_matchingData['Users']->id) { //if logged on user = current user, then unset the delete button
+            unset($buttons['remove']);
+        }
+
+        return $buttons;
+    }
+
+    public function onGetStaffId(EventInterface $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('user')) {
+            $value = $entity->user->name;
+        } else {
+            $value = $entity->_matchingData['Users']->name;
+        }
+        return $value;
+    }
+
+    public function onGetIsHomeroom(EventInterface $event, Entity $entity)
+    {
+        $home = ($entity->is_homeroom) ? __('Yes') : __('No');
+        return $home;
+    }
+
+    // Function used by the Mini-Dashboard (Institution Staff)
+
+    public function onGetPositionType(EventInterface $event, Entity $entity)
+    {
+        $options = $this->getSelectOptions('Position.types');
+        $value = $options['FULL_TIME'];
+        if ($entity->FTE < 1) {
+            $value = $options['PART_TIME'];
+        }
+        return $value;
+    }
+
+    // Function used by the Dashboard (For Institution Dashboard and Home Page)
+
+    public function onGetFTE(EventInterface $event, Entity $entity)
+    {
+        $value = '100%';
+        if ($entity->FTE < 1) {
+            $value = ($entity->FTE * 100) . '%';
+        }
+        return $value;
+    }
+
+    // Function used by the Dashboard (For Institution Dashboard and Home Page)
+
+    public function afterAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+        $this->field('staff_status_id', ['type' => 'select']);
+        $this->field('staff_id');
+        $this->field('security_group_user_id', ['visible' => false]);
+
+        $this->fields['staff_id']['sort'] = ['field' => 'Users.first_name'];
+
+        if ($this->action == 'index') {
+            $InstitutionArray = [];
+            $session = $this->Session;
+            $institutionId = $this->getInstitutionID();
+
+            $periodId = $this->request->getQuery('academic_period_id');
+            $conditions = ['institution_id' => $institutionId];
+
+            $positionId = $this->request->getQuery('position');
+
+            $searchConditions = $this->getSearchConditions($this->Users, $this->request->getData['Search']['searchField']);
+            $searchConditions['OR'] = array_merge($searchConditions['OR'], $this->advanceNameSearch($this->Users, $this->request->getData['Search']['searchField']));
+
+            $institutionStaffQuery = clone $this->dashboardQuery;
+            // Get Number of staff in an institution
+            //POCOR-8687 Start
+            //$staffCount = $institutionStaffQuery->group($this->aliasField('staff_id'))->count();
+            $staffCount = $institutionStaffQuery
+                ->select(['staff_id' => $this->aliasField('staff_id')])
+                ->distinct(['staff_id'])
+                ->count();
+            //POCOR-8687 End
+            unset($institutionStaffQuery);
+            // Get Gender
+            $InstitutionArray[__('Gender')] = $this->getDonutChart(
+                'institution_staff_gender',
+                ['query' => $this->dashboardQuery, 'key' => __('Gender')]
+            );
+
+            // Get Staff Licenses
+            $table = TableRegistry::getTableLocator()->get('Staff.Licenses');
+            // Revisit here in awhile
+            $InstitutionArray[__('Licenses')] = $table->getDonutChart(
+                'institution_staff_licenses',
+                ['query' => $this->dashboardQuery, 'table' => $this, 'key' => __('Licenses')]
+            );
+            $queryString = $this->getQueryString();
+            $encodedQueryString = $this->paramsEncode($queryString);
+            $indexElements = (isset($this->controller->viewVars['indexElements'])) ? $this->controller->viewVars['indexElements'] : [];
+            $indexElements[] = ['name' => 'Institution.Staff/controls', 'data' => ['encodedQueryString' => $encodedQueryString], 'options' => [], 'order' => 0];
+            $indexDashboard = 'dashboard';
+
+            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+                $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+                $currentYearId = $AcademicPeriod->getCurrent();
+                $periodId = $this->request->getQuery['academic_period_id'];
+                if ($currentYearId == $periodId) {
+                    $indexElements['mini_dashboard'] = [
+                        'name' => $indexDashboard,
+                        'data' => [
+                            'model' => 'staff',
+                            'modelCount' => $staffCount,
+                            'modelArray' => $InstitutionArray,
+                        ],
+                        'options' => [],
+                        'order' => 2
+                    ];
+                }
+            }
+            foreach ($indexElements as $key => $value) {
+                if ($value['name'] == 'OpenEmis.ControllerAction/index') {
+                    $indexElements[$key]['order'] = 3;
+                } elseif ($value['name'] == 'OpenEmis.pagination') {
+                    $indexElements[$key]['order'] = 4;
+                }
+            }
+
+            $extra['elements'] = array_merge($extra['elements'], $indexElements);
+
+            $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id']);
+        } else if ($this->action == 'view') {//POCOR-7238 starts
+            $this->field('is_homeroom', ['type' => 'text']);
+            $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_type_id', 'staff_status_id', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'is_homeroom']);//POCOR-7238 ends
+        }
+    }
+
+    // For Dashboard (Institution Dashboard and Home Page)
+
+    public function viewBeforeAction(EventInterface $event)
+    {
+        if ($this->Session->read('Institution.StaffPositionProfiles.addSuccessful')) {
+            $this->Alert->success('StaffPositionProfiles.request');
+            $this->Session->delete('Institution.StaffPositionProfiles.addSuccessful');
+        }
+        $this->field('photo_content', ['type' => 'image', 'order' => 0]);
+        $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+        $i = 10;
+        $this->fields['staff_id']['order'] = $i++;
+        $this->fields['institution_position_id']['order'] = $i++;
+        $this->fields['FTE']['order'] = $i++;
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        //POCOR-8334-START
+        $institutionId = $this->getInstitutionID();
+        $session = $this->request->getSession();
+        try {
+            $assignedStudentToInstitution = $this->find()->where(['institution_id' => $institutionId])->count();
+            $session->write('is_any_student', $assignedStudentToInstitution);
+        } catch (\Exception $ex) {
+            Log::debug($ex->getMessage());
+        }
+        //POCOR-8334-START
+    }
+
+    // Functions that are migrated over
+
+    /******************************************************************************************************************
+     **
+     ** finders functions to be used with query
+     **
+     ******************************************************************************************************************/
+
+    public function editBeforeQuery(EventInterface $event, Query $query)
+    {
+        $query->contain(['Users', 'Positions', 'StaffTypes', 'StaffStatuses']);
+    }
+
+    public function editAfterAction(EventInterface $event, Entity $entity)
+    {
+        $this->field('staff_id', [
+            'type' => 'readonly',
+            'order' => 10,
+            'attr' => ['value' => $entity->user->name_with_id]
+        ]);
+        $this->field('institution_position_id', [
+            'type' => 'readonly',
+            'order' => 11,
+            'attr' => ['value' => $entity->position->name]
+        ]);
+
+        if (empty($entity->end_date)) {
+            $this->field('FTE', [
+                'type' => 'select',
+                'order' => 12,
+                'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
+            ]);
+        } else {
+            $this->field('FTE', [
+                'type' => 'readonly',
+                'order' => 12,
+                'attr' => ['value' => $entity->FTE]
+            ]);
+        }
+        $this->Session->write('Staff.Staff.id', $entity->staff_id);
+        $this->Session->write('Staff.Staff.name', $entity->user->name);
+        $this->setupTabElements($entity);
+    }
+
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        // populate 'to be deleted' field
+        $staff = $this->Users->get($entity->staff_id);
+        $entity->showDeletedValueAs = $staff->name_with_id;
+
+        $extra['excludedModels'] = [$this->StaffPositionProfiles->getAlias(), $this->StaffTransferOut->getAlias(), $this->StaffRelease->getAlias()];
+
+        // staff transfer out
+        $InstitutionStaffTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
+        $doneStatus = $InstitutionStaffTransfers::DONE;
+
+        $transferOutRecordsCount = $InstitutionStaffTransfers->find()
+            ->matching('Statuses', function ($q) use ($doneStatus) {
+                return $q->where(['category <> ' => $doneStatus]);
+            })
+            ->where([
+                $InstitutionStaffTransfers->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionStaffTransfers->aliasField('previous_institution_id') => $entity->institution_id
+            ])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
+
+        // staff release out
+        $InstitutionStaffReleases = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffReleases');
+        $releaseDoneStatus = $InstitutionStaffReleases::DONE;
+
+        $releaseOutRecordsCount = $InstitutionStaffReleases->find()
+            ->matching('Statuses', function ($q) use ($releaseDoneStatus) {
+                return $q->where(['category <>' => $releaseDoneStatus]);
+            })
+            ->where([
+                $InstitutionStaffReleases->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionStaffReleases->aliasField('previous_institution_id') => $entity->institution_id
+            ])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'StaffRelease', 'count' => $releaseOutRecordsCount];
+
+        $associationArray = [
+            'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
+            'Institution.StaffLeave' => 'StaffLeave',
+            'Institution.InstitutionClasses' => 'InstitutionClasses',
+            'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
+        ];
+
+        if (!Configure::read('schoolMode')) {
+            $coreAssociationArray = [
+                'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+                'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+            ];
+            $associationArray = array_merge($associationArray, $coreAssociationArray);
+        }
+
+        foreach ($associationArray as $tableName => $model) {
+            $Table = TableRegistry::getTableLocator()->get($tableName);
+            $recordsCount = $Table->find()
+                ->where([
+                    $Table->aliasField('staff_id') => $entity->staff_id,
+                    $Table->aliasField('institution_id') => $entity->institution_id
+                ])
+                ->count();
+            $extra['associatedRecords'][] = ['model' => $model, 'count' => $recordsCount];
+        }
+    }
+
+    /**
+     * @param EventInterface $event
+     * @param Entity $entity
+     */
+    public function beforeDelete(EventInterface $event, Entity $entity)
+    {
+        $staff_id = !empty($entity->staff_id) ? $entity->staff_id : NULL;
+        $institution_id = !empty($entity->institution_id) ? $entity->institution_id : 0;
+        //$affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+        //POCOR-8143
+        if ($this->checkStaffRecords($entity)) {
+            $this->Alert->error('general.delete.restrictDeleteBecauseAssociation', ['reset' => true]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->url('remove'));
+        } else {
+            $affected = $this->removeIndividualChildRecords($staff_id, $institution_id);
+        }
+//        $this->log("deleted $affected children", 'debug');
+    }
+
+    /**
+     * @param Entity $entity
+     * POCOR-8143 -- check if association exits before deleting child records.
+     */
+    public function checkStaffRecords($entity)
+    {
+        $result = false;
+        $checkAllRecords = [];
+        $institutionId = $entity->institution_id ?? 0;
+        $staffId = $entity->staff_id ?? 0;
+        if ($institutionId && $staffId) {
+            $InstitutionStaffTransfers = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffTransfers');
+            $doneStatus = $InstitutionStaffTransfers::DONE;
+
+            $transferOutRecordsCount = $InstitutionStaffTransfers->find()
+                ->matching('Statuses', function ($q) use ($doneStatus) {
+                    return $q->where(['category <> ' => $doneStatus]);
+                })
+                ->where([
+                    $InstitutionStaffTransfers->aliasField('staff_id') => $entity->staff_id,
+                    $InstitutionStaffTransfers->aliasField('previous_institution_id') => $entity->institution_id
+                ])
+                ->count();
+
+            $checkAllRecords['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
+            $InstitutionStaffReleases = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffReleases');
+
+            $releaseDoneStatus = $InstitutionStaffReleases::DONE;
+            $releaseOutRecordsCount = $InstitutionStaffReleases->find()
+                ->matching('Statuses', function ($q) use ($releaseDoneStatus) {
+                    return $q->where(['category <>' => $releaseDoneStatus]);
+                })
+                ->where([
+                    $InstitutionStaffReleases->aliasField('staff_id') => $entity->staff_id,
+                    $InstitutionStaffReleases->aliasField('previous_institution_id') => $entity->institution_id
+                ])
+                ->count();
+
+            $checkAllRecords['associatedRecords'][] = ['model' => 'StaffRelease', 'count' => $releaseOutRecordsCount];
+
+            $associationArray = [
+                'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
+                'Institution.StaffLeave' => 'StaffLeave',
+                'Institution.InstitutionClasses' => 'InstitutionClasses',
+                'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects'
+            ];
+
+            if (!Configure::read('schoolMode')) {
+                $coreAssociationArray = [
+                    'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+                    'Quality.InstitutionQualityVisits' => 'InstitutionVisits'
+                ];
+                $associationArray = array_merge($associationArray, $coreAssociationArray);
+            }
+
+            foreach ($associationArray as $tableName => $model) {
+                $Table = TableRegistry::getTableLocator()->get($tableName);
+                $recordsCount = $Table->find()
+                    ->where([
+                        $Table->aliasField('staff_id') => $entity->staff_id,
+                        $Table->aliasField('institution_id') => $entity->institution_id
+                    ])->count();
+                $checkAllRecords['associatedRecords'][] = ['model' => $model, 'count' => $recordsCount];
+            }
+
+            if (!empty($checkAllRecords)) {
+                foreach ($checkAllRecords['associatedRecords'] as $record) {
+                    echo $record['count'];
+                    if ($record['count'] > 0) {
+                        $result = true;
+                    }
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param $staff_id
+     * @param int $institution_id
+     * @return int
+     */
+    private function removeIndividualChildRecords($staff_id, $institution_id = 0)
+    {
+        $affected = 0;
+        if ($staff_id) {
+
+            $table_name = 'security_group_users';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'user_activities';
+            $field_name = 'security_user_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'staff_custom_field_values';
+            $field_name = 'staff_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name);
+
+            $table_name = 'institution_staff_shifts';
+            $field_name = 'staff_id';
+            $affected = $affected + $this->removeFromTable($staff_id, $table_name, $field_name, $institution_id);
+
+        }
+
+        return $affected;
+
+    }
+
+    /**
+     * @param $user_id
+     * @param $table_name
+     * @param $field_name
+     * @param int $institution_id
+     * @return int
+     */
+    private function removeFromTable($user_id, $table_name, $field_name, $institution_id = 0)
+    {
+        $affected = 0;
+        try {
+
+
+            if ($institution_id == 0) {
+                $tableToClean = TableRegistry::getTableLocator()->get($table_name);
+                $where = [
+                    $tableToClean->aliasField($field_name) => $user_id
+
+                ];
+                $affected = $tableToClean->deleteAll($where);
+            }
+
+            if ($institution_id != 0) {
+                if ($table_name == 'institution_staff_shifts') {
+                    $affected = $this->deleteFromInstitutionStaffShifts($user_id, $table_name, $field_name, $institution_id);
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch remove from table',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        }
+        return $affected;
+    }
+
+    /**
+     * @param $user_id
+     * @param $table_name
+     * @param $field_name
+     * @param $institution_id
+     * @return int
+     */
+    private function deleteFromInstitutionStaffShifts($user_id, $table_name, $field_name, $institution_id)
+    {
+        $tableToClean = TableRegistry::getTableLocator()->get($table_name);
+        $Shifts = TableRegistry::getTableLocator()->get('institution_shifts');
+        $allShifts = $Shifts
+            ->find('all')
+            ->select('id')
+            ->where([$Shifts->aliasField('institution_id') => $institution_id]);
+        $allShifts = new Collection($allShifts->toArray());
+        $where = [
+            $tableToClean->aliasField($field_name) => $user_id,
+            $tableToClean->aliasField('shift_id IN') => $allShifts->extract('id')->toArray()
+        ];
+        $affected = $tableToClean->deleteAll($where);
+        return $affected;
+    }
+
+    /*
+    * Function to check whether logged in user have "All Comments" view permission
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6800
+    */
+
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $broadcaster = $this;
+        $listeners = [
+            TableRegistry::getTableLocator()->get('Institution.StaffLeave')    // Staff Leave associated to institution must be deleted.
+        ];
+        $this->dispatchEventToModels('Model.InstitutionStaff.afterDelete', [$entity], $broadcaster, $listeners);
+
+        // note that $this->table('institution_staff');
+        $id = $entity->id;
+        $institutionId = $entity->institution_id;
+        $staffId = $entity->staff_id;
+
+
+        $startDate = (!empty($entity->start_date)) ? $entity->start_date->format('Y-m-d') : null;
+        $endDate = (!empty($entity->end_date)) ? $entity->end_date->format('Y-m-d') : null;
+
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+
+        // Deleting a staff-to-position record in a school removes all records related to the staff in the school (i.e. remove him from classes/subjects) falling between end date and start date of his assignment in the position.
+        $classesInPosition = $InstitutionClasses->find()
+            ->where(
+                ['staff_id' => $staffId, 'institution_id' => $institutionId]
+            )
+            ->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+                $overlapDateCondition = [];
+                if (empty($endDate)) {
+                    $overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+                } else {
+                    $overlapDateCondition['OR'] = [];
+                    $overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+                    $overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+                    $overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+                }
+                return $q->where($overlapDateCondition);
+            });
+        $classArray = [];
+        foreach ($classesInPosition as $key => $value) {
+            $classArray[] = $value->id;
+        }
+        if (!empty($classArray)) {
+            $InstitutionClasses->updateAll(
+                ['staff_id' => 0],
+                ['id IN ' => $classArray]
+            );
+        }
+        // delete the staff from subjects
+        // find subjects that matched the start-end date then delete from subject_staff that matches staff id and subjects returned from previous
+
+        $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $subjectsDuringStaffPeriod = $InstitutionSubjects->find()
+            ->where([$InstitutionSubjects->aliasField('institution_id') => $institutionId])
+            ->matching('AcademicPeriods', function ($q) use ($startDate, $endDate) {
+                $overlapDateCondition = [];
+                if (empty($endDate)) {
+                    $overlapDateCondition['AcademicPeriods.end_date' . ' >= '] = $startDate;
+                } else {
+                    $overlapDateCondition['OR'] = [];
+                    $overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' >= ' => $startDate, 'AcademicPeriods.start_date' . ' <= ' => $endDate];
+                    $overlapDateCondition['OR'][] = ['AcademicPeriods.end_date' . ' >= ' => $startDate, 'AcademicPeriods.end_date' . ' <= ' => $endDate];
+                    $overlapDateCondition['OR'][] = ['AcademicPeriods.start_date' . ' <= ' => $startDate, 'AcademicPeriods.end_date' . ' >= ' => $endDate];
+                }
+                return $q->where($overlapDateCondition);
+            });
+        $subjectIdsDuringStaffPeriod = [];
+        foreach ($subjectsDuringStaffPeriod as $key => $value) {
+            $subjectIdsDuringStaffPeriod[] = $value->id;
+        }
+
+        // Staff behavior associated to institution must be deleted.
+        $StaffBehaviours = TableRegistry::getTableLocator()->get('Institution.StaffBehaviours');
+        $staffBehavioursData = $StaffBehaviours->find()
+            ->where([
+                $StaffBehaviours->aliasField('staff_id') => $entity->staff_id,
+                $StaffBehaviours->aliasField('institution_id') => $entity->institution_id,
+            ])
+            ->toArray();
+        foreach ($staffBehavioursData as $key => $value) {
+            $StaffBehaviours->delete($value);
+        }
+
+        // Rubrics related to staff must be deleted. (institution_site_quality_rubrics)
+        // association cascade deletes institution_site_quality_rubric_answers
+        $InstitutionRubrics = TableRegistry::getTableLocator()->get('Institution.InstitutionRubrics');
+        $institutionRubricsQuery = $InstitutionRubrics->find()
+            ->where([
+                $InstitutionRubrics->aliasField('staff_id') => $entity->staff_id,
+                $InstitutionRubrics->aliasField('institution_id') => $entity->institution_id,
+            ]);
+        foreach ($institutionRubricsQuery as $key => $value) {
+            $InstitutionRubrics->delete($value);
+        }
+
+        if (!empty($subjectIdsDuringStaffPeriod)) {
+            $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+            $InstitutionSubjectStaff->deleteAll([
+                $InstitutionSubjectStaff->aliasField('staff_id') => $staffId,
+                $InstitutionSubjectStaff->aliasField('institution_subject_id') . ' IN ' => $subjectIdsDuringStaffPeriod
+            ]);
+        }
+
+        // this logic here is to delete the roles from groups when the staff is deleted from the school
+        try {
+            $securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
+            $this->removeStaffRole($entity);
+        } catch (InvalidPrimaryKeyException $ex) {
+            Log::write('error', __METHOD__ . ': ' . $this->Institutions->getAlias() . ' primary key not found (' . $institutionId . ')');
+        }
+
+    }
+
+    /*
+    * Function to check whether logged in user have "All Comments" edit permission
+    * @author Poonam Kharka <poonam.kharka@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-6800
+    */
+
+    public function getNumberOfStaffsByGender($params = [])
+    {
+        //POCOR-8501 start
+        $query = $params['query'];
+        $InstitutionRecords = clone $query;
+        $valueBinder = $query->getValueBinder();
+        $institutionId = $valueBinder->bindings()[':c0']['value'];
+        $date1 = $valueBinder->bindings()[':c1']['value'];
+        $date2 = $valueBinder->bindings()[':c2']['value'];
+        $date3 = $valueBinder->bindings()[':c3']['value'];
+        $date4 = $valueBinder->bindings()[':c4']['value'];
+        $date5 = $valueBinder->bindings()[':c5']['value'];
+        $date6 = $valueBinder->bindings()[':c6']['value'];
+        $date7 = $valueBinder->bindings()[':c7']['value'];
+        $staffStatusId1 = $valueBinder->bindings()[':c8']['value'];
+        $staffStatusId2 = $valueBinder->bindings()[':c9']['value'];
+
+        $InstitutionStaffCount = $this
+        ->find()
+        ->select([
+            'gender' => 'Genders.name',
+            'gender_code' => 'Genders.code',
+            'count' =>  $this->find()->func()->count('DISTINCT ' . $this->aliasField('staff_id'))
+
+        ])
+        ->innerJoinWith('Users')
+        ->matching('Users.Genders')
+        ->leftJoinWith('Positions')
+        ->leftJoinWith('Institutions')
+        ->leftJoinWith('StaffTypes')
+        ->leftJoinWith('StaffStatuses')
+        ->leftJoinWith('SecurityGroupUsers')
+        ->leftJoinWith('InstitutionStaffShifts')
+        ->where([
+            $this->aliasField('institution_id') => $institutionId,
+            'OR' => [
+                [
+                    $this->aliasField('end_date IS NOT') => null,
+                    $this->aliasField('start_date <=') => $date1,
+                    $this->aliasField('end_date >=') => $date2
+                ],
+                [
+                    $this->aliasField('end_date IS NOT') => null,
+                    $this->aliasField('start_date <=') => $date3,
+                    $this->aliasField('end_date >=') => $date4
+                ],
+                [
+                    $this->aliasField('end_date IS NOT') => null,
+                    $this->aliasField('start_date >=') => $date5,
+                    $this->aliasField('end_date <=') => $date6
+                ],
+                [
+                    $this->aliasField('end_date IS') => null,
+                    $this->aliasField('start_date <=') => $date7
+                ]
+            ],
+            $this->aliasField('staff_status_id IN') => [$staffStatusId1, $staffStatusId2]
+        ])
+        ->group(['Users.gender_id']);
+
+        $dataSet = [
+            'M' => [__('Male'), 0],
+            'F' => [__('Female'), 0],
+        ];
+        foreach ($InstitutionStaffCount->toArray() as $value) {
+            $genderCode = $value['gender_code'];
+            if (isset($dataSet[$genderCode])) {
+                $dataSet[$genderCode][1] += $value['count'];
+            } else {
+                $dataSet[$genderCode] = [__($value['gender']), $value['count']];
+            }
+        } //POCOR-8501 end
+        $params['dataSet'] = array_values($dataSet);
+        unset($InstitutionRecords);
+        return $params;
+    }
+
+    /*
+     * Function to check whether Principal role view permission
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-8007
+    */
+    public function getNumberOfStaffByType($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $currentYearId = $AcademicPeriod->getCurrent();
+        if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields' => 'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+
+        $staffsByPositionConditions = ['Genders.name IS NOT NULL'];
+        $staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+
+        $query = $this->find('all');
+        $staffByPositions = $query
+            ->find('AcademicPeriod', ['academic_period_id' => $currentYearId])
+            ->contain(['Users.Genders', 'Positions.StaffPositionTitles'])
+            ->select([
+                'Positions.id',
+                'StaffPositionTitles.type',
+                'Users.id',
+                'Genders.name',
+                'total' => $query->func()->count('DISTINCT ' . $this->aliasField('staff_id'))
+            ])
+            ->where($staffsByPositionConditions)
+            ->group([
+                'StaffPositionTitles.type', 'Genders.name'
+            ])
+            ->order(
+                'StaffPositionTitles.type'
+            )
+            ->toArray();
+
+        $positionTypes = array(
+            0 => __('Non-Teaching'),
+            1 => __('Teaching')
+        );
+
+        $genderOptions = $this->Users->Genders->getList();
+        $dataSet = array();
+        foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = array('name' => __($value), 'data' => []);
+        }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+        foreach ($dataSet as $key => $obj) {
+            foreach ($positionTypes as $id => $name) {
+                $dataSet[$key]['data'][$id] = 0;
+            }
+        }
+        foreach ($staffByPositions as $key => $staffByPosition) {
+            if ($staffByPosition->has('position')) {
+                $positionType = $staffByPosition->position->staff_position_title->type;
+                $staffGender = $staffByPosition->user->gender->name;
+                $StaffTotal = $staffByPosition->total;
+
+                foreach ($dataSet as $dkey => $dvalue) {
+                    if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+                        $dataSet[$dkey]['data'][$positionType] = 0;
+                    }
+                }
+
+                $dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+                $dataSet['Total']['data'][$positionType] += $StaffTotal;
+            }
+        }
+
+        $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
+        $params['options']['xAxis']['categories'] = array_values($positionTypes);
+        $params['dataSet'] = $dataSet;
+
+        return $params;
+    }
+
+    /*
+     * Function to check whether any role "Report Cards > Comments" (view/edit) count permission
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-8007
+    */
+
+    public function getNumberOfStaffByPosition($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $currentYearId = $AcademicPeriod->getCurrent();
+        if (!empty($currentYearId)) {
+            $currentYear = $AcademicPeriod->get($currentYearId, ['fields' => 'name'])->name;
+        } else {
+            $currentYear = __('Not Defined');
+        }
+
+        $staffsByPositionConditions = ['Genders.name IS NOT NULL'];
+        $staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
+
+        $query = $this->find('all');
+        $staffByPositions = $query
+            ->find('AcademicPeriod', ['academic_period_id' => $currentYearId])
+            ->contain(['Users.Genders', 'Positions.StaffPositionTitles'])
+            ->select([
+                'Positions.id',
+                'StaffPositionTitles.id',
+                'StaffPositionTitles.name',
+                'Users.id',
+                'Genders.name',
+                'total' => $query->func()->count('DISTINCT ' . $this->aliasField('staff_id'))
+            ])
+            ->where($staffsByPositionConditions)
+            ->group([
+                'StaffPositionTitles.id', 'Genders.name'
+            ])
+            ->order(
+                'StaffPositionTitles.id'
+            )
+            ->toArray();
+
+        $positionTypes = [];
+        foreach ($staffByPositions as $staffPosition) {
+            if ($staffPosition->has('position') && $staffPosition->position->has('staff_position_title')) {
+                $id = $staffPosition->position->staff_position_title->id;
+                $name = $staffPosition->position->staff_position_title->name;
+                $positionTypes[$id] = $name;
+            }
+        }
+
+        $genderOptions = $this->Users->Genders->getList();
+        $dataSet = array();
+        foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = array('name' => __($value), 'data' => []);
+        }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+        foreach ($dataSet as $key => $obj) {
+            foreach ($positionTypes as $id => $name) {
+                $dataSet[$key]['data'][$id] = 0;
+            }
+        }
+        foreach ($staffByPositions as $key => $staffByPosition) {
+            if ($staffByPosition->has('position')) {
+                $positionType = $staffByPosition->position->staff_position_title->id;
+                $staffGender = $staffByPosition->user->gender->name;
+                $StaffTotal = $staffByPosition->total;
+
+                foreach ($dataSet as $dkey => $dvalue) {
+                    if (!array_key_exists($positionType, $dataSet[$dkey]['data'])) {
+                        $dataSet[$dkey]['data'][$positionType] = 0;
+                    }
+                }
+                $dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+                $dataSet['Total']['data'][$positionType] += $StaffTotal;
+            }
+        }
+
+        $params['options']['subtitle'] = array('text' => sprintf(__('For Year %s'), $currentYear));
+        $params['options']['xAxis']['categories'] = array_values($positionTypes);
+        $params['dataSet'] = $dataSet;
+
+        return $params;
+    }
+
+    /*
+     * Function to check whether Homeroom role user have "Comments'" view permission
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return boolean
+    * @ticket POCOR-8007
+    */
+
+    public function getNumberOfStaffByYear($params = [])
+    {
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        $_conditions = [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $currentPeriodId = $AcademicPeriod->getCurrent();
+
+        $genderOptions = $this->Users->Genders->getList();
+        $dataSet = new ArrayObject();
+        foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = ['name' => __($value), 'data' => []];
+        }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+        // only show one year before and after the current academic period (if configured)
+        $academicPeriodList = [];
+        $found = false;
+        foreach ($AcademicPeriod->getYearList() as $periodId => $periodName) {
+            if ($found) {
+                $academicPeriodList[$periodId] = $periodName;
+                break;
+            }
+            if ($periodId == $currentPeriodId) {
+                $academicPeriodList[$periodId] = $periodName;
+                $found = true;
+            } else {
+                $academicPeriodList = [$periodId => $periodName];
+            }
+        }
+        $academicPeriodList = array_reverse($academicPeriodList, true);
+
+        foreach ($academicPeriodList as $periodId => $periodName) {
+            if ($periodId == $currentPeriodId) {
+                foreach ($dataSet as $dkey => $dvalue) {
+                    if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
+                        $dataSet[$dkey]['data'][$periodName] = 0;
+                    }
+                }
+
+                foreach ($genderOptions as $genderId => $genderName) {
+                    $queryCondition = array_merge(['Genders.id' => $genderId], $_conditions);
+
+                    $staffByYear = $this->find()
+                        ->find('AcademicPeriod', ['academic_period_id' => $periodId])
+                        ->find('list', [
+                            'keyField' => 'gender_name',
+                            'valueField' => 'total'
+                        ])
+                        ->matching('Users.Genders')
+                        ->select([
+                            'gender_name' => 'Genders.name',
+                            'total' => $this->find()->func()->count('DISTINCT ' . $this->aliasField('staff_id'))
+                        ])
+                        ->where($queryCondition)
+                        ->group(['gender_name'])
+                        //->enableHydration(false)
+                        ->toArray();
+
+                    if (!empty($staffByYear)) {
+                        $dataSet[$genderName]['data'][$periodName] = $staffByYear[$genderName];
+                        $dataSet['Total']['data'][$periodName] += $staffByYear[$genderName];
+                    }
+                }
+            }
+        }
+
+        $params['dataSet'] = $dataSet->getArrayCopy();
+        $params['options']['title'] = ['text' => __('Number of Staff')]; //POCOR-9636: Rename chart label
+
+        return $params;
+    }
+
+    /*
+    * Function to get number of staff attendance for the given institution dashboard
+    *  (for highcharts)
+    * @author Anubhav Jain <anubhav.jain@mail.valuecoders.com>
+    * @return array
+    * @ticket POCOR-8007
+    * @ticket POCOR-9111
+    */
+
+    public function getNumberOfStaffByAttendanceType(array $params = [])
+    {
+        $conditions = $params['conditions'] ?? [];
+        $_conditions = [];
+
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->getAlias() . '.' . $key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $currentYearId = $AcademicPeriod->getCurrent();
+
+        $currentYear = $currentYearId
+            ? $AcademicPeriod->get($currentYearId, ['fields' => ['name']])->name
+            : __('Not Defined');
+
+        $institutionId = $conditions['institution_id'] ?? null;
+        if (!$institutionId) {
+            return $params; // No institution_id provided, nothing to process
+        }
+
+        $where = [$this->aliasField('institution_id') => $institutionId];
+        if (!empty($conditions['staff_id'])) {
+            $where[$this->aliasField('staff_id')] = $conditions['staff_id'];
+        }
+
+//        $debug = false; // Set to true only for testing purposes
+//
+//        $currentDate = $debug
+//            ? FrozenDate::parse('2025-05-15') // Your test date
+//            : FrozenDate::today();
+
+        $currentDate = FrozenDate::today();
+
+        $staffAttendances = $this->find()
+            ->where($where)
+            ->group([
+                $this->aliasField('institution_id'),
+                $this->aliasField('staff_id')
+            ])
+            ->formatResults(function (ResultSetInterface $results) use ($currentDate, $institutionId, $currentYearId) {
+                return $results->map(function ($row) use ($currentDate, $institutionId, $currentYearId) {
+
+                    $staffId = $row->staff_id;
+
+                    $StaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+                    $attendance = $StaffAttendances->find()
+                        ->select(['time_in'])
+                        ->where([
+                            'staff_id' => $staffId,
+                            'institution_id' => $institutionId,
+                            'date' => $currentDate,
+                            'time_in IS NOT NULL',
+//                            'time_out IS NOT NULL'
+                        ])
+                        ->first();
+
+                    $row->present = $attendance ? 1 : 0;
+                    $row->late = 0;
+
+//                    if ($attendance) {
+//                        $staffTimeIn = FrozenTime::parse($attendance->time_in)->format('H:i:s');
+//
+//                        $StaffShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffShifts');
+//                        $InstitutionShifts = TableRegistry::getTableLocator()->get('Institution.InstitutionShifts');
+//
+//                        $shiftMappings = $StaffShifts->find()
+//                            ->where(['staff_id' => $staffId])
+//                            ->toArray();
+//
+//                        if (!empty($shiftMappings)) {
+//                            foreach ($shiftMappings as $shiftMap) {
+//                                $shift = $InstitutionShifts->get($shiftMap->shift_id);
+//                                $shiftStart = FrozenTime::parse($shift->start_time)->format('H:i:s');
+//
+//                                if ($staffTimeIn > $shiftStart) {
+//                                    $row->late = 1;
+//                                    break;
+//                                }
+//                            }
+//                        } else {
+//                            $defaultShift = $InstitutionShifts->find()
+//                                ->select(['start_time' => 'MIN(InstitutionShifts.start_time)'])
+//                                ->where([
+//                                    'institution_id' => $institutionId,
+//                                    'academic_period_id' => $currentYearId
+//                                ])
+//                                ->first();
+//
+//                            if ($defaultShift) {
+//                                $defaultStartTime = FrozenTime::parse($defaultShift->start_time)->format('H:i:s');
+//
+//                                if ($staffTimeIn > $defaultStartTime) {
+//                                    $row->late = 1;
+//                                }
+//                            }
+//                        }
+//                    }
+
+                    $StaffLeave = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+                    $onLeave = $StaffLeave->find()
+                        ->where([
+                            'staff_id' => $staffId,
+                            'institution_id' => $institutionId,
+                            'date_from <=' => $currentDate,
+                            'date_to >=' => $currentDate
+                        ])
+                        ->count();
+
+                    $row->absent = $onLeave > 0 ? 1 : 0;
+
+                    return $row;
+                });
+            });
+
+        $dataSet = [
+            'Present' => ['name' => __('Present'), 'data' => []],
+            'Absent'  => ['name' => __('Absent'),  'data' => []],
+            'Late'    => ['name' => __('Late'),    'data' => []],
+        ];
+
+        $totals = ['present' => 0, 'absent' => 0, 'late' => 0];
+
+        foreach ($staffAttendances as $attendance) {
+            $totals['present'] += $attendance->present;
+            $totals['absent'] += $attendance->absent;
+            $totals['late']   += $attendance->late;
+        }
+
+        if (!empty($currentYear)) {
+            $dataSet['Present']['data'][$currentYear] = $totals['present'];
+            $dataSet['Absent']['data'][$currentYear]  = $totals['absent'];
+            $dataSet['Late']['data'][$currentYear]    = $totals['late'];
+        }
+
+        $params['options']['subtitle'] = ['text' => __('For Today')];
+        $params['options']['xAxis']['categories'] = [$currentYear];
+        $params['dataSet'] = $dataSet;
+
+        return $params;
+    }
+
+    // Functions that are migrated over
+    /******************************************************************************************************************
+     **
+     ** finders functions to be used with query
+     **
+     ******************************************************************************************************************/
+    /**
+     * $options['type'] == 0 > non-teaching
+     * $options['type'] == 1 > teaching
+     * refer to OptionsTrait
+     */
+    public function findByPositions(Query $query, array $options)
+    {
+        if (array_key_exists('Institutions.id', $options) && array_key_exists('type', $options)) {
+            $positions = $this->Positions->find('list')
+                ->select([
+                    $this->Positions->aliasField('id'),
+                    'StaffPositionTitles.type'
+                ])
+                ->contain(['StaffPositionTitles'])
+                ->where([
+                    $this->Positions->aliasField('institution_id') => $options['Institutions.id'],
+                    'StaffPositionTitles.type' => $options['type']
+                ])
+                ->toArray();
+            $positions = array_keys($positions);
+            if (!empty($positions)) {
+                return $query->where([$this->aliasField('institution_position_id IN') => $positions]);
+            } else {
+                return $query;
+            }
+        } else {
+            return $query;
+        }
+    }
+    //POCOR-6734 ends
+
+    // used for student report cards
+
+    public function findByInstitution(Query $query, array $options)
+    {
+        if (array_key_exists('Institutions.id', $options)) {
+            return $query->where([$this->aliasField('institution_id') => $options['Institutions.id']/*,$this->aliasField('is_homeroom') =>1 POCOR-7292*/]); //POCOR-5070
+        } else {
+            return $query;
+        }
+    }
+
+    /**
+     * currently available values:
+     *  Full-Time
+     *  Part-Time
+     *  Contract
+     */
+    public function findByType(Query $query, array $options)
+    {
+        if (array_key_exists('type', $options)) {
+            $types = $this->StaffTypes->getList()->toArray();
+            if (is_array($types) && in_array($options['type'], $types)) {
+                $typeId = array_search($options['type'], $types);
+                return $query->where([$this->aliasField('staff_type_id') => $typeId]);
+            } else {
+                return $query;
+            }
+        } else {
+            return $query;
+        }
+    }
+
+    // used for student report cards
+
+    /**
+     * currently available values:
+     *  Current
+     *  Transferred
+     *  Resigned
+     *  Leave
+     *  Terminated
+     */
+    public function findByStatus(Query $query, array $options)
+    {
+        if (array_key_exists('status', $options)) {
+            $statuses = $this->StaffStatuses->getList()->toArray();
+            if (is_array($statuses) && in_array($options['status'], $statuses)) {
+                $statusId = array_search($options['status'], $statuses);
+                return $query->where([$this->aliasField('staff_status_id') => $statusId]);
+            } else {
+                return $query;
+            }
+        } else {
+            return $query;
+        }
+    }
+
+    public function findStaffRecords(Query $query, array $options)
+    {
+        $academicPeriodId = (array_key_exists('academicPeriodId', $options)) ? $options['academicPeriodId'] : null;
+        $positionType = (array_key_exists('positionType', $options)) ? $options['positionType'] : null;
+        $staffId = (array_key_exists('staffId', $options)) ? $options['staffId'] : null;
+        $institutionId = (array_key_exists('institutionId', $options)) ? $options['institutionId'] : null;
+        $isHomeroom = (array_key_exists('isHomeroom', $options)) ? $options['isHomeroom'] : null;
+
+        if (!is_null($academicPeriodId)) {
+            $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodData = $AcademicPeriods->find()
+                ->select([
+                    $AcademicPeriods->aliasField('start_date'), $AcademicPeriods->aliasField('end_date')
+                ])
+                ->where([$AcademicPeriods->aliasField($AcademicPeriods->getPrimaryKey()) => $academicPeriodId])
+                ->first();
+            if (!empty($academicPeriodData)) {
+                $start_date = $academicPeriodData->start_date;
+                $end_date = $academicPeriodData->end_date;
+                $query->find('inDateRange', ['start_date' => $start_date, 'end_date' => $end_date]);
+            }
+        }
+        if (!is_null($positionType)) {
+            $query->matching('Positions.StaffPositionTitles', function ($q) use ($positionType) {
+                // teaching staff only
+                return $q->where(['StaffPositionTitles.type' => $positionType]);
+            });
+        }
+        if (!is_null($isHomeroom)) {
+            // POCOR-7768
+            $query->where([$this->aliasField('is_homeroom') => $isHomeroom]);
+        }
+        if (!is_null($staffId)) {
+            $query->where([$this->aliasField('staff_id') => $staffId]);
+        }
+        if (!is_null($institutionId)) {
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        }
+
+        return $query;
+    }
+
+    public function findClassStaffOptions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        //$institutionId = $_SESSION['Institution']['StudentUser']['primaryKey']['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $todayDate = Time::now();
+        // echo "<pre>";print_r($_SESSION['Institution']['StudentUser']['primaryKey']['institution_id']);die;
+        return $query
+            ->select([
+                $this->Users->aliasField('id'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name')
+            ])
+            ->contain(['Users'])
+            // ->matching('Positions', function ($q) {
+            //     return $q->where(['Positions.is_homeroom' => 1]);
+            // })
+            ->find('byInstitution', ['Institutions.id' => $institutionId])
+            //->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+            ->where([
+                $this->aliasField('start_date <= ') => $todayDate,
+                $this->aliasField('is_homeroom') => 1,
+                'OR' => [
+                    [$this->aliasField('end_date >= ') => $todayDate], //POCOR-6720
+                    [$this->aliasField('end_date IS NULL')]
+                ]
+            ])
+            ->order([
+                $this->Users->aliasField('first_name')
+            ])
+            ->formatResults(function ($results) {
+                $returnArr = [];
+                foreach ($results as $result) {
+                    if ($result->has('user')) {
+                        // echo "<pre>";print_r($result);die;
+                        $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
+                    }
+                }
+                return $returnArr;
+            });
+    }
+
+    public function findSubjectStaffOptions(Query $query, array $options)
+    {
+        $institutionId     = $options['institution_id'];
+        $academicPeriodId  = $options['academic_period_id'] ?? null;
+        $type  = $options['type'] ?? 1;
+
+        // Base query
+        $query = $query
+            ->select([
+                $this->aliasField('id'),
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name'
+            ])
+            ->find('byInstitution', [
+                'Institutions.id' => $institutionId
+            ])
+            ->contain(['Users'])
+            ->where([
+                $this->aliasField('institution_position_id'),
+                'OR' => [
+                    [$this->aliasField('end_date') . ' >' => Time::now()],
+                    [$this->aliasField('end_date') . ' IS NULL']
+                ]
+            ])
+            ->order([$this->Users->aliasField('first_name')]);
+
+        // Only apply the AcademicPeriod finder if we actually have a period ID
+        if ($academicPeriodId !== null) {
+            $query = $query->find('AcademicPeriod', [
+                'academic_period_id' => $academicPeriodId
+            ]);
+        }
+
+        if ($type >= 0) {
+            $query = $query->find('byPositions', [
+                'Institutions.id' => $institutionId,
+                'type'            => $type
+            ]);
+        }
+
+        return $query
+            ->find('all') // you can drop this if your custom finder already starts from 'all'
+            ->formatResults(function ($results) {
+                $return = [];
+                foreach ($results as $entity) {
+                    if ($entity->has('user')) {
+                        $return[] = [
+                            'id'   => $entity->user->id,
+                            'name' => $entity->user->name_with_id
+                        ];
+                    }
+                }
+                return $return;
+            });
+    }
+
+    /**
+     * Find all staff in an institution who are NOT assigned to a given department or are managers.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param array $options Must contain:
+     * - 'institution_id' (int): ID of the institution
+     * - 'department_id'  (int): ID of the department to exclude
+     * - 'target'  (string): 'unassigned' or 'manager' (default 'unassigned')
+     * @return \Cake\ORM\Query
+     */
+    public function findStaffForDepartment(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $departmentId  = $options['department_id'];
+        $target        = $options['target'] ?? 'unassigned';
+
+        $query = $query
+            ->where([
+                'Staff.institution_id' => $institutionId,
+                'OR' => [
+                    ['Staff.end_date >'   => Time::now()],
+                    ['Staff.end_date IS'  => null],
+                ],
+            ])
+            ->contain([
+                'Users.Genders',
+                'StaffStatuses'
+            ]);
+        switch ($target) {
+            case 'unassigned':
+                $query = $this->_filterUnassignedStaff($query, $departmentId);
+                break;
+            case 'manager':
+                $query = $this->_filterManagerStaff($query, $departmentId); // Assuming you'll implement this
+                break;
+            // Add more cases as needed
+        }
+
+        return $this->_formatStaffResults($query, $departmentId);
+    }
+
+    /**
+     * Applies filters for unassigned staff based on multiple assignment allowance.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterUnassignedStaff(Query $query, int $departmentId): Query
+    {
+        // load the config once
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $allowMultiple = $ConfigItems->value('AssigningStafftoMultipleDepartments');
+        if ($allowMultiple == 'Disable') {
+            // filter out anyone in DepartmentStaff *at all*
+            $query = $query->notMatching('DepartmentStaff');
+        } else {
+            // only filter out those already in *this* department
+            $query = $query->notMatching('DepartmentStaff', function (Query $q) use ($departmentId) {
+                return $q->where([
+                    'DepartmentStaff.institution_department_id' => $departmentId
+                ]);
+            });
+        }
+        return $query;
+    }
+
+    /**
+     * Applies filters for manager staff (placeholder).
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _filterManagerStaff(Query $query, int $departmentId): Query
+    {
+        // Implement manager-specific filtering logic here
+        // For example:
+        // $query->where(['Staff.is_manager' => true]);
+        return $query;
+    }
+
+    /**
+     * Formats the staff query results.
+     *
+     * @param \Cake\ORM\Query $query
+     * @param int $departmentId
+     * @return \Cake\ORM\Query
+     */
+    protected function _formatStaffResults(Query $query, int $departmentId): Query
+    {
+        return $query->formatResults(function (CollectionInterface $results) use ($departmentId) {
+            return $results->map(function ($staff) use ($departmentId) {
+                return [
+                    'openemis_no'        => $staff->user->openemis_no,
+                    'name'               => $staff->user->name,
+                    'staff_status_name'  => $staff->staff_status->name,
+                    'gender_name'        => $staff->user->gender->name,
+                    'security_user_id'   => $staff->user->id,
+                    'encodedVar'         => base64_encode(json_encode([
+                        'institution_staff_id'       => $staff->id,
+                        'institution_department_id'  => $departmentId,
+                    ])),
+                ];
+            })->toList();
+        });
+    }
+
+
+    public function findAllCommentsViewPermissions(Query $query, array $options)
+    {
+        $loggedInUserId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $permission = 'All Comments';
+        $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $functionsData = $SecurityFunctions->find()
+            ->select([$SecurityFunctions->aliasField('id')])
+            ->where([
+                $SecurityFunctions->aliasField('name') => $permission
+            ])->enableHydration(false)->first();
+        if (!empty($functionsData)) {
+            $funId = $functionsData['id'];
+        }
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        if ($superAdmin) {
+            $data = array('result' => 1);
+            echo json_encode($data, true);
+            die;
+        } else {
+            if (!empty($funId) && !empty($userRoleId)) {
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                    ->select([$SecurityRoleFunctionsTbl->aliasField('_view')])
+                    ->where([
+                        $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
+                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
+                        $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
+                    ])->enableHydration(false)->first();
+
+                if (!empty($SecurityRoleFunctions) && $SecurityRoleFunctions['_view'] == 1) {
+                    $data = array('result' => 1);
+                    echo json_encode($data, true);
+                    die;
+                } else {
+                    $data = array('result' => 0);
+                    echo json_encode($data, true);
+                    die;
+                }
+            }
+        }
+    }
+
+    public function findAllCommentsEditPermissions(Query $query, array $options)
+    {
+        $loggedInUserId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $userRoleId = $SecurityRoles->getLoggedInUserRoles($loggedInUserId);
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $permission = 'All Comments';
+        $SecurityFunctions = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $functionsData = $SecurityFunctions->find()
+            ->select([$SecurityFunctions->aliasField('id')])
+            ->where([
+                $SecurityFunctions->aliasField('name') => $permission
+            ])->enableHydration(false)->first();
+        if (!empty($functionsData)) {
+            $funId = $functionsData['id'];
+        }
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        if ($superAdmin) {
+            $data = array('result' => 1);
+            echo json_encode($data, true);
+            die;
+        } else {
+            if (!empty($funId) && !empty($userRoleId)) {
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                    ->select([$SecurityRoleFunctionsTbl->aliasField('_edit')])
+                    ->where([
+                        $SecurityRoleFunctionsTbl->aliasField('security_function_id') => $funId,
+                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $userRoleId,
+                        $SecurityRoleFunctionsTbl->aliasField('_edit') => 1,
+                    ])->enableHydration(false)->first();
+                if (!empty($SecurityRoleFunctions) && $SecurityRoleFunctions['_edit'] == 1) {
+                    $data = array('result' => 1);
+                    echo json_encode($data, true);
+                    die;
+                } else {
+                    $data = array('result' => 0);
+                    echo json_encode($data, true);
+                    die;
+                }
+            }
+        }
+    }
+
+
+    public function findPrincipalViewPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $principalRoleId = $SecurityRoles->getPrincipalRoleId();
+
+        //$SecurityGroupInsTbl = TableRegistry::getTableLocator()->get('security_group_institutions');
+        //$SecurityGroupsTbl = TableRegistry::getTableLocator()->get('security_groups');
+        $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityRolesTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityUsersTbl = TableRegistry::getTableLocator()->get('User.Users');
+        $InstitutionsTbl = TableRegistry::getTableLocator()->get('Institution.Institutions');
+
+        $SecurityGroupIns = $SecurityRolesTbl->find()
+            ->select([$SecurityUsersTbl->aliasField('openemis_no'), $InstitutionsTbl->aliasField('code')])
+            ->innerJoin([$SecurityGroupUsersTbl->getAlias() => $SecurityGroupUsersTbl->getTable()], [
+                $SecurityGroupUsersTbl->aliasField('security_role_id = ') . $SecurityRolesTbl->aliasField('id')
+            ])
+            ->innerJoin([$InstitutionsTbl->getAlias() => $InstitutionsTbl->getTable()], [
+                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $InstitutionsTbl->aliasField('security_group_id')
+            ])
+            ->innerJoin([$SecurityUsersTbl->getAlias() => $SecurityUsersTbl->getTable()], [
+                $SecurityGroupUsersTbl->aliasField('security_user_id = ') . $SecurityUsersTbl->aliasField('id')
+            ])
+            ->where([
+                $SecurityRolesTbl->aliasField('id') => $principalRoleId,
+                $InstitutionsTbl->aliasField('id') => $institutionId,
+                $SecurityUsersTbl->aliasField('id') => $staffId
+            ])->count();
+        if ($SecurityGroupIns > 0) {
+            $getCommentPermission = $this->checkCommentPermissionForReportCards($principalRoleId);
+            $principalPermissionArr = ['result' => $SecurityGroupIns];
+            $data = array_merge($principalPermissionArr, $getCommentPermission);
+            echo json_encode($data, true);
+            die;
+        } else {
+            $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
+            echo json_encode($data, true);
+            die;
+        }
+    }
+
+    public function checkCommentPermissionForReportCards($roleId)
+    {
+        $permissionModule = ['Comments'];
+        $categories = ['Report Cards'];
+        $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+        $SecurityFunctions = $SecurityFunctionsTbl->find()
+            ->select([$SecurityFunctionsTbl->aliasField('id')])
+            ->where([
+                $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
+                $SecurityFunctionsTbl->aliasField('category IN') => $categories,
+            ])->enableHydration(false)->toArray();
+
+        $funArr = [];
+        if (!empty($SecurityFunctions)) {
+            foreach ($SecurityFunctions as $funkey => $funval) {
+                $funArr[$funkey] = $funval['id'];
+            }
+        }
+
+        $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+        $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+            ->where([
+                $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
+                $SecurityRoleFunctionsTbl->aliasField('security_role_id') => $roleId,
+            ])->enableHydration(false)->toArray();
+        $viewCount = $editCount = 0;
+        if (!empty($SecurityRoleFunctions)) {
+            foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
+                if ($rvalue['_view'] == 1) {
+                    $viewCount++;
+                }
+                if ($rvalue['_edit'] == 1) {
+                    $editCount++;
+                }
+            }
+        }
+        $finalData = ['viewCount' => $viewCount, 'editCount' => $editCount];
+        return $finalData;
+    }
+
+    public function findHomeroomViewPermissions(Query $query, array $options)
+    {
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionId = $options['institution_id'];
+        $classId = $options['institution_class_id'];
+        $staffId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+
+        $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
+        $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+        $institutionSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+        $institutionClassSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+
+        $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
+        $SecurityGroupInsTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        // $SecurityGroupsTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroups');
+        $SecurityGroupsLocator = new TableLocator();
+        $SecurityGroupsTbl = $SecurityGroupsLocator->get('security_groups');
+        $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityGroupIns = $SecurityGroupInsTbl->find()
+            ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
+                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6791
+            ])
+            ->innerJoin([$SecurityGroupUsersTbl->getAlias() => $SecurityGroupUsersTbl->getTable()], [
+                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
+            ])
+            ->where([
+                $SecurityGroupInsTbl->aliasField('institution_id') => $institutionId,
+                $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
+                $SecurityGroupUsersTbl->aliasField('security_role_id') => $homeroomRoleId,
+            ])->count();
+        if (($SecurityGroupIns > 0) || ($superAdmin == 1)) {
+            if ($superAdmin == 1) { // Super Role/Admin
+                $homeroomTeacherPermissionArr = ['result' => 1, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
+            } else {
+                //to find records for homeroom teacher staff
+                $institutionClassesTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+                $institutionClasses = $institutionClassesTbl
+                    ->find()
+                    ->select([ // to find records for homeroom teacher
+                        'staff_id' => $institutionClassesTbl->aliasField('staff_id')
+                    ])
+                    ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
+                        $SecurityGroupUsers->aliasField('security_user_id = ') . $institutionClassesTbl->aliasField('staff_id'),
+                        $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                    ])
+                    ->where([
+                        $institutionClassesTbl->aliasField('id') => $classId,
+                        $institutionClassesTbl->aliasField('institution_id') => $institutionId,
+                        $institutionClassesTbl->aliasField('staff_id') => $staffId,
+                        $institutionClassesTbl->aliasField('academic_period_id') => $academicPeriodId
+                    ])->count();
+                if ($institutionClasses > 0) {
+                    $homeroomTeacherPermissionArr = ['result' => 2, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
+                } else {
+                    $securityGroupId = $Institution->get($institutionId)->security_group_id;
+                    //to find records for secondar staff
+                    $InstitutionClassesSecondary = $InstitutionClassesSecondaryStaff
+                        ->find()
+                        ->select([
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                        ])
+                        ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
+                            $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
+                            $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                            $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                        ])
+                        ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') . ' = ' . $institutionClassesTbl->aliasField('staff_id'),
+                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') . ' = ' . $institutionClassesTbl->aliasField('id')
+                        ])
+                        ->where([
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId,
+                            $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId
+                        ])->count();
+                    $InstitutionClassesSecondary = 0;
+                    if ($InstitutionClassesSecondary > 0) {
+                        $homeroomTeacherPermissionArr = ['result' => 3, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
+                    }else{
+                        $InstitutionClassesSecondary = $InstitutionClassesSecondaryStaff
+                        ->find()
+                        ->select([
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                        ])
+                        ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
+                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') . ' = ' . $institutionClassesTbl->aliasField('id')
+                        ])
+                        ->where([
+                            $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                            $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId,
+                            $InstitutionClasses->aliasField('academic_period_id') => $academicPeriodId,
+                            $InstitutionClasses->aliasField('institution_id') => $institutionId
+                        ])->count();
+                        if($InstitutionClassesSecondary > 0){
+                            $homeroomTeacherPermissionArr = ['result' => 4, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
+                        }else{
+                            $InstitutionSubjectStaffData = $InstitutionSubjectStaff
+                                                            ->find()
+                                                            ->select([
+                                                                $InstitutionSubjectStaff->aliasField('staff_id'),
+                                                                $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                                                            ])
+                                                            ->where([
+                                                                $InstitutionSubjectStaff->aliasField('institution_id') => $institutionId,
+                                                                $InstitutionSubjectStaff->aliasField('staff_id') => $staffId
+                                                            ])->first();
+                            //POCOR-9028
+                            if (empty($InstitutionSubjectStaffData)) {
+                                $InstitutionSubjectStaffData = $InstitutionSubjectStaff
+                                    ->find()
+                                    ->select([
+                                        $InstitutionSubjectStaff->aliasField('staff_id'),
+                                        $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                                    ])
+                                    ->innerJoin([$institutionSubjectsTbl->getAlias() => $institutionSubjectsTbl->getTable()], [
+                                        $InstitutionSubjectStaff->aliasField('institution_subject_id') . ' = ' . $institutionSubjectsTbl->aliasField('id'),
+                                        $InstitutionSubjectStaff->aliasField('institution_id') . ' = ' . $institutionSubjectsTbl->aliasField('institution_id')
+                                    ])
+                                    ->innerJoin([$institutionClassSubjectsTbl->getAlias() => $institutionClassSubjectsTbl->getTable()], [
+                                        $institutionClassSubjectsTbl->aliasField('institution_subject_id') . ' = ' . $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                                    ])
+                                    ->where([
+
+                                        $institutionClassSubjectsTbl->aliasField('institution_class_id') => $classId,
+
+                                    ])->first();
+                            }
+                            //POCOR-9028
+                            $homeroomTeacherPermissionArr = ['result' => 'Not homeroom class', 'subject_edit_data' =>  $InstitutionSubjectStaffData =[]]; //POCOR-9618
+                        }
+                    }
+                }
+            }
+
+            $getCommentPermission = $this->checkCommentPermissionForReportCards($homeroomRoleId);
+            $data = array_merge($homeroomTeacherPermissionArr, $getCommentPermission);
+            echo json_encode($data, true);
+            die;
+        } else {
+            $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0, 'subject_edit_data' =>  $InstitutionSubjectStaffData = []];
+            echo json_encode($data, true);
+            die;
+        }
+    }
+
+    public function findMySubjectTeacherViewPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        $academicPeriodId = $options['academic_period_id'];
+        $classId = $options['institution_class_id'];
+
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $teacherRoleId = $SecurityRoles->getTeacherRoleId();
+        $SecurityGroupInsTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+        // $SecurityGroupsTbl = TableRegistry::getTableLocator()->get('security_groups');
+        $SecurityGroupsLocator = new TableLocator();
+        $SecurityGroupsTbl = $SecurityGroupsLocator->get('security_groups');
+        $SecurityGroupUsersTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $SecurityGroupIns = $SecurityGroupInsTbl->find()
+            ->innerJoin([$SecurityGroupsTbl->getAlias() => $SecurityGroupsTbl->getTable()], [
+                $SecurityGroupsTbl->aliasField('id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6791
+            ])
+            ->innerJoin([$SecurityGroupUsersTbl->getAlias() => $SecurityGroupUsersTbl->getTable()], [
+                $SecurityGroupUsersTbl->aliasField('security_group_id = ') . $SecurityGroupInsTbl->aliasField('security_group_id') //POCOR-6783
+            ])
+            ->where([
+                $SecurityGroupInsTbl->aliasField('institution_id') => $institutionId,
+                $SecurityGroupUsersTbl->aliasField('security_user_id') => $staffId,
+                $SecurityGroupUsersTbl->aliasField('security_role_id') => $teacherRoleId,
+            ])->count();
+        $count = 0;
+        if (($SecurityGroupIns > 0) || ($superAdmin == 1)) {
+            if ($superAdmin == 1) { // Super Role/Admin
+                $subjectTeacherPermissionArr = ['result' => 1];
+            } else {
+                //to find record only subject teacher
+                $institutionSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
+                $institutionClassSubjectsTbl = TableRegistry::getTableLocator()->get('Institution.InstitutionClassSubjects');
+                $InstitutionSubjectStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff');
+                $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+                $AcademicPeriodData = $AcademicPeriodTable->find()
+                    ->where([
+                        $AcademicPeriodTable->aliasField('id') => $academicPeriodId,
+                    ])->first();
+
+                $InstitutionSubjectStaffData = $InstitutionSubjectStaff
+                    ->find()
+                    ->select([
+                        $InstitutionSubjectStaff->aliasField('staff_id')
+                    ])
+                    ->innerJoin([$institutionSubjectsTbl->getAlias() => $institutionSubjectsTbl->getTable()], [
+                        $InstitutionSubjectStaff->aliasField('institution_subject_id') . ' = ' . $institutionSubjectsTbl->aliasField('id'),
+                        $InstitutionSubjectStaff->aliasField('institution_id') . ' = ' . $institutionSubjectsTbl->aliasField('institution_id')
+                    ])
+                    ->innerJoin([$institutionClassSubjectsTbl->getAlias() => $institutionClassSubjectsTbl->getTable()], [
+                        $institutionClassSubjectsTbl->aliasField('institution_subject_id') . ' = ' . $InstitutionSubjectStaff->aliasField('institution_subject_id')
+                    ])
+                    ->where([
+                        $institutionSubjectsTbl->aliasField('academic_period_id') => $academicPeriodId,
+                        $institutionClassSubjectsTbl->aliasField('institution_class_id') => $classId,
+                        $InstitutionSubjectStaff->aliasField('institution_id') => $institutionId,
+                        $InstitutionSubjectStaff->aliasField('staff_id') => $staffId
+                    ])->count();
+
+                if ($InstitutionSubjectStaffData > 0) {
+                    $subjectTeacherPermissionArr = ['result' => 2];
+                    $getCommentPermission = $this->checkCommentPermissionForReportCards($teacherRoleId);
+                    $data = array_merge($subjectTeacherPermissionArr, $getCommentPermission);
+                } else {
+                    $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
+                }
+                echo json_encode($data, true);
+                die;
+            }
+            $data = ['result' => 1, 'viewCount' => 0, 'editCount' => 0];
+            echo json_encode($data, true);
+            die;
+        } else {
+            $data = ['result' => 0, 'viewCount' => 0, 'editCount' => 0];
+            echo json_encode($data, true);
+            die;
+        }
+    }
+
+    public function findAllSubjectTeacherViewPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        if ($superAdmin) {
+            $data = array('result' => 1);
+            echo json_encode($data, true);
+            die;
+        } else {
+            // $permissionModule = ['All Subjects', 'Comments']; //Anubhav
+            $permissionModule = ['All Subjects'];
+            // $categories = ['Academic', 'Report Cards']; //Anubhav
+            $categories = ['Academic'];
+            $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+            $SecurityFunctions = $SecurityFunctionsTbl->find()
+                ->select([$SecurityFunctionsTbl->aliasField('id')])
+                ->where([
+                    $SecurityFunctionsTbl->aliasField('name IN') => $permissionModule,
+                    $SecurityFunctionsTbl->aliasField('category IN') => $categories,
+                ])->enableHydration(false)->toArray();
+            $funArr = [];
+            if (!empty($SecurityFunctions)) {
+                foreach ($SecurityFunctions as $funkey => $funval) {
+                    $funArr[$funkey] = $funval['id'];
+                }
+            }
+            //get staff id roles POCOR-6814 Starts
+            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+            $SecurityGroupTbl = TableRegistry::getTableLocator()->get('Security.UserGroups');
+            $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+
+             //POCOR-9212[START] // Here is the logic change: instead of checking institution_id from the table SecurityGroupInstitutions
+             // check for the security_group_id
+             $groupUserRecords = $SecurityGroupUserTbl->find()
+                        ->matching('SecurityGroups')
+                        ->matching('SecurityRoles')
+                        ->where([$SecurityGroupUserTbl->aliasField('security_user_id') => $staffId])
+                        ->group([
+                            $SecurityGroupUserTbl->aliasField('security_group_id'),
+                            $SecurityGroupUserTbl->aliasField('security_role_id')
+                        ])
+                        ->select(['id' => 'SecurityRoles.id', 'role_name' => 'SecurityRoles.name', 'security_group_id' => $SecurityGroupUserTbl->aliasField('security_group_id')])
+                        ->toArray();
+            $security_group_id = $groupUserRecords[0]['security_group_id'];
+            //POCOR-9212[END]
+
+
+            $SecurityGroup = $SecurityGroupTbl->find()
+                ->select([
+                    $SecurityGroupUserTbl->aliasField('security_group_id'),
+                    $SecurityGroupUserTbl->aliasField('security_user_id'),
+                    $SecurityGroupUserTbl->aliasField('security_role_id'),
+                ])
+                ->leftJoin(
+                    [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
+                    [
+                        // $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupTbl->aliasField('id')  //POCOR-9212
+                    ]
+                )
+                ->leftJoin(
+                    [$SecurityGroupUserTbl->getAlias() => $SecurityGroupUserTbl->getTable()],
+                    [
+                        $SecurityGroupUserTbl->aliasField('security_group_id = ') . $SecurityGroupInstitutions->aliasField('security_group_id')
+                    ]
+                )
+                ->where([
+                    // $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    $SecurityGroupTbl->aliasField('id') => $security_group_id, //POCOR-9212
+                    $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
+                ])->enableHydration(false)->toArray();
+            $RoleArr = [];
+            if (!empty($SecurityGroup)) {
+                foreach ($SecurityGroup as $SecurityGroup_k => $SecurityGroup_v) {
+                    $RoleArr[] = $SecurityGroup_v['SecurityGroupUsers']['security_role_id'];
+                }
+            } //POCOR-6814 Ends
+            $SecurityRoleFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityRoleFunctions');
+            if (!empty($funArr) && !empty($RoleArr)) { //POCOR-7068
+                $SecurityRoleFunctions = $SecurityRoleFunctionsTbl->find()
+                    ->where([
+                        $SecurityRoleFunctionsTbl->aliasField('security_function_id IN') => $funArr,
+                        $SecurityRoleFunctionsTbl->aliasField('security_role_id IN') => $RoleArr,
+                        $SecurityRoleFunctionsTbl->aliasField('_view') => 1,
+                    ])->enableHydration(false)->toArray();
+            }
+            if (!empty($SecurityRoleFunctions)) {
+                foreach ($SecurityRoleFunctions as $rkey => $rvalue) {
+                    if ($rvalue['_view'] == 1) {
+                        $count++;
+                    }
+                }
+            }
+
+            if ($count >= 1) {
+                $data = array('result' => 1);
+                echo json_encode($data, true);
+                die;
+            } else {
+                $data = array('result' => 0);
+                echo json_encode($data, true);
+                die;
+            }
+        }
+    }
+
+    public function findgetCurrentUserRole(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+        $superAdmin = $options['super_admin'];
+        if($superAdmin == 1){
+            $SecurityRolesNames[] = 'SUPER_ADMIN';
+            echo json_encode($SecurityRolesNames, true);
+            die;
+        }else{
+            $SecurityFunctionsTbl = TableRegistry::getTableLocator()->get('Security.SecurityFunctions');
+            //get staff id roles POCOR-6814 Starts
+            $SecurityGroupInstitutions = TableRegistry::getTableLocator()->get('Security.SecurityGroupInstitutions');
+            $SecurityGroupTbl = TableRegistry::getTableLocator()->get('Security.UserGroups');
+            $SecurityGroupUserTbl = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $SecurityGroup = $SecurityGroupTbl->find()
+                ->select([
+                    $SecurityGroupUserTbl->aliasField('security_group_id'),
+                    $SecurityGroupUserTbl->aliasField('security_user_id'),
+                    $SecurityGroupUserTbl->aliasField('security_role_id'),
+                ])
+                ->leftJoin(
+                    [$SecurityGroupInstitutions->getAlias() => $SecurityGroupInstitutions->getTable()],
+                    [
+                        // $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                        $SecurityGroupInstitutions->aliasField('security_group_id = ') . $SecurityGroupTbl->aliasField('id') // POCOR-8983 initially:- $SecurityGroupInstitutions->aliasField('institution_id = ') . $SecurityGroupTbl->aliasField('id')
+                    ]
+                )
+                ->leftJoin(
+                    [$SecurityGroupUserTbl->getAlias() => $SecurityGroupUserTbl->getTable()],
+                    [
+                        $SecurityGroupUserTbl->aliasField('security_group_id = ') . $SecurityGroupInstitutions->aliasField('security_group_id')
+                    ]
+                )
+                ->where([
+                    // $SecurityGroupTbl->aliasField('id') => $institutionId,
+                    $SecurityGroupInstitutions->aliasField('institution_id') => $institutionId,//POCOR-8987
+                    $SecurityGroupUserTbl->aliasField('security_user_id') => $staffId,
+                ])->enableHydration(false)->toArray();
+            $RoleArr = [];
+            if (!empty($SecurityGroup)) {
+                foreach ($SecurityGroup as $SecurityGroup_k => $SecurityGroup_v) {
+                    $RoleArr[] = $SecurityGroup_v['SecurityGroupUsers']['security_role_id'];
+                }
+            }
+            $SecurityRolesTable = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+            if (!empty($RoleArr)) { //POCOR-7068
+                $SecurityRolesData = $SecurityRolesTable->find()
+                    ->where([
+                        $SecurityRolesTable->aliasField('id IN') => $RoleArr
+                    ])->enableHydration(false)->toArray();
+            }
+            if (!empty($SecurityRolesData)) {
+                foreach ($SecurityRolesData as $SecurityRolesvalue) {
+                    $SecurityRolesNames[] = $SecurityRolesvalue['code'];
+                }
+            }
+
+            echo json_encode($SecurityRolesNames, true);
+            die;
+        }
+    }
+
+    public function findPrincipalEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $principalRoleId = $SecurityRoles->getPrincipalRoleId();
+
+        return $query
+            ->innerJoinWith('SecurityGroupUsers')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_id') => $staffId,
+                'SecurityGroupUsers.security_role_id' => $principalRoleId
+            ]);
+    }
+
+    public function findNonTeacherEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+        $StaffPositionTitles = TableRegistry::getTableLocator()->get('Institution.StaffPositionTitles');
+        $InstitutionPosition = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        return $query
+            ->select([$this->aliasField('staff_id')])
+            ->leftJoin(
+                [$InstitutionPosition->getAlias() => $InstitutionPosition->getTable()],
+                [
+                    $InstitutionPosition->aliasField('id = ') . $this->aliasField('institution_position_id'),
+                    $InstitutionPosition->aliasField('institution_id = ') . $this->aliasField('institution_id')
+                ]
+            )
+            ->leftJoin(
+                [$StaffPositionTitles->getAlias() => $StaffPositionTitles->getTable()],
+                [
+                    $InstitutionPosition->aliasField('staff_position_title_id = ') . $StaffPositionTitles->aliasField('id'),
+                ]
+            )
+            ->where([
+                $StaffPositionTitles->aliasField('type') => 0,
+                $this->aliasField('staff_id') => $staffId
+            ]);
+        //     $staffList = $query->toArray();
+        //     $nonTeacherIds = [];
+        //     if(!empty($staffList)){
+        //         foreach($staffList as $staffVal) {
+        //             $nonTeacherIds[] = $staffVal->staff_id;
+        //         }
+        //  }
+        //    if (in_array($staffId,$nonTeacherIds)) {
+        //        $isNonTeacher = true;
+        //    }
+    }
+
+    public function findHomeroomEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $classId = $options['institution_class_id'];
+        // $staffId = $options['staff_id'];
+        $staffId = $_SESSION['Auth']['User']['id']; // Added for Version4
+
+        $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $InstitutionClasses = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
+        $SecurityRoles = TableRegistry::getTableLocator()->get('Security.SecurityRoles');
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $InstitutionClassesSecondaryStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionClassesSecondaryStaff');
+
+        $homeroomRoleId = $SecurityRoles->getHomeroomRoleId();
+        $securityGroupId = $Institution->get($institutionId)->security_group_id;
+
+        $query
+            ->select([ // to find records for homeroom teacher
+                'staff_id' => $this->aliasField('staff_id')
+            ])
+            ->innerJoin([$InstitutionClasses->getAlias() => $InstitutionClasses->getTable()], [
+                $InstitutionClasses->aliasField('staff_id = ') . $this->aliasField('staff_id')
+            ])
+            ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
+                $SecurityGroupUsers->aliasField('security_user_id = ') . $this->aliasField('staff_id'),
+                //$SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+            ])
+            ->where([
+                $InstitutionClasses->aliasField('id') => $classId, //POCOR-6508
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_id') => $staffId
+            ])
+            ->union( // to find records for secondary_staff_id
+                $InstitutionClassesSecondaryStaff
+                    ->find()
+                    ->select([
+                        $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id')
+                    ])
+                    ->innerJoin([$SecurityGroupUsers->getAlias() => $SecurityGroupUsers->getTable()], [
+                        $SecurityGroupUsers->aliasField('security_user_id = ') . $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id'),
+                        $SecurityGroupUsers->aliasField('security_group_id') => $securityGroupId,
+                        $SecurityGroupUsers->aliasField('security_role_id') => $homeroomRoleId
+                    ])
+                    ->where([
+                        $InstitutionClassesSecondaryStaff->aliasField('secondary_staff_id') => $staffId,
+                        $InstitutionClassesSecondaryStaff->aliasField('institution_class_id') => $classId
+                    ])
+            );
+
+        return $query;
+    }
+
+    public function removeInactiveStaffSecurityRole()
+    {
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+
+        $StaffTable = $this;
+        while (true) {
+            $query = $this->find()
+                ->where([
+                    $this->aliasField('security_group_user_id IS NOT NULL'),
+                    $this->aliasField('end_date IS NOT NULL'),
+                    $this->aliasField('staff_status_id') => $this->assigned
+                ])
+                ->where(
+                    function ($exp) use ($StaffTable) {
+                        return $exp->lt($StaffTable->aliasField('end_date'), $StaffTable->find()->func()->now('date'));
+                    }
+                )
+                ->limit(10)
+                ->page(1);
+
+            $resultSet = $query->all();
+
+            if ($resultSet->count() == 0) {
+                break;
+            } else {
+                foreach ($resultSet as $entity) {
+                    $this->removeStaffRole($entity);
+                    $this->updateStaffStatus($entity, $this->endOfAssignment);
+                }
+            }
+        }
+    }
+
+    public function removeIndividualStaffSecurityRole($staffId)
+    {
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $StaffTable = $this;
+        $institutionStaffRecords = $this->find()
+            ->where([
+                $this->aliasField('security_group_user_id IS NOT NULL'),
+                $this->aliasField('end_date IS NOT NULL'),
+                $this->aliasField('staff_id') => $staffId
+            ])
+            ->where(
+                function ($exp) use ($StaffTable) {
+                    return $exp->lt($StaffTable->aliasField('end_date'), $StaffTable->find()->func()->now('date'));
+                }
+            )
+            ->toArray();
+        foreach ($institutionStaffRecords as $entity) {
+            $SecurityGroupUsers->deleteAll([
+                $SecurityGroupUsers->aliasField($SecurityGroupUsers->getPrimaryKey()) => $entity->security_group_user_id
+            ]);
+            $this->updateAll(
+                ['security_group_user_id' => null],
+                [$this->getPrimaryKey() => $entity->id]
+            );
+            $this->updateStaffStatus($entity, $this->endOfAssignment);
+        }
+    }
+
+    public function getModelAlertData($threshold)
+    {
+        $thresholdArray = json_decode($threshold, true);
+
+        $conditions = [
+            1 => ('DATEDIFF(' . $this->aliasField('end_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
+            2 => ('DATEDIFF(NOW(), ' . $this->aliasField('end_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
+        ];
+
+        // will do the comparison with threshold when retrieving the absence data
+        $licenseData = $this->find()
+            ->select([
+                'StaffTypes.name',
+                'start_date',
+                'end_date',
+                'Institutions.id',
+                'Institutions.name',
+                'Institutions.code',
+                'Institutions.address',
+                'Institutions.postal_code',
+                'Institutions.contact_person',
+                'Institutions.telephone',
+//                'Institutions.fax',
+                'Institutions.email',
+                'Institutions.website',
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name',
+                'Users.email',
+                'Users.address',
+                'Users.postal_code',
+                'Users.date_of_birth'
+            ])
+            ->contain(['Users', 'Institutions', 'StaffTypes'])
+            ->where([
+                $this->aliasField('staff_type_id') => $thresholdArray['staff_type'],
+                $this->aliasField('end_date') . ' IS NOT NULL',
+                $conditions[$thresholdArray['condition']]
+            ])
+            ->enableHydration(false);
+
+        return $licenseData->toArray();
+    }
+
+    public function findStaffAttendances(Query $query, array $options)
+    {
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $staffId = $options['staff_id'];
+        $institutionId = $options['institution_id'];
+        //POCOR-7020
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $staffRecord = $institutionStaff->find('all', ['conditions' => ['staff_id' => $staffId]])
+            ->first();
+        $staffStatusId = $staffRecord['staff_status_id'];
+        //End of POCOR-7020
+        $conditions = [];
+        if ($institutionId != '') {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+        $academicPeriodId = $options['academic_period_id'];
+
+        $weekStartDate = $options['week_start_day'];
+        $weekEndDate = $options['week_end_day'];
+
+        //Gets all the days in the selected week based on its start date end date
+        $startDate = new DateTime($weekStartDate);
+        $endDate = new DateTime($weekEndDate);
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+
+        // To get all the dates of the working days only
+        $workingDaysArr = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($daterange as $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDays)) {
+                $workingDaysArr[] = $date;
+            }
+        }
+
+        $StaffLeaveTable = TableRegistry::get('Institution.StaffLeave');
+// commented for POCOR-9446
+//        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415 start
+        // institution_staff_leave schema may differ (e.g. missing staff_id, full_day, date_from/date_to); fetch leave only when possible
+        $staffLeavesByWeekStartAndEnd = [];
+        try {
+            $conditions = [
+                $StaffLeaveTable->aliasField('staff_id') => $staffId,
+                $StaffLeaveTable->aliasField('full_day') => 1,
+                'OR' => [
+                    [
+                        $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                        $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField('date_to <=') => $weekEndDate,
+                        $StaffLeaveTable->aliasField('date_to >=') => $weekStartDate,
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField('date_from <=') => $weekEndDate,
+                        $StaffLeaveTable->aliasField('date_from >=') => $weekStartDate,
+                    ],
+                    [
+                        $StaffLeaveTable->aliasField('date_from <=') => $weekStartDate,
+                        $StaffLeaveTable->aliasField('date_to >=') => $weekEndDate,
+                    ]
+                ]
+            ];
+            $staffLeavesByWeekStartAndEnd = $StaffLeaveTable
+                ->find()
+                ->matching('StaffLeaveTypes')
+                ->where($conditions)
+                ->enableHydration(false)
+                ->toArray();
+        } catch (\Exception $e) {
+            // leave table schema may not match (e.g. different column names); continue without leave overlap data
+        }
+// POCOR-9415 end
+
+        $query = $query
+            ->select([
+                $this->aliasField('institution_id'),
+                $this->aliasField('staff_id'),
+                $this->aliasField('start_date'),
+                $this->Users->aliasField('openemis_no'),
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('middle_name'),
+                $this->Users->aliasField('third_name'),
+                $this->Users->aliasField('last_name'),
+                $this->Users->aliasField('preferred_name'),
+                $InstitutionStaffAttendances->aliasField('id'),
+                $InstitutionStaffAttendances->aliasField('time_in'),
+                $InstitutionStaffAttendances->aliasField('time_out'),
+                $InstitutionStaffAttendances->aliasField('date'),
+            ])
+            ->leftJoin(
+                [$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()],
+                [
+                    $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('staff_id'),
+                    $InstitutionStaffAttendances->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                    $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                ]
+            )
+            ->matching('Users')
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('staff_status_id') => $staffStatusId
+            ])
+            ->group([
+                $InstitutionStaffAttendances->aliasField('staff_id'),
+                $InstitutionStaffAttendances->aliasField('institution_id'),
+                $InstitutionStaffAttendances->aliasField('academic_period_id'),
+                $InstitutionStaffAttendances->aliasField('date')
+            ])
+            // ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr) {
+            ->formatResults(function (ResultSetInterface $results) use ($workingDaysArr, $staffLeavesByWeekStartAndEnd) {
+                $results = $results->toArray();
+                $resultsCount = count($results);
+                $formatResultDates = [];
+                foreach ($workingDaysArr as $date) {
+                    $i = 1;
+                    $found = false;
+                    $workingDay = $date->format('Y-m-d');
+                    foreach ($results as $result) {
+                        // to flag so that we only add to result when there is attendance records
+                        $isHaveAttendance = false;
+
+                        $cloneResult = clone $result;
+                        $InstitutionStaffAttendanceDate = $cloneResult->InstitutionStaffAttendances['date'];
+                        if ($InstitutionStaffAttendanceDate == $workingDay) {
+                            $cloneResult['isNew'] = false;
+                            $cloneResult['date'] = date("l, d F Y", strtotime($InstitutionStaffAttendanceDate));
+                            $isHaveAttendance = true;
+                            // $formatResultDates[] = $cloneResult;
+                            $found = true;
+                        }
+                        //if iteration is in the last index of cloneResult and the date still cannot be found, insert the date in and also set the start_time and end_time to null
+                        if ($i == $resultsCount && !$found) {
+                            $cloneResult['isNew'] = true;
+                            $cloneResult['date'] = $date->format('l, d F Y');
+                            $cloneResult->InstitutionStaffAttendances['time_in'] = null;
+                            $cloneResult->InstitutionStaffAttendances['time_out'] = null;
+                            $cloneResult->InstitutionStaffAttendances['date'] = $workingDay;
+                            $isHaveAttendance = true;
+                            // $formatResultDates[] = $cloneResult;
+                        }
+                        if ($isHaveAttendance) {
+                            $isOverlap = false;
+                            if (count($staffLeavesByWeekStartAndEnd) > 0) {
+                                $currDate = strtotime($workingDay);
+                                foreach ($staffLeavesByWeekStartAndEnd as $staffLeaveRecord) {
+                                    if (
+                                        strtotime($staffLeaveRecord['date_from']) <= $currDate &&
+                                        $currDate <= strtotime($staffLeaveRecord['date_to'])
+                                    ) {
+                                        $isOverlap = true;
+                                    }
+                                }
+                            }
+                            $cloneResult->isOverlapLeave = $isOverlap;
+                            $formatResultDates[] = $cloneResult;
+                        }
+                        $i++;
+                    }
+                }
+                return $formatResultDates;
+            });
+        // print_r($query->toArray());die;
+        return $query;
+    }
+
+    public function findAllStaffAttendances(Query $query, array $options)
+    {
+        //options
+        $institutionId = self::getFromArray($options, 'institution_id');
+        $academicPeriodId = self::getFromArray($options, 'academic_period_id');
+        $ownAttendanceView = self::getFromArray($options, 'own_attendance_view');
+        $otherAttendanceView = self::getFromArray($options, 'other_attendance_view');
+        $shiftId = self::getFromArray($options, 'shift_id');
+        $weekStartDate = self::getFromArray($options, 'week_start_day');
+        $weekEndDate = self::getFromArray($options, 'week_end_day');
+        $dayId = self::getFromArray($options, 'day_id');
+        //if -1 = that means all days of the week
+        $dayDate = self::getFromArray($options, 'day_date');
+        $superAdmin = $options['user']['super_admin'];
+        $user_id = $options['user']['id'];
+        $conditionQuery = [
+            $this->aliasField('institution_id') => $institutionId,
+//            $this->aliasField('staff_status_id') => 1,
+        ];
+
+        if ($superAdmin == 0) {
+            $conditionQuery = $this->setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, $conditionQuery);
+            if ($conditionQuery == null) {
+                $query->where("1 = 0");
+                return $query;
+            }
+        }
+        //if $dayId != -1 then $weekStartDate = $weekEndDate
+        list($weekStartDate, $weekEndDate) =
+            $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
+        if (empty($dayId)) {
+            $weekStartDate = self::getFromArray($options, 'week_start_day');
+            $weekEndDate = self::getFromArray($options, 'week_end_day');
+        }
+        // echo "<pre>";print_r($weekStartDate);die;
+
+        $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate,
+            $shiftId);
+
+        $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate);
+
+        $conditionQuery = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+        //POCOR-6971[START]
+
+        //Gets all the days in the selected week based on its start date end date
+        $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
+
+        $query = $this->getQueryWithShiftId($query, $shiftId);
+        $query = $query
+            ->matching('Users')
+            ->where(
+                [
+                    $conditionQuery
+                ]
+            )
+            ->order([
+                $this->Users->aliasField('first_name')
+            ])
+            ->group([
+                $this->aliasField('staff_id')
+            ])
+            ->formatResults($this->getFormattedStaffAttendanceRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId));
+
+        return $query;
+    }
+
+    /**
+     * function to get a value from array or null
+     *
+     */
+    private static function getFromArray($array, $key)
+    {
+        return isset($array[$key]) ? $array[$key] : null;
+    }
+
+    /**
+     * @param $ownAttendanceView
+     * @param $otherAttendanceView
+     * @param $user_id
+     * @param array $conditionQuery
+     * @return array|null
+     */
+    private function setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, array $conditionQuery)
+    {
+        if ($ownAttendanceView == 0 && $otherAttendanceView == 0) {
+            $conditionQuery = null;
+        }
+        if ($ownAttendanceView == 1 && $otherAttendanceView == 0) {
+            $conditionQuery[$this->aliasField('staff_id')] = $user_id;
+        } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 1) {
+            $conditionQuery[$this->aliasField('staff_id != ')] = $user_id;
+        }
+        return $conditionQuery;
+    }
+
+    /**
+     * @param $dayId
+     * @param $dayDate
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @return array
+     */
+    private function resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate)
+    {
+        if ($dayId != -1) {
+            $weekStartDate = $dayDate;
+            $weekEndDate = $dayDate;
+        }
+        if (empty($dayId)) {
+            $weekStartDate = $weekStartDate;
+            $weekEndDate = $weekEndDate;
+        }
+        return array($weekStartDate, $weekEndDate);
+    }
+
+    /**
+     * @param $institutionId
+     * @param $academicPeriodId
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @param $shiftId
+     * @return array
+     */
+    private function getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId, $archive = false)
+    {
+        $weekStartDate = $this->normalizeDateForDbCompare($weekStartDate);
+        $weekEndDate = $this->normalizeDateForDbCompare($weekEndDate);
+
+        if (!$archive) {
+            $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+            $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+            $staff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+            $attDate = $InstitutionStaffAttendances->aliasField('date');
+            $allStaffAttendancesQuery = $InstitutionStaffAttendances
+                ->find('all')
+                ->where([
+                    $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                    $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                    $attDate . ' >=' => $weekStartDate,
+                    $attDate . ' <=' => $weekEndDate,
+                ]);
+
+            if ($shiftId != -1) {
+                $allStaffAttendancesQuery = $allStaffAttendancesQuery
+                    ->leftJoin([$staff->getAlias() => $staff->getTable()],
+                        [$staff->aliasField('staff_id = ') . $InstitutionStaffAttendances->aliasField('staff_id')])
+                    ->leftJoin([$positions->getAlias() => $positions->getTable()],
+                        [$positions->aliasField('id = ') . $staff->aliasField('institution_position_id')])
+                    ->where([
+                        $positions->aliasField('shift_id') => $shiftId,
+                    ]);
+            }
+        }
+        if ($archive) {
+            // Resolves physical table institution_staff_attendances_archived (see Archive\DataManagementConnectionsTable::hasArchiveTable)
+            $InstitutionStaffAttendances = ArchiveConnections::getArchiveTable('institution_staff_attendances');
+            $attDateArchived = $InstitutionStaffAttendances->aliasField('date');
+            $t = $InstitutionStaffAttendances;
+            // Aliased columns so dehydrated rows always expose id/staff_id (generic Table + hydration is unreliable)
+            $allStaffAttendancesQuery = $t
+                ->find('all')
+                ->select([
+                    '_att_row_id' => $t->aliasField('id'),
+                    '_att_staff_id' => $t->aliasField('staff_id'),
+                    'date' => $t->aliasField('date'),
+                    'time_in' => $t->aliasField('time_in'),
+                    'time_out' => $t->aliasField('time_out'),
+                    'comment' => $t->aliasField('comment'),
+                    'absence_type_id' => $t->aliasField('absence_type_id'),
+                ])
+                ->where([
+                    $t->aliasField('institution_id') => (int)$institutionId,
+                    $t->aliasField('academic_period_id') => (int)$academicPeriodId,
+                    $attDateArchived . ' >=' => $weekStartDate,
+                    $attDateArchived . ' <=' => $weekEndDate,
+                ])
+                ->enableHydration(false);
+
+                $allStaffAttendancesQuery = $InstitutionStaffAttendances
+                    ->find('all')
+                    ->where([
+                        $InstitutionStaffAttendances->aliasField('institution_id') => $institutionId,
+                        $InstitutionStaffAttendances->aliasField('academic_period_id') => $academicPeriodId,
+                        $InstitutionStaffAttendances->aliasField("date >= '") . $weekStartDate . "'",
+                        $InstitutionStaffAttendances->aliasField("date <= '") . $weekEndDate . "'",
+                    ]);
+        }
+
+        $attendanceByStaffIdRecords = [];
+        if ($archive) {
+            foreach ($allStaffAttendancesQuery->all() as $row) {
+                $row = $this->archiveAttendanceResultRowToArray($row);
+                $sid = null;
+                if (isset($row['_att_staff_id']) && $row['_att_staff_id'] !== '') {
+                    $sid = (int)$row['_att_staff_id'];
+                } elseif (isset($row['staff_id']) && $row['staff_id'] !== '') {
+                    $sid = (int)$row['staff_id'];
+                }
+                $id = $row['_att_row_id'] ?? $row['id'] ?? null;
+                if ($sid === null || $sid === 0 || $id === null) {
+                    continue;
+                }
+                if (!isset($attendanceByStaffIdRecords[$sid])) {
+                    $attendanceByStaffIdRecords[$sid] = [];
+                }
+                $dateVal = $row['date'] ?? null;
+                if ($dateVal !== null && !$dateVal instanceof \DateTimeInterface) {
+                    $dateVal = FrozenDate::parse((string)$dateVal);
+                }
+                $attendanceByStaffIdRecords[$sid][$id] = [
+                    'id' => $id,
+                    'staff_id' => $sid,
+                    'date' => $dateVal,
+                    'time_in' => $row['time_in'] ?? null,
+                    'time_out' => $row['time_out'] ?? null,
+                    'comment' => $row['comment'] ?? null,
+                    'absence_type_id' => $row['absence_type_id'] ?? null,
+                ];
+            }
+        } else {
+            foreach ($allStaffAttendancesQuery->all() as $attendanceRow) {
+                $sid = $attendanceRow->get('staff_id');
+                $id = $attendanceRow->get('id');
+                if ($sid === null || $id === null) {
+                    continue;
+                }
+                $sid = (int)$sid;
+                if (!isset($attendanceByStaffIdRecords[$sid])) {
+                    $attendanceByStaffIdRecords[$sid] = [];
+                }
+                $attendanceByStaffIdRecords[$sid][$id] = $attendanceRow;
+            }
+        }
+
+        return $attendanceByStaffIdRecords;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function normalizeDateForDbCompare($value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        if (is_string($value) && $value !== '') {
+            $ts = strtotime($value);
+
+            return $ts ? date('Y-m-d', $ts) : $value;
+        }
+
+        return (string)$value;
+    }
+
+    /**
+     * Normalizes ORM/archive query rows to a plain array (keys may vary by driver or hydration).
+     *
+     * @param mixed $row
+     * @return array<string, mixed>
+     */
+    private function archiveAttendanceResultRowToArray($row): array
+    {
+        if (is_array($row)) {
+            return $row;
+        }
+        if ($row instanceof Entity) {
+            return $row->toArray();
+        }
+
+        return (array)$row;
+    }
+
+    /**
+     * @param $institutionId
+     * @param $academicPeriodId
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @return array
+     */
+    private function getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $archive = false)
+    {
+
+        $whereForLeaveTable = $this->setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive);
+//        $approvedLeaveStatuses = $this->getApprovedLeaveStatusIds(); // POCOR-9415
+//        Log::debug(print_r($approvedLeaveStatuses,true));
+        try {
+            if (!$archive) {
+                $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+            } else {
+                $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+            }
+
+            // institution_staff_leave may not have institution_id/staff_id/academic_period_id; filter by staff_id IN when column exists
+            $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
+            $staffIds = $InstitutionStaffTable->find()
+                ->select([$InstitutionStaffTable->aliasField('staff_id')])
+                ->where([$InstitutionStaffTable->aliasField('institution_id') => $institutionId])
+                ->all()
+                ->extract('staff_id')
+                ->toArray();
+            $staffIds = array_values(array_unique(array_filter($staffIds)));
+            $commonConditions = is_array($whereForLeaveTable) ? $whereForLeaveTable : [];
+            if (!empty($staffIds)) {
+                $commonConditions[$StaffLeaveTable->aliasField('staff_id') . ' IN'] = $staffIds;
+            } else {
+                $commonConditions[$StaffLeaveTable->aliasField('staff_id')] = -1; // no staff at institution
+            }
+
+            if (!$archive) {
+                $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+                $allStaffLeaves = $StaffLeaveTable
+                    ->find()
+                    ->matching('StaffLeaveTypes')
+                    ->where($commonConditions)
+                    ->enableHydration(false)
+                    ->toArray();
+            } else {
+                //POCOR-9606
+                // $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+                $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Institution.StaffLeaveArchived');
+                //POCOR-9606
+                $allStaffLeaves = $StaffLeaveTable
+                    ->find()
+                    ->where($commonConditions)
+                    ->enableHydration(false)
+                    ->toArray();
+            }
+            $leaveByStaffIdRecords = Hash::combine($allStaffLeaves, '{n}.id', '{n}', '{n}.staff_id');
+            return $leaveByStaffIdRecords;
+        } catch (\Exception $e) {
+            // institution_staff_leave schema may differ (e.g. missing staff_id, date_from/date_to); return no leave data
+            return [];
+        }
+    }
+
+    /**
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @param bool $archive
+     * @return array
+     */
+
+    private function setWhereForLeaveTable($weekStartDate, $weekEndDate, $archive = false)
+    {
+
+        if (!$archive) {
+            $StaffLeaveTable = TableRegistry::getTableLocator()->get('Institution.StaffLeave');
+        } else {
+            // Base table name only — not a plugin alias (getArchiveTable maps to institution_staff_leave_archived)
+            $StaffLeaveTable = ArchiveConnections::getArchiveTable('institution_staff_leave');
+        }
+        $dateFrom = $StaffLeaveTable->aliasField('date_from');
+        $dateTo = $StaffLeaveTable->aliasField('date_to');
+        // Leave row overlaps [weekStartDate, weekEndDate] iff date_from <= weekEnd AND date_to >= weekStart
+        $whereForLeaveTable = [
+            $dateFrom . ' <=' => $weekEndDate,
+            $dateTo . ' >=' => $weekStartDate,
+        ];
+
+        return $whereForLeaveTable;
+    }
+
+    /**
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @param $conditionQuery
+     * @return array
+     */
+    private function setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery)
+    {
+        $start = $this->aliasField('start_date');
+        $end = $this->aliasField('end_date');
+        // Assignment overlaps the week window: started on/before week end, and not ended before week start
+        $conditionQuery[$start . ' <='] = $weekEndDate;
+        $conditionQuery['OR'] = [
+            [$end . ' IS' => null],
+            [$end . ' >=' => $weekStartDate],
+        ];
+
+        return $conditionQuery;
+    }
+
+    /**
+     * Gets all the days in the selected week based on its start date end date
+     * @param $weekStartDate
+     * @param $weekEndDate
+     * @return array
+     * @throws \Exception
+     */
+    private function getWorkingDays($weekStartDate, $weekEndDate)
+    {
+        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $startDate = new DateTime($weekStartDate);
+        $endDate = new DateTime($weekEndDate);
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($startDate, $interval, $endDate->modify('+1 day'));
+        // To get all the dates of the working days only
+        $workingDaysArr = [];
+        $workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
+        foreach ($daterange as $date) {
+            $dayText = $date->format('l');
+            if (in_array($dayText, $workingDays)) {
+                $workingDaysArr[] = $date;
+            }
+        }
+        return $workingDaysArr;
+    }
+
+    /**
+     * @param Query $query
+     * @param $shiftId
+     * @return Query
+     */
+    private function getQueryWithShiftId(Query $query, $shiftId)
+    {
+        $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        if ($shiftId != -1) {
+            $query = $query
+                ->leftJoin([$positions->getAlias() => $positions->getTable()],
+                    [$positions->aliasField('id = ') . $this->aliasField('institution_position_id')])
+                ->where(
+                    [
+                        $positions->aliasField('shift_id') => $shiftId,
+                    ]
+                );
+        }
+        return $query;
+    }
+
+    /**
+     * @param array $attendanceByStaffIdRecords
+     * @param array $leaveByStaffIdRecords
+     * @param array $workingDaysArr
+     * @param $dayId
+     * @return \Closure
+     */
+    private function getFormattedStaffAttendanceRow(
+        array $attendanceByStaffIdRecords,
+        array $leaveByStaffIdRecords,
+        array $workingDaysArr,
+              $dayId)
+    {
+        return function (ResultSetInterface $results) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+            return $results->map(function ($row) use ($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId) {
+                $staffId = $row->staff_id;
+                $institution_id = $row->institution_id;
+                $staffRecords = [];
+                $staffLeaveRecords = [];
+
+                if (!empty($row->_matchingData['Users']->photo_name)) {
+                    if (!empty($row->_matchingData['Users']->photo_content)) {//POCOR-9189 starts
+                        $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                    }//POCOR-9189 ends
+                }
+
+                if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
+                    $staffRecords = $attendanceByStaffIdRecords[$staffId];
+                }
+
+                if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
+                    $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
+                    $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
+                }
+
+                $staffTimeRecords = [];
+                foreach ($workingDaysArr as $dateObj) {
+                    $dateStr = $dateObj->format('Y-m-d');
+                    $formattedDate = $this->formatDate($dateObj);
+
+                    $found = false;
+                    foreach ($staffRecords as $attendanceRecord) {
+                        $staffAttendanceDate = $attendanceRecord['date']->format('Y-m-d');
+
+                        if ($dateStr == $staffAttendanceDate) {
+                            $found = true;
+                            //isNew determines if record is existing data
+                            $attendanceData = [
+                                'dateStr' => $dateStr,
+                                'date' => $this->formatDate($attendanceRecord['date']),
+//                                'time_in' => $attendanceRecord['time_in'],//$this->formatTime($attendanceRecord['time_in']),
+//                                'time_out' => $attendanceRecord['time_out'],//$this->formatTime($attendanceRecord['time_out']),
+                                'time_in' => $this->formatTime($attendanceRecord['time_in']), // POCOR-9415
+                                'time_out' => $this->formatTime($attendanceRecord['time_out']), // POCOR-9415
+                                'comment' => $attendanceRecord['comment'],
+                                'absence_type_id' => $attendanceRecord['absence_type_id'],
+                                'isNew' => false
+                            ];
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $attendanceData = [
+                            'dateStr' => $dateStr,
+                            'date' => $formattedDate,
+                            'time_in' => null,
+                            'time_out' => null,
+                            'comment' => null,
+                            'absence_type_id' => null,
+                            'isNew' => true
+                        ];
+                    }
+                    $staffTimeRecords[$dateStr] = $attendanceData;
+                    if ($dayId != -1) {
+                        $row->date = $dateStr;
+                    }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
+                    $historyUrl = Router::url([
+                        'plugin' => 'Staff',
+                        'controller' => 'Staff',
+                        'action' => 'InstitutionStaffAttendanceActivities',
+                        '0' => 'index',
+                        '1' => $encodedQueryString
+                       // 'user_id' => $staffId
+                    ]);
+                    // POCOR-9166 end
+                    $row->historyUrl = $historyUrl;
+                }
+                // gets all the staff leave
+                foreach ($staffTimeRecords as $key => $staffTimeRecord) {
+                    $leaveRecords = [];
+                    foreach ($staffLeaveRecords as $staffLeaveRecord) {
+                        $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
+                        $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
+                        if ($dateFrom <= $key && $dateTo >= $key) {
+                            $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                            $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
+                            $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
+                            $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['_matchingData']['StaffLeaveTypes']['name'];
+                            $leaveRecords[] = $leaveRecord;
+                        }
+                    }
+                    $url = Router::url([
+                        'plugin' => 'Staff',
+                        'controller' => 'Staff',
+                        'action' => 'StaffLeave',
+                        '0' => 'index',
+                        '1' => $this->paramsEncode(['user_id' => $staffId, 'institution_id' => $institution_id])
+                        //'user_id' => $staffId
+                    ]);
+                    $staffTimeRecords[$key]['leave'] = $leaveRecords;
+                    $staffTimeRecords[$key]['url'] = $url;
+                }
+                $row->attendance = $staffTimeRecords;
+                return $row;
+            });
+        };
+    }
+
+    public function findAllStaffAttendancesArchived(Query $query, array $options)
+    {
+        $institutionId = self::getFromArray($options, 'institution_id');
+        $academicPeriodId = self::getFromArray($options, 'academic_period_id');
+        $ownAttendanceView = self::getFromArray($options, 'own_attendance_view');
+        $otherAttendanceView = self::getFromArray($options, 'other_attendance_view');
+        $shiftId = self::getFromArray($options, 'shift_id');
+        $weekStartDate = self::getFromArray($options, 'week_start_day');
+        $weekEndDate = self::getFromArray($options, 'week_end_day');
+        $dayId = self::getFromArray($options, 'day_id');
+        //if -1 = that means all days of the week
+        $dayDate = self::getFromArray($options, 'day_date');
+        $superAdmin = $options['user']['super_admin'];
+        $user_id = $options['user']['id'];
+        $archive = true;
+        $conditionQuery = [
+            $this->aliasField('institution_id') => $institutionId,
+//            $this->aliasField('staff_status_id') => 1,
+        ];
+
+        if ($superAdmin == 0) {
+            $conditionQuery = $this->setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, $conditionQuery);
+            if ($conditionQuery == null) {
+                $query->where("1 = 0");
+                return $query;
+            }
+        }
+
+        //if $dayId != -1 then $weekStartDate = $weekEndDate
+        list($weekStartDate, $weekEndDate) =
+            $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
+        // Match findAllStaffAttendances: when day_id is empty/null, resetWeekStartEndForOneDaySearch can
+        // still treat (null != -1) as true and clobber the week with day_date — restore from options.
+        if (empty($dayId)) {
+            $weekStartDate = self::getFromArray($options, 'week_start_day');
+            $weekEndDate = self::getFromArray($options, 'week_end_day');
+        }
+
+        $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate,
+            $shiftId,
+            $archive);
+
+        $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray(
+            $institutionId,
+            $academicPeriodId,
+            $weekStartDate,
+            $weekEndDate,
+            $archive);
+
+        // Do not apply setConditionQueryForDates() here. That filter requires institution_staff.start_date/end_date
+        // to overlap the selected week; for historical archive weeks (e.g. 2016) current assignment rows often
+        // start years later, so every row would be excluded even when archive attendance exists. The list is
+        // already scoped by institution_id and staff_id IN (from archived attendance in the date range).
+
+        // Archived screen: only list staff who have rows in institution_staff_attendances_archived for this window
+        $staffIdsWithArchivedAttendance = array_values(array_unique(array_map(
+            'intval',
+            array_keys($attendanceByStaffIdRecords)
+        )));
+        if ($staffIdsWithArchivedAttendance === []) {
+            $query->where('1 = 0');
+
+            return $query;
+        }
+        $conditionQuery[$this->aliasField('staff_id') . ' IN'] = $staffIdsWithArchivedAttendance;
+
+        //POCOR-6971[START]
+        
+        //Gets all the days in the selected week based on its start date end date
+        $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
+//        $query = $this->getQueryWithShiftId($query, $shiftId);
+        $query = $query
+            ->matching('Users')
+            ->where($conditionQuery)
+            ->order([
+                $this->Users->aliasField('first_name')
+            ])
+            ->group([
+                $this->aliasField('staff_id')
+            ])
+            ->formatResults($this->getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $dayId));
+
+        return $query;
+
+
+    }
+
+    /**
+     * @param $attendanceByStaffIdRecords
+     * @param $leaveByStaffIdRecords
+     * @param $workingDaysArr
+     * @param $day_id
+     * @return \Closure
+     */
+    private function getFormattedStaffAttendanceArchivedRow($attendanceByStaffIdRecords, $leaveByStaffIdRecords, $workingDaysArr, $day_id)
+    {
+        $AbsenceTypesTable = TableRegistry::getTableLocator()->get('Institution.AbsenceTypes');
+        $absenceTypes = $AbsenceTypesTable->getAbsenceTypeList();
+        return function (ResultSetInterface $results) use (
+            $attendanceByStaffIdRecords,
+            $leaveByStaffIdRecords,
+            $workingDaysArr,
+            $day_id,
+            $absenceTypes
+        ) {
+            return $results->map(function ($row) use (
+                $attendanceByStaffIdRecords,
+                $leaveByStaffIdRecords,
+                $workingDaysArr,
+                $day_id,
+                $absenceTypes
+            ) {
+                $staffId = (int)$row->staff_id;
+                $institution_id = $row->institution_id; // POCOR-9166
+
+                $staffRecords = [];
+                $staffLeaveRecords = [];
+
+                if (!empty($row->_matchingData['Users']->photo_name)) {
+                    $row['photo_content'] = base64_encode(stream_get_contents($row->_matchingData['Users']->photo_content));
+                }
+
+                if (array_key_exists($staffId, $attendanceByStaffIdRecords)) {
+                    $staffRecords = $attendanceByStaffIdRecords[$staffId];
+                }
+
+                if (array_key_exists($staffId, $leaveByStaffIdRecords)) {
+                    $staffLeaveRecords = $leaveByStaffIdRecords[$staffId];
+                    $staffLeaveRecords = array_slice($staffLeaveRecords, 0, 2);
+                }
+
+                $staffTimeRecords = [];
+                foreach ($workingDaysArr as $dateObj) {
+                    $dateStr = $dateObj->format('Y-m-d');
+                    $formattedDate = $this->formatDate($dateObj);
+
+                    $found = false;
+                    foreach ($staffRecords as $attendanceRecord) {
+                        $recDate = $attendanceRecord['date'] ?? null;
+                        if ($recDate instanceof \DateTimeInterface) {
+                            $staffAttendanceDate = $recDate->format('Y-m-d');
+                        } elseif ($recDate !== null && $recDate !== '') {
+                            $staffAttendanceDate = FrozenDate::parse((string)$recDate)->format('Y-m-d');
+                        } else {
+                            continue;
+                        }
+
+                        if ($dateStr == $staffAttendanceDate) {
+                            $found = true;
+                            $absenceTypeId = $attendanceRecord['absence_type_id'] ?? null;
+                            //isNew determines if record is existing data
+                            $attendanceData = [
+                                'dateStr' => $dateStr,
+                                'date' => $this->formatDate($recDate instanceof \DateTimeInterface ? $recDate : FrozenDate::parse((string)$recDate)),
+                                'time_in' => $this->formatTime($attendanceRecord['time_in']),
+                                'time_out' => $this->formatTime($attendanceRecord['time_out']),
+                                'comment' => $attendanceRecord['comment'],
+                                'absence_type_id' => $absenceTypeId,
+                                'absence_type' => ($absenceTypeId !== null && isset($absenceTypes[$absenceTypeId]))
+                                    ? __($absenceTypes[$absenceTypeId])
+                                    : '',
+                                'isNew' => false
+                            ];
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $attendanceData = [
+                            'dateStr' => $dateStr,
+                            'date' => $formattedDate,
+                            'time_in' => null,
+                            'time_out' => null,
+                            'comment' => null,
+                            'absence_type_id' => null,
+                            'isNew' => true
+                        ];
+                    }
+                    $staffTimeRecords[$dateStr] = $attendanceData;
+                    if ($day_id != -1) {
+                        $row->date = $dateStr;
+                    }
+                    // POCOR-9166 start
+                    $queryString = $this->getQueryString();
+                    $queryString['user_id'] = $staffId;
+                    $queryString['institution_id'] = $institution_id;
+                    $encodedQueryString = $this->paramsEncode($queryString);
+                    $historyUrl = Router::url([
+                        'plugin' => 'Staff',
+                        'controller' => 'Staff',
+                        'action' => 'InstitutionStaffAttendanceActivities',
+                        '0' => 'index',
+                        '1' => $encodedQueryString
+                        // 'user_id' => $staffId
+                    ]);
+                    // POCOR-9166 end
+                    $row->historyUrl = $historyUrl;
+                }
+                // gets all the staff leave
+                foreach ($staffTimeRecords as $key => $staffTimeRecord) {
+
+                    $leaveRecords = [];
+                    foreach ($staffLeaveRecords as $staffLeaveRecord) {
+
+                        $dateFrom = $staffLeaveRecord['date_from']->format('Y-m-d');
+                        $dateTo = $staffLeaveRecord['date_to']->format('Y-m-d');
+                        $tableName = 'staff_leave_types';
+                        $relatedField = $staffLeaveRecord['staff_leave_type_id'];
+                        $leaveTypeName = self::getRelatedName($tableName, $relatedField);
+
+                        if ($dateFrom <= $key && $dateTo >= $key) {
+                            $comment = $staffLeaveRecord['comments'];
+                            if ($comment) {
+                                $staffTimeRecords[$key]['comment'] = trim($staffTimeRecords[$key]['comment'] . " " . $comment);
+                            }
+                            $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
+                            $leaveRecord['comment'] = $staffLeaveRecord['comments'];
+                            $leaveRecord['startTime'] = $this->formatTime($staffLeaveRecord['start_time']);
+                            $leaveRecord['endTime'] = $this->formatTime($staffLeaveRecord['end_time']);
+                            $leaveRecord['staffLeaveTypeName'] = $leaveTypeName;
+                            $leaveRecords[] = $leaveRecord;
+                        }
+                    }
+                    $url = Router::url([
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'ArchivedStaffLeave',
+                        'index',
+                        'user_id' => $staffId
+                    ]);
+                    $staffTimeRecords[$key]['leave'] = $leaveRecords;
+                    $staffTimeRecords[$key]['url'] = $url;
+                }
+                $row->attendance = $staffTimeRecords;
+                return $row;
+            });
+        };
+    }
+
+    /**
+     * common proc to show related field with id in the index table
+     * @param $tableName
+     * @param $relatedField
+     *
+     */
+    public static function getRelatedName($tableName, $relatedField)
+    {
+        if (!$relatedField) {
+            return null;
+        }
+        $Table = TableRegistry::getTableLocator()->get($tableName);
+        try {
+            $related = $Table->get($relatedField);
+            return $related->name;
+        } catch (RecordNotFoundException $e) {
+            return 'RecordNotFoundException';
+        }
+        return null;
+    }
+
+    public function beforeFind(EventInterface $event, Query $query, ArrayObject $options)
+    {
+
+        if (!empty($_REQUEST['_device']) && $_REQUEST['_device'] == true) {
+            $query->formatResults(function ($results) {
+                return $results->map(function ($row) {
+                    $row['user_avatar'] = null;
+
+                    if (!empty($row->user->photo_name)) {
+                        if (!empty($row->user->photo_content)) {//POCOR-9189 starts
+                            $row['user_avatar'] = base64_encode(stream_get_contents($row->user->photo_content));
+                        }//POCOR-9189 ends
+                    }
+                    return $row;
+                });
+            });
+        }
+    }
+
+    public function findStaffShiftsAttendance(Query $query, array $options)
+    {
+        $staffId = $options['staff_id'];
+        $institutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $positions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
+        $shiftOption = TableRegistry::getTableLocator()->get('Institution.ShiftOptions');
+        $InstitutionStaffAttendances = TableRegistry::getTableLocator()->get('Staff.InstitutionStaffAttendances');
+        $staffShiftsData = $query
+            ->leftJoin(
+                [$InstitutionStaffAttendances->getAlias() => $InstitutionStaffAttendances->getTable()],
+                [
+                    $InstitutionStaffAttendances->aliasField('staff_id = ') . $this->aliasField('id')
+                ])
+            ->leftJoin(
+                [$positions->getAlias() => $positions->getTable()],
+                [
+                    $positions->aliasField('id = ') . $this->aliasField('institution_position_id')
+                ])
+            ->leftJoin(
+                [$shiftOption->getAlias() => $shiftOption->getTable()],
+                [
+                    $shiftOption->aliasField('id = ') . $positions->aliasField('shift_id')
+                ]
+            )
+            ->select([
+                'institutionstaff' => $this->aliasField('staff_id'),
+                //'startTime' => $this->aliasField('start_time'),
+                //'endTime'   => $this->aliasField('end_time'),
+            ])
+            ->where([
+                // $this->aliasField('staff_id') => $staffId,
+                $InstitutionStaffAttendances->aliasField('staff_id') => $staffId,
+
+            ])->first();
+
+        return $staffShiftsData;
+
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'photo_content') {
+            return __('Photo Content');
+        } elseif ($field == 'openemis_id') {
+            return __('OpenEMIS ID');
+        } elseif ($field == 'first_name') {
+            return __('First Name');
+        } elseif ($field == 'middle_name') {
+            return __('Middle Name');
+        } elseif ($field == 'third_name') {
+            return __('Third Name');
+        } elseif ($field == 'last_name') {
+            return __('Last Name');
+        } elseif ($field == 'staff_id') {
+            return __('Staff');
+        } elseif ($field == 'start_date') {
+            return __('Start Date');
+        } elseif ($field == 'end_date') {
+            return __('End Date');
+        } elseif ($field == 'staff_status_id') {
+            return __('Staff Status');
+        } elseif ($field == 'passport_no') {
+            return __('Passport');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    private function addStaffGenderField(Query $query)
+    {
+        $genders = self::getRelatedOptions('genders');
+        $query->select(['staff_gender_id' => 'Users.gender_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($genders) {
+            return $results->map(function ($row) use ($genders) {
+                $row['staff_gender'] = $genders[$row->staff_gender_id];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    private function addStaffBirthplaceAreaField(Query $query)
+    {
+        $options = self::getRelatedOptions('area_administratives');
+        $source_field = 'staff_birthplace_area_id';
+        $destination_field = 'staff_birthplace_area';
+        $query->select([$source_field => 'Users.birthplace_area_id']);
+        $query->formatResults(function (\Cake\Collection\CollectionInterface $results)
+        use ($options, $source_field, $destination_field) {
+            return $results->map(function ($row) use ($options, $source_field, $destination_field) {
+                $row[$destination_field] = $options[$row[$source_field]];
+                return $row;
+            });
+        });
+        return $query;
+    }
+
+    public function onGetStaffPositionGradeId(EventInterface $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->staff_position_grade_id) {
+            $StaffPositionGradesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
+            $StaffPositionGrades = $StaffPositionGradesTable->get($entity->staff_position_grade_id);
+            $value = $StaffPositionGrades->name;
+        }
+        return $value;
+    }
+
+    //POCOR-8790 Start
+    /**
+     * @param Query $query
+     * @return Query
+    */
+    private function setStaffStatusID(Query $query)
+    {
+        $staff_status_id = $this->request->getQuery('staff_status_id');
+        if (!$staff_status_id) {
+            $this->StaffStatuses = new StaffStatusesTable();
+            $statuses = $this->StaffStatuses->findCodeList();
+            $staff_status_id = $statuses['ASSIGNED'];
+        }
+        $query->where([$this->aliasField('staff_status_id') => $staff_status_id]);
+        return $query;
+    }
+
+    /**
+     * @param Query $query
+     * @return Query
+    */
+    private function setPoitionID(Query $query)
+    {
+        $selectedPosition = $this->request->getQuery('position');
+        $query->matching('Positions', function ($q) use ($selectedPosition) {
+            return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
+        });
+        return $query;
+    }
+    //POCOR-8790 End
+
+//    /**
+//     * @return mixed
+//     * commented for POCOR-9446
+//     * POCOR-9415 refactured
+//     */
+//    private function getApprovedLeaveStatusIds(): array
+//    {
+//        $workflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+//        $workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+//
+//        $workflowAlias = $workflows->getAlias();
+//        $workflowStepsAlias = $workflowSteps->getAlias();
+//
+//        $query = $workflowSteps->find()
+//            ->select(["{$workflowStepsAlias}.id"])
+//            ->innerJoin(
+//                [$workflowAlias => $workflows->getTable()],
+//                ["{$workflowAlias}.id = {$workflowStepsAlias}.workflow_id"]
+//            )
+//            ->where(
+//                ["LOWER({$workflowAlias}.name) LIKE '%leave%'",
+//                    "{$workflowStepsAlias}.category = 3",
+//                    'OR' => [
+//                        "LOWER({$workflowStepsAlias}.name) = 'approved'",
+//                        "LOWER({$workflowStepsAlias}.name) = 'leave cancellation rejected'",
+//                        "LOWER({$workflowStepsAlias}.name) != 'rejected'"
+//                    ]
+//                ])
+//            ->enableHydration(false);
+//
+//        // Optional: log the generated SQL
+//        // Log::debug('Approved status query: ' . $query->sql($query->getValueBinder()));
+//
+//        return $query->extract('id')->toList() ?: [0];
+//    }
+
+
+
+
+
+}

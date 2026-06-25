@@ -1,0 +1,148 @@
+<?php
+namespace Workflow\Model\Behavior;
+
+use ArrayObject;
+use Cake\Event\EventInterface;
+use Cake\Http\ServerRequest;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
+use Cake\ORM\Behavior;
+use Institution\Model\Table\InstitutionStaffTransfersTable as InstitutionStaffTransfers;
+
+class TransferBehavior extends Behavior
+{
+    private $transferWorkflowIds = [];
+    private $institutionTypeOptions = [];
+
+    public function initialize(array $config): void
+    {
+        parent::initialize($config);
+
+        $transferWorkflowModels = [
+            'Institution.StaffTransferIn',
+            'Institution.StaffTransferOut',
+            'Institution.StudentTransferIn',
+            'Institution.StudentTransferOut',
+            'Institution.StaffReleaseIn',
+            'Institution.StaffRelease'
+        ];
+
+        $this->transferWorkflowIds = $this->_table->Workflows->find()
+                ->matching('WorkflowModels', function ($q) use ($transferWorkflowModels) {
+                    return $q->where(['model IN' => $transferWorkflowModels]);
+                })
+                ->all()
+                ->extract('id')
+                ->toArray();
+
+        $this->institutionTypeOptions = [
+            InstitutionStaffTransfers::INCOMING => 'Receiving Institution',
+            InstitutionStaffTransfers::OUTGOING => 'Sending Institution'
+        ];
+    }
+
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
+        $events['ControllerAction.Model.add.afterAction'] = 'addAfterAction';
+        $events['ControllerAction.Model.edit.onInitialize'] = 'editOnInitialize';
+        $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
+        $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+        return $events;
+    }
+
+    public function validationTransferWorkflow(Validator $validator) : Validator
+    {
+        $validator = $this->_table->validationDefault($validator);
+        return $validator->notEmpty('institution_owner');
+    }
+
+    public function indexAfterAction(EventInterface $event, $data)
+    {
+        if (!is_null($this->_table->request->getQuery('workflow'))) {
+            $selectedWorkflowId = $this->_table->request->getQuery('workflow');
+            $this->setupInstitutionOwnerField($selectedWorkflowId);
+        }
+    }
+
+    public function addAfterAction(EventInterface $event, Entity $entity)
+    {
+        $model = $this->_table;
+        if (isset($model->request->getData()[$model->getAlias()]['workflow_id']) && !empty($model->request->getData()[$model->getAlias()]['workflow_id'])) {
+            $selectedWorkflowId = $model->request->getData()[$model->getAlias()]['workflow_id'];
+            $this->setupInstitutionOwnerField($selectedWorkflowId);
+        }
+    }
+
+    public function editOnInitialize(EventInterface $event, Entity $entity)
+    {
+        // populate params data
+        if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
+            foreach ($entity->workflow_steps_params as $param) {
+                if ($param->name == 'institution_owner') {
+                    $institutionOwner = $param->value;
+                } else if ($param->name == 'validate_approve') {
+                    $validateApprove = $param->value;
+                }
+            }
+            $entity->institution_owner = isset($institutionOwner) ? $institutionOwner : '';
+            $entity->validate_approve = isset($validateApprove) ? $validateApprove : '';
+        }
+    }
+
+    public function editAfterAction(EventInterface $event, Entity $entity)
+    {
+        $workflowId = $entity->workflow_id;
+        $this->setupInstitutionOwnerField($workflowId);
+    }
+
+    public function viewAfterAction(EventInterface $event, Entity $entity)
+    {
+        $workflowId = $entity->workflow_id;
+        $this->setupInstitutionOwnerField($workflowId);
+    }
+
+    private function setupInstitutionOwnerField($workflowId)
+    {
+        if (in_array($workflowId, $this->transferWorkflowIds)) {
+            $this->_table->ControllerAction->field('institution_owner', ['type' => 'select', 'options' => $this->institutionTypeOptions]);
+            $this->_table->ControllerAction->field('validate_approve', ['type' => 'hidden']);
+            $this->_table->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'institution_owner', 'security_roles', 'category', 'is_editable', 'is_removable']);
+        }
+    }
+
+    public function onGetInstitutionOwner(EventInterface $event, Entity $entity)
+    {
+        $value = ' ';
+        if ($entity->has('workflow_steps_params') && !empty($entity->workflow_steps_params)) {
+            $params = $entity->workflow_steps_params;
+            $key = array_search('institution_owner', array_column($params, 'name'));
+            $value = $this->institutionTypeOptions[$params[$key]['value']];
+        }
+        return $value;
+    }
+
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            if (in_array($data['workflow_id'], $this->transferWorkflowIds)) {
+                $options['validate'] = 'transferWorkflow';
+
+                // format params to save
+                $params = [];
+                if (isset($data['institution_owner']) && !empty($data['institution_owner'])) {
+                    $params[] = ['name' => 'institution_owner', 'value' => $data['institution_owner']];
+                }
+                if (isset($data['validate_approve']) && !empty($data['validate_approve'])) {
+                    $params[] = ['name' => 'validate_approve', 'value' => $data['validate_approve']];
+                }
+                if (!empty($params)) {
+                    $data->offsetSet('workflow_steps_params', $params);
+                    $options['associated']['WorkflowStepsParams'] = ['validate' => false];
+                }
+            }
+        }
+    }
+}

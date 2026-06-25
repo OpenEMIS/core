@@ -1,0 +1,114 @@
+@charset "UTF-8";
+
+/* Layout v.1.0.1 */
+
+body {
+    min-width: 320px !important;
+    
+    .rtl & {
+        text-align: right;
+    }
+
+    .main-wrapper {
+        display: flex;
+        background-color: $whiteColor;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0; // background: yellow;
+        /* Media Query */
+        @media #{$tabletLandscape} {
+            overflow: auto;
+            display: block;
+        }
+
+        @media #{$webView} {
+            .content-area {
+                display: flex !important;
+                flex-direction: column;
+                height: 100%;
+                flex: 1 auto;
+
+                .content {
+                    flex: 1 auto;
+                    display: flex;
+                    flex-direction: column;
+
+                    router-outlet {
+                        flex: 0 0 auto;
+                    }
+
+                    &>.has-aggrid {
+                        flex: 1 0 auto;
+                    }
+
+                    &>* {
+                        flex: 0 0 auto;
+                        display: flex;
+                        flex-direction: column;
+
+                        &>* {
+                            flex: 0 0 auto;
+                        }
+                    }
+                }
+            }
+        }
+
+        .content-wrapper {
+            display: -webkit-box;
+            display: flex;
+            flex-grow: inherit;
+            flex-shrink: inherit;
+            flex-basis: inherit;
+            flex-direction: column;
+            width: 100%; // background: green;
+            /* Media Query */
+            @media #{$tabletLandscape} {
+                display: block;
+                overflow: hidden;
+            }
+
+            .content-area {
+                display: block;
+                font-size: 0;
+                overflow: auto;
+                padding: $padding15 $noPadding;
+                box-sizing: border-box;
+
+                @media #{$tabletLandscape} {
+                    overflow: hidden;
+                    padding: $padding15 $noPadding $noPadding;
+                }
+
+                .content {
+                    padding: $noPadding $padding15;
+                    box-sizing: border-box;
+
+                    @media #{$tabletLandscape} {
+                        padding: $noPadding $padding15 $padding30;
+                    }
+
+                    .content-wrapper {
+                        transform: translateZ(0);
+                    }
+                }
+            }
+        }
+    }
+
+    .col-md-3 {
+        padding: $padding10;
+        float: left;
+        .rtl & {
+            float: right;
+        }
+    }
+
+    .pull-right {
+        .rtl & {
+            float: left !important;
+        }    
+    }
+}

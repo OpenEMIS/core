@@ -1,0 +1,192 @@
+/* PANEL ACCORDION ANCHOR v.1.0.1 */
+
+.accordion-pagination {
+    position: absolute;
+    width: 10px;
+    height: 140px;
+    left: 10px;
+    top: 28px;
+    background-color: #FFF;
+    text-align: center;
+}
+
+.section-label {
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin: 8px 0 10px;
+}
+
+/* accordion bullets */
+
+.accordion-pagination.two-bullets {
+    padding: 53px 0;
+}
+
+.accordion-pagination.three-bullets {
+    padding: 45px 0;
+}
+
+.accordion-pagination.four-bullets {
+    padding: 40px 0;
+}
+
+.accordion-pagination.five-bullets {
+    padding: 30px 0;
+}
+
+.accordion-pagination.six-bullets {
+    padding: 22px 0;
+}
+
+
+/* end of accordion bullets */
+
+.accordion-pagination > li {
+    height: 13px;
+}
+
+.accordion-pagination.four-bullets > li > a,
+.accordion-pagination.four-bullets > li > a:hover {
+    padding: 0 !important;
+}
+
+.accordion-pagination > li {
+    opacity: 0.5;
+}
+
+.accordion-pagination > li.active,
+.accordion-pagination > li:hover {
+    opacity: 1;
+}
+
+.accordion-pagination > li > a,
+.accordion-pagination > li > a:hover {
+/*    padding: 4px 0 !important;
+    margin: 0 !important;*/
+    font-size: 6px;
+    line-height: 10px;
+    font-weight: normal;
+}
+
+.accordion-pagination > li > a,
+.nav.accordion-pagination > li > a:hover,
+.accordion-pagination > li > a:hover,
+.accordion-pagination > li > a:focus,
+.accordion-pagination > li.active a {
+    border-color: transparent !important;
+    background-color: #FFF !important;
+    color: #6B6B6B !important;
+    padding: 4px 0 !important;
+    margin: 0 !important;
+}
+
+.accordion-anchor {
+    margin-left: 40px;
+    margin-bottom: 20px;
+    padding: 10px 0 0;
+    height: 130px;
+    vertical-align: middle;
+}
+
+.accordion-anchor:last-child {
+    margin-bottom: 0 !important;
+}
+
+.btn-scroll-bullet:before,
+.accordion-pagination > li.active .btn-scroll-bullet:before {
+    font-family: "FontAwesome";
+}
+
+.btn-scroll-bullet:before {
+    content: "\f10c";
+}
+
+.accordion-pagination > li.active .btn-scroll-bullet:before,
+.accordion-pagination > li:hover .btn-scroll-bullet:before {
+    content: "\f111";
+    font-size: 8px !important;
+}
+
+.tooltip.scroll-label {
+    margin-left: 10px !important;
+    margin-top: 2px !important;
+}
+
+.tooltip.scroll-label.in {
+    opacity: 1 !important;
+    filter: alpha(opacity=100) !important;
+}
+
+.tooltip.scroll-label:before {
+    display: block;
+    content: "";
+    width: 20px;
+    height: 1px;
+    background-color: #6B6B6B;
+    position: absolute;
+    left: -15px;
+    top: 12px;
+}
+
+.tooltip.scroll-label .tooltip-inner {
+    background-color: #6B6B6B;
+    color: #FFF;
+    box-shadow: 0 0 40px #FFF;
+}
+
+.tooltip.scroll-label .tooltip-arrow {
+    display: none;
+}
+
+@media only screen and (max-width: 800px) {
+    .accordion-anchor {
+        padding: 20px 0 0;
+    }
+    .accordion-anchor,
+    .accordion-pagination {
+        height: 150px !important;
+    }
+    .accordion-pagination.six-bullets {
+        padding: 25px 0;
+    }
+    .accordion-pagination.five-bullets {
+        padding: 35px 0;
+    }
+    .accordion-pagination.four-bullets {
+        padding: 45px 0;
+    }
+    .accordion-pagination.three-bullets {
+        padding: 50px 0;
+    }
+    .accordion-pagination.two-bullets {
+        padding: 58px 0;
+    }
+}
+
+/* RTL PANEL ACCORDION ANCHOR */
+
+.rtl .accordion-pagination {
+    left: auto !important;
+    right: 10px;
+}
+
+.rtl .accordion-anchor {
+    margin-right: 40px;
+    margin-left: 0 !important;
+}
+
+.rtl .tooltip.scroll-label:before {
+    left: auto !important;
+    right: -15px;
+    margin-top: 2px !important;
+}
+
+.rtl.safari .tooltip.scroll-label:before {
+    margin-top: 0 !important;
+}
+
+.rtl .tooltip.scroll-label {
+    margin-left: -98px !important;
+    margin-top: 1px !important;
+}

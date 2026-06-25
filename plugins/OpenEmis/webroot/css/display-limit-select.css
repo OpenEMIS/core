@@ -1,0 +1,64 @@
+/**
+ * Loaded after OpenEmis.master.min (see templates/Element/styles.php).
+ * - menulist-button hid the selected value in WebKit; avoid it.
+ * - Keep one arrow: component.form.css :after chevron + select { appearance: none }.
+ * - Hide only ::before (IE overlay from ie9-fixes when loaded), not ::after.
+ */
+.pagination-wrapper .display-limit .input-select-wrapper::before {
+    display: none !important;
+    content: none !important;
+}
+
+.pagination-wrapper .display-limit select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    color: #333 !important;
+    background-color: #fff !important;
+    -webkit-text-fill-color: #333 !important;
+    font-size: 12px !important;
+    line-height: 30px !important;
+    height: 30px !important;
+    box-sizing: border-box !important;
+    opacity: 1 !important;
+    padding: 0 16px 0 6px !important;
+    position: relative;
+    z-index: 1;
+}
+
+.pagination-wrapper .display-limit select::-ms-expand {
+    display: none;
+}
+
+/* Enough width so "10" / "50" stays visible next to the custom chevron */
+.pagination-wrapper .display-limit .input-select-wrapper {
+    width: 52px !important;
+    min-width: 52px !important;
+}
+
+.pagination-wrapper .display-limit .input-select-wrapper::after {
+    right: -4px;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+    margin-top: 0;
+}
+
+/*
+ * Nested .input-select-wrapper (template + Form helper) drew two chevrons.
+ * If an outer wrapper still wraps an inner one, hide the outer arrow only.
+ */
+.pagination-wrapper .display-limit .input-select-wrapper:has(> .input-select-wrapper)::after {
+    display: none !important;
+    content: none !important;
+}
+
+.rtl .pagination-wrapper .display-limit select {
+    padding: 0 6px 0 16px !important;
+}
+
+.rtl .pagination-wrapper .display-limit .input-select-wrapper::after {
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+}

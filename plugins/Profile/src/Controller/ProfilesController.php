@@ -1,0 +1,1550 @@
+<?php
+
+namespace Profile\Controller;
+
+use ArrayObject;
+
+use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Event\EventInterface;
+use Cake\ORM\Table;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\Routing\Router;
+use App\Controller\AppController;
+
+class ProfilesController extends AppController
+{
+    public $activeObj = null;
+    const APPROVED = 1;
+
+    private $redirectedViewFeature = [
+        // student academic
+        'Programmes',
+        'StudentClasses',
+        'StudentSubjects',
+        'StudentReportCards',
+
+        // staff career
+        'Positions',
+        'StaffClasses',
+        'StaffSubjects',
+        'StaffBehaviours',
+        // 'Licenses',
+        'StaffAttendances',
+    ];
+
+    public function initialize(): void
+    {
+        parent::initialize();
+
+        $this->ConfigItems = $this->fetchTable('Configuration.ConfigItems');
+
+        // get the configuration for change_password
+        $changePasswordAllowed = $this->ConfigItems->value('change_password');
+        // check if the current logged in user is a super admin
+        $isSuperAdmin = $this->Auth->user('super_admin');
+
+        // if user is super admin and change_password is not allowed, then remove the edit action from account page
+        $accountPermissions = (!$changePasswordAllowed && $isSuperAdmin) ? ['view'] : ['view', 'edit'];
+
+        $this->ControllerAction->models = [
+            // Users
+            'Accounts' => ['className' => 'Profile.Accounts', 'actions' => ['view', 'edit']],
+            'History' => ['className' => 'User.UserActivities', 'actions' => ['index']],
+
+            // Student
+            // 'StudentAbsences'       => ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
+            //'StudentBehaviours' => ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
+            //'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],//POCOR-6700
+            // Staff
+            'StaffPositions' => ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
+            'StaffSections' => ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
+            'StaffClasses' => ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
+            'StaffQualifications' => ['className' => 'Staff.Qualifications'],
+            'StaffExtracurriculars' => ['className' => 'Staff.Extracurriculars'],
+            'TrainingResults' => ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
+
+            'ImportUsers' => ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
+            'ImportSalaries' => ['className' => 'Staff.ImportSalaries', 'actions' => ['add']]
+        ];
+
+        $this->loadComponent('Training.Training');
+        $this->loadComponent('User.Image');
+        $this->loadComponent('Scholarship.ScholarshipTabs');
+        $this->attachAngularModules();
+
+        $this->set('contentHeader', 'Personal');
+    }
+
+    public function StudentBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.ProfileStudentBehaviours']);//POCOR-8425
+    }
+
+    public function Personal()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']);
+    }
+    // public function Profiles() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Profiles']); }
+
+    public function History()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserActivities']);
+    }
+
+    // CAv4
+    public function StudentAbsences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
+    }
+
+    public function Absences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Absences']);
+    }
+
+    public function StudentFees()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']);
+    }
+
+    public function StaffEmployments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']);
+    }
+
+    public function StaffQualifications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']);
+    }
+
+    public function StaffPositions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Positions']);
+    }
+
+    public function StaffClasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']);
+    }
+
+    public function StaffSubjects()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']);
+    }
+
+    public function StaffEmploymentStatuses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.EmploymentStatuses']);
+    }
+
+    public function StaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']);
+    }
+
+    public function StudentClasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']);
+    }
+
+    public function StudentSubjects()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']);
+    }
+
+    public function Nationalities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']);
+    }
+
+    public function Memberships()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
+    }
+
+    public function Awards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
+    }
+
+    public function Languages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']);
+    }
+
+    public function StaffMemberships()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Memberships']);
+    }
+
+    public function StaffLicenses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Licenses']);
+    }
+
+    public function Contacts()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Contacts']);
+    }
+
+    public function StudentBankAccounts()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']);
+    }
+
+    public function StaffBankAccounts()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.BankAccounts']);
+    }
+
+    public function StudentProgrammes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']);
+    }
+
+    public function Identities()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']);
+    }
+
+    public function StudentAwards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
+    }
+
+    public function StaffAwards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']);
+    }
+
+    public function TrainingNeeds()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']);
+    }
+    // public function StaffTrainingApplications()
+    // {
+    //     $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']);
+    // }
+    public function StaffTrainingApplications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']);
+    }
+
+    public function CourseCatalogue()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CourseCatalogue']);
+    }
+
+    public function StaffAppraisals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']);
+    }
+
+    public function StaffDuties()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Duties']);
+    }
+
+    public function StaffAssociations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.InstitutionAssociationStaff']);
+    }
+
+    public function StudentTextbooks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']);
+    }
+
+    public function StudentAssociations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.InstitutionAssociationStudent']);
+    }
+
+    public function ProfileGuardians()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Guardians']);
+    }
+
+    public function ProfileGuardianUser()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.GuardianUser']);
+    }
+
+    public function StudentReportCards()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']);
+    }
+
+    public function Attachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']);
+    }
+
+    public function Courses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']);
+    }
+
+    public function StaffSalaries()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']);
+    }
+
+    public function StaffPayslips()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Payslips']);
+    }
+
+    public function StaffBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']);
+    }
+
+    public function StudentOutcomes()
+    {
+        $comment = $this->request->getQuery('comment');
+        if (!empty($comment) && $comment == 1) {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomeComments']);
+
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentOutcomes']);
+        }
+
+    }
+
+    //Start:POCOR-6699
+    public function StudentAssessments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentAssessments']);
+    }
+
+    //END:POCOR-6699
+    public function StudentCompetencies()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCompetencies']);
+    }
+
+    public function StudentRisks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentRisks']);
+    }
+
+    public function ScholarshipApplications($pass = 'index')
+    {
+        // POCOR-7905: start
+        if ($pass == 'add') {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Scholarship.Applications']);
+
+        } else {
+            // POCOR-7905: middle
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipApplications']);
+        }   // POCOR-7905: END
+    }
+
+    public function ScholarshipsDirectory($pass = 'index')
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.ScholarshipsDirectory']);
+    }
+
+    public function Demographic()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Demographic']);
+    }
+
+    public function ProfileStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.Students']);
+    }
+
+    public function ProfileStudentUser()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StudentUser']);
+    }
+
+    // health
+    public function Healths()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']);
+    }
+
+    public function HealthAllergies()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']);
+    }
+
+    public function HealthConsultations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']);
+    }
+
+    public function HealthFamilies()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']);
+    }
+
+    public function HealthHistories()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']);
+    }
+
+    public function HealthImmunizations()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']);
+    }
+
+    public function HealthMedications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']);
+    }
+
+    public function HealthTests()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']);
+    }
+
+    public function HealthInsurances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Insurances']);
+    }
+
+    public function HealthBodyMasses()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.BodyMasses']);
+    }
+    // End Health
+
+    // Special Needs
+    public function SpecialNeedsReferrals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsReferrals']);
+    }
+
+    public function SpecialNeedsAssessments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsAssessments']);
+    }
+
+    public function SpecialNeedsServices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsServices']);
+    }
+
+    public function SpecialNeedsDevices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDevices']);
+    }
+
+    public function SpecialNeedsPlans()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsPlans']);
+    }
+
+    // Special Needs - End
+
+    public function Employments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserEmployments']);
+    }
+
+    public function HistoricalStaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Historical.HistoricalStaffLeave']);
+    }
+
+    // START: POCOR-6353 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+    public function Comments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']);
+    }
+    // Ends: POCOR-6353 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+    // AngularJS
+    public function StaffAttendances()
+    {
+        $institutionId = null;
+        $staffId = $this->Auth->user('id');
+        $tabElements = $this->getCareerTabElements();
+
+        $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->getParam('action'))));
+        $this->Navigation->addCrumb($crumbTitle);
+        $this->set('institution_id', $institutionId);
+        $this->set('staff_id', $staffId);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'Attendances');
+        $this->set('ngController', 'StaffAttendancesCtrl as $ctrl');
+    }
+
+    // End
+
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        //$events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored'; //POCOR-5312
+        return $events;
+    }
+
+    //POCOR-5312 starts
+    /*public function isActionIgnored(EventInterface $event, $action)
+    {
+        return true;
+    }*/
+    //POCOR-5312 ends
+
+    // AngularJS
+    public function StudentResults()
+    {
+        $session = $this->request->getSession();
+        //$studentId = $this->Auth->user('id');
+        $sId = $this->request->getParam('pass')[1];
+
+        // tabs
+        $options['type'] = 'student';
+        $tabElements = $this->getAcademicTabElements($options);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'Results');
+        // End
+
+        $this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
+    }
+
+    public function StudentExaminationResults()
+    {
+        $session = $this->request->getSession();
+        /*$studentId = $this->Auth->user('id');*/
+        if ($session->read('Auth.User.is_guardian') == 1) {
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        } else {
+            $studentId = $this->request->getParam('pass')[1];
+        }
+        $session->write('Student.ExaminationResults.student_id', $studentId);
+
+        // tabs
+        $options['type'] = 'student';
+        $tabElements = $this->getAcademicTabElements($options);
+        $this->set('tabElements', $tabElements);
+        $this->set('selectedAction', 'ExaminationResults');
+        // End
+
+        $this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
+    }
+
+    // End
+
+    private function attachAngularModules()
+    {
+        $action = $this->request->getAttribute('params')['action'];//POCOR-8379
+
+        switch ($action) {
+            case 'StudentResults':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'student.results.ctrl',
+                    'student.results.svc'
+                ]);
+                break;
+            case 'StudentExaminationResults':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'student.examination_results.ctrl',
+                    'student.examination_results.svc'
+                ]);
+                break;
+            case 'StaffAttendances':
+                $this->Angular->addModules([
+                    'staff.attendances.ctrl',
+                    'staff.attendances.svc'
+                ]);
+                break;
+            case 'ScheduleTimetable':
+                $this->Angular->addModules([
+                    'timetable.ctrl',
+                    'timetable.svc'
+                ]);
+                break;
+            case 'StudentScheduleTimetable':
+                $this->Angular->addModules([
+                    'studenttimetable.ctrl',
+                    'studenttimetable.svc'
+                ]);
+                break;
+        }
+    }
+
+    public function beforeFilter(EventInterface $event)
+    {
+        parent::beforeFilter($event);
+        $session = $this->request->getSession();
+        $action = $this->request->getParam('action');
+
+        $loginUserId = $this->Auth->user('id'); // login user
+        if(!$loginUserId){
+            $loginUserId = $session->read('Auth.User.name');
+        }
+        if(!$loginUserId){
+            $loginUserId = $this->getQueryString('user_id');
+        }
+        $this->Navigation->addCrumb('Personal', ['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => 'Personal', 'view', $this->ControllerAction->paramsEncode(['id' => $loginUserId])]);
+
+        $header = '';
+        $entity = null;
+        $user_id = $session->read('Profile.Profiles.primaryKey.id');
+        if ($this->Profiles->exists([$this->Profiles->getPrimaryKey() => $loginUserId])) {
+            if ($action == 'StudentReportCards') {
+                if (isset($user_ids['id']) && !empty($user_ids['id'])) {
+                    $user_id = $user_ids['id'];
+                } else {
+                    if (isset($user_ids['security_user_id']) && !empty($user_ids['security_user_id']))
+                        $user_id = $user_ids['security_user_id'];
+                }//POCOR-6202 end
+            }
+            if (!$user_id) {
+                $user_id_req = $this->request->getAttribute('params')['pass'][1];
+                $entity = null;
+                if (!empty($user_id_req)) {
+                    $user_ids = $this->ControllerAction->paramsDecode($user_id_req);
+                    // $security_user_id = $user_ids['id'];
+                    if (isset($user_ids['id']) && !empty($user_ids['id'])) {
+                        $user_id = $user_ids['id'];
+                    } else {
+                        if (isset($user_ids['security_user_id']) && !empty($user_ids['security_user_id']))
+                            $user_id = $user_ids['security_user_id'];
+                    }//POCOR-6202 end
+                }
+            }
+        }
+        try {
+            $entity = $this->Profiles->get($loginUserId);
+            $name = $entity->name;
+        } catch
+        (RecordNotFoundException $e) {
+            $name = "";
+        } catch // POCOR-7905: start
+        (InvalidPrimaryKeyException $e) {
+            $name = "";
+        } // POCOR-7905: end
+
+        if ($name) {
+            $header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
+            $this->Navigation->addCrumb($header);
+        }
+        if ($entity) {
+            $this->activeObj = $entity;
+        }
+        $this->set('contentHeader', $header);
+    }
+
+    public
+    function changeUserHeader($model, $modelAlias, $userType)
+    {
+        $session = $this->request->getSession();
+        // add the student name to the header
+        $id = 0;
+        if ($session->check('Staff.Staff.id')) {
+            $id = $session->read('Staff.Staff.id');
+        }
+        if (!empty($id)) {
+            $Users = TableRegistry::getTableLocator()->get('Security.Users');
+            $entity = $Users->get($id);
+            $name = $entity->name;
+            $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
+            $header = $name . ' - ' . __($crumb);
+            $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->getAlias())));
+            $this->Navigation->addCrumb('Staff', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Staff']);
+            $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+            $this->Navigation->addCrumb($crumb);
+            $this->set('contentHeader', $header);
+        }
+    }
+
+    public
+    function onInitialize(EventInterface $event, Table $model, ArrayObject $extra)
+    {
+        $session = $this->request->getSession();
+
+        if ($model instanceof \App\Model\Table\ControllerActionTable) { // CAv4
+            // off the import action
+            if ($model->behaviors()->has('ImportLink')) {
+                $model->removeBehavior('ImportLink');
+            }
+
+            $alias = $model->getAlias();
+            
+            $excludedModel = ['ScholarshipApplications',
+                'Applications', // POCOR-7905
+                'Leave', 'StudentReportCards', 'Contacts', 'TrainingNeeds', 'Comments']; //POCOR-5695 add TrainingNeeds POCOR-6353 add comment
+
+            if (!in_array($alias, $excludedModel)) {
+                ## Enabled in POCOR-6314
+
+                $enabledCrudOperation = ['Awards', 'UserEmployments', 'Licenses', 'Memberships', 'Qualifications', 'StaffTrainingApplications', 'StaffTrainings', 'EmploymentStatuses', 'Leave','InstitutionChoices','InstitutionApplicationAttachment'];
+
+                if (in_array($alias, $enabledCrudOperation)) {
+                    $model->toggle('add', true);
+                    $model->toggle('edit', true);
+                    $model->toggle('remove', true);
+                } else {
+                    $model->toggle('add', false);
+                    $model->toggle('edit', false);
+                    $model->toggle('remove', false);
+                    $enabledEditOperation = ['Profiles', 'Demographic', 'Identities', 'InstitutionCases', 'UserNationalities', 'UserLanguages', 'Attachments'];
+                    if (in_array($alias, $enabledEditOperation)) {
+                        $model->toggle('edit', true);
+                        $model->toggle('add', true);
+                    }
+                }
+                // redirected view feature is to cater for the link that redirected to institution
+                if (in_array($alias, $this->redirectedViewFeature)) {
+                    $model->toggle('view', false);
+                }
+            }
+        } else if ($model instanceof \App\Model\Table\AppTable) { // CAv3
+            $alias = $model->getAlias();
+            $excludedModel = ['Accounts', 'Extracurriculars', 'UserActivities'];
+
+            if (!in_array($alias, $excludedModel)) {
+                $model->addBehavior('ControllerAction.HideButton');
+            }
+        } else if ($model instanceof \Staff\Model\Table\StaffClassesTable || $model instanceof \Staff\Model\Table\StaffSubjectsTable) {
+            $model->toggle('add', false);
+        } else if ($model->getAlias() == 'Guardians') {
+            $model->editButtonAction('ProfileGuardianUser');
+        }
+
+        $header = '';
+        $userId = $this->Auth->user('id'); // login user
+        $header = $session->read('Auth.User.name');
+
+        $alias = $model->alias;
+        //POCOR-5890 starts
+        if ($alias == 'HealthImmunizations') {
+            $alias = __('Vaccinations');
+        }
+        if($alias == 'StudentGpa' || $alias == 'Gpa'){
+            $alias = 'Student GPA';
+            $alias = $model->getHeader($alias);
+            $alias = preg_replace('/G\s*P\s*A/', 'GPA', $alias);
+            $this->Navigation->addCrumb($alias);
+            $header = $header . ' - ' . $alias;
+
+        }else{
+            $this->Navigation->addCrumb($model->getHeader($alias));
+        }
+        $action = $this->request->getParam('action');
+        if ($action == 'Profiles') {
+            $action = __('Personal');
+        }
+        if ($session->read('Auth.User.is_guardian') == 1) {
+            //$studentId = $session->read('Student.ExaminationResults.student_id');//POCOR-6202 uncomment $studentId
+            //POCOR-6202 start
+            if ($action == 'Personal') { //for gaurdian personal page
+                $studentId = $session->read('Profile.StudentUser.primaryKey.id');
+            } else { //for Profile Student User page
+                //$studentData = $this->ControllerAction->paramsDecode($session->read('Student.ExaminationResults.student_id'));
+                $studentId = $this->ControllerAction->paramsEncode(['id' => $session->read('Auth.User.id')]);;
+            } //POCOR-6202 ends
+        } else {
+            //$studentId = $this->request->params['pass'][1];
+            $studentId = $this->ControllerAction->paramsEncode(['id' => $session->read('Auth.User.id')]);
+        }
+
+        if (!empty($studentId)) {
+            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentClasses' || $action == 'StudentSubjects' || $action == 'StudentAbsences' || $action == 'ComponentAction' || $action == 'StudentOutcomes' || $action == 'StudentCompetencies' || $action == 'StudentAssessments' || $action == 'StudentExaminationResults' || $action == 'StudentReportCards' || $action == 'StudentExtracurriculars' || $action == 'StudentTextbooks' || $action == 'StudentRisks' || $action == 'StudentAwards' || $action == 'StudentAssociations' || $action == 'Personal' || $action == 'StudentCurriculars') {
+                //POCOR-6202 starts
+                if ($session->read('Auth.User.is_guardian') == 1) {
+                    //$studentId = $this->ControllerAction->paramsDecode($studentId)['id'];//POCOR-6202 uncomment $studentId
+                    if ($action == 'Personal') {
+                        $studentId = $this->ControllerAction->paramsDecode($this->request->getParam('pass')[1]);
+                    } /*POCOR-6324 starts*/ else {
+                        $studentId = $this->Auth->user('id');
+                    } /*POCOR-6324 ends*/
+                } else {
+                    if (isset($this->ControllerAction->paramsDecode($studentId)['id'])) {
+
+                        $studentId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                    } else {
+                        $studentId = $this->ControllerAction->paramsDecode($studentId)['student_id'];
+                    }
+                }//POCOR-6202 ends
+                $entity = $this->Profiles->get($studentId);
+
+                $name = $entity->name;
+                $header = $name;
+                if ($alias == 'Profiles') {
+                    $alias = __('Personal');
+                }
+                $header = $header . ' - ' . $model->getHeader($alias);
+            }
+        } else {
+            if ($alias == 'StudentAssociations') {
+                $header = $header . ' - ' . __('Houses'); //POCOR-7938
+            } else {
+                $header = $header . ' - ' . $model->getHeader($alias);
+            }
+        }
+        //POCOR-5675
+        $this->set('contentHeader', $header);
+
+
+        if ($model->hasField('security_user_id')) {
+
+            $model->fields['security_user_id']['type'] = 'hidden';
+            $model->fields['security_user_id']['value'] = $userId;
+
+            if (count($this->request->getParam('pass')) > 2) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
+                $ids = $this->ControllerAction->paramsDecode($modelId);
+                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                $idKey[$model->aliasField('security_user_id')] = $userId;
+                $exists = $model->exists($idKey);
+
+                /**
+                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                 */
+                if (!$exists) {
+                    $this->Alert->warning('general.notExists');
+                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                }
+            }
+        } else if ($model->hasField('staff_id') && $this->getPlugin('Profile') != 'Profile') {
+            $model->fields['staff_id']['type'] = 'hidden';
+            $model->fields['staff_id']['value'] = $userId;
+
+            if (count($this->request->getParam('pass')) > 1) {
+                $modelId = $this->request->getParam('pass')[1]; // id of the sub model
+
+                $ids = $this->ControllerAction->paramsDecode($modelId);
+                $idKey = $this->ControllerAction->getIdKeys($model, $ids);
+                $idKey[$model->aliasField('staff_id')] = $userId;
+                $exists = $model->exists($idKey);
+
+                /**
+                 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+                 */
+                if (!$exists) {
+                    $this->Alert->warning('general.notExists');
+                    return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+                }
+            }
+        } else if ($model->hasField('student_id')) {
+            $model->fields['student_id']['type'] = 'hidden';
+            $model->fields['student_id']['value'] = $userId;
+
+            //if (count($this->request->pass) > 1) {
+            //$modelId = $this->request->pass[1]; // id of the sub model
+
+            //$ids = $this->ControllerAction->paramsDecode($modelId);
+            //$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+            //$idKey[$model->aliasField('student_id')] = $userId;
+            //$exists = $model->exists($idKey);
+
+            //if (in_array($model->alias(), ['Students'])) {
+            //$params[$model->aliasField('guardian_id')] = $userId;
+            //$exists = $model->exists($params);
+            //}
+            /**
+             * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
+             */
+            //if (!$exists) {
+            //$this->Alert->warning('general.notExists');
+            //return $this->redirect(['plugin' => 'Profile', 'controller' => 'Profiles', 'action' => $alias]);
+            //}
+            //}
+        }
+    }
+
+    public
+    function beforePaginate(EventInterface $event, Table $model, Query $query, ArrayObject $options)
+    {
+        $loginUserId = $this->Auth->user('id'); // login user
+        $action = $this->request->getParam('action');
+        $session = $this->request->getSession();
+        //POCOR-7485 this code resolve the issue when login user not able to see his nationalities record
+        if($this->request->getAttribute('params')['controller'] == 'Profiles' && $this->request->getAttribute('params')['action'] == 'Nationalities' && $model->hasField('security_user_id')){
+            $query->where([$model->aliasField('security_user_id') => $loginUserId]);
+            return $query;
+        }//POCOR-7485 ends
+        if ($model->hasField('security_user_id')) {
+            $studentId = $session->read('Student.Students.id');
+            if (!empty($studentId)) {
+                /**
+                 * Need to add current login id as param when no data found in existing variable
+                 * @author Anand Malvi <anand.malvi@mail.valuecoders.com>
+                 * @ticket POCOR-6548
+                 */
+                //# START: [POCOR-6548] Check if user data not found then add current login user data
+                if (is_int($studentId)) {
+                    $sId = $studentId;
+                } else if ($studentId == null || empty($studentId) || $studentId == '') {
+                    $sId = $loginUserId;
+                } else {
+                    $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                }
+                //# END: [POCOR-6548] Check if user data not found then add current login user data
+                $query->where([$model->aliasField('security_user_id') => $sId]);
+            } else {
+                $query->where([$model->aliasField('security_user_id') => $loginUserId]);
+            }
+        } else if ($model->hasField('student_id')) {
+            if ($action == 'ProfileStudentUser' || $action == 'StudentProgrammes' || $action == 'StudentTextbooks') {
+                if ($session->read('Auth.User.is_guardian') == 1) {
+                    $studentId = $session->read('Student.ExaminationResults.student_id');
+                } else {
+                    $studentId = $session->read('Student.Students.id');
+                }
+                if (!empty($studentId)) {
+                    if ($studentId['id']) {
+                        $sId = $this->ControllerAction->paramsDecode($studentId)['id'];
+                        $query->where([$model->aliasField('student_id') => $sId]);
+                    } else {
+                        $query->where([$model->aliasField('student_id') => $studentId]);
+                    }
+                } else {
+                    $query->where([$model->aliasField('student_id') => $loginUserId]);
+                }
+            }
+        } else if ($model->hasField('staff_id') && $model->alias != 'StudentCompetencies') {
+            $query->where([$model->aliasField('staff_id') => $loginUserId]);
+        } else if ($model->hasField('applicant_id')) {
+            $query->where([$model->aliasField('applicant_id') => $loginUserId]);
+        }
+    }
+
+    public function beforeRender(EventInterface $event)
+    {
+        parent::beforeRender($event);
+        $this->viewBuilder()->addHelper('ControllerAction.ControllerAction');
+
+    }
+
+    public
+    function beforeQuery(EventInterface $event, Table $model, Query $query, ArrayObject $extra)
+    {
+        $this->beforePaginate($event, $model, $query, $extra);
+    }
+
+    public
+    function getImage($id)
+    {
+        $this->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+        $this->Image->getUserImage($id);
+    }
+    // POCOR-8334 start
+    public function PersonalDashboard($action, $encodedParam)
+    {
+        if (!$action) {
+            return;
+        }
+        if (!$encodedParam) {
+            return;
+        }
+//        echo "<pre>"; print_r($encodedParam);
+//        die;
+
+        $hasPermission = $this->AccessControl->check(['Profiles', 'PersonalDashboard', 'view']);
+        $params = $this->paramsDecode($encodedParam);
+        $header = 'Profile Dashboard';
+        $this->set('haveProfilePermission', $hasPermission);
+        //POCOR-8334-START
+
+        $session = $this->request->getSession();
+        $userName = $session->read('Auth.User.name');
+        $this->set('userName', $userName);
+        //POCOR-8334-END
+        $userID = $params['id'];
+        // $this->ControllerAction->model->action = $this->request->action;
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $currentPeriod = $AcademicPeriods->getCurrent();
+        //POCOR-7733 start
+        $session->write('AcademicPeriod.currentAcademicPeriod', $currentPeriod);
+        $session->write('AcademicPeriod.currentAcademicPeriodName', $AcademicPeriods->get($currentPeriod)->name);
+        //POCOR-7733 end
+        if (empty($currentPeriod)) {
+            $this->Alert->warning('Institution.Institutions.academicPeriod');
+        }
+
+//         $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
+        $highChartDatas = [];
+        $profileData = $this->getPersonalProfileCompletenessData($userID);
+        $this->set('personalProfileCompletness', $profileData);
+        $this->set('highChartDatas', $highChartDatas);
+        $indexDashboard = 'dashboard';
+        $this->set('mini_dashboard', [
+            'name' => $indexDashboard,
+            'data' => [
+                'model' => 'staff',
+                'modelCount' => 25,
+                'modelArray' => []]
+        ]);
+
+        //        $this->log('dashboard', 'debug');
+    }
+    // POCOR-8334 end
+    public
+    function getUserTabElements($options = [])
+    {
+        if (array_key_exists('queryString', $this->request->getQuery())) { //to filter if the URL already contain querystring
+            $id = $this->ControllerAction->getQueryString('security_user_id');
+        }
+
+        $plugin = $this->plugin;
+        $name = $this->name;
+
+        $id = (isset($options['id'])) ? $options['id'] : $this->Auth->user('id');
+
+        $tabElements = [
+            $this->name => ['text' => __('Overview')],
+            'Accounts' => ['text' => __('Account')],
+            'Demographic' => ['text' => __('Demographic')],
+            'Identities' => ['text' => __('Identities')],
+            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
+            'Contacts' => ['text' => __('Contacts')],
+            'Languages' => ['text' => __('Languages')],
+            'Attachments' => ['text' => __('Attachments')],
+            'Comments' => ['text' => __('Comments')],
+            'History' => ['text' => __('History')]
+        ];
+
+        foreach ($tabElements as $key => $value) {
+            if ($key == $this->name) {
+                $tabElements[$key]['url']['action'] = 'Personal';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+
+            } else if ($key == 'Accounts') {
+                $tabElements[$key]['url']['action'] = 'Accounts';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+            } else {
+                $actionURL = $key;
+                if ($key == 'UserNationalities') {
+                    $actionURL = 'Nationalities';
+                }
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
+                    'plugin' => $plugin,
+                    'controller' => $name,
+                    'action' => $actionURL,
+                    'index'],
+                    ['security_user_id' => $id]
+                );
+            }
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public
+    function getAcademicTabElements($options = [])
+    {
+        $session = $this->request->getSession();
+        if ($session->read('Auth.User.is_guardian') == 1) {
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        } else {
+            $studentId = $this->request->getParam('pass')[1];
+        }
+        $id = (isset($options['id'])) ? $options['id'] : 0;
+        $type = (isset($options['type'])) ? $options['type'] : null;
+        $tabElements = [];
+        $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+        $plugin = $this->getPlugin();
+        $studentTabElements = [
+            'Programmes' => ['text' => __('Programmes')],
+            'Classes' => ['text' => __('Classes')],
+            'Subjects' => ['text' => __('Subjects')],
+            'Absences' => ['text' => __('Absences')],
+            'Behaviours' => ['text' => __('Behaviours')],
+            'Outcomes' => ['text' => __('Outcomes')],
+            'Competencies' => ['text' => __('Competencies')],
+            'Assessments' => ['text' => __('Assessments')],
+            //'Results' => ['text' => __('Assessments')],
+            'ExaminationResults' => ['text' => __('Examinations')],
+            'ReportCards' => ['text' => __('Report Cards')],
+            'StudentGpa' => ['text' => __('GPA')], //POCOR-8222
+            'Awards' => ['text' => __('Awards')],
+            //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7413
+            'Textbooks' => ['text' => __('Textbooks')],
+            'Risks' => ['text' => __('Risks')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
+            'Curriculars' => ['text' => __('Curriculars')] //POCOR-6673
+        ];
+
+        $tabElements = array_merge($tabElements, $studentTabElements);
+
+        foreach ($studentTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => 'Student' . $key, 'index', $studentId, 'type' => $type]);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+    // POCOR-8039-start
+    /**
+     * Get personal profile completeness data
+     * @return array
+     */
+    public
+    function getPersonalProfileCompletenessData($userID)
+    {
+        $data = array();
+        $profileComplete = 0;
+        //Overview
+        $usersData['Overview'] = $this->getLastData(
+            $userID,
+            'security_users', 'id'
+        );
+        $usersData['Nationalities'] = $this->getLastData(
+            $userID,
+            'user_nationalities',
+            'security_user_id');
+        $usersData['Identities'] = $this->getLastData(
+            $userID,
+            'user_identities',
+            'security_user_id');
+        $usersData['Contacts'] = $this->getLastData(
+            $userID,
+            'user_contacts',
+            'security_user_id');
+        $usersData['Languages'] = $this->getLastData(
+            $userID,
+            'user_languages',
+            'security_user_id');
+        $usersData['Demographic'] = $this->getLastData(
+            $userID,
+            'user_demographics',
+            'security_user_id');
+        $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $enabledTypeList = $ConfigItem
+            ->find()
+            ->select(['name' => $ConfigItem->aliasField('name')])
+            ->order('label')
+            ->where([
+                $ConfigItem->aliasField('visible') => 1,
+                $ConfigItem->aliasField('value') => 1,
+                $ConfigItem->aliasField('type') => 'Personal Data Completeness'])//POCOR-6022
+            ->toArray();
+        $singleData = null;
+        foreach ($enabledTypeList as $key => $enabled) {
+            $data[$key]['feature'] = $enabled->name;
+            $singleData = $usersData[$enabled->name];
+            if (!empty($singleData)) {
+                $profileComplete = $profileComplete + 1;
+                $data[$key]['complete'] = 'yes';
+                $data[$key]['modifiedDate'] = ($singleData->modified) ? date("F j,Y", strtotime($singleData->modified)) : date("F j,Y", strtotime($singleData->created));
+            } else {
+                $data[$key]['complete'] = 'no';
+                $data[$key]['modifiedDate'] = 'Not updated';
+            }
+        }
+        $totalProfileComplete = count($data);
+        if($totalProfileComplete != 0){
+            $profilePercentage = 100 / $totalProfileComplete * $profileComplete;
+            $profilePercentage = round($profilePercentage);
+            $data['percentage'] = $profilePercentage;
+        }
+        return $data;
+    }
+
+// For staff
+
+    /**
+     * @param $userID
+     * @param $tableName
+     * @param $fieldName
+     * @return mixed
+     */
+
+    public function getLastData($userID, $tableName, $fieldName)
+    {
+        $table = $this->getDynamicTableInstance($tableName);
+        $usersData = $table->find()
+            ->select([
+                'created' => $table->aliasField('created'),
+                'modified' => $table->aliasField('modified'),
+            ])
+            ->where([$table->aliasField($fieldName) => $userID])
+            ->orderDesc($table->aliasField('modified'))
+            ->limit(1)
+            ->first();
+
+        return $usersData;
+    }
+    public
+    function getDynamicTableInstance($tableName)
+    {
+
+        // Convert the table name to camel case as expected by CakePHP conventions
+        $tableAlias = \Cake\Utility\Inflector::camelize($tableName);
+
+        // Create a TableLocator instance
+        $locator = TableRegistry::getTableLocator();
+
+        // Check if the table instance already exists
+        if (!$locator->exists($tableAlias)) {
+            // Configure a new table instance
+            $locator->setConfig($tableAlias, [
+                'table' => $tableName,
+                'alias' => $tableAlias,
+                'className' => 'Cake\ORM\Table', // Use the generic Table class
+            ]);
+        }
+
+
+        // Return the table instance
+        return $locator->get($tableAlias);
+    }
+
+    // POCOR-8039-end
+    public
+    function getFinanceTabElements($options = [])
+    {
+        $type = (isset($options['type'])) ? $options['type'] : null;
+        $plugin = $this->getPlugin();
+        $name = $this->getName();
+        $tabElements = [];
+        $studentUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+        $studentTabElements = [
+            'BankAccounts' => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentBankAccounts', 'type' => $type],
+                'text' => __('Bank Accounts')
+            ],
+            'StudentFees' => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'StudentFees', 'type' => $type],
+                'text' => __('Fees')
+            ],
+        ];
+
+        foreach ($studentTabElements as $key => $tab) {
+            $studentTabElements[$key]['url'] = array_merge($studentTabElements[$key]['url'], ['type' => $type]);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+// For staff
+    public
+    function getCareerTabElements($options = [])
+    {
+        $type = (isset($options['type'])) ? $options['type'] : null;
+        $tabElements = [];
+        $staffUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+        $studentTabElements = [
+            'EmploymentStatuses' => ['text' => __('Statuses')],
+            'Positions' => ['text' => __('Positions')],
+            'Classes' => ['text' => __('Classes')],
+            'Subjects' => ['text' => __('Subjects')],
+            'Leave' => ['text' => __('Leave')],
+            'Attendances' => ['text' => __('Attendances')],
+            'Behaviours' => ['text' => __('Behaviours')],
+            'Appraisals' => ['text' => __('Appraisals')],
+            'Duties' => ['text' => __('Duties')],
+            'Associations' => ['text' => __('Houses')], //POCOR-7938
+            'Curriculars' => ['text' => __('Curriculars')],//POCOR-6673
+        ];
+
+        $tabElements = array_merge($tabElements, $studentTabElements);
+
+        foreach ($studentTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff' . $key, 'type' => 'staff']);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public
+    function getProfessionalTabElements($options = [])
+    {
+        $session = $this->request->getSession();
+        $isStudent = $session->read('Auth.User.is_student');
+        $isStaff = $session->read('Auth.User.is_staff');
+
+        $tabElements = [];
+        $profileUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+
+        if ($isStaff) {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
+                //'Extracurriculars' => ['text' => __('Extracurriculars')],//POCOR-7513
+                'Memberships' => ['text' => __('Memberships')],
+                'Licenses' => ['text' => __('Licenses')],
+                'Awards' => ['text' => __('Awards')],
+            ];
+        } else if ($isStudent) {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
+            ];
+        } else {
+            $professionalTabElements = [
+                'Employments' => ['text' => __('Employments')],
+                'Qualifications' => ['text' => __('Qualifications')],
+            ];
+        }
+        $tabElements = array_merge($tabElements, $professionalTabElements);
+
+        foreach ($professionalTabElements as $key => $tab) {
+            if ($key != 'Employments') {
+                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => 'Staff' . $key, 'index']);
+            } else {
+                $tabElements[$key]['url'] = array_merge($profileUrl, ['action' => $key, 'index']);
+            }
+        }
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public
+    function getStaffFinanceTabElements($options = [])
+    {
+        $type = (isset($options['type'])) ? $options['type'] : null;
+        $tabElements = [];
+        $staffUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+        $staffTabElements = [
+            'BankAccounts' => ['text' => __('Bank Accounts')],
+            'Salaries' => ['text' => __('Salaries')],
+            'Payslips' => ['text' => __('Payslips')],
+        ];
+
+        $tabElements = array_merge($tabElements, $staffTabElements);
+
+        foreach ($staffTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => 'Staff' . $key, '?' => ['type' => 'staff']]);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public
+    function getTrainingTabElements($options = [])
+    {
+        $tabElements = [];
+        $staffUrl = ['plugin' => 'Profile', 'controller' => 'Profiles'];
+        $studentTabElements = [
+            'TrainingNeeds' => ['text' => __('Training Needs')],
+            'StaffTrainingApplications' => ['text' => __('Applications')],
+            'TrainingResults' => ['text' => __('Training Results')],
+            'Courses' => ['text' => __('Courses')],
+        ];
+
+        $tabElements = array_merge($tabElements, $studentTabElements);
+
+        foreach ($studentTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
+        }
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public
+    function getCompetencyTabElements($options = [])
+    {
+        $queryString = $this->request->getQuery('queryString');
+
+        $tabElements = [
+            'Competencies' => [
+                'url' => ['plugin' => 'Student',
+                    'controller' => 'Students',
+                    'action' => 'StudentCompetencies',
+                    'view',
+                    '?' => ['queryString' => $queryString]],  // POCOR-8074-QueryStringProfile
+                'text' => __('Items')
+            ]
+        ];
+
+        return $this->TabPermission->checkTabPermission($tabElements);
+    }
+
+    public function ScheduleTimetable()
+    {
+        $userId = $this->Auth->user('id');
+
+        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+
+        $InstitutionStaff = $InstitutionStaff
+            ->find()
+            ->where([
+                'InstitutionStaff.staff_id' => $userId,
+                'InstitutionStaff.staff_status_id' => self::APPROVED
+            ])
+            ->enableHydration(false)
+            ->first();
+
+        $institutionId = $InstitutionStaff['institution_id'];
+
+        $selectedInstitutionOptions = $Institutions
+            ->find('list', [
+                'keyField' => 'id',
+                'valueField' => 'name'
+            ])
+            ->select([
+                'id' => $Institutions->aliasField('id'),
+                'name' => $Institutions->aliasField('name'),
+            ]);
+
+        if ($institutionId === null) {
+            $selectedInstitutionOptions = $selectedInstitutionOptions->where([
+                $Institutions->aliasField('id IS') => null,
+            ]);
+        } else {
+            $selectedInstitutionOptions = $selectedInstitutionOptions->where([
+                $Institutions->aliasField('id') => $institutionId,
+            ]);
+        }
+
+        $selectedInstitutionOptions = $selectedInstitutionOptions->enableHydration(false)->toArray();
+
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
+            ->getCurrent();
+        $academicPeriodOptions = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
+            ->getYearList();
+
+        $shiftOptions = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals')
+            ->getStaffShiftOptions($academicPeriodId, false, $institutionId);
+        $intervals = TableRegistry::getTableLocator()->get('Schedule.ScheduleIntervals');
+
+        $conditions = [
+            $intervals->aliasField('academic_period_id') => $academicPeriodId,
+        ];
+
+        if ($institutionId === null) {
+            $conditions[$intervals->aliasField('institution_id IS')] = null;
+        } else {
+            $conditions[$intervals->aliasField('institution_id')] = $institutionId;
+        }
+
+        $scheduleIntervals = $intervals->find('list')
+            ->where($conditions)
+            ->toArray();
+
+        $this->set('userId', $userId);
+        $this->set('selectedInstitutionOptions', $selectedInstitutionOptions);
+        $this->set('scheduleIntervals', $scheduleIntervals);
+        $scheduleIntervalDefaultId = (!empty($this->request->getQuery('schedule_interval_id'))) ? $this->request->getQuery('schedule_interval_id') : key($scheduleIntervals);
+        $this->set('scheduleIntervalDefaultId', $scheduleIntervalDefaultId);
+        $this->set('shiftOptions', $shiftOptions);
+        $shiftDefaultId = (!empty($this->request->getQuery('shift'))) ? $this->request->getQuery('shift') : key($shiftOptions);
+        $this->set('academicPeriodId', $academicPeriodId);
+        $this->set('academicPeriodName', $academicPeriodOptions[$academicPeriodId]);
+        $this->set('shiftDefaultId', $shiftDefaultId);
+        $this->set('institutionDefaultId', key($selectedInstitutionOptions));
+        $this->set('ngController', 'TimetableCtrl as $ctrl');
+    }
+
+
+    public
+    function StudentScheduleTimetable()
+    {
+        $userId = $this->Auth->user('id');
+
+        $InstitutionStudents =
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStudents')
+                ->find()
+                ->where([
+                    'InstitutionStudents.student_id' => $userId
+                ])
+                ->enableHydration(false)
+                ->first();
+
+        $institutionId = $InstitutionStudents['institution_id'];
+        $academicPeriodId = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')
+            ->getCurrent();
+
+        $InstitutionClassStudentsResult =
+            TableRegistry::getTableLocator()->get('Institution.InstitutionClassStudents')
+                ->find()
+                ->where([
+                    'academic_period_id' => $academicPeriodId,
+                    'student_id' => $userId,
+                    'institution_id IS' => $institutionId
+                ])
+                ->enableHydration(false)
+                ->first();
+
+        $institutionClassId = $InstitutionClassStudentsResult['institution_class_id'];
+        if ($institutionClassId !== null) {
+        $ScheduleTimetables = TableRegistry::getTableLocator()->get('Schedule.ScheduleTimetables')
+            ->find()
+            ->where([
+                'academic_period_id' => $academicPeriodId,
+                'institution_class_id' => $institutionClassId,
+                'institution_id' => $institutionId,
+                'status' => 2
+            ])
+            ->enableHydration(false)
+            ->first();
+        }
+        $this->set('userId', $userId);
+        $timetable_id = (isset($ScheduleTimetables['id'])) ? $ScheduleTimetables['id'] : 0;
+        $this->set('timetable_id', $timetable_id);
+        $this->set('academicPeriodId', $academicPeriodId);
+        $this->set('institutionDefaultId', $institutionId);
+        $this->set('ngController', 'StudentTimetableCtrl as $ctrl');
+    }
+
+    /*POCOR-6286 starts - registering function*/
+    public
+    function StaffProfiles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StaffProfiles']);
+    }
+
+    public
+    function StudentProfiles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.StudentProfiles']);
+    }
+
+    /*POCOR-6286 ends*/
+
+    /*POCOR-6700 start - registering function*/
+    public
+    function StudentExtracurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Extracurriculars']);
+    }
+
+    /*POCOR-6700 ends*/
+
+//POCOR-6673
+    public
+    function StudentCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentCurriculars']);
+    }
+
+//POCOR-6673
+    public
+    function StaffCurriculars()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffCurriculars']);
+    }
+
+//POCOR-7439 start
+    public
+    function Cases()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Cases.InstitutionCases']);
+    }
+//POCOR-7439 end
+
+    public function SpecialNeedsDiagnostics()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'SpecialNeeds.SpecialNeedsDiagnostics']);
+    }
+
+    public function ScholarshipApplicationInstitutionChoices()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionChoices']);
+    }
+
+    public function ScholarshipApplicationAttachments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Profile.InstitutionApplicationAttachment']);
+    }
+
+    public function StudentGpa()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
+    }
+}

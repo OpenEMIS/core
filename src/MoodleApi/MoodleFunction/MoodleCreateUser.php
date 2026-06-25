@@ -1,0 +1,154 @@
+<?php
+
+/**
+ * MoodleCreateUser - Handles any moodle's core_user_create_users logic
+ * To be used with MoodleApiComponent
+ *
+ * PHP version 7.2
+ *
+ * @category  API
+ * @package   MoodleApi
+ * @author    Ervin Kwan <ekwan@kordit.com>
+ * @copyright 2018 KORDIT PTE LTD
+ */
+
+namespace App\MoodleApi\MoodleFunction;
+
+use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
+
+class MoodleCreateUser extends MoodleFunction
+{
+    protected static $functionParam = "core_user_create_users";
+    protected static $listFunctionParam = "core_user_get_users";
+
+    protected static $allowedParams  //POCOR-8706
+    = [
+        "username",
+        "password",
+        "createpassword",
+        "firstname",
+        "lastname",
+        "email",
+        "auth",
+        "idnumber",
+        "lang",
+        "calendartype",
+        "theme",
+        "timezone",
+        "mailformat",
+        "description",
+        "city",
+        "country",
+        "firstnamephonetic",
+        "lastnamephonetic",
+        "middlename",
+        "alternatename"
+    ];
+
+    protected static $mandatoryParams //POCOR-8706
+    = [
+        "username",
+        "firstname",
+        "lastname",
+        "email"
+    ];
+
+    private $openemis_no;
+
+    /**
+     * Converts data array into moodle restful format
+     *
+     * @return null
+     */
+    protected function convertDataToParam()
+    {
+        $this->data = [0 => $this->data];
+        $this->data = ["users" => $this->data];
+    }
+
+    /**
+     * Converts an entity object into array data and stores in $this->data
+     *
+     * @param object $entity - \User\Model\Entity\User
+     *
+     * @return null
+     */
+    protected function convertEntityToData($entity)
+    {
+        if (!$entity instanceof \User\Model\Entity\User) {
+            $this->setError("Entity Datatype is not \User\Model\Entity\User");
+        }
+
+        $this->openemis_no = $entity->openemis_no;
+
+        $users = array();
+        $users["username"] = $entity->username;
+        $users["password"] = $this->generatePassword();
+        $users["firstname"] = $entity->first_name;
+        $users["lastname"] = $entity->last_name;
+        //TOOD - Hardcode for now first
+        $users["email"] = $entity->openemis_no . "@kordit.com";
+        $this->data = $users;
+    }
+
+    /**
+     * Generate password based on a certain hardcoded pattern.
+     * To create a system configuration such that user can define the pattern.
+     *
+     * @param object $entity - \User\Model\Entity\User
+     *
+     * @return string - password
+     */
+    private function generatePassword()
+    {
+        return $this->openemis_no . "_Moodle";
+    }
+
+    //change in POCOR-8381
+    public function linkMoodletoOpenEmis($moodleId, $moodleUsername)
+    {
+        $MoodleApiCreatedUsers = TableRegistry::getTableLocator()->get("MoodleApi.MoodleApiCreatedUsers");
+        $SecurityUsers = TableRegistry::getTableLocator()->get("Security.Users");
+
+        // Assuming $this->openemis_no is the value for core_user_id
+        $openemis_no = $this->openemis_no;
+
+        // Check if the openemis_no exists in the security_users table
+        if (!$SecurityUsers->exists(['openemis_no' => $openemis_no])) {
+            // Handle the case where the openemis_no does not exist
+            Log::write('debug', "The openemis_no $openemis_no does not exist in the security_users table.");
+            return false;
+        }
+
+        $coreUser = $SecurityUsers->find()
+            ->where(['openemis_no' => $openemis_no])
+            ->first();
+
+        if (!$coreUser) {
+            Log::write('debug', "No user found with openemis_no $openemis_no in the security_users table.");
+            return false;
+        }
+        
+        $coreUserId = $coreUser->id;
+        $instance = $MoodleApiCreatedUsers->newEntity([
+            'moodle_user_id' => $moodleId,
+            'moodle_username' => $moodleUsername,
+            'core_user_id' => $coreUserId
+        ]);
+
+
+        if ($MoodleApiCreatedUsers->save($instance)) {
+            Log::write('debug', "Successfully linked Moodle user $moodleUsername with OpenEmis user ID $coreUserId.");
+            return true;
+        } else {
+            Log::write('debug', "Failed to link Moodle user $moodleUsername with OpenEmis user ID $coreUserId.");
+            return false;
+        }
+    }
+
+    public static function getListFunctionParam()
+    {
+        return self::$listFunctionParam;
+    }
+}

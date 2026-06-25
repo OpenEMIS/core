@@ -1,0 +1,12 @@
+/* KDX-CHARTS v.1.0.0 */
+.kdx-charts .chart-container {
+    position: relative;
+    top: unset;
+    left: unset;
+    right: unset;
+    bottom: unset;
+}
+
+.kdx-charts .chart-container div {
+    height: auto;
+}

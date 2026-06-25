@@ -1,0 +1,73 @@
+/* TIME SLIDER v.1.0.0 */
+
+.slider-container {
+    min-height: 95px !important;
+}
+
+.time-slider .form-control {
+    display: inline-block;
+    width: -webkit-calc(100% - 38px);
+    width: -moz-calc(100% - 38px);
+    width: calc(100% - 38px);
+    background-color: transparent;
+    border-color: transparent;
+    padding: 0 35px 0 15px;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.time-slider .slider.slider-horizontal .slider-track {
+    height: 10px !important;
+    border: 1px solid #CCC;
+}
+
+.time-slider .slider-handle {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.time-slider .slider-handle.custom,
+.time-slider .slider.slider-disabled .slider-handle.custom {
+    background: transparent none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+.time-slider .slider-handle.custom:before {
+    display: block;
+    content: "";
+    width: 10px;
+    height: 20px;
+    background-color: #990000;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+    -moz-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #6B0000;
+    text-align: center;
+    margin-left: 5px;
+    margin-top: -1px;
+}
+
+.time-slider .slider-selection {
+    background-image: none !important;
+}
+
+.time-slider .tooltip-inner,
+.time-slider .tooltip-arrow {
+    background-color: transparent !important;
+    border-bottom-color: transparent !important;
+    color: #444 !important;
+    font-weight: bold;
+    padding-top: 0 !important;
+}
+
+
+/* RTL */
+
+.rtl .time-slider .form-control {
+    padding: 0 15px 0 35px;
+}

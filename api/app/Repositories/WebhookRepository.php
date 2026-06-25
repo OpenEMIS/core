@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use JWTAuth;
+use App\Models\Webhooks;
+use App\Models\WebhookEvents;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use App\Services\OpenemisRuntime\TasksRecorder; //POCOR-9694
+
+
+class WebhookRepository extends Controller
+{
+    protected $eventKey;
+
+    public function __construct(array $eventKey = ['attendance_update']) {
+        $this->eventKey = $eventKey;
+    }
+
+    public function getEventKeys() {
+        return $this->eventKey;
+    }
+
+    const ACTIVE = 1;
+    public function handleWebhookRequest($request)
+    {
+        try {
+            $eventKey = $this->eventKey[0];
+            $webhooks = Webhooks::query()
+            ->join('webhook_events', 'webhooks.id', '=', 'webhook_events.webhook_id') // Replace 'webhook_events.webhook_id' with the correct foreign key
+            ->where('webhook_events.event_key', trim($eventKey))
+            ->where('webhooks.status', self::ACTIVE) // Assuming Webhook::ACTIVE is defined as a constant in your model
+            ->get();
+
+
+            //POCOR-9694: enqueue webhooks into webhook_queue + dual-write to OpenEMIS Tasks
+            //  Replaces the prior fire-and-forget exec() pattern. The OpenEMIS Runtime
+            //  (php artisan openemis-core:run, every minute) drains webhook_queue.
+            $recorder = app(TasksRecorder::class); //POCOR-9694
+            $payload = is_array($request) || is_object($request) //POCOR-9694
+                ? json_encode($request)
+                : (string) $request;
+
+            foreach ($webhooks as $webhook) {
+                try {
+                    //POCOR-9694: primary write — webhook_queue is authoritative for execution
+                    $queueId = DB::table('webhook_queue')->insertGetId([
+                        'webhook_id' => $webhook->id ?? null,
+                        'event_key' => $eventKey,
+                        'target_url' => $webhook->url,
+                        'http_method' => $webhook->method ?? 'POST',
+                        'payload' => $payload,
+                        'status' => 0,
+                        'retry_count' => 0,
+                        'max_retries' => 3,
+                        'available_at' => Carbon::now(),
+                        'created' => Carbon::now(),
+                    ]);
+
+                    //POCOR-9694: dual-write to OpenEMIS Tasks abstraction (never throws back)
+                    $recorder->recordEnqueue(
+                        'webhook',
+                        ['event_key' => $eventKey, 'target_url' => $webhook->url, 'http_method' => $webhook->method ?? 'POST'],
+                        'webhook_queue',
+                        (int) $queueId
+                    );
+
+                    Log::info("[POCOR-9694] Webhook enqueued: {$webhook->url} (webhook_queue.id={$queueId})");
+                } catch (\Exception $ex) {
+                    Log::error('[POCOR-9694] Exception when enqueuing webhook: ' . $ex->getMessage());
+                }
+            }
+            return $webhooks;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Students List Not Found');
+        }
+    }
+}

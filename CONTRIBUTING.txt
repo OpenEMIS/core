@@ -1,0 +1,16 @@
+CONTRIBUTING TO OPENEMIS
+========================
+
+OpenEMIS was originally developed by UNESCO. OpenEMIS is a result of 
+contributions from many people around the world including staff from ministries
+of education, teachers, designers, developers, testers, translators and other 
+stakeholders. 
+
+You are very welcome to join us and contribute to the project. There are many 
+ways you can help, not only with coding.
+
+OpenEMIS is open to community code contributions, though all code must go
+through design reviews, code reviews, manual testing, integration testing,
+and automated testing.
+
+Please contact support@openemis.org for further information on contributing to OpenEMIS.

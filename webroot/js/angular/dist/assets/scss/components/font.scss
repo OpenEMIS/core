@@ -1,0 +1,17 @@
+@charset "UTF-8";
+
+/* Font V1.0.0 */
+
+.default-font-size {
+    font-size: $bodyTextSize;
+}
+
+.font-containter {
+    display: block;
+}
+
+.font-containter:after {
+    clear: both;
+    content: "";
+    display: block;
+}

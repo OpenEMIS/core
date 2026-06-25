@@ -1,0 +1,508 @@
+<?php
+namespace Examination\Model\Table;
+
+use ArrayObject;
+use Cake\Event\EventInterface;
+use Cake\Http\ServerRequest;
+use Cake\Validation\Validator;
+use Cake\Controller\Component;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
+use Cake\Log\Log;
+use App\Model\Table\ControllerActionTable;
+
+class ExaminationCentresExaminationsTable extends ControllerActionTable
+{
+    private $queryString;
+    private $examCentreId;
+
+    public function initialize(array $config): void
+    {
+
+        parent::initialize($config);
+        $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
+        $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
+// POCOR-8919 removed academic period
+        $this->belongsToMany('ExaminationSubjects', [
+            'className' => 'Examination.ExaminationSubjects',
+            'joinTable' => 'examination_centres_examinations_subjects',
+            'foreignKey' => ['examination_centre_id', 'examination_id'],
+            'targetForeignKey' => 'examination_subject_id',
+            'through' => 'Examination.ExaminationCentresExaminationsSubjects',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->belongsToMany('LinkedInstitutions', [
+            'className' => 'Institution.Institutions',
+            'joinTable' => 'examination_centres_examinations_institutions',
+            'foreignKey' => ['examination_centre_id', 'examination_id'],
+            'targetForeignKey' => 'institution_id',
+            'through' => 'Examination.ExaminationCentresExaminationsInstitutions',
+            'dependent' => true
+        ]);
+        $this->belongsToMany('Invigilators', [
+            'className' => 'User.Users',
+            'joinTable' => 'examination_centres_examinations_invigilators',
+            'foreignKey' => ['examination_centre_id', 'examination_id'],
+            'targetForeignKey' => 'invigilator_id',
+            'through' => 'Examination.ExaminationCentresExaminationsInvigilators',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->belongsToMany('Students', [
+            'className' => 'User.Users',
+            'joinTable' => 'examination_centre_examinations_students',
+            'foreignKey' => ['examination_centre_id', 'examination_id'],
+            'targetForeignKey' => 'student_id',
+            'through' => 'Examination.ExaminationCentresExaminationsStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['index']
+        ]);
+        $this->addBehavior('CompositeKey');
+        $this->setDeleteStrategy('restrict');
+        $this->toggle('edit', false);
+        $this->toggle('view', false);
+        $this->toggle('search', false);
+    }
+
+    /*public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->requirePresence('examination_centres', 'create')
+            ->requirePresence('examination_id')
+            ->requirePresence('academic_period_id');
+
+        return $validator;
+    }*/
+
+    public function validationAllExaminationCentres(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->requirePresence('examination_centres', false)
+            ->remove('examination_centres');
+        return $validator;
+    }
+
+    public function implementedEvents(): array {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(EventInterface $event, ServerRequest $request, Component $Navigation, $persona)
+    {
+        if ($this->action != 'add') {
+            $queryString = $this->request->getQuery['queryString'];
+            $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
+            $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
+
+            $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+            $Navigation->substituteCrumb('Exam Centre Exams', 'Exam Centres', $overviewUrl);
+            $Navigation->addCrumb('Examinations');
+
+        } else {
+            $Navigation->substituteCrumb('Exam Centre Exams', 'Link Examination');
+        }
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        if ($this->action != 'add') {
+            $this->controller->getExamCentresTab();
+            $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+            if($this->examCentreId == null){
+                $this->examCentreId = 1;
+            }
+            // Set the header of the page
+            $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+            $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Examinations'));
+
+        } else {
+            $this->controller->set('contentHeader', __('Examination'). ' - ' .__('Link Examination'));
+        }
+    }
+
+    public function afterAction(EventInterface $event, ArrayObject $extra)
+    {
+        if ($this->action != 'add' && is_null($this->examCentreId)) {
+            $event->stopPropagation();
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
+        }
+    }
+
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        if (isset($extra['toolbarButtons']['add'])) {
+            unset($extra['toolbarButtons']['add']);
+        }
+
+        $this->field('examination_id', ['type' => 'integer', 'sort' => ['field' => 'Examinations.name']]);
+        $this->field('education_grade_id');
+        $this->field('registration_start_date', ['type' => 'date']);
+        $this->field('registration_end_date', ['type' => 'date']);
+// POCOR-8919 removed academic period
+        $this->setFieldOrder([
+            'examination_id', 'education_grade_id', 'registration_start_date', 'registration_end_date', 'total_registered']);
+
+        // Start POCOR-5188
+		$is_manual_exist = $this->getManualUrl('Administration','Exam Centre Exams','Examinations');
+		if(!empty($is_manual_exist)){
+			$btnAttr = [
+				'class' => 'btn btn-xs btn-default icon-big',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false,
+				'target'=>'_blank'
+			];
+
+			$helpBtn['url'] = $is_manual_exist['url'];
+			$helpBtn['type'] = 'button';
+			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+			$helpBtn['attr'] = $btnAttr;
+			$helpBtn['attr']['title'] = __('Help');
+			$extra['toolbarButtons']['help'] = $helpBtn;
+		}
+		// End POCOR-5188
+    }
+
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        // sort
+        $sortList = ['Examinations.name'];
+        if (isset($extra['options']['sortWhitelist']) && is_array($extra['options']['sortWhitelist'])) { //POCOR-8800
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        $query
+            ->contain(['Examinations.EducationGrades'])
+            ->where([$this->aliasField('examination_centre_id') => $this->examCentreId]);
+
+        $extra['auto_contain_fields'] = ['Examinations' => ['registration_start_date', 'registration_end_date']];
+    }
+
+    public function onGetEducationGradeId(EventInterface $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination') && $entity->examination->has('education_grade')) {
+            $value = $entity->examination->education_grade->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetRegistrationStartDate(EventInterface $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination')) {
+            $value = $entity->examination->registration_start_date;
+        }
+
+        return $value;
+    }
+
+    public function onGetRegistrationEndDate(EventInterface $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination')) {
+            $value = $entity->examination->registration_end_date;
+        }
+
+        return $value;
+    }
+
+    public function addBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $extra['redirect']['action'] = 'ExamCentres';
+
+        if (isset($extra['toolbarButtons']['back'])) {
+            $extra['toolbarButtons']['back']['url']['action'] = 'ExamCentres';
+        }
+
+        $this->field('examination_id');
+        $this->field('examination_centre_type');
+        $this->field('link_all_examination_centres');
+        $this->field('examination_centres');
+        $this->fields['total_registered']['visible'] = false;
+// POCOR-8919 removed academic period
+        $this->setFieldOrder([
+            'examination_id', 'examination_centre_type', 'link_all_examination_centres', 'examination_centres']);
+    }
+
+
+    public function onUpdateFieldExaminationId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $todayDate = Time::now();
+
+            $Examinations = $this->Examinations;
+            $examOptions = $Examinations->getExaminationOptions(); // POCOR-8919 removed academic period
+
+            $examinationId = isset($this->request->getData($this->getAlias())['examination_id']) ? $this->request->getData($this->getAlias())['examination_id'] : null;
+            $this->advancedSelectOptions($examOptions, $examinationId, [
+                'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
+                'selectOption' => false,
+                'callable' => function($id) use ($Examinations, $todayDate) {
+                    return $Examinations
+                        ->find()
+                        ->where([
+                            $Examinations->aliasField('id') => $id,
+                            $Examinations->aliasField('registration_end_date >=') => $todayDate
+                        ])
+                        ->count();
+                }
+            ]);
+
+            $attr['type'] = 'select';
+            $attr['options'] = $examOptions;
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldExaminationCentreType(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $typeOptions = $Institutions->Types
+                ->find('list')
+                ->find('visible')
+                ->toArray();
+
+            $attr['options'] = $typeOptions + ['-1' => __('Non-Institution')];
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldLinkAllExaminationCentres(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $examinationId = isset($this->request->getData($this->getAlias())['examination_id']) ? $this->request->getData($this->getAlias())['examination_id'] : 0;
+            $type = isset($this->request->getData($this->getAlias())['examination_centre_type']) ? $this->request->getData($this->getAlias())['examination_centre_type'] : 0;
+
+            $examCentreOptions = $this->ExaminationCentres
+                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId,
+                    'examination_centre_type' => $type])
+                ->count();
+
+            $selectOptions = [];
+            if ($examCentreOptions != 0) {
+                $yesOption = __('Yes') . ' - ' . $examCentreOptions . ' ' . __('examination centres selected');
+                $selectOptions = [0 => __('No'), 1 => $yesOption];
+            }
+
+            $attr['type'] = 'select';
+            $attr['options'] = $selectOptions;
+            $attr['select'] = false;
+            $attr['default'] = 0; // default selected is no
+            $attr['onChangeReload'] = 'changeLinkAllExaminationCentres';
+            return $attr;
+        }
+    }
+
+    public function addOnChangeLinkAllExaminationCentres(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data[$this->getAlias()])) { //POCOR-8800
+            // Check if 'examination_centres' is set within the alias section
+            if (isset($data[$this->getAlias()]['examination_centres'])) {
+                $data[$this->getAlias()]['examination_centres'] = '';
+            }
+        }
+    }
+
+    public function onUpdateFieldExaminationCentres(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $linkAllExaminationCentres = isset($this->request->getData($this->getAlias())['link_all_examination_centres']) ? $this->request->getData($this->getAlias())['link_all_examination_centres'] : 0;
+
+            if ($linkAllExaminationCentres == 1) {
+                $attr['type'] = 'hidden';
+
+            } else {
+                $examinationId = isset($this->request->getData($this->getAlias())['examination_id']) ? $this->request->getData($this->getAlias())['examination_id'] : 0;
+                $type = isset($this->request->getData($this->getAlias())['examination_centre_type']) ? $this->request->getData($this->getAlias())['examination_centre_type'] : 0;
+
+                $examCentreOptions = $this->ExaminationCentres
+                    ->find('NotLinkedExamCentres', ['examination_id' => $examinationId,
+                        'examination_centre_type' => $type])
+                    ->order([$this->ExaminationCentres->aliasField('code')])
+                    ->toArray();
+
+                $attr['type'] = 'chosenSelect';
+                $attr['options'] = $examCentreOptions;
+                $attr['fieldName'] = $this->getAlias().'.examination_centres';
+            }
+
+            return $attr;
+        }
+    }
+
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $requestData[$this->getAlias()]['examination_centre_id'] = 0;
+
+        if ($requestData[$this->getAlias()]['link_all_examination_centres'] == 1) {
+            $patchOptions['validate'] = 'allExaminationCentres';
+        }
+
+        // Subjects logic
+        $examinationId = $requestData[$this->getAlias()]['examination_id'];
+        $ExaminationSubjects = $this->ExaminationSubjects->getExaminationSubjectsubjects($examinationId);
+
+        $examinationCentreSubjects = [];
+        if (is_array($ExaminationSubjects)) {
+            foreach($ExaminationSubjects as $item) {
+                $examinationCentreSubjects[] = [
+                    'id' => $item->item_id,
+                    '_joinData' => [
+                        'education_subject_id' => $item->education_subject_id
+                    ]
+                ];
+            }
+        }
+
+        $requestData[$this->getAlias()]['examination_subjects'] = $examinationCentreSubjects;
+        $patchOptions['associated'] = ['ExaminationSubjects._joinData' => ['validate' => false]];
+    }
+
+    public function addBeforeSave(EventInterface $event, $entity, $requestData, $extra)
+    {
+
+        $process = function ($model, $entity) use ($requestData) {
+            if (isset($requestData[$model->getAlias()]['examination_centres']) && !empty($requestData[$model->getAlias()]['examination_centres'])) {
+
+                $examCentreIds = $requestData[$model->getAlias()]['examination_centres'];
+                $newEntities = [];
+
+                if (is_array($examCentreIds)) {
+                    $patchOptions['associated'] = ['ExaminationSubjects._joinData' => ['validate' => false]];
+
+                    foreach ($examCentreIds as $centreId) {
+                        $requestData[$model->getAlias()]['examination_centre_id'] = $centreId;
+                        $newEntities[] = $model->newEntity($requestData->getArrayCopy(), $patchOptions);
+                    }
+                }
+
+                return $model->saveMany($newEntities);
+
+            } else if (isset($requestData[$model->getAlias()]['link_all_examination_centres']) && $requestData[$model->getAlias()]['link_all_examination_centres'] == 1) {
+
+                if (!empty($requestData[$this->getAlias()]['examination_id'])) {
+                    $examinationId = $requestData[$model->getAlias()]['examination_id'];
+                    $examCentreTypeId = !empty($requestData[$model->getAlias()]['examination_centre_type']) ? $requestData[$model->getAlias()]['examination_centre_type'] : '';
+
+                    $examItems = [];
+                    if (isset($requestData[$model->getAlias()]['examination_subjects'])) {
+                        foreach($requestData[$model->getAlias()]['examination_subjects'] as $obj) {
+                            $examItems[] = [
+                                'examination_subject_id' => $obj['id'],
+                                'education_subject_id' => $obj['_joinData']['education_subject_id']
+                            ];
+                        }
+                    }
+
+                    // put subjects into System Processes params
+                    $SystemProcesses = TableRegistry::getTableLocator()->get('SystemProcesses');
+                    $name = 'LinkAllExamCentres';
+                    $pid = '';
+                    $processModel = $model->getRegistryAlias();
+                    $eventName = '';
+                    $passArray = ['examination_subjects' => $examItems];
+                    $params = json_encode($passArray);
+                    $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+
+                    $this->triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $examCentreTypeId);
+                    $this->Alert->warning($this->aliasField('savingProcessStarted'), ['reset' => true]);
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        return $process;
+    }
+
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [TableRegistry::getTableLocator()->get('Examination.ExaminationCentreRoomsExaminations')];
+        $this->dispatchEventToModels('Model.ExaminationCentreExaminations.afterSave', [$entity], $this, $listeners);
+    }
+
+    public function deleteOnInitialize(EventInterface $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        // populate 'to be deleted' field
+        $exam = $this->Examinations->get($entity->examination_id);
+        $entity->showDeletedValueAs = $exam->code_name;
+
+        $extra['excludedModels'] = [
+            $this->LinkedInstitutions->getAlias(), $this->ExaminationSubjects->getAlias()
+        ];
+    }
+
+    private function triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $examCentreTypeId = null)
+    {
+        $args = '';
+        $args .= !is_null($systemProcessId) ? ''.$systemProcessId : '';
+        $args .= !is_null($examinationId) ? ' '.$examinationId : '';
+        $args .= !is_null($examCentreTypeId) ? ' '.$examCentreTypeId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake LinkAllExamCentres "'.$args.'"';
+        $logs = ROOT . DS . 'logs' . DS . 'LinkAllExamCentres.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when link all exam centres : '. $ex);
+        }
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'examination_id') {
+            return __('Examination');
+        } elseif ($field == 'examination_centre_type') {
+            return __('Examination Centre Type');
+        } elseif ($field == 'institution_type') {
+            return __('Institution Type');
+        } elseif ($field == 'add_all_institutions') {
+            return __('Add All Institutions');
+        } elseif ($field == 'institutions') {
+            return __('Institutions');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }elseif ($field == 'link_all_examination_centres') {
+            return __('Link All Examination Centres');
+        }elseif ($field == 'examination_centres') {
+            return __('Examination Centres');
+        }elseif ($field == 'registration_start_date') {
+            return __('Registration Start Date');
+        }elseif ($field == 'registration_end_date') {
+            return __('Registration Start Date');
+        }elseif ($field == 'education_grade_id') {
+            return __('Education Grade');
+        }elseif ($field == 'total_registered') {
+            return __('Total Registered');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+}

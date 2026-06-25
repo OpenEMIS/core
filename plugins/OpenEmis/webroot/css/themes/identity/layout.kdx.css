@@ -1,0 +1,30 @@
+/* 
+Identity Theme for Kdx: v.1.0.0
+Product Color: #6666FF
+Darker Shade Color: #3333FF
+*/
+
+
+/* PRODUCT COLOR */
+
+.kdx-slider .kdx-slider-track-fill,
+.kdx-slider .kdx-slider-thumb,
+.kdx-slider .kdx-sliderthumb:before,
+.kdx-slider .btn {
+    background-color: #6666FF !important;
+}
+
+
+.kdx-mindmap .kdx-mindmap-node.kdx-mindmap-node-active .kdx-mindmap-node-wrapper,
+.kdx-mindmap .kdx-mindmap-link.kdx-mindmap-link-active {
+    stroke: #6666FF !important;
+}
+
+.kdx-mindmap #arrowEndActive.kdx-mindmap-link-active,
+.kdx-mindmap #arrowStartActive.kdx-mindmap-link-active {
+    fill: #6666FF !important;
+}
+
+.kdx-load-page .kdx-loader {
+    border-top: 5px solid #6666FF !important;
+}

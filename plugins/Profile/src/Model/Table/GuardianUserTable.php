@@ -1,0 +1,156 @@
+<?php
+namespace Profile\Model\Table;
+
+use ArrayObject;
+
+use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Http\ServerRequest;
+use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
+
+use App\Model\Table\AppTable;
+use Directory\Model\Table\DirectoriesTable as UserTable;
+
+class GuardianUserTable extends UserTable
+{
+    public function addAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (!$entity->getErrors()) {
+            $sessionKey = 'Student.Guardians.new';
+            if ($this->Session->check($sessionKey)) {
+                $guardianData = $this->Session->read($sessionKey);
+                $guardianData['guardian_id'] = $entity->id;
+
+                $Guardians = TableRegistry::getTableLocator()->get('Student.Guardians');
+                $Guardians->save($Guardians->newEntity($guardianData));
+                $this->Session->delete($sessionKey);
+            }
+            $event->stopPropagation();
+
+            $controller = $this->controller->getName();
+            $action = 'ProfileGuardians';
+
+            $redirect = ['plugin' => $this->controller->getPlugin(), 'controller' => $controller, 'action' => $action, 'index'];
+
+            return $this->controller->redirect($redirect);
+        }
+    }
+
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $Guardians = TableRegistry::getTableLocator()->get('Profile.Guardians');
+        $params = $this->paramsDecode($this->request->getParam('pass')[1]);
+        $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
+
+        if ($entity->has('guardian_relation_id')) {
+            // Update the guardian_relation table
+            $Guardians->updateAll(
+                ['guardian_relation_id' => $entity->guardian_relation_id],
+                ['id' => $profileGuardianId]
+            );
+        }
+    }
+
+    public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $extra['toolbarButtons']['back']['url']['action'] = 'ProfileGuardians';
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $userType = $this->request->getQuery('user_type');
+        $userType = UserTable::GUARDIAN;
+        $this->field('guardian_relation_id', ['before' => 'openemis_no']);
+    }
+
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->fields['nationality_id']['type'] = 'readonly';
+        if (!empty($entity->main_nationality)) {
+            $this->fields['nationality_id']['attr']['value'] = $entity->main_nationality->name;
+        }
+
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        if (!empty($entity->main_identity_type)) {
+            $this->fields['identity_type_id']['attr']['value'] = $entity->main_identity_type->name;
+        }
+
+        $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+
+        $extra['toolbarButtons']['list']['url']['action'] = 'ProfileGuardians';
+    }
+
+    public function addAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $options['type'] = 'student';
+
+        $this->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
+        $this->field('nationality_id', ['visible' => 'false']);
+        $this->field('identity_type_id', ['visible' => 'false']);
+        $this->field('identity_number', ['visible' => 'false']);
+
+        $extra['toolbarButtons']['back']['url']['action'] = 'ProfileGuardians';
+        $extra['toolbarButtons']['back']['url'][0] = 'add';
+    }
+
+    public function onGetGuardianRelationId(EventInterface $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            $Guardians = TableRegistry::getTableLocator()->get('Profile.Guardians');
+            $GuardianRelations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
+
+            $params = $this->paramsDecode($this->request->getParam('pass')[1]);
+            $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
+
+            if (!is_null($profileGuardianId)) {
+                $guardianRecords = $Guardians->find()
+                    ->contain(['GuardianRelations'])
+                    ->where([$Guardians->aliasField('id') => $profileGuardianId])
+                    ->first();
+
+                $guardianRelationName = $guardianRecords->guardian_relation->name;
+            }
+
+            return $guardianRelationName;
+        }
+    }
+
+    public function onUpdateFieldGuardianRelationId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        $Guardians = TableRegistry::getTableLocator()->get('Profile.Guardians');
+        $GuardianRelations = TableRegistry::getTableLocator()->get('Student.GuardianRelations');
+
+        $attr['type'] = 'select';
+
+        if (!empty($request->getParam('pass')[1]) && ($action == 'add' || $action == 'edit')) {
+            $params = $this->paramsDecode($request->getParam('pass')[1]);
+
+            $guardianRelationId = isset($params['guardian_relation_id']) ? $params['guardian_relation_id']: null;
+            $guardianId = isset($params['id']) ? $params['id']: null;
+            $profileGuardianId = array_key_exists('ProfileGuardians.id', $params) ? $params['ProfileGuardians.id']: null;
+
+            if (is_null($guardianRelationId) && !is_null($profileGuardianId)) {
+                $guardianRecords = $Guardians->find()
+                    ->contain(['GuardianRelations'])
+                    ->where([$Guardians->aliasField('id') => $profileGuardianId])
+                    ->first();
+
+                $guardianRelationId = $guardianRecords->guardian_relation->id;
+            }
+
+            $relationOptions = $GuardianRelations
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->toArray();
+
+            $attr['select'] = false;
+            $attr['options'] = $relationOptions;
+            $attr['value'] = $guardianRelationId;
+            $attr['attr']['value'] = $guardianRelationId;
+        }
+
+        return $attr;
+    }
+}

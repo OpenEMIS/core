@@ -1,0 +1,228 @@
+<?php 
+namespace AcademicPeriod\Model\Behavior;
+
+use ArrayObject;
+use Cake\ORM\Behavior;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
+use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
+
+class AcademicPeriodBehavior extends Behavior {
+
+	public function implementedEvents(): array {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'ControllerAction.Model.edit.afterAction' => 'editAfterAction',
+			'ControllerAction.Model.add.beforeSave' => 'addBeforeSave',
+			'ControllerAction.Model.edit.beforePatch' => 'editBeforePatch',
+			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+			'ControllerAction.Model.view.afterAction' => 'viewAfterAction',
+			'Model.custom.onUpdateActionButtons' => ['callable' => 'onUpdateActionButtons', 'priority' => 100]
+		];
+
+		if ($this->isCAv4()) {
+			$newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
+		}
+
+		$tableAlias = $this->_table->getAlias();
+
+		switch ($tableAlias) {
+			case 'InstitutionAssessments':
+				$newEvent = ['ControllerAction.Model.onGetAssessmentId' => 'onGetAssessmentId'] + $newEvent;
+				break;
+
+			case 'StaffAttendances':
+			case 'StudentAttendances':
+				$newEvent = ['ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'] + $newEvent;
+				break;
+		}
+		$events = array_merge($events, $newEvent);
+		return $events;
+	}
+
+	private function isCAv4() {
+		return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+	}
+
+	public function indexBeforeAction(EventInterface $event) {
+		if(!is_null($this->_table->request->getQuery('mode'))) {
+			$academicPeriodId = $this->_table->request->getQuery('academic_period_id');
+			$editable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
+			if (!$editable) {
+				if ($this->isCAv4()) {
+					$urlParams = $this->_table->url('index');
+				} else {
+					$urlParams = $this->_table->ControllerAction->url('index');
+				}
+				if (isset($urlParams['mode'])) {
+					unset($urlParams['mode']);
+				}
+				$event->stopPropagation();
+				return $this->_table->controller->redirect($urlParams);
+			}
+		}
+	}
+
+	public function editAfterAction(EventInterface $event, Entity $entity) {
+		if ($entity->has('academic_period_id')) {
+			$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			if (! $isEditable) {
+				if ($this->isCAv4()) {
+					$urlParams = $this->_table->url('view');
+				} else {
+					$urlParams = $this->_table->ControllerAction->url('view');
+				}
+				$event->stopPropagation();
+				return $this->_table->controller->redirect($urlParams);
+			}
+		}
+	}
+
+	public function viewAfterAction(EventInterface $event, Entity $entity) {
+		//dd($entity);
+		if ($entity->has('academic_period_id')) {
+			$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+			$requestData = $this->_table->request->getData();
+			$alias = $this->_table->getAlias();
+			//$this->request->data[$this->_table->getAlias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			if(isset($requestData[$alias])) {
+				$requestData[$this->_table->getAlias()]['editable'] = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+				$requestData->withData($requestData);
+				$this->_table->request = $requestData;
+			}
+		}
+	}
+
+	public function afterAction(EventInterface $event, $extra)
+	{	
+		$action = $this->_table->action;
+		$toolbarButtons = new ArrayObject($extra['toolbarButtons']);
+		$this->onUpdateToolbarButtons($event, new ArrayObject(), $toolbarButtons, [], $action, null);
+	}
+
+	public function onUpdateToolbarButtons(EventInterface $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		switch ($action) {
+			case 'view':
+				if (isset($this->_table->request->getData()[$this->_table->getAlias()]['editable'])) {//POCOR-8671
+					$isEditable = $this->_table->request->getData()[$this->_table->getAlias()]['editable'];//POCOR-8671
+					if (!$isEditable) {
+						if(isset($toolbarButtons['edit'])) {
+							unset($toolbarButtons['edit']);
+						}
+						if(isset($toolbarButtons['remove'])) {
+							unset($toolbarButtons['remove']);
+						}
+					}
+				}
+				break;
+			case 'index':
+				$tableAlias = $this->_table->getAlias();
+				if ($tableAlias == 'StudentAttendances' || $tableAlias == 'StaffAttendances') {
+					if ($this->_table->AccessControl->check(['Institutions', $tableAlias, 'indexEdit'])) {
+						if (!is_null($this->_table->request->getQuery('academic_period_id'))) {
+							$academicPeriodId = $this->_table->request->getQuery('academic_period_id');
+							$editable = 1;
+							if ($academicPeriodId != 0 || !empty($academicPeriodId)) {
+								$editable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
+							}
+							if (!is_null($this->_table->request->getQuery('mode'))) {
+								if ($editable) {
+									if ($tableAlias == 'StudentAttendances') {
+										$toolbarButtons['edit'] = $buttons['index'];
+								    	$toolbarButtons['edit']['url'][0] = 'index';
+										$toolbarButtons['edit']['url']['mode'] = 'edit';
+										$toolbarButtons['edit']['type'] = 'button';
+										$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+										$toolbarButtons['edit']['attr'] = $attr;
+										$toolbarButtons['edit']['attr']['title'] = __('Edit');
+									}
+								} else {
+									if ($tableAlias == 'StaffAttendances') {
+										// used for CAv4 logic in StaffAttendance
+										if ($toolbarButtons->offsetExists('indexEdit')) {
+											$toolbarButtons->offsetUnset('indexEdit');
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				break;
+		}
+	}
+
+	public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) {
+		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
+		$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		$isEditable = 1;
+		if ($entity->has('academic_period_id')) {
+			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+		} else if (!is_null($this->_table->request->getQuery('academic_period_id'))) {
+			$academicPeriodId = $this->_table->request->getQuery('academic_period_id');
+			if(!empty($academicPeriodId) || $academicPeriodId > 0) {
+				$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+			}
+		}
+		if (! $isEditable) {
+			if (!is_null($buttons['edit'])) {
+				unset($buttons['edit']);
+			}
+			if (!is_null($buttons['remove'])) {
+				unset($buttons['remove']);
+			}
+			return $buttons;
+		}	
+	}
+
+	public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data) {
+
+		$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		$isEditable = 1;
+		if ($entity->has('academic_period_id')) {
+			if (!empty($entity->academic_period_id)) {
+				$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			}
+		} else if (isset($data[$this->_table->getAlias()]['academic_period_id']) && !empty($data[$this->_table->getAlias()]['academic_period_id'])) {
+			$academicPeriodId = $data[$this->_table->getAlias()]['academic_period_id'];
+			if (!empty($academicPeriodId)) {
+				$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+			}
+		}
+		if (! $isEditable) {
+			$urlParams = $this->_table->ControllerAction->url('add');
+			$event->stopPropagation();
+
+			// Error message to tell user that they cannot add into a non-editable academic period
+			$this->_table->Alert->error('general.academicPeriod.notEditable');
+			return $this->_table->controller->redirect($urlParams);
+		}
+	}
+
+	public function editBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+		if ($entity->has('academic_period_id')) {
+			// $academicPeriodId = $data[$this->_table->alias()]['academic_period_id'];
+			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			if (! $isEditable) {
+				$urlParams = $this->_table->ControllerAction->url('edit');
+				$event->stopPropagation();
+
+				// Error message to tell user that they cannot add into a non-editable academic period
+				$this->_table->Alert->error('general.academicPeriod.notEditable');
+				return $this->_table->controller->redirect($urlParams);
+			}
+		}
+	}
+
+	public function onGetAssessmentId(EventInterface $event, Entity $entity) {
+		$editable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods')->getEditable($entity->academic_period_id);
+		if (! $editable) {
+			$event->stopPropagation();
+			return $entity->assessment->code_name;
+		}
+	}
+}

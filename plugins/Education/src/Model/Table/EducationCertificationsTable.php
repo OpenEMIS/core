@@ -1,0 +1,66 @@
+<?php
+namespace Education\Model\Table;
+use ArrayObject;
+use App\Model\Table\ControllerActionTable;
+use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
+
+class EducationCertificationsTable extends ControllerActionTable
+{
+    public function initialize(array $config): void
+    {
+        parent::initialize($config);
+        $this->addBehavior('Education.Setup');
+        $this->hasMany('EducationProgrammes', ['className' => 'Education.EducationProgrammes', 'cascadeCallbacks' => true]);
+
+        $this->setDeleteStrategy('restrict');
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'name') {
+            return __('Name');
+        } elseif ($field == 'visible') {
+            return __('Visible');
+        } elseif ($field == 'modified_user_id') {
+            return __('Modified By');
+        } elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created_user_id') {
+            return __('Created By');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    //POCOR-8495 --start
+    public function editAfterSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $errors = $entity->getErrors();
+        if (empty($errors)) {
+            $action = ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Certifications','view',$this->request->getParam('pass.1')];
+            return $this->controller->redirect($action);
+        } 
+    }
+
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+
+    public function beforeDelete(EventInterface $event, Entity $entity)
+    {
+        $connection = $this->getConnection();
+        $connection->getDriver()->enableAutoQuoting();
+    }
+    //POCOR-8495 --start
+}

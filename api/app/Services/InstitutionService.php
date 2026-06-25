@@ -1,0 +1,2742 @@
+<?php
+
+namespace App\Services;
+
+use App\Http\Controllers\Controller;
+use App\Models\AcademicPeriod;
+use App\Models\EducationGrades;
+use App\Models\InstitutionClasses;
+use App\Models\InstitutionGrades;
+use App\Models\Institutions;
+use App\Models\InstitutionSubjects;
+use App\Repositories\InstitutionRepository;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use JWTAuth;
+use Illuminate\Support\Facades\Log;
+
+class InstitutionService extends Controller
+{
+
+    protected $institutionRepository;
+
+    public function __construct(
+    InstitutionRepository $institutionRepository) {
+        $this->institutionRepository = $institutionRepository;
+    }
+
+    
+    public function getInstitutions($request)
+    {
+        try {
+            $list = $this->institutionRepository->getInstitutions($request);
+            $resp = [];
+            foreach($list['data'] as $k => $data){
+                $resp[$k]['id'] = $data['id'];
+                $resp[$k]['name'] = $data['name'];
+                $resp[$k]['alternative_name'] = $data['alternative_name'];
+
+                //For POCOR-8250 Start...
+                //$resp[$k]['code'] = $data['code'];
+                $resp[$k]['institution_code'] = $data['code'];
+                //For POCOR-8250 End...
+
+                $resp[$k]['address'] = $data['address'];
+                $resp[$k]['postal_code'] = $data['postal_code'];
+                $resp[$k]['contact_person'] = $data['contact_person'];
+                $resp[$k]['telephone'] = $data['telephone'];
+               // $resp[$k]['fax'] = $data['fax'];
+                $resp[$k]['email'] = $data['email'];
+                $resp[$k]['website'] = $data['website'];
+                $resp[$k]['date_opened'] = $data['date_opened'];
+                $resp[$k]['year_opened'] = $data['year_opened'];
+                $resp[$k]['date_closed'] = $data['date_closed'];
+                $resp[$k]['year_closed'] = $data['year_closed'];
+                $resp[$k]['longitude'] = $data['longitude'];
+                $resp[$k]['latitude'] = $data['latitude'];
+                $resp[$k]['vision'] = $data['vision'];
+                $resp[$k]['mission'] = $data['mission'];
+                $resp[$k]['logo_name'] = $data['logo_name'];
+                if($data['logo_content']){
+                    $resp[$k]['logo_content'] = base64_encode($data['logo_content']);
+                } else {
+                    $resp[$k]['logo_content'] = $data['logo_content'];
+                }
+                $resp[$k]['shift_type'] = $data['shift_type'];
+                $resp[$k]['classification'] = $data['classification'];
+                $resp[$k]['area_id'] = $data['area_id'];
+                //POCOR-9240[START]
+                $resp[$k]['area_name'] = !empty($data['area_education']['name']) ? $data['area_education']['name'] : 'N/A';
+                $resp[$k]['area_code'] = !empty($data['area_education']['code']) ? $data['area_education']['code'] : 'N/A';
+                $resp[$k]['area_administrative_id'] = $data['area_administrative_id'];
+                $resp[$k]['area_administrative_name'] = !empty($data['area_administratives']['name']) ? $data['area_administratives']['name'] : 'N/A';
+                $resp[$k]['area_administrative_code'] = !empty($data['area_administratives']['code']) ? $data['area_administratives']['code'] : 'N/A';
+                //POCOR-9240[END]
+                $resp[$k]['institution_locality_id'] = $data['institution_locality_id'];
+                $resp[$k]['institution_locality_name'] = $data['institution_localities']['name']??"";
+                $resp[$k]['institution_locality_international_code'] = $data['institution_localities']['international_code']??"";
+                $resp[$k]['institution_locality_national_code'] = $data['institution_localities']['national_code']??"";
+
+                $resp[$k]['institution_ownership_id'] = $data['institution_ownership_id'];
+                $resp[$k]['institution_ownership_name'] = $data['institution_ownerships']['name']??"";
+                $resp[$k]['institution_ownership_international_code'] = $data['institution_ownerships']['international_code']??"";
+                $resp[$k]['institution_ownership_national_code'] = $data['institution_ownerships']['national_code']??"";
+
+                $resp[$k]['institution_provider_id'] = $data['institution_provider_id'];
+                $resp[$k]['institution_provider_name'] = $data['institution_providers']['name']??"";
+                $resp[$k]['institution_provider_international_code'] = $data['institution_providers']['international_code']??"";
+                $resp[$k]['institution_provider_national_code'] = $data['institution_providers']['national_code']??"";
+
+
+                $resp[$k]['institution_sector_id'] = $data['institution_sector_id'];
+                $resp[$k]['institution_sector_name'] = $data['institution_sectors']['name']??"";
+                $resp[$k]['institution_sector_international_code'] = $data['institution_sectors']['international_code']??"";
+                $resp[$k]['institution_sector_national_code'] = $data['institution_sectors']['national_code']??"";
+
+                $resp[$k]['institution_type_id'] = $data['institution_type_id'];
+                $resp[$k]['institution_type_name'] = $data['institution_types']['name']??"";
+                //For POCOR-8250 Start...
+                $resp[$k]['institution_classification_id'] = $data['classification'];
+                if($data['classification'] == 1){
+                    $resp[$k]['institution_classification_name'] = "Academic Institution";
+                } else {
+                   $resp[$k]['institution_classification_name'] = "Non-Academic Institution"; 
+                }
+                //For POCOR-8250 End...
+
+                $resp[$k]['institution_type_international_code'] = $data['institution_types']['international_code']??"";
+                $resp[$k]['institution_type_national_code'] = $data['institution_types']['national_code']??"";
+
+
+                $resp[$k]['institution_gender_id'] = $data['institution_gender_id'];
+                $resp[$k]['institution_gender_name'] = $data['institution_gender']['name']??"";
+                $resp[$k]['institution_gender_code'] = $data['institution_gender']['code']??"";
+
+
+                $resp[$k]['institution_status_id'] = $data['institution_status_id'];
+                $resp[$k]['institution_status_name'] = $data['institution_status']['name']??"";
+                $resp[$k]['institution_status_name'] = $data['institution_status']['code']??"";
+
+                $resp[$k]['modified_user_id'] = $data['modified_user_id'];
+                $resp[$k]['modified'] = $data['modified'];
+                $resp[$k]['created_user_id'] = $data['created_user_id'];
+                $resp[$k]['created'] = $data['created'];
+            }
+            
+            $list['data'] = $resp;
+            return $list; 
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution List Not Found');
+        }
+    }
+
+
+    public function getInstitutionData($params, int $id)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionData($params, $id);
+
+            $resp = [];
+            if($data){
+                $resp['id'] = $data['id'];
+                $resp['name'] = $data['name'];
+                $resp['alternative_name'] = $data['alternative_name'];
+
+                //For POCOR-8250 Start...
+                //$resp['code'] = $data['code'];
+                $resp['institution_code'] = $data['code'];
+                //For POCOR-8250 End...
+
+                $resp['address'] = $data['address'];
+                $resp['postal_code'] = $data['postal_code'];
+                $resp['contact_person'] = $data['contact_person'];
+                $resp['telephone'] = $data['telephone'];
+             //   $resp['fax'] = $data['fax'];
+                $resp['email'] = $data['email'];
+                $resp['website'] = $data['website'];
+                $resp['date_opened'] = $data['date_opened'];
+                $resp['year_opened'] = $data['year_opened'];
+                $resp['date_closed'] = $data['date_closed'];
+                $resp['year_closed'] = $data['year_closed'];
+                $resp['longitude'] = $data['longitude'];
+                $resp['latitude'] = $data['latitude'];
+                $resp['vision'] = $data['vision'];
+                $resp['mission'] = $data['mission'];
+                $resp['logo_name'] = $data['logo_name'];
+                if($data['logo_content']){
+                    $resp['logo_content'] = base64_encode($data['logo_content']);
+                } else {
+                    $resp['logo_content'] = $data['logo_content'];
+                }
+                $resp['shift_type'] = $data['shift_type'];
+                $resp['classification'] = $data['classification'];
+                $resp['area_id'] = $data['area_id'];
+                $resp['area_administrative_id'] = $data['area_administrative_id'];
+
+                $resp['institution_locality_id'] = $data['institution_locality_id'];
+                $resp['institution_locality_name'] = $data['institutionLocalities']['name']??"";
+                $resp['institution_locality_international_code'] = $data['institutionLocalities']['international_code']??"";
+                $resp['institution_locality_national_code'] = $data['institutionLocalities']['national_code']??"";
+
+                $resp['institution_ownership_id'] = $data['institution_ownership_id'];
+                $resp['institution_ownership_name'] = $data['institutionOwnerships']['name']??"";
+                $resp['institution_ownership_international_code'] = $data['institutionOwnerships']['international_code']??"";
+                $resp['institution_ownership_national_code'] = $data['institutionOwnerships']['national_code']??"";
+
+                $resp['institution_provider_id'] = $data['institution_provider_id'];
+                $resp['institution_provider_name'] = $data['institutionProviders']['name']??"";
+                $resp['institution_provider_international_code'] = $data['institutionProviders']['international_code']??"";
+                $resp['institution_provider_national_code'] = $data['institutionProviders']['national_code']??"";
+
+
+                $resp['institution_sector_id'] = $data['institution_sector_id'];
+                $resp['institution_sector_name'] = $data['institutionSectors']['name']??"";
+                $resp['institution_sector_international_code'] = $data['institutionSectors']['international_code']??"";
+                $resp['institution_sector_national_code'] = $data['institutionSectors']['national_code']??"";
+
+                $resp['institution_type_id'] = $data['institution_type_id'];
+                $resp['institution_type_name'] = $data['institutionTypes']['name']??"";
+
+                //For POCOR-8250 Start...
+                $resp['institution_classification_id'] = $data['classification'];
+                if($data['classification'] == 1){
+                    $resp['institution_classification_name'] = "Academic Institution";
+                } else {
+                   $resp['institution_classification_name'] = "Non-Academic Institution"; 
+                }
+                //For POCOR-8250 End...
+
+                $resp['institution_type_international_code'] = $data['institutionTypes']['international_code']??"";
+                $resp['institution_type_national_code'] = $data['institutionTypes']['national_code']??"";
+
+
+                $resp['institution_gender_id'] = $data['institution_gender_id'];
+                $resp['institution_gender_name'] = $data['institutionGender']['name']??"";
+                $resp['institution_gender_code'] = $data['institutionGender']['code']??"";
+
+
+                $resp['institution_status_id'] = $data['institution_status_id'];
+                $resp['institution_status_name'] = $data['institutionStatus']['name']??"";
+                $resp['institution_status_name'] = $data['institutionStatus']['code']??"";
+
+                $resp['modified_user_id'] = $data['modified_user_id'];
+                $resp['modified'] = $data['modified'];
+                $resp['created_user_id'] = $data['created_user_id'];
+                $resp['created'] = $data['created'];
+            }
+            
+            return $resp; 
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Institution Data Not Found');
+        }
+    }
+
+
+    public function getGradesList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getGradesList($request);
+            
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Grades List Not Found');
+        }
+    }
+
+
+    public function getInstitutionGradeList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Grades List Not Found');
+        }
+    }
+
+
+    public function getInstitutionGradeData(int $institutionId, int $gradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeData($institutionId, $gradeId);
+
+            return $data;
+        } catch (\Exception $e) {
+
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Grades Data Not Found');
+        }
+    }
+
+
+    public function getClassesList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getClassesList($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Classes List Not Found');
+        }
+    }
+
+
+    public function getInstitutionClassesList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionClassesList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Classes List Not Found');
+        }
+    }
+
+
+    public function getInstitutionClassData(int $institutionId, int $classId)
+    {
+        try {
+
+            $data = $this->institutionRepository->getInstitutionClassData($institutionId, $classId);
+
+            $assignedStudents = [];
+
+            if (!$data->students->isEmpty()) {
+                foreach($data['students'] as $key => $student) {
+                    $assignedStudents[$key] = [
+                        'user_id' => $student->student_id,
+                        'user_openemis_no' => $student->user->openemis_no,
+                        'user_first_name' => $student->user->first_name,
+                        'user_last_name' => $student->user->last_name,
+                        'grade_name' => $student->educationGrade->name,
+                        'user_gender' => $student->user->gender->name,
+                        'user_status' => $student->status->name,
+                        'special_needs' => $student->user->specialNeed ? 1 : 0
+                    ];
+                }
+            }
+
+            unset($data['students']);
+            $data['students'] = $assignedStudents;
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Class Data Not Found');
+        }
+    }
+
+
+    public function getSubjectsList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSubjectsList($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects List Not Found');
+        }
+    }
+
+
+    public function getInstitutionSubjectsList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionSubjectsList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects List Not Found');
+        }
+    }
+
+
+    public function getInstitutionSubjectsData(int $institutionId, int $subjectId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionSubjectsData($institutionId, $subjectId);
+
+            $assignedStudents = [];
+            if (!$data->students->isEmpty()) {
+                foreach($data['students'] as $key => $student) {
+                    $assignedStudents[$key] = [
+                        'user_id' => $student->student_id,
+                        'user_openemis_no' => $student->securityUser->openemis_no,
+                        'user_first_name' => $student->securityUser->first_name,
+                        'user_last_name' => $student->securityUser->last_name,
+                        'institution_class' => $student->class->name,
+                        'institution_class_id' => $student->class->id,
+                        'user_gender' => $student->securityUser->gender->name,
+                        'user_status' => $student->studentStatus->name,
+                        'special_needs' => $student->securityUser->specialNeed ? 1 : 0
+                    ];
+                }
+            }
+
+            unset($data['students']);
+            $data['students'] = $assignedStudents;
+
+            return $data;
+
+        } catch (\Exception $e) {
+
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Subjects Data Not Found');
+        }
+    }
+
+
+    public function getInstitutionShifts($request)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionShifts($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Shifts List Not Found');
+        }
+    }
+
+
+    public function getInstitutionShiftsList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionShiftsList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Shifts List Not Found');
+        }
+    }
+
+
+    public function getInstitutionShiftsData(int $institutionId, int $shiftId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionShiftsData($institutionId, $shiftId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Shifts Data Not Found');
+        }
+    }
+
+
+    public function getInstitutionAreas($request)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionAreas($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Areas List Not Found');
+        }
+    }
+
+
+    public function getInstitutionAreasList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionAreasList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Areas List Not Found');
+        }
+    }
+
+
+    public function getInstitutionAreasData(int $institutionId, int $areaAdministrativeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionAreasData($institutionId, $areaAdministrativeId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Areas Data Not Found');
+        }
+    }
+
+
+    public function getSummariesList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSummariesList($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Summaries List Not Found');
+        }
+    }
+
+
+    public function getInstitutionSummariesList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionSummariesList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Summaries List Not Found');
+        }
+    }
+
+
+    public function getGradeSummariesList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getGradeSummariesList($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Grade Summaries List Not Found');
+        }
+    }
+
+
+    public function getInstitutionGradeSummariesList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeSummariesList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Grade Summaries List Not Found');
+        }
+    }
+
+
+
+    public function getInstitutionGradeSummariesData($params, int $institutionId, int $gradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeSummariesData($params, $institutionId, $gradeId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Grade Summaries Data Not Found');
+        }
+    }
+
+
+    public function getStudentNationalitySummariesList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStudentNationalitySummariesList($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Nationality Summaries Data Not Found');
+        }
+    }
+
+
+    public function getInstitutionStudentNationalitySummariesList($request, $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStudentNationalitySummariesList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Nationality Summaries Data Not Found');
+        }
+    }
+
+
+    public function getGradesStudentNationalitySummariesList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getGradesStudentNationalitySummariesList($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Nationality Summaries Data Not Found');
+        }
+    }
+
+
+    public function getInstitutionGradeStudentNationalitySummariesList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeStudentNationalitySummariesList($request, $institutionId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Nationality Summaries Data Not Found');
+        }
+    }
+
+
+    public function getInstitutionGradeStudentNationalitySummaries($request, int $institutionId, int $gradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeStudentNationalitySummaries($request, $institutionId, $gradeId);
+            return $this->sendSuccessResponse("Student Nationality Summaries Data Found", $data);
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student Nationality Summaries Data Not Found');
+        }
+    }
+
+
+    public function getStaffList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStaffList($request);
+            
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    // For POCOR-8251 start...
+                    $classData = [];
+                    foreach ($d['classes'] as $c => $class) {
+
+                        $classData[$c]['id'] = $class['id'];
+                        $classData[$c]['name'] = $class['name'];
+                        $classData[$c]['subjects'] = [];
+
+                        $subjects = $this->institutionRepository->getStaffSubjects($d['institution_id'], $d['staff_id'], $class['id']);
+
+                        foreach ($subjects as $s => $subject) {
+                            $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                            $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                        }
+                    }
+                    // For POCOR-8251 end...
+
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['fte'] = $d['FTE'];
+                    $list[$k]['start_date'] = $d['start_date'];
+                    $list[$k]['start_year'] = $d['start_year'];
+                    $list[$k]['end_date'] = $d['end_date'];
+                    $list[$k]['end_year'] = $d['end_year'];
+                    $list[$k]['staff_id'] = $d['staff_id'];
+                    $list[$k]['staff_type_id'] = $d['staff_type_id'];
+                    $list[$k]['staff_type_name'] = $d['staff_type']['staff_type_name']??"";
+                    $list[$k]['staff_status_id'] = $d['staff_status_id'];
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_position_id'] = $d['institution_position_id'];
+                    
+                    // For POCOR-8251 start...
+                    $list[$k]['classes'] = $classData;
+                    // For POCOR-8251 end...
+
+                    //For POCOR-8491 Start...
+                    $list[$k]['custom_fields'] = $d['staff_custom_field_value'];
+                    //For POCOR-8491 End...
+
+
+                    // For POCOR-8398 start...
+                    $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
+                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grade']['name'];
+                    // For POCOR-8398 end...
+
+                    $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                    $list[$k]['institution_code'] = $d['institution']['code']??"";
+                    $list[$k]['institution_name'] = $d['institution']['name']??"";
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
+                    $list[$k]['institution_position_name'] = $d['institution_position']['staff_position_title']['name']??"";
+                }
+            }
+            
+
+            $data['data'] = $list;
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Institution Staff List Not Found');
+        }
+    }
+
+    public function getInstitutionStaffList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStaffList($request, $institutionId);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    
+                    // For POCOR-8251 start...
+                    $classData = [];
+                    foreach ($d['classes'] as $c => $class) {
+
+                        $classData[$c]['id'] = $class['id'];
+                        $classData[$c]['name'] = $class['name'];
+                        $classData[$c]['subjects'] = [];
+
+                        $subjects = $this->institutionRepository->getStaffSubjects($d['institution_id'], $d['staff_id'], $class['id']);
+
+                        foreach ($subjects as $s => $subject) {
+                            $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                            $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                        }
+                    }
+                    // For POCOR-8251 end...
+
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['fte'] = $d['FTE'];
+                    $list[$k]['start_date'] = $d['start_date'];
+                    $list[$k]['start_year'] = $d['start_year'];
+                    $list[$k]['end_date'] = $d['end_date'];
+                    $list[$k]['end_year'] = $d['end_year'];
+                    $list[$k]['staff_id'] = $d['staff_id'];
+                    $list[$k]['staff_type_id'] = $d['staff_type_id'];
+                    $list[$k]['staff_type_name'] = $d['staff_type']['staff_type_name']??"";
+                    $list[$k]['staff_status_id'] = $d['staff_status_id'];
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_position_id'] = $d['institution_position_id'];
+                    $list[$k]['is_homeroom'] = $d['is_homeroom'];
+                    $list[$k]['user'] = $d['user'];
+                    
+                    // For POCOR-8251 start...
+                    $list[$k]['classes'] = $classData;
+                    // For POCOR-8251 end...
+
+                    //For POCOR-8491 Start...
+                    $list[$k]['custom_fields'] = $d['staff_custom_field_value'];
+                    //For POCOR-8491 End...
+
+                    // For POCOR-8398 start...
+                    $list[$k]['staff_position_grade_id'] = $d['staff_position_grade']['id'];
+                    $list[$k]['staff_position_grade_name'] = $d['staff_position_grade']['name'];
+                    // For POCOR-8398 end...
+
+                    $list[$k]['security_group_user_id'] = $d['security_group_user_id'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                    $list[$k]['institution_code'] = $d['institution']['code']??"";
+                    $list[$k]['institution_name'] = $d['institution']['name']??"";
+                    $list[$k]['staff_status_name'] = $d['staff_status']['staff_status_name']??"";
+                    $list[$k]['institution_position_name'] = $d['institution_position']['staff_position_title']['name']??"";
+                    $list[$k]['staff_position_type'] = (isset($d['institution_position']['staff_position_title']['type']) && $d['institution_position']['staff_position_title']['type'] == 1) 
+                                    ? 'Teaching' 
+                                    : 'Non-teaching'; //POCOR-8601
+
+                }
+            }
+            
+            if(isset($request['is_homeroom']) || isset($request['institution_position_type'])){
+                $list = collect($list)->sortBy(function ($item) {
+                    return $item['user']['full_name'];
+                }, SORT_REGULAR, false)->values()->all();
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+            
+        } catch (\Exception $e) {
+
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution Staff List Not Found');
+        }
+    }
+
+
+    public function getInstitutionStaffData(int $institutionId, int $staffId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStaffData($institutionId, $staffId);
+            
+            $list = [];
+            if($data){
+                
+                // For POCOR-8251 start...
+                $classData = [];
+                foreach ($data['classes'] as $c => $class) {
+
+                    $classData[$c]['id'] = $class['id'];
+                    $classData[$c]['name'] = $class['name'];
+                    $classData[$c]['subjects'] = [];
+
+                    $subjects = $this->institutionRepository->getStaffSubjects($data['institution_id'], $data['staff_id'], $class['id']);
+
+                    foreach ($subjects as $s => $subject) {
+                        $classData[$c]['subjects'][$s]['id'] = $subject['id'];
+                        $classData[$c]['subjects'][$s]['name'] = $subject['name'];
+                    }
+                }
+                // For POCOR-8251 end...
+
+
+                $list['id'] = $data['id'];
+                $list['fte'] = $data['FTE'];
+                $list['start_date'] = $data['start_date'];
+                $list['start_year'] = $data['start_year'];
+                $list['end_date'] = $data['end_date'];
+                $list['end_year'] = $data['end_year'];
+                $list['staff_id'] = $data['staff_id'];
+                $list['staff_type_id'] = $data['staff_type_id'];
+                $list['staff_type_name'] = $data['staffType']['staff_type_name']??"";
+                $list['staff_status_id'] = $data['staff_status_id'];
+                $list['staff_status_name'] = $data['staffStatus']['staff_status_name']??"";
+                $list['institution_id'] = $data['institution_id'];
+                $list['institution_position_id'] = $data['institution_position_id'];
+
+                // For POCOR-8251 start...
+                $list['classes'] = $classData;
+                // For POCOR-8251 end...
+
+                //For POCOR-8491 Start...
+                    $list['custom_fields'] = $data['staffCustomFieldValue'];
+                    //For POCOR-8491 End...
+
+                // For POCOR-8398 start...
+                $list['staff_position_grade_id'] = $data['staffPositionGrade']['id'];
+                $list['staff_position_grade_name'] = $data['staffPositionGrade']['name'];
+                // For POCOR-8398 end...
+
+                $list['security_group_user_id'] = $data['security_group_user_id'];
+                $list['modified_user_id'] = $data['modified_user_id'];
+                $list['modified'] = $data['modified'];
+                $list['created_user_id'] = $data['created_user_id'];
+                $list['created'] = $data['created'];
+                $list['institution_code'] = $data['institution']['code']??"";
+                $list['institution_name'] = $data['institution']['name']??"";
+                $list['staff_status_name'] = $data['staffStatus']['staff_status_name']??"";
+                $list['institution_position_name'] = $data['institutionPosition']['staffPositionTitle']['name'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Institution Staff Data Not Found');
+        }
+    }
+
+
+
+    public function getPositionsList($request)
+    {
+        try {
+            $data = $this->institutionRepository->getPositionsList($request);
+            //dd($data);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    //For POCOR-8384 Start...
+                    $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($d['staff_position_title_id']);
+                    //For POCOR-8384 End...
+
+
+                    $list[$k]['position_id'] = $d['id'];
+                    $list[$k]['status_id'] = $d['status_id'];
+                    $list[$k]['status_name'] = $d['status']['status_name'];
+                    $list[$k]['position_no'] = $d['position_no'];
+                    $list[$k]['staff_position_title_id'] = $d['staff_position_title_id'];
+                    $list[$k]['staff_position_title_name'] = $d['staff_position_title']['staff_position_title_name'];
+                    if($getStaffPositionGrade){
+                        $list[$k]['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                        $list[$k]['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                    } else {
+                        $list[$k]['staff_position_grade_id'] = Null;
+                        $list[$k]['staff_position_grade_name'] = Null;
+                    }
+                    
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['assignee_id'] = $d['assignee_id'];
+                    $list[$k]['is_homeroom'] = $d['institution_staff']['is_homeroom']??0;
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Institutions Positions List Not Found');
+        }
+    }
+    
+
+    public function getInstitutionPositionsList($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionPositionsList($request, $institutionId);
+            
+            //dd($data);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+
+                    //For POCOR-8384 Start...
+                    $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($d['staff_position_title_id']);
+                    //For POCOR-8384 End...
+
+                    $list[$k]['position_id'] = $d['id'];
+                    $list[$k]['status_id'] = $d['status_id'];
+                    $list[$k]['status_name'] = $d['status']['status_name'];
+                    $list[$k]['position_no'] = $d['position_no'];
+                    $list[$k]['staff_position_title_id'] = $d['staff_position_title_id'];
+                    $list[$k]['staff_position_title_name'] = $d['staff_position_title']['staff_position_title_name'];
+                    if($getStaffPositionGrade){
+                        $list[$k]['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                        $list[$k]['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                    } else {
+                        $list[$k]['staff_position_grade_id'] = Null;
+                        $list[$k]['staff_position_grade_name'] = Null;
+                    }
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['assignee_id'] = $d['assignee_id'];
+                    $list[$k]['is_homeroom'] = $d['institution_staff']['is_homeroom']??0;
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Positions List Not Found');
+        }
+    }
+
+
+
+    public function getInstitutionPositionsData(int $institutionId, int $positionId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionPositionsData($institutionId, $positionId);
+            
+            $list = [];
+            if($data){
+
+                //For POCOR-8384 Start...
+                $getStaffPositionGrade = $this->institutionRepository->getStaffPositionGrade($data['staff_position_title_id']);
+                //For POCOR-8384 End...
+
+                $list['position_id'] = $data['id'];
+                $list['status_id'] = $data['status_id'];
+                $list['status_name'] = $data['status']['status_name'];
+                $list['position_no'] = $data['position_no'];
+                $list['staff_position_title_id'] = $data['staff_position_title_id'];
+                $list['staff_position_title_name'] = $data['staffPositionTitle']['staff_position_title_name']??"";
+                if($getStaffPositionGrade){
+                    $list['staff_position_grade_id'] = $getStaffPositionGrade->id;
+                    $list['staff_position_grade_name'] = $getStaffPositionGrade->name;
+                } else {
+                    $list['staff_position_grade_id'] = Null;
+                    $list['staff_position_grade_name'] = Null;
+                }
+                $list['institution_id'] = $data['institution_id'];
+                $list['assignee_id'] = $data['assignee_id'];
+                $list['is_homeroom'] = $data['institution_staff']['is_homeroom']??0;;
+                $list['modified_user_id'] = $data['modified_user_id'];
+                $list['modified'] = $data['modified'];
+                $list['created_user_id'] = $data['created_user_id'];
+                $list['created'] = $data['created'];
+            }
+
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institutions Positions Data Not Found');
+        }
+    }
+
+
+    public function localeContentsList($request)
+    {
+        try {
+            $data = $this->institutionRepository->localeContentsList($request);
+            
+            //dd($data);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['translation'] = $d['translation'];
+                    $list[$k]['locale_content_id'] = $d['locale_content_id'];
+                    $list[$k]['locale_content_name'] = $d['locale_contents']['en']??"";
+                    $list[$k]['locale_id'] = $d['locale_id'];
+                    $list[$k]['locale_name'] = $d['locales']['name']??"";
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Locale Contents List Not Found');
+        }
+    }
+
+
+
+    public function localeContentsData(int $localeId)
+    {
+        try {
+            $data = $this->institutionRepository->localeContentsData($localeId);
+            
+            //dd($data);
+            $list = [];
+            if($data){
+                $list['id'] = $data['id'];
+                $list['translation'] = $data['translation'];
+                $list['locale_content_id'] = $data['locale_content_id'];
+                $list['locale_content_name'] = $data['locale_contents']['en']??"";
+                $list['locale_id'] = $data['locale_id'];
+                $list['locale_name'] = $data['locales']['name']??"";
+                $list['modified_user_id'] = $data['modified_user_id'];
+                $list['modified'] = $data['modified'];
+                $list['created_user_id'] = $data['created_user_id'];
+                $list['created'] = $data['created'];
+            }
+
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Locale Contents Data Not Found');
+        }
+    }
+
+
+
+    public function roomTypeSummaries($request)
+    {
+        try {
+            $data = $this->institutionRepository->roomTypeSummaries($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }
+
+
+    public function institutionRoomTypeSummaries($request, int $institutionId)
+    {
+        try {
+            $data = $this->institutionRepository->institutionRoomTypeSummaries($request, $institutionId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch list from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Room Type Summaries List Not Found');
+        }
+    }
+
+
+    public function reportCardCommentAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionRepository->reportCardCommentAdd($request, $institutionId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function reportCardCommentHomeroomAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionRepository->reportCardCommentHomeroomAdd($request, $institutionId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function reportCardCommentPrincipalAdd($request, int $institutionId, int $classId)
+    {
+        try {
+            $data = $this->institutionRepository->reportCardCommentPrincipalAdd($request, $institutionId, $classId);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add report card comment.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add report card comment.');
+        }
+    }
+
+
+
+    public function getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionGradeStudentdata($institutionId, $gradeId, $studentId);
+            
+            $resp = [];
+            if($data){
+                $resp['academic_period_id'] = $data['academic_period_id'];
+                $resp['institution_id'] = $data['institution_id'];
+                $resp['education_grade_id'] = $data['education_grade_id'];
+                $resp['student_status_id'] = $data['student_status_id'];
+                $resp['student_id'] = $data['student_id'];
+                $resp['username'] = $data['securityUser']['username'];
+                $resp['openemis_no'] = $data['securityUser']['openemis_no'];
+                $resp['first_name'] = $data['securityUser']['first_name'];
+                $resp['last_name'] = $data['securityUser']['last_name'];
+                $resp['gender_id'] = $data['securityUser']['gender_id'];
+                $resp['date_of_birth'] = $data['securityUser']['date_of_birth'];
+                $resp['start_year'] = $data['start_year'];
+                $resp['start_date'] = $data['start_date'];
+                $resp['end_year'] = $data['end_year'];
+                $resp['end_date'] = $data['end_date'];
+            }
+            return $resp;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student data.');
+        }
+    }
+
+
+
+    public function addCompetencyResults($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyResults($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency result.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency result.');
+        }
+    }
+
+
+    public function addCompetencyComments($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyComments($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+
+    public function addCompetencyPeriodComments($request)
+    {
+        try {
+            $data = $this->institutionRepository->addCompetencyPeriodComments($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to add competency comments.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to add competency comments.');
+        }
+    }
+
+
+    public function getStudentAssessmentItemResult($params, $institutionId, $studentId)
+    {
+        try {
+            $lists = $this->institutionRepository->getStudentAssessmentItemResult($params, $institutionId, $studentId);
+            $resp = [];
+
+            if(count($lists) > 0){
+                foreach($lists['data'] as $k => $l){
+                    $resp[$k]['id'] = $l['id'];
+                    $resp[$k]['academic_period_id'] = $l['academic_period_id'];
+                    $resp[$k]['assessment_grading_option_id'] = $l['assessment_grading_option_id'];
+                    $resp[$k]['assessment_grading_option_name'] = $l['assessment_grading_option']['name']??"";
+                    $resp[$k]['assessment_id'] = $l['assessment_id'];
+                    $resp[$k]['assessment_period_id'] = $l['assessment_period_id'];
+                    $resp[$k]['education_grade_id'] = $l['education_grade_id'];
+                    $resp[$k]['education_subject_id'] = $l['education_subject_id'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['marks'] = $l['marks'];
+                    $resp[$k]['student_id'] = $l['student_id'];
+                    $resp[$k]['modified_user_id'] = $l['modified_user_id'];
+                    $resp[$k]['modified'] = $l['modified'];
+                    $resp[$k]['created_user_id'] = $l['created_user_id'];
+                    $resp[$k]['created'] = $l['created'];
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $lists['data'] = $resp;
+                return $lists;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get student assessment data.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get student assessment data.');
+        }
+    }
+
+    public function displayAddressAreaLevel($params)
+    {
+        try {
+            $data = $this->institutionRepository->displayAddressAreaLevel($params);
+
+            $resp = [];
+            if(!empty($data)){
+                foreach($data['data'] as $k => $d){
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['name'];
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get address area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get address area level area.');
+        }
+    }
+
+
+    public function displayBirthplaceAreaLevel($params)
+    {
+        try {
+            $data = $this->institutionRepository->displayBirthplaceAreaLevel($params);
+            
+            $resp = [];
+            if(!empty($data)){
+                foreach($data['data'] as $k => $d){
+                    $resp[$k]['id'] = $d['id'];
+                    $resp[$k]['name'] = $d['name'];
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get birthplace area level area.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get birthplace area level area.');
+        }
+    }
+
+    
+    public function getSubjectsStaffList($params)
+    {
+        try {
+            $data = $this->institutionRepository->getSubjectsStaffList($params);
+            
+            //dd($data);
+
+            $resp = [];
+            if($data){
+                foreach($data['data'] as $k => $d){
+                    //dd($d['institution_subject']['education_grades']['education_programme']['education_cycle']['education_level']);
+                    $resp[$k]['education_systems_name'] = $d['institution_subject']['education_grades']['education_programme']['education_cycle']['education_level']['education_system']['name'];
+
+                    $resp[$k]['education_levels_name'] = $d['institution_subject']['education_grades']['education_programme']['education_cycle']['education_level']['name'];
+
+                    $resp[$k]['education_cycles_name'] = $d['institution_subject']['education_grades']['education_programme']['education_cycle']['name'];
+
+                    $resp[$k]['education_programmes_code'] = $d['institution_subject']['education_grades']['education_programme']['code'];
+
+                    $resp[$k]['education_programmes_name'] = $d['institution_subject']['education_grades']['education_programme']['name'];
+
+                    $resp[$k]['education_grades_code'] = $d['institution_subject']['education_grades']['code'];
+                    $resp[$k]['education_grades_name'] = $d['institution_subject']['education_grades']['name'];
+                    $resp[$k]['education_subjects_code'] = $d['institution_subject']['education_subjects']['code'];
+                    $resp[$k]['education_subjects_name'] = $d['institution_subject']['education_subjects']['name'];
+                    $resp[$k]['institutions_id'] = $d['institution']['id'];
+                    $resp[$k]['institutions_code'] = $d['institution']['code'];
+                    $resp[$k]['institutions_name'] = $d['institution']['name'];
+
+                    $resp[$k]['institution_classes_name'] = $d['institution_subject']['classes'][0]['institutionClass']['name']??"";
+
+                    $resp[$k]['academic_periods_code'] = $d['institution_subject']['academic_period']['code'];
+                    $resp[$k]['academic_periods_name'] = $d['institution_subject']['academic_period']['name'];
+                    $resp[$k]['institution_subjects_id'] = $d['institution_subject']['id'];
+                    $resp[$k]['institution_subjects_name'] = $d['institution_subject']['name'];
+
+                    $resp[$k]['security_users_openemis_no_subject_teachers'] = $d['staff']['openemis_no'];
+
+                    $openEmisNo = [];
+
+                    if(count($d['institution_subject']['students']) > 0){
+                        $students = $d['institution_subject']['students'];
+
+                        foreach($students as $s){
+                            $openEmisNo[] = $s['security_user']['openemis_no'];
+                        }
+                    }
+
+                    $resp[$k]['security_users_openemis_no_students'] = $openEmisNo;
+                }
+                
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch data from DB',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            dd($e);
+            return $this->sendErrorResponse('Subjects Staff List Not Found');
+        }
+    }
+
+
+
+    
+    // POCOR-7394-S starts
+
+    public function getAbsenceReasons($request)
+    {
+        try {
+            $data = $this->institutionRepository->getAbsenceReasons($request);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['name'] = $d['name']; 
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+                   
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Reasons List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Reasons List.');
+        }
+    }
+
+    public function getAbsenceTypes($request)
+    {
+        try {
+            $data = $this->institutionRepository->getAbsenceTypes($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Absence Types List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Absence Types List.');
+        }
+    }
+
+    public function getAreaAdministratives($request)
+    {
+        try {
+            $data = $this->institutionRepository->getAreaAdministratives($request);
+            // dd($data);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['is_main_country'] = $d['is_main_country'];
+                    $list[$k]['parent_id'] = $d['parent_id'];
+                    $list[$k]['lft'] = $d['lft'];
+                    $list[$k]['rght'] = $d['rght'];
+                    $list[$k]['area_administrative_level_id'] = $d['area_administrative_level_id'];
+                    $list[$k]['order'] = $d['order'];
+                    $list[$k]['visible'] = $d['visible'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                    $list[$k]['area_administrative_levels'] = $d['area_administrative_levels'];
+                    
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administratives List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Area Administratives List.');
+        }
+    }
+
+    public function getAreaAdministrativesById($areaAdministrativeId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getAreaAdministrativesById($areaAdministrativeId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Area Administrative.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Area Administrative.');
+        }
+    }
+    
+    public function getInstitutionGenders($params)
+    {
+        try {
+
+            $data = $this->institutionRepository->getInstitutionGenders($params);
+            
+            $list = [];
+            if(count($data) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['order'] = $d['order'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $list;
+                return $data;
+            } else {
+                return $list;
+            }
+            //For POCOR-8215/8216 end...
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Genders List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Genders List.');
+        }
+    }
+
+    public function getInstitutionsLocalitiesById($localityId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionsLocalitiesById($localityId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Locality.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Locality.');
+        }
+    }
+
+    public function getInstitutionsOwnershipsById($ownershipId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionsOwnershipsById($ownershipId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Ownership.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Ownership.');
+        }
+    }
+
+    public function getInstitutionSectorsById($sectorId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionSectorsById($sectorId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Sector.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Sector.');
+        }
+    }
+
+    public function getInstitutionProvidersById($providerId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionProvidersById($providerId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['institution_sector_id'] = $data['institution_sector_id'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Provider.');
+        }
+    }
+
+    public function getInstitutionTypesById($typeId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionTypesById($typeId);
+            $list = [];
+            if($data){
+                    $list['id'] = $data['id'];
+                    $list['name'] = $data['name'];
+                    $list['order'] = $data['order'];
+                    $list['visible'] = $data['visible'];
+                    $list['editable'] = $data['editable'];
+                    $list['default'] = $data['default'];
+                    $list['international_code'] = $data['international_code'];
+                    $list['national_code'] = $data['national_code'];
+                    $list['modified_user_id'] = $data['modified_user_id'];
+                    $list['modified'] = $data['modified'];
+                    $list['created_user_id'] = $data['created_user_id'];
+                    $list['created'] = $data['created'];
+            }
+            
+            return $list;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Type.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Type.');
+        }
+    }
+
+    public function getInstitutionProviderBySectorId($sectorId)
+    {
+        try {
+            
+            $data = $this->institutionRepository->getInstitutionProviderBySectorId($sectorId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Provider By Sector ID.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Provider By Sector ID.');
+        }
+    }
+
+    public function getMealBenefits($request)
+    {
+        try {
+            $data = $this->institutionRepository->getMealBenefits($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Benefits List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Benefits List.');
+        }
+    }
+
+    public function getMealProgrammes($request)
+    {
+        try {
+            $data = $this->institutionRepository->getMealProgrammes($request);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $list[$k]['name'] = $d['name'];
+                    $list[$k]['code'] = $d['code'];
+                    $list[$k]['type'] = $d['type'];
+                    $list[$k]['targeting'] = $d['targeting'];
+                    $list[$k]['start_date'] = $d['start_date'];
+                    $list[$k]['end_date'] = $d['end_date'];
+                    $list[$k]['amount'] = $d['amount'];
+                    $list[$k]['implementer'] = $d['implementer'];
+                    $list[$k]['modified_user_id'] = $d['modified_user_id'];
+                    $list[$k]['modified'] = $d['modified'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                    
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Meal Programmes List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Meal Programmes List.');
+        }
+    }
+
+    // POCOR-7394-S ends
+
+    public function deleteClassAttendance($request)
+    {
+        try {
+            $data = $this->institutionRepository->deleteClassAttendance($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+
+
+    public function deleteStudentAttendance($request, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->deleteStudentAttendance($request, $studentId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to delete student attendance.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to delete student attendance.');
+        }
+    }
+
+    // POCOR-7546 starts
+
+    public function getBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Behaviour Categories List.');
+        }
+    }
+
+    //POCOR-8711 starts
+    public function getStudentBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStudentBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Student Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Student Behaviour Categories List.');
+        }
+    }
+
+    public function getStaffBehaviourCategories($request)
+    {
+        try {
+            $data = $this->institutionRepository->getStaffBehaviourCategories($request);
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Staff Behaviour Categories Option List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Staff Behaviour Categories List.');
+        }
+    }//POCOR-8711 Ends
+
+    public function getInstitutionStudentBehaviour($params, $institutionId, $studentId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStudentBehaviour($params, $institutionId, $studentId);
+            if($data){
+                return $data; 
+            }
+            return null;
+
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Student Behaviour.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            
+            return $this->sendErrorResponse('Failed to get Institution Student Behaviour.');
+        }
+    }
+
+    public function addStudentAssessmentItemResult($request)
+    {
+        try {
+            $data = $this->institutionRepository->addStudentAssessmentItemResult($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student assessment mark could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student assessment mark could not be completed successfully.');
+        }
+    }
+
+    public function addStudentBehaviour($request)
+    {
+        try {
+            $data = $this->institutionRepository->addStudentBehaviour($request);
+            
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The update of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The update of student behaviour could not be completed successfully.');
+        }
+    }
+
+    public function getInstitutionClassEducationGradeStudents($params, $institutionId, $institutionClassId, $educationGradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionClassEducationGradeStudents($params, $institutionId, $institutionClassId, $educationGradeId);
+
+            $resp = [];
+
+            if(count($data) > 0){
+                foreach($data['data'] as $k => $l){
+                    $resp[$k]['institution_class_id'] = $l['id'];
+                    $resp[$k]['institution_class_name'] = $l['name'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['student_id'] = $l['students'];
+
+                    $studentIds = [];
+
+                    if(count($resp[$k]['student_id']) > 0){
+                        $students = $resp[$k]['student_id'];
+
+                        foreach($students as $s){
+                            $studentIds[] = $s['student_id'];
+                        }
+                    }
+
+                    $resp[$k]['student_id'] = $studentIds;
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function getInstitutionEducationSubjectStudents($params, $institutionId, $educationGradeId)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionEducationSubjectStudents($params, $institutionId, $educationGradeId);
+            // return $data;
+
+            $resp = [];
+
+            if(count($data) > 0){
+                foreach($data['data'] as $k => $l){
+                    $resp[$k]['institution_subject_id'] = $l['id'];
+                    $resp[$k]['institution_subject_name'] = $l['name'];
+                    $resp[$k]['education_subject_code'] = $l['education_subjects']['code'];
+                    $resp[$k]['education_subject_name'] = $l['education_subjects']['name'];
+                    $resp[$k]['institution_id'] = $l['institution_id'];
+                    $resp[$k]['student_id'] = $l['students'];
+
+                    $studentIds = [];
+
+                    if(count($resp[$k]['student_id']) > 0){
+                        $students = $resp[$k]['student_id'];
+
+                        foreach($students as $s){
+                            $studentIds[] = $s['student_id'];
+                        }
+                    }
+
+                    $resp[$k]['student_id'] = $studentIds;
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $resp;
+                return $data;
+            } else {
+                return $resp;
+            }
+            //For POCOR-8215/8216 end...
+            
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+        
+            return $this->sendErrorResponse('Failed to get Students List.');
+        }
+    }
+
+    public function deleteStudentBehaviour($institutionId, $studentId, $behaviourId)
+    {
+        try {
+            $data = $this->institutionRepository->deleteStudentBehaviour($institutionId, $studentId, $behaviourId);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'The deletion of student behaviour could not be completed successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('The deletion of student behaviour could not be completed successfully.');
+        }
+    }
+
+// POCOR-7546 ends
+
+
+    // pocor-7545 starts
+
+    public function getSecurityRoleFunction($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSecurityRoleFunction($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Security Role Function List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Security Role Function List.');
+        }
+    }
+
+    public function getSecurityGroupUsers($request)
+    {
+        try {
+            $data = $this->institutionRepository->getSecurityGroupUsers($request);
+
+            return $data;
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Security Group Users List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Security Group Users List.');
+        }
+    }
+
+    public function getInstitutionStudentsMeals($request)
+    {
+        try {
+            $data = $this->institutionRepository->getInstitutionStudentsMeals($request);
+            $list = [];
+            if(count($data['data']) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_class_id'] = $d['institution_class_id'];
+                    $list[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $list[$k]['date'] = $d['date'];
+                    $list[$k]['meal_programmes_id'] = $d['meal_programmes_id'];
+                    $list[$k]['meal_received_id'] = $d['meal_received_id'];
+                    $list[$k]['meal_benefit_id'] = $d['meal_benefit_id'];
+                    
+                }
+            }
+
+            $data['data'] = $list;
+
+            return $data;
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Institution Students Meals List.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Institution Students Meals List.');
+        }
+    }
+
+    public function getStudentsMealsByInstitutionId($params, $institutionId)
+    {
+        try {
+
+            $data = $this->institutionRepository->getStudentsMealsByInstitutionId($params, $institutionId);
+            $list = [];
+            if(count($data) > 0){
+                foreach($data['data'] as $k => $d){
+                    $list[$k]['institution_id'] = $d['institution_id'];
+                    $list[$k]['institution_class_id'] = $d['institution_class_id'];
+                    $list[$k]['academic_period_id'] = $d['academic_period_id'];
+                    $list[$k]['date'] = $d['date'];
+                    $list[$k]['student_id'] = $d['student_id'];
+                    $list[$k]['meal_programmes_id'] = $d['meal_programmes_id'];
+                    $list[$k]['meal_received_id'] = $d['meal_received_id'];
+                    $list[$k]['meal_benefit_id'] = $d['meal_benefit_id'];
+                    
+                }
+            }
+
+            //For POCOR-8215/8216 start...
+            if(isset($params['limit'])){
+                $data['data'] = $list;
+                return $data;
+                
+            } else {
+                return $list;
+            }
+            //For POCOR-8215/8216 end...
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to get Students Meals List By Institution Id.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to get Students Meals List By Institution Id.');
+        }
+    }
+
+    public function getInstitutionStudentStatusByStudentId($studentId, $params)
+    {
+        try {
+
+            $data = $this->institutionRepository->getInstitutionStudentStatusByStudentId($studentId, $params);
+            $list = [];
+
+            $record = isset($params['limit']) ? $data['data'] : $data;
+            if(count($record) > 0){
+                foreach($record as $k => $d){
+                    $list[$k]['id'] = $d['id'];
+                    $list[$k]['security_user_id'] = $d['student_id'];
+                    $list[$k]['student_status_id'] = $d['student_status_id'];
+                    $list[$k]['created_user_id'] = $d['created_user_id'];
+                    $list[$k]['created'] = $d['created'];
+                }
+            }
+            if(isset($params['limit'])){
+                $data['data'] = $list;
+                return $data;
+            } else {
+                return $list;
+            }
+
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Institution Students Status from DB.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to fetch Institution Students Status from DB.');
+        }
+    }
+
+    public function addInstitutionStudent($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionStudent($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Student is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Student is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStaffPayslip($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionStaffPayslip($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Payslips is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Payslips is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionStudentMealBenefits($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionStudentMealBenefits($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Meal Benefit is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Benefit is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitutionMealDistributions($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitutionMealDistributions($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Meal Distribution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Meal Distribution is not created/updated successfully.');
+        }
+    }
+
+    public function addInstitution($request)
+    {
+        try {
+            $data = $this->institutionRepository->addInstitution($request);
+            return $data;
+            
+        } catch (\Exception $e) {
+            Log::error(
+                'Institution is not created/updated successfully.',
+                ['message'=> $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Institution is not created/updated successfully.');
+        }
+    }
+
+    //pocor-7545 ends
+
+    public function updateInstitutionClass($institutionId, $classId, $data) {
+        try {
+            return $this->institutionRepository->updateInstitutionClass($institutionId, $classId, $data);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function updateInstitutionSubject($institutionId, $subjectId, $data) {
+        try {
+            return $this->institutionRepository->updateInstitutionSubject($institutionId, $subjectId, $data);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function validateInstitutionClassData($institutionId, $classId, $data)
+    {
+        $errors = null;
+        $studentIds = [];
+        $class = $this->institutionRepository->getClass($classId);
+
+        if(!isset($data['name'])) {
+            $errors['name'] = 'Please enter name.';
+        }
+
+        if(!$class) {
+            $errors['class_id'] = 'Invalid class parameter.';
+        } else {
+            if($class->institution_id != $institutionId) {
+                $errors['institution_id'] = 'Invalid institution parameter.';
+            }
+
+            if($class->academic_period_id != $data['academic_period_id']) {
+                $errors['academic_period_id'] = 'Invalid academic period.';
+            }
+
+            $shifts = $this->institutionRepository->institutionShifts($institutionId, $class->academic_period_id);
+           // dd(isset($data['institution_shift_id']), $data['institution_shift_id'],  array_column($shifts, 'institution_shift_id'));
+           if(isset($data['institution_shift_id'])){
+                if (!in_array($data['institution_shift_id'],  array_column($shifts, 'institution_shift_id'))) {
+                    $errors['institution_shift_id'] = 'Invalid Institution shift Id';
+                } 
+            }else {
+                $errors['institution_shift_id'][] = 'Please enter shift.';
+            }
+            $grades = array_column($class->grades->toArray(), 'education_grade_id');
+
+            if($grades) {
+                $studentsNotInClass = $this->institutionRepository->studentsNotInClass($institutionId, $class->academic_period_id, $grades);
+
+                $studentsNotInClassIds = array_column($studentsNotInClass, 'student_id');
+
+                $studentInClass = $this->institutionRepository->studentsInClass($classId);
+                $studentsInClassIds = array_column($studentInClass, 'student_id');
+
+                $studentIds = array_merge($studentsInClassIds, $studentsNotInClassIds);
+
+                $classStudents = $data['class_students'];
+                if (count($classStudents)) {
+                    foreach($classStudents as $key => $student)
+                    {
+                        if (!in_array($student['student_id'], $studentIds)) {
+                            $errors['class_students']['student_id'][$key] = 'Invalid student Id, Student ('.$student['student_id'].') does not belong to institution.';
+                        }
+
+                        if (!in_array($student['education_grade_id'], $grades)) {
+                            $errors['class_students']['education_grade_id'][$key] = 'Invalid education grade Id ('.$student['education_grade_id'].') for student('.$student['student_id'].')' ;
+                        }
+                    }
+                }
+            }
+
+        }
+
+        $staffs = $this->institutionRepository->institutionStaffs($institutionId);
+        if (isset($data['staff_id']) && !in_array($data['staff_id'], array_column($staffs, 'users_id'))) {
+            $errors['staff_id'] = 'Invalid Staff Id.';
+        }
+
+        $units = $this->institutionRepository->institutionUnits();
+        if (isset($data['institution_unit_id']) && !in_array($data['institution_unit_id'], array_column($units->toArray(), 'id'))) {
+            $errors['institution_unit_id'] = 'Invalid Institution Unit Id';
+        }
+
+        $courses = $this->institutionRepository->institutionCourses();
+        if (isset($data['institution_course_id']) && !in_array($data['institution_course_id'], array_column($courses->toArray(), 'id'))) {
+            $errors['institution_course_id'] = 'Invalid Institution Course Id';
+        }
+
+        $capacity = $this->institutionRepository->institutionClassCapacity();
+
+        $maxAllowed = !empty($capacity->value) ? $capacity->value : $capacity->default_value;
+
+        if (is_numeric($maxAllowed) && $data['capacity'] > $maxAllowed) {
+            $errors['capacity'] = 'The capacity per class has exceeded the maximum capacity limit of '.$maxAllowed.' students.';
+        }
+
+        if (in_array($data['staff_id'], $data['classes_secondary_staff'])) {
+                $errors['secondary_staff_id'] = 'Secondary staff id should be different than staff id';
+        } else {
+            foreach($data['classes_secondary_staff'] as $staff) {
+                if (!in_array($staff, array_column($staffs, 'users_id'))) {
+                    $errors['staff'][] = 'Invalid secondary staff id - '.$staff;
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+
+    public function validateInstitutionSubjectData($institutionId, $subjectId, $data)
+    {
+        $errors = null;
+        $studentIds = [];
+
+        $subject = $this->institutionRepository->getSubject($subjectId);
+
+        if(!isset($data['name']) || empty($data['name'])) {
+            $errors['name'] = 'Please enter name.';
+        }
+
+        if(!isset($data['classes']) || empty($data['classes'])) {
+            $errors['classes'] = 'Please enter class.';
+        }
+
+        if(!$subject) {
+            $errors['subject_id'] = 'Invalid subject id in url.';
+        } else {
+
+            if($subject->institution_id != $institutionId) {
+                $errors['institution_id'] = 'Invalid institution id in url.';
+            }
+
+            if($subject->academic_period_id != $data['academic_period_id']) {
+                $errors['academic_period_id'] = 'Invalid academic period.';
+            }
+
+            $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $subject->education_grade_id, $subjectId);
+
+            if ($classes) {
+                foreach($data['classes'] as $class) {
+                    if (!in_array($class, array_column($classes, 'institution_class_id'))) {
+                        $errors['subject_staff'][] = 'Invalid class id - '.$class;
+                    }
+                }
+
+                $classesArray = array_column($classes, 'institution_class_id');
+
+                $unassignedStudents = $this->institutionRepository->unassignedStudentsInSubject($subject->education_subject_id, $classesArray, $subject->academic_period_id);
+
+                $unassignedStudentsIds = array_column($unassignedStudents, 'institution_class_students_student_id');
+
+                $assignedStudents = $this->institutionRepository->assignedStudentsInSubject($subjectId);
+
+                $assignedStudentsIds = array_column($assignedStudents, 'student_id');
+
+                $studentIds = array_merge($unassignedStudentsIds, $assignedStudentsIds);
+
+                $subjectStudents = $data['subject_students'];
+                if (count($subjectStudents)) {
+                    foreach($subjectStudents as $key => $student)
+                    {
+                        if (!in_array($student['student_id'], $studentIds)) {
+                            $errors['subject_students']['student_id'][$key] = 'Invalid student Id, Student ('.$student['student_id'].') does not belong to institution.';
+                        }
+
+                        if (!in_array($student['institution_class_id'], $classesArray)) {
+                            $errors['subject_students']['institution_class_id'][$key] = 'Invalid class Id ('.$student['institution_class_id'].') for student('.$student['student_id'].')' ;
+                        }
+                    }
+                }
+
+                foreach($data['classes'] as $class) {
+                    if (!in_array($class, $classesArray)) {
+                        $errors['classes'][] = 'Invalid class id - '.$class;
+                    }
+                }
+            }
+
+        }
+
+        $rooms = $this->institutionRepository->institutionRooms($institutionId, $data['academic_period_id']);
+
+        foreach($data['rooms'] as $room) {
+            if (!in_array($room, array_column($rooms, 'id'))) {
+                $errors['rooms'][] = 'Invalid room id - '.$room;
+            }
+        }
+
+        $staffs = $this->institutionRepository->institutionStaffs($institutionId);
+
+        foreach($data['subject_staff'] as $staff) {
+            if (!in_array($staff, array_column($staffs, 'users_id'))) {
+                $errors['subject_staff'][] = 'Invalid staff id - '.$staff;
+            }
+        }
+
+        return $errors;
+    }
+
+    public function shifts($institutionId, $academicPeriodId)
+    {
+        return  $this->institutionRepository->institutionShifts($institutionId, $academicPeriodId);
+    }
+
+    public function staffs($institutionId)
+    {
+        return  $this->institutionRepository->staffs($institutionId);
+    }
+
+    public function units($params)
+    {
+        return $this->institutionRepository->institutionUnits($params);
+    }
+
+    public function courses($params)
+    {
+        return $this->institutionRepository->institutionCourses($params);
+    }
+
+    public function rooms($institutionId, $params)
+    {
+        return  $this->institutionRepository->institutionRooms($institutionId, $params);
+    }
+
+    public function subjectClasses($institutionId, $educationGradeId, $institutionSubjectId)
+    {
+        return  $this->institutionRepository->institutionSubjectClasses($institutionId, $educationGradeId, $institutionSubjectId);
+    }
+
+    public function unassignedStudentsInClass($institutionId, $classId)
+    {
+        $class = $this->institutionRepository->getClass($classId);
+        if (!$class){
+            throw new Exception('Class not found.');
+        }
+        $grades = array_column($class->grades->toArray(), 'education_grade_id');
+        $students =  $this->institutionRepository->studentsNotInClass($institutionId, $class->academic_period_id, $grades);
+
+        $assignedStudents = [];
+        foreach($students as $key => $student) {
+            $assignedStudents[$key] = [
+                'user_id' => $student->student_id,
+                'user_openemis_no' => $student->users_openemis_no,
+                'user_first_name' => $student->users_first_name,
+                'user_last_name' => $student->users_last_name,
+                'grade_name' => $student->education_grade_name,
+                'user_gender' => $student->gender_name,
+                'user_status' => $student->student_status_name,
+                'special_needs' => $student->user_special_needs_assessments_id ? 1 : 0
+            ];
+        }
+
+        return $assignedStudents;
+    }
+
+    public function unassignedStudentsInSubject($institutionId, $subjectId)
+    {
+        $subject = $this->institutionRepository->getSubject($subjectId);
+        if (!$subject){
+            throw new Exception('Subject not found.');
+        }
+        $classes = $this->institutionRepository->institutionSubjectClasses($institutionId, $subject->education_grade_id, $subjectId);
+
+        $classesArray = array_column($classes, 'institution_class_id');
+
+        $students = $this->institutionRepository->unassignedStudentsInSubject($subject->education_subject_id, $classesArray, $subject->academic_period_id);
+
+        $assignedStudents = [];
+        foreach($students as $key => $student) {
+            $assignedStudents[$key] = [
+                'user_id' => $student->institution_class_students_student_id,
+                'user_openemis_no' => $student->users_openemis_no,
+                'user_first_name' => $student->users_first_name,
+                'user_last_name' => $student->users_last_name,
+                'class_name' => $student->institution_classes_name,
+                'user_gender' => $student->gender_name,
+                'user_status' => $student->student_statuses_name,
+                'special_needs' => $student->user_special_needs_assessments_id ? 1 : 0
+            ];
+        }
+
+        return $assignedStudents;
+    }
+
+    public function validateInstitution($id)
+    {
+        return  Institutions::where('id', $id)->first();
+    }
+
+    public function validateAcademicPeriod($id)
+    {
+        return  AcademicPeriod::where('id', $id)->first();
+    }
+
+    public function validateClass($id)
+    {
+        return  InstitutionClasses::where('id', $id)->first();
+    }
+
+    public function validateSubject($id)
+    {
+        return  InstitutionSubjects::where('id', $id)->first();
+    }
+
+    public function validateEducationGrade($id)
+    {
+        return  EducationGrades::where('id', $id)->first();
+    }
+
+    //For POCOR-8197 Starts...
+    public function getGradesViaInstitutionId($params, $institutionId)
+    {
+        try {
+
+            $list = $this->institutionRepository->getGradesViaInstitutionId($params, $institutionId);
+            
+            return $list;
+            
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+    //For POCOR-8197 End...
+
+}

@@ -1,0 +1,36 @@
+<?php
+namespace Student\Model\Table;
+
+use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
+
+class StudentGuardiansTable extends AppTable {
+	public function initialize(array $config): void {
+		parent::initialize($config);
+
+		$this->belongsTo('StudentUsers', ['className' => 'User.Users', 'foreignKey' => 'student_user_id']);
+		$this->belongsTo('GuardianUsers', ['className' => 'User.Users', 'foreignKey' => 'guardian_user_id']);
+		$this->belongsTo('GuardianRelations', ['className' => 'Student.GuardianRelations']);
+        $this->addBehavior('Configuration.CallWebhook', // POCOR-9403
+            [
+                'entity_create' => 'student_guardian_create',
+                'entity_delete' => 'student_guardian_delete',
+                'entity_update' => 'student_guardian_update',
+                'table_alias' => 'Student.StudentGuardians',
+                'contain' => []
+            ]
+        ); // for webhook
+		// $this->belongsTo('GuardianEducationLevels', ['className' => 'FieldOption.GuardianEducationLevels']); // Not in used currently
+	}
+
+	public function validationDefault(Validator $validator): Validator {
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->add('guardian_relation_id', [
+			])
+			->add('guardian_education_level_id', [
+			])
+			;
+	}
+}

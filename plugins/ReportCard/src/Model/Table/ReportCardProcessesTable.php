@@ -1,0 +1,450 @@
+<?php
+
+namespace ReportCard\Model\Table;
+
+use App\Model\Table\ControllerActionTable;
+use ArrayObject;
+use Cake\Log\Log;
+use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;//POCOR-6841
+use Cake\I18n\Date;//POCOR-6841
+use DateTime;//POCOR-6785
+use Cake\Http\ServerRequest;
+
+class ReportCardProcessesTable extends ControllerActionTable
+{
+    //POCOR-7989 start
+    CONST NEW_REPORT = 1;
+    CONST NEW_PROCESS = 1;
+    CONST IN_PROGRESS = 2;
+    CONST RUNNING = 2;
+    CONST GENERATED = 3;
+    CONST COMPLETED = 3;
+    CONST PUBLISHED = 4;
+    CONST ERROR = -1; //POCOR-6788
+    //POCOR-7989 end
+
+
+    public function initialize(array $config): void
+    {
+        parent::initialize($config);
+
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'institution_class_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->toggle('add', false);
+        $this->toggle('edit', false);
+        $this->toggle('search', false);
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        if ($field == 'class_name') {
+            return __('Class');
+        } else if ($field == 'student_id') {
+            return __('OpenEMIS ID');
+        } else if($field == 'institution_id') {
+            return __('Institution');
+        } else if($field == 'status') {
+            return __('Status');
+        }else if($field == 'academic_period_id') {
+            return __('Academic Period');
+        }elseif ($field == 'modified') {
+            return __('Modified On');
+        } elseif ($field == 'created') {
+            return __('Created On');
+        }else if($field=='education_grade_id'){//POCOR-7319
+            return __('Education Grades');
+        }else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetStudentID(EventInterface $event, Entity $entity)
+    {
+        if (isset($entity->student->openemis_no) && !empty($entity->student->openemis_no)) {
+            return $entity->student->openemis_no;
+        }
+        return ' - ';
+    }
+
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+////        Log::debug('@ReportCardProcessesTable::indexBeforeQuery START'); //[TEMP-LOG]
+////        Log::debug('@ReportCardProcessesTable::indexBeforeQuery WHERE conditions: ' . json_encode($query->clause('where'))); //[TEMP-LOG]
+
+        //POCOR_7319 starts
+        $where = [];
+        //AcademicPeriodd Filter //POCOR-7958::Start
+        $AcademicPeriodd = $this->AcademicPeriods->getYearList();
+        $academicPeriodOptions = ['-1' => __(' All Academic Periods ')] + $AcademicPeriodd;
+        $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') :-1 ;
+        $this->controller->set(compact( 'academicPeriodOptions','selectedAcademicPeriod'));
+
+        foreach ($academicPeriodOptions AS $key => $academicPeriodOptionsData) {
+            $AcademicPerioddKey[$key] = $key;
+        }
+        if ($selectedAcademicPeriod != -1) {
+            $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        }
+        //End //POCOR-7958::End
+        $serverRequest = $this->request;
+        //Status Filter
+        $ReportStatus = $this->getStatusList();
+        $reportCardStatusOptions = ['0' => __(' All Status ')] + $ReportStatus; //POCOR-7989 start
+        $selectedReportStatus = !is_null($serverRequest->getQuery('status')) ? $serverRequest->getQuery('status') :0 ; 
+        $this->controller->set(compact('reportCardStatusOptions', 'selectedReportStatus'));
+
+        foreach ($reportCardStatusOptions AS $key => $reportCardSatusOptionsData) {
+            $reportStatusKey[$key] = $key;
+        }
+        if ($selectedReportStatus != 0) { //POCOR-7989 start
+            $where[$this->aliasField('status')] = $selectedReportStatus;
+        }
+//        if (!empty($reportStatusKey)) { //POCOR-7989 start
+//            $where[$this->aliasField('status In')] = $reportStatusKey; //POCOR-7989 start
+//        } //POCOR-7989 start
+        // End
+
+        //Area Filter
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $areaOptions = [];
+        $areaOptions = $Areas->find('list')
+            ->toArray();
+        $areaOptions = ['-1' => __(' All Areas ')] + $areaOptions;
+        $selectedArea = !is_null($serverRequest->getQuery('area_id')) ? $serverRequest->getQuery('area_id') : -1;
+        $this->controller->set(compact('areaOptions', 'selectedArea'));
+
+        foreach ($areaOptions AS $key => $areaOptionsData) {
+            $areaKey[$key] = $key;
+        }
+        //End
+
+        //Institution Filter
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $institutionOptions = [];
+        if ($selectedArea == -1) {
+            $institutionOptions = $Institutions->find('list')
+                ->where([
+                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
+                ])->toArray();
+        } else {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[] = $selectedArea;
+            if (!empty($allgetArea)) {
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            } else {
+                $allselectedAreas = $selectedArea1;
+            }
+
+            $institutionOptions = $Institutions->find('list')
+                ->where([$Institutions->aliasField('area_id IN') => $allselectedAreas,
+                    $Institutions->aliasField('institution_status_id !=') => 2 //POCOR-6329
+                ])->toArray();
+        }
+
+        if (!empty($institutionOptions)) {
+            foreach ($institutionOptions AS $institutionOptionsDataKey => $institutionOptionsData) {
+                $institutionOptionsKey[$institutionOptionsDataKey] = $institutionOptionsDataKey;
+            }
+        }
+
+        $institutionOptions = ['-1' => __('All Institution')] + $institutionOptions;
+        $selectedInstitution = !is_null($serverRequest->getQuery('institution_id')) ? $serverRequest->getQuery('institution_id') : -1;
+        $this->controller->set(compact('institutionOptions', 'selectedInstitution'));
+
+
+        if ($selectedInstitution != -1) {
+            $where[$this->aliasField('institution_id')] = $selectedInstitution;
+        }
+        if (!empty($institutionOptionsKey)) {
+            $where[$this->aliasField('institution_id IN ')] = $institutionOptionsKey;
+        }
+
+        //End
+        //Education grade Filter
+         $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+         $EducationGrades=TableRegistry::getTableLocator()->get('Education.EducationGrades');
+         $EducationGradeOptions = [];
+         $educationGradeList = [];
+         if($selectedInstitution == -1){
+            $EducationGradeOptions  = $EducationGrades->find('list')
+                                    //  ->distinct([$EducationGrades->aliasField('name')])
+                                    ->toArray();
+         }else{
+             $EducationGradeOptions = $EducationGrades
+                                ->find('list')
+                                ->select([
+                                    'education_grade_id' => $EducationGrades->aliasField('id'),
+                                    'education_grade' => $EducationGrades->aliasField('name')])
+                                ->InnerJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
+                                   $EducationGrades->aliasField('id = ') . $InstitutionGrades->aliasField('education_grade_id')
+                                ])
+                                ->where([$InstitutionGrades->aliasField('institution_id') => $selectedInstitution])
+                                ->enableHydration(false)
+                                ->toArray();
+           }
+        $EducationGradeOptionsKey = [];
+        $EducationGradeOptionsList=$EducationGradeOptions;
+        $list=[];
+        if(!empty($EducationGradeOptions)){
+            foreach($EducationGradeOptions AS $key => $value){
+                $EducationGradeOptionsKey[$key] = $key ;
+
+            }
+        }
+
+        $EducationGradeOptions = ['-1' => __('All Education Grades')] + $EducationGradeOptions;
+        $selectedEducationGrade = !is_null($this->request->getQuery('education_grade_id')) ? $this->request->getQuery('education_grade_id') : -1;
+        $EducationGradeOptions = array_unique($EducationGradeOptions);
+        $this->controller->set(compact('EducationGradeOptions', 'selectedEducationGrade'));
+
+        if ($selectedEducationGrade != -1) {
+            $EducationGradeName = $EducationGradeOptions[$selectedEducationGrade];
+            $EducationGradeIdList = [];
+            foreach ($EducationGradeOptionsList as $key => $value) {
+                if ($value == $EducationGradeName) {
+                    $EducationGradeIdList[] = $key;
+                }
+            }
+            $where[$this->aliasField('education_grade_id In')] = $EducationGradeIdList;
+        }
+
+        //End
+        $query->where($where);
+////        Log::debug('@ReportCardProcessesTable::indexBeforeQuery final WHERE: ' . json_encode($where)); //[TEMP-LOG]
+        //POCOR-7319 ends
+
+        // POCOR-7067 Starts
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $timeZone = $ConfigItems->value("time_zone");
+        date_default_timezone_set($timeZone);//POCOR-7067 Ends
+
+        $ReportCardProcessesTable = TableRegistry::getTableLocator()->get('ReportCard.ReportCardProcesses');
+        $entitydata = $ReportCardProcessesTable->find('all', ['conditions' => [
+            'status' => '2' //POCOR-7989 start
+        ]])->where([$ReportCardProcessesTable->aliasField('modified IS NOT NULL')])->toArray();
+
+        //POCOR-9228[START]
+        // foreach ($entitydata as $keyy => $entity) {
+        //     //POCOR-7067 Starts
+        //     $now = new DateTime();
+        //     $currentDateTime = $now->format('Y-m-d H:i:s');
+        //     $c_timestap = strtotime($currentDateTime);
+        //     $modifiedDate = $entity->modified->format('Y-m-d H:i:s');
+        //     //POCOR-6841 starts
+        //     if ($entity->status == 2) {
+        //         $currentTimeZone = new DateTime();
+        //         $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
+        //         $m_timestap = strtotime($modifiedDate);
+        //         $interval = abs($c_timestap - $m_timestap);
+        //         $diff_mins = round($interval / 60);
+        //         if ($diff_mins > 5 && $diff_mins < 30) {
+        //             $entity->status = 1;
+        //             $ReportCardProcessesTable->save($entity);
+        //         } elseif ($diff_mins > 30) {
+        //             $entity->status = self::ERROR;
+        //             $entity->modified = $currentTimeZone;//POCOR-6841
+        //             $ReportCardProcessesTable->save($entity);
+        //         }
+        //         //POCOR-7067 Ends
+        //     }//POCOR-6841 ends
+        // }
+
+        foreach ($entitydata as $keyy => $entity) {
+            $now = new DateTime();
+            $currentDateTime = $now->format('Y-m-d H:i:s');
+            $c_timestap = strtotime($currentDateTime);
+            $modifiedDate = $entity->modified->timezone($timeZone)->format('Y-m-d H:i:s');
+            if ($entity->status == 2) {
+                $currentTimeZone = new DateTime();
+                $modifiedDate = ($modifiedDate === null) ? $currentTimeZone : $modifiedDate;
+                $m_timestap = strtotime($modifiedDate);
+                $interval = abs($c_timestap - $m_timestap);
+                $diff_mins = round($interval / 60);
+                if ($diff_mins > 30) {
+                    $entity->status = self::ERROR;
+                    $entity->modified = $currentTimeZone;
+                    $ReportCardProcessesTable->save($entity);
+                }
+            }
+        }
+        //POCOR-9228[END]
+        $extra['elements']['controls'] = ['name' => 'ReportCard.controls', 'data' => [], 'options' => [], 'order' => 1];
+        //  //END:POCOR-6785
+        $sortList = ['status', 'Users.openemis_no', 'InstitutionClasses.name', 'Institutions.name', 'EducationGrades.name'];//POCOR-7319
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // Start POCOR-5188
+        $is_manual_exist = $this->getManualUrl('Administration', 'Processes', 'Report Cards');
+        if (!empty($is_manual_exist)) {
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target' => '_blank'
+            ];
+
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
+    }
+
+
+    public function onGetStatus(EventInterface $event, Entity $entity)
+    {
+
+        $status = [
+            '1' => "New Process",
+            '2' => 'Running',
+            '3' => 'Completed',
+            '-1' => 'Error'
+        ];
+        if (isset($status[$entity->status])) {
+            return $status[$entity->status];
+        }
+        return 'Error';
+    }
+
+
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->fields['institution_id']['visible'] = true;
+        $this->fields['institution_class_id']['visible'] = true;
+        $this->fields['student_id']['visible'] = true;
+        $this->fields['status']['visible'] = true;
+
+        $this->fields['report_card_id']['visible'] = false;
+        $this->fields['education_grade_id']['visible'] = true;//POCOR 7319
+        $this->fields['academic_period_id']['visible'] = false;
+        $this->fields['created']['visible'] = false;
+
+        $this->setFieldOrder([
+            'institution_id',
+            'education_grade_id',//POCOR 7319
+            'class_name',
+            'openemis_no',
+            'status'
+        ]);
+
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('class_name', ['sort' => ['field' => 'InstitutionClasses.name']]);
+        $this->field('institution_id', ['sort' => ['field' => 'Institutions.name']]);
+        $this->field('education_grade_id', ['sort' => ['field' => 'EducationGrades.name']]);//POCOR 7319
+        $this->field('status', ['sort' => ['field' => 'status']]);
+        $this->setupNewTabElements();
+    }
+
+    private function setupNewTabElements()
+    {
+        $tabElements = $this->controller->getReportTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Processes');
+    }
+
+    public function onGetOpenemisNo(EventInterface $event, Entity $entity)
+    {
+        if ($entity->has('user')) {
+            return $entity->user->openemis_no;
+        }
+        return ' - ';
+    }
+
+    public function onGetClassName(EventInterface $event, Entity $entity)
+    {
+        if ($entity->has('institution_class')) {
+            return $entity->institution_class->name;
+        }
+        return ' - ';
+    }
+
+
+    //POCOR-7319 starts
+
+    public function getStatusList()
+    {
+        //POCOR-7989 start
+        $status = [
+            self::NEW_REPORT => __('New'),
+            self::IN_PROGRESS => __('In Progress'),
+            self::GENERATED => __('Generated'),
+            self::PUBLISHED => __('Published'),
+            self::ERROR => __('Error') //POCOR-6788
+        ];
+        //POCOR-7989 end
+        return $status;
+    }
+
+    public function getChildren($id, $idArray)
+    {
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $result = $Areas->find()
+            ->where([
+                $Areas->aliasField('parent_id') => $id
+            ])
+            ->toArray();
+        foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+            $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
+    }
+
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+////        Log::debug('@ReportCardProcessesTable::afterSave status=' . $entity->status . ' report_card_id=' . $entity->report_card_id . ' student_id=' . $entity->student_id . ' institution_id=' . $entity->institution_id); //[TEMP-LOG]
+        if ($entity->status == 3)//Status is complete
+        {
+////            Log::debug('@ReportCardProcessesTable::afterSave status is COMPLETED (3), cascading to InstitutionStudentsReportCards'); //[TEMP-LOG]
+            $StudentsReportCards = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentsReportCards');
+            # Update the status of student process
+            $updateQuery = $StudentsReportCards->query()->update()
+                ->set([
+                    'status' => self::NEW_PROCESS,  // POCOR-7443
+                    // 'started_on' => null,    // POCOR-7443
+                    // 'completed_on' => null   // POCOR-7443
+                ])
+                ->where([
+                    'report_card_id' => $entity->report_card_id,
+                    'student_id' => $entity->student_id,
+                    'institution_id' => $entity->institution_id,
+                    'academic_period_id' => $entity->academic_period_id,
+                    'education_grade_id' => $entity->education_grade_id,
+                    'institution_class_id' => $entity->institution_class_id
+                ]);
+            //// Log::debug('@ReportCardProcessesTable::afterSave cascading update to InstitutionStudentsReportCards with conditions: ' . json_encode([
+            ////     'report_card_id' => $entity->report_card_id,
+            ////     'student_id' => $entity->student_id,
+            ////     'institution_id' => $entity->institution_id,
+            ////     'academic_period_id' => $entity->academic_period_id,
+            ////     'education_grade_id' => $entity->education_grade_id,
+            ////     'institution_class_id' => $entity->institution_class_id
+            //// ])); //[TEMP-LOG]
+            $result = $updateQuery->execute();
+////            Log::debug('@ReportCardProcessesTable::afterSave cascade affected rows=' . $result->rowCount()); //[TEMP-LOG]
+        } else {
+////            Log::debug('@ReportCardProcessesTable::afterSave status=' . $entity->status . ' - no cascade action'); //[TEMP-LOG]
+        }
+    }
+
+    //POCOR-7319 ends
+}

@@ -1,0 +1,203 @@
+/* DROPDOWN v.1.0.1 */
+
+select:focus {
+    outline: none !important;
+}
+
+.dropdown-filter {
+    display: block;
+    text-align: left;
+    border: 1px solid #CCC;
+    -webkit-border-radius: 4px;
+    border-radius: 4px;
+    position: relative;
+    margin: 20px 0 10px;
+    padding: 20px 10px 0;
+    position: relative;
+}
+
+.dropdown-filter .filter-label {
+    display: block;
+    background-color: #FFF;
+    color: #999;
+    vertical-align: middle;
+    position: absolute;
+    top: -15px;
+    left: 5px;
+    margin: 0;
+    padding: 5px;
+    width: auto !important;
+    text-align: center;
+}
+
+.dropdown-filter .filter-label label {
+    display: inline-block;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.dropdown-filter .close {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    font-size: 16px;
+    z-index: 1;
+}
+
+.dropdown-filter .filter-label i {
+    line-height: normal;
+    vertical-align: text-top;
+}
+
+.dropdown-filter label,
+.dropdown-filter select,
+.dropdown-filter .text input {
+    font-size: 12px;
+}
+
+.dropdown-filter label {
+    font-weight: normal;
+    margin: 0 5px 5px 0 !important;
+    display: block;
+    padding: 0;
+}
+
+.dropdown-filter .input-select-wrapper,
+.dropdown-filter select,
+.dropdown-filter .text input {
+    background-color: #FFF;
+    width: 100%;
+    min-width: 150px;
+    height: 25px;
+}
+
+.dropdown-filter .text input {
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    border: 1px solid #CCC;
+}
+
+.dropdown-filter select,
+.dropdown-filter .text input {
+    padding: 3px 25px 4px 5px !important;
+}
+
+.chrome .dropdown-filter select,
+.safari .dropdown-filter select,
+.chrome .dropdown-filter .text input,
+.safari .dropdown-filter .text input {
+    padding: 4px 25px 4px 5px !important;
+}
+
+.dropdown-filter .input-select-wrapper:after {
+    top: 40%;
+}
+
+.dropdown-filter .select,
+.dropdown-filter .text {
+    display: inline-block;
+    margin-right: 10px;
+    width: 15%;
+}
+
+.dropdown-filter .text {
+    margin-bottom: 15px !important;
+}
+
+.dropdown-filter .filter-action-btn {
+    display: block;
+    clear: both;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.dropdown-filter .checkbox .input-selection,
+.dropdown-filter .checkbox .input-selection-inline {
+    border: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.dropdown-filter .checkbox .input-selection .selection-label,
+.dropdown-filter .checkbox .input-selection-inline .selection-label {
+    width: auto !important;
+    display: inline !important;
+    line-height: 25px;
+}
+
+
+/* Bigger Screen */
+
+@media only screen and (max-width: 1240px) {
+    .dropdown-filter label {
+        display: block;
+    }
+    .dropdown-filter .select,
+    .dropdown-filter .text {
+        width: 35%;
+        margin: 0 5px;
+    }
+    .dropdown-filter .input-select-wrapper,
+    .dropdown-filter select,
+    .dropdown-filter .text input {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .dropdown-filter .select,
+    .dropdown-filter .text {
+        width: 100%;
+        margin: 0;
+    }
+    .dropdown-filter .filter-label {
+        left: 50%;
+        -webkit-transform: translate(-50%, 0);
+        -moz-transform: translate(-50%, 0);
+        -ms-transform: translate(-50%, 0);
+        -o-transform: translate(-50%, 0);
+        transform: translate(-50%, 0);
+    }
+}
+
+
+/* RTL */
+
+.rtl .dropdown-filter {
+    text-align: right;
+}
+
+.rtl .dropdown-filter .input-select-wrapper {
+    float: none;
+}
+
+.rtl .dropdown-filter label,
+.rtl .dropdown-filter select {
+    font-size: 14px;
+}
+
+.rtl .dropdown-filter select {
+    padding: 2px 5px 2px 25px !important;
+}
+
+.rtl .dropdown-filter .filter-label {
+    right: 20px;
+    left: auto;
+}
+
+.rtl .dropdown-filter .filter-label {
+    width: 68px;
+}
+
+@media only screen and (max-width: 480px) {
+    .dropdown-filter .filter-label {
+        left: auto !important;
+        right: 50% !important;
+        -webkit-transform: translate(50%, 0);
+        -moz-transform: translate(50%, 0);
+        -ms-transform: translate(50%, 0);
+        -o-transform: translate(50%, 0);
+        transform: translate(50%, 0);
+    }
+}
+

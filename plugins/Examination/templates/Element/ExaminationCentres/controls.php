@@ -1,0 +1,47 @@
+<?php if (!empty($examinationOptions) || !empty($roomOptions)) : ?>
+    <div class="toolbar-responsive panel-toolbar">
+        <div class="toolbar-wrapper">
+            <?php
+                $encodedQueryString = !empty($queryString) ? $queryString : $this->request->getQuery('queryString');
+
+                $url = [
+                    'plugin' => $this->request->getParam('plugin'),
+                    'controller' => $this->request->getParam('controller'),
+                    'action' => $this->request->getParam('action'),
+                    'index'
+                ];
+
+                if (!empty($encodedQueryString)) {
+                    $url['queryString'] = $encodedQueryString;
+                }
+
+                $baseUrl = $this->Url->build($url);
+                $template = $this->ControllerAction->getFormTemplate();
+                $this->Form->templates($template);
+
+                if (!empty($examinationOptions)) {
+                    echo $this->Form->input('examination', array(
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $examinationOptions,
+                        'default' => $selectedExamination,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'examination_id'
+                    ));
+                }
+
+                if (!empty($roomOptions)) {
+                    echo $this->Form->input('examination_centre_room', array(
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $roomOptions,
+                        'default' => $selectedRoom,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'examination_centre_room_id',
+                        'data-named-group' => 'examination_id'
+                    ));
+                }
+            ?>
+        </div>
+    </div>
+<?php endif ?>
