@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Api5\UserIdentities as Api5UserIdentities;
+use Illuminate\Support\Facades\Log;
 
 class UserIdentities extends Model
 {
@@ -16,8 +18,27 @@ class UserIdentities extends Model
     public $timestamps = false;
     protected $table = "user_identities";
 
-
-
+    //POCOR-9590: same identity-lock as the v5 model — number / identity_type_id immutable on
+    //rows whose identity_type is an external-source lookup key. See Api5\UserIdentities for
+    //the shared isExternalLookupIdentityType() helper.
+    protected static function booted(): void
+    {
+        static::updating(function (self $row) {
+            if (!$row->isDirty('number') && !$row->isDirty('identity_type_id')) {
+                return;
+            }
+            $typeId = (int) $row->getOriginal('identity_type_id');
+            if (!Api5UserIdentities::isExternalLookupIdentityType($typeId)) {
+                return;
+            }
+            Log::warning('POCOR-9590: v4 blocked update to external-lookup identity row', [
+                'row_id'  => $row->id,
+                'type_id' => $typeId,
+                'fields'  => array_keys($row->getDirty()),
+            ]);
+            return false;
+        });
+    }
 
 
 

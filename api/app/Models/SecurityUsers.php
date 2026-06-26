@@ -12,6 +12,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Traits\NumericId;
 use App\Models\Concerns\UserActivityLog; //POCOR-9697: Wave-3 audit-log trait
+use App\Models\Concerns\HidesSuperAdmins; //POCOR-9710: row-level super_admin visibility lock
 
 class SecurityUsers extends Authenticatable implements JWTSubject
 {
@@ -19,6 +20,7 @@ class SecurityUsers extends Authenticatable implements JWTSubject
     use Notifiable;
     use NumericId;
     use UserActivityLog; //POCOR-9697: log every create/update/delete to user_activities
+    use HidesSuperAdmins; //POCOR-9710: super_admin = 1 rows invisible to non-super-admin callers
 
     //POCOR-9591: start - account status constants
     const STATUS_ACTIVE   = 1; // active account
