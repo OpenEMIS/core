@@ -2,9 +2,9 @@ angular
     .module('institution.staff.attendances.svc', ['kd.data.svc', 'alert.svc'])
     .service('InstitutionStaffAttendancesSvc', InstitutionStaffAttendancesSvc);
 
-InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', 'KdDataSvc', 'AlertSvc', 'UtilsSvc'];
+InstitutionStaffAttendancesSvc.$inject = ['$http', '$q', '$filter', '$timeout', 'KdDataSvc', 'AlertSvc', 'UtilsSvc']; //POCOR-9700: native HTML5 type=time picker
 
-function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc, UtilsSvc) {
+function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc, AlertSvc, UtilsSvc) { //POCOR-9700: native HTML5 type=time picker
    var models = {
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
         InstitutionStaffAttendances: 'Staff.InstitutionStaffAttendances',
@@ -43,7 +43,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         getAllDayColumnDefs: getAllDayColumnDefs,
         getShiftListOptions: getShiftListOptions,
         getConfigItemValue: getConfigItemValue,
+        getTimeFormatIs12h: getTimeFormatIs12h, //POCOR-9700: ctrl awaits this before grid renders so AM/PM is correct on first paint
     };
+
     return service;
 
     function init(baseUrl) {
@@ -501,264 +503,160 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         return eTextarea;
     }
 
-    function createTimeElement(params, timeKey, rowIndex)
-    {
-		var action = params.context.action;
+    //POCOR-9700: server returns time strings per system time_format config — when 12h is configured,
+    // it returns 'HH:MM:SS AM/PM' which HTML5 <input type=time> CANNOT display (value attribute is
+    // strictly 24h HH:MM per W3C spec). Normalize to canonical 24h before assignment. Idempotent
+    // on already-24h input.
+    function normalizeTo24Hour(timeStr) {
+        if (!timeStr || typeof timeStr !== 'string') return timeStr;
+        var m = timeStr.match(/^\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)?\s*$/);
+        if (!m) return timeStr;
+        var h = parseInt(m[1], 10);
+        var mm = m[2];
+        var ss = m[3] || '00';
+        var meridian = (m[4] || '').toUpperCase();
+        if (meridian === 'PM' && h < 12) h += 12;
+        if (meridian === 'AM' && h === 12) h = 0;
+        return (h < 10 ? '0' + h : h) + ':' + mm + ':' + ss;
+    }
+
+    //POCOR-9700: native HTML5 <input type="time"> picker.
+    // Per MDN, AM/PM display is decided by the browser/OS locale — there is no HTML/CSS/JS
+    // knob to override it. Trade-off accepted in favour of the generic, universally-available
+    // native picker: no extra library, mobile-native UX, zero popup-stacking risk.
+    // Preserved from prior POCOR-9700 work: per-row _savePromise chain, 600ms debounce,
+    // recheck-from-DB after save, order validation, outside-shift ±3h soft warning,
+    // future-time block, permission checks.
+    function createTimeElement(params, timeKey, rowIndex) {
         var data = params.data;
+        var dateString = data.date;
         var academicPeriodId = params.context.period;
-        var timepickerId = (timeKey == 'time_in') ? 'time-in-' : 'time-out-';
-        timepickerId += rowIndex;
-        var time = '';
-        if (params.value[timeKey] != null && params.value[timeKey] != "") {
-            time = convert12Timeformat(params.value[timeKey]);
-        }
         var scope = params.context.scope;
-        var leave = data.attendance[data.date].leave;
+        var timepickerId = (timeKey === 'time_in' ? 'time-in-' : 'time-out-') + rowIndex;
+        var leave = data.attendance[dateString].leave;
         var isDisabled = (leave && leave.length > 0 && leave[0].isFullDay === 1);
         var isTimeOutField = (timeKey === 'time_out');
 
+        // input-group wrapper with native HTML5 type=time input + glyphicon-time addon
+        var wrapperDiv = document.createElement('div');
+        wrapperDiv.setAttribute('class', 'input-group time' + (isDisabled ? ' disabled' : ''));
+
+        var inputElement = document.createElement('input');
+        inputElement.setAttribute('type', 'time');
+        inputElement.setAttribute('step', '60');
+        inputElement.setAttribute('id', timepickerId);
+        inputElement.setAttribute('class', 'form-control timPikr');
+        if (isDisabled) inputElement.setAttribute('disabled', 'disabled');
+        var existing = normalizeTo24Hour(params.value[timeKey]);
+        if (existing) inputElement.value = existing.substring(0, 5);
+        if (hasError(data, timeKey, timepickerId)) inputElement.className += ' form-error';
+
+        var iconSpan = document.createElement('span');
+        iconSpan.setAttribute('class', 'input-group-addon' + (isDisabled ? ' disabled' : ''));
+        var iconElement = document.createElement('i');
+        iconElement.setAttribute('class', 'glyphicon glyphicon-time');
+        iconSpan.appendChild(iconElement);
+        //POCOR-9700: clicking the addon icon focuses the native input so user can use spinner / keyboard
+        iconSpan.addEventListener('click', function () { if (!isDisabled) inputElement.focus(); });
+
         function hasTimeInSelected() {
-            return angular.isDefined(params.value.time_in) && params.value.time_in !== null && params.value.time_in !== '';
+            return params.value.time_in !== null && params.value.time_in !== undefined && params.value.time_in !== '';
+        }
+        function revertInput() {
+            inputElement.value = params.value[timeKey] ? params.value[timeKey].substring(0, 5) : '';
+        }
+        function toMinutes(hms) {
+            var p = hms.split(':');
+            return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
+        }
+        function detectOutsideShiftWarning(time24Hour) {
+            // POCOR-9700: returns the warning text (or null), so the save callback can fold it into a
+            // single combined toast rather than letting the success message overwrite the warning.
+            var shiftStart = params.context.shiftStartTime;
+            var shiftEnd = params.context.shiftEndTime;
+            if (!shiftStart || !shiftEnd || !time24Hour) return null;
+            var GRACE_MIN = 180; // 3 hours: schools have early prep + late grading
+            var tMin = toMinutes(time24Hour);
+            if (timeKey === 'time_in' && tMin < toMinutes(shiftStart) - GRACE_MIN) {
+                return 'Time In is more than 3 hours before the shift starts — please verify.';
+            }
+            if (timeKey === 'time_out' && tMin > toMinutes(shiftEnd) + GRACE_MIN) {
+                return 'Time Out is more than 3 hours after the shift ends — please verify.';
+            }
+            return null;
         }
 
-        function guardTimeOutWithoutTimeIn() {
+        inputElement.addEventListener('change', function () {
+            if (isDisabled) return;
             if (isTimeOutField && !hasTimeInSelected()) {
                 AlertSvc.warning(scope, 'Please select Time In first.');
-                return true;
-            }
-            return false;
-        }
-
-        // div element
-        var timeInputDivElement = document.createElement('div');
-        // if (!isDisabled)
-        timeInputDivElement.setAttribute('id', timepickerId); // for pop up
-        //POCOR-7770 to hide
-        if (!isDisabled) timeInputDivElement.setAttribute('class', 'input-group time timepicker');
-        if (isDisabled) timeInputDivElement.setAttribute('class', 'input-group time');
-        //END POCOR-7770 to hide
-        var timeInputElement = document.createElement('input');
-        if (!isDisabled)  timeInputElement.setAttribute('class', 'form-control timPikr'); //POCOR-7918
-        if (isDisabled)  timeInputElement.setAttribute('class', 'form-control'); //POCOR-7918
-        if (isDisabled) timeInputElement.setAttribute('disabled', true); // for styling ui
-        timeInputElement.setAttribute('readonly', 'readonly');
-        var timeSpanElement = document.createElement('span');
-        timeSpanElement.setAttribute('class', (isDisabled) ? 'input-group-addon disabled' : 'input-group-addon'); // for styling ui
-        var timeIconElement = document.createElement('i');
-        timeIconElement.setAttribute('class', 'glyphicon glyphicon-time');
-
-        if (hasError(data, timeKey, timepickerId)) {
-            timeInputElement.setAttribute("class", "form-control form-error");
-        }
-        setTimeout(function(event) {
-            if (isDisabled){
+                inputElement.value = '';
                 return;
             }
-            var timepickerControl = $('#' + timepickerId).timepicker({defaultTime: time, showInputs: true,minuteStep:1});
-            $('#' + timepickerId).timepicker().on("hide.timepicker", function (e) {
-                UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
-                if (params.value[timeKey] == null) {
-                    params.value.isNew = true;
-                }
-                var time24Hour = null;
-                if (timeInputElement.value.length > 0) {
-                    time24Hour = convert24Timeformat(e.time.hours, e.time.minutes, e.time.seconds, e.time.meridian);
-                }
-                // Validate ordering: time_out must be strictly greater than time_in (and vice versa)
-                try {
-                    var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
-                    if (time24Hour !== null && otherTime) {
-                        // Compare as strings HH:MM:SS works lexicographically
-                        if (timeKey === 'time_out' && time24Hour <= otherTime) {
-                            AlertSvc.error(scope, 'Time Out must be after Time In.');
-                            // revert UI value to previous saved value
-                            try {
-                                timeInputElement.value = convert12Timeformat(params.value[timeKey] || '');
-                            } catch (err) {
-                                timeInputElement.value = '';
-                            }
-                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
-                            UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                            timeInputElement.setAttribute('readonly', 'readonly');
-                            return;
-                        }
-                        if (timeKey === 'time_in' && time24Hour >= otherTime) {
-                            AlertSvc.error(scope, 'Time In must be before Time Out.');
-                            try {
-                                timeInputElement.value = convert12Timeformat(params.value[timeKey] || '');
-                            } catch (err) {
-                                timeInputElement.value = '';
-                            }
-                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
-                            UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                            timeInputElement.setAttribute('readonly', 'readonly');
-                            return;
-                        }
-                    }
-                } catch (cmpErr) {
-                    // If validation comparison fails, just proceed to server-side validation
-                }
-                saveStaffAttendance(params, timeKey, time24Hour, academicPeriodId)
-                    .then(
-                        function (response) {
-                            clearError(data, timeKey);
-                            if (Object.keys(response.data.error).length > 0 || response.data.error.length > 0) {
-                                setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
-                                var errorMsg = 'There was an error when saving record';
-                                if (typeof response.data.error === 'string') {
-                                    errorMsg = response.data.error;
-                                } else if (response.data.error.time_out.ruleCompareTimeReverse) {
-                                    errorMsg = response.data.error.time_out.ruleCompareTimeReverse;
-                                } else if (response.data.error.time_out.timeInShouldNotEmpty) {
-                                    errorMsg = response.data.error.time_out.timeInShouldNotEmpty;
-                                }
-
-                                AlertSvc.error(scope, errorMsg);
-                            } else {
-                                AlertSvc.success(scope, 'Time record successfully saved.');
-                                params.value.isNew = false;
-                                params.value[timeKey] = time24Hour;
-                                setError(data, timeKey, false, {id: timepickerId, elm: timeInputElement});
-                            }
-                        },
-                        function (error) {
-                            clearError(data, timeKey);
-                            setError(data, timeKey, true, {id: timepickerId, elm: timeInputElement});
-                            AlertSvc.error(scope, 'There was an error when saving record');
-                        }
-                    )
-                    .finally(function () {
-                        UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                        var refreshParams = {
-                            columns: [
-                                'attendance.' + data.date,
-                            ],
-                            force: true
-                        };
-                        params.api.refreshCells(refreshParams);
-                    });
-                UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
-                timeInputElement.setAttribute('readonly', 'readonly');
-            })
-            //POCOR-7770 to hide
-                .on('keyup', function(e) {
-                if(e.keyCode == 9) {
-                    $('.timepicker').each(function() {
-                        var element = $(this);
-                        if (element.attr('id') !== timepickerId) {
-                            element.timepicker('hideWidget');
-                        }
-                    });
-                }
-            })
-            //END POCOR-7770 to hide
-            ;
-
-            $(document).on('DOMMouseScroll mousewheel scroll', function () {
-                window.clearTimeout(t);
-                t = setTimeout(function (event) {
-                    timepickerControl.timepicker('place');
-                });
-            });
-        }, 1);
-
-        timeInputElement.addEventListener('select', function (event) {
-            $(this).click();
-        });
-
-        timeInputElement.addEventListener('click', function (event) {
-            if (guardTimeOutWithoutTimeIn()) {
-                return;
-            }
-            timeInputElement.removeAttribute('readonly', 'readonly');
-            //POCOR-7770 to hide - Close all other time pickers before showing the selected one
-            // First, hide all visible timepicker widgets in the DOM
-            $('.bootstrap-timepicker-widget:visible').hide();
-            // Then, hide all timepickers using the hideWidget method
-            $('.timepicker').each(function() {
-                var element = $(this);
-                var elementId = element.attr('id');
-                // Hide all timepickers except the one being clicked
-                if (elementId && elementId !== timepickerId) {
-                    try {
-                        element.timepicker('hideWidget');
-                    } catch (e) {
-                        // Ignore errors if timepicker is not initialized on this element
-                    }
-                }
-            });
-            // Close any open date pickers when time picker is clicked
-            $('.datepicker, input[data-datepicker], input.datepicker').each(function () {
-                var datepickerElement = $(this);
-                try {
-                    if (datepickerElement.data('datepicker') || datepickerElement.data('Datepicker')) {
-                        datepickerElement.datepicker('hide');
-                    }
-                } catch (e) {
-                    // Ignore errors if datepicker is not initialized on this element
-                }
-            });
-            // Close any visible datepicker dropdowns/widgets
-            $('.datepicker-dropdown, .bootstrap-datepicker, .datepicker-widget').hide();
-            // Initialize the timepicker for the specific timepicker you want to show
-            $('#' + timepickerId).timepicker('showWidget');
-            //END POCOR-7770 to hide
-        });
-
-        timeInputElement.addEventListener('keydown', function (event) {
-            if (event.keyCode != 8) {
-                event.preventDefault();
-            }
-        });
-
-        //POCOR-9499
-        // Add click handler to timeSpanElement (icon) to close other timepickers
-        timeSpanElement.addEventListener('click', function (event) {
-            if (!isDisabled) {
-                if (guardTimeOutWithoutTimeIn()) {
+            var rawValue = inputElement.value;
+            var time24Hour = rawValue ? (rawValue + ':00') : null;
+            var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
+            if (time24Hour !== null && otherTime) {
+                if (timeKey === 'time_out' && time24Hour <= otherTime) {
+                    AlertSvc.error(scope, 'Time Out must be after Time In.');
+                    revertInput();
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
                     return;
                 }
-                timeInputElement.removeAttribute('readonly', 'readonly');
-                //POCOR-7770 to hide - Close all other time pickers before showing the selected one
-                // First, hide all visible timepicker widgets in the DOM
-                $('.bootstrap-timepicker-widget:visible').hide();
-                // Then, hide all timepickers using the hideWidget method
-                $('.timepicker').each(function() {
-                    var element = $(this);
-                    var elementId = element.attr('id');
-                    // Hide all timepickers except the one being clicked
-                    if (elementId && elementId !== timepickerId) {
-                        try {
-                            element.timepicker('hideWidget');
-                        } catch (e) {
-                            // Ignore errors if timepicker is not initialized on this element
-                        }
-                    }
-                });
-                // Close any open date pickers when time picker is clicked
-                $('.datepicker, input[data-datepicker], input.datepicker').each(function () {
-                    var datepickerElement = $(this);
-                    try {
-                        if (datepickerElement.data('datepicker') || datepickerElement.data('Datepicker')) {
-                            datepickerElement.datepicker('hide');
-                        }
-                    } catch (e) {
-                        // Ignore errors if datepicker is not initialized on this element
-                    }
-                });
-                // Close any visible datepicker dropdowns/widgets
-                $('.datepicker-dropdown, .bootstrap-datepicker, .datepicker-widget').hide();
-                // Initialize the timepicker for the specific timepicker you want to show
-                $('#' + timepickerId).timepicker('showWidget');
-                //END POCOR-7770 to hide
+                if (timeKey === 'time_in' && time24Hour >= otherTime) {
+                    AlertSvc.error(scope, 'Time In must be before Time Out.');
+                    revertInput();
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                    return;
+                }
             }
+            var outsideShiftWarning = detectOutsideShiftWarning(time24Hour);
+            UtilsSvc.isAppendSpinner(true, 'institution-staff-attendances-table');
+            if (params.value[timeKey] == null) params.value.isNew = true;
+            params.value[timeKey] = time24Hour;
+            // POCOR-9700: debounce per row to coalesce time_in + time_out into one POST under load.
+            var rowState = params.data.attendance[dateString];
+            if (rowState._saveTimer) $timeout.cancel(rowState._saveTimer);
+            rowState._saveTimer = $timeout(function () {
+                rowState._saveTimer = null;
+                if (!rowState._savePromise) rowState._savePromise = $q.when();
+                rowState._savePromise = rowState._savePromise.then(function () {
+                    return saveStaffAttendance(params, timeKey, params.value[timeKey], academicPeriodId);
+                }).then(function (response) {
+                    clearError(data, timeKey);
+                    if (!response || !response.data) { AlertSvc.error(scope, 'There was an error when saving record'); return; }
+                    var errBlob = response.data.error || {};
+                    var hasErr = Array.isArray(errBlob) ? errBlob.length > 0 : Object.keys(errBlob).length > 0;
+                    if (hasErr) {
+                        setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                        var errorMsg = 'There was an error when saving record';
+                        if (typeof errBlob === 'string') errorMsg = errBlob;
+                        else if (errBlob.time_out) errorMsg = errBlob.time_out.ruleCompareTimeReverse || errBlob.time_out.timeInShouldNotEmpty || errorMsg;
+                        AlertSvc.error(scope, errorMsg);
+                        return;
+                    }
+                    if (outsideShiftWarning) AlertSvc.warning(scope, 'Saved. ' + outsideShiftWarning);
+                    else AlertSvc.success(scope, 'Time record successfully saved.');
+                    // POCOR-9700: trust the server's persisted record, not the picked value.
+                    var saved = response.data.data || {};
+                    if (angular.isDefined(saved.time_in))  params.value.time_in  = normalizeTo24Hour(saved.time_in);
+                    if (angular.isDefined(saved.time_out)) params.value.time_out = normalizeTo24Hour(saved.time_out);
+                    params.value.isNew = false;
+                    setError(data, timeKey, false, {id: timepickerId, elm: inputElement});
+                }, function () {
+                    clearError(data, timeKey);
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                    AlertSvc.error(scope, 'There was an error when saving record');
+                }).finally(function () {
+                    UtilsSvc.isAppendSpinner(false, 'institution-staff-attendances-table');
+                    params.api.refreshCells({columns: ['attendance.' + dateString], force: true});
+                });
+            }, 600);
         });
-        //END POCOR-9499
 
-        timeSpanElement.appendChild(timeIconElement);
-        timeInputDivElement.appendChild(timeInputElement);
-        timeInputDivElement.appendChild(timeSpanElement);
-        return timeInputDivElement;
+        wrapperDiv.appendChild(inputElement);
+        wrapperDiv.appendChild(iconSpan);
+        return wrapperDiv;
     }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
@@ -786,33 +684,66 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
         }
     }
 
+    //POCOR-9700: cache the system time_format. The fetch returns a promise that the ctrl
+    // awaits BEFORE first grid render — so AM/PM is correct on the very first paint instead
+    // of flipping after a config call resolves mid-flight. Private cache is also read
+    // synchronously by convert12Timeformat (view-mode formatter); since the ctrl has already
+    // awaited the promise by then, the cache is hot.
+    var _timeFormatPromise = null;
+    var _timeFormatIs12h = true; // safe default if the config call is never made (e.g. tests)
+    function getTimeFormatIs12h() {
+        if (!_timeFormatPromise) {
+            _timeFormatPromise = getConfigItemValue('time_format').then(function (tf) {
+                //POCOR-9700: PHP date format chars — lowercase h/g = 12-hour, uppercase H/G = 24-hour,
+                // a/A = am/pm token. Any lowercase h/g (even without A) means 12-hour even if lossy
+                // (e.g. "h:i:s" with no meridian — we still treat it as 12h so the view formatter
+                // doesn't mistakenly emit a 24-h string).
+                _timeFormatIs12h = /[hgaA]/.test(tf || '');
+                return _timeFormatIs12h;
+            }, function () {
+                return _timeFormatIs12h;
+            });
+        }
+        return _timeFormatPromise;
+    }
+    function ensureTimeFormatLoaded() {
+        // Fire-and-forget — keeps the cache hot for the view-mode formatter (which is sync).
+        getTimeFormatIs12h();
+    }
+
     function convert12Timeformat(time) {
+        //POCOR-9700: name kept for back-compat, but now respects the system time_format config.
+        // Returns 24h "HH:MM" when system is configured 24h, else 12h "HH:MM AM/PM".
+        ensureTimeFormatLoaded();
         try {
+            //POCOR-9700: server can return either "15:00:00" (24h) or "03:00:00 PM" (12h) depending
+            // on time_format config. Canonicalise to 24h FIRST — without this, splitting "03:00:00 PM"
+            // on ":" yielded hours=3 and we mis-rendered every PM time as AM (Khindol's screenshot bug).
+            time = normalizeTo24Hour(time);
             if (!time || typeof time !== "string") {
                 throw new Error("Input is not a string");
             }
-
             const timeSplit = time.split(":");
-            if (timeSplit.length !== 3) {
-                throw new Error("Time string is not in HH:MM:SS format");
+            if (timeSplit.length < 2) {
+                throw new Error("Time string is not in HH:MM[:SS] format");
             }
-
-            let [hours, minutes, seconds] = timeSplit.map(part => parseInt(part, 10));
-
-            if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+            let hours = parseInt(timeSplit[0], 10);
+            let minutes = parseInt(timeSplit[1], 10);
+            if (isNaN(hours) || isNaN(minutes)) {
                 throw new Error("Time parts must be valid numbers");
             }
-
+            const sMinutes = minutes < 10 ? "0" + minutes : minutes.toString();
+            if (!_timeFormatIs12h) {
+                const sHours24 = hours < 10 ? "0" + hours : hours.toString();
+                return sHours24 + ":" + sMinutes;
+            }
             const meridian = hours >= 12 ? "PM" : "AM";
             hours = (hours % 12) || 12;
-
             const sHours = hours < 10 ? "0" + hours : hours.toString();
-            const sMinutes = minutes < 10 ? "0" + minutes : minutes.toString();
-
             return sHours + ":" + sMinutes + " " + meridian;
         } catch (error) {
             console.error("convert12Timeformat - Invalid input:", error.message);
-            return "--:-- --";
+            return _timeFormatIs12h ? "--:-- --" : "--:--";
         }
     }
 
@@ -852,7 +783,26 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
                 } else {
                     console.error('AlertSvc failed: scope is undefined in params.context');
                 }
-                return false;
+                return $q.reject('FUTURE_DATE');
+            }
+
+            //POCOR-9700: hard block — cannot mark a time later than the current institution-tz clock when the date is today
+            if (selectedDate.getTime() === institutionToday.getTime()) {
+                var attemptedTime = (params.data.attendance[dateString][dataKey] === dataValue)
+                    ? dataValue
+                    : (dataKey === 'time_in' || dataKey === 'time_out' ? dataValue : null);
+                if (attemptedTime) {
+                    //POCOR-9729: allow any time today (threshold = end of day). Teachers arrive
+                    // early / leave late, so the time-of-day must not be hard-blocked against the
+                    // current clock — only genuine future *dates* are rejected (FUTURE_DATE above).
+                    var nowHms = '23:59:59';
+                    if (attemptedTime > nowHms) {
+                        if ($scope) {
+                            AlertSvc.warning($scope, 'Cannot mark a time in the future');
+                        }
+                        return $q.reject('FUTURE_TIME_TODAY');
+                    }
+                }
             }
 
             // --- Rest of your data preparation logic ---
@@ -882,15 +832,22 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, KdDataSvc, AlertSvc,
 
             staffAttendanceData[dataKey] = dataValue;
 
-            if(!params.data.attendance[dateString].isNew) {
+            var isNew = params.data.attendance[dateString].isNew;
+            if(!isNew) {
                 return InstitutionStaffAttendances.edit(staffAttendanceData);
             } else {
                 return InstitutionStaffAttendances.save(staffAttendanceData);
             }
 
         }).catch(function(err) {
-            console.error('Error in saveStaffAttendance:', err);
-            if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            //POCOR-9729: these rejections are controlled validations that already showed a
+            // specific, user-friendly AlertSvc message above. Don't overwrite that with the
+            // generic "timezone" error — only surface it for genuinely unexpected failures.
+            var handled = ['FUTURE_DATE', 'FUTURE_TIME_TODAY', 'TIME_ORDER_INVALID'];
+            if (handled.indexOf(err) === -1) {
+                console.error('Error in saveStaffAttendance:', err);
+                if ($scope) AlertSvc.error($scope, 'Error validating timezone settings');
+            }
             return false;
         });
     }

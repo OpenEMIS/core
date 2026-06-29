@@ -502,17 +502,24 @@ function InstitutionStudentAttendancesController(
         isMarkableSubjectAttendance
     ) {
         vm.subjectListOptions = subjectListOptions;
+        //POCOR-9652: preserve current subject if still valid; only fall back to first when gone
+        var subjectStillValid = subjectListOptions.some(function (opt) {
+            return opt.id == vm.selectedSubject;
+        });
         if (vm.isMarkableSubjectAttendance == true) {
             if (subjectListOptions.length > 0) {
-                vm.selectedSubject = subjectListOptions[0].id;
+                if (!subjectStillValid) {
+                    vm.selectedSubject = subjectListOptions[0].id;
+                }
                 vm.gridOptions.context.subject_id = vm.selectedSubject;
             }
         } else {
             //POCOR-8874 start
             if (subjectListOptions.length > 0) {
-                vm.selectedSubject = subjectListOptions[0].id;
-            }
-            else{
+                if (!subjectStillValid) {
+                    vm.selectedSubject = subjectListOptions[0].id;
+                }
+            } else {
                 vm.selectedSubject = 0;
             }
             //POCOR-8874 end
@@ -530,9 +537,15 @@ function InstitutionStudentAttendancesController(
     vm.updateAttendancePeriodList = function (attendancePeriodOptions) {
         vm.attendancePeriodOptions = attendancePeriodOptions;
         if (attendancePeriodOptions.length > 0) {
-            vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
+            //POCOR-9652: preserve the currently selected period if it still exists in the list;
+            //only fall back to the first period when the selection is gone (e.g. on a different day)
+            var currentStillValid = attendancePeriodOptions.some(function (opt) {
+                return opt.id == vm.selectedAttendancePeriod;
+            });
+            if (!currentStillValid) {
+                vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
+            }
             // POCOR-7787 start
-            vm.selectedAttendancePeriod = attendancePeriodOptions[0].id;
             var closedPeriod = false;
             for (var i = 0; i < vm.dayListOptions.length; i++) {
                 if (vm.dayListOptions[i].date === vm.selectedDay) {
@@ -1469,7 +1482,14 @@ function InstitutionStudentAttendancesController(
                 UtilsSvc.isAppendLoader(false);
             });
     };
+    //POCOR-9652: returns true when the currently selected day is flagged as No Scheduled Classes
+    vm.isNoScheduledDay = function () {
+        return vm.classStudentList.length > 0 && vm.classStudentList[0].no_scheduled_class == 1;
+    };
+
     vm.onNoScheduledClick = function () {
+        var alreadySet = vm.isNoScheduledDay();
+        // console.log('[TEMP-LOG] onNoScheduledClick: alreadySet=' + alreadySet + ' (true=UNDO, false=SET)'); //POCOR-9652
         vm.action = "view";
         vm.gridOptions.context.mode = vm.action;
         vm.noScheduledSaving = true; //POCOR-9617: block any concurrent in-flight changeClass from overwriting
@@ -1482,6 +1502,7 @@ function InstitutionStudentAttendancesController(
                 //even if PHP returned 500, the INSERT/UPDATE may have committed before the crash
                 vm.noScheduledSaving = false;
                 UtilsSvc.isAppendLoader(false);
+                // console.log('[TEMP-LOG] onNoScheduledClick: reloading class data after toggle'); //POCOR-9652
                 vm.changeClass();
             });
     };

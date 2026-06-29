@@ -235,6 +235,7 @@ class RemoveBehavior extends Behavior
                     }
                 }
                 /** End POCOR-7253 */
+                $cells = array_values($cells);
                 $extra['cells'] = $cells;
 
                 // check if force delete fields should be displayed

@@ -5,11 +5,13 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\InstitutionScope;
+use App\Services\AlertTriggerService;
+use Illuminate\Support\Facades\Log;
 
 class InstitutionStudentAdmission extends Model
 {
     use HasFactory;
-use InstitutionScope;
+    use InstitutionScope;
     // ✅ Allow mass assignment
     protected $fillable = ['id', 'start_date', 'end_date', 'student_id', 'status_id', 'assignee_id', 'institution_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'test_score', 'interview_score', 'comment', 'modified_user_id', 'modified', 'created_user_id', 'created', 'student_id', 'status_id', 'assignee_id', 'institution_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'modified_user_id', 'created_user_id'];
     // ✅ Treat 'modified' and 'created' as timestamps
@@ -17,6 +19,65 @@ use InstitutionScope;
 
     public $timestamps = false;
     protected $table = "institution_student_admission";
+
+    /**
+     * POCOR-9509: Trigger admission alerts when the record is created or the workflow status changes.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saved(function (self $admission) {
+            if (!$admission->wasRecentlyCreated && !$admission->wasChanged('status_id')) {
+                return;
+            }
+
+            if (!$admission->student_id || !$admission->institution_id || !$admission->status_id) {
+                // POCOR-9509: Keep production resilient when required event data is missing.
+                return;
+            }
+
+            try {
+                $admission->processAdmissionAlert();
+            } catch (\Throwable $e) {
+                Log::error('[POCOR-9509] Admission alert processing failed in saved event', [
+                    'admission_id' => $admission->id,
+                    'exception' => $e->getMessage(),
+                ]);
+            }
+        });
+    }
+
+    /**
+     * POCOR-9509: Dispatch the Laravel alert command for admission events.
+     */
+    protected function processAdmissionAlert(): bool
+    {
+        $alertRule = AlertTriggerService::getActiveAlertRule('StudentAdmission', (int) $this->institution_id);
+
+        if (!$alertRule) {
+            return false;
+        }
+
+        $result = AlertTriggerService::triggerAlert(
+            processName: 'AlertStudentAdmission',
+            featureName: 'StudentAdmission',
+            userId: (int) ($this->created_user_id ?: 1),
+            ruleId: (int) $alertRule->id,
+            entityId: (int) $this->id,
+            context: [
+                'student_id' => (int) $this->student_id,
+                'status_id' => (int) $this->status_id,
+                'academic_period_id' => (int) $this->academic_period_id,
+                'institution_id' => (int) $this->institution_id,
+                'change_date' => $this->modified ?? $this->created,
+            ],
+            entityType: 'StudentAdmission',
+            triggerType: 'status_changed'
+        );
+
+        return (bool) ($result['success'] ?? false) || (bool) ($result['duplicate'] ?? false);
+    }
 
 
 /**
