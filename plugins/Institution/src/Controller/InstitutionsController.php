@@ -5858,16 +5858,12 @@ class InstitutionsController extends AppController
             }
 
             if (!$roleExcluded) {
-                //POCOR-9385: user is restricted — keep only the lowest-order grade per programme
-                $minOrderByProgramme = [];
-                foreach ($resultArray as $row) {
-                    $progId = $row['_programme_id'];
-                    if (!isset($minOrderByProgramme[$progId]) || $row['_grade_order'] < $minOrderByProgramme[$progId]) {
-                        $minOrderByProgramme[$progId] = $row['_grade_order'];
-                    }
-                }
-                $resultArray = array_values(array_filter($resultArray, function ($row) use ($minOrderByProgramme) {
-                    return $row['_grade_order'] === $minOrderByProgramme[$row['_programme_id']];
+                //POCOR-9385: user is restricted — keep only entry grades, using the SAME source of
+                //truth as the Save check (StudentCreationCheckTrait) so the dropdown can never offer
+                //a grade that Save would reject (no select-then-error).
+                $entryIds = $institutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
+                $resultArray = array_values(array_filter($resultArray, function ($row) use ($entryIds) {
+                    return in_array((int)$row['education_grade_id'], $entryIds, true);
                 }));
             }
         }
