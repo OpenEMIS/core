@@ -12,8 +12,8 @@ class POCOR9385 extends AbstractMigration
             INSERT IGNORE INTO `config_items`
                 (`id`, `name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
             VALUES
-                (1357, 'Limit student addition to first grade only', 'restrict_student_creation', 'Add New Student', 'Restrict Student Creation', '0', '', '0', 1, 1, 'Dropdown', 'student_creation_toggle', NULL, NULL, 1, NOW()),
-                (1358, 'Excluded Security Roles for Student Creation', 'student_creation_excluded_roles', 'Add New Student', 'Excluded Security Roles', '', '', '', 1, 1, 'Dropdown', 'database:Security.SecurityRoles', NULL, NULL, 1, NOW())
+                (1357, 'Limit student addition to first grade only', 'restrict_student_creation', 'Add New Student', 'Limit student addition to first grade only', '0', '', '0', 1, 1, 'Dropdown', 'student_creation_toggle', NULL, NULL, 1, NOW()),
+                (1358, 'Excluded Security Roles for Student Creation', 'student_creation_excluded_roles', 'Add New Student', 'Excluded Security Roles for Student Creation', '', '', '', 1, 1, 'Dropdown', 'database:Security.SecurityRoles', NULL, NULL, 1, NOW())
         "); //POCOR-9385: row 1358 rendered as chosenSelect by ConfigItemsTable::onUpdateFieldValue
 
         // Insert config_item_options for the toggle //POCOR-9385: Enabled/Disabled options
