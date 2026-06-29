@@ -398,7 +398,19 @@ class StaffUserTable extends ControllerActionTable
                     return ($context['newRecord'] && array_key_exists('academic_period_id', $context['data']));
                 }
             ])*/
-        ;
+            ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ]) //POCOR-9680
+            ->allowEmptyString('mobile_number')
+            ->add('mobile_number', 'numeric', [
+                'rule' => 'numeric',
+                'message' => 'Only numbers are allowed'
+            ]); //POCOR-9680
         return $validator;
     }
 
@@ -421,7 +433,47 @@ class StaffUserTable extends ControllerActionTable
 
         $this->addTransferButton($entity, $extra);
         $this->addReleaseButton($entity, $extra);
+        $this->addSyncButton($entity, $extra); //POCOR-9590
     }
+
+    //POCOR-9590: Sync button on the staff General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        //POCOR-9590: delegate to controller when it supports the method (StaffController); fall back for InstitutionsController and others
+        $permission = method_exists($this->controller, 'syncUserPermission')
+            ? $this->controller->syncUserPermission()
+            : ['Institutions', 'Staff', 'add'];
+        if (!$this->AccessControl->check($permission)) {
+            return;
+        }
+        //POCOR-9590: institution_staff.id is a UUID — the security_user_id lives under staff_id
+        $securityUserId = $entity->staff_id ?? $entity->id;
+        if (!$this->isSyncEligibleUser($securityUserId)) {
+            return;
+        }
+        $toolbarButtons = $extra['toolbarButtons'];
+        //POCOR-9590: encode full context so syncUser can redirect back to the same view
+        $encodedParams = $this->paramsEncode([
+            'user_id'              => $securityUserId,
+            'staff_id'             => $securityUserId,
+            'institution_id'       => $this->getInstitutionID(),
+            'institution_staff_id' => $entity->id,
+        ]);
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Staff',
+            'controller' => 'Staff',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
+    }
+
+    //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
 
     private function setupTabElements($entity)
     {

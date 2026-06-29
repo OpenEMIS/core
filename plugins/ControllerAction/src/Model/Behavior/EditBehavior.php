@@ -132,6 +132,7 @@ class EditBehavior extends Behavior
                     //$requestCopyData = $requestData->getArrayCopy();
                     $requestArrayCopyData = $request->withParsedBody($requestData->getArrayCopy());//POCOR-7485
                     $requestCopyData = $requestArrayCopyData->getData();//POCOR-7485
+                    $requestCopyData[$model->getAlias()]['id'] = $entity->id; // POCOR-9664 - Ensure the ID is included in the patched data
                     if ($extra['patchEntity']) {
                         $entity = $model->patchEntity($entity, $requestCopyData, $patchOptionsArray);
                         $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);

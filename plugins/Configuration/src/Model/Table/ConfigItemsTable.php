@@ -14,6 +14,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
+use App\Utility\ApplicationTimezone;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Http\ServerRequest;
@@ -66,8 +67,8 @@ class ConfigItemsTable extends AppTable
         $this->ControllerAction->field('value', ['visible' => true]);
         //POCOR-6248 start
         $this->ControllerAction->field('value_selection', ['visible' => false]);
-        if ($this->request->getQuery['type_value'] == 'Columns for Student List Page') {
-            $pass = $this->request->getAttribute('param')('pass');
+        if ($this->request->getQuery('type_value') == 'Columns for Student List Page') {
+            $pass = $this->request->getParam('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
@@ -76,8 +77,8 @@ class ConfigItemsTable extends AppTable
                 }
             }
         }
-        if ($this->request->getQuery['type_value'] == 'Columns for Staff List Page') {
-            $pass = $this->request->getAttribute('param')('pass');
+        if ($this->request->getQuery('type_value') == 'Columns for Staff List Page') {
+            $pass = $this->request->getParam('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
@@ -86,8 +87,8 @@ class ConfigItemsTable extends AppTable
                 }
             }
         }
-        if ($this->request->getQuery['type_value'] == 'Columns for Directory List Page') {
-            $pass = $this->request->getAttribute('param')('pass');
+        if ($this->request->getQuery('type_value') == 'Columns for Directory List Page') {
+            $pass = $this->request->getParam('pass');
             if (is_array($pass) && !empty($pass)) {
                 $id = $this->paramsDecode($pass[0]);
                 $entity = $this->get($id);
@@ -168,7 +169,7 @@ class ConfigItemsTable extends AppTable
                 $option_types = $identity_types->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'name'
-                ]);
+                ])->toArray();
                 $this->fields['value_selection']['attr'] = ['required' => true];
                 $this->fields['value_selection']['options'] = $option_types;
                 $this->fields['value_selection']['attr']['label'] = 'Identity Type';
@@ -277,7 +278,12 @@ class ConfigItemsTable extends AppTable
             $this->deleteLanguageCacheFile();
         } else if ($entity->code == 'language_menu') {
             $this->deleteLanguageCacheFile();
+        } 
+        //POCOR-9565[START]
+        else if ($entity->code === 'time_zone' || $entity->name === 'Time Zone') {
+            ApplicationTimezone::clearDisplayTimezoneCache();
         }
+        //POCOR-9565[END]
         $session = $this->request->getSession();
         $session->write('successAlert', 'yes');
         $action = [
@@ -285,7 +291,10 @@ class ConfigItemsTable extends AppTable
             'controller' => 'Configurations',
             'action' => 'view',
             '1' => $this->request->getParam('pass')[0],
-            '?' => ['type' => $this->request->getQuery('type')]
+            '?' => [
+                'type' => $this->request->getQuery('type'),
+                'type_value' => $this->request->getQuery('type_value')
+            ]
         ];
         return $this->controller->redirect($action);
     }
@@ -1139,10 +1148,10 @@ class ConfigItemsTable extends AppTable
         $customOptions[0] = 'Pending Enrolment : '."Enrolled";//POCOR-8434 ends
         return $customOptions;
     }
-    //POCOR-8751 start
-        /**
+
+    /**
      * Handles updating the action buttons for a specific entity.
-     *
+     * //POCOR-8751 start
      * @param EventInterface $event The event triggered during the action.
      * @param Entity $entity The entity associated with the action.
      * @param array $buttons The existing action buttons that will be modified.
@@ -1151,14 +1160,22 @@ class ConfigItemsTable extends AppTable
     public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-      
-                if($entity->code=="edition" && $entity->type=="System"){
-                    if (isset($buttons['edit'])) {
-                        unset($buttons['edit']);
-                    }
-                }
+        $queryParams = $this->request->getQueryParams();
+        //POCOR-9683 start
+        if (isset($buttons['view'])) {
+            $buttons['view']['url']['?'] = $queryParams;
+        }
+
+        if (isset($buttons['edit'])) {
+            $buttons['edit']['url']['?'] = $queryParams;
+        } //POCOR-9683 end
+        if($entity->code=="edition" && $entity->type=="System"){
+            if (isset($buttons['edit'])) {
+                unset($buttons['edit']);
+            }
+        }
                
         return $buttons;
     }
-    //POCOR-8751 end 
+    
 }

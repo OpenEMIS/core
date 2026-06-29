@@ -23,6 +23,7 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate student status alerts through AlertLogsTable helper
 
 class StudentsTable extends ControllerActionTable
 {
@@ -48,6 +49,9 @@ class StudentsTable extends ControllerActionTable
     private $student_status_codes_array;
     private $student_status_names_array;
     private $previousStudents;
+    //POCOR-9509: refreshed every 10 min — admin change takes effect within 10 min on each worker
+    private static ?bool $studentStatusAlertEnabled = null;
+    private static int $studentStatusAlertCachedAt = 0;
 
     public function initialize(array $config): void
     {
@@ -95,7 +99,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByYear',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_students_by_stage' => [
@@ -342,8 +346,14 @@ class StudentsTable extends ControllerActionTable
      */
     private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
     {
-        if ($tableName = 'genders') {
+        if ($tableName === 'genders') {
             $tableName = 'User.Genders';
+        } elseif ($tableName === 'area_administratives') {
+            $tableName = 'Area.AreaAdministratives';
+        } elseif ($tableName === 'identity_types') {
+            $tableName = 'FieldOption.IdentityTypes';
+        } elseif ($tableName === 'nationalities') {
+            $tableName = 'FieldOption.Nationalities';
         }
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
@@ -358,6 +368,7 @@ class StudentsTable extends ControllerActionTable
             null;
         }
         return null;
+        
     }
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
@@ -1874,6 +1885,12 @@ class StudentsTable extends ControllerActionTable
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
 
+        //POCOR-9509: fire StudentStatus alert when student is new or student_status_id changes
+        if ($entity->isNew() || $entity->isDirty('student_status_id')) {
+            //Log::debug('[TEMP-LOG] @StudentsTable::afterSave() student_status_id dirty or new — triggering StudentStatus alert entity_id=' . ($entity->id ?? 'null') . ' student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
+            $this->sendStudentStatusAlert($entity);
+        }
+
         //if new record has no previous_institution_student_id value yet, then try to update it.
         if (!$entity->has('previous_institution_student_id')) {
             $prevInstitutionStudent = $this
@@ -1894,6 +1911,70 @@ class StudentsTable extends ControllerActionTable
                     ['id' => $entity->id]
                 );
             }
+        }
+    }
+
+    /**
+     * POCOR-9509: Sends an alert for student status changes.
+     *
+     * @param \Cake\ORM\Entity $institutionStudent The InstitutionStudent entity.
+     * @return void
+     */
+    public function sendStudentStatusAlert($institutionStudent): void
+    {
+        //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($institutionStudent->id ?? 'null') . ', student_status_id=' . ($institutionStudent->student_status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($institutionStudent->toArray())); //[TEMP-LOG]
+
+        //POCOR-9509: re-query at most every 10 min — admin change takes effect within 10 min
+        if (self::$studentStatusAlertEnabled === null || (time() - self::$studentStatusAlertCachedAt) > 600) {
+            $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+            $alert = $alertsTable->find()
+                ->select(['name'])
+                ->where(['process_name' => 'AlertStudentStatus'])
+                ->first();
+            if (!$alert) {
+                self::$studentStatusAlertEnabled = false;
+            } else {
+                self::$studentStatusAlertEnabled = (bool) TableRegistry::getTableLocator()
+                    ->get('Alert.AlertRules')
+                    ->find()
+                    ->where(['feature' => $alert->name, 'enabled' => 1])
+                    ->count();
+            }
+            self::$studentStatusAlertCachedAt = time();
+        }
+        if (!self::$studentStatusAlertEnabled) {
+            return;
+        }
+
+        if (empty($institutionStudent->student_id)
+            && empty($institutionStudent->institution_id)
+            && empty($institutionStudent->id)
+            && empty($institutionStudent->created_user_id)) {
+            //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, missing required fields'); //[TEMP-LOG]
+            return;
+        }
+
+        try {
+            // Determine the user ID for the alert
+            $userId = null;
+            if (is_numeric($institutionStudent->modified_user_id)) {
+                $userId = $institutionStudent->modified_user_id;
+            } elseif (is_numeric($institutionStudent->created_user_id)) {
+                $userId = $institutionStudent->created_user_id;
+            }
+
+            //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() userId=' . $userId); //[TEMP-LOG]
+
+            if ($userId) {
+                //POCOR-9509: delegate student status alert triggering to AlertLogsTable helper
+                AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $institutionStudent, $userId);
+                //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - triggerLaravelAlertFromCakePHP called'); //[TEMP-LOG]
+            } else {
+                //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, no userId found'); //[TEMP-LOG]
+            }
+        } catch (\Throwable $e) {
+            Log::error('[POCOR-9509] sendStudentStatusAlert exception: ' . $e->getMessage() . ' entity_id=' . ($institutionStudent->id ?? 'null'));
         }
     }
 
@@ -2367,6 +2448,7 @@ class StudentsTable extends ControllerActionTable
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();
+        $params['options']['title'] = ['text' => __('Number of Students')]; //POCOR-9636: Rename chart label
 
         return $params;
     }
