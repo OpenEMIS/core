@@ -89,39 +89,22 @@ trait StudentCreationCheckTrait
 
         ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed grade->order=' . json_encode($grade->order) . ' grade->education_programme_id=' . json_encode($grade->education_programme_id)); //[TEMP-LOG]
 
-        //POCOR-9385: when institution+period context is available, check against the lowest-order
-        //grade of this programme that the institution actually runs for that period
+        //POCOR-9385: when institution+period context is available, validate against the SAME
+        //entry-grade set that getEducationGrade offers in the dropdown (single source of truth in
+        //InstitutionGradesTable::getEntryEducationGradeIds) so the picker can never offer a grade
+        //that Save rejects (no select-then-error).
         if (!empty($institutionId) && !empty($academicPeriodId)) {
             $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-            $minOrder = $InstitutionGrades->find()
-                ->select(['min_order' => 'MIN(EducationGrades.order)'])
-                ->join([
-                    'EducationGrades' => [
-                        'table'      => 'education_grades',
-                        'type'       => 'INNER',
-                        'conditions' => 'EducationGrades.id = InstitutionGrades.education_grade_id',
-                    ],
-                ])
-                ->where([
-                    'InstitutionGrades.institution_id'    => $institutionId,
-                    'InstitutionGrades.academic_period_id' => $academicPeriodId,
-                    'EducationGrades.education_programme_id' => $grade->education_programme_id, //POCOR-9385: same programme only
-                ])
-                ->disableHydration()
-                ->first();
+            $entryIds = $InstitutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
 
-            $minOrderValue = $minOrder['min_order'] ?? null;
-
-            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed minOrderValue=' . json_encode($minOrderValue) . ' (int)grade->order=' . json_encode((int)$grade->order)); //[TEMP-LOG]
-
-            if ($minOrderValue === null) {
-                ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed institution has no grades for programme+period, allowing'); //[TEMP-LOG]
-                return true; //POCOR-9385: institution has no grades for this programme+period → allow (safe default)
+            if (empty($entryIds)) {
+                ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed institution has no grades for period, allowing'); //[TEMP-LOG]
+                return true; //POCOR-9385: institution has no grades for this period → allow (safe default)
             }
 
-            $result = (int)$grade->order === (int)$minOrderValue;
-            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed institutional context result=' . json_encode($result)); //[TEMP-LOG]
-            return $result; //POCOR-9385: first in institution's programme for this period
+            $result = in_array((int)$gradeId, $entryIds, true);
+            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed entryIds=' . json_encode($entryIds) . ' gradeId=' . json_encode((int)$gradeId) . ' result=' . json_encode($result)); //[TEMP-LOG]
+            return $result; //POCOR-9385: gradeId must be an entry grade offered by the dropdown
         }
 
         // Fallback: global order=1 check (no institution/period context e.g. import without full row data) //POCOR-9385
