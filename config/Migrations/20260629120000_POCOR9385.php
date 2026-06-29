@@ -8,13 +8,17 @@ class POCOR9385 extends AbstractMigration
         $this->backupTables();
 
         // Insert config_items rows //POCOR-9385: toggle + excluded roles config items
+        // POCOR-9385: no hardcoded ids — `code` is UNIQUE and `id` is auto-increment.
+        // Hardcoding ids collided with config_items master added after this branch forked
+        // (1357/1358 became external_data_source_type / external_alert_service_im_telegram),
+        // so INSERT IGNORE silently skipped both rows. Auto-increment + INSERT IGNORE-on-code is collision-proof.
         $this->execute("
             INSERT IGNORE INTO `config_items`
-                (`id`, `name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+                (`name`, `code`, `type`, `label`, `value`, `value_selection`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
             VALUES
-                (1357, 'Limit student addition to first grade only', 'restrict_student_creation', 'Add New Student', 'Limit student addition to first grade only', '0', '', '0', 1, 1, 'Dropdown', 'student_creation_toggle', NULL, NULL, 1, NOW()),
-                (1358, 'Excluded Security Roles for Student Creation', 'student_creation_excluded_roles', 'Add New Student', 'Excluded Security Roles for Student Creation', '', '', '', 1, 1, 'Dropdown', 'database:Security.SecurityRoles', NULL, NULL, 1, NOW())
-        "); //POCOR-9385: row 1358 rendered as chosenSelect by ConfigItemsTable::onUpdateFieldValue
+                ('Limit student addition to first grade only', 'restrict_student_creation', 'Add New Student', 'Limit student addition to first grade only', '0', '', '0', 1, 1, 'Dropdown', 'student_creation_toggle', NULL, NULL, 1, NOW()),
+                ('Excluded Security Roles for Student Creation', 'student_creation_excluded_roles', 'Add New Student', 'Excluded Security Roles for Student Creation', '', '', '', 1, 1, 'Dropdown', 'database:Security.SecurityRoles', NULL, NULL, 1, NOW())
+        "); //POCOR-9385: roles row rendered as chosenSelect by ConfigItemsTable::onUpdateFieldValue
 
         // Insert config_item_options for the toggle //POCOR-9385: Enabled/Disabled options
         $this->execute("
