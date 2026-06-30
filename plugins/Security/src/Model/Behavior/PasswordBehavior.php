@@ -43,6 +43,7 @@ class PasswordBehavior extends Behavior {
 		$passwordHasLowercase = $ConfigItems->value('password_has_lowercase');
 		$passwordHasNumber = $ConfigItems->value('password_has_number');
 		$passwordHasNonAlpha = $ConfigItems->value('password_has_non_alpha');
+		$passwordRotation = $ConfigItems->value('password_rotation');
 
 		$validator = $validator
 			->add('username', [
@@ -132,6 +133,17 @@ class PasswordBehavior extends Behavior {
 				]
 			]);
 		}
+		//POCOR-7440
+		if ($passwordRotation) {
+			$validator->add($this->targetField, [
+				'ruleCheckPasswordRotation' => [
+					'rule' => 'checkPasswordRotation',
+					'message' => $this->_table->getMessage('User.Users.password.ruleCheckPasswordRotation'),
+					'provider' => 'custom'
+				]
+			]);
+		}
+		//POCOR-7440
 
 		if ($this->checkOwnPassword) {
 			$validator = $validator
