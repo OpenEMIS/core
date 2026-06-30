@@ -7,8 +7,8 @@ class POCOR7440 extends AbstractMigration
 {
     public function up(): void
     {
-        $this->execute('CREATE TABLE IF NOT EXISTS `zz_9738_config_items` LIKE `config_items`');
-        $this->execute('INSERT INTO `zz_9738_config_items` SELECT * FROM `config_items`');
+        // $this->execute('CREATE TABLE IF NOT EXISTS `zz_9738_config_items` LIKE `config_items`');
+        // $this->execute('INSERT INTO `zz_9738_config_items` SELECT * FROM `config_items`');
         $this->execute('DROP TABLE IF EXISTS `security_user_passwords`');
 
         $exists = $this->fetchRow("SELECT `id` FROM `config_items` WHERE `code` = 'password_rotation'");
