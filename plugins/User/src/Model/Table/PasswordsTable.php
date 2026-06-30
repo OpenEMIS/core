@@ -22,5 +22,8 @@ class PasswordsTable extends AppTable
         $this->addBehavior('User.Password', [
             'field' => 'password'
         ]);
+        //POCOR-7440
+        $this->addBehavior('User.PasswordRotation');
+        //POCOR-7440
     }
 }
