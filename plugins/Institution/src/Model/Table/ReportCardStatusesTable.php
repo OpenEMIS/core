@@ -1955,7 +1955,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
         // POCOR-9569: filter out students with withdrawn or transferred status
         $StudentStatuses = TableRegistry::getTableLocator()->get('Student.StudentStatuses');
-        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED','WITHDRAWN'];
+        $where[$StudentStatuses->aliasField('code NOT IN ')] = ['WITHDRAWN']; //POCOR-9596-removed transfered status
         // POCOR-9569 end
         $classStudents = $classStudentsTable->find()
             ->contain('StudentStatuses')
