@@ -1111,7 +1111,6 @@ class CrudApiController extends Controller
      */
     private function parseFilters(Request $request, array &$segments)
     {
-        
         $filters = [];
         $excludedParams = ['order',
             'orderby',
