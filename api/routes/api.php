@@ -418,6 +418,10 @@ Route::group(
         Route::get('academic-periods/{academicperiodId}/weeks', 'AttendanceController@getAcademicPeriodsWeeks');
         Route::get('academic-periods/{academicperiodId}/weeks/{weekId}/days', 'AttendanceController@getAcademicPeriodsWeekDays');
         Route::get('institutions/{institution_id}/staff/attendances', 'AttendanceController@getStaffAttendances');
+        Route::get('staff/attendance/import-template', 'AttendanceController@getStaffAttendancesImportTemplate');//POCOR-8630
+        Route::post('staff/attendance/import', 'AttendanceController@staffAttendancesImport');//POCOR-8630
+        Route::get('staff/attendance/export', 'AttendanceController@getStaffAttendancesExport');//POCOR-8630
+        Route::get('staff/attendance/archive', 'AttendanceController@getStaffAttendancesArchive');//POCOR-8630
 
         Route::get('institutions/{institution_id}/shift-options', 'AttendanceController@getInstitutionShiftOption');
         //POCOR-7853 end
