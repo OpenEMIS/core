@@ -129,6 +129,7 @@ class ReportsController extends AppController
             $options = [
                 'Report.BodyMassStatusReports' => __('BMI Status Report'),
                 'Report.Competencies' => __('Competencies'), //POCOR-5791
+                'Report.Counsellings' => __('Counselling'),//POCOR-9756
                 'Report.StudentContacts' => __('Contacts'),
                 'Report.StudentsEnrollmentSummary' => __('Enrollment Summary'),
                 'Report.StudentsGraduationSummary' => __('Graduation Summary'),//POCOR-8868
