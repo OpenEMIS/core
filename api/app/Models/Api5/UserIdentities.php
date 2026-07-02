@@ -4,6 +4,8 @@ namespace App\Models\Api5;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserIdentities extends Model
 {
@@ -15,6 +17,43 @@ class UserIdentities extends Model
 
     public $timestamps = false;
     protected $table = "user_identities";
+
+    //POCOR-9590: Block updates to `number` or `identity_type_id` on rows whose identity_type
+    //is registered as an external-source lookup key. Mirrors IdentitiesTable::beforeSave on the
+    //CakePHP side. Returning false from `updating` aborts the save silently — the attacker
+    //sees a successful 200/201 from CrudApiController but the row stays untouched, matching
+    //the "no fingerprinting" policy in feedback_silent_security_rejections.md.
+    protected static function booted(): void
+    {
+        static::updating(function (self $row) {
+            if (!$row->isDirty('number') && !$row->isDirty('identity_type_id')) {
+                return;
+            }
+            $typeId = (int) $row->getOriginal('identity_type_id');
+            if (!self::isExternalLookupIdentityType($typeId)) {
+                return;
+            }
+            Log::warning('POCOR-9590: v5 blocked update to external-lookup identity row', [
+                'row_id'  => $row->id,
+                'type_id' => $typeId,
+                'fields'  => array_keys($row->getDirty()),
+            ]);
+            return false;
+        });
+    }
+
+    //POCOR-9590: true when this identity_type_id is the lookup key for any external data
+    //source. Kept on the model so v4/v5 read the same source of truth.
+    public static function isExternalLookupIdentityType(int $identityTypeId): bool
+    {
+        if ($identityTypeId <= 0) {
+            return false;
+        }
+        return DB::table('external_data_source_attributes')
+            ->where('attribute_field', 'identity_type_id')
+            ->where('value', (string) $identityTypeId)
+            ->exists();
+    }
 
 
 /**
