@@ -102,7 +102,13 @@ class CounsellingsTable extends AppTable
                 $currentStatus = $StudentStatuses->getIdByCode('CURRENT');
                 $conditions['InstitutionStudents.student_status_id'] = $currentStatus ?: 1;
             } else {
-                $conditions['InstitutionStudents.student_status_id IN'] = [1, 7, 6, 8];
+                $statusIds = $StudentStatuses->find()
+                                ->select(['id'])
+                                ->where(['code IN' => ['CURRENT','PROMOTED','GRADUATED','REPEATED']])
+                                ->enableHydration(false)
+                                ->extract('id')
+                                ->toList();
+                $conditions['InstitutionStudents.student_status_id IN'] = $statusIds;
             }
         }
 
