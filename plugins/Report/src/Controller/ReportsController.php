@@ -120,6 +120,7 @@ class ReportsController extends AppController
                 'Report.InstitutionStudents' => __('Students'),
                 'Report.InstitutionSubjects' => __('Subjects'),
                 'Report.StudentWithdrawalReport' => __('Student Withdrawal Report'),
+                'Report.TeacherClasses' => __('Teacher Classes'), //POCOR-9064
                 // 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
                 // 'Report.InstitutionSpecialNeedsStudents' => __('Special Needs Students'),
                 // 'Report.InstitutionStudentsWithSpecialNeeds' => __('Students with Special Needs'),
