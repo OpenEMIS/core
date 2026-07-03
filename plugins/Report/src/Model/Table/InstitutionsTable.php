@@ -430,6 +430,7 @@ class InstitutionsTable extends AppTable
                 case 'Report.InstitutionAssociations':
                 case 'Report.InstitutionProgrammes':
                 case 'Report.InstitutionClasses':
+                case 'Report.TeacherClasses': //POCOR-9064
                     $fieldsOrder[] = 'academic_period_id';  /*POCOR-6637 :: START*/
                     $fieldsOrder[] = 'area_level_id';
                     $fieldsOrder[] = 'area_education_id';
@@ -1094,7 +1095,8 @@ class InstitutionsTable extends AppTable
                     'Report.InstitutionPositionsSummaries',
                     'Report.StudentAbsencesPerDays', //POCOR-7276
                     'Report.InstitutionInfrastructureSummaryReport',
-                    'Report.StudentBehaviours'
+                    'Report.StudentBehaviours',
+                    'Report.TeacherClasses', //POCOR-9064
 
 
                 ]
@@ -1164,6 +1166,7 @@ class InstitutionsTable extends AppTable
                 'Report.StaffBehaviours', //POCOR-7276
                 'Report.InstitutionInfrastructureSummaryReport',
                 'Report.StudentBehaviours', //POCOR-7517
+                'Report.TeacherClasses', //POCOR-9064
             ]))) {
                 $Areas = self::getDynamicTableInstance('Area.AreaLevels');
                 $entity = $attr['entity'];
@@ -1233,7 +1236,8 @@ class InstitutionsTable extends AppTable
                     'Report.StudentAbsencesPerDays',
                     'Report.StaffBehaviours', //POCOR-7276
                     'Report.InstitutionInfrastructureSummaryReport',
-                    'Report.StudentBehaviours' //POCOR-7517
+                    'Report.StudentBehaviours', //POCOR-7517
+                    'Report.TeacherClasses', //POCOR-9064
                 ]
             ))) {
                 $Areas = self::getDynamicTableInstance('Area.Areas');
@@ -1361,7 +1365,8 @@ class InstitutionsTable extends AppTable
                 'Report.StudentAttendanceSummary',
                 'Report.StudentAbsences',
                 'Report.ClassAttendanceMarkedSummaryReport',
-                'Report.InstitutionClasses'
+                'Report.InstitutionClasses',
+                'Report.TeacherClasses', //POCOR-9064
             ])) {
 
                 $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
@@ -1393,7 +1398,8 @@ class InstitutionsTable extends AppTable
 
                 $attr['type'] = 'select';
                 $attr['select'] = false;
-                if (in_array($feature, ['Report.StudentAttendanceSummary', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.InstitutionClasses', 'Report.StudentAbsences'])) {
+                if (in_array($feature, ['Report.StudentAttendanceSummary', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport', 'Report.InstitutionClasses', 'Report.StudentAbsences', 'Report.TeacherClasses'])) 
+                 {
                     $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
                 } else {
                     $attr['options'] = $gradeOptions;
@@ -1612,10 +1618,9 @@ class InstitutionsTable extends AppTable
                 'Report.InstitutionPositionsSummaries',
                 'Report.StudentAbsencesPerDays', //POCOR-7276
                 'Report.InstitutionInfrastructureSummaryReport',
-                'Report.StudentBehaviours' //POCOR-7517
+                'Report.StudentBehaviours', //POCOR-7517
+                'Report.TeacherClasses', //POCOR-9064
             ];
-
-
             if (in_array($feature, $reportModels)) {
                 $institutionList = [];
                 if (array_key_exists('institution_type_id', $data) && !empty($data['institution_type_id'])) {
