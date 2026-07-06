@@ -26,7 +26,7 @@ $this->start('toolbar');
         data-placement="bottom"
         data-container="body"
         title="<?= __('Edit'); ?>"
-        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
+        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && !$ctrl.closedPeriod && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1 && !$ctrl.isNoScheduledDay()"
         ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
@@ -43,8 +43,14 @@ $this->start('toolbar');
 <?php endif; ?>
 <?php /******POCOR-8745--End*********/ ?>
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('No Scheduled Class'); ?>" ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1" ng-click="$ctrl.onNoScheduledClick()">
-        <i class="kd-null"></i>
+    <?php //POCOR-9652: icon + reactive tooltip — uib-tooltip re-evaluates on digest, so text toggles with the flag (plain Bootstrap data-toggle="tooltip" caches title at bind time and won't update) ?>
+    <button class="btn btn-xs btn-default"
+        uib-tooltip="{{$ctrl.isNoScheduledDay() ? '<?= __('Scheduled Class'); ?>' : '<?= __('No Scheduled Class'); ?>'}}"
+        tooltip-placement="bottom"
+        tooltip-append-to-body="true"
+        ng-show="$ctrl.action == 'view' && $ctrl.selectedDay != -1 && $ctrl.selectedAttendanceBy != '-1' && $ctrl.selectedDay <= $ctrl.currentDayMonthYear && !$ctrl.schoolClosed && $ctrl.classStudentList.length > 0 && $ctrl.permissionEdit == 1"
+        ng-click="$ctrl.onNoScheduledClick()">
+        <i ng-class="$ctrl.isNoScheduledDay() ? 'oe-check' : 'oe-close'"></i>
     </button>
 <?php endif; ?>
 <?php
