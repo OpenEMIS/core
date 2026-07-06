@@ -281,7 +281,9 @@ class ExcelBehavior extends Behavior
                 } else {
                     $this->setConfig('orientation', 'portrait');
                 }
-            }elseif ($count == 1) {
+            }
+            // elseif ($count == 1) {
+            elseif ($count == 1 && !isset($settings['process'])) // POCOR-9699
                 $params = json_decode($settings['process']->params, true); //POCOR-9731
                 if (isset($params['feature']) && str_contains($params['feature'], 'Report')) {
                     $this->setConfig('orientation', 'landscape');
