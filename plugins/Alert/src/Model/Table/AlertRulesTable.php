@@ -415,17 +415,189 @@ class AlertRulesTable extends ControllerActionTable
 
     public function onGetThreshold(EventInterface $event, Entity $entity)
     {
-        // temporary solution
         $origEntity = $this->get($entity->id);
-        if ($origEntity->has('feature') && !empty($origEntity->feature)) {
-            $event = $this->dispatchEvent('AlertRule.onGet.' . $origEntity->feature . '.Threshold', [$origEntity], $this);
-            if ($event->isStopped()) {
-                return $event->getResult();
+
+        return $this->formatThresholdForDisplay($origEntity);
+    }
+
+    public function formatThresholdForDisplay(Entity $entity)
+    {
+        $threshold = $entity->threshold;
+        if ($threshold === null || $threshold === '') {
+            return '';
+        }
+
+        $thresholdData = json_decode($threshold, true);
+        if (!is_array($thresholdData)) {
+            return (string)$threshold;
+        }
+
+        $feature = $entity->feature;
+        if ($feature === 'StudentAbsence') {
+            $feature = 'StudentAttendance';
+        }
+
+        $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+        if (empty($alertTypeDetails[$feature]['threshold'])) {
+            if (array_key_exists('value', $thresholdData) && !is_array($thresholdData['value'])) {
+                return (string)$thresholdData['value'];
             }
-            if (!empty($event->getResult())) {
-                return $event->getResult();
+
+            return $this->formatThresholdArrayFallback($thresholdData);
+        }
+
+        $thresholdConfig = $alertTypeDetails[$feature]['threshold'];
+        $parts = [];
+        $processedFields = [];
+
+        if (isset($thresholdData['value'], $thresholdData['condition'], $thresholdConfig['condition'])
+            && ($thresholdConfig['condition']['options'] ?? null)
+        ) {
+            $conditionOptions = $this->getSelectOptions(
+                $this->getAlias() . '.' . $thresholdConfig['condition']['options']
+            );
+            $conditionText = $conditionOptions[$thresholdData['condition']] ?? '';
+            if ($conditionText !== '') {
+                $parts[] = trim($thresholdData['value'] . ' ' . $conditionText);
+            } else {
+                $parts[] = (string)$thresholdData['value'];
+            }
+            $processedFields = ['value', 'condition'];
+        }
+
+        foreach ($thresholdConfig as $field => $fieldConfig) {
+            if (in_array($field, $processedFields, true)) {
+                continue;
+            }
+            if (!array_key_exists($field, $thresholdData)) {
+                continue;
+            }
+
+            $formatted = $this->formatThresholdFieldValue($field, $thresholdData[$field], $fieldConfig);
+            if ($formatted !== '') {
+                $parts[] = $formatted;
             }
         }
+
+        return !empty($parts) ? implode(', ', $parts) : $this->formatThresholdArrayFallback($thresholdData);
+    }
+
+    private function formatThresholdFieldValue(string $field, $value, array $fieldConfig): string
+    {
+        if ($value === null || $value === '' || (is_array($value) && empty($value))) {
+            return '';
+        }
+
+        $type = $fieldConfig['type'] ?? null;
+
+        if ($type === 'select') {
+            if (!empty($fieldConfig['lookupModel'])) {
+                return $this->getThresholdLookupLabel($fieldConfig['lookupModel'], $value);
+            }
+            if (!empty($fieldConfig['options'])) {
+                $options = $this->getSelectOptions($this->getAlias() . '.' . $fieldConfig['options']);
+
+                return (string)($options[$value] ?? $value);
+            }
+        }
+
+        if ($type === 'chosenSelect') {
+            if (!empty($fieldConfig['lookupModel']) && is_array($value)) {
+                $labels = [];
+                foreach ($value as $id) {
+                    $label = $this->getThresholdLookupLabel($fieldConfig['lookupModel'], $id);
+                    if ($label !== '') {
+                        $labels[] = $label;
+                    }
+                }
+
+                return implode(', ', $labels);
+            }
+
+            $workflowOptions = [
+                'Cases.workflow_steps',
+                'StudentAdmission.workflow_steps',
+                'StudentEnrolment.workflow_steps',
+            ];
+            if (!empty($fieldConfig['options'])
+                && in_array($fieldConfig['options'], $workflowOptions, true)
+                && is_array($value)
+            ) {
+                return $this->getWorkflowStepLabels($value);
+            }
+
+            if (is_array($value)) {
+                return implode(', ', $value);
+            }
+        }
+
+        if ($type === 'integer') {
+            $unit = $fieldConfig['tooltip']['label'] ?? '';
+            if ($unit !== '' && strtolower($unit) !== 'value') {
+                return trim($value . ' ' . __($unit));
+            }
+
+            return (string)$value;
+        }
+
+        return is_array($value) ? implode(', ', $value) : (string)$value;
+    }
+
+    private function getThresholdLookupLabel(string $lookupModel, $id): string
+    {
+        if ($id === null || $id === '') {
+            return '';
+        }
+
+        try {
+            $model = TableRegistry::getTableLocator()->get($lookupModel);
+            $record = $model->find()
+                ->where([$model->getPrimaryKey() => $id])
+                ->first();
+            if ($record && $record->has('name')) {
+                return (string)$record->name;
+            }
+        } catch (\Exception $exception) {
+            return (string)$id;
+        }
+
+        return (string)$id;
+    }
+
+    private function getWorkflowStepLabels(array $stepIds): string
+    {
+        $workflowStepsTable = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+        $stepNames = [];
+        foreach ($stepIds as $stepId) {
+            if ($stepId === '' || $stepId === null) {
+                continue;
+            }
+            $step = $workflowStepsTable->find()
+                ->where([$workflowStepsTable->getPrimaryKey() => $stepId])
+                ->first();
+            if ($step) {
+                $stepNames[] = $step->name;
+            }
+        }
+
+        return implode(', ', $stepNames);
+    }
+
+    private function formatThresholdArrayFallback(array $thresholdData): string
+    {
+        $displayValues = [];
+        foreach ($thresholdData as $value) {
+            if ($value === null || $value === '' || (is_array($value) && empty($value))) {
+                continue;
+            }
+            if (is_array($value)) {
+                $displayValues[] = implode(', ', $value);
+            } else {
+                $displayValues[] = (string)$value;
+            }
+        }
+
+        return implode(', ', $displayValues);
     }
 
     //POCOR-8690[END]
