@@ -473,6 +473,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
     userCtrl.selectUserFromExternalSearch = function (id) {
         userCtrl.selectedGuardian = id;
         userCtrl.isInternalSearchSelected = false;
+        userCtrl.isExternalSearchSelected = true; //POCOR-9590: mark guardian as sourced from External Search so saveDetails sets sync_status=1
         userCtrl.getGuardianData();
         userCtrl.disableFields = {
             username: false,
@@ -708,6 +709,7 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
             identity_type_name: userCtrl.selectedUserData.identity_type_name,
             photo_name: userCtrl.selectedUserData.photo_name,
             photo_content: userCtrl.selectedUserData.photo_base_64,
+            sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             contact_type: userCtrl.selectedUserData.contact_type_id,
             contact_value: userCtrl.selectedUserData.contact_value,
             email: userCtrl.selectedUserData.email,
@@ -725,7 +727,21 @@ function DirectoryaddguardianController($scope, $q, $window, $http, $filter, Uti
                 UtilsSvc.isAppendLoader(false);
             }, function (error) {
                 console.error(error);
-                userCtrl.message =  error.data.message || error.statusText || error.toString();
+                //POCOR-9590: walk per-field errors so the offending field is highlighted
+                //and the toast carries the field+rule message instead of generic "Validation failed".
+                const fieldErrors = (error && error.data && error.data.errors) ? error.data.errors : null;
+                let firstFieldMessage = '';
+                if (fieldErrors && typeof fieldErrors === 'object') {
+                    for (const field of Object.keys(fieldErrors)) {
+                        const rules = fieldErrors[field];
+                        const msg = (rules && typeof rules === 'object') ? Object.values(rules)[0] : rules;
+                        if (msg) {
+                            userCtrl.setError(field, msg);
+                            if (!firstFieldMessage) firstFieldMessage = `${field}: ${msg}`;
+                        }
+                    }
+                }
+                userCtrl.message = firstFieldMessage || (error.data && error.data.message) || error.statusText || error.toString();
                 userCtrl.messageClass = 'alert-danger';
                 UtilsSvc.isAppendLoader(false);
             });
