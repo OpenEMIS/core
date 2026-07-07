@@ -7,8 +7,7 @@ use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Event\EventInterface;
+use Cake\Event\EventInterface; //POCOR-9509: CakePHP 5 - replaced Cake\Event\Event
 
 
 class CallWebhookBehavior extends Behavior
@@ -26,7 +25,7 @@ class CallWebhookBehavior extends Behavior
         $this->_table->getEventManager()->on('Model.afterFullSave', [$this, 'afterFullSave']);
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $options): void //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
 
         $this->triggerMyWebhook($entity, $this->getConfig('entity_delete'));
@@ -89,7 +88,7 @@ class CallWebhookBehavior extends Behavior
         $this->triggerMyWebhook($entity, $eventKey);
 
     }
-    public function afterFullSave(Event $event, Entity $entity, ArrayObject $options): void
+    public function afterFullSave(EventInterface $event, Entity $entity, ArrayObject $options): void //POCOR-9509: CakePHP 5 - Event → EventInterface
     {
         if (!empty($options['skip_callbacks'])) {
             return;
