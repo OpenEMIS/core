@@ -1,6 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/results/institutions.results.archive.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/results/institutions.results.archive.ctrl', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/results/institutions.results.archived.svc', ['block' => true]); ?>
+<?= $this->Html->script('Institution.angular/results/institutions.results.archived.ctrl', ['block' => true]); ?>
 
 <?php
 $this->extend('OpenEmis./Layout/Panel');

@@ -12,6 +12,7 @@ use Cake\I18n\FrozenTime;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use Institution\Model\Traits\ProfilePermissionTrait; //POCOR-9598: centralised profile permission check
+use Institution\Model\Traits\StaleProfileBannerTrait; //POCOR-9593: stale-profile alert banner
 
 /**
  *
@@ -23,6 +24,7 @@ use Institution\Model\Traits\ProfilePermissionTrait; //POCOR-9598: centralised p
 class StaffProfilesTable extends ControllerActionTable
 {
     use ProfilePermissionTrait; //POCOR-9598: security_role_functions execute-permission check
+    use StaleProfileBannerTrait; //POCOR-9593: stale-profile alert banner
 
     private $statusOptions = [];
     private $reportProcessList = [];
@@ -264,13 +266,14 @@ class StaffProfilesTable extends ControllerActionTable
         $this->field('started_on');
         $this->field('completed_on');
         $this->field('email_status');
+        $this->field('age', ['type' => 'string', 'label' => false]); //POCOR-9593: age indicator — no column header
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('report_queue');
-        $this->setFieldOrder(['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
-        $this->setFieldVisible(['index'], ['openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']);
+        $this->setFieldOrder(['age', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']); //POCOR-9593: age first, no label
+        $this->setFieldVisible(['index'], ['age', 'openemis_no', 'staff_id', 'profile_name', 'status', 'started_on', 'completed_on', 'report_queue', 'email_status']); //POCOR-9593: age first, no label
 
         // SQL Query to get the current processing list for report_queue table
         $this->reportProcessList = $this->StaffReportCardProcesses
@@ -396,10 +399,10 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function indexAfterAction(EventInterface $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $reportCardId = $this->request->getQuery['staff_profile_template_id'];
+        $reportCardId = $this->request->getQuery('staff_profile_template_id'); //POCOR-9593: fix array syntax → method call
         //POCOR-6654 - taking institution id from session as request query doesn't contain it
         $institutionId = $this->getInstitutionID();
-        $academicPeriodId = $this->request->getQuery['academic_period_id'];
+        $academicPeriodId = $this->request->getQuery('academic_period_id'); //POCOR-9593: fix array syntax → method call
 
         if (!is_null($reportCardId) && !is_null($institutionId)) {
             $existingReportCard = $this->StaffTemplates->exists([$this->StaffTemplates->getPrimaryKey() => $reportCardId]);
@@ -488,6 +491,13 @@ class StaffProfilesTable extends ControllerActionTable
                     //POCOR-9598: end
                 }
 
+                //POCOR-9593: start - stale profile banner (runs after POCOR-9598 so it overwrites with richer message)
+                $staleTemplate = $this->StaffTemplates->find()
+                    ->where([$this->StaffTemplates->aliasField('id') => $this->request->getQuery('staff_profile_template_id')])
+                    ->first();
+                $this->showStaleProfileBanner($data, $staleTemplate, 'report_card_completed_on', 'report_card_status');
+                //POCOR-9593: end
+
                 // Publish all button
                 if ($generatedCount > 0) {
                     $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
@@ -552,9 +562,9 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $value = '';
 
-        if ($entity->has('report_card_started_on')) {
+        if ($entity->has('report_card_started_on') && !empty($entity->report_card_started_on)) {
             $startedOnValue = new FrozenTime($entity->report_card_started_on);
-            $value = $this->formatDateTime($startedOnValue);
+            $value = $startedOnValue->format('Y-m-d H:i:s'); //POCOR-9593: direct format — formatDateTime() not available on this branch
         }
 
         return $value;
@@ -564,13 +574,40 @@ class StaffProfilesTable extends ControllerActionTable
     {
         $value = '';
 
-        if ($entity->has('report_card_completed_on')) {
+        if ($entity->has('report_card_completed_on') && !empty($entity->report_card_completed_on)) {
             $completedOnValue = new FrozenTime($entity->report_card_completed_on);
-            $value = $this->formatDateTime($completedOnValue);
+            $value = $completedOnValue->format('Y-m-d H:i:s'); //POCOR-9593: direct format — formatDateTime() not available on this branch
         }
 
         return $value;
     }
+
+    //POCOR-9593: start - profile age indicator square
+    public function onGetAge(EventInterface $event, Entity $entity)
+    {
+        $completedOn = $entity->has('report_card_completed_on') ? $entity->report_card_completed_on : null;
+        $status = $entity->has('report_card_status') ? $entity->report_card_status : self::NEW_REPORT;
+
+        if (empty($completedOn) || !in_array($status, [self::GENERATED, self::PUBLISHED])) {
+            return '<span style="display:inline-block;width:14px;height:14px;border:2px solid #aaa;background:transparent;vertical-align:middle;" title="' . __('Not yet generated') . '"></span>';
+        }
+
+        $now = FrozenTime::now(); //POCOR-9593: use diffInDays for correct future-date handling
+        $completed = new FrozenTime($completedOn);
+        $days = $now->greaterThan($completed) ? (int) $now->diffInDays($completed) : 0; //POCOR-9593: 0 if completed_on is in the future
+
+        if ($days < 30) {
+            $color = '#2196F3';
+        } elseif ($days < 365) {
+            $color = '#FFC107';
+        } else {
+            $color = '#F44336';
+        }
+
+        $title = __('Generated %d days ago', $days); //POCOR-9593: single translatable string
+        return '<span style="display:inline-block;width:14px;height:14px;background:' . $color . ';vertical-align:middle;" title="' . $title . '"></span>';
+    }
+    //POCOR-9593: end
 
     public function onGetReportQueue(EventInterface $event, Entity $entity)
     {
@@ -775,15 +812,26 @@ class StaffProfilesTable extends ControllerActionTable
 
         if ($hasTemplate) {
             $StaffReportCardProcesses = TableRegistry::getTableLocator()->get('ReportCard.StaffReportCardProcesses');
+
+            //POCOR-9593: start — purge stuck RUNNING records before the inProgress gate
+            // Without this, a crashed background process leaves RUNNING rows that block generateAll forever.
+            // 2h is generous — a full institution's staff generation completes in minutes.
+            $cutoff2h = FrozenTime::now()->subHours(2);
+            $StaffReportCardProcesses->deleteAll([
+                $StaffReportCardProcesses->aliasField('institution_id') => $institutionId,
+                $StaffReportCardProcesses->aliasField('status') => $StaffReportCardProcesses::RUNNING,
+                $StaffReportCardProcesses->aliasField('created') . ' <' => $cutoff2h->format('Y-m-d H:i:s'),
+            ]);
+            //POCOR-9593: end
+
             $inProgress = $StaffReportCardProcesses->find()
                 ->where([
                     $StaffReportCardProcesses->aliasField('staff_profile_template_id') => $params['staff_profile_template_id'],
-                    $StaffReportCardProcesses->aliasField('staff_id') => $params['staff_id'],
                     $StaffReportCardProcesses->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StaffReportCardProcesses->aliasField('institution_id') => $institutionId,
-                ])
+                    $StaffReportCardProcesses->aliasField('status IN') => [$StaffReportCardProcesses::NEW_PROCESS, $StaffReportCardProcesses::RUNNING],
+                ]) //POCOR-9593: status filter — COMPLETED rows must not block a new generation run
                 ->count();
-
 
             if (!$inProgress) {
                 $this->addReportCardsToProcesses($institutionId, $params['academic_period_id'], $params['staff_profile_template_id']);
@@ -1272,7 +1320,9 @@ class StaffProfilesTable extends ControllerActionTable
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
-        if ($field == 'openemis_no') {
+        if ($field == 'age') {
+            return ''; //POCOR-9593: age indicator column has no header
+        } else if ($field == 'openemis_no') {
             return __('OpenEMIS ID');
         } else if ($field == 'staff_id') {
             return  __('Staff');

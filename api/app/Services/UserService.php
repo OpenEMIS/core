@@ -134,10 +134,13 @@ class UserService extends Controller
                     $staff_position_grade_name = $item['institutionStaff']['staffPositionGrade']['name'];
                 }
 
+                //POCOR-9697: password and super_admin omitted from the
+                //response. Both are sensitive (password is a bcrypt hash,
+                //super_admin tells an attacker which accounts to target) and
+                //no frontend feature reads them from /api/v4/users/{id}.
                 $resp = [
                         "id" => $data['id'],
                         "username" => $data['username'],
-                        "password" => $data['password'],
                         "openemis_no" => $data['openemis_no'],
                         "first_name" => $data['first_name'],
                         "middle_name" => $data['middle_name'],
@@ -157,8 +160,6 @@ class UserService extends Controller
                         "identity_type_id" => $data['identity_type_id'],
                         "identity_type_name" => $data['identityType']['name']??null,
                         "identity_number" => $data['identity_number'],
-                        "external_reference" => $data['external_reference'],
-                        "super_admin" => $data['super_admin'],
                         "external_reference" => $data['external_reference'],
                         "status" => $data['status'],
                         "last_login" => $data['last_login'],

@@ -174,27 +174,33 @@ class AssessmentItemResultsTable extends AppTable
         $this->dispatchEventToModels('Model.AssessmentResults.afterSave', [$entity], $this, $listeners);
     }
 
-    public function findResults(Query $query, array $options)
+        public function findResults(Query $query, array $options)
     {
         $academicPeriodId = $options['academic_period_id'];
-        $controller = $options['_controller'];
+        //$controller = $options['_controller'];
         // Ensure $controller and $controller->request are set
-        if (isset($controller) && isset($controller->request)) {
-            $session = $controller->request->session();
-            $institutionId = $session->read('Institution.Institutions.id'); // POCOR-6823
-        }
-        //$session = $controller->request->session();
-        //$institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
-        $studentId = -1;
-        if ($session->check('Student.Results.student_id')) {
-            $studentId = $session->read('Student.Results.student_id');
-        } else {
-            $studentId = $session->read('Profile.StudentUser.primaryKey.id');
-        }
+        // if (isset($controller) && isset($controller->request)) {
+        //     $session = $controller->request->session();
+        //     $institutionId = $session->read('Institution.Institutions.id'); // POCOR-6823
+        // }
+        // //$session = $controller->request->session();
+        // //$institutionId = $session->read('Institution.Institutions.id'); //POCOR-6823
+        // $studentId = -1;
+        // if ($session->check('Student.Results.student_id')) {
+        //     $studentId = $session->read('Student.Results.student_id');
+        // } else {
+        //     $studentId = $session->read('Profile.StudentUser.primaryKey.id');
+        // }
 
-        if ($options['user']['is_student'] == 1) {
-            $studentId = $options['user']['id'];
-        }
+        // if ($options['user']['is_student'] == 1) {
+        //     $studentId = $options['user']['id'];
+        // }
+        
+        //POCOR-9637 -- start
+        $controller = $options['_controller'] ?? null;
+        $studentId = $options['student_id'] ?? null;
+        $institutionId = $options['institution_id'] ?? null;
+        //POCOR-9637 -- end
 
         //Start POCOR-6823
         $InstitutionClassStudents = self::getDynamicTableInstance('Institution.InstitutionClassStudents'); //POCOR-8224
@@ -216,6 +222,10 @@ class AssessmentItemResultsTable extends AppTable
             $className = $ClassStudents->institution_class_id;
         }
         //End POCOR-6823
+
+        if (!$academicPeriodId || !$studentId) {
+            throw new \Exception("Missing required params");
+        }
 
         return $query
             ->select([
@@ -255,7 +265,9 @@ class AssessmentItemResultsTable extends AppTable
                 $this->aliasField('created') => 'DESC', //POCOR-6823
                 $this->aliasField('modified') => 'DESC', //POCOR-6823
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
-            ])->all(); //->first(); //POCOR-6948 Comment Reason: taking one record of assessment instead of all records for student.
+            ]);
+            // ->all(); //POCOR-9637 commenting because it returned resultset instead of query object.
+           //->first(); //POCOR-6948 Comment Reason: taking one record of assessment instead of all records for student.
     }
 
     /**
