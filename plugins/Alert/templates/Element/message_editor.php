@@ -15,9 +15,16 @@
         display: none;
         float: left;
     }
+    div#cke_105_uiElement {
+        display: none;
+    }
+    select.cke_dialog_ui_input_select{
+        height: 32%;
+    }
 </style>
 
-<?php echo $this->Html->script('https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js', ['block' => true]) ?>
+<?php echo $this->Html->script('https://cdn.ckeditor.com/4.22.1/full/ckeditor.js', ['block' => true]) ?>
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     if (typeof CKEDITOR !== 'undefined') {
@@ -27,12 +34,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         CKEDITOR.replace('notices-message', {
             toolbar: [
-                { name: 'basicstyles', items: ['Bold','Italic','Underline','Strike'] },
-                { name: 'paragraph', items: ['NumberedList','BulletedList','Blockquote'] },
-                { name: 'insert', items: ['Link','Image','Table'] },
+                { name: 'basicstyles', items: ['Bold','Italic','Underline'] },
                 { name: 'styles', items: ['Font','FontSize','TextColor','BGColor'] },
-                { name: 'align', items: ['JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock'] },
-                { name: 'tools', items: ['Maximize','Source'] }
+                { name: 'align', items: ['JustifyLeft','JustifyCenter','JustifyRight'] },
+                { name: 'paragraph', items: ['NumberedList','BulletedList'] },
+                { name: 'insert', items: ['Link','Image'] },
+               // { name: 'tools', items: ['Source'] }
             ]
         });
     }
