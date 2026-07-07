@@ -20,6 +20,11 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use Cake\Collection\CollectionInterface; // POCOR-9243
 
+/**
+ * @property \Cake\Http\ServerRequest $request
+ * @property \Cake\Controller\Controller $controller
+ * @property \Cake\Http\Session $Session
+ */
 class InstitutionSubjectsTable extends ControllerActionTable
 {
     use MessagesTrait;
@@ -182,7 +187,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         // $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>false, 'add'=>true], 'onChangeReload' => true, 'sort' => ['field' => 'EducationGrades.name']]);
         $this->field('education_grade_id', ['type' => 'select', 'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]]);
-        $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true, 'add' => true], 'onChangeReload' => true]);
+        $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view' => true, 'edit' => true, 'add' => true]]);
         $this->field('created', ['type' => 'string', 'visible' => false]);
         $this->field('created_user_id', ['type' => 'string', 'visible' => false]);
         $this->field('education_subject_code', ['type' => 'string', 'visible' => ['view' => true]]);
@@ -191,7 +196,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->field('modified_user_id', ['type' => 'string', 'visible' => false]);
         $this->field('name', ['type' => 'string', 'visible' => ['index' => true, 'view' => true, 'edit' => true], 'sort' => ['field' => 'EducationSubjects.name']]);
         $this->field('no_of_seats', ['type' => 'integer', 'attr' => ['min' => 1], 'visible' => false]);
-        $this->field('class_name', ['type' => 'select', 'visible' => ['index' => true, 'view' => true, 'edit' => true], 'onChangeReload' => true]);
+        $this->field('class_name', ['type' => 'select', 'visible' => ['index' => true, 'view' => true, 'edit' => true]]);
 
         $this->field('students', [
             'label' => '',
@@ -683,7 +688,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
      ******************************************************************************************************************/
     public function addBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+        $selectedAcademicPeriodId = $this->getSelectedAcademicPeriodIdForAdd();
+        if (empty($selectedAcademicPeriodId)) {
+            $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+        }
         if ($selectedAcademicPeriodId == -1) {
             return $this->controller->redirect([
                 'plugin' => $this->controller->getPlugin(),
@@ -707,107 +715,309 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'academic_period_id', 'class_name', 'education_grade_id', 'subjects',
         ]);
 
-        $Classes = $this->Classes;
-
         $institutionId = $extra['institution_id'];
-        $periodOption = ['' => '-- ' . __('Select Period') . ' --'];
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['withLevels' => false, 'isEditable' => true]);
-        $academicPeriodOptions = $periodOption + $academicPeriodOptions;
+        $classOptions = $this->getClassOptionsForAcademicPeriod($selectedAcademicPeriodId, $institutionId);
+        $selectedClassId = $this->getSelectedClassIdForAdd(null, $classOptions);
 
-        if ($this->request->is(['post', 'put']) && $this->request->getData()['InstitutionSubjects']['academic_period_id']) {
-            $extra['selectedAcademicPeriodId'] = $this->request->getData()['InstitutionSubjects']['academic_period_id'];
-            $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
+        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+        $extra['selectedClassId'] = $selectedClassId;
+    }
+
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $institutionId = $this->getInstitutionID();
+            $Classes = $this->Classes;
+            $periodOption = ['' => '-- ' . __('Select Period') . ' --'];
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList(['withLevels' => false, 'isEditable' => true]);
+            $academicPeriodOptions = $periodOption + $academicPeriodOptions;
+            $selectedAcademicPeriodId = $this->getSelectedAcademicPeriodIdForAdd($request);
+
+            $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
+                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+                'callable' => function ($id) use ($Classes, $institutionId) {
+                    return $Classes->find()->where([
+                        $Classes->aliasField('institution_id') => $institutionId,
+                        $Classes->aliasField('academic_period_id') => $id
+                    ])->count();
+                }
+            ]);
+
+            $attr['options'] = $academicPeriodOptions;
+            $attr['default'] = $selectedAcademicPeriodId;
+            $attr['onChangeReload'] = 'changePeriod';
         }
 
-        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
-            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-            'callable' => function ($id) use ($Classes, $institutionId) {
-                return $Classes->find()->where([
-                    $Classes->aliasField('institution_id') => $institutionId,
-                    $Classes->aliasField('academic_period_id') =>  $id
-                ])->count();
-            }
-        ]);
+        return $attr;
+    }
 
-        $classOptions = $Classes->find('list')
-            ->where([
-                $Classes->aliasField('academic_period_id') => $selectedAcademicPeriodId,
-                $Classes->aliasField('institution_id') => $institutionId
-            ])
-            ->toArray();
+    public function onUpdateFieldClassName(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $institutionId = $this->getInstitutionID();
+            $ClassGrades = $this->InstitutionClassGrades;
+            $selectedAcademicPeriodId = $this->getSelectedAcademicPeriodIdForAdd($request);
+            $classOptions = $this->getClassOptionsForAcademicPeriod($selectedAcademicPeriodId, $institutionId);
+            $selectedClassId = $this->getSelectedClassIdForAdd($request, $classOptions);
+
+            if (!empty($classOptions)) {
+                $this->advancedSelectOptions($classOptions, $selectedClassId, [
+                    'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
+                    'callable' => function ($id) use ($ClassGrades) {
+                        return $ClassGrades->find()->where([
+                            $ClassGrades->aliasField('institution_class_id') => $id
+                        ])->count();
+                    }
+                ]);
+            }
+
+            $attr['options'] = $classOptions;
+            $attr['default'] = $selectedClassId;
+            $attr['onChangeReload'] = 'changeClass';
+        }
+
+        return $attr;
+    }
+
+    public function addEditOnChangePeriod(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->getControllerRequest();
+        $queryParams = $request->getQueryParams();
+        unset($queryParams['class_id']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->getAlias(), $request->getData())) {
+                if (array_key_exists('academic_period_id', $request->getData()[$this->getAlias()])) {
+                    $queryParams['academic_period_id'] = $request->getData($this->getAlias())['academic_period_id'];
+                }
+                if (isset($data[$this->getAlias()]['education_grade_id'])) {
+                    unset($data[$this->getAlias()]['education_grade_id']);
+                }
+            }
+        }
+        unset($queryParams['education_grade_id']);
+
+        $request = $request->withQueryParams($queryParams);
+        $institutionId = $this->getInstitutionID();
+        $selectedAcademicPeriodId = $this->getSelectedAcademicPeriodIdForAdd($request);
+        $classOptions = $this->getClassOptionsForAcademicPeriod($selectedAcademicPeriodId, $institutionId);
+        $selectedClassId = $this->getSelectedClassIdForAdd($request, $classOptions);
+
+        if (!empty($selectedClassId)) {
+            $queryParams['class_id'] = $selectedClassId;
+            $data[$this->getAlias()]['class_name'] = $selectedClassId;
+        } else {
+            unset($queryParams['class_id']);
+            if (isset($data[$this->getAlias()]['class_name'])) {
+                unset($data[$this->getAlias()]['class_name']);
+            }
+        }
+
+        $this->setControllerRequest($request->withQueryParams($queryParams));
+    }
+
+    public function addEditOnChangeClass(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->getControllerRequest();
+        $queryParams = $request->getQueryParams();
+
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->getData($this->getAlias());
+            if (!empty($requestData['academic_period_id'])) {
+                $queryParams['academic_period_id'] = $requestData['academic_period_id'];
+            }
+            if (!empty($requestData['class_name'])) {
+                $queryParams['class_id'] = $requestData['class_name'];
+            } else {
+                unset($queryParams['class_id']);
+            }
+            if (isset($data[$this->getAlias()]['education_grade_id'])) {
+                unset($data[$this->getAlias()]['education_grade_id']);
+            }
+        }
+
+        unset($queryParams['education_grade_id']);
+
+        $this->setControllerRequest($request->withQueryParams($queryParams));
+    }
+
+    public function addEditOnChangeEducationGrade(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $request = $this->getControllerRequest();
+        $queryParams = $request->getQueryParams();
+
+        if ($request->is(['post', 'put'])) {
+            $requestData = $request->getData($this->getAlias());
+            if (!empty($requestData['academic_period_id'])) {
+                $queryParams['academic_period_id'] = $requestData['academic_period_id'];
+            }
+            if (!empty($requestData['class_name'])) {
+                $queryParams['class_id'] = $requestData['class_name'];
+            }
+            if (!empty($requestData['education_grade_id'])) {
+                $queryParams['education_grade_id'] = $requestData['education_grade_id'];
+            } else {
+                unset($queryParams['education_grade_id']);
+            }
+        }
+
+        $this->setControllerRequest($request->withQueryParams($queryParams));
+    }
+
+    private function getControllerRequest(): ServerRequest
+    {
+        if (isset($this->request) && $this->request instanceof ServerRequest) {
+            return $this->request;
+        }
+
+        return $this->controller->getRequest();
+    }
+
+    private function setControllerRequest(ServerRequest $request): void
+    {
+        $this->request = $request;
+        if (isset($this->controller)) {
+            $this->controller->setRequest($request);
+        }
+    }
+
+    private function getSelectedAcademicPeriodIdForAdd(ServerRequest $request = null)
+    {
+        $request = $request ?? $this->getControllerRequest();
+        $requestData = $request->getData($this->getAlias());
+
+        if (!empty($requestData['academic_period_id'])) {
+            return $requestData['academic_period_id'];
+        }
+
+        $academicPeriodId = $request->getQuery('academic_period_id');
+        if (!empty($academicPeriodId)) {
+            return $academicPeriodId;
+        }
+
+        return $this->AcademicPeriods->getCurrent();
+    }
+
+    private function getSelectedEducationGradeIdForAdd(ServerRequest $request = null)
+    {
+        $request = $request ?? $this->getControllerRequest();
+        $requestData = $request->getData($this->getAlias());
+
+        if (!empty($requestData['education_grade_id'])) {
+            return $requestData['education_grade_id'];
+        }
+
+        $educationGradeId = $request->getQuery('education_grade_id');
+        if ($educationGradeId !== null && $educationGradeId !== '') {
+            return $educationGradeId;
+        }
+
+        return '';
+    }
+
+    private function getSelectedClassIdForAdd(ServerRequest $request = null, array $classOptions = [])
+    {
+        $request = $request ?? $this->getControllerRequest();
+        $requestData = $request->getData($this->getAlias());
+        $candidates = [];
+
+        if (!empty($requestData['class_name'])) {
+            $candidates[] = $requestData['class_name'];
+        }
+
+        $classId = $request->getQuery('class_id');
+        if (!empty($classId)) {
+            $candidates[] = $classId;
+        }
+
+        foreach ($candidates as $candidate) {
+            if ($candidate === '' || $candidate === null) {
+                continue;
+            }
+            if (empty($classOptions) || array_key_exists($candidate, $classOptions)) {
+                return $candidate;
+            }
+        }
+
+        return $this->getFirstClassIdWithGrades($classOptions);
+    }
+
+    private function getFirstClassIdWithGrades(array $classOptions)
+    {
+        if (empty($classOptions)) {
+            return '';
+        }
 
         $ClassGrades = $this->InstitutionClassGrades;
-        $query = $this->request->getQuery();
-
-        // $selectedClassId = isset($query['class_id']) && !empty($query['class_id']) ? $query['class_id'] : '';
-        //POCOR-7110
-
-        //POCOR-7099 start
-        $pageWasRefreshed = isset($_SERVER['HTTP_CACHE_CONTROL']) && $_SERVER['HTTP_CACHE_CONTROL'] === 'max-age=0';
-        if ($pageWasRefreshed == 1) {
-            $selectedClassId = $this->postString('class_name', $classOptions);
-        } else {
-            $selectedClassId = isset($query['class_id']) && !empty($query['class_id']) ? $query['class_id'] : '';
+        foreach ($classOptions as $classId => $className) {
+            if ($classId === '' || $classId === null) {
+                continue;
+            }
+            $count = $ClassGrades->find()->where([
+                $ClassGrades->aliasField('institution_class_id') => $classId
+            ])->count();
+            if ($count > 0) {
+                return $classId;
+            }
         }
 
-        //End of POCOR-7110
-
-        //POCOR-7099 end
-
-        $this->advancedSelectOptions($classOptions, $selectedClassId, [
-            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-            'callable' => function ($id) use ($ClassGrades) {
-                return $ClassGrades->find()->where([
-                    $ClassGrades->aliasField('institution_class_id') => $id
-                ])->count();
+        foreach ($classOptions as $classId => $className) {
+            if ($classId !== '' && $classId !== null) {
+                return $classId;
             }
-        ]);
-        $extra['selectedClassId'] = $selectedClassId;
+        }
 
-        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-        $this->fields['class_name']['options'] = $classOptions;
+        return '';
+    }
 
-        $this->fields['education_grade_id'];
+    private function getClassOptionsForAcademicPeriod($academicPeriodId, $institutionId)
+    {
+        if (empty($academicPeriodId)) {
+            return [];
+        }
+
+        return $this->Classes->find('list')
+            ->where([
+                $this->Classes->aliasField('academic_period_id') => $academicPeriodId,
+                $this->Classes->aliasField('institution_id') => $institutionId
+            ])
+            ->toArray();
     }
 
 
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-        $academicPeriodId = $AcademicPeriodTable->getCurrent();
-        if(!empty($this->request->getQuery('class_id')) || !empty($this->request->getData('InstitutionSubjects')['class_name'])){
-            $className = (null !== $this->request->getQuery()) ? $this->request->getQuery('class_id') : $this->request->getData('InstitutionSubjects')['class_name'];
-            if($this->request->getQuery()!=null && !empty($this->request->getData('InstitutionSubjects')['class_name'])){
-                $className = $this->request->getData('InstitutionSubjects')['class_name'];
-            }
-            if($className == ''){
-                $className = $this->request->getData('InstitutionSubjects')['class_name'];
-            }
-            list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+        if ($action == 'add') {
+            $institutionId = $this->getInstitutionID();
+            $selectedAcademicPeriodId = $this->getSelectedAcademicPeriodIdForAdd($request);
+            $classOptions = $this->getClassOptionsForAcademicPeriod($selectedAcademicPeriodId, $institutionId);
+            $className = $this->getSelectedClassIdForAdd($request, $classOptions);
+            $gradeOption = ['' => '-- ' . __('Select Grade') . ' --'];
 
-            $attr['options'] = $levelOptions;
-            if ($action == 'add') {
-                $attr['default'] = $selectedLevel;
+            if (!empty($className)) {
+                list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+                $attr['options'] = $gradeOption + $levelOptions;
+                $selectedEducationGradeId = $this->getSelectedEducationGradeIdForAdd($request);
+                if ($selectedEducationGradeId !== '' && array_key_exists($selectedEducationGradeId, $levelOptions)) {
+                    $attr['default'] = $selectedEducationGradeId;
+                }
+            } else {
+                $attr['options'] = $gradeOption;
             }
-            return $attr;
-        }else{
-            $institutionid = $this->getInstitutionID();
-            $institutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
-            $getClassId = $institutionClass->find()->where(['institution_id' => $institutionid, 'academic_period_id' => $academicPeriodId])->first()->id;
-            $className = $getClassId;
-            //POCOR-8706 start
-            $levelOptions = null;
-            $selectedLevel = null;
-            if($className)
-              list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
-            //POCOR-8706 end
-            $attr['options'] = $levelOptions;
-            if ($action == 'add') {
-                $attr['default'] = $selectedLevel;
-            }
+            $attr['onChangeReload'] = 'changeEducationGrade';
+        } elseif ($action == 'edit') {
+            $institutionId = $this->getInstitutionID();
+            $selectedAcademicPeriodId = $attr['entity']->academic_period_id;
+            $classOptions = $this->getClassOptionsForAcademicPeriod($selectedAcademicPeriodId, $institutionId);
+            $className = $this->getSelectedClassIdForAdd($request, $classOptions);
 
-            return $attr;
+            if (!empty($className)) {
+                list($levelOptions, $selectedLevel) = array_values($this->getEducationGradeOptions($className));
+                $attr['options'] = $levelOptions;
+            }
         }
+
+        return $attr;
     }
 
     public function getEducationGradeOptions($className)
@@ -1073,8 +1283,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $teachers[$value->user->id] = $value->user->name;
             }//POCOR-8324 ends
         }
-        $subjects = $this->getSubjectOptions($extra['selectedClassId']);
-        $existedSubjects = $this->getExistedSubjects($extra['selectedClassId'], true);
+        $selectedEducationGradeId = $this->getSelectedEducationGradeIdForAdd();
+        $subjects = [];
+        $existedSubjects = [];
+        if (!empty($selectedEducationGradeId) && !empty($extra['selectedClassId'])) {
+            $subjects = $this->getSubjectOptions($extra['selectedClassId'], false, $selectedEducationGradeId);
+            $existedSubjects = $this->getExistedSubjects($extra['selectedClassId'], true, $selectedEducationGradeId);
+        }
         $this->fields['subjects']['data'] = [
             'teachers' => $teachers,
             'subjects' => $subjects,
@@ -1354,7 +1569,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
     }
 
-    public function getSubjectOptions($selectedClassId, $listOnly = false)
+    public function getSubjectOptions($selectedClassId, $listOnly = false, $educationGradeId = null)
     {
         $Grade = $this->InstitutionClassGrades;
         $gradeOptions = $Grade->find('list', [
@@ -1368,6 +1583,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->toArray();
         $data = [];
         if (!empty($gradeOptions)) {
+            if (!empty($educationGradeId)) {
+                if (!array_key_exists($educationGradeId, $gradeOptions)) {
+                    return [];
+                }
+                $gradeIds = [$educationGradeId];
+            } else {
+                $gradeIds = array_keys($gradeOptions);
+            }
             $EducationGradesSubjects = TableRegistry::getTableLocator()->get('Education.EducationGradesSubjects');
             /**
              * Do not check for the visible attribute in sql query,
@@ -1378,7 +1601,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 ->find()
                 ->contain(['EducationSubjects'])
                 ->where([
-                    'EducationGradesSubjects.education_grade_id IN ' => array_keys($gradeOptions),
+                    'EducationGradesSubjects.education_grade_id IN ' => $gradeIds,
                 ]);
             $subjects = $query
                 ->order('EducationSubjects.order')
@@ -1401,7 +1624,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $data;
     }
 
-    private function getExistedSubjects($selectedClassId, $listOnly = false)
+    private function getExistedSubjects($selectedClassId, $listOnly = false, $educationGradeId = null)
     {
         $classSubjects = $this->ClassSubjects
             ->find()
@@ -1429,6 +1652,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if ($listOnly) {
             $subjectList = [];
             foreach ($classSubjects as $key => $classSubject) {
+                if (!empty($educationGradeId) && $classSubject->institution_subject->education_grade_id != $educationGradeId) {
+                    continue;
+                }
                 $subjectList[$classSubject->institution_subject->education_subject->id] = [
                     'name' => $classSubject->institution_subject->name,
                     'subject_name' => $classSubject->institution_subject->education_subject->name,
