@@ -37,11 +37,13 @@ RUN ng build --base-href /core/ --output-path=./dist
 
 # === Second Stage: PHP Backed + Apache Stage ===
 # Uses the php image with apache as base image
-FROM php:8.3-apache AS backend
+FROM php:8.4-apache AS backend
+# POCOR-9694: pinned to 8.4 to restore composer resolution on hosts running PHP 8.5
 
 # Install system dependencies
+# POCOR-9694: added `cron` for the OpenEMIS Runtime single-cron entry-point
 RUN apt-get update && apt-get install -y \
-    libicu-dev libzip-dev unzip git inotify-tools \
+    libicu-dev libzip-dev unzip git inotify-tools cron \
     libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev vim \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install intl zip gd pdo pdo_mysql mysqli mbstring xml bcmath
@@ -82,6 +84,10 @@ RUN mv ./webroot/js/angular/dist/styles.css ./webroot/css/angular/main/ &&\
     rm -rf /var/lib/apt/lists/*
 
 COPY ./docker-config/init.sh /usr/bin/init.sh
+
+# POCOR-9694: install OpenEMIS Runtime crontab (runs as www-data, every minute)
+COPY ./docker-config/cron/openemis-core /etc/cron.d/openemis-core
+RUN chmod 0644 /etc/cron.d/openemis-core
 
 RUN chmod 755 /usr/bin/init.sh
 

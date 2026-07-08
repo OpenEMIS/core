@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\SecurityUsers;
 use App\Services\UserService;
 use App\Services\PermissionService;
+use App\Services\Security\SuperAdminProbeGuard; //POCOR-9710
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\SaveStudentDataRequest;
 use App\Http\Requests\SaveStaffDataRequest;
@@ -22,10 +24,15 @@ class UserController extends Controller
     //it grants "logged-in", not "may create or edit security_users".
     protected $permissionService;
 
-    public function __construct(UserService $userService, PermissionService $permissionService)
+    //POCOR-9710: probe-detection + password carve-out for /api/v4/users — same
+    //rule v5 applies via CrudApiController so the two API versions stay in lockstep.
+    protected $probeGuard;
+
+    public function __construct(UserService $userService, PermissionService $permissionService, SuperAdminProbeGuard $probeGuard)
     {
         $this->userService = $userService;
         $this->permissionService = $permissionService;
+        $this->probeGuard = $probeGuard;
     }
 
     //POCOR-9697: shared 403 gate used by every v4 endpoint that writes to
@@ -282,6 +289,21 @@ class UserController extends Controller
      */
     public function getUsersData(int $userId)
     {
+        //POCOR-9710: probe gate — non-super-admin callers who fetch a
+        //super_admin = 1 id by primary key get 404 + an audit log entry,
+        //never the row. Mirrors the v5 gate in CrudApiController::common().
+        $caller = JWTAuth::user();
+        if (!SuperAdminProbeGuard::isSuperAdmin($caller)
+            && $this->probeGuard->idIsSuperAdmin(SecurityUsers::class, $userId)
+        ) {
+            $this->probeGuard->logProbe(request(), $caller, [
+                'resource' => 'v4-users',
+                'action'   => 'view',
+                'target'   => $userId,
+            ]);
+            return $this->sendErrorResponse('Users Data Not Found');
+        }
+
         try {
             $data = $this->userService->getUsersData($userId);
             return $this->sendSuccessResponse("Users Data Found", $data);
