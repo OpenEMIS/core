@@ -1,3 +1,16 @@
+### [5.15.0] - 2026-07-06
+- Bug Fixed: Core>Administration>System Setup>Attendances>Status: Should be able to modify the Mark Type without encountering any errors.
+- Implemented: Develop configuration for next programme
+- Implemented: Develop formatting changes to the notices
+- Bug Fixed: Personal > Health: 2 fields are missing even when permission from security roles is given for them, when logged as student.
+- Bug Fixed: Institution>Students>Student Profile>Academic>Edit: Clicking on edit button makes no change
+- Bug Fixed: Directory > Advanced Search: Advanced Search does not trim leading/trailing spaces for Name and ID fields
+- Bug Fixed: Institutions > Academic > Subjects > Add : When adding in previous academic year, system will add Institution Subjects and link it to the wrong education_grade_id
+- Bug Fixed: Core>Reports>Data Quality>Validity Report: Everything is showing 0 despite there being data to show on the interface.
+- Bug Fixed: Core>Institutions>Students>General>Guardians tab:All other tabs disappear when one clicks on the Guardians tab
+- Bug Fixed: Administrations > System Setup > Education Structure : Remove the Copy feature at the top
+- Bug Fixed: Directory > Advanced Search > Contact Number : Advanced Search with contact number not working
+
 ### [5.14.0] - 2026-06-23
 - Implemented: Develop behaviour placeholders for institution profiles report - part 2
 - Implemented: Develop External Data Source - Sync function
