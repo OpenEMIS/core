@@ -108,7 +108,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             .ajax({success: success, defer: true});
     };
 
-    function getStudentResults(academicPeriodId) {
+    function getStudentResults(academicPeriodId, studentId, institutionId) { //POCOR-9637
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);
@@ -150,13 +150,17 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             }
         };
 
+        //POCOR-9637
         return AssessmentItemResultsTable
             .select()
             .find('Results', {
-                academic_period_id: academicPeriodId
+                academic_period_id: academicPeriodId,
+                student_id: studentId,
+                institution_id: institutionId
             })
             .ajax({success: success, defer: true})
             ;
+        //POCOR-9637    
     };
 
     function getAssessmentPeriods(assessmentId) {
