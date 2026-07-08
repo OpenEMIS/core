@@ -98,9 +98,12 @@ class DataQualityTable extends AppTable {
     {
     	if (isset($this->request->getData($this->getAlias())['feature'])) {
             $feature = $this->request->getData($this->getAlias())['feature'];
-            // if (in_array($feature,['Report.EnrollmentOutliers','Report.AgeOutliers','Report.StaffWithMissingQualificationReport'])){
-            if (in_array($feature,['Report.EnrollmentOutliers','Report.AgeOutliers','Report.StaffWithMissingQualificationReport', 'Report.ValidationReport'])) // POCOR-9699
-            {
+            if (in_array($feature, [
+                'Report.EnrollmentOutliers',
+                'Report.AgeOutliers',
+                'Report.StaffWithMissingQualificationReport',
+                'Report.ValidationReport'
+            ])) {
             	$AcademicPeriodTable = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $academicPeriodOptions = $AcademicPeriodTable->getYearList();
                 $currentPeriod = $AcademicPeriodTable->getCurrent();
