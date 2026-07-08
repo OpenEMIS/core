@@ -606,9 +606,7 @@ class StaffController extends AppController
             return;
         }
         parent::beforeFilter($event);
-
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-
         //$institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $this->getInstitutionID();
         $staffId = $this->getStaffID();
@@ -641,22 +639,6 @@ class StaffController extends AppController
         if (empty($institutionId)) {
             return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
         }
-        $activeInstitution = $this->Institutions->get($institutionId);
-        $institutionName = $activeInstitution->name;
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId ,'institution_id' => $institutionId]);
-        $this->Navigation->addCrumb($institutionName,
-            ['plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'dashboard',
-                'institutionId' => $institutionId,
-                $encodedInstitutionId]);
-        $this->Navigation->addCrumb('Staff',
-            ['plugin' => 'Institution',
-                'institutionId' => $institutionId,
-                'controller' => 'Institutions',
-                'action' => 'Staff',
-                'index',
-                $encodedInstitutionId]);
         $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
 
@@ -676,7 +658,7 @@ class StaffController extends AppController
                 $header = $name . ' - ' . __('Overview');
                 //$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
                 $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view',
-                 $this->ControllerAction->paramsEncode(['id' => $id,'institution_id' => $institutionId,'staff_id' => $id])]);
+                $this->ControllerAction->paramsEncode(['id' => $id,'institution_id' => $institutionId,'staff_id' => $id])]);
             }
         }
         $this->set('contentHeader', $header);
