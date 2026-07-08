@@ -42,13 +42,42 @@
 
             //Reset the values on the Advanced Search
             $scope.resetFields = function() {
-                window.location.reload();
                 var searchForm = angular.element('#search-form');
-                var resetCheckbox = angular.element('input[type="checkbox"]');  
+                //POCOR-9644
+                if (!searchForm.length) {
+                    var resetBtn = document.getElementById('reset');
+                    if (resetBtn && resetBtn.form) {
+                        searchForm = angular.element(resetBtn.form);
+                    } else {
+                        searchForm = angular.element('form').first();
+                    }
+                }
+                var resetCheckbox = angular.element('input[type="checkbox"]');
 
-                $scope.inputModelText = angular.copy(JSON.parse(JSON.stringify($scope.originalModel)));
+                if (!angular.isUndefined($scope.originalModel) && $scope.originalModel !== null) {
+                    $scope.inputModelText = angular.copy($scope.originalModel);
+                } else {
+                    $scope.inputModelText = {};
+                }
+                //POCOR-9644
+
                 searchForm.find('input:text, select').val('');
                 resetCheckbox.removeAttr('checked');
+
+                //POCOR-9644
+                // Clear server-side AdvanceSearch session values (AdvanceSearchBehavior checks reset=Reset).
+                if (searchForm.length && searchForm[0]) {
+                    var resetInput = searchForm.find('input[name="reset"]');
+                    if (!resetInput.length) {
+                        resetInput = angular.element('<input type="hidden" name="reset" />');
+                        searchForm.append(resetInput);
+                    }
+                    resetInput.val('Reset');
+                    searchForm[0].submit();
+                } else {
+                    window.location.reload();
+                }
+                //POCOR-9644
             }
 
             $scope.submitSearch = function () {
