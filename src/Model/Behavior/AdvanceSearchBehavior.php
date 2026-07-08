@@ -303,9 +303,24 @@ class AdvanceSearchBehavior extends Behavior
                 if (isset($request->getData()['AdvanceSearch'][$alias]['tableField'])) {
                     $advancedSearchTableField = $request->getData()['AdvanceSearch'][$alias]['tableField'];
                 }
-                $model->Session->write($alias.'.advanceSearch', $request->getData()['AdvanceSearch'][$alias]);
             }
         }
+
+        //POCOR-9747 Start: Trim the search values to avoid leading/trailing spaces affecting the search results
+        $advancedSearchBelongsTo = $this->trimStringSearchValues($advancedSearchBelongsTo);
+        $advancedSearchHasMany = $this->trimStringSearchValues($advancedSearchHasMany);
+        $advancedSearchTableField = $this->trimStringSearchValues($advancedSearchTableField);
+
+        if ($request->is(['post', 'put'])) {
+            if (isset($request->getData()['AdvanceSearch']) && isset($request->getData()['AdvanceSearch'][$alias])) {
+                $advanceSearchData = $request->getData()['AdvanceSearch'][$alias];
+                $advanceSearchData['belongsTo'] = $advancedSearchBelongsTo;
+                $advanceSearchData['hasMany'] = $advancedSearchHasMany;
+                $advanceSearchData['tableField'] = $advancedSearchTableField;
+                $model->Session->write($alias.'.advanceSearch', $advanceSearchData);
+            }
+        }
+        //POCOR-9747 End
 
         if ($model->Session->check($alias.'.advanceSearch')) {
             $request->getData['AdvanceSearch'][$alias] = $model->Session->read($alias.'.advanceSearch');
@@ -448,6 +463,19 @@ class AdvanceSearchBehavior extends Behavior
     {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
+
+    //POCOR-9747 Starrt
+    private function trimStringSearchValues(array $values): array
+    {
+        foreach ($values as $key => $value) {
+            if (is_string($value)) {
+                $values[$key] = trim($value);
+            }
+        }
+
+        return $values;
+    }
+    //POCOR-9747 End
 
     public function isAdvancedSearchEnabled()
     {
