@@ -14,34 +14,10 @@ use PHPExcel_Worksheet;
 class ImportLocaleContentsLanguageTable extends AppTable
 {
 
-    /*public function initialize(array $config): void
-    {
-        $this->setTable('locale_content_translations');
-        parent::initialize($config);
-        $this->toggle('view', true);
-        $this->toggle('add', false);
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
-        $this->addBehavior('Import.ImportLink');
-    }
-
-    public function implementedEvents(): array
-    {
-        $events = parent::implementedEvents();
-        return $events;
-    }
-
-    public function beforeAction(EventInterface $event, ArrayObject $extra)
-    {
-        $header = __(Inflector::humanize(Inflector::underscore($this->getAlias())));
-        $this->controller->set('contentHeader', $header);
-    }*/
-
     use OptionsTrait;
 
     public function initialize(array $config): void
     {
-
         $this->setTable('import_mapping');
         parent::initialize($config);
 
@@ -58,11 +34,8 @@ class ImportLocaleContentsLanguageTable extends AppTable
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
-            'Model.import.onImportUpdateUniqueKeys' => 'onImportUpdateUniqueKeys',
-            'Model.import.onImportGetClassificationId' => 'onImportGetClassificationId',
-            'Model.import.onImportPopulateAreasData' => 'onImportPopulateAreasData',
-            'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
-            'Model.import.onImportPopulateClassificationData' => 'onImportPopulateClassificationData',
+            'Model.import.onImportPopulateLanguages' => 'onImportPopulateLanguages',
+            'Model.import.onImportPopulateLocaleContents' => 'onImportPopulateLocaleContents',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
         ];
@@ -77,59 +50,13 @@ class ImportLocaleContentsLanguageTable extends AppTable
         $toolbarButtons['back']['url'][0] = $toolbarButtons['back']['url']['action'];
         $toolbarButtons['back']['url']['action'] = 'LocaleContents/LocaleContents';
     }
-   
 
-   public function onImportCheckUnique(EventInterface $event, $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    public function onImportPopulateLanguages(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $columns = new Collection($columns);
-        $filtered = $columns->filter(function ($value, $key, $iterator) {
-            return $value == 'code';
-        });
-        $codeIndex = key($filtered->toArray());
-        $code = $sheet->getCellByColumnAndRow($codeIndex, $row)->getValue();
-
-        if (in_array($code, $importedUniqueCodes->getArrayCopy())) {
-            $rowInvalidCodeCols['code'] = $this->getExcelLabel('Import', 'duplicate_unique_key');
-            return false;
-        }
-        // POCOR-8683 start
-        $institution = null;
-        if ($code) {
-            $institution = $this->Institutions->find()->where(['code' => $code])->first();
-        }
-        // POCOR-8683 end
-        if (!$institution) {
-            $tempRow['entity'] = $this->Institutions->newEmptyEntity();
-        } else {
-            $tempRow['entity'] = $institution;
-        }
-    }
-
-    public function onImportGetClassificationId(EventInterface $event, $cellValue)
-    {
-        $options = $this->getSelectOptions('Institutions.classifications');
-        foreach ($options as $key => $value) {
-            if ($cellValue == $key) {
-                return $cellValue;
-            }
-        }
-        return null;
-    }
-
-    public function onImportUpdateUniqueKeys(EventInterface $event, ArrayObject $importedUniqueCodes, Entity $entity)
-    {
-        $importedUniqueCodes[] = $entity->code;
-    }
-
-    public function onImportPopulateAreasData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
-
-        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
         $modelData = $lookedUpTable->find('all')
-                                ->select($selectFields)
-                                ->order($order)
+            ->select(['name', $lookupColumn])
+                                ->order([$lookupModel.'.order'])
                                 ;
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -145,15 +72,12 @@ class ImportLocaleContentsLanguageTable extends AppTable
         }
     }
 
-    public function onImportPopulateAreaAdministrativesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateLocaleContents(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
-
-        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
+        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
         $modelData = $lookedUpTable->find('all')
-                                ->select($selectFields)
-                                ->order($order)
+            ->select(['name', $lookupColumn])
+                                ->order([$lookupModel.'.order'])
                                 ;
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -167,26 +91,6 @@ class ImportLocaleContentsLanguageTable extends AppTable
                 ];
             }
         }
-    }
-
-    public function onImportPopulateClassificationData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $translatedReadableCol = $this->getExcelLabel('Classification', 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-
-        $options = $this->getSelectOptions('Institutions.classifications');
-        foreach ($options as $key => $value) {
-            $data[$columnOrder]['data'][] = [
-                $value,
-                $key
-            ];
-        }
-    }
-
-    public function onImportModelSpecificValidation(EventInterface $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
-    {
-        return true;
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -198,6 +102,8 @@ class ImportLocaleContentsLanguageTable extends AppTable
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+
 
 }
 
