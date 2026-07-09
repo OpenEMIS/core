@@ -594,7 +594,10 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                 return;
             }
             var rawValue = inputElement.value;
-            var time24Hour = rawValue ? (rawValue + ':00') : null;
+            //POCOR-9762: route through normalizeTo24Hour so any stray meridian is autocorrected
+            // (e.g. a 24h-habit user's "20:00 AM" resolves to 20:00:00 = 8 PM, not 8 AM). Native
+            // type=time normally yields a clean 24h "HH:MM", so this is a harmless safety net there.
+            var time24Hour = rawValue ? normalizeTo24Hour(rawValue) : null;
             var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
             if (time24Hour !== null && otherTime) {
                 if (timeKey === 'time_out' && time24Hour <= otherTime) {
@@ -654,9 +657,52 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             }, 600);
         });
 
+        //POCOR-9762: on systems configured for 12-hour presentation, the native <input type="time">
+        // renders an AM/PM segment that STARTS EMPTY; its .value stays "" until AM/PM is set, so a
+        // record could not be saved unless the user manually entered AM/PM (the reported bug on the
+        // 12h-locale GY-UAT / demo servers). Fix (a: respect the time_format config; b: prefill by
+        // time of day): when the system is 12h, prefill an empty cell with the current institution-tz
+        // time on focus so the meridian defaults sensibly (morning -> AM, evening -> PM). The user
+        // then adjusts HH/MM — or, for a cross-period time, the AM/PM they can see — and the value is
+        // always complete and saveable. 24h-configured systems are untouched: no meridian, native
+        // picker keeps working exactly as before.
+        inputElement.addEventListener('focus', function () {
+            if (isDisabled || inputElement.value) return;
+            if (isTimeOutField && !hasTimeInSelected()) return;
+            getTimeFormatIs12h().then(function (is12h) {
+                if (!is12h || inputElement.value) return;
+                getConfigItemValue('time_zone').then(function (timeZone) {
+                    if (inputElement.value) return; // user typed while we resolved — don't clobber
+                    var hm = nowHmInTz(timeZone);
+                    if (hm) inputElement.value = hm;
+                });
+            });
+        });
+
         wrapperDiv.appendChild(inputElement);
         wrapperDiv.appendChild(iconSpan);
         return wrapperDiv;
+    }
+
+    //POCOR-9762: current wall-clock time in the institution timezone as 24h "HH:MM".
+    // Assigning this as a native <input type="time"> value auto-populates the AM/PM segment on
+    // 12h-locale widgets (morning -> AM, evening -> PM), giving the picker a saveable default so
+    // users are never forced to enter AM/PM manually. hourCycle:'h23' + explicit hour/minute are
+    // mandatory — Intl.DateTimeFormat only emits the fields you request (POCOR-9729 lesson).
+    function nowHmInTz(timeZone) {
+        try {
+            var parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+            }).formatToParts(new Date()).reduce(function (acc, p) {
+                if (p.type !== 'literal') acc[p.type] = p.value;
+                return acc;
+            }, {});
+            if (parts.hour == null || parts.minute == null) return '';
+            return parts.hour + ':' + parts.minute;
+        } catch (error) {
+            console.error('nowHmInTz - Invalid timezone:', error.message);
+            return '';
+        }
     }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
