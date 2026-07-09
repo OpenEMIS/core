@@ -509,11 +509,13 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
     // on already-24h input.
     function normalizeTo24Hour(timeStr) {
         if (!timeStr || typeof timeStr !== 'string') return timeStr;
-        var m = timeStr.match(/^\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)?\s*$/);
+        //POCOR-9762: minutes optional — "8", "8:", "8 PM" all mean 8:00 (saves the : + 00 keystrokes).
+        var m = timeStr.match(/^\s*(\d{1,2})(?::(\d{0,2}))?(?::(\d{0,2}))?\s*(AM|PM|am|pm)?\s*$/);
         if (!m) return timeStr;
+        function pad2(x) { return (x && x.length) ? (x.length < 2 ? '0' + x : x) : '00'; } //POCOR-9762
         var h = parseInt(m[1], 10);
-        var mm = m[2];
-        var ss = m[3] || '00';
+        var mm = pad2(m[2]);
+        var ss = pad2(m[3]);
         var meridian = (m[4] || '').toUpperCase();
         if (meridian === 'PM' && h < 12) h += 12;
         if (meridian === 'AM' && h === 12) h = 0;
