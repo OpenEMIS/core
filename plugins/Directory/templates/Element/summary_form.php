@@ -79,7 +79,7 @@
                                             <td class="vertical-align-top">
                                                 {{selectedUserData.nationality_name}}
                                             </td>
-                                            <td class="vertical-align-top"><?= __('No') ?></td>
+                                            <td class="vertical-align-top"><?= __('Yes') ?></td>
                                         </tr>
                                         </tbody>
                                     </table>
