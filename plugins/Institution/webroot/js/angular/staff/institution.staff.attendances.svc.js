@@ -670,7 +670,9 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             if (isDisabled || inputElement.value) return;
             if (isTimeOutField && !hasTimeInSelected()) return;
             getTimeFormatIs12h().then(function (is12h) {
-                if (!is12h || inputElement.value) return;
+                // Fire when the widget is 12h (browser/OS locale — where the bug lives) OR the
+                // system is configured 12h. 24h widgets on 24h config get no prefill (unchanged).
+                if (!(isWidgetTwelveHour() || is12h) || inputElement.value) return;
                 getConfigItemValue('time_zone').then(function (timeZone) {
                     if (inputElement.value) return; // user typed while we resolved — don't clobber
                     var hm = nowHmInTz(timeZone);
@@ -682,6 +684,20 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         wrapperDiv.appendChild(inputElement);
         wrapperDiv.appendChild(iconSpan);
         return wrapperDiv;
+    }
+
+    //POCOR-9762: is the native <input type="time"> rendering a 12-hour (AM/PM) widget? Per MDN
+    // that is decided by the browser/OS locale, NOT by our system time_format config — and it is
+    // exactly where the empty-meridian save-blocker occurs. Intl exposes it via hour12. We prefill
+    // when EITHER this is true OR the system is configured 12h, so the fix covers a 12h-OS user on
+    // a 24h-configured site too (and stays a no-op on genuine 24h widgets).
+    function isWidgetTwelveHour() {
+        try {
+            return new Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
+                .resolvedOptions().hour12 === true;
+        } catch (error) {
+            return false;
+        }
     }
 
     //POCOR-9762: current wall-clock time in the institution timezone as 24h "HH:MM".
