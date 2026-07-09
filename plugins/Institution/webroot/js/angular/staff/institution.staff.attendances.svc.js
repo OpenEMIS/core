@@ -687,6 +687,15 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             }, 600);
         });
 
+        //POCOR-9762: the cell only commits on 'change', which fires on blur. ag-Grid captures Tab
+        // (and Enter) for cell navigation and can swallow the input's blur, so a Tab-to-next-cell
+        // entry was never saved. Force a blur first so the change handler commits before ag-Grid moves.
+        inputElement.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                inputElement.blur();
+            }
+        });
+
         //POCOR-9762: convenience — prefill an empty cell with the current institution-tz time on
         // focus (formatted per the system time_format, so morning -> AM, evening -> PM on 12h
         // systems), giving a sensible starting value the user can accept or type over. Only on 12h
