@@ -958,8 +958,8 @@ class WorkflowBehavior extends Behavior
                                             'SecurityGroupInstitutions.security_group_id = SecurityGroupUsers.security_group_id'
                                         )
                                         ->where([
-                                            'SecurityGroupUsers.security_role_id' => $stepRole->security_role_id,
-                                            'SecurityGroupInstitutions.institution_id' => $institutionId
+                                            'SecurityGroupUsers.security_role_id IS' => $stepRole->security_role_id,
+                                            'SecurityGroupInstitutions.institution_id IS' => $institutionId
                                         ])
                                         ->order(['SecurityGroupUsers.id' => 'ASC'])
                                         ->first();
