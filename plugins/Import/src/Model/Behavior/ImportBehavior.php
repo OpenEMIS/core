@@ -1194,6 +1194,7 @@ class ImportBehavior extends Behavior
         } else {
             $codesData = $this->excelGetCodesData($this->_table);
         }
+
         $lastColumn = -1;
         $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
         foreach ($codesData as $columnOrder => $modelArr) {

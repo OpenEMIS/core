@@ -3181,6 +3181,7 @@ class NavigationComponent extends Component
                                 'LocaleContents.index',
                                 'LocaleContents.view',
                                 'LocaleContents.edit',
+                                'LocaleContents.ImportLocaleContentsLanguage'
                                 
                             ]
                         ],
@@ -3271,7 +3272,8 @@ class NavigationComponent extends Component
                             'selected' => [
                                 'LocaleContents.index',
                                 'LocaleContents.view',
-                                'LocaleContents.edit'
+                                'LocaleContents.edit',
+                                'LocaleContents.ImportLocaleContentsLanguage'
                             ]
                         ],
                     ];
@@ -3367,7 +3369,8 @@ class NavigationComponent extends Component
                         'selected' => [
                             'LocaleContents.index',
                             'LocaleContents.view',
-                            'LocaleContents.edit'
+                            'LocaleContents.edit',
+                            'LocaleContents.ImportLocaleContentsLanguage'
                         ]
                     ],
 

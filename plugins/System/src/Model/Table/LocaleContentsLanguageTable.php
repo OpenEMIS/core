@@ -34,7 +34,7 @@ class LocaleContentsLanguageTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportLocaleContentsLanguage']);
     }
 
     public function implementedEvents(): array

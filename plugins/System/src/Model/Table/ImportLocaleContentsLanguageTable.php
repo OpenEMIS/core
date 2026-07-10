@@ -20,27 +20,24 @@ class ImportLocaleContentsLanguageTable extends AppTable
     {
         $this->setTable('import_mapping');
         parent::initialize($config);
-
-        $this->addBehavior('Import.Import');
-
-        // register the target table once
-       // $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $this->addBehavior('Import.Import', [
+            'plugin' => 'System',
+            'model' => 'LocaleContentsLanguage'
+        ]);
         $this->addBehavior('ControllerAction.FileUpload');
+        $this->LocaleContentsLanguage = TableRegistry::getTableLocator()->get('System.LocaleContentsLanguage');
     }
 
     public function implementedEvents(): array
     {
-
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
-            'Model.import.onImportPopulateLanguages' => 'onImportPopulateLanguages',
-            'Model.import.onImportPopulateLocaleContents' => 'onImportPopulateLocaleContents',
-            'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+            'Model.import.onImportPopulateLocalesData' => 'onImportPopulateLocalesData',
+           // 'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
         ];
         $events = array_merge($events, $newEvent);
-
         return $events;
     }
 
@@ -51,33 +48,12 @@ class ImportLocaleContentsLanguageTable extends AppTable
         $toolbarButtons['back']['url']['action'] = 'LocaleContents/LocaleContents';
     }
 
-    public function onImportPopulateLanguages(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateLocalesData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
+        $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel); 
         $modelData = $lookedUpTable->find('all')
-            ->select(['name', $lookupColumn])
-                                ->order([$lookupModel.'.order'])
-                                ;
-
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-        if (!empty($modelData)) {
-            foreach ($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->{$lookupColumn}
-                ];
-            }
-        }
-    }
-
-    public function onImportPopulateLocaleContents(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $lookedUpTable = self::getDynamicTableInstance($lookupPlugin . '.' . $lookupModel); // POCOR-8683 start
-        $modelData = $lookedUpTable->find('all')
-            ->select(['name', $lookupColumn])
-                                ->order([$lookupModel.'.order'])
+            ->select(['id','iso','name', $lookupColumn])
+                                //->order([$lookupModel.'.order'])
                                 ;
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -103,7 +79,47 @@ class ImportLocaleContentsLanguageTable extends AppTable
         }
     }
 
+    public function onImportCheckUniquennn(
+    EventInterface $event,
+    $sheet,
+    $row,
+    $columns,
+    ArrayObject $tempRow,
+    ArrayObject $importedUniqueCodes,
+    ArrayObject $rowInvalidCodeCols)
+    {
+        $columns = new Collection($columns);
 
+        // Translation(Label) column
+        $translationColumn = $columns->filter(function ($value) {
+            return $value == 'label';
+        });
+
+        $translationIndex = key($translationColumn->toArray());
+        $translation = trim($sheet->getCellByColumnAndRow($translationIndex, $row)->getValue());
+        echo "<pre>"; print_r($translation); die;
+        // Locale column
+        $localeColumn = $columns->filter(function ($value) {
+            return $value == 'locale_id';
+        });
+        $localeContentsLanguage = TableRegistry::getTableLocator()->get('System.LocaleContentsLanguage');
+        $localeIndex = key($localeColumn->toArray());
+        $localeId = trim($sheet->getCellByColumnAndRow($localeIndex, $row)->getValue());
+
+        $entity = $localeContentsLanguage->find()
+            ->where([
+                'translation' => $translation,
+                'locale_id' => $localeId
+            ])
+            ->enableHydration(false)
+            ->first();
+
+        if ($entity) {
+            $tempRow['entity'] = $entity;    // Update existing record
+        } else {
+            $tempRow['entity'] = $localeContentsLanguage->newEntity(); // Insert new record
+        }
+    }
 
 }
 
