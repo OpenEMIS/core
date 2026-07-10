@@ -34,7 +34,7 @@ class ImportLocaleContentsLanguageTable extends AppTable
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
             'Model.import.onImportPopulateLocalesData' => 'onImportPopulateLocalesData',
-           // 'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+            'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
             'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
         ];
         $events = array_merge($events, $newEvent);
@@ -79,7 +79,7 @@ class ImportLocaleContentsLanguageTable extends AppTable
         }
     }
 
-    public function onImportCheckUniquennn(
+    /*public function onImportCheckUnique(
     EventInterface $event,
     $sheet,
     $row,
@@ -88,28 +88,19 @@ class ImportLocaleContentsLanguageTable extends AppTable
     ArrayObject $importedUniqueCodes,
     ArrayObject $rowInvalidCodeCols)
     {
+        $tempRow['columns'] = $columns; // POCOR-8683 start
         $columns = new Collection($columns);
+        $extractedlabel = $columns->filter(fn($v) => $v === 'label');
 
-        // Translation(Label) column
-        $translationColumn = $columns->filter(function ($value) {
-            return $value == 'label';
-        });
+        $labelNoIndex   = key($extractedlabel->toArray()) + 1;
 
-        $translationIndex = key($translationColumn->toArray());
-        $translation = trim($sheet->getCellByColumnAndRow($translationIndex, $row)->getValue());
-        echo "<pre>"; print_r($translation); die;
-        // Locale column
-        $localeColumn = $columns->filter(function ($value) {
-            return $value == 'locale_id';
-        });
+        $label          = $sheet->getCellByColumnAndRow($labelNoIndex, $row)->getValue();
+        $label          = is_string($label) ? trim($label) : $label;
         $localeContentsLanguage = TableRegistry::getTableLocator()->get('System.LocaleContentsLanguage');
-        $localeIndex = key($localeColumn->toArray());
-        $localeId = trim($sheet->getCellByColumnAndRow($localeIndex, $row)->getValue());
 
         $entity = $localeContentsLanguage->find()
             ->where([
-                'translation' => $translation,
-                'locale_id' => $localeId
+                'en' => $label,
             ])
             ->enableHydration(false)
             ->first();
@@ -117,9 +108,112 @@ class ImportLocaleContentsLanguageTable extends AppTable
         if ($entity) {
             $tempRow['entity'] = $entity;    // Update existing record
         } else {
-            $tempRow['entity'] = $localeContentsLanguage->newEntity(); // Insert new record
+            $data['en'] = $label;
+            $tempRow['entity'] = $localeContentsLanguage->newEntity($data); // Insert new record
         }
+    }*/
+
+    public function onImportCheckUnique(
+    EventInterface $event,
+    $sheet,
+    $row,
+    $columns,
+    ArrayObject $tempRow,
+    ArrayObject $importedUniqueCodes,
+    ArrayObject $rowInvalidCodeCols
+) {
+
+    $columns = new Collection($columns);
+
+    $labelIndex = key($columns->filter(fn($v) => $v == 'label')->toArray()) + 1;
+    $localeIndex = key($columns->filter(fn($v) => $v == 'locale_id')->toArray()) + 1;
+
+    $label = trim((string)$sheet->getCellByColumnAndRow($labelIndex, $row)->getValue());
+    $localeId = $sheet->getCellByColumnAndRow($localeIndex, $row)->getValue();
+
+    $LocaleContents = TableRegistry::getTableLocator()->get('System.LocaleContentsLanguage');
+    $LocaleContentTranslations = TableRegistry::getTableLocator()->get('Localization.Translations');
+
+    $localeContent = $LocaleContents->find()
+        ->where(['en' => $label])
+        ->first();
+
+    $tempRow['localeContent'] = $localeContent;
+    $tempRow['label'] = $label;
+
+    if ($localeContent) {
+
+        $translation = $LocaleContentTranslations->find()
+            ->where([
+                'locale_content_id' => $localeContent->id,
+                'locale_id' => $localeId
+            ])
+            ->first();
+
+        if ($translation) {
+            $tempRow['entity'] = $translation;
+        } else {
+            $tempRow['entity'] = $LocaleContentTranslations->newEntity([]);
+        }
+
+    } else {
+
+        $tempRow['entity'] = $LocaleContentTranslations->newEntity([]);
+
     }
+}
+
+    public function onImportModelSpecificValidation(
+    EventInterface $event,
+    $references,
+    $tempRow,
+    ArrayObject $originalRow,
+    ArrayObject $rowInvalidCodeCols
+    ) {
+        $LocaleContents = TableRegistry::getTableLocator()->get('System.LocaleContentsLanguage');
+
+        $label = trim($tempRow['label'] ?? '');
+        $localeId = $tempRow['locale_id'] ?? null;
+        $translation = $tempRow['translation'] ?? '';
+
+        if ($label === '') {
+            $rowInvalidCodeCols['label'][] = __('Label is required.');
+            return false;
+        }
+
+        if (empty($localeId)) {
+            $rowInvalidCodeCols['locale_id'][] = __('Locale is required.');
+            return false;
+        }
+
+        // Find existing locale content
+        $localeContent = $LocaleContents->find()
+            ->where(['en' => $label])
+            ->first();
+
+        // Create if not exists
+        if (!$localeContent) {
+            $localeContent = $LocaleContents->newEntity([
+                'en' => $label
+            ]);
+
+            if (!$LocaleContents->save($localeContent)) {
+                $rowInvalidCodeCols['label'][] = __('Unable to save label.');
+                return false;
+            }
+        }
+
+        // Pass the FK to locale_content_translations
+        $tempRow['locale_content_id'] = $localeContent->id;
+
+        // Prepare translation entity
+        $tempRow['entity']->locale_content_id = $localeContent->id;
+        $tempRow['entity']->locale_id = $localeId;
+        $tempRow['entity']->translation = $translation;
+
+        return true;
+    }
+
 
 }
 
