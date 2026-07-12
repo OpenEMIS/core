@@ -133,7 +133,7 @@ class EducationSystemsTable extends ControllerActionTable
             'escape' => false
         ];
 
-        $extraButtons = [
+        /*$extraButtons = [
             'copy' => [
                 'Systems' => ['Educations', 'CopySystems', 'add'],
                 'action' => 'CopySystems',
@@ -155,7 +155,7 @@ class EducationSystemsTable extends ControllerActionTable
 
                 $extra['toolbarButtons'][$key] = $button;
             }
-        }
+        }*/
     }
     //POCOR-5696 ends
 

@@ -80,6 +80,7 @@ class InstitutionsTable extends ControllerActionTable
         $this->belongsTo('Sectors', ['className' => 'Institution.Sectors', 'foreignKey' => 'institution_sector_id']);
         $this->belongsTo('Providers', ['className' => 'Institution.Providers', 'foreignKey' => 'institution_provider_id']);
         $this->belongsTo('Genders', ['className' => 'Institution.Genders', 'foreignKey' => 'institution_gender_id']);
+        $this->belongsTo('InstitutionTypes', ['className' => 'FieldOption.InstitutionTypes', 'foreignKey' => 'institution_type_id']);
         /**
          * end fieldOption tables
          */
