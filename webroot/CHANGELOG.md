@@ -1,3 +1,49 @@
+### [5.15.0] - 2026-07-06
+- Bug Fixed: Core>Administration>System Setup>Attendances>Status: Should be able to modify the Mark Type without encountering any errors.
+- Implemented: Develop configuration for next programme
+- Implemented: Develop formatting changes to the notices
+- Bug Fixed: Personal > Health: 2 fields are missing even when permission from security roles is given for them, when logged as student.
+- Bug Fixed: Institution>Students>Student Profile>Academic>Edit: Clicking on edit button makes no change
+- Bug Fixed: Directory > Advanced Search: Advanced Search does not trim leading/trailing spaces for Name and ID fields
+- Bug Fixed: Institutions > Academic > Subjects > Add : When adding in previous academic year, system will add Institution Subjects and link it to the wrong education_grade_id
+- Bug Fixed: Core>Reports>Data Quality>Validity Report: Everything is showing 0 despite there being data to show on the interface.
+- Bug Fixed: Core>Institutions>Students>General>Guardians tab:All other tabs disappear when one clicks on the Guardians tab
+- Bug Fixed: Administrations > System Setup > Education Structure : Remove the Copy feature at the top
+- Bug Fixed: Directory > Advanced Search > Contact Number : Advanced Search with contact number not working
+
+### [5.14.0] - 2026-06-23
+- Implemented: Develop behaviour placeholders for institution profiles report - part 2
+- Implemented: Develop External Data Source - Sync function
+- Implemented: Develop Staff Attendance feature v4 APIs - Part 2
+- Bug Fixed: Core>Institution>Performance>Assessment:Deleted Marks do not stay deleted
+- Bug Fixed: Institutions>Staff>Health>Allergies, Consultation, Insurances: 404 when adding
+- Bug Fixed: Core>Institutions>Attendance>Student >Edit : When switching between All days and Single Day ,The attendance mark type behaviour does not reflect the same.
+- Bug Fixed: Institution>Students>Select Student>Guardians tab: When clicking on Select > View, the system doesn't show all the guardian information; it shows only the name and the relation
+- Bug Fixed: Directory/Personal > Students > Academic > Assessments: Assessments are not showing up
+- Bug Fixed: DB: Index statuses for report_card_processes and institution_students_report_cards
+
+### [5.13.0] - 2026-06-10
+- Implemented: Develop change to Reports > Institutions and Reports > Students and and Reports > Staff to include the option to select multiple institutions 
+- Bug Fixed: Institution>Attendance>Staff>Edit: Unable to save record
+- Bug Fixed: Institutitions> Students > Withdraw/Enroll : Error seen "Please add value".
+- Bug Fixed: Administration > Communication > Alert Rules > Create Alert rule for student enrollment > View/Edit : Gives 404
+- Bug Fixed: Institutions>Attendance>Students>Edit>Mark attendance>Return: On a day when No Scheduled Classes were already chosen, the users are unable to mark attendance later.
+- Bug Fixed: Institutions>Performance>GPA: Unable to delete cumulative gpa
+- Bug Fixed: Reports > Institutions > Institutions > View : Unable to view a report generated for single institution.
+- Bug Fixed: Institution>Staff>Edit: The shift change request automatically goes to the Approved Status without any manual approval.
+- Bug Fixed: Administrations > System Configurations > Columns for Student List: should be able to choose the Identity Type from System Configurations page.
+- Bug Fixed: C1. SQL injection via ORDER BY in the v5 CRUD API
+
+### [5.12.0] - 2026-06-03
+- Implemented: Develop Async Runtime Consolidation - Part 2
+- Implemented: Develop notification banner for all profile features
+- Implemented: Develop changes to the Reports > Institution > Programmes Report to include institution type
+- Bug Fixed: Security fix for v5 API-Core Part Two
+- Bug Fixed: Institutions>Students>Add: OpenEMIS ID is not being generated correctly
+- Bug Fixed: Institution>Students>Add: No other country but Turks & Caicos is visible.
+- Bug Fixed: Registrations:When creating an user from registration, last executed user is not showing correctly
+- Bug Fixed: Administration>system>survey>forms>status>add: the forms not having filters is giving error on submitting.
+
 ### [5.11.1] - 2026-05-22
 - Bug Fixed: Institution>Attendance>Staff>Edit: The changed time values did not take.
 - Bug Fixed: Institutions>Add: Giving message "For Developer: You should put institution_id into query string first"
