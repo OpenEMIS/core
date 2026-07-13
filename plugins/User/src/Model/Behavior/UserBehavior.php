@@ -238,13 +238,18 @@ class UserBehavior extends Behavior
             $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
                 return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
             }, $systemDateFormat);
+            //POCOR-9765[START]
+            // endDate must use the same PHP format as datepicker format, otherwise
+            // e.g. Y-m-d (yyyy-mm-dd) misparses d-m-Y "13-07-2026" as year 13 and disables all dates
+            $endDate = date($systemDateFormat ?: 'd-m-Y');
+            //POCOR-9765[END]
             // POCOR-8286 date format end
             if ($this->isCAv4()) {
 
                 $this->_table->field('date_of_birth', [
                     'date_options' => [
                         'format' => $datepickerFormat, // POCOR-8286
-                        'endDate' => date('d-m-Y')
+                        'endDate' => $endDate // POCOR-9765
                     ],
                     'default_date' => false,
                 ]);
@@ -254,7 +259,7 @@ class UserBehavior extends Behavior
                     [
                         'date_options' => [
                             'format' => $datepickerFormat, // POCOR-8286
-                            'endDate' => date('d-m-Y')
+                            'endDate' => $endDate //POCOR-9765
                         ],
                         'default_date' => false,
                     ]
