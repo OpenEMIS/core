@@ -204,10 +204,16 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew()) {
-            $localeOptions = $this->Localization->getOptions();
-            $isoLocaleOption = array_keys($localeOptions);
-            foreach ($isoLocaleOption as $iso) {
+        // Skip for new records and import context (Localization component not loaded)
+        if ($entity->isNew() || !isset($this->Localization)) {
+            return;
+        }
+
+        $localeOptions = $this->Localization->getOptions();
+        $isoLocaleOption = array_keys($localeOptions);
+        foreach ($isoLocaleOption as $iso) {
+            // Only update translations for language fields that were actually changed
+            if ($entity->isDirty($iso)) {
                 $this->saveLocaleContentTranslationsTable($entity, $iso);
             }
         }
