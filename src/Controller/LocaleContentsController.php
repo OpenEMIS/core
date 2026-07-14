@@ -17,7 +17,7 @@ class LocaleContentsController extends AppController
         $this->ControllerAction->models = [
             'ImportLocaleContentsLanguage' => [
                 'className' => 'System.ImportLocaleContentsLanguage',
-                'action'   => ['add'],
+                'action'   => 'add'
             ],
         ];
 

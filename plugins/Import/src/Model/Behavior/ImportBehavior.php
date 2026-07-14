@@ -804,20 +804,19 @@ class ImportBehavior extends Behavior
             /**
              * Custom redirect only for Locale Contents import
             */
-          //  echo "<pre>"; print_r($url['action']); die;
-            if ($url['action'] === 'ImportLocaleContentsLanguage') {
+          
+            if ($url['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673 start
                 $url = [
                     'plugin' => false,
                     'controller' => 'LocaleContents',
                     'action' => 'ImportLocaleContentsLanguage',
-                    0 => 'results'
+                    1 => 'results'
                 ];
 
                 if ($fullEncodedParam) {
                     $url[1] = $fullEncodedParam;
                 }
-
-                return $model->controller->redirect($url);
+               return $model->controller->redirect($url); //POCOR-3673 end
             }
             if ($fullEncodedParam) {
                 $url[1] = $fullEncodedParam;

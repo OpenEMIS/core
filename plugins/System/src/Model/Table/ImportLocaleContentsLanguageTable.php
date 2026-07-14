@@ -240,6 +240,7 @@ class ImportLocaleContentsLanguageTable extends AppTable
             );
         }
     }
+    
 
 }
 
