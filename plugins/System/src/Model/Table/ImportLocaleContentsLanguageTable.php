@@ -10,6 +10,7 @@ use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
+
 class ImportLocaleContentsLanguageTable extends AppTable
 {
     use OptionsTrait;
@@ -17,7 +18,7 @@ class ImportLocaleContentsLanguageTable extends AppTable
     /**
      * Holds locale_id + translation text for the current row,
      * saved after locale_contents is persisted.
-     *
+     * POCOR-3673
      * @var array|null
      */
     private $importTranslationData = null;
@@ -240,7 +241,7 @@ class ImportLocaleContentsLanguageTable extends AppTable
             );
         }
     }
-    
+
 
 }
 
