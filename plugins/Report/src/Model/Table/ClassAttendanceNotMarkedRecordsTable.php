@@ -83,6 +83,19 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
         $selectedArea = $requestData->area_education_id;
         $where = [];
 
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $institutionIds = [(int)$institutionId];
+        }
+
         //POCOR-8825 start
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
@@ -95,8 +108,8 @@ class ClassAttendanceNotMarkedRecordsTable extends AppTable
             }
                 $where['Institutions.area_id IN'] = $allselectedAreas;
         } //POCOR-8825 end
-        if ($institutionId != 0 && $institutionId != '0' && $institutionId != '') {
-            $where['Institutions.id'] = $institutionId;
+        if (!empty($institutionIds)) {
+            $where['Institutions.id IN'] = $institutionIds;
         }
         $query
             ->find('byGrades', [
