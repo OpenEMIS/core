@@ -10,6 +10,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet; // POCOR-9503 start
+use Cake\Validation\Validator;
 
 class LocaleContentsLanguageTable extends ControllerActionTable
 {
@@ -35,6 +36,12 @@ class LocaleContentsLanguageTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportLocaleContentsLanguage']);
+    }
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator
+            ->notEmptyString('en');
+        return $validator;
     }
 
     public function implementedEvents(): array
