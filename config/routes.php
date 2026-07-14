@@ -76,6 +76,7 @@ return function (RouteBuilder $routes) {
     $routes->connect('/Themes/*', ['controller' => 'Themes', 'action' => 'Themes']);
     $routes->connect('/Profiles/ScholarshipsDirectory/*', ['controller' => 'ScholarshipsDirectory', 'action' => 'ScholarshipsDirectory']);
     $routes->connect('/Locales/*', ['controller' => 'Locales', 'action' => 'Locales']);
+    $routes->connect('/LocaleContents/*', ['controller' => 'LocaleContents', 'action' => 'LocaleContents']);
 
     // Redirect /Systems/* to System plugin (controller is SystemsController in plugin System)
     $routes->connect('/Systems/StaffPolicies/*', ['plugin' => 'System', 'controller' => 'Systems', 'action' => 'StaffPolicies']);
