@@ -85,6 +85,4 @@ class TranslationsTable extends AppTable {
 		}
     	return $buttons;
     }
-
-   
 }
