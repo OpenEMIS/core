@@ -12,6 +12,8 @@ use App\Model\Table\ControllerActionTable;
 
 class TestsTable extends ControllerActionTable
 {
+    use HealthLookupTrait; //POCOR-9718
+
     public function initialize(array $config): void
     {
         $this->setTable('user_health_tests');
@@ -236,6 +238,12 @@ class TestsTable extends ControllerActionTable
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
+    }
+
+    //POCOR-9718: populate health_test_type_id select from Health.TestTypes.
+    public function onUpdateFieldHealthTestTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.TestTypes');
     }
 
 }

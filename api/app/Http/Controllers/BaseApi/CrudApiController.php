@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
 use App\Services\Security\SuperAdminProbeGuard; //POCOR-9710
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache; //POCOR-9660: cache allowed orderby columns
 
 class CrudApiController extends Controller
 {
@@ -844,18 +845,25 @@ class CrudApiController extends Controller
 
         $pagination = $this->getPaginationParams($request, $segments);
         $filters = $this->parseFilters($request, $segments);
-        $order = $this->parseOrderParams($request, $segments);
-
-        $query = $this->parseSelectParams($request, $segments, $query, $model);
-        //POCOR-9697: applyFilters throws InvalidArgumentException when a filter key is
-        //not in the per-model allowlist. We translate to a generic 400 with no field
-        //name so the response never fingerprints which key was rejected.
+        //POCOR-9660: start - implicit id-list segment (e.g. /resource/4,5,6) → filter
         try {
-            $query = $this->applyFilters($query, $filters, $model);
+            $implicitIdFilter = $this->parseImplicitIdFilter($model, $segments);
+            if (!empty($implicitIdFilter)) {
+                $filters = array_merge($filters, $implicitIdFilter);
+            }
         } catch (\InvalidArgumentException $e) {
             return $this->errorResponse($e->getMessage(), 400);
         }
-        $query = $this->applyOrder($query, $order, $model);
+        //POCOR-9660: end
+        //POCOR-9660+9697: surface invalid orderby/filter column as 400 instead of 500
+        try {
+            $order = $this->parseOrderParams($request, $segments);
+            $query = $this->parseSelectParams($request, $segments, $query, $model);
+            $query = $this->applyFilters($query, $filters, $model); //POCOR-9697: pass $model for allowlist
+            $query = $this->applyOrder($query, $order, $model);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
         $query = $this->applyInstitutionFilter($query, $model);
 
         //POCOR-9710: list-probe fingerprint for security-users. The
@@ -1123,7 +1131,7 @@ class CrudApiController extends Controller
         // POCOR-9633: skip params starting with '_' — reserved for scope-consumed params (e.g., _date, _meal_programmes_id)
         foreach ($request->all() as $key => $value) {
             if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) {
-                $filters[$key] = $value;
+                $filters[$key] = $this->normalizeGetFilterValue($key, $value); //POCOR-9660: normalize comma-separated id values
             }
         }
 
@@ -1143,7 +1151,7 @@ class CrudApiController extends Controller
                     $i -= 2;
                 } else {
                     if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) { //POCOR-9633: skip _ prefixed scope-consumed params
-                        $filters[$key] = $value;
+                        $filters[$key] = $this->normalizeGetFilterValue($key, $value); //POCOR-9660: normalize comma-separated id values
                     }
                 }
             }
@@ -1178,12 +1186,114 @@ class CrudApiController extends Controller
         foreach ($pairs as $pair) {
             $parts = explode(':', $pair, 2);
             if (count($parts) === 2) {
-                $conditions[$parts[0]] = $parts[1];
+                //POCOR-9660: start - support IN(a,b,c) and comma-separated id lists in _conditions
+                $field = trim($parts[0]);
+                $value = trim($parts[1]);
+
+                $inValues = $this->parseInConditionValues($value);
+                if ($inValues !== null) {
+                    $conditions[$field] = $inValues;
+                } else {
+                    $conditions[$field] = $this->normalizeGetFilterValue($field, $value);
+                }
+                //POCOR-9660: end
             }
         }
 
         return $conditions;
     }
+
+    //POCOR-9660: start - new helper - normalize GET filter values (split id-lists into arrays)
+    /**
+     * Normalize GET filter values before they are applied to the query.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return mixed
+     */
+    private function normalizeGetFilterValue($field, $value)
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $value = trim($value);
+
+        if (($field === 'id' || str_ends_with($field, '_id')) && strpos($value, ',') !== false) { //POCOR-9660: match bare 'id' and any '*_id' field for multi-value filter
+            $values = $this->splitAndTrimValues($value);
+
+            if (!empty($values) && count(array_filter($values, [$this, 'isValidIdentifier'])) === count($values)) {
+                return $values;
+            }
+        }
+
+        return $value;
+    }
+    //POCOR-9660: end
+
+    //POCOR-9660: start - new helper - split a CSV string, trim each item, and drop empty entries
+    private function splitAndTrimValues(string $csv): array
+    {
+        return array_values(array_filter(array_map('trim', explode(',', $csv)), fn ($v) => $v !== ''));
+    }
+    //POCOR-9660: end
+
+    //POCOR-9660: start - new helper - parse IN(a,b,c) operator from _conditions value
+    /**
+     * Parse IN operator values from _conditions.
+     *
+     * @param string $value
+     * @return array|null
+     */
+    private function parseInConditionValues($value)
+    {
+        if (!str_starts_with($value, 'IN')) {
+            return null;
+        }
+
+        $listValue = trim(substr($value, 2), '()');
+        if ($listValue === '' || preg_match('/^[A-Za-z]/', $listValue)) {
+            return null;
+        }
+
+        $rawValues = array_map('trim', explode(',', $listValue));
+        $values = $this->splitAndTrimValues($listValue);
+
+        return count($values) > 1 && count($values) === count($rawValues) ? $values : null;
+    }
+    //POCOR-9660: end
+
+    //POCOR-9660: start - new helper - parse implicit id-list segment "/resource/4,5,6"
+    /**
+     * Parse an implicit GET identifier segment such as "4,5,6".
+     *
+     * @param string $model Fully qualified model class.
+     * @param array $segments Remaining URL segments.
+     * @return array
+     */
+    private function parseImplicitIdFilter($model, array &$segments)
+    {
+        if (count($segments) !== 1 || strpos($segments[0], ',') === false) {
+            return [];
+        }
+
+        $idField = $this->getPossibleIdField($model);
+        if (!$idField) {
+            return [];
+        }
+
+        $rawValues = array_map('trim', explode(',', $segments[0]));
+        $values = $this->splitAndTrimValues($segments[0]);
+
+        if (count($values) < 2 || count($values) !== count($rawValues) || count(array_filter($values, [$this, 'isValidIdentifier'])) !== count($values)) {
+            throw new \InvalidArgumentException('Invalid identifier list.');
+        }
+
+        $segments = [];
+
+        return [$idField => $values];
+    }
+    //POCOR-9660: end
 
     /**
      * Parse select parameters from the request and segments.
@@ -1422,17 +1532,29 @@ class CrudApiController extends Controller
         if (is_string($model)) {
             $model = new $model;
         }
+
+        //POCOR-9660: start - validate orderby column + direction against schema-derived allowlist
+        $allowedColumns = $this->getAllowedOrderColumns($model);
         $hasOrderParam = !empty($order['columns']);
 
-        if (!$hasOrderParam && in_array('order', $model->getFillable())) {
+        if (!$hasOrderParam && in_array('order', $allowedColumns, true)) {
             // Default ordering by 'order' field if no order params are provided
             $query->orderBy('order', 'asc');
         } else {
             foreach ($order['columns'] as $index => $column) {
-                $direction = $order['directions'][$index] ?? 'asc';
+                if (!in_array($column, $allowedColumns, true)) {
+                    throw new \InvalidArgumentException("Invalid orderby column: {$column}");
+                }
+
+                $direction = $order['directions'][$index] ?? 'asc'; //POCOR-9660: already lowercased by parseOrderParams
+                if (!in_array($direction, ['asc', 'desc'], true)) {
+                    throw new \InvalidArgumentException("Invalid order direction: {$direction}");
+                }
+
                 $query->orderBy($column, $direction);
             }
         }
+        //POCOR-9660: end
 
         return $query;
     }
@@ -1490,11 +1612,53 @@ class CrudApiController extends Controller
             }
         }
 
+        //POCOR-9660: start - trim/normalize order columns and directions before validation
+        $orderColumns = array_values(array_filter(array_map('trim', $orderColumns), function ($column) {
+            return $column !== '';
+        }));
+        $orderDirections = array_values(array_filter(array_map(function ($direction) {
+            return strtolower(trim($direction));
+        }, $orderDirections), function ($direction) {
+            return $direction !== '';
+        }));
+        //POCOR-9660: end
+
         return [
             'columns' => $orderColumns,
             'directions' => $orderDirections,
         ];
     }
+
+    //POCOR-9660: start - new helper - cached schema-derived allowlist of sortable columns
+    /**
+     * Resolve the list of columns that may be used for ordering.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return array
+     */
+    private function getAllowedOrderColumns($model)
+    {
+        $cacheKey = 'crud_api_sortable_columns:v3:' . get_class($model) . ':' . $model->getTable(); //POCOR-9660: v3 excludes hidden columns
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($model) {
+            try {
+                $schemaColumns = $model->getConnection()
+                    ->getSchemaBuilder()
+                    ->getColumnListing($model->getTable());
+            } catch (\Exception $e) {
+                $schemaColumns = $model->getFillable();
+            }
+
+            $hidden = $model->getHidden(); //POCOR-9660: never reveal hidden columns (e.g. password) via sort order
+
+            return array_values(array_filter(array_unique($schemaColumns), function ($column) use ($hidden) {
+                return is_string($column)
+                    && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column)
+                    && !in_array($column, $hidden, true); //POCOR-9660: exclude $hidden fields — sort order exposes values even when field is not returned
+            }));
+        });
+    }
+    //POCOR-9660: end
 
 
     /**
