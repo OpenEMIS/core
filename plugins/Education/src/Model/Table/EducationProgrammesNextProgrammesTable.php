@@ -29,7 +29,7 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 		} else {
 			$query->where([$this->aliasField('education_programme_id') => $id]);
 		}
-		//POCOR-9342 -- End 
+		//POCOR-9342 -- End
 		return $query->toArray();
 	}
 
@@ -112,16 +112,16 @@ class EducationProgrammesNextProgrammesTable extends AppTable {
 					])
 					->order([$EducationGrades->aliasField('order')])
 					->toArray();
-					
+
 				if (!is_null(key($nextProgrammeGradeResults))) {
 					$results = $results + [key($nextProgrammeGradeResults) => current($nextProgrammeGradeResults)];
 				}
-				
+
 			}
 		} else {
 			$results = [];
 		}
-		
+
 		return $results;
 	}
 	/*POCOR-6498 ends*/
