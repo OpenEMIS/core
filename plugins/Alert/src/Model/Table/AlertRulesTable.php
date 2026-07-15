@@ -279,7 +279,18 @@ class AlertRulesTable extends ControllerActionTable
                                 $entity->{$field} = [];
 
                                 foreach ($value as $modelId) {
-                                    $entity->{$field}[] = $Model->get($modelId);
+                                    //POCOR-9732[START]
+                                    if (!empty($modelId)) {
+                                        $record = $Model->find()
+                                            ->where([$Model->getPrimaryKey() => $modelId])
+                                            ->first();
+
+                                        if ($record) {
+                                            $entity->{$field}[] = $record;
+                                        }
+                                    }
+                                    // $entity->{$field}[] = $Model->get($modelId);
+                                    //POCOR-9732[END]
                                 }
                             }
                         }
