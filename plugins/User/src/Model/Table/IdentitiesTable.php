@@ -22,6 +22,11 @@ class IdentitiesTable extends ControllerActionTable
     const ISPREFERRED = 1;
     use OptionsTrait;
 
+    //POCOR-9590: cached per-request for sync_status column rendering — avoids N+1 queries on index, single-fetch on view/edit
+    private $_syncCacheLoaded = false; //POCOR-9590: sentinel — null on the two fields below is a valid loaded state
+    private $_indexSyncStatus = null; //POCOR-9590: security_users.sync_status for the current user
+    private $_indexActiveIdentityTypeId = null; //POCOR-9590: identity_type_id from active external data source, null when no source active
+
     public function initialize(array $config): void
     {
         $this->setTable('user_identities');
@@ -73,6 +78,21 @@ class IdentitiesTable extends ControllerActionTable
             if ($userID) {
                 $entity['security_user_id'] = $userID;
             }
+        }
+        //POCOR-9590: server-side mirror of the readonly UI rule. Block updates to number /
+        //identity_type_id on rows whose identity_type is an external lookup key — closes the
+        //"swap NIN then re-sync to steal identity" vector even when the request bypasses the form.
+        if (!$entity->isNew()
+            && $this->isExternalLookupIdentityType((int) $entity->identity_type_id)
+            && ($entity->isDirty('number') || $entity->isDirty('identity_type_id'))
+        ) {
+            Log::write(
+                'warning',
+                'POCOR-9590: blocked update to external-lookup identity row '
+                . $entity->id . ' by user ' . $this->getUserID()
+            );
+            $event->stopPropagation();
+            return false;
         }
         $message = $this->checkCustomIdentityNumber($options);
         if ($message != "") {
@@ -192,7 +212,12 @@ class IdentitiesTable extends ControllerActionTable
          $this->fields['preferred']['type'] = 'select';
          $this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
          // POCOR-8664 end
-        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number','preferred','issue_date', 'expiry_date', 'issue_location', 'comments']);
+        //POCOR-9590: virtual "Synced" field — visible on index/view/edit (readonly), hidden on add. Value computed in onGetSyncStatus().
+        $this->field('sync_status', [
+            'type' => 'string',
+            'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => false],
+        ]);
+        $this->setFieldOrder(['identity_type_id', 'nationality_id', 'number', 'preferred', 'sync_status', 'issue_date', 'expiry_date', 'issue_location', 'comments']); //POCOR-9590: sync_status inserted after preferred
 
     }
 
@@ -299,6 +324,34 @@ class IdentitiesTable extends ControllerActionTable
         if (empty($entity->expiry_date)) {
             $this->fields['expiry_date']['default_date'] = false;
         }
+
+        //POCOR-9590: sync_status is system-managed — render as readonly Yes/No on edit
+        $this->fields['sync_status']['type'] = 'readonly';
+
+        //POCOR-9590: identity types registered as an external-source lookup key (e.g. NIN) are
+        //set-once. The number is editable on insert (admission/data-entry) but immutable on
+        //subsequent edits — otherwise the row can be retargeted to another person's NIN and
+        //re-synced to import their identity (impersonation by swap).
+        if (!$entity->isNew() && $this->isExternalLookupIdentityType((int) $entity->identity_type_id)) {
+            $this->fields['number']['type'] = 'readonly';
+            $this->fields['identity_type_id']['type'] = 'readonly';
+        }
+    }
+
+    //POCOR-9590: true when this identity_type_id is registered as the lookup key for any
+    //configured external data source. Used by IdentitiesTable + Laravel API guards.
+    public function isExternalLookupIdentityType(int $identityTypeId): bool
+    {
+        if ($identityTypeId <= 0) {
+            return false;
+        }
+        $ExternalAttrs = TableRegistry::getTableLocator()->get('Configuration.ExternalDataSourceAttributes');
+        return $ExternalAttrs->find()
+            ->where([
+                'attribute_field' => 'identity_type_id',
+                'value' => (string) $identityTypeId,
+            ])
+            ->count() > 0;
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -555,10 +608,47 @@ class IdentitiesTable extends ControllerActionTable
             return __('Modified By');
         } elseif ($field == 'created') {
             return __('Created On');
+        } elseif ($field == 'sync_status') {
+            return __('Synced'); //POCOR-9590: column header label
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-9590: start — per-row "Synced" value (index/view/edit). Same eligibility rule as
+    //plugins/User/templates/Element/UserIdentities/details.php line 16:
+    //  eligible = preferred==1 AND identity_type_id == active_source_identity_type_id
+    //  Yes iff eligible AND user.sync_status == SYNC_STATUS_SYNCED — otherwise No.
+    public function onGetSyncStatus(EventInterface $event, Entity $entity): string
+    {
+        $this->loadSyncStatusCache(); //POCOR-9590: lazy single-shot — covers index (N rows, 1 load) + view/edit (1 row, 1 load)
+        $activeTypeId = $this->_indexActiveIdentityTypeId;
+        $eligible = ($entity->preferred == 1)
+            && ($activeTypeId !== null)
+            && ((int)$entity->identity_type_id === (int)$activeTypeId);
+        if ($eligible && $this->_indexSyncStatus === \User\Model\Behavior\UserBehavior::SYNC_STATUS_SYNCED) {
+            return __('Yes');
+        }
+        return __('No');
+    }
+
+    //POCOR-9590: load user sync_status + active external identity_type_id once per request.
+    //Re-fires are no-ops thanks to the null guards — safe for both index (called N times) and view/edit (called once).
+    private function loadSyncStatusCache(): void
+    {
+        if ($this->_syncCacheLoaded) {
+            return;
+        }
+        $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
+        $userRow = $SecurityUsers->find()
+            ->select(['sync_status'])
+            ->where(['id' => $this->getUserID()])
+            ->first();
+        $this->_indexSyncStatus = $userRow ? (int)$userRow->sync_status : \User\Model\Behavior\UserBehavior::SYNC_STATUS_LOCAL;
+        $this->_indexActiveIdentityTypeId = $SecurityUsers->getActiveExternalSourceIdentityTypeId(); //null is a valid loaded value (no active source)
+        $this->_syncCacheLoaded = true;
+    }
+    //POCOR-9590: end
 
     //POCOR-9663
     private function checkDuplicateIdentity($entity)
