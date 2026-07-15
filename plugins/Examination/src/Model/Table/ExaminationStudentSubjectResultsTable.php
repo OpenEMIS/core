@@ -101,7 +101,13 @@ class ExaminationStudentSubjectResultsTable extends AppTable
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId,
-                $this->ExaminationSubjects->aliasField('weight > ') => 0
+                $this->ExaminationSubjects->aliasField('weight > ') => 0,
+                //POCOR-3573: start - show results only once current date >= Release Results date (empty date = always visible)
+                'OR' => [
+                    $this->Examinations->aliasField('release_results_date IS') => null,
+                    $this->Examinations->aliasField('release_results_date <= ') => date('Y-m-d')
+                ]
+                //POCOR-3573: end
             ])
             ->order([
                 $this->EducationSubjects->aliasField('order'),
