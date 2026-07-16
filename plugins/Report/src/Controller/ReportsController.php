@@ -13,6 +13,7 @@ use Cake\Http\Exception\NotFoundException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Cake\Event\EventInterface;
+use Cake\Routing\Router;
 use Report\Utility\ReportViewFileReader;
 
 class ReportsController extends AppController
@@ -448,7 +449,7 @@ class ReportsController extends AppController
                     'module' => $dataModule,
                     'sections' => $sectionMeta,
                     'pageSize' => ReportViewFileReader::ROW_PAGE_SIZE,
-                    'ajaxUrl' => $this->Url->build([
+                    'ajaxUrl' => Router::url([
                         'plugin' => $this->getPlugin(),
                         'controller' => $this->getName(),
                         'action' => 'ajaxViewReportData',
@@ -483,7 +484,7 @@ class ReportsController extends AppController
                             'totalRows' => $singlePage['totalRows'],
                         ]],
                         'pageSize' => ReportViewFileReader::ROW_PAGE_SIZE,
-                        'ajaxUrl' => $this->Url->build([
+                        'ajaxUrl' => Router::url([
                             'plugin' => $this->getPlugin(),
                             'controller' => $this->getName(),
                             'action' => 'ajaxViewReportData',
