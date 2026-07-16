@@ -428,6 +428,7 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (identityTypeId === null) {
             selectedUserData.identity_number = '';
             selectedUserData.identity_type_name = '';
+            scope.canSkipIdentity = false;
             return;
         }
 
@@ -436,20 +437,59 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         if (identityType) {
             selectedUserData.identity_type_name = identityType.name;
         }
+        const hasValidIdentityNumber = validateIdentityNumberByIdentityType(scope);
         const {nationality_id, identity_type_id, identity_number} = scope.selectedUserData;
-        if (nationality_id && identity_type_id && identity_number) {
+        if (hasValidIdentityNumber && nationality_id && identity_type_id && identity_number) {
             unsetAllErrors(scope);
         }
         setConfigForExternalSearch(scope);
     }
 
+    function getIdentityTypeValidationPattern(scope, identityTypeId) {
+        if (!scope || !Array.isArray(scope.identityTypeOptions) || !identityTypeId) {
+            return '';
+        }
+
+        const identityType = scope.identityTypeOptions.find(option => Number(option.id) === Number(identityTypeId));
+        return identityType && identityType.validation_pattern ? String(identityType.validation_pattern).trim() : '';
+    }
+
+    function validateIdentityNumberByIdentityType(scope) {
+        unsetError(scope.error, 'identity_number');
+
+        const {identity_type_id, identity_number} = scope.selectedUserData || {};
+        if (!identity_type_id || identity_number === undefined || identity_number === null || identity_number === '') {
+            return true;
+        }
+
+        const pattern = getIdentityTypeValidationPattern(scope, identity_type_id);
+        if (!pattern) {
+            return true;
+        }
+
+        try {
+            const regex = new RegExp(pattern);
+            if (!regex.test(String(identity_number))) {
+                setError(scope.error, 'identity_number', 'Please enter a valid Identity Number');
+                return false;
+            }
+        } catch (e) {
+            // Ignore malformed admin regex to avoid blocking all entries.
+            console.warn('Invalid identity validation_pattern:', pattern, e);
+        }
+
+        return true;
+    }
+
     function changeIdentityNumber(scope) {
         const {nationality_id, identity_type_id, identity_number} = scope.selectedUserData;
+        scope.canSkipIdentity = !!(identity_number && String(identity_number).trim());
         if (identity_number) {
-            this.unsetError('identity_number');
+            unsetError(scope.error, 'identity_number');
         }
-        if (nationality_id && identity_type_id && identity_number) {
-            this.unsetAllErrors(scope);
+        const hasValidIdentityNumber = validateIdentityNumberByIdentityType(scope);
+        if (hasValidIdentityNumber && nationality_id && identity_type_id && identity_number) {
+            unsetAllErrors(scope);
         }
     }
 
@@ -524,6 +564,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
                 }
             }
 
+            if (!validateIdentityNumberByIdentityType(scope)) {
+                return;
+            }
+
             if (Object.keys(scope.error).length > 0) return;
             if (scope.selectedUserData.identity_number) {
                 scope.canSkipIdentity = true;
@@ -540,7 +584,32 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
     }
 
 
+    //POCOR-9590: shared reset for the External Search step.
+    //All four wizards (Directory / Student / Staff / Guardian) call
+    //directorySvc.goToExternalSearch(scope), so wiping the prior grid state
+    //here re-arms the search for everyone in one place. Without this, going
+    //Back to change the identity inputs and clicking Next again would either
+    //show the cached first hit or, after a single page returns, leave the
+    //grid stuck in "no more pages" mode for every subsequent identity.
+    function resetExternalSearchGrid(scope) {
+        var prior = scope.externalGridOptions;
+        if (prior && prior.api) {
+            if (typeof prior.api.purgeInfiniteCache === 'function') {
+                try { prior.api.purgeInfiniteCache(); } catch (e) { /* api torn down */ }
+            }
+            if (typeof prior.api.setRowData === 'function') {
+                try { prior.api.setRowData([]); } catch (e) { /* infinite model */ }
+            }
+        }
+        scope.rowsThisPage = [];
+        scope.isExternalSearchSelected = false;
+        if ('selectedGuardian' in scope) {
+            scope.selectedGuardian = undefined;
+        }
+    }
+
     function goToExternalSearch(scope) {
+        resetExternalSearchGrid(scope);
         UtilsSvc.isAppendLoader(true);
         var externalSearchParams = {
             first_name: scope.selectedUserData.first_name,
@@ -961,6 +1030,10 @@ function DirectoryaddSvc($http, $q, $filter, KdOrmSvc, AggridLocaleSvc, AlertSvc
         }
         if (!config.nationalitySkipped && config.nationalitiesRequired === 'required') {
             checkAndSetError('nationality_id', 'This field cannot be left empty');
+        }
+
+        if (!validateIdentityNumberByIdentityType(scope)) {
+            return;
         }
 
         // 🧾 Custom Fields

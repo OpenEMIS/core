@@ -370,6 +370,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             shift_ids: userCtrl.staffShiftsId,
             photo_name: userCtrl.selectedUserData.photo_name,
             photo_base_64: userCtrl.selectedUserData.photo_base_64,
+            sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             institution_id: userCtrl.institutionId,
             is_same_school: userCtrl.staffData && userCtrl.staffData.is_same_school ? userCtrl.staffData.is_same_school : 0,
             is_diff_school: userCtrl.staffData && userCtrl.staffData.is_diff_school ? userCtrl.staffData.is_diff_school : 0,
