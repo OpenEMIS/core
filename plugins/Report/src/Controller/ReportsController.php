@@ -13,6 +13,7 @@ use Cake\Http\Exception\NotFoundException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Cake\Event\EventInterface;
+use Report\Utility\ReportViewFileReader;
 
 class ReportsController extends AppController
 {
@@ -54,7 +55,7 @@ class ReportsController extends AppController
         //POCOR-8034 : start
         $header = __('Reports');
         $action = $this->getRequest()->getParam('action');
-        if ($action != 'ViewReport') {
+        if (!in_array($action, ['ViewReport', 'ajaxViewReportData'], true)) {
             $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' =>$this->getRequest()->getParam('action')]);
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($action)));
             $this->Navigation->addCrumb($crumbTitle);
@@ -409,9 +410,13 @@ class ReportsController extends AppController
         $rowHeader = [];
         $newArr2 = [];
         $reportSections = [];
+        $lazyLoadReportView = false;
+        $viewReportConfig = [];
 
-        // Multi-sheet workbooks (e.g. Class Attendance Marked: one sheet per month). View used only sheet 0
-        // and companion CSV repeats headers with different column counts per month — unusable for view.
+        $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
+        $csvReadable = file_exists($csvFileName) && is_readable($csvFileName);
+
+        // Multi-sheet workbooks (e.g. Class Attendance Marked): load one section/page at a time.
         if ($ext === 'xlsx') {
             try {
                 $xlsxReader = IOFactory::createReader('Xlsx');
@@ -423,19 +428,32 @@ class ReportsController extends AppController
             }
 
             if (count($worksheetNames) > 1) {
-                foreach ($worksheetNames as $worksheetName) {
-                    $reportSections[] = $this->readViewReportXlsxSheetSection(
-                        $inputFileName,
-                        $worksheetName,
-                        $dataModule
-                    );
-                }
-                if (function_exists('gc_collect_cycles')) {
-                    gc_collect_cycles();
-                }
-                $reportSections = array_values(array_filter($reportSections, function ($section) {
-                    return !empty($section['headers']) && !empty($section['rows']);
-                }));
+                $sectionMeta = ReportViewFileReader::getMultiSectionMeta(
+                    $inputFileName,
+                    $csvReadable ? $csvFileName : null
+                );
+                $firstSection = ReportViewFileReader::readSectionPage(
+                    $inputFileName,
+                    $csvReadable ? $csvFileName : null,
+                    $dataModule,
+                    0,
+                    $sectionMeta[0]['title'] ?? $worksheetNames[0],
+                    1
+                );
+
+                $reportSections[] = $firstSection;
+                $lazyLoadReportView = true;
+                $viewReportConfig = [
+                    'filePath' => $inputFileName,
+                    'module' => $dataModule,
+                    'sections' => $sectionMeta,
+                    'pageSize' => ReportViewFileReader::ROW_PAGE_SIZE,
+                    'ajaxUrl' => $this->Url->build([
+                        'plugin' => $this->getPlugin(),
+                        'controller' => $this->getName(),
+                        'action' => 'ajaxViewReportData',
+                    ]),
+                ];
             }
         }
 
@@ -445,26 +463,33 @@ class ReportsController extends AppController
             $newArr2 = isset($first['rows']) ? $first['rows'] : [];
         } else {
             //POCOR-9567: prefer companion CSV for single-sheet xlsx (fast path)
-            $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
-            if (file_exists($csvFileName) && is_readable($csvFileName)) {
-                $csvHandle = fopen($csvFileName, 'r');
-                $rowHeader = null;
-                $rowHeaderNew = [];
-                $newArr2 = [];
-                while (($csvRow = fgetcsv($csvHandle)) !== false) {
-                    if ($rowHeader === null) {
-                        $rowHeader = [$csvRow];
-                        $rowHeaderNew = $csvRow;
-                        continue;
-                    }
-                    if ($this->isEmptyRow($csvRow)) {
-                        continue;
-                    }
-                    if (count($csvRow) === count($rowHeaderNew)) {
-                        $newArr2[] = array_combine($rowHeaderNew, $csvRow);
-                    }
+            if ($csvReadable || $ext === 'xlsx') {
+                $singlePage = ReportViewFileReader::readSingleSheetPage(
+                    $inputFileName,
+                    $dataModule,
+                    1,
+                    $csvReadable
+                );
+                $rowHeader = [$singlePage['headers']];
+                $newArr2 = $singlePage['rows'];
+                if ($singlePage['totalRows'] > ReportViewFileReader::ROW_PAGE_SIZE) {
+                    $lazyLoadReportView = true;
+                    $viewReportConfig = [
+                        'filePath' => $inputFileName,
+                        'module' => $dataModule,
+                        'sections' => [[
+                            'index' => 0,
+                            'title' => $singlePage['title'] ?: __('Report'),
+                            'totalRows' => $singlePage['totalRows'],
+                        ]],
+                        'pageSize' => ReportViewFileReader::ROW_PAGE_SIZE,
+                        'ajaxUrl' => $this->Url->build([
+                            'plugin' => $this->getPlugin(),
+                            'controller' => $this->getName(),
+                            'action' => 'ajaxViewReportData',
+                        ]),
+                    ];
                 }
-                fclose($csvHandle);
             } else {
                 try {
                     $inputFileType = IOFactory::identify($inputFileName);
@@ -508,56 +533,71 @@ class ReportsController extends AppController
         $this->set('reportSections', $reportSections);
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
+        $this->set('lazyLoadReportView', $lazyLoadReportView);
+        $this->set('viewReportConfig', $viewReportConfig);
         $this->set('contentHeader', $header);
     }
 
-    /**
-     * Read one worksheet for ViewReport (one month per sheet). Loads only that sheet to limit memory.
-     *
-     * @return array{title: string, headers: array, rows: array<int, array<string, mixed>>}
-     */
-    private function readViewReportXlsxSheetSection(string $path, string $worksheetTitle, string $module): array
+    public function ajaxViewReportData()
     {
-        $reader = IOFactory::createReader('Xlsx');
-        $reader->setReadDataOnly(true);
-        $reader->setReadEmptyCells(false);
-        $reader->setLoadSheetsOnly([$worksheetTitle]);
-        $spreadsheet = $reader->load($path);
-        $sheet = $spreadsheet->getActiveSheet();
-        $highestRow = (int)$sheet->getHighestRow();
-        if ($module === 'InstitutionStatistics') {
-            $highestRow = (int)$sheet->getHighestRow() + 1;
-        }
-        $highestColumn = $sheet->getHighestColumn();
-        $headers = [];
-        if ($highestRow >= 1 && $highestColumn !== '') {
-            $headerMatrix = $sheet->rangeToArray('A1:' . $highestColumn . '1', null, true, false);
-            if (!empty($headerMatrix[0])) {
-                $headers = $headerMatrix[0];
-            }
-        }
-        $rows = [];
-        if ($highestRow >= 2 && $highestColumn !== '' && $headers !== []) {
-            for ($row = 2; $row <= $highestRow - 1; $row++) {
-                $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, null, true, false);
-                $line = reset($currentRow);
-                if ($line === false || $this->isEmptyRow($line)) {
-                    continue;
-                }
-                if (count($line) !== count($headers)) {
-                    continue;
-                }
-                $rows[] = array_combine($headers, $line);
-            }
-        }
-        $spreadsheet->disconnectWorksheets();
-        unset($spreadsheet, $sheet);
+        $this->request->allowMethod(['get']);
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
 
-        return [
-            'title' => $worksheetTitle,
-            'headers' => $headers,
-            'rows' => $rows,
-        ];
+        $filePath = $this->resolveViewReportPath($this->request->getQuery('file_path'));
+        $module = $this->request->getQuery('module');
+        if ($module === null && $this->request->getQuery('amp;module') !== null) {
+            $module = $this->request->getQuery('amp;module');
+        }
+        $module = (string)$module;
+        $sectionIndex = max(0, (int)$this->request->getQuery('section_index'));
+        $page = max(1, (int)$this->request->getQuery('page'));
+        $sectionTitle = (string)$this->request->getQuery('section_title');
+
+        $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $filePath);
+        $csvReadable = file_exists($csvFileName) && is_readable($csvFileName);
+
+        try {
+            $xlsxReader = IOFactory::createReader('Xlsx');
+            $xlsxReader->setReadDataOnly(true);
+            $worksheetNames = $xlsxReader->listWorksheetNames($filePath);
+        } catch (\Exception $e) {
+            throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+        }
+
+        if (count($worksheetNames) > 1) {
+            $payload = ReportViewFileReader::readSectionPage(
+                $filePath,
+                $csvReadable ? $csvFileName : null,
+                $module,
+                $sectionIndex,
+                $sectionTitle,
+                $page
+            );
+        } else {
+            $payload = ReportViewFileReader::readSingleSheetPage($filePath, $module, $page, $csvReadable);
+        }
+
+        $this->viewBuilder()->setClassName('Json');
+        $this->set([
+            'success' => true,
+            'data' => $payload,
+            '_serialize' => ['success', 'data'],
+        ]);
+    }
+
+    private function resolveViewReportPath(?string $filePath): string
+    {
+        if (empty($filePath)) {
+            throw new NotFoundException(__('File not found or not readable.'));
+        }
+
+        $path = str_replace('\\', '/', $filePath);
+        if (!file_exists($path) || !is_readable($path)) {
+            throw new NotFoundException(__('File not found or not readable.'));
+        }
+
+        return $path;
     }
 
     function array_flatten($array)
