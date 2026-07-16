@@ -4,6 +4,7 @@ echo $this->Html->script('OpenEmis.../plugins/progressbar/bootstrap-progressbar.
 echo $this->Html->script('Report.report.list', ['block' => true]);
 echo $this->Html->css('https://cdn.datatables.net/v/dt/dt-1.10.23/datatables.min.css', ['block' => true]);
 echo $this->Html->script('https://cdn.datatables.net/v/dt/dt-1.10.23/datatables.min.js', ['block' => true]);
+echo $this->Html->script('Report.report.view', ['block' => true]);
 
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
@@ -32,62 +33,58 @@ $url = $this->Url->build($url);
 $table = $ControllerAction['table'];
 $downloadText = __('Downloading...');
 $reportSections = isset($reportSections) ? $reportSections : [];
+$lazyLoadReportView = !empty($lazyLoadReportView);
+$viewReportConfig = isset($viewReportConfig) ? $viewReportConfig : [];
+$initialRows = !empty($reportSections) ? ($reportSections[0]['rows'] ?? []) : ($newArr2 ?? []);
+$initialHeaders = !empty($reportSections) ? ($reportSections[0]['headers'] ?? $rowHeaderData) : $rowHeaderData;
 ?>
 <style type="text/css">
 .none { display: none !important; }
+#report-lazy-loading { display: none; margin: 10px 0; font-style: italic; }
 </style>
-<script>
-$(document).ready( function () {
-	var sectionTables = $('.report-section');
-	if (sectionTables.length > 1) {
-		var currentIndex = 0;
-
-		function renderPage(index) {
-			sectionTables.hide();
-			$(sectionTables.get(index)).show();
-			$('#report-page-pagination .page-number').removeClass('current');
-			$('#report-page-pagination .page-number[data-page-index="' + index + '"]').addClass('current');
-			$('#report-page-pagination .previous').toggleClass('disabled', index === 0);
-			$('#report-page-pagination .next').toggleClass('disabled', index === sectionTables.length - 1);
-			$('#report-page-info').text((index + 1) + ' / ' + sectionTables.length);
-		}
-
-		$('#report-page-pagination').on('click', '.page-number', function (e) {
-			e.preventDefault();
-			var targetIndex = parseInt($(this).attr('data-page-index'), 10);
-			if (!isNaN(targetIndex) && targetIndex >= 0 && targetIndex < sectionTables.length) {
-				currentIndex = targetIndex;
-				renderPage(currentIndex);
-			}
-		});
-
-		$('#report-page-pagination').on('click', '.previous:not(.disabled)', function (e) {
-			e.preventDefault();
-			if (currentIndex > 0) {
-				currentIndex -= 1;
-				renderPage(currentIndex);
-			}
-		});
-
-		$('#report-page-pagination').on('click', '.next:not(.disabled)', function (e) {
-			e.preventDefault();
-			if (currentIndex < sectionTables.length - 1) {
-				currentIndex += 1;
-				renderPage(currentIndex);
-			}
-		});
-
-		renderPage(currentIndex);
-	} else if ($('#myTable').length) {
-		$('#myTable').DataTable();
-		$('.dataTables_length').hide();
-		$('#myTable_filter').hide();
-	}
-} );
-</script>
 
 <div class="table-wrapper">
-	<?php if (!empty($reportSections) && is_array($reportSections)) : ?>
+	<?php if ($lazyLoadReportView) : ?>
+		<div id="report-lazy-view" data-config='<?= json_encode($viewReportConfig, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>'>
+			<div id="report-lazy-loading"><?= __('Loading...') ?></div>
+			<div class="table-responsive">
+				<table class="table table-curved report-table" id="lazyReportTable">
+					<thead>
+						<tr id="lazyReportHead">
+							<?php foreach ($initialHeaders as $headerCell) : ?>
+								<th><?= h($headerCell) ?></th>
+							<?php endforeach; ?>
+						</tr>
+					</thead>
+					<tbody id="lazyReportBody">
+						<?php foreach ($initialRows as $val) : ?>
+						<tr>
+							<?php foreach ($val as $val1) : ?>
+							<td><?= h($val1) ?></td>
+							<?php endforeach; ?>
+						</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			</div>
+			<div class="dataTables_wrapper no-footer" id="report-row-pagination">
+				<div class="dataTables_info" id="report-row-info"></div>
+				<div class="dataTables_paginate paging_simple_numbers">
+					<a class="paginate_button previous disabled" href="#"><?= __('Previous') ?></a>
+					<span id="report-row-page-info"></span>
+					<a class="paginate_button next" href="#"><?= __('Next') ?></a>
+				</div>
+			</div>
+			<div class="dataTables_wrapper no-footer" id="report-section-pagination">
+				<div class="dataTables_info" id="report-section-info"></div>
+				<div class="dataTables_paginate paging_simple_numbers">
+					<a class="paginate_button previous disabled" href="#"><?= __('Previous') ?></a>
+					<span class="section-pages"></span>
+					<a class="paginate_button next" href="#"><?= __('Next') ?></a>
+				</div>
+			</div>
+		</div>
+	<?php elseif (!empty($reportSections) && is_array($reportSections)) : ?>
 		<?php foreach ($reportSections as $section) : ?>
 			<?php if (empty($section['headers']) || empty($section['rows'])) { continue; } ?>
 			<div class="table-responsive report-section" style="margin-bottom: 20px;" data-section-label="<?= h($section['title'] ?? '') ?>">
