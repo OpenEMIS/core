@@ -1388,8 +1388,7 @@ class StaffTable extends ControllerActionTable
         if($this->action == 'view'){
             $url = $this->url('view');
         }
-        else{
-            $options = [
+        $options = [
                 'userRole' => 'Staff',
                 'action' => $this->action,
                 'id' => $entity->id,
@@ -1401,7 +1400,6 @@ class StaffTable extends ControllerActionTable
 
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', 'Positions');
-        }
     }
 
     public function onGetFormButtons(EventInterface $event, ArrayObject $buttons)
