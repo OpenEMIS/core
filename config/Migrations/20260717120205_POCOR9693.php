@@ -22,10 +22,10 @@ class POCOR9693 extends AbstractMigration
             UPDATE `security_functions`
             SET
                 `controller` = 'Institutions',
-                '_view'            => 'StaffBehaviourAttachments.index|StaffBehaviourAttachments.view',
-                '_edit'            => 'StaffBehaviourAttachments.edit',
-                '_add'             => 'StaffBehaviourAttachments.add',
-                '_delete'          => 'StaffBehaviourAttachments.delete',
+                `_view`            => 'StaffBehaviourAttachments.index|StaffBehaviourAttachments.view',
+                `_edit`            => 'StaffBehaviourAttachments.edit',
+                `_add`             => 'StaffBehaviourAttachments.add',
+                `_delete`          => 'StaffBehaviourAttachments.delete',
             WHERE `name` = 'Staff Behaviour Attachments Old'
               AND `module` = 'Institutions'
               AND `category` = 'Staff'
