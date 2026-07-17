@@ -221,7 +221,8 @@ class UserBehavior extends Behavior
             $this->_table->fields['gender_id']['order'] = $i++;
             // POCOR-8286 date format start
             $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-            $systemDateFormat = $ConfigItems->value('date_format');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            // Strip PHP ordinal "S" — bootstrap-datepicker does not support it (avoids "31S August 2017")
             $phpToDatepickerFormat = [
                 'd' => 'dd',
                 'j' => 'd',
@@ -232,16 +233,18 @@ class UserBehavior extends Behavior
                 'M' => 'M',        // Jan, Feb (short month)
                 'F' => 'MM',       // January, February (full month)
                 'y' => 'yy',       // 2-digit year
-                'Y' => 'yyyy'      // 4-digit year
+                'Y' => 'yyyy',     // 4-digit year
+                'S' => '',
             ];
 
             $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
                 return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
             }, $systemDateFormat);
+            $datepickerFormat = preg_replace('/\s+/', ' ', trim($datepickerFormat));
             //POCOR-9765[START]
-            // endDate must use the same PHP format as datepicker format, otherwise
-            // e.g. Y-m-d (yyyy-mm-dd) misparses d-m-Y "13-07-2026" as year 13 and disables all dates
-            $endDate = date($systemDateFormat ?: 'd-m-Y');
+            // endDate must match datepicker output format (no ordinals); also keeps Y-m-d endDate correct
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $endDate = date($editableDateFormat);
             //POCOR-9765[END]
             // POCOR-8286 date format end
             if ($this->isCAv4()) {
@@ -1057,15 +1060,22 @@ class UserBehavior extends Behavior
         }
         // POCOR-8286 start
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $systemDateFormat = $ConfigItems->value('date_format');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // Datepicker cannot emit ordinals; parse without "S" and also accept legacy "30th" values
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
         try {
             $dob = $data['date_of_birth'] ?? null;
             if ($dob) {
-                $date = Chronos::createFromFormat($systemDateFormat, $dob);
+                $dobNormalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', (string)$dob);
+                try {
+                    $date = Chronos::createFromFormat($editableDateFormat, $dobNormalized);
+                } catch (\Exception $e) {
+                    $date = Chronos::createFromFormat($systemDateFormat, (string)$dob);
+                }
                 $data['date_of_birth'] = $date->format('Y-m-d');
             }
         } catch (\Exception $e) {
-            Log::warning("Invalid date: " . $data['date_of_birth'] . ' with format ' . $systemDateFormat);
+            Log::warning("Invalid date: " . ($data['date_of_birth'] ?? '') . ' with format ' . $systemDateFormat);
         }
         // POCOR-8286 end
     }
