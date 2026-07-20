@@ -972,7 +972,7 @@ class WorkflowBehavior extends Behavior
                                     $executerName = $user->user->name;
                                 }else{
                                     //POCOR-9752 start
-                                    if($key == count($transitions) - 1 && !empty($entity->modified_user_id)){
+                                    if($key === count($transitions) - 1 && !empty($entity->modified_user_id)){
                                         $Users = TableRegistry::getTableLocator()->get('User.Users');
                                         $modifiedUser = $Users->find()
                                             ->where(['id' => $entity->modified_user_id])
