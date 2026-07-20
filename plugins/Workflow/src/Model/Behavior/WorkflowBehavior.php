@@ -971,7 +971,23 @@ class WorkflowBehavior extends Behavior
                                 ) {
                                     $executerName = $user->user->name;
                                 }else{
-                                    $executerName = $transition->created_user->name;
+                                    //POCOR-9752 start
+                                    if($key == count($transitions) - 1 && !empty($entity->modified_user_id)){
+                                        $Users = TableRegistry::getTableLocator()->get('User.Users');
+                                        $modifiedUser = $Users->find()
+                                            ->where(['id' => $entity->modified_user_id])
+                                            ->first();
+
+                                        if ($modifiedUser) {
+                                            $executerName = trim(implode(' ', array_filter([
+                                                            $modifiedUser->first_name ?? '',
+                                                            $modifiedUser->third_name ?? '',
+                                                            $modifiedUser->last_name ?? ''
+                                                        ])));
+                                        } //POCOR-9752 end
+                                    }else{
+                                        $executerName = $transition->created_user->name;
+                                    }  
                                 }
                             }
                         }
