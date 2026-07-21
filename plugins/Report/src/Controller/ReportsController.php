@@ -47,6 +47,54 @@ class ReportsController extends AppController
         $this->loadComponent('Navigation');
     }
 
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        // ViewReport / ajaxViewReportData are top-level actions not listed in security_functions
+        // (_view is e.g. Institutions.index, _execute is Institutions.download). Without this,
+        // non-super-admin roles (e.g. Principal) are redirected to Dashboard.
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    /**
+     * Allow ViewReport when the user can list or download the report module in the query string.
+     */
+    public function isActionIgnored(EventInterface $event, $action)
+    {
+        if (!in_array($action, ['ViewReport', 'ajaxViewReportData'], true)) {
+            return null;
+        }
+
+        $module = $this->getRequest()->getQuery('module');
+        if ($module === null || $module === '') {
+            $module = $this->getRequest()->getQuery('amp;module');
+        }
+        $module = is_string($module) ? trim($module) : '';
+        // Only allow known report module identifiers (prevent open permission bypass).
+        if ($module === '' || !preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $module)) {
+            return false;
+        }
+
+        // Institution Custom/Statistics reports are stored under Institutions permissions
+        // but are opened via Reports/ViewReport.
+        $permissionControllers = ['Reports'];
+        if (in_array($module, ['InstitutionStatistics', 'InstitutionStandards'], true)) {
+            $permissionControllers[] = 'Institutions';
+        }
+
+        foreach ($permissionControllers as $permissionController) {
+            if ($this->AccessControl->check(['controller' => $permissionController, 'action' => $module, 0 => 'index'])) {
+                return true;
+            }
+            if ($this->AccessControl->check(['controller' => $permissionController, 'action' => $module, 0 => 'download'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Report') {
