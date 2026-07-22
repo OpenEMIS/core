@@ -57,11 +57,26 @@ class POCOR3673 extends AbstractMigration
         $this->table('security_functions')->insert($record)->save();
     }
 
-   public function down(): void
+    public function down(): void
     {
-        $this->execute('DROP TABLE IF EXISTS `import_mapping`');
-        $this->execute('RENAME TABLE `zz_3673_import_mapping` TO `import_mapping`');
-        $this->execute('DROP TABLE IF EXISTS `security_functions`');
-        $this->execute('RENAME TABLE `zz_3673_security_functions` TO `security_functions`');
+        // Remove import mapping entries added by this migration
+        $this->execute("
+            DELETE FROM `import_mapping`
+            WHERE `model` = 'System.LocaleContentsLanguage'
+              AND `column_name` IN ('label', 'locale_iso', 'translated_label')
+        ");
+
+        // Remove security function added by this migration
+        $this->execute("
+            DELETE FROM `security_functions`
+            WHERE `controller` = 'LocaleContents'
+              AND `module` = 'Administration'
+              AND `category` = 'Localization'
+              AND `name` = 'Import Translations'
+        ");
+
+        // Remove backup tables
+        $this->execute('DROP TABLE IF EXISTS `zz_3673_import_mapping`');
+        $this->execute('DROP TABLE IF EXISTS `zz_3673_security_functions`');
     }
 }
