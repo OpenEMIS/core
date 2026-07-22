@@ -75,7 +75,6 @@ class AttachmentsTable extends ControllerActionTable
         $validator
         ->requirePresence('file_content', 'create')
         ->notEmptyFile('file_content', __('File attachment is required.Check the file size'));
-
         // POCOR-9463
         $validator->add('file_content', 'fileSize', [
             'rule' => function ($value, $context) {
@@ -83,7 +82,6 @@ class AttachmentsTable extends ControllerActionTable
             if (empty($value)) {
                 return true;
             }
-
             try {
                 // Uploaded file
                 if ($value instanceof \Psr\Http\Message\UploadedFileInterface) {
