@@ -7,6 +7,22 @@ StudentResultsController.$inject = ['$scope', '$location', '$filter', '$q', 'Uti
 function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, StudentResultsSvc) {
 	var vm = this;
 
+    //POCOR-9637
+    var queryParams = $location.search();
+    var decodedParams = {};
+
+    if (queryParams.queryString) {
+        try {
+            decodedParams = JSON.parse(atob(queryParams.queryString.split('.')[0]));
+        } catch (e) {
+            console.log('Error decoding queryString', e);
+        }
+    }
+
+    vm.studentId = decodedParams.student_id;
+    vm.institutionId = decodedParams.institution_id;
+    //POCOR-9637
+
     // Variables
     vm.gridOptions = {};
 
@@ -38,7 +54,11 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 var academicPeriodName = academicPeriod.name;
                 var academicPeriodOrder = academicPeriod.order;
 
-                StudentResultsSvc.getStudentResults(academicPeriodId)
+                StudentResultsSvc.getStudentResults( //POCOR-9637
+                    academicPeriodId,
+                    vm.studentId,
+                    vm.institutionId
+                )
                 .then(function(response) {
                     if (angular.isDefined(response[academicPeriodId])) {
                         angular.forEach(response[academicPeriodId], function(assessmentObj, assessmentId) {

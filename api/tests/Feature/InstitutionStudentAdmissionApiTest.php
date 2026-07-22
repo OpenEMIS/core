@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use Tests\Feature\Concerns\BootstrapsPocor9509AlertApiData;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
 use App\Models\Api5\InstitutionStudentAdmission;
 use App\Models\Api5\SecurityUsers as TestSecurityUser;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -12,13 +12,16 @@ use Carbon\Carbon;
 
 class InstitutionStudentAdmissionApiTest extends TestCase
 {
-    use DatabaseTransactions, WithFaker;
+    use BootstrapsPocor9509AlertApiData;
+    use WithFaker;
 
     protected $token;
 
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->bootPocor9509AlertApiData(); //POCOR-9509: bootstrap minimal schema/data for alert-related API tests
 
         $user = TestSecurityUser::where('id', 2)->first();
         if (!$user) {
@@ -30,10 +33,6 @@ class InstitutionStudentAdmissionApiTest extends TestCase
 
     public function test_can_list_InstitutionStudentAdmission()
     {
-        if (InstitutionStudentAdmission::count() === 0) {
-            InstitutionStudentAdmission::factory()->count(1)->create();
-        }
-
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/institution-student-admission');
@@ -43,8 +42,7 @@ class InstitutionStudentAdmissionApiTest extends TestCase
 
     public function test_can_create_InstitutionStudentAdmission()
     {
-        $record = InstitutionStudentAdmission::factory()->make();
-        $data = $record->toArray();
+        $data = $this->pocor9509AdmissionPayload(); //POCOR-9509: avoid deep factory dependencies in sparse test DB
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
@@ -55,7 +53,7 @@ class InstitutionStudentAdmissionApiTest extends TestCase
 
     public function test_can_view_InstitutionStudentAdmission()
     {
-        $record = InstitutionStudentAdmission::factory()->create();
+        $record = InstitutionStudentAdmission::create($this->pocor9509AdmissionPayload()); //POCOR-9509: create a deterministic record without factory-only dependencies
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->getJson('/api/v5/institution-student-admission/' . $record->id);
@@ -66,10 +64,10 @@ class InstitutionStudentAdmissionApiTest extends TestCase
 
     public function test_can_update_InstitutionStudentAdmission()
     {
-        $record = InstitutionStudentAdmission::factory()->create();
+        $record = InstitutionStudentAdmission::create($this->pocor9509AdmissionPayload()); //POCOR-9509: create a deterministic record without factory-only dependencies
         $updatedData = [
             'id' => $record->id,
-            // Add at least one field from schema to update
+            'comment' => 'POCOR-9509 updated admission test',
         ];
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
@@ -80,7 +78,7 @@ class InstitutionStudentAdmissionApiTest extends TestCase
 
     public function test_can_delete_InstitutionStudentAdmission()
     {
-        $record = InstitutionStudentAdmission::factory()->create();
+        $record = InstitutionStudentAdmission::create($this->pocor9509AdmissionPayload()); //POCOR-9509: create a deterministic record without factory-only dependencies
         $response = $this->withHeaders([
             'Authorization' => "Bearer {$this->token}",
         ])->deleteJson('/api/v5/institution-student-admission/' . $record->id);
