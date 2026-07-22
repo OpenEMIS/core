@@ -22,17 +22,24 @@ if (!empty($filterOptions) || !empty($categoryOptions) ||  !empty($areaOptions) 
                     $url = array_merge($url, $this->request->getParam('pass'));
                 }
 
+                // Hidden fields + data-named-group: JS (app.js change) re-appends these on toolbar select change.
+                // Only "filter" was preserved (POCOR-5695), so institution_id / status / etc. were dropped from the URL
+                // and school-based screens (e.g. Institution Surveys) lost context — filters looked broken.
                 $dataNamedGroup = [];
+                $toolbarSelectKeys = ['filter', 'category', 'level', 'area', 'period', 'month'];
                 if (!empty($this->request->getQuery())) {
                     foreach ($this->request->getQuery() as $key => $value) {
-                        //if (in_array($key, ['filter', 'category'])) continue; //POCOR-5695
-                        if (in_array($key, ['filter'])){ //POCOR-5695
-                            echo $this->Form->hidden($key, [
-                                'value' => $value,
-                                'data-named-key' => $key
-                            ]);
-                            $dataNamedGroup[] = $key;
+                        if (in_array($key, $toolbarSelectKeys, true)) {
+                            continue;
                         }
+                        if (is_array($value)) {
+                            continue;
+                        }
+                        echo $this->Form->hidden($key, [
+                            'value' => $value,
+                            'data-named-key' => $key
+                        ]);
+                        $dataNamedGroup[] = $key;
                     }
                 }
 
@@ -40,102 +47,128 @@ if (!empty($filterOptions) || !empty($categoryOptions) ||  !empty($areaOptions) 
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
 
+                // Keys of visible toolbar <select>s (app.js change() re-reads each by data-named-key).
+                // Each select's data-named-group must list every OTHER toolbar key + preserved query hiddens,
+                // or changing category drops filter (and vice versa) when $dataNamedGroup was empty.
+                $toolbarCrossKeys = [];
                 if (!empty($filterOptions)) {
+                    $toolbarCrossKeys[] = 'filter';
+                }
+                if (!empty($categoryOptions)) {
+                    $toolbarCrossKeys[] = 'category';
+                }
+                if ($this->request->getParam('action') == 'Sessions' || $this->request->getParam('action') == 'Results') {
+                    if (!empty($levelOptions)) {
+                        $toolbarCrossKeys[] = 'level';
+                    }
+                    if (!empty($areaOptions)) {
+                        $toolbarCrossKeys[] = 'area';
+                    }
+                    if (!empty($periodsOptions)) {
+                        $toolbarCrossKeys[] = 'period';
+                    }
+                    if (!empty($monthOptions)) {
+                        $toolbarCrossKeys[] = 'month';
+                    }
+                }
+                $toolbarCrossGroupFor = function ($omitKey) use ($dataNamedGroup, $toolbarCrossKeys) {
+                    $others = array_values(array_diff($toolbarCrossKeys, [$omitKey]));
+                    $merged = array_merge($dataNamedGroup, $others);
+
+                    return implode(',', array_unique($merged));
+                };
+
+                if (!empty($filterOptions)) {
+                    $group = $toolbarCrossGroupFor('filter');
                     $inputOptions = [
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $filterOptions,
                         'url' => $baseUrl,
-                        'data-named-key' => 'filter'
+                        'data-named-key' => 'filter',
                     ];
-                    if (!empty($dataNamedGroup)) {
-                        $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                        $dataNamedGroup[] = 'filter';
+                    if ($group !== '') {
+                        $inputOptions['data-named-group'] = $group;
                     }
                     echo $this->Form->input('filter', $inputOptions);
                 }
 
                 if (!empty($categoryOptions)) {
+                    $group = $toolbarCrossGroupFor('category');
                     $inputOptions = [
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $categoryOptions,
                         'url' => $baseUrl,
                         'data-named-key' => 'category',
-                        'data-named-group' => 'level, area, period, month', //POCOR-5695
-                        'escape' => false //POCOR-5695
+                        'escape' => false
                     ];
-                    if (!empty($dataNamedGroup)) {
-                        $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                        $dataNamedGroup[] = 'category';
+                    if ($group !== '') {
+                        $inputOptions['data-named-group'] = $group;
                     }
                     echo $this->Form->input('category', $inputOptions);
                 }
                 //POCOR-5695 starts
                 if($this->request->getParam('action') == 'Sessions' || $this->request->getParam('action') == 'Results'){
                     if (!empty($levelOptions)) {
+                        $group = $toolbarCrossGroupFor('level');
                         $inputOptions = [
                             'class' => 'form-control',
                             'label' => false,
                             'options' => $levelOptions,
                             'url' => $baseUrl,
                             'data-named-key' => 'level',
-                            'data-named-group' => 'category, area, period, month',
                             'escape' => false
                         ];
-                        if (!empty($dataNamedGroup)) {
-                            $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'level';
+                        if ($group !== '') {
+                            $inputOptions['data-named-group'] = $group;
                         }
                         echo $this->Form->input('level', $inputOptions);
                     }
                     if (!empty($areaOptions)) {
+                        $group = $toolbarCrossGroupFor('area');
                         $inputOptions = [
                             'class' => 'form-control',
                             'label' => false,
                             'options' => $areaOptions,
                             'url' => $baseUrl,
                             'data-named-key' => 'area',
-                            'data-named-group' => 'category, level, period, month',
                             'escape' => false
                         ];
-                        if (!empty($dataNamedGroup)) {
-                            $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'area';
+                        if ($group !== '') {
+                            $inputOptions['data-named-group'] = $group;
                         }
                         echo $this->Form->input('area', $inputOptions);
                     }
 
                     if (!empty($periodsOptions)) {
+                        $group = $toolbarCrossGroupFor('period');
                         $inputOptions = [
                             'class' => 'form-control',
                             'label' => false,
                             'options' => $periodsOptions,
                             'url' => $baseUrl,
                             'data-named-key' => 'period',
-                            'data-named-group' => 'category, level, area, month',
                             'escape' => false
                         ];
-                        if (!empty($dataNamedGroup)) {
-                            $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'period';
+                        if ($group !== '') {
+                            $inputOptions['data-named-group'] = $group;
                         }
                         echo $this->Form->input('period', $inputOptions);
                     }
 
                     if (!empty($monthOptions)) {
+                        $group = $toolbarCrossGroupFor('month');
                         $inputOptions = [
                             'class' => 'form-control',
                             'label' => false,
                             'options' => $monthOptions,
                             'url' => $baseUrl,
                             'data-named-key' => 'month',
-                            'data-named-group' => 'category, level, area, period',
                             'escape' => false
                         ];
-                        if (!empty($dataNamedGroup)) {
-                            $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-                            $dataNamedGroup[] = 'month';
+                        if ($group !== '') {
+                            $inputOptions['data-named-group'] = $group;
                         }
                         echo $this->Form->input('month', $inputOptions);
                     }
