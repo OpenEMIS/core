@@ -246,15 +246,15 @@ class SurveyRecipientsTable extends ControllerActionTable
                     'conditions' => ['InstitutionsTable.id = ' . $this->aliasField('institution_id')]
                 ],
                 [
-                    'table' => 'academic_periods', 'alias' => 'AcademicPeriods', 'type' => 'INNER',
-                    'conditions' => ['AcademicPeriods.id = ' . $this->aliasField('academic_period_id')]
+                    'table' => 'academic_periods', 'alias' => 'AcademicPeriodsSearch', 'type' => 'INNER',
+                    'conditions' => ['AcademicPeriodsSearch.id = ' . $this->aliasField('academic_period_id')]
                 ],
             ])
             ->where([
                     'OR' => [
                         ['InstitutionsTable.name LIKE' => '%' . $search . '%'],
                         ['InstitutionsTable.code LIKE' => '%' . $search . '%'],
-                        ['AcademicPeriods.name LIKE' => '%' . $search . '%'],
+                        ['AcademicPeriodsSearch.name LIKE' => '%' . $search . '%'],
                     ]
                 ]
             );

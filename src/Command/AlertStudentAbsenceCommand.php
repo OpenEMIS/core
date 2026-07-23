@@ -41,7 +41,7 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
         $this->StudentAbsencesPeriodDetails = $this->fetchTable('Institution.StudentAbsencesPeriodDetails');
         $this->Students = $this->fetchTable('Institution.Students');
         $this->Institutions = $this->fetchTable('Institution.Institutions');
-        $this->Users = $this->fetchTable('User.Users');
+        //POCOR-9509: removed User.Users override — Security.Users (set in AlertCommandBase::initialize()) has findRecipientList; User.Users does not
 //        $io->out('start');
         if (!$this->prepareContext($args, $io)) {
             return static::CODE_SUCCESS;

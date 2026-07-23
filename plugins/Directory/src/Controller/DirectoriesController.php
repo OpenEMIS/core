@@ -12,9 +12,18 @@ use Cake\Utility\Inflector;
 use App\Controller\AppController;
 use Cake\Http\Response;
 use Cake\Http\Client;
+use User\Controller\SyncUserTrait; //POCOR-9590
 
 class DirectoriesController extends AppController
 {
+    use SyncUserTrait; //POCOR-9590
+
+    //POCOR-9590: public — also called by DirectoriesTable::addSyncButton to avoid duplicating the ACL triple
+    public function syncUserPermission(): array
+    {
+        return ['Directories', 'Directories', 'add'];
+    }
+
     const STUDENT = 1;
     const STAFF = 2;
     const GUARDIAN = 3;
@@ -1524,12 +1533,16 @@ class DirectoriesController extends AppController
         $identityTypesTable = $this->getDynamicTableInstance('identity_types');
         $identityTypes = $identityTypesTable
             ->find()
-            ->select(['id', 'name'])
+            ->select(['id', 'name', 'validation_pattern'])
             ->order(['`order`'])
             ->toArray();
 
         $resultArray = array_map(function ($type) {
-            return ["id" => $type['id'], "name" => $type['name']];
+            return [
+                "id" => $type['id'],
+                "name" => $type['name'],
+                "validation_pattern" => $type['validation_pattern'] ?? '',
+            ];
         }, $identityTypes);
 
         return $this->sendJsonResponse($resultArray);
@@ -2038,6 +2051,10 @@ class DirectoriesController extends AppController
         $page = $params['page'] ?? 1;
         $id = $params['id'] ?? '';
         $searchType = $params['search_type'] ?? '';
+        //POCOR-9590: 'Seychellois' is an alias for 'Seychelles Civil Status' — normalize before routing
+        if ($searchType === 'Seychellois') {
+            $searchType = 'Seychelles Civil Status';
+        }
 
         $ExternalAttributes = $this->getDynamicTableInstance('Configuration.ExternalDataSourceAttributes');
         $attributes = $ExternalAttributes
@@ -2156,7 +2173,6 @@ class DirectoriesController extends AppController
     private function getSeychellesData(array $attributes, string $noData, string $identityNumber, ?string $dateOfBirth = null): array
     {
         $responseData = json_decode($noData, true);
-//        Log::debug(print_r([__FUNCTION__ . ' ATTR' => $attributes], true));
 
         // Basic config
         $clientId  = $attributes['client_id'];
@@ -2166,7 +2182,10 @@ class DirectoriesController extends AppController
         $grantType = $attributes['grant_type'];
         $scopes    = $attributes['scopes'];
 
-        // Field mappings (normalized)
+        //POCOR-9590: restore prev lenient Seychelles mapping — the source returns keys with
+        //different casing between its test and production payloads, so normalize keys and
+        //default to the well-known Seychelles field names when a mapping is not configured.
+        //(The strict ExternalIdentityMapper consolidation dropped first_name/last_name here.)
         $mapFirst       = strtolower(trim($attributes['first_name_mapping']     ?? 'givennames'));
         $mapLast        = strtolower(trim($attributes['last_name_mapping']      ?? 'presentsurname'));
         $mapFull        = strtolower(trim($attributes['full_name_mapping']      ?? 'fullname'));
@@ -2191,7 +2210,6 @@ class DirectoriesController extends AppController
         ]);
 
         $decodedToken = $tokenResponse->getJson();
-//        Log::debug(print_r(['SeychellesTokenRaw' => $decodedToken], true));
 
         if (!$tokenResponse->isOk() || empty($decodedToken['access_token'])) {
             return $responseData;
@@ -2209,40 +2227,32 @@ class DirectoriesController extends AppController
         ]);
 
         $payload = $userResponse->getJson();
-//        Log::debug(print_r(['SeychellesUserRaw' => $payload], true));
 
         $record = $payload['record'] ?? $payload;
         if (!$userResponse->isOk() || empty($record)) {
             return $responseData;
         }
 
+        //POCOR-9590: restore prev lenient mapping — normalize payload keys to lowercase
+        //then read via the (lowercased) configured/default mapping keys.
         $raw = $this->normalizeKeys($record);
-
-        // ------------------------------------------------------------
-        // NORMALIZED RESULT
-        // ------------------------------------------------------------
         $mapped = [
             'identity_number' => $identityNumber,
             'first_name'      => $raw[$mapFirst] ?? '',
             'last_name'       => $raw[$mapLast] ?? '',
             'full_name'       => $raw[$mapFull] ?? '',
-            'date_of_birth'   => isset($raw[$mapDob]) ? substr($raw[$mapDob], 0, 10) : '',
+            'date_of_birth'   => isset($raw[$mapDob]) ? substr((string)$raw[$mapDob], 0, 10) : '',
             'gender'          => $raw[$mapGender] ?? '',
-            'nationality'     => $raw[$mapNationality] ?? ''
+            'nationality'     => $raw[$mapNationality] ?? '',
         ];
 
-        // Generate full_name if missing
         if (empty($mapped['full_name'])) {
             $mapped['full_name'] = trim(($mapped['first_name'] ?? '') . ' ' . ($mapped['last_name'] ?? ''));
         }
 
-        // Add gender_id
-        $mapped['gender_id'] = $this->matchGenderId($mapped['gender']);
-
-        // Add nationality_id
+        $mapped['gender_id']      = $this->matchGenderId($mapped['gender']);
         $mapped['nationality_id'] = $this->matchOrCreateNationalityId($mapped['nationality']);
 
-        // Optional extras
         if (isset($raw['postaladdress1'])) {
             $mapped['address'] = $raw['postaladdress1'];
         }
@@ -2258,11 +2268,13 @@ class DirectoriesController extends AppController
         ];
     }
 
+    //POCOR-9590: restore prev helper — lowercases every payload key so mapping is
+    //case-insensitive (the external source varies key casing between test and production).
     private function normalizeKeys(array $arr): array
     {
         $normalized = [];
         foreach ($arr as $key => $value) {
-            $normalized[strtolower($key)] = $value;
+            $normalized[strtolower((string)$key)] = $value;
         }
         return $normalized;
     }

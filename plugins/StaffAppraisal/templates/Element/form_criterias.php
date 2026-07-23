@@ -36,7 +36,8 @@
 		<h3><?= __($label)?></h3>
 		<div class="clearfix">
 			<?php
-				echo $this->HtmlField->chosenSelectInput($chosenSelectInput, ['label' => __($chosenSelectInput['label']), 'multiple' => false, 'onchange' => "$('#reload').val('addField').click();"]);
+				//POCOR-9638
+				echo $this->HtmlField->chosenSelectInput($chosenSelectInput, ['label' => __($chosenSelectInput['label']), 'multiple' => false, 'onchange' => "if (typeof CustomForm !== 'undefined' && CustomForm.prepareAddField) { CustomForm.prepareAddField(); } $('#reload').val('addField').click();"]);
 			?>
 			<?=
 				$this->Form->input($sectionField, [

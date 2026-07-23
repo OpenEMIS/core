@@ -79,6 +79,8 @@ class ReportCardsTable extends ControllerActionTable
             ->notEmpty('principal_comments_required')
             ->notEmpty('homeroom_teacher_comments_required')
             ->notEmpty('teacher_comments_required')
+            ->notEmpty('regenerate_gpa') //POCOR-9629
+            ->notEmpty('regenerate_cumulative_gpa') //POCOR-9629
             ->add('start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
@@ -137,7 +139,9 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['homeroom_teacher_comments_required']['visible'] = false;
         $this->fields['teacher_comments_required']['visible'] = false;
         $this->fields['pdf_page_number']['visible'] = false;
-        $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'excel_template']);
+        $this->fields['overall_result']['visible'] = false;
+        $this->fields['regenerate_cumulative_gpa']['visible'] = false;
+        $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_grade_id', 'excel_template','regenerate_gpa']);
 
         // Start POCOR-5188
         $is_manual_exist = $this->getManualUrl('Administration','Templates','Report Cards');
@@ -224,6 +228,8 @@ class ReportCardsTable extends ControllerActionTable
         $this->field('homeroom_teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('overall_result', ['options' => $this->getSelectOptions('general.overallresult')]);
+        $this->field('regenerate_gpa', ['options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('regenerate_cumulative_gpa', ['options' => $this->getSelectOptions('general.yesno')]);
 
     }
 
@@ -315,7 +321,8 @@ class ReportCardsTable extends ControllerActionTable
     {
         $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'overall_result', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->field('regenerate_gpa', ['type' => 'select']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'overall_result', 'regenerate_gpa', 'regenerate_cumulative_gpa','principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -339,7 +346,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['code']['type'] = 'readonly';
        // $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'overall_result', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'overall_result', 'regenerate_gpa','regenerate_cumulative_gpa','principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
     }
 
     public function onUpdateFieldExcelTemplate(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -577,14 +584,21 @@ class ReportCardsTable extends ControllerActionTable
 
     public function addEditBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
+
         //POCOR-7860 :: Start
         $string = $data['ReportCards']['name'];
-        if (preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $string))
+        if (preg_match('/[\'\^£$%&*()}{@#~?><>,|=_+¬-]/u', $string))
         {
             // one or more of the 'special characters' found in $string
             $this->Alert->error('Templates.specialCharr', ['reset' => true]);
             $event->stopPropagation();
-            return $this->controller->redirect($this->url('edit'));;
+            //POCOR-9639: redirect back to the current action (add or edit) instead of hardcoding 'edit'
+            //Previously always redirected to /edit with no entity ID, causing SecurityException:
+            //"Wrong number of segments" in paramsDecode() when pass[1] is null on Edit page load
+            if ($entity->isNew()) {
+                return $this->controller->redirect($this->url('add'));
+            }
+            return $this->controller->redirect($this->url('edit'));
         }
         //POCOR-7860 :: End
         if (!empty($data[$this->getAlias()]['teacher_comments_required']) && !empty($data[$this->getAlias()]['education_grade_id'])) {
@@ -886,6 +900,26 @@ class ReportCardsTable extends ControllerActionTable
             $uniqu_array = [0];
         };
         return $uniqu_array;
+    }
+
+    //POCOR-9629
+    public function onGetRegenerateGpa(EventInterface $event, Entity $entity)
+    {
+        if ($entity->has('regenerate_gpa') && $entity->regenerate_gpa == 1) {
+            return __('Yes');
+        }
+
+        return __('No');
+    }
+
+    //POCOR-9629
+    public function onGetRegenerateCumulativeGpa(EventInterface $event, Entity $entity)
+    {
+        if ($entity->has('regenerate_cumulative_gpa') && $entity->regenerate_cumulative_gpa == 1) {
+            return __('Yes');
+        }
+
+        return __('No');
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)

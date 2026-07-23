@@ -34,6 +34,14 @@ class InstitutionTabBehavior extends Behavior
         if (!$extra) {
             return;
         }
+        //POCOR-9661
+        $toolbarButtons = $extra['toolbarButtons'] ?? new ArrayObject([]);
+        if (is_array($toolbarButtons)) {
+            $toolbarButtons = new ArrayObject($toolbarButtons);
+        } elseif (!($toolbarButtons instanceof ArrayObject)) {
+            $toolbarButtons = new ArrayObject([]);
+        }
+        //POCOR-9661
         $toolbarButtons = $extra['toolbarButtons'];
         $redirectURL = $extra['redirect'];
 
@@ -93,6 +101,9 @@ class InstitutionTabBehavior extends Behavior
     {
 
         $model = $this->_table;
+        if (!($toolbarButtons instanceof ArrayObject)) {
+            return $toolbarButtons;
+        }
         $institutionID = $this->getInstitutionID();
         $params = $model->getQueryString();
         if($model->getAlias() == 'FeederOutgoingInstitutions'){
@@ -132,8 +143,24 @@ class InstitutionTabBehavior extends Behavior
     public function fixAddDeleteRedirectURL()
     {
         $model = $this->_table;
-        $url = $model->url('index');
-        $queryString = $model->getQueryString();
+        // $url = $model->url('index');
+        // $queryString = $model->getQueryString();
+        //POCOR-9661
+        if (method_exists($model, 'url')) {
+            $url = $model->url('index');
+        } else {
+            $request = $model->request ?? null;
+            $url = [
+                'plugin' => $request ? $request->getParam('plugin') : null,
+                'controller' => $request ? $request->getParam('controller') : null,
+                'action' => $request ? $request->getParam('action') : 'index',
+            ];
+        }
+        $queryString = method_exists($model, 'getQueryString') ? $model->getQueryString() : [];
+        if (!is_array($queryString)) {
+            $queryString = [];
+        }
+        //POCOR-9661
         $institutionID = $this->getInstitutionID();
         if (isset($url[2])) {
             unset($url[2]);
@@ -141,7 +168,14 @@ class InstitutionTabBehavior extends Behavior
         $queryString['id'] = $institutionID;
         $queryString['institution_id'] = $institutionID;
         $url['0'] = 'index';
-        $url['1'] = $model->paramsEncode($queryString);
+        //POCOR-9661
+        if (method_exists($model, 'paramsEncode')) {
+            $url['1'] = $model->paramsEncode($queryString);
+        } else {
+            $url['?'] = $queryString;
+        }
+        //POCOR-9661
+        // $url['1'] = $model->paramsEncode($queryString);
         return $url;
     }
 
