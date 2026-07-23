@@ -73,39 +73,29 @@ class AttachmentsTable extends ControllerActionTable
                 ->notEmpty('student_attachment_type_id');
         }
         $validator
-        ->requirePresence('file_content', 'create')
-        ->notEmptyFile('file_content', __('File attachment is required.Check the file size'));
+        ->requirePresence('name', 'create');
         // POCOR-9463
+        $maxSize = 10 * 1024 * 1024; // 10 MB
         $validator->add('file_content', 'fileSize', [
-            'rule' => function ($value, $context) {
-
-            if (empty($value)) {
-                return true;
-            }
-            try {
-                // Uploaded file
+            'rule' => function ($value) use ($maxSize) {
+                if (empty($value)) {
+                    return true;
+                }
                 if ($value instanceof \Psr\Http\Message\UploadedFileInterface) {
-                    if ($value->getError() !== UPLOAD_ERR_OK) {
-                        return true;
-                    }
-                    return $value->getSize() <= 10 * 1024 * 1024;
+                    return $value->getError() !== UPLOAD_ERR_OK || $value->getSize() <= $maxSize;
                 }
+
                 if (is_array($value) && isset($value['size'])) {
-                    return $value['size'] <= 10 * 1024 * 1024;
+                    return $value['size'] <= $maxSize;
                 }
+
                 if (is_string($value)) {
-                    return strlen($value) <= 10 * 1024 * 1024;
+                    return strlen($value) <= $maxSize;
                 }
-
-            } catch (\Exception $e) {
                 return true;
-            }
-
-            return true; 
-                },
-                'message' => __('File Size must be <= 10MB')
-            ]);
-
+            },
+            'message' => __('File Size must be <= 10MB')
+        ]);
         return $validator;
     }
     
@@ -377,7 +367,7 @@ class AttachmentsTable extends ControllerActionTable
         $user_id = $this->getUserID();
         $user = $UserTable->get($user_id); // POCOR-7485
         $this->setFieldOrder([
-            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created'
+            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created', 'description'
         ]);
 
         if ($user->is_staff == 1) {
@@ -427,7 +417,7 @@ class AttachmentsTable extends ControllerActionTable
         $user_id = $this->getUserID();
         $user = $UserTable->get($user_id); // POCOR-7485
         $this->setFieldOrder([
-            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created'
+            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created','description'
         ]);
 
         if ($user->is_staff == 1) {
