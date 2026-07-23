@@ -309,13 +309,15 @@ function InstitutionsResultsController($q,
             }
 
             //POCOR-9608 -- Ignore empty / undefined values
-            if (
-                params.newValue === null ||
-                params.newValue === undefined ||
-                params.newValue === ''
-            ) {
-                return;
-            }
+            //POCOR-9744 START -- Allow clearing values by entering empty value
+            // if (
+            //     params.newValue === null ||
+            //     params.newValue === undefined ||
+            //     params.newValue === ''
+            // ) {
+            //     return;
+            // }
+            //POCOR-9744 END
 
             // Existing logic unchanged
             var index = params.colDef.field.replace(/period_(\d+)/, '$1');

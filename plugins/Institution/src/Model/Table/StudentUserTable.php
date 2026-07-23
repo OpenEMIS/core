@@ -240,8 +240,20 @@ class StudentUserTable extends ControllerActionTable
             ->add('identity_number', 'ruleCheckUniqueIdentityNumber', [
                 'rule' => ['checkUniqueIdentityNumber'],
                 'on' => 'create'
-            ])//POCOR-5924 ends
-        ;
+            ])
+            ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+            ->allowEmptyString('mobile_number')
+            ->add('mobile_number', 'numeric', [
+                'rule' => 'numeric',
+                'message' => 'Only numbers are allowed'
+            ]); //POCOR-9680
         return $validator;
     }
 
@@ -549,6 +561,8 @@ class StudentUserTable extends ControllerActionTable
                 return $this->controller->redirect($url);
             }
         }
+
+        //POCOR-9590: drift detection now lives in UserBehavior::beforeSave (1→2 on dirty general field). Removed older reset-to-0 rule which contradicted the 3-state model.
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -599,6 +613,7 @@ class StudentUserTable extends ControllerActionTable
     private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
+        $this->addSyncButton($entity, $extra);
         $toolbarButtons['back']['url']['action'] = 'Students';
 
         // Export execute permission.
@@ -608,6 +623,7 @@ class StudentUserTable extends ControllerActionTable
             }
         }
         $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
+        
         if ($status_can_be_changed) {
             $this->addPromoteButton($entity, $extra);
             $this->addTransferButton($entity, $extra);
@@ -663,6 +679,7 @@ class StudentUserTable extends ControllerActionTable
         ]);
 
     }
+
 
     //POCOR-9393
     public function studentsAfterSave(EventInterface $event)
@@ -1435,6 +1452,48 @@ class StudentUserTable extends ControllerActionTable
             //End
         }
     }
+
+    //POCOR-9590: Sync button on the student General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        //POCOR-9590: delegate to controller when it supports the method (StudentsController); fall back for InstitutionsController and others
+        $permission = method_exists($this->controller, 'syncUserPermission')
+            ? $this->controller->syncUserPermission()
+            : ['Institutions', 'Students', 'add'];
+        if (!$this->AccessControl->check($permission)) {
+            return;
+        }
+        //POCOR-9590: institution_students.id is a UUID — the security_user_id lives under student_id
+        $securityUserId = $entity->student_id ?? $entity->id;
+        if (!$this->isSyncEligibleUser($securityUserId)) {
+            return; //POCOR-9590: hide button for Local users (no preferred external identity, or no active source)
+        }
+
+        $toolbarButtons = $extra['toolbarButtons'];
+
+        //POCOR-9590: encode full context (user + institution + institution_student) so syncUser can redirect back to the same view
+        $encodedParams = $this->paramsEncode([
+            'user_id'                => $securityUserId,
+            'student_id'             => $securityUserId,
+            'institution_id'         => $this->getInstitutionID(),
+            'institution_student_id' => $entity->id,
+        ]);
+
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Student',
+            'controller' => 'Students',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
+    }
+
+    //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
 
     // needs to migrate
 

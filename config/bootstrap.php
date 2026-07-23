@@ -146,11 +146,13 @@ if (Configure::read('debug')) {
     Configure::write('Cache._cake_routes_.duration', '+2 seconds');
 }
 
+//POCOR-9565[START]
 /*
- * Set the default server timezone. Using UTC makes time calculations / conversions easier.
- * Check http://php.net/manual/en/timezones.php for list of valid timezone strings.
+ * Internal timezone: UTC. Display timezone (e.g. Asia/Singapore) is loaded from config_items
+ * via App\Utility\ApplicationTimezone (cached) into Configure::read('App.displayTimezone').
  */
-//date_default_timezone_set(Configure::read('App.defaultTimezone'));
+date_default_timezone_set(Configure::read('App.defaultTimezone') ?: 'UTC');
+//POCOR-9565[END]
 
 /*
  * Configure the mbstring extension to use the correct encoding.
@@ -216,6 +218,14 @@ unset($fullBaseUrl);
 
 Cache::setConfig(Configure::consume('Cache'));
 ConnectionManager::setConfig(Configure::consume('Datasources'));
+
+//POCOR-9719: unify PHP, CakePHP App.defaultTimezone, and every MySQL
+//connection's session timezone on config_items.time_zone. Shared source with
+//Laravel (api/app/Providers/AppServiceProvider::applySystemTimezone). Env
+//vars APP_TIMEZONE / APP_DEFAULT_TIMEZONE removed — cron and queue workers
+//don't inherit FPM env, the root cause of the Tonga +13h alert drift.
+\App\Utility\ApplicationTimezone::applyToSystem();
+
 TransportFactory::setConfig(Configure::consume('EmailTransport'));
 Mailer::setConfig(Configure::consume('Email'));
 Log::setConfig(Configure::consume('Log'));

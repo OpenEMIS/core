@@ -10,6 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Datasource\ConnectionManager; //POCOR-7023
+use Cake\Log\Log; //POCOR-9652
 
 class StudentAttendanceMarkedRecordsTable extends AppTable
 {
@@ -359,47 +360,101 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         $period = $options['attendance_period_id']; //POCOR-8383
         $subjectId = isset($options['subject_id']) ? (int)$options['subject_id'] : 0; //POCOR-9617
 
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: START class=' . $institutionClassId . ' date=' . $day . ' period=' . $period . ' subject=' . $subjectId);
+
         //POCOR-9617: start
         //POCOR-9617: raw SQL existence check — bypasses ORM, zero entity hydration, safe on large datasets
         $connection = ConnectionManager::get('default');
         $tableName = $this->getTable();
         $periodSql = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+
+        //POCOR-9652: start - enforce XOR rule: period-based → period=X,subject_id=0; subject-based → period=0,subject_id=X
+        $storedPeriod    = ($subjectId > 0) ? 0          : (int)$period;
+        $storedSubjectId = ($subjectId > 0) ? $subjectId : 0;
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: storedPeriod=' . $storedPeriod . ' storedSubjectId=' . $storedSubjectId);
+
+        // Toggle: if no_scheduled_class=1 already exists for this period/subject, delete it (undo)
+        $alreadySetSql = "SELECT 1 FROM `{$tableName}`
+            WHERE institution_class_id = {$institutionClassId}
+              AND education_grade_id = {$educationGradeId}
+              AND institution_id = {$institutionId}
+              AND academic_period_id = {$academicPeriodId}
+              AND `date` = '{$day}'
+              AND period = {$storedPeriod}
+              AND subject_id = {$storedSubjectId}
+              AND no_scheduled_class = 1
+            LIMIT 1";
+        $alreadySet = !empty($connection->execute($alreadySetSql)->fetchAll('assoc'));
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: alreadySet=' . ($alreadySet ? 'YES — will UNDO' : 'NO — will SET'));
+
+        if ($alreadySet) {
+            $deleted = $this->deleteAll([
+                'institution_id'       => $institutionId,
+                'academic_period_id'   => $academicPeriodId,
+                'institution_class_id' => $institutionClassId,
+                'education_grade_id'   => $educationGradeId,
+                'date'                 => $day,
+                'period'               => $storedPeriod,
+                'subject_id'           => $storedSubjectId,
+                'no_scheduled_class'   => 1,
+            ]);
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: UNDO complete — deleted=' . $deleted . ' rows');
+            return $this->find()->where([
+                $this->aliasField('institution_class_id') => $institutionClassId,
+                $this->aliasField('institution_id')       => $institutionId,
+                $this->aliasField('academic_period_id')   => $academicPeriodId,
+                $this->aliasField('date')                 => $day,
+                $this->aliasField('period')               => $storedPeriod,
+                $this->aliasField('subject_id')           => $storedSubjectId,
+                $this->aliasField('no_scheduled_class')   => 1,
+            ])->limit(1); //POCOR-9652: row was just deleted, so this returns 0 rows → total=0 → JS clears state
+        }
+        //POCOR-9652: end
+
         $existsSql = "SELECT 1 FROM `{$tableName}`
             WHERE institution_class_id = {$institutionClassId}
               AND education_grade_id = {$educationGradeId}
               AND institution_id = {$institutionId}
               AND academic_period_id = {$academicPeriodId}
               AND `date` = '{$day}'
-              AND {$periodSql}
+              AND period = {$storedPeriod}
+              AND subject_id = {$storedSubjectId}
             LIMIT 1";
         $existsResult = $connection->execute($existsSql)->fetchAll('assoc');
         $existsCount = count($existsResult);
 
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: markerRowExists=' . $existsCount);
+
         if ($existsCount > 0) {
+            //POCOR-9652: use storedPeriod/storedSubjectId so subject-based rows store period=0,subject_id=X
             $updateQuery = $this->query();
             $updateQuery->update()
-                ->set(['period' => $period, 'subject_id' => 0, 'no_scheduled_class' => 1])
+                ->set(['period' => $storedPeriod, 'subject_id' => $storedSubjectId, 'no_scheduled_class' => 1])
                 ->where([
                     $this->aliasField('institution_class_id') => $institutionClassId,
-                    $this->aliasField('education_grade_id') => $educationGradeId,
-                    $this->aliasField('institution_id') => $institutionId,
-                    $this->aliasField('academic_period_id') => $academicPeriodId,
-                    $this->aliasField('date') => $day,
-                    $this->aliasField('period') => $period //POCOR-8383
+                    $this->aliasField('education_grade_id')   => $educationGradeId,
+                    $this->aliasField('institution_id')       => $institutionId,
+                    $this->aliasField('academic_period_id')   => $academicPeriodId,
+                    $this->aliasField('date')                 => $day,
+                    $this->aliasField('period')               => $storedPeriod,
+                    $this->aliasField('subject_id')           => $storedSubjectId,
                 ])
                 ->execute();
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: SET via UPDATE');
         } else {
+            //POCOR-9652: use storedPeriod/storedSubjectId so subject-based rows store period=0,subject_id=X
             $newRecord = $this->newEntity([
                 'institution_class_id' => $institutionClassId,
-                'education_grade_id' => $educationGradeId,
-                'institution_id' => $institutionId,
-                'academic_period_id' => $academicPeriodId,
-                'date' => $day,
-                'period' => $period,
-                'subject_id' => 0,
-                'no_scheduled_class' => 1
+                'education_grade_id'   => $educationGradeId,
+                'institution_id'       => $institutionId,
+                'academic_period_id'   => $academicPeriodId,
+                'date'                 => $day,
+                'period'               => $storedPeriod,
+                'subject_id'           => $storedSubjectId,
+                'no_scheduled_class'   => 1,
             ]);
             $this->save($newRecord);
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: SET via INSERT');
         }
 
         $InstitutionStudentAbsenceDetails = TableRegistry::getTableLocator()->get('Institution.InstitutionStudentAbsenceDetails');
@@ -413,19 +468,21 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
         if ($subjectId > 0) {
             $absenceConditions[$InstitutionStudentAbsenceDetails->aliasField('subject_id')] = $subjectId;
         }
-        $InstitutionStudentAbsenceDetails->deleteAll($absenceConditions);
+        $deleted = $InstitutionStudentAbsenceDetails->deleteAll($absenceConditions);
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: cleared absence details=' . $deleted . ' rows');
         //POCOR-9617: end
 
         //POCOR-7143[START]
         //POCOR-9617: raw SQL existence check for POCOR-7143 block — bypasses ORM memory overhead
-        $periodSql7143 = ($period === null) ? 'period IS NULL' : 'period = ' . (int)$period;
+        //POCOR-9652: use storedPeriod so subject-based rows (period=0) are found correctly
         $markedCheckSql = "SELECT 1 FROM `{$tableName}`
             WHERE institution_id = {$institutionId}
               AND academic_period_id = {$academicPeriodId}
               AND institution_class_id = {$institutionClassId}
               AND education_grade_id = {$educationGradeId}
               AND `date` = '{$day}'
-              AND {$periodSql7143}
+              AND period = {$storedPeriod}
+              AND subject_id = {$storedSubjectId}
             LIMIT 1";
         $markedCheckResult = $connection->execute($markedCheckSql)->fetchAll('assoc');
         if (!empty($markedCheckResult)) {
@@ -443,23 +500,28 @@ class StudentAttendanceMarkedRecordsTable extends AppTable
                     $ClassAttendanceRecords->aliasField('month') => $month
                 ]
             );
+            // Log::debug('[TEMP-LOG] findNoScheduledClass: updated ClassAttendanceRecords day=' . $daydata);
         }
         //POCOR-7143[END]
 
         //POCOR-9617: return a fresh query that confirms the saved record exists,
         //so the restful API returns total > 0 and the JS sets isMarked = true
+        //POCOR-9652: use storedPeriod/storedSubjectId so subject-based rows are found correctly
         $query = $this->find()->where([
             $this->aliasField('institution_class_id') => $institutionClassId,
-            $this->aliasField('education_grade_id') => $educationGradeId,
-            $this->aliasField('institution_id') => $institutionId,
-            $this->aliasField('academic_period_id') => $academicPeriodId,
-            $this->aliasField('date') => $day,
-            $this->aliasField('period IS') => $period,
-            $this->aliasField('no_scheduled_class') => 1,
+            $this->aliasField('education_grade_id')   => $educationGradeId,
+            $this->aliasField('institution_id')       => $institutionId,
+            $this->aliasField('academic_period_id')   => $academicPeriodId,
+            $this->aliasField('date')                 => $day,
+            $this->aliasField('period')               => $storedPeriod,
+            $this->aliasField('subject_id')           => $storedSubjectId,
+            $this->aliasField('no_scheduled_class')   => 1,
         ])->limit(1);
+        // Log::debug('[TEMP-LOG] findNoScheduledClass: END — returning confirmation query');
         //POCOR-9617: end
 
         return $query;
     }
     /*POCOR-6021 ends*/
+
 }

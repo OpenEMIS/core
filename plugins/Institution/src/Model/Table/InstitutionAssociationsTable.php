@@ -140,6 +140,29 @@ class InstitutionAssociationsTable extends ControllerActionTable
 
     public function deleteAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
+        // RemoveBehavior redirects with url('index','QUERY'); mergeRequestParams strips `pass`, so the
+        // encoded institution segment is lost and only ?institution_id= remains. Rebuild index URL like
+        // /Associations/index/<encoded> (same shape as add/index after save).
+        if (
+            $entity !== null
+            && $entity->has('institution_id')
+            && $this->request->getParam('plugin') === 'Institution'
+            && $this->request->getParam('controller') === 'Institutions'
+            && $this->request->getParam('action') === 'Associations'
+        ) {
+            $institutionId = $entity->get('institution_id');
+            $extra['redirect'] = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Associations',
+                'index',
+                $this->paramsEncode([
+                    'id' => $institutionId,
+                    'institution_id' => $institutionId,
+                ]),
+            ];
+        }
+
         if(!empty($this->controllerAction) && ($this->controllerAction == 'Associations')) {
             // Delete Students related to associations
             $existingStudents = $this->AssociationStudent
