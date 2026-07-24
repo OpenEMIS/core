@@ -7387,7 +7387,7 @@ class InstitutionReportCardsTable extends AppTable
     
     //POCOR-9739
     public function onExcelTemplateInitialiseStudentBehaviourTotalStudent(EventInterface $event,
-    array $params,ArrayObject $extra) 
+    array $params,ArrayObject $extra)
     {
         if (empty($params['institution_id'])) {
             return [];
@@ -7396,14 +7396,15 @@ class InstitutionReportCardsTable extends AppTable
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $SecurityUsers = TableRegistry::getTableLocator()->get('Security.Users');
 
-        $data = $InstitutionStudents->find()
+        $query = $InstitutionStudents->find();
+
+        $data = $query
             ->select([
-                'id' => $InstitutionStudents->aliasField('id'),
-                'male_count' => $InstitutionStudents->find()->func()->sum(
-                    'CASE WHEN Users.gender_id = 1 THEN 1 ELSE 0 END'
+                'male_count' => $query->newExpr(
+                    'SUM(CASE WHEN Users.gender_id = 1 THEN 1 ELSE 0 END)'
                 ),
-                'female_count' => $InstitutionStudents->find()->func()->sum(
-                    'CASE WHEN Users.gender_id = 2 THEN 1 ELSE 0 END'
+                'female_count' => $query->newExpr(
+                    'SUM(CASE WHEN Users.gender_id = 2 THEN 1 ELSE 0 END)'
                 )
             ])
             ->leftJoin(
@@ -7414,7 +7415,9 @@ class InstitutionReportCardsTable extends AppTable
                 ]
             )
             ->matching('StudentStatuses', function ($q) {
-                return $q->where(['StudentStatuses.code' => 'CURRENT']);
+                return $q->where([
+                    'StudentStatuses.code' => 'CURRENT'
+                ]);
             })
             ->where([
                 $InstitutionStudents->aliasField('institution_id') => $params['institution_id'],
@@ -7422,12 +7425,12 @@ class InstitutionReportCardsTable extends AppTable
             ])
             ->enableHydration(false)
             ->first();
-        $entity = [
+
+        return [
             'male_count' => $data['male_count'] ?? 0,
             'female_count' => $data['female_count'] ?? 0,
             'year' => date('Y'),
             'month' => date('M')
         ];
-        return $entity;
     }
 }
