@@ -76,18 +76,27 @@ class LoginController extends Controller
             $password = $request->password;
             //POCOR-9745 Check encryption type
             if ($request->has('enc') && !empty($request->enc)) {
+                $privateKey = config('services.rsa_private_key');
+                $key = openssl_pkey_get_private($privateKey);
+                if (!$key) {
+                    return $this->sendErrorResponse('Invalid private key.');
+                }
                 switch ($request->enc) {
                     case 'RSA-OAEP-256':
-                        $privateKey = file_get_contents(public_path('private.pem'));
-                        openssl_private_decrypt(
+                        $result = openssl_private_decrypt(
                             base64_decode($password),
                             $decryptedPassword,
-                            $privateKey,
+                            $key,
                             OPENSSL_PKCS1_OAEP_PADDING
                         );
+                        openssl_free_key($key);
+                        if (!$result) {
+                            return $this->sendErrorResponse('Failed to decrypt password.');
+                        }
                         $password = $decryptedPassword;
                         break;
                     default:
+                        openssl_free_key($key);
                         return $this->sendErrorResponse('Unsupported encryption type.');
                 }
             }
