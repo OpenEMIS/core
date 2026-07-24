@@ -174,7 +174,7 @@ class StudentAssessmentsTable extends ControllerActionTable
             ])->toArray(); 
             $sumMarks = [];
             foreach ($totalMarks as $result) {
-                $assessmentItemResults = TableRegistry::getTableLocator()->get('assessment_item_results');
+                $assessmentItemResults = TableRegistry::getTableLocator()->get('Assessment.AssessmentItemResults'); //POCOR-9637
                 $assessmentItemResultsData = $assessmentItemResults->find()
                         ->select([
                             $assessmentItemResults->aliasField('marks')

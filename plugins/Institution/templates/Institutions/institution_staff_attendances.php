@@ -15,7 +15,15 @@ $this->start('toolbar');
 </button>
 <?php endif; ?>
 <?php if ($_edit) : ?>
-    <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="$ctrl.action == 'view' && !$ctrl.schoolClosed && $ctrl.selectedDay != -1" ng-click="$ctrl.onEditClick()">
+    <?php //POCOR-9700: keep Edit visible but disabled when no shift is selected (multishift schools). ?>
+    <?php //Use uib-tooltip (reactive) instead of Bootstrap data-toggle=tooltip so the hint switches when state changes. ?>
+    <button class="btn btn-xs btn-default" data-placement="bottom"
+            aria-label="<?= __('Edit') ?>"
+            uib-tooltip="{{(!$ctrl.selectedShift || $ctrl.selectedShift == -1) ? '<?= __('Select a shift to enable editing') ?>' : '<?= __('Edit') ?>'}}"
+            tooltip-placement="bottom" tooltip-append-to-body="true"
+            ng-show="$ctrl.action == 'view' && !$ctrl.schoolClosed && $ctrl.selectedDay != -1"
+            ng-disabled="!$ctrl.selectedShift || $ctrl.selectedShift == -1"
+            ng-click="$ctrl.onEditClick()">
         <i class="fa kd-edit"></i>
     </button>
 
@@ -146,6 +154,46 @@ $institutionId = $paramsQuery['institution_id'];
     #institution-staff-attendances-table .sg-theme .time-view {
         padding: 4px;
         font-size: 13px;
+    }
+
+    /* POCOR-9700: shrink-wrap the input-group so the addon hugs the input AND the two stacked
+       cells (Time In / Time Out) sit on separate rows. Bootstrap 3's default display:table
+       width:100% stretched inside the wide ag-Grid cell and left a gap; inline-flex closed the
+       gap but put the two cells side by side and truncated Time Out. Block-level flex with
+       fit-content keeps both: block layout = vertical stacking, fit-content = shrink-wrap. */
+    #institution-staff-attendances-table .input-group.time {
+        display: flex;
+        width: fit-content;
+        gap: 4px;
+    }
+    /* POCOR-9700: matching 4px vertical breathing room between Time In and Time Out rows —
+       otherwise the two blue addons abut and read as one tall block. Adjacent-sibling selector
+       so we never add margin before the first row or after the last. */
+    #institution-staff-attendances-table .input-group.time + .input-group.time {
+        margin-top: 4px;
+    }
+    /* POCOR-9700: when the wrapper became display:flex, the addon (a flex item) stretches to
+       match the input's height, but its Bootstrap default vertical-align:middle no longer
+       applies (vertical-align only honours inline / table-cell). The glyph then sits at the
+       top, per its line-height:1. Making the addon a centering flex container itself fixes the
+       icon's vertical alignment inside the stretched blue box. */
+    #institution-staff-attendances-table .input-group.time .input-group-addon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    /* POCOR-9700: native HTML5 type=time edit-cell input sized so 24h/12h text fits comfortably. */
+    #institution-staff-attendances-table .timPikr {
+        width: 100px;
+        padding-right: 8px;
+        text-align: center;
+    }
+    /* POCOR-9700: hide the native browser clock indicator — the blue glyphicon addon is the
+       single clickable affordance (clicking the addon focuses the input so the spinner / keyboard
+       still works). Without this rule Chrome rendered TWO clocks side by side. */
+    #institution-staff-attendances-table .timPikr::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
     }
 
     #institution-staff-attendances-table .sg-theme .time-view > i {
