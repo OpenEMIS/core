@@ -7,6 +7,7 @@
 - Bug Fixed: Institutions > Staff > Add Page : Error message says "Please enter valid Identity number"
 - Bug Fixed: Report generation issue in age outliers and validation report.
 - Bug Fixed: Administration>System Configuration>Themes: OpenEMIS Registration should show OpenEMIS Admissions
+- Bug Fixed: Reports> Institutions : Unable to download report due to Error. The Principal is not able to download despite having the right permissions in Administration.
 
 ### [5.15.0] - 2026-07-06
 - Bug Fixed: Core>Administration>System Setup>Attendances>Status: Should be able to modify the Mark Type without encountering any errors.
