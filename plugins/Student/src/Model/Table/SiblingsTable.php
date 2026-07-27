@@ -39,19 +39,17 @@ class SiblingsTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
-        // Run after InstitutionTabBehavior (priority 1001) which overwrites view URLs
         $events['Model.custom.onUpdateActionButtons'] = [
             'callable' => 'onUpdateActionButtonsAfterTab',
-            'priority' => 1102
         ];
-        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1200];
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
         return $events;
     }
 
     /**
      * Ensure student / institution context is present for tabs and back button.
      * View URL must keep student_guardians.id for the record, but student_id must
-     * remain the ORIGINAL student (not the sibling), or other tabs 404.
+     * remain the ORIGINAL student (not the sibling)
      */
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
@@ -184,33 +182,31 @@ class SiblingsTable extends ControllerActionTable
 
     /**
      * Batch-load latest Institution.Students rows (with EducationGrades + Institutions)
-     * for the given sibling student_ids. Keeps the highest academic_period_id per student.
      */
     private function loadSiblingEnrolments(array $siblingIds)
     {
         $siblingIds = array_values(array_unique(array_filter(array_map('intval', $siblingIds))));
-        $loaded = array_map('intval', $this->siblingEnrolmentsLoaded);
-        $toLoad = array_values(array_diff($siblingIds, $loaded));
-        if (empty($toLoad)) {
+        $studentloaded = array_map('intval', $this->siblingEnrolmentsLoaded);
+        $studentToLoad = array_values(array_diff($siblingIds, $studentloaded));
+        if (empty($studentToLoad)) {
             return;
         }
 
         $studentTable = TableRegistry::getTableLocator()->get('Institution.Students');
         $records = $studentTable->find()
             ->contain(['EducationGrades', 'Institutions'])
-            ->where(['Students.student_id IN' => $toLoad])
+            ->where(['Students.student_id IN' => $studentToLoad])
             ->order(['Students.academic_period_id' => 'DESC'])
             ->all();
 
         foreach ($records as $record) {
             $sid = (int)$record->student_id;
-            // First row wins (DESC academic_period_id = latest enrolment)
             if (!isset($this->siblingEnrolments[$sid])) {
                 $this->siblingEnrolments[$sid] = $record;
             }
         }
 
-        $this->siblingEnrolmentsLoaded = array_values(array_unique(array_merge($loaded, $toLoad)));
+        $this->siblingEnrolmentsLoaded = array_values(array_unique(array_merge($studentloaded, $studentToLoad)));
     }
 
     private function getSiblingEnrolment(Entity $entity)
@@ -407,7 +403,6 @@ class SiblingsTable extends ControllerActionTable
     public function viewAfterAction(EventInterface $event, $entity, ArrayObject $extra)
     {
         $this->setupTabElements($entity);
-
         $this->field('photo_content', ['visible' => true, 'type' => 'image']);
         $this->field('openemis_no');
         $this->field('student_name');
