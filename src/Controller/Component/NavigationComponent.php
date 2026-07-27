@@ -1377,6 +1377,7 @@ class NavigationComponent extends Component
                     'Institutions.StudentUser.pull',
                     'StudentComments',
                     'Students.StudentTransport',
+                    'Students.Siblings',
                     'Students.Demographic',
                     'Guardians.Accounts',
                     'Guardians.Demographic',
