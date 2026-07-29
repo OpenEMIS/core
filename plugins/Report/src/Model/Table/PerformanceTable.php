@@ -555,9 +555,23 @@ class PerformanceTable extends AppTable
         $userId = $requestData->user_id;
         $academicTerm = $requestData->academic_term;//POCOR-6848
         $institutionIds = [];
+        $selectedArea = $requestData->area_education_id;
         $conditions = [];
-        if ($areaId > 0) {
+        /*if ($areaId > 0) {
             $conditions[$this->aliasField('area_id')] = $areaId;
+        }*/
+        //POCOR-9743
+        if ($areaId > 0 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
+            }//POCOR-6944 code ends
+               // $conditions['Institutions.area_id IN'] = $allselectedAreas;
+                $conditions[$this->aliasField('area_id IN')] = $allselectedAreas;
         }
         if ($gradeId > 0) {
             $conditions[$this->aliasField('education_grade_id')] = $gradeId;
@@ -576,9 +590,11 @@ class PerformanceTable extends AppTable
             }
         }
         
-        if ($assessmentPeriodId > 0) {
-            $conditions[$this->aliasField('assessment_period_id IN')] = $assessmentPeriodId['_ids']; //POCOR-9575
-        }
+       
+
+        if (!empty($assessmentPeriodId->_ids)) {
+            $conditions[$this->aliasField('assessment_period_id IN')] = $assessmentPeriodId->_ids;
+        } //POCOR-9743
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
@@ -910,6 +926,20 @@ class PerformanceTable extends AppTable
         }
 
         return $attr;
+    }
+
+    public function getChildren($id, $idArray) {
+        $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
+        $result = $Areas->find()
+                           ->where([
+                               $Areas->aliasField('parent_id') => $id
+                            ])
+                             ->toArray();
+       foreach ($result as $key => $value) {
+            $idArray[] = $value['id'];
+           $idArray = $this->getChildren($value['id'], $idArray);
+        }
+        return $idArray;
     }
 
 }

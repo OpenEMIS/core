@@ -52,10 +52,36 @@ class TextbooksTable extends AppTable  {
 
     public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
-        $attr['onChangeReload'] = true;
+        if ($action == 'add') {
+            $attr['options'] = $this->controller->getFeatureOptions($this->getAlias());
+            $attr['onChangeReload'] = true;
+            //POCOR-9743
+            if (!isset($this->request->getData($this->getAlias())['feature'])) {
+                $options = $attr['options'];
+                reset($options);
+                $defaultFeatureValue = key($options);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+            }
+        }
 
         return $attr;
+    }
+
+    /**
+     * Resolve selected report feature from request data or entity.
+     */
+    private function getSelectedFeature(?Entity $entity = null): ?string
+    {
+        $requestData = $this->request->getData($this->getAlias());
+        if (!empty($requestData['feature'])) {
+            return $requestData['feature'];
+        }
+
+        if ($entity !== null && $entity->has('feature') && !empty($entity->feature)) {
+            return $entity->feature;
+        }
+
+        return null;
     }
     function array_flatten($array) {
         if (!is_array($array)) {
@@ -97,70 +123,61 @@ class TextbooksTable extends AppTable  {
     }
     public function onUpdateFieldAreaLevelId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-            if (in_array($feature, ['Report.InstitutionTextbooks'
-            ])) {
+        $feature = $this->getSelectedFeature($attr['entity'] ?? null);
+        if ($feature && in_array($feature, ['Report.InstitutionTextbooks'])) {
+            if ($action == 'add') {
                 $Areas = TableRegistry::getTableLocator()->get('Area.AreaLevels');
-                $entity = $attr['entity'];
+                $areaOptions = $Areas
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                    ->order([$Areas->aliasField('level')]);
 
-                if ($action == 'add') {
-                    $areaOptions = $Areas
-                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
-                        ->order([$Areas->aliasField('level')]);
-
-                    $attr['type'] = 'chosenSelect';
-                    $attr['attr']['multiple'] = false;
-                    $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
-                    $attr['onChangeReload'] = true;
-                } else {
-                    $attr['type'] = 'hidden';
-                }
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['select'] = true;
+                $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
+                $attr['onChangeReload'] = true;
+            } else {
+                $attr['type'] = 'hidden';
             }
-            return $attr;
         }
+
+        return $attr;
     }
 
     public function onUpdateFieldAreaId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-
-            if (in_array($feature, ['Report.InstitutionTextbooks'
-            ])) {
+        $feature = $this->getSelectedFeature($attr['entity'] ?? null);
+        if ($feature && in_array($feature, ['Report.InstitutionTextbooks'])) {
+            if ($action == 'add') {
                 $Areas = TableRegistry::getTableLocator()->get('Area.Areas');
-                $entity = $attr['entity'];
+                $areaOptions = $Areas
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                    ->order([$Areas->aliasField('order')]);
 
-                if ($action == 'add') {
-                    $areaOptions = $Areas
-                        ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                        ->order([$Areas->aliasField('order')]);
-
-                    $attr['type'] = 'chosenSelect';
-                    $attr['attr']['multiple'] = false;
-                    $attr['select'] = true;
-                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
-                    $attr['onChangeReload'] = true;
-                } else {
-                    $attr['type'] = 'hidden';
-                }
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['select'] = true;
+                $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
+                $attr['onChangeReload'] = true;
+            } else {
+                $attr['type'] = 'hidden';
             }
         }
+
         return $attr;
     }
 
     public function onUpdateFieldInstitutionId(EventInterface $event, array $attr, $action, ServerRequest $request)
-    {   
-        $areaId = $request->getData($this->getAlias())['area_id'];
-        $institutionTypeId = $request->getData($this->getAlias())['institution_type_id'];
+    {
+        $requestData = $request->getData($this->getAlias()) ?? [];
+        $areaId = $requestData['area_id'] ?? null;
+        $institutionTypeId = $requestData['institution_type_id'] ?? null;
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        if (isset($this->request->getData($this->getAlias())['feature'])) {
-            $feature = $this->request->getData($this->getAlias())['feature'];
-            if (in_array($feature, ['Report.InstitutionTextbooks'
-            ])) {
+        $feature = $this->getSelectedFeature($attr['entity'] ?? null);
+
+        if ($feature && in_array($feature, ['Report.InstitutionTextbooks'])) {
                 $institutionList = [];
-                if (array_key_exists('institution_type_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['institution_type_id'])) {
+                if (array_key_exists('institution_type_id', $requestData) && !empty($requestData['institution_type_id'])) {
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -182,7 +199,7 @@ class TextbooksTable extends AppTable  {
                     }
 
                     $institutionList = $institutionQuery->toArray();
-                } elseif (!$institutionTypeId && array_key_exists('area_id', $request->getData($this->getAlias())) && !empty($request->getData($this->getAlias())['area_id']) && $areaId != -1) {
+                } elseif (!$institutionTypeId && array_key_exists('area_id', $requestData) && !empty($requestData['area_id']) && $areaId != -1) {
                     $institutionQuery = $InstitutionsTable
                         ->find('list', [
                             'keyField' => 'id',
@@ -244,36 +261,38 @@ class TextbooksTable extends AppTable  {
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }
+
                 return $attr;
-            }
         }
+
+        return $attr;
     }
 
     /*POCOR-6176 Starts function for ordering required order of fields*/
     public function addAfterAction(EventInterface $event, Entity $entity)
     {
-        if ($entity->has('feature')) {
-            $feature = $entity->feature;
-
-            $fieldsOrder = ['feature'];
-            switch ($feature) {
-                case 'Report.InstitutionTextbooks':
-                    $fieldsOrder[] = 'academic_period_id';
-                    $fieldsOrder[] = 'area_level_id';
-                    $fieldsOrder[] = 'area_id';
-                    $fieldsOrder[] = 'institution_id';
-                    $fieldsOrder[] = 'format';
-                    break;
-                default:
-                    break;
-            }
-            $this->ControllerAction->field('area_id', [
-                    'select' => false,
-                    'attr' => ['label'=>'Area Education'],
-                    'type' => 'hidden'
-                ]);
-            $this->ControllerAction->setFieldOrder($fieldsOrder);
+        $feature = $this->getSelectedFeature($entity);
+        if (!$feature) {
+            return;
         }
+
+        $fieldsOrder = ['feature'];
+        switch ($feature) {
+            case 'Report.InstitutionTextbooks':
+                $fieldsOrder[] = 'academic_period_id';
+                $fieldsOrder[] = 'area_level_id';
+                $fieldsOrder[] = 'area_id';
+                $fieldsOrder[] = 'institution_id';
+                $fieldsOrder[] = 'format';
+                $this->ControllerAction->field('area_id', [
+                    'select' => false,
+                    'attr' => ['label' => __('Area Education')],
+                ]);
+                break;
+            default:
+                break;
+        }
+        $this->ControllerAction->setFieldOrder($fieldsOrder);
     }
     /*POCOR-6176 Ends*/
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
