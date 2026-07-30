@@ -73,7 +73,8 @@ class WorkflowStepsTable extends AppTable {
 			->requirePresence('is_editable')
 			->requirePresence('is_removable')
 			->requirePresence('is_system_defined')
-			->requirePresence('workflow_model_id')
+			->requirePresence('workflow_model_id', 'create')
+    		->notEmptyString('workflow_model_id', __('Please select a workflow model.'))
 			->requirePresence('workflow_id');
 	}
 
