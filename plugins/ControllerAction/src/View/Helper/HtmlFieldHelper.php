@@ -672,8 +672,33 @@ class HtmlFieldHelper extends Helper
     public function date($action, Entity $data, $attr, $options = [])
     {
         $value = '';
+        //POCOR-9765[START]
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker has no ordinal token; PHP "S" (st/nd/rd/th) must be stripped
+        // otherwise format "dS F Y" becomes "ddS MM yyyy" and shows "31S August 2017"
+        $phpToDatepickerFormat = [
+            'd' => 'dd',
+            'j' => 'd',
+            'D' => 'D',
+            'l' => 'DD',
+            'm' => 'mm',
+            'n' => 'm',
+            'M' => 'M',
+            'F' => 'MM',
+            'y' => 'yy',
+            'Y' => 'yyyy',
+            'S' => '',
+        ];
+        $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
+            return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
+        }, $systemDateFormat);
+        $datepickerFormat = preg_replace('/\s+/', ' ', trim($datepickerFormat));
+        // Value/endDate must match what datepicker writes (no ordinals)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+        //POCOR-9765[END]
         $_options = [
-            'format' => 'dd-mm-yyyy',
+            'format' => $datepickerFormat, //POCOR-9765
             'todayBtn' => 'linked',
             'orientation' => 'auto',
             'autoclose' => true,
@@ -687,7 +712,7 @@ class HtmlFieldHelper extends Helper
             $schema = $table->getSchema();
             $columnAttr = $schema->getColumn($field);
             if ($columnAttr['null'] == true) {
-                $defaultDate = date('d-m-Y');
+                $defaultDate = date($editableDateFormat); //POCOR-9765
             }
         }
 
@@ -725,21 +750,22 @@ class HtmlFieldHelper extends Helper
             }
 
             $attr['date_options'] = array_merge($_options, $attr['date_options']);
+            // Keep displayed value in the same format as datepicker output (no PHP ordinals)
             if (!isset($attr['value'])) {
                 if (!empty($value)) {
                     if (is_object($value)) {
-                        $attr['value'] = $value->format('d-m-Y');
+                        $attr['value'] = $value->format($editableDateFormat); //POCOR-9765
                     } else {
-                        $attr['value'] = date('d-m-Y', strtotime($value));
+                        $attr['value'] = date($editableDateFormat, strtotime($value)); //POCOR-9765
                     }
                 } elseif ($attr['default_date']) {
-                    // $attr['value'] = date('d-m-Y');
+                    // $attr['value'] = date($editableDateFormat);
                 }
             } else {
                 if (is_object($attr['value'])) {
-                    $attr['value'] = $attr['value']->format('d-m-Y');
+                    $attr['value'] = $attr['value']->format($editableDateFormat); //POCOR-9765
                 } elseif (!isset($attr['special_value'])) {
-                    $attr['value'] = date('d-m-Y', strtotime($attr['value']));
+                    $attr['value'] = date($editableDateFormat, strtotime($attr['value'])); //POCOR-9765
                 }
                 // else $attr['value'] will be what was set before calling this function when $attr['special_value'] was set to true.
                 // this is added when datepicker input is being used with angularJs scope
