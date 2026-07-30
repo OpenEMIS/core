@@ -564,7 +564,8 @@ class PerformanceTable extends AppTable
         if ($areaId > 0 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
-            $selectedArea1[]= $selectedArea;
+            $selectedArea1 = [];
+            $selectedArea1[] = $selectedArea;
             if(!empty($allgetArea)){
                 $allselectedAreas = array_merge($selectedArea1, $allgetArea);
             }else{

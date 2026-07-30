@@ -57,10 +57,13 @@ class TextbooksTable extends AppTable  {
             $attr['onChangeReload'] = true;
             //POCOR-9743
             if (!isset($this->request->getData($this->getAlias())['feature'])) {
-                $options = $attr['options'];
-                reset($options);
-                $defaultFeatureValue = key($options);
-                $this->request = $this->request->withData($this->getAlias() . '.feature', $defaultFeatureValue);
+                $selectedFeature = $this->getSelectedFeature($attr['entity'] ?? null);
+                if ($selectedFeature === null) {
+                    $options = $attr['options'];
+                    reset($options);
+                    $selectedFeature = key($options);
+                }
+                $this->request = $this->request->withData($this->getAlias() . '.feature', $selectedFeature);
             }
         }
 
