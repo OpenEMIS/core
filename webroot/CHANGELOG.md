@@ -1,3 +1,14 @@
+### 5.15.1 - 2026-07-21
+- Bug Fixed: Core>Administration>Data Management>Copy : Copying of Institution Programmes, Grades and Subjects is not successful in gy-moe environment
+- Bug Fixed: Migration script to fix the query_sql
+- Bug Fixed: Admissions > Login : Currently when navigating to Admissions users see Administrator credentials in the API payload
+- Bug Fixed: Institution> Attendance> Staff : The staff attendance system is not allowing attendance records to be saved unless AM or PM is manually entered.
+- Bug Fixed: Directory > Users > Edit Page : Date field does not allow user to select other dates outside of today's date
+- Bug Fixed: Institutions > Staff > Add Page : Error message says "Please enter valid Identity number"
+- Bug Fixed: Report generation issue in age outliers and validation report.
+- Bug Fixed: Administration>System Configuration>Themes: OpenEMIS Registration should show OpenEMIS Admissions
+- Bug Fixed: Reports> Institutions : Unable to download report due to Error. The Principal is not able to download despite having the right permissions in Administration.
+
 ### [5.15.0] - 2026-07-06
 - Bug Fixed: Core>Administration>System Setup>Attendances>Status: Should be able to modify the Mark Type without encountering any errors.
 - Implemented: Develop configuration for next programme
