@@ -151,6 +151,7 @@ class TextbooksTable extends AppTable  {
                     $attr['select'] = true;
                     $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
                     $attr['onChangeReload'] = true;
+                    $attr['attr']['required'] = true;
                 } else {
                     $attr['type'] = 'hidden';
                 }
@@ -179,6 +180,7 @@ class TextbooksTable extends AppTable  {
                     $attr['select'] = true;
                     $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
                     $attr['onChangeReload'] = true;
+                    $attr['attr']['required'] = true;
                 } else {
                     $attr['type'] = 'hidden';
                 }
