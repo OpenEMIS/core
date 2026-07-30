@@ -94,7 +94,14 @@ class AuthenticationBehavior extends Behavior
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
-        $this->model->request->getQuery['type_value'] = $typeOptions[$selectedType];
+        //POCOR-9733: previous line (`$this->model->request->getQuery['type_value'] = ...`) treated the
+        //getQuery() method as an array property and never actually updated the request's query params.
+        //As a result checkController() below always saw an empty type_value and defaulted back to
+        //'Authentication', so it never redirected away when a different type was picked in the dropdown -
+        //the page kept rendering this table's hardcoded "type = Authentication" listing regardless of selection.
+        $queryParams = $this->model->request->getQueryParams();
+        $queryParams['type_value'] = $typeOptions[$selectedType];
+        $this->model->request = $this->model->request->withQueryParams($queryParams);
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
         $authenticationTypeOptions = [];
