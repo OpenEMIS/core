@@ -445,7 +445,6 @@ class MealsTable extends AppTable
 
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
-        $this->AcademicPeriods  = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : $this->AcademicPeriods->getCurrent(); //POCOR-9743
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
@@ -470,7 +469,6 @@ class MealsTable extends AppTable
     {
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
-        $this->AcademicPeriods  = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : $this->AcademicPeriods->getCurrent(); //POCOR-9743
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
