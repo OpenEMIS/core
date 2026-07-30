@@ -76,6 +76,14 @@ return [
     ],
 
     /**
+     * Max upload size for User.Attachments.
+     * Accepts the same size string format as ControllerAction.FileUpload (e.g. '10MB').
+     */
+    'Attachment' => [
+        'maxFileSize' => env('ATTACHMENT_MAX_FILE_SIZE', '10MB'),
+    ],
+
+    /**
      * Apply timestamps with the last modified time to static assets (js, css, images).
      * Will append a querystring parameter containing the time the file was modified.
      * This is useful for busting browser caches.

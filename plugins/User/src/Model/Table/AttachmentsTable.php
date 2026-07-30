@@ -4,6 +4,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
+use Cake\Core\Configure;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
@@ -20,7 +21,7 @@ class AttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload',
-            ['size' => '10MB',
+            ['size' => Configure::read('Attachment.maxFileSize'),
                 'contentEditable' => false,
                 'allowable_file_types' => 'all',
                 'useDefaultName' => true]
@@ -75,7 +76,8 @@ class AttachmentsTable extends ControllerActionTable
         $validator
         ->requirePresence('name', 'create');
         // POCOR-9463
-        $maxSize = 10 * 1024 * 1024; // 10 MB
+        $maxSizeReadable = Configure::read('Attachment.maxFileSize');
+        $maxSize = $this->readableSizeToBytes($maxSizeReadable);
         $validator->add('file_content', 'fileSize', [
             'rule' => function ($value) use ($maxSize) {
                 if (empty($value)) {
@@ -94,11 +96,28 @@ class AttachmentsTable extends ControllerActionTable
                 }
                 return true;
             },
-            'message' => __('File Size must be <= 10MB')
+            'message' => sprintf(__('File Size must be <= %s'), $maxSizeReadable)
         ]);
         return $validator;
     }
-    
+
+    private function readableSizeToBytes(string $size): int
+    {
+        $unit = strtolower(substr($size, -2));
+        $value = (int)$size;
+
+        switch ($unit) {
+            case 'kb':
+                return $value * 1024;
+            case 'mb':
+                return $value * 1024 * 1024;
+            case 'gb':
+                return $value * 1024 * 1024 * 1024;
+            default:
+                return $value;
+        }
+    }
+
     //END:POCOR-5067
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
