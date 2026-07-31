@@ -68,9 +68,18 @@ class StudentTemplatesTable extends ControllerActionTable
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
+            // generate_start_date/generate_end_date are marked mandatory (*) in the form. Cake's
+            // Validator silently skips custom add() rules (like ruleInAcademicPeriod below) for
+            // empty values unless a presence/non-empty rule is also declared, so a blank submission
+            // previously slipped past validation entirely and crashed at save with a raw SQL
+            // "doesn't have a default value" error instead of a friendly message.
+            ->requirePresence('generate_start_date', 'create')
+            ->notEmpty('generate_start_date', __('This field cannot be left empty'))
             ->add('generate_start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
+            ->requirePresence('generate_end_date', 'create')
+            ->notEmpty('generate_end_date', __('This field cannot be left empty'))
             ->add('generate_end_date', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
