@@ -552,11 +552,11 @@ class ScholarshipsTable extends ControllerActionTable
         }elseif ($field == 'field_of_study_selection') {
             return __('Field Of Studies Selection');
         }elseif ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         }elseif ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         }elseif ($field == 'created_user_id') {
             return __('Created By');
         } else {
