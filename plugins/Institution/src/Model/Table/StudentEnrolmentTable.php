@@ -67,7 +67,6 @@ class StudentEnrolmentTable extends ControllerActionTable
             'Dashboard' => ['index'],
             'Students' => ['index', 'add']
         ]);
-
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             //['appliedAction' => ['StudentAdmission' => ['id']]
@@ -374,14 +373,30 @@ class StudentEnrolmentTable extends ControllerActionTable
             // If already enrolled, reuse the record
             $student = $existingStudent;
         } else {
+            //POCOR-9737[START]
+            $startDate = $entity->start_date;
+            $endDate = $entity->end_date;
+            if ((empty($startDate) || empty($endDate)) && !empty($entity->academic_period_id)
+                && $this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $entity->academic_period_id])
+            ) {
+                $period = $this->AcademicPeriods->get($entity->academic_period_id);
+                if (empty($startDate) && !empty($period->start_date)) {
+                    $startDate = $period->start_date;
+                }
+                if (empty($endDate) && !empty($period->end_date)) {
+                    $endDate = $period->end_date;
+                }
+            }
+            //POCOR-9737[END]
+
             // Create new enrolment (PENDING if available for workflow)
             $incomingStudent = [
                 'student_status_id' => $statusId,
                 'student_id' => $entity->student_id,
                 'education_grade_id' => $entity->education_grade_id,
                 'academic_period_id' => $entity->academic_period_id,
-                'start_date' => $entity->start_date,
-                'end_date' => $entity->end_date,
+                'start_date' => $startDate, // POCOR-9737
+                'end_date' => $endDate, // POCOR-9737
                 'institution_id' => $entity->institution_id
             ];
 
