@@ -938,6 +938,10 @@ class StaffTable extends AppTable  {
         } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
             $filterInstitutionIds = [(int)$institutionId];
         }
+        // user_id/super_admin are injected server-side from the authenticated session by
+        // Report.ReportList::addBeforeSave() before the export job is queued - not client input.
+        $userId = $requestData->user_id ?? null;
+        $superAdmin = $requestData->super_admin ?? false;
         $selectedArea = $requestData->area_education_id;
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -987,6 +991,21 @@ class StaffTable extends AppTable  {
 
         if (!empty($filterInstitutionIds)) {
             $conditions['InstitutionStaff.institution_id IN'] = $filterInstitutionIds;
+        } elseif (!$superAdmin) {
+            // No specific institution(s) selected - either the field was left on "All
+            // Institutions" (id 0, stripped out above) or nothing at all. For a super admin that
+            // genuinely means "no restriction". For anyone else, scope down to only the
+            // institutions this user has access to, matching the pre-multi-select behavior that
+            // was previously enforced here - otherwise this falls through with zero institution
+            // scoping and the export would include every institution in the system.
+            $institutionQuery = $InstitutionsTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->find('byAccess', ['userId' => $userId]);
+            $institutionList = $institutionQuery->toArray();
+            $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
         }
 
         // Main Query
