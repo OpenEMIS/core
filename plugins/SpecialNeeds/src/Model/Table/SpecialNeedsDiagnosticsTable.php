@@ -52,12 +52,18 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator
-                ->add('comment', 'length', [
+        //POCOR-9674
+        $validator
+            ->requirePresence('special_needs_diagnostics_type_id', true)
+            ->notEmptyString('special_needs_diagnostics_type_id', __('This field cannot be left empty'))
+            ->requirePresence('special_needs_diagnostics_degree_id', true)
+            ->notEmptyString('special_needs_diagnostics_degree_id', __('This field cannot be left empty'))
+            ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                ])
-                ; //POCOR-9584: Removed academic period range validation
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.'),
+            ]);
+
+        return $validator;
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -74,7 +80,14 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     public function onUpdateFieldSpecialNeedsDiagnosticsTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9674
+        if (!isset($attr['attr'])) {
+            $attr['attr'] = [];
+        }
+        $attr['attr']['required'] = true;
+        //POCOR-9674
         $attr['onChangeReload'] = true;
+
         return $attr;
     }
 
@@ -109,6 +122,8 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 $attr['value'] = $attr['entity']->special_needs_diagnostics_degree_id;
                 //POCOR-9584: end
             }
+            $attr['attr']['required'] = true;
+
             return $attr;
         }
     }
@@ -163,8 +178,8 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('special_needs_diagnostics_type_id', ['type' => 'select']);
-        $this->field('special_needs_diagnostics_degree_id', ['type' => 'select']);
+        $this->field('special_needs_diagnostics_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
+        $this->field('special_needs_diagnostics_degree_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => true, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //Modify for POCOR-7147
