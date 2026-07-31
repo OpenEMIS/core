@@ -101,6 +101,20 @@ class StaffBehavioursTable extends ControllerActionTable
         ;
     }*/
 
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+
+        // Category and Classification (staff_behaviour_category_id / behaviour_classification_id)
+        // are NOT NULL columns in the database but had no validator enforcing that, so leaving them
+        // blank previously crashed at save with a raw SQL error instead of a friendly message.
+        return $validator
+            ->requirePresence('staff_behaviour_category_id', 'create')
+            ->notEmpty('staff_behaviour_category_id', __('This field cannot be left empty'))
+            ->requirePresence('behaviour_classification_id', 'create')
+            ->notEmpty('behaviour_classification_id', __('This field cannot be left empty'));
+    }
+
     // The bootstrap-datepicker "date" field for date_of_behaviour renders/accepts text in whatever
     // format is configured in System Configurations > Date Format (e.g. "July 31, 2026"), not just
     // 'Y-m-d'. Cake's DateType::marshal() only ever accepts the strict 'Y-m-d' format, so saving
@@ -217,6 +231,17 @@ class StaffBehavioursTable extends ControllerActionTable
     {
         $this->field('behaviour_classification_id', ['attr' => ['label' => __('Classification')]]);
         // $this->field('action', ['type' => 'text', 'after' => 'description','visible' => true]);
+
+        // Category and Classification are already NOT NULL columns in the database, but nothing
+        // enforced that at the form level, so leaving them blank crashed at save with a raw SQL
+        // error instead of a validation message. Mark them required the same way WorkflowBehavior
+        // marks assignee_id required, so the red asterisk shows up in the form.
+        if ($this->hasField('staff_behaviour_category_id')) {
+            $this->fields['staff_behaviour_category_id']['attr']['required'] = true;
+        }
+        if ($this->hasField('behaviour_classification_id')) {
+            $this->fields['behaviour_classification_id']['attr']['required'] = true;
+        }
     }
     // End POCOR-7441
 

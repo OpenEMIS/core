@@ -79,6 +79,15 @@ class StaffTemplatesTable extends ControllerActionTable
             //         'rule' => ['compareDateReverse', 'generate_start_date', false]
             //     ]
             // ])
+            // generate_start_date/generate_end_date are marked mandatory (*) in the form, but
+            // nothing previously enforced that: the column is 'datetime', and AppTable's generic
+            // schema-driven validationDefault() only auto-handles 'date' typed columns. Leaving
+            // these blank marshalled to null and passed validation silently, then crashed at save
+            // with a raw SQL "doesn't have a default value" error instead of a friendly message.
+            ->requirePresence('generate_start_date', 'create')
+            ->notEmpty('generate_start_date', __('This field cannot be left empty'))
+            ->requirePresence('generate_end_date', 'create')
+            ->notEmpty('generate_end_date', __('This field cannot be left empty'))
             ->allowEmpty('excel_template');
     }
 
