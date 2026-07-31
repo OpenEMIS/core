@@ -137,11 +137,17 @@ class AuthenticationBehavior extends Behavior
             $url['action'] = $typeValue;
             $this->model->controller->redirect($url);
         } elseif ($action != $typeValue && $action != 'index' && $typeValue != 'Authentication') {
+            // 'type' must be nested under '?' - CakePHP's URL builder only turns the '?' sub-array
+            // into an actual query string; any other bare non-numeric key (like a top-level 'type')
+            // is silently dropped. That caused this redirect to land on /Configurations/index with
+            // no type param at all, which then defaulted to the first config type ("Add New
+            // Guardian") instead of the type the user actually selected (e.g. "API Settings").
             $this->model->controller->redirect([
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
                 'action' => 'index',
-                'type' => $this->selectedType]);
+                '?' => ['type' => $this->selectedType]
+            ]);
         }
     }
 }
