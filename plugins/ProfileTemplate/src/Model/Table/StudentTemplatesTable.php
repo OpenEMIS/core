@@ -332,16 +332,41 @@ class StudentTemplatesTable extends ControllerActionTable
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
-        $generate_start_date = $this->request->getData()['StudentTemplates']['generate_start_date'];
-        $generate_end_date = $this->request->getData()['StudentTemplates']['generate_end_date'];
+        $requestData = $this->request->getData($this->getAlias()) ?: [];
+        $generate_start_date = $requestData['generate_start_date'] ?? null;
+        $generate_end_date = $requestData['generate_end_date'] ?? null;
         if (!empty($generate_start_date)) {
-            $entity->generate_start_date = (new FrozenDate($generate_start_date))->format('Y-m-d H:i:s');
-        }  
+            $entity->generate_start_date = $this->parseDisplayDate($generate_start_date)->format('Y-m-d H:i:s');
+        }
         if (!empty($generate_end_date)) {
-            $entity->generate_end_date = (new FrozenDate($generate_end_date))->format('Y-m-d H:i:s');
-        } 
+            $entity->generate_end_date = $this->parseDisplayDate($generate_end_date)->format('Y-m-d H:i:s');
+        }
 
-    } 
+    }
+
+    /**
+     * Parses a date string in the system's configured Date Format (e.g. "d/m/Y" - which PHP's
+     * loose date parser would otherwise misread as month/day) into a FrozenDate, falling back to
+     * PHP's own lenient parser for values already in another recognizable format.
+     */
+    private function parseDisplayDate($value)
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $value);
+
+        try {
+            $date = FrozenDate::createFromFormat($editableDateFormat, $normalized);
+            if ($date !== false) {
+                return $date;
+            }
+        } catch (\Exception $e) {
+            // fall through to lenient parsing below
+        }
+
+        return new FrozenDate($value);
+    }
     
     private function setupTabElements() {
         $options['type'] = 'StaffTemplates';
@@ -409,8 +434,11 @@ class StudentTemplatesTable extends ControllerActionTable
             $id = $DecodedQueryString['id'];
             $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->generate_start_date;
             $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            // Note: this used to add a stray '+1 day' here with no corresponding shift on save,
+            // which made the edit form display one day later than what was actually saved
+            // (e.g. a stored July 1 showed as July 2).
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
             return $attr;
             
         }
@@ -429,8 +457,8 @@ class StudentTemplatesTable extends ControllerActionTable
             $id = $DecodedQueryString['id'];
             $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->generate_end_date;
             $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
             return $attr;
             
         }
@@ -464,14 +492,17 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function onGetGenerateStartDate(EventInterface $event, Entity $entity)
     {
+        // Note: this used to add a stray '+1 day' to both dates with no corresponding shift on
+        // save, making the displayed date one day later than what was actually saved (e.g. a
+        // stored July 1 showed as July 2).
         $generate_start_date = $entity->generate_start_date;
         $generate_end_date = $entity->generate_end_date;
         if (!empty($generate_start_date)) {
-            $entity->generate_start_date = (new FrozenDate($generate_start_date))->modify('+1 day')->format('Y-m-d');
+            $entity->generate_start_date = (new FrozenDate($generate_start_date))->format('Y-m-d');
         }
 
         if (!empty($generate_end_date)) {
-            $entity->generate_end_date = (new FrozenDate($generate_end_date))->modify('+1 day')->format('Y-m-d');
+            $entity->generate_end_date = (new FrozenDate($generate_end_date))->format('Y-m-d');
         }
     }
 

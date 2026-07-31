@@ -15,6 +15,7 @@ use App\Model\Table\ControllerActionTable;
 use Page\Traits\EncodingTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 
 class StaffBehavioursTable extends ControllerActionTable
 {
@@ -99,6 +100,61 @@ class StaffBehavioursTable extends ControllerActionTable
             ])
         ;
     }*/
+
+    // The bootstrap-datepicker "date" field for date_of_behaviour renders/accepts text in whatever
+    // format is configured in System Configurations > Date Format (e.g. "July 31, 2026"), not just
+    // 'Y-m-d'. Cake's DateType::marshal() only ever accepts the strict 'Y-m-d' format, so saving
+    // would silently fail/produce a wrong date for any other configured format. Normalize the
+    // submitted value to 'Y-m-d' here, before patchEntity()/marshal() runs.
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        $this->normalizeDateOfBehaviour($data);
+    }
+
+    /**
+     * Returns [systemDateFormat, editableDateFormat] - the same pair computed by
+     * HtmlFieldHelper::date() to render/parse the "date" form field, so we can convert
+     * submitted text and datepicker range boundaries consistently with what is displayed.
+     */
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
+    private function normalizeDateOfBehaviour(ArrayObject $data)
+    {
+        $field = 'date_of_behaviour';
+        if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+            return;
+        }
+
+        $rawValue = $data[$field];
+        if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+            // already Y-m-d (or not a string we can parse) - leave untouched
+            return;
+        }
+
+        [$systemDateFormat, $editableDateFormat] = $this->getSystemDateFormats();
+        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+        try {
+            try {
+                $date = Date::createFromFormat($editableDateFormat, $normalized);
+            } catch (\Exception $e) {
+                $date = Date::createFromFormat($systemDateFormat, $rawValue);
+            }
+            if ($date !== false && $date !== null) {
+                $data[$field] = $date->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            Log::warning("StaffBehavioursTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+        }
+    }
 
     public function onGetOpenemisNo(EventInterface $event, Entity $entity)
     {
@@ -328,31 +384,48 @@ class StaffBehavioursTable extends ControllerActionTable
             $startDate = $academicPeriod->start_date;
             $endDate = $academicPeriod->end_date;
 
+            // The datepicker widget (HtmlFieldHelper::date()) displays/parses text using the
+            // system's configured Date Format, not a fixed 'd-m-Y'. The startDate/endDate range
+            // options below are read by that same widget instance, so they must be formatted the
+            // same way - otherwise the widget mis-parses its own min/max boundaries and disables
+            // the wrong days (POCOR fix: previously hardcoded to 'd-m-Y').
+            [$systemDateFormat, $editableDateFormat] = $this->getSystemDateFormats();
+
             if ($action == 'add') {
                 $todayDate = Date::now();
 
                 if (!empty($request->data[$this->getAlias()]['date_of_behaviour'])) {
-                    $inputDate = Date::createfromformat('d-m-Y', $request->data[$this->getAlias()]['date_of_behaviour']); //string to date object
+                    $submittedValue = $request->data[$this->getAlias()]['date_of_behaviour'];
+                    $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $submittedValue);
+                    try {
+                        $inputDate = Date::createFromFormat($editableDateFormat, $normalized); //string to date object
+                    } catch (\Exception $e) {
+                        try {
+                            $inputDate = Date::createFromFormat($systemDateFormat, $submittedValue);
+                        } catch (\Exception $e2) {
+                            $inputDate = false;
+                        }
+                    }
 
                     // if today date is not within selected academic period, default date will be start of the year
-                    if ($inputDate < $startDate || $inputDate > $endDate) {
-                        $attr['value'] = $startDate->format('d-m-Y');
+                    if ($inputDate === false || $inputDate < $startDate || $inputDate > $endDate) {
+                        $attr['value'] = $startDate->format($editableDateFormat);
 
                         // if today date is within selected academic period, default date will be current date
                         if ($todayDate >= $startDate && $todayDate <= $endDate) {
-                            $attr['value'] = $todayDate->format('d-m-Y');
+                            $attr['value'] = $todayDate->format($editableDateFormat);
                         }
                     }
                 } else {
                     if ($todayDate <= $startDate || $todayDate >= $endDate) {
-                        $attr['value'] = $startDate->format('d-m-Y');
+                        $attr['value'] = $startDate->format($editableDateFormat);
                     } else {
-                        $attr['value'] = $todayDate->format('d-m-Y');
+                        $attr['value'] = $todayDate->format($editableDateFormat);
                     }
                 }
             }
 
-            $attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+            $attr['date_options'] = ['startDate' => $startDate->format($editableDateFormat), 'endDate' => $endDate->format($editableDateFormat)];
             $attr['date_options']['todayBtn'] = false;
         }
 

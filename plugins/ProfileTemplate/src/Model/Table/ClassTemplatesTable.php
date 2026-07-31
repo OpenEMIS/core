@@ -272,12 +272,35 @@ class ClassTemplatesTable extends ControllerActionTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
-        if (!empty($data['generate_start_date'])) {
-            $data['generate_start_date'] = (new FrozenDate($data['generate_start_date']))->format('Y-m-d H:i:s');
-        }
+        foreach (['generate_start_date', 'generate_end_date'] as $field) {
+            if (empty($data[$field])) {
+                continue;
+            }
 
-        if (!empty($data['generate_end_date'])) {
-            $data['generate_end_date'] = (new FrozenDate($data['generate_end_date']))->format('Y-m-d H:i:s');
+            $rawValue = $data[$field];
+            if (is_string($rawValue) && !preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue)) {
+                $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+                $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+                $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+                $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+                $date = false;
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    try {
+                        $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                    } catch (\Exception $e2) {
+                        \Cake\Log\Log::warning("ClassTemplatesTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+                    }
+                }
+
+                if ($date !== false && $date !== null) {
+                    $rawValue = $date->format('Y-m-d');
+                }
+            }
+
+            $data[$field] = (new FrozenDate($rawValue))->format('Y-m-d H:i:s');
         }
     }
 	
