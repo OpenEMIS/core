@@ -504,14 +504,24 @@ class StudentTemplatesTable extends ControllerActionTable
         // Note: this used to add a stray '+1 day' to both dates with no corresponding shift on
         // save, making the displayed date one day later than what was actually saved (e.g. a
         // stored July 1 showed as July 2).
+        //
+        // It also used to hardcode the display format to 'Y-m-d', regardless of the
+        // System Configurations > Date Format setting - so the index/view pages showed
+        // e.g. "2026-07-01" while the add/edit datepicker (which does honour the configured
+        // format) showed "July 31, 2026" for the same field. Use the configured format here too
+        // so add/edit and index/view are consistent.
         $generate_start_date = $entity->generate_start_date;
         $generate_end_date = $entity->generate_end_date;
+
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+
         if (!empty($generate_start_date)) {
-            $entity->generate_start_date = (new FrozenDate($generate_start_date))->format('Y-m-d');
+            $entity->generate_start_date = (new FrozenDate($generate_start_date))->format($systemDateFormat);
         }
 
         if (!empty($generate_end_date)) {
-            $entity->generate_end_date = (new FrozenDate($generate_end_date))->format('Y-m-d');
+            $entity->generate_end_date = (new FrozenDate($generate_end_date))->format($systemDateFormat);
         }
     }
 

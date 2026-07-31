@@ -267,17 +267,11 @@ class ClassTemplatesTable extends ControllerActionTable
         } 
     }
 
-    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
-
-        if (!empty($entity->generate_start_date)) {
-            $entity->generate_start_date = (new FrozenDate($entity->generate_start_date))->modify('+2 day')->format('Y-m-d H:i:s');
-        }
-
-        if (!empty($entity->generate_end_date)) {
-            $entity->generate_end_date = (new FrozenDate($entity->generate_end_date))->modify('+2 day')->format('Y-m-d H:i:s');
-        }        
-
-    } 
+    // Note: this used to shift generate_start_date/generate_end_date forward by '+2 day' before
+    // saving, with no corresponding adjustment anywhere on read/display. That made every saved
+    // date land 2 days after what the user actually picked (e.g. selecting July 1 saved as
+    // July 3). beforeMarshal() below already normalizes the submitted value correctly, so no
+    // further adjustment is needed here. (Same fix as StaffTemplatesTable.php.)
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
