@@ -303,7 +303,7 @@ class HealthsTable extends ControllerActionTable
         } elseif ($field == 'modified') {
             return __('Modified On');
         }elseif ($field == 'created_user_id') {
-            return __('Modified By');
+            return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
         }else {
