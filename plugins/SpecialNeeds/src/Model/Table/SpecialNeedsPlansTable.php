@@ -55,11 +55,20 @@ class SpecialNeedsPlansTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator
-                ->add('comment', 'length', [
+        //POCOR-9674
+        $validator
+            ->requirePresence('academic_period_id', true)
+            ->notEmptyString('academic_period_id', __('This field cannot be left empty'))
+            ->requirePresence('special_needs_plan_types_id', true)
+            ->notEmptyString('special_needs_plan_types_id', __('This field cannot be left empty'))
+            ->requirePresence('plan_name', true)
+            ->notEmptyString('plan_name', __('This field cannot be left empty'))
+            ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                ]);
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.'),
+            ]);
+
+        return $validator;
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -211,9 +220,9 @@ class SpecialNeedsPlansTable extends ControllerActionTable
         // $condition = [$this->AcademicPeriods->aliasField('current').' <> ' => "1"]; // // POCOR-7467
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(); //['conditions' => $condition]  // POCOR-7467
         $specialNeedsPlanTypesOptions = $this->SpecialNeedsPlanTypes->getPlanTypeList();
-        $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions]);
-        $this->field('special_needs_plan_types_id', ['type' => 'select', 'options' => $specialNeedsPlanTypesOptions]);
-        $this->field('plan_name');
+        $this->field('academic_period_id', ['type' => 'select', 'options' => $academicPeriodOptions, 'attr' => ['required' => true]]); //POCOR-9674
+        $this->field('special_needs_plan_types_id', ['type' => 'select', 'options' => $specialNeedsPlanTypesOptions, 'attr' => ['required' => true]]); //POCOR-9674
+        $this->field('plan_name', ['attr' => ['required' => true]]); //POCOR-9674
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => false, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
