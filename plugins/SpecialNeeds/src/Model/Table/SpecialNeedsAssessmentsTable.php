@@ -56,19 +56,24 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator
-            // ->notEmpty('assessor_id')//POCOR-9026
-            ->allowEmptyString('comment') //POCOR-9026
+        //POCOR-9674
+        $validator
+            ->requirePresence('assessor_id', true)
+            ->notEmptyString('assessor_id', __('This field cannot be left empty'))
+            ->requirePresence('special_need_type_id', true)
+            ->notEmptyString('special_need_type_id', __('This field cannot be left empty'))
+            ->requirePresence('special_need_difficulty_id', true)
+            ->notEmptyString('special_need_difficulty_id', __('This field cannot be left empty'))
+            ->requirePresence('comment', true)
+            ->notEmptyString('comment', __('This field cannot be left empty'))
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-             ])
-//             ->add('date', // POCOR-9061
-//                 'ruleCheckInputWithinRange',
-//                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
-//
-//             )
-            ->allowEmpty('file_content');
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.'),
+            ]);
+
+        $validator->allowEmpty('file_content');
+
+        return $validator;
     }
 
     public function implementedEvents(): array
@@ -265,12 +270,12 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     private function setupFields($entity = null)
     {
         $this->field('date');
-        $this->field('special_need_type_id', ['type' => 'select']);
-        $this->field('special_need_difficulty_id', ['type' => 'select']);
+        $this->field('special_need_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
+        $this->field('special_need_difficulty_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('assessor_id', ['entity' => $entity]);  //POCOR-6873
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('comment', ['type' => 'text']);
+        $this->field('comment', ['type' => 'text', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['date', 'assessor_id', 'special_need_type_id', 'special_need_difficulty_id','file_name', 'file_content', 'comment']); //POCOR-6873
@@ -348,7 +353,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
             $attr['noResults'] = __('No User found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            $attr['attr'] = [
+                'placeholder' => __('OpenEMIS ID, Identity Number or Name'), //POCOR-9674
+                'required' => true,
+            ];
             // $attr['onSelect'] = "$('#reload').click();";
 
             $urlAction = $this->getAlias();
