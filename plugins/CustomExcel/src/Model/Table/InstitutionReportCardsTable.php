@@ -7385,7 +7385,6 @@ class InstitutionReportCardsTable extends AppTable
         return $entity;
     }
     
-    //POCOR-9739
     public function onExcelTemplateInitialiseStudentBehaviourTotalStudent(EventInterface $event,
     array $params,ArrayObject $extra)
     {
