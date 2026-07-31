@@ -62,17 +62,24 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator
-            // ->add('date', [
-            //     'ruleInAcademicPeriod' => [
-            //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
-            //     ]
-            // ])
+        //POCOR-9674
+        $validator
+            ->requirePresence('academic_period_id', true)
+            ->notEmptyString('academic_period_id', __('This field cannot be left empty'))
+            ->requirePresence('referrer_id', true)
+            ->notEmptyString('referrer_id', __('This field cannot be left empty'))
+            ->requirePresence('special_needs_referrer_type_id', true)
+            ->notEmptyString('special_needs_referrer_type_id', __('This field cannot be left empty'))
+            ->requirePresence('reason_type_id', true)
+            ->notEmptyString('reason_type_id', __('This field cannot be left empty'))
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-             ])
-            ->allowEmpty('file_content');
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.'),
+            ]);
+
+        $validator->allowEmpty('file_content');
+
+        return $validator;
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -266,6 +273,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             // $attr['type'] = 'readonly'; // POCOR-7467
             $attr['value'] = $selectedAcademicPeriodId;
             $attr['attr']['value'] = $academicPeriodName;
+            $attr['attr']['required'] = true;
 
             return $attr;
         }
@@ -279,7 +287,10 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
             $attr['noResults'] = __('No User found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            $attr['attr'] = [
+                'placeholder' => __('OpenEMIS ID, Identity Number or Name'), //POCOR-9674
+                'required' => true,
+            ];
             // $attr['onSelect'] = "$('#reload').click();";
 
             $urlAction = $this->getAlias();
@@ -373,14 +384,14 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity, 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('referrer_id', ['entity' => $entity]);
-        $this->field('special_needs_referrer_type_id', ['type' => 'select']);
+        $this->field('special_needs_referrer_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('date');
-        $this->field('reason_type_id', ['type' => 'select']);
+        $this->field('reason_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //POCOR-9674
         $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
