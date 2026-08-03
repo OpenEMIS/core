@@ -11,9 +11,42 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Http\ServerRequest;
 use Cake\I18n\FrozenTime; // POCOR-8985
+use Cake\Log\Log;
 
 class ScheduleTermsTable extends ControllerActionTable
 {
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['start_date', 'end_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("ScheduleTermsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('institution_schedule_terms');
@@ -215,9 +248,10 @@ class ScheduleTermsTable extends ControllerActionTable
         $selectedPeriodId = $requestData[$alias]['academic_period_id'] ?? $currentAcademicPeriodId;
         // POCOR-8985 end
         $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        [, $editableDateFormat] = $this->getSystemDateFormats();
         $attr['type'] = 'date';
-        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format('d-m-Y');
-        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format('d-m-Y');
+        $attr['date_options']['startDate'] = $selectedPeriod->start_date->format($editableDateFormat);
+        $attr['date_options']['endDate'] = $selectedPeriod->end_date->format($editableDateFormat);
         // POCOR-8985 start
         $attr['date_options']['todayBtn'] = false;
         if (!isset($requestData[$alias]) || !isset($requestData[$alias][$key])) {
@@ -230,6 +264,16 @@ class ScheduleTermsTable extends ControllerActionTable
         // POCOR-8985 end
 
         return $attr;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     private function setupField($entity = null)
