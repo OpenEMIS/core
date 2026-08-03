@@ -113,7 +113,9 @@ class LoginController extends Controller
                 'password' => $password
             ];
 
-            if (!$token = JWTAuth::attempt($input)) {
+            $token = JWTAuth::attempt($input);
+
+            if (!$token) {
                 //POCOR-9591: start - increment failed_logins; lock when threshold reached
                 $threshold = (int) DB::table('config_items')->where('code', 'login_attempts')->value('value') ?: 5;
                 $newCount = $userCheck->failed_logins + 1;
@@ -128,6 +130,9 @@ class LoginController extends Controller
                 //POCOR-9591: end
                 return $this->sendErrorResponse('Invalid Username or Password.');
             }
+            //POCOR-9591: reset failed login counter on successful authentication
+            SecurityUsers::where('id', $userCheck->id)->update(['failed_logins' => 0]);
+
             return $this->sendSuccessResponse(
                 'Logged In successfully',
                 [
