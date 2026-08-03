@@ -124,10 +124,10 @@ class ProfileTemplatesTable extends ControllerActionTable
             'status_id' => $institutionPositionsTable->aliasField('status_id')
         ])->innerJoin([$institutionPositionsTable->getAlias() => $institutionPositionsTable->getTable()], [
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
-        ])->where([
+        ])/*->where([
             $StaffTable->aliasField('institution_id') => 6,
             $StaffTable->aliasField('staff_id') => 8810,
-        ])
+        ])*/
         // ->hydrate(false)->toArray();
         ->toArray();
         $expectedStaffStatuses = [];
