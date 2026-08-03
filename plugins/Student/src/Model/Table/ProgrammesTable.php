@@ -430,6 +430,16 @@ class ProgrammesTable extends ControllerActionTable
 		return $value;
 	}
 
+	private function getSystemDateFormats(): array
+	{
+		$ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+		$systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+		// bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+		$editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+		return [$systemDateFormat, $editableDateFormat];
+	}
+
 	private function setupTabElements()
 	{
 		$options['type'] = 'student';
@@ -485,9 +495,10 @@ class ProgrammesTable extends ControllerActionTable
 			//POCOR-8870 end
 
 			$period = $entity->academic_period;
+			[, $editableDateFormat] = $this->getSystemDateFormats();
 			$dateOptions = [
-				'startDate' => $period->start_date->format('d-m-Y'),
-				'endDate' => $period->end_date->format('d-m-Y')
+				'startDate' => $period->start_date->format($editableDateFormat),
+				'endDate' => $period->end_date->format($editableDateFormat)
 			];
 
 			$this->fields['start_date']['date_options'] = $dateOptions;
