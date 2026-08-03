@@ -1078,5 +1078,22 @@ class UserBehavior extends Behavior
             Log::warning("Invalid date: " . ($data['date_of_birth'] ?? '') . ' with format ' . $systemDateFormat);
         }
         // POCOR-8286 end
+        // UserBehavior: also normalize date_of_death (same bug as date_of_birth above)
+        try {
+            $dod = $data['date_of_death'] ?? null;
+            if ($dod && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$dod)) {
+                $dodNormalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', (string)$dod);
+                try {
+                    $date = Chronos::createFromFormat($editableDateFormat, $dodNormalized);
+                } catch (\Exception $e) {
+                    $date = Chronos::createFromFormat($systemDateFormat, (string)$dod);
+                }
+                if ($date !== false && $date !== null) {
+                    $data['date_of_death'] = $date->format('Y-m-d');
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning("UserBehavior: Invalid date_of_death '" . ($data['date_of_death'] ?? '') . "' with format '{$systemDateFormat}'");
+        }
     }
 }

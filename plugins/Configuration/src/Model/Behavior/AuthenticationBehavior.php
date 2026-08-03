@@ -74,7 +74,7 @@ class AuthenticationBehavior extends Behavior
     public function buildSystemConfigFilters($action = null)
     { 
         $toolbarElements = [
-            ['name' => 'Configuration.idp_controls', 'data' => [], 'options' => []]
+            ['name' => 'Configuration.controls', 'data' => [], 'options' => []]
         ];
         $ConfigItem = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $typeList = $ConfigItem
@@ -94,7 +94,14 @@ class AuthenticationBehavior extends Behavior
         }
         $selectedType = $this->model->queryString('type', $typeOptions);
         $this->selectedType = $selectedType;
-        $this->model->request->getQuery['type_value'] = $typeOptions[$selectedType];
+        //POCOR-9733: previous line (`$this->model->request->getQuery['type_value'] = ...`) treated the
+        //getQuery() method as an array property and never actually updated the request's query params.
+        //As a result checkController() below always saw an empty type_value and defaulted back to
+        //'Authentication', so it never redirected away when a different type was picked in the dropdown -
+        //the page kept rendering this table's hardcoded "type = Authentication" listing regardless of selection.
+        $queryParams = $this->model->request->getQueryParams();
+        $queryParams['type_value'] = $typeOptions[$selectedType];
+        $this->model->request = $this->model->request->withQueryParams($queryParams);
         $this->model->advancedSelectOptions($typeOptions, $selectedType);
         $this->model->controller->set('typeOptions', $typeOptions);
         $authenticationTypeOptions = [];
@@ -110,7 +117,10 @@ class AuthenticationBehavior extends Behavior
         }//POCOR-7156 Ends
         $this->model->controller->set('authenticationTypeOptions', $authenticationTypeOptions);
         $controlElement = $toolbarElements[0];
-        $controlElement['data'] = ['typeOptions' => $typeOptions];
+        $controlElement['data'] = [
+            'typeOptions' => $typeOptions,
+            'authenticationTypeOptions' => $authenticationTypeOptions,
+        ];
         $controlElement['order'] = 1;
 
         return $controlElement;
@@ -127,11 +137,17 @@ class AuthenticationBehavior extends Behavior
             $url['action'] = $typeValue;
             $this->model->controller->redirect($url);
         } elseif ($action != $typeValue && $action != 'index' && $typeValue != 'Authentication') {
+            // 'type' must be nested under '?' - CakePHP's URL builder only turns the '?' sub-array
+            // into an actual query string; any other bare non-numeric key (like a top-level 'type')
+            // is silently dropped. That caused this redirect to land on /Configurations/index with
+            // no type param at all, which then defaulted to the first config type ("Add New
+            // Guardian") instead of the type the user actually selected (e.g. "API Settings").
             $this->model->controller->redirect([
                 'plugin' => 'Configuration',
                 'controller' => 'Configurations',
                 'action' => 'index',
-                'type' => $this->selectedType]);
+                '?' => ['type' => $this->selectedType]
+            ]);
         }
     }
 }
