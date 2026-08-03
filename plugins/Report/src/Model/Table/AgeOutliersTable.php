@@ -92,13 +92,14 @@ class AgeOutliersTable extends AppTable  {
                         'code IN' => ['report_outlier_min_age', 'report_outlier_max_age', 'report_outlier_min_student', 'report_outlier_max_student']
                     ]);
 
-        $query->select(['academic_period_id' => 'main_query.academic_period_name',
+        $query->select(['academic_period_name' => 'main_query.academic_period_name',
                         'institution_code' => 'main_query.institution_code',
                         'institution_name' => 'main_query.institution_name',
                         'education_grade_name' => 'main_query.education_grade_name',
                         'openemis_no' => 'main_query.openemis_no',
                         'student_name' => 'main_query.student_name ',
-                        'gender_name' => 'main_query.gender_name',
+                        // 'gender_name' => 'main_query.gender_name',
+                        'student_gender' => 'main_query.gender_name',
                         'student_age' => 'main_query.student_age'
         ])->from(['main_query' => $main_query]);
         $query->join(['subq' => $subquery])->where('main_query.student_age NOT BETWEEN subq.min_age AND subq.max_age');

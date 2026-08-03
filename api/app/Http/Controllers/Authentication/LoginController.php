@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
-    
+
 
     /**
      * @OA\Post(
@@ -63,56 +63,84 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         try {
-
             $userCheck = SecurityUsers::where('username', $request->username)->first();
-
-            if (isset($userCheck)) {
-                //POCOR-9591: start - block locked and inactive accounts before attempting auth
-                if ($userCheck->status === SecurityUsers::STATUS_LOCKED) {
-                    return $this->sendErrorResponse('Account is locked.', [], "", 403);
-                }
-                if ($userCheck->status === SecurityUsers::STATUS_INACTIVE) {
-                    return $this->sendErrorResponse('Account is inactive.', [], "", 403);
-                }
-                //POCOR-9591: end
-
-                $input = $request->only('username', 'password');
-                $token = null;
-                $api_key = $request->api_key ?? "";
-
-                $apiCredentials = ApiCredentials::where('api_key', $api_key)->first();
-                if (!$apiCredentials) {
-                    return $this->sendErrorResponse("Invalid API key provided.");
-                }
-
-                if (!$token = JWTAuth::attempt($input)) {
-                    //POCOR-9591: start - increment failed_logins; lock when threshold reached
-                    $threshold = (int) DB::table('config_items')->where('code', 'login_attempts')->value('value') ?: 5;
-                    $newCount = $userCheck->failed_logins + 1;
-                    if ($newCount >= $threshold) {
-                        SecurityUsers::where('id', $userCheck->id)->update([
-                            'failed_logins' => $newCount,
-                            'status'        => SecurityUsers::STATUS_LOCKED,
-                        ]);
-                        return $this->sendErrorResponse('Account is locked due to too many failed login attempts.', [], "", 403);
-                    }
-                    SecurityUsers::where('id', $userCheck->id)->update(['failed_logins' => $newCount]);
-                    //POCOR-9591: end
-                    return $this->sendErrorResponse('Invalid Username or Password.');
-                }
-
-                //POCOR-9591: reset failed login counter on successful authentication
-                SecurityUsers::where('id', $userCheck->id)->update(['failed_logins' => 0]);
-
-                return $this->sendSuccessResponse('Logged In successfully', ['token' => $token, 'client_id' => $apiCredentials->client_id ?? ""]);
-            } else {
+            if (!$userCheck) {
                 return $this->sendErrorResponse("Invalid Username or Password.");
             }
-        } catch (\Exception $e) {
-            Log::error(
-                'Failed to login.',
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            //POCOR-9591: start - block locked and inactive accounts before attempting auth
+            if ($userCheck->status === SecurityUsers::STATUS_LOCKED) {
+                return $this->sendErrorResponse('Account is locked.', [], "", 403);
+            }
+            if ($userCheck->status === SecurityUsers::STATUS_INACTIVE) {
+                return $this->sendErrorResponse('Account is inactive.', [], "", 403);
+            }
+            //POCOR-9591: end
+            // Validate API key
+            $apikey = $request->api_key ?? "";
+            $apiCredentials = ApiCredentials::where('api_key', $apikey)->first();
+            if (!$apiCredentials) {
+                return $this->sendErrorResponse("Invalid API key provided.");
+            }
+            $password = $request->password;
+            //POCOR-9745 Check encryption type
+            if ($request->has('enc') && !empty($request->enc)) {
+                $privateKey = config('services.rsa_private_key');
+                $key = openssl_pkey_get_private($privateKey);
+                if (!$key) {
+                    return $this->sendErrorResponse('Invalid private key.');
+                }
+                switch ($request->enc) {
+                    case 'RSA-OAEP-256':
+                        $result = openssl_private_decrypt(
+                            base64_decode($password),
+                            $decryptedPassword,
+                            $key,
+                            OPENSSL_PKCS1_OAEP_PADDING
+                        );
+                        openssl_free_key($key);
+                        if (!$result) {
+                            return $this->sendErrorResponse('Failed to decrypt password.');
+                        }
+                        $password = $decryptedPassword;
+                        break;
+                    default:
+                        openssl_free_key($key);
+                        return $this->sendErrorResponse('Unsupported encryption type.');
+                }
+            }
+            $input = [
+                'username' => $request->username,
+                'password' => $password
+            ];
+
+            if (!$token = JWTAuth::attempt($input)) {
+                //POCOR-9591: start - increment failed_logins; lock when threshold reached
+                $threshold = (int) DB::table('config_items')->where('code', 'login_attempts')->value('value') ?: 5;
+                $newCount = $userCheck->failed_logins + 1;
+                if ($newCount >= $threshold) {
+                    SecurityUsers::where('id', $userCheck->id)->update([
+                        'failed_logins' => $newCount,
+                        'status'        => SecurityUsers::STATUS_LOCKED,
+                    ]);
+                    return $this->sendErrorResponse('Account is locked due to too many failed login attempts.', [], "", 403);
+                }
+                SecurityUsers::where('id', $userCheck->id)->update(['failed_logins' => $newCount]);
+                //POCOR-9591: end
+                return $this->sendErrorResponse('Invalid Username or Password.');
+            }
+            return $this->sendSuccessResponse(
+                'Logged In successfully',
+                [
+                    'token' => $token,
+                    'client_id' => $apiCredentials->client_id ?? ''
+                ]
             );
+        } catch (\Exception $e) {
+            Log::error('Failed to login.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return $this->sendErrorResponse("You Are Not Authorized To Access This Page");
         }
     }
