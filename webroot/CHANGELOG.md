@@ -1,3 +1,27 @@
+### 5.15.2 - 2026-07-31
+- Bug Fixed: Date is saving the wrong value throughout multiple pages
+- Bug Fixed: Institutions>Students>List: Enrolled(Repeater) will reflect if the previous academic is Repeated/ Withdrawn/ Promoted/ Graduated but yet assign to the same Education Grade.
+- Bug Fixed: Institutions>Staff>Career>Leave Tab: Last executed user does not match the user who executes the workflow
+- Bug Fixed: Institutions>Performance>Report Cards: Report card generation is not found for student that is enrolled during Christmas term
+- Bug Fixed: Institution > student > special needs: Dropdown fields to be marked mandatory
+- Bug Fixed: Core>Directory>Select User type as Guardian>Search>view>Guardian>student:  Left sidebar panel disappears unexpectedly.
+- Bug Fixed: Develop Registrations and Accreditations features-Add buttons are missing
+- Bug Fixed: Administration>System Configuration>Authentication: Dropdown is not working properly when authentication is selected
+- Bug Fixed: 404 Error when workflow state changes from Pending Approval -> Approved
+- Bug Fixed: Reports > Institutions > Classes : Issues in Classes Report
+- Bug Fixed: API: Responses are not showing correctly
+
+### 5.15.1 - 2026-07-21
+- Bug Fixed: Core>Administration>Data Management>Copy : Copying of Institution Programmes, Grades and Subjects is not successful in gy-moe environment
+- Bug Fixed: Migration script to fix the query_sql
+- Bug Fixed: Admissions > Login : Currently when navigating to Admissions users see Administrator credentials in the API payload
+- Bug Fixed: Institution> Attendance> Staff : The staff attendance system is not allowing attendance records to be saved unless AM or PM is manually entered.
+- Bug Fixed: Directory > Users > Edit Page : Date field does not allow user to select other dates outside of today's date
+- Bug Fixed: Institutions > Staff > Add Page : Error message says "Please enter valid Identity number"
+- Bug Fixed: Report generation issue in age outliers and validation report.
+- Bug Fixed: Administration>System Configuration>Themes: OpenEMIS Registration should show OpenEMIS Admissions
+- Bug Fixed: Reports> Institutions : Unable to download report due to Error. The Principal is not able to download despite having the right permissions in Administration.
+
 ### [5.15.0] - 2026-07-06
 - Bug Fixed: Core>Administration>System Setup>Attendances>Status: Should be able to modify the Mark Type without encountering any errors.
 - Implemented: Develop configuration for next programme

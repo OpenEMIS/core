@@ -221,7 +221,8 @@ class UserBehavior extends Behavior
             $this->_table->fields['gender_id']['order'] = $i++;
             // POCOR-8286 date format start
             $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-            $systemDateFormat = $ConfigItems->value('date_format');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            // Strip PHP ordinal "S" — bootstrap-datepicker does not support it (avoids "31S August 2017")
             $phpToDatepickerFormat = [
                 'd' => 'dd',
                 'j' => 'd',
@@ -232,19 +233,26 @@ class UserBehavior extends Behavior
                 'M' => 'M',        // Jan, Feb (short month)
                 'F' => 'MM',       // January, February (full month)
                 'y' => 'yy',       // 2-digit year
-                'Y' => 'yyyy'      // 4-digit year
+                'Y' => 'yyyy',     // 4-digit year
+                'S' => '',
             ];
 
             $datepickerFormat = preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($phpToDatepickerFormat) {
                 return $phpToDatepickerFormat[$matches[0]] ?? $matches[0];
             }, $systemDateFormat);
+            $datepickerFormat = preg_replace('/\s+/', ' ', trim($datepickerFormat));
+            //POCOR-9765[START]
+            // endDate must match datepicker output format (no ordinals); also keeps Y-m-d endDate correct
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $endDate = date($editableDateFormat);
+            //POCOR-9765[END]
             // POCOR-8286 date format end
             if ($this->isCAv4()) {
 
                 $this->_table->field('date_of_birth', [
                     'date_options' => [
                         'format' => $datepickerFormat, // POCOR-8286
-                        'endDate' => date('d-m-Y')
+                        'endDate' => $endDate // POCOR-9765
                     ],
                     'default_date' => false,
                 ]);
@@ -254,7 +262,7 @@ class UserBehavior extends Behavior
                     [
                         'date_options' => [
                             'format' => $datepickerFormat, // POCOR-8286
-                            'endDate' => date('d-m-Y')
+                            'endDate' => $endDate //POCOR-9765
                         ],
                         'default_date' => false,
                     ]
@@ -1052,16 +1060,40 @@ class UserBehavior extends Behavior
         }
         // POCOR-8286 start
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $systemDateFormat = $ConfigItems->value('date_format');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // Datepicker cannot emit ordinals; parse without "S" and also accept legacy "30th" values
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
         try {
             $dob = $data['date_of_birth'] ?? null;
             if ($dob) {
-                $date = Chronos::createFromFormat($systemDateFormat, $dob);
+                $dobNormalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', (string)$dob);
+                try {
+                    $date = Chronos::createFromFormat($editableDateFormat, $dobNormalized);
+                } catch (\Exception $e) {
+                    $date = Chronos::createFromFormat($systemDateFormat, (string)$dob);
+                }
                 $data['date_of_birth'] = $date->format('Y-m-d');
             }
         } catch (\Exception $e) {
-            Log::warning("Invalid date: " . $data['date_of_birth'] . ' with format ' . $systemDateFormat);
+            Log::warning("Invalid date: " . ($data['date_of_birth'] ?? '') . ' with format ' . $systemDateFormat);
         }
         // POCOR-8286 end
+        // UserBehavior: also normalize date_of_death (same bug as date_of_birth above)
+        try {
+            $dod = $data['date_of_death'] ?? null;
+            if ($dod && !preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$dod)) {
+                $dodNormalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', (string)$dod);
+                try {
+                    $date = Chronos::createFromFormat($editableDateFormat, $dodNormalized);
+                } catch (\Exception $e) {
+                    $date = Chronos::createFromFormat($systemDateFormat, (string)$dod);
+                }
+                if ($date !== false && $date !== null) {
+                    $data['date_of_death'] = $date->format('Y-m-d');
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning("UserBehavior: Invalid date_of_death '" . ($data['date_of_death'] ?? '') . "' with format '{$systemDateFormat}'");
+        }
     }
 }

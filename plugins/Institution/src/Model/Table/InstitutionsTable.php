@@ -904,8 +904,68 @@ class InstitutionsTable extends ControllerActionTable
     public function onUpdateFieldDateOpened(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $today = new Date();
-        $attr['date_options']['endDate'] = $today->format('d-m-Y');
+        // The datepicker widget (HtmlFieldHelper::date()) displays/parses text using the system's
+        // configured Date Format, not a fixed 'd-m-Y'. This endDate option is read by that same
+        // widget instance, so it must be formatted the same way - otherwise the widget mis-parses
+        // its own max boundary and disables the wrong days.
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+        $attr['date_options']['endDate'] = $today->format($editableDateFormat);
         return $attr;
+    }
+
+    /**
+     * Returns [systemDateFormat, editableDateFormat] - the same pair computed by
+     * HtmlFieldHelper::date() to render/parse the "date" form field, so we can convert submitted
+     * text and datepicker range boundaries consistently with what is displayed.
+     */
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
+    /**
+     * The bootstrap-datepicker "date" fields (date_opened/date_closed) render/accept text in
+     * whatever format is configured in System Configurations > Date Format (e.g. "July 31, 2026"),
+     * not just 'Y-m-d'. Cake's DateType::marshal() only ever accepts the strict 'Y-m-d' format, so
+     * with any other configured format the submitted value was marshalled to null - and since
+     * date_opened has no default, saving then failed with "Column 'date_opened' cannot be null".
+     * Normalize the submitted value to 'Y-m-d' here, before patchEntity()/marshal() runs.
+     */
+    private function normalizeDateFields(ArrayObject $data, array $fields)
+    {
+        [$systemDateFormat, $editableDateFormat] = $this->getSystemDateFormats();
+
+        foreach ($fields as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                // already Y-m-d (or not a string we can parse) - leave untouched
+                continue;
+            }
+
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("InstitutionsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
     }
 
     public function onUpdateFieldDateClosed(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -934,6 +994,10 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+        // Normalize first: setInstitutionStatusId() below compares 'date_closed' against today's
+        // date using PHP's loose date parser, which mis-reads ambiguous formats like 'd/m/Y'
+        // unless the value has already been normalized to 'Y-m-d'.
+        $this->normalizeDateFields($data, ['date_opened', 'date_closed']);
         $this->setInstitutionStatusId($data);
     }
 
@@ -2024,9 +2088,9 @@ class InstitutionsTable extends ControllerActionTable
         if ($yearDateOpened != $yearOpened) {
             $debugInfo = $this->getAlias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
 
-            Log::write('debug', $debugInfo);
-            Log::write('debug', $options);
-            Log::write('debug', 'End of monitoring year opened');
+            // Log::write('debug', $debugInfo);
+            // Log::write('debug', $options);
+            // Log::write('debug', 'End of monitoring year opened');
         }
     }
 
