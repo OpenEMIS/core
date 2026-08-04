@@ -107,8 +107,8 @@ class CopyEducationStructureCommand extends CopyCommandBase
             ->all();
 
         foreach ($systems as $sys) {
-            // If a name ends with " <fromApName>", rewrite it to " <toApName>"
-            $newSystemName = $this->swapNameTail((string)$sys->name, $fromApName, $toApName);
+            // Rewrite name so TO structure reflects the target academic period
+            $newSystemName = $this->renameWithAcademicPeriod((string)$sys->name, $fromApName, $toApName);//POCOR-9767
             $this->logMsg('Start Education Structure Copy To ' . $newSystemName);
 
             // Avoid duplicates in TO: same system name for that TO period
@@ -142,7 +142,9 @@ class CopyEducationStructureCommand extends CopyCommandBase
                 ->all();
 
             foreach ($levels as $lvl) {
-                $lvlName = $this->swapNameTail((string)$lvl->name, $fromApName, $toApName);
+                // Keep level/cycle/programme/grade names unchanged — only the education system
+                // gets the target academic period name.
+                $lvlName = $this->stripTrailingAcademicPeriod((string)$lvl->name, $toApName);//POCOR-9767
 
                 // insert (no dedupe across names here; structure copy expects fresh tree)
                 $lvlEntity = $this->EducationLevels->newEntity([
@@ -166,7 +168,7 @@ class CopyEducationStructureCommand extends CopyCommandBase
                     ->all();
 
                 foreach ($cycles as $cyc) {
-                    $cycName = $this->swapNameTail((string)$cyc->name, $fromApName, $toApName);
+                    $cycName = $this->stripTrailingAcademicPeriod((string)$cyc->name, $toApName);//POCOR-9767
 
                     $cycEntity = $this->EducationCycles->newEntity([
                         'education_level_id' => $newLevelId,
@@ -188,7 +190,7 @@ class CopyEducationStructureCommand extends CopyCommandBase
                         ->all();
 
                     foreach ($progs as $prg) {
-                        $progName = $this->swapNameTail((string)$prg->name, $fromApName, $toApName);
+                        $progName = $this->stripTrailingAcademicPeriod((string)$prg->name, $toApName);//POCOR-9767
 
                         $progEntity = $this->EducationProgrammes->newEntity([
                             'education_cycle_id'          => $newCycleId,
@@ -248,7 +250,7 @@ class CopyEducationStructureCommand extends CopyCommandBase
                             ->all();
 
                         foreach ($grades as $gr) {
-                            $gradeName = $this->swapNameTail((string)$gr->name, $fromApName, $toApName);
+                            $gradeName = $this->stripTrailingAcademicPeriod((string)$gr->name, $toApName);//POCOR-9767
 
                             $grEntity = $this->EducationGrades->newEntity([
                                 'education_programme_id' => $newProgId,
@@ -330,22 +332,6 @@ class CopyEducationStructureCommand extends CopyCommandBase
 
         $this->logMsg('Copy complete.');
     }
-
-    /**
-     * Replace a trailing " <fromApName>" with " <toApName>" if present.
-     * Examples:
-     *   "National System 2025" + (from="2025", to="2026") → "National System 2026"
-     *   "Cycle (2025)"         + (from="2025", to="2026") → unchanged (pattern is only " SPACE + fromName")
-     */
-    private function swapNameTail(string $name, string $fromApName, string $toApName): string
-    {
-        $pattern = '/\s+' . preg_quote($fromApName, '/') . '$/u';
-        if (preg_match($pattern, $name) === 1) {
-            return preg_replace($pattern, ' ' . $toApName, $name) ?? $name;
-        }
-        return $name;
-    }
-
 
     private function uuid(): string
     {

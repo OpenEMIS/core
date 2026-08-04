@@ -779,7 +779,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         if (!$superAdmin) {
             $query->find('byAccess', [
                 'user_id' => $userId,
-                'institution_field_alias' => $this->aliasField($this->association('Institutions')->foreignKey())
+                'institution_field_alias' => $this->aliasField($this->getAssociation('Institutions')->getForeignKey())
             ]);
         }
             
