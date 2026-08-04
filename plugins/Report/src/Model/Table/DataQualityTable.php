@@ -57,7 +57,8 @@ class DataQualityTable extends AppTable {
             if (!(isset($this->request->getData($this->getAlias())['feature']))) {
                 $option = $attr['options'];
                 reset($option);
-                $this->request->getData($this->getAlias())['feature'] = key($option);
+                // $this->request->getData($this->getAlias())['feature'] = key($option);
+                $this->request = $this->request->withData($this->getAlias() . '.feature', key($option));
             }
             return $attr;
         }
@@ -149,7 +150,8 @@ class DataQualityTable extends AppTable {
                 $attr['select'] = false;
                 $attr['onChangeReload'] = true;
                 if (empty($request->getData($this->getAlias())['academic_period_id'])) {
-                    $request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
+                    // $request->getData($this->getAlias())['academic_period_id'] = $currentPeriod;
+                     $this->request = $this->request->withData($this->getAlias() . '.academic_period_id', $currentPeriod); // POCOR-9699
                 }
                 return $attr;
             }

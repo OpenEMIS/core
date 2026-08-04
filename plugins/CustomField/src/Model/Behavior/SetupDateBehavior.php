@@ -146,6 +146,33 @@ class SetupDateBehavior extends SetupBehavior
         }
     }
 
+    private function normalizeSetupDate($rawValue)
+    {
+        if (!is_string($rawValue) || $rawValue === '' || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+            return $rawValue;
+        }
+
+        $ConfigItems = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+        try {
+            try {
+                $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+            } catch (\Exception $e) {
+                $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+            }
+            if ($date !== false && $date !== null) {
+                return $date->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            \Cake\Log\Log::warning("SetupDateBehavior: Invalid date '{$rawValue}' with format '{$systemDateFormat}'");
+        }
+
+        return $rawValue;
+    }
+
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
@@ -154,8 +181,8 @@ class SetupDateBehavior extends SetupBehavior
                 $paramsArray = [];
                 // $start_date = (isset($data['start_date']))? $data['start_date']: null;
                 // $end_date = (isset($data['end_date']))? $data['end_date']: null;
-                $start_date = $data->offsetExists('start_date') ? $data->offsetGet('start_date') : null;
-                $end_date = $data->offsetExists('end_date') ? $data->offsetGet('end_date') : null;
+                $start_date = $data->offsetExists('start_date') ? $this->normalizeSetupDate($data->offsetGet('start_date')) : null;
+                $end_date = $data->offsetExists('end_date') ? $this->normalizeSetupDate($data->offsetGet('end_date')) : null;
 
                 if (!empty($start_date)) {
                     $paramsArray['start_date'] = $start_date;
