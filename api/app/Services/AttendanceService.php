@@ -51,6 +51,29 @@ class AttendanceService extends Controller
         }
     }
 
+    //POCOR-8630 start
+    /**
+     * @return array<string, int>|false
+     */
+    public function validateStaffAttendancePermissions(int $institutionId, array $params): array|false
+    {
+        return $this->attendanceRepository->validateStaffAttendancePermissions($institutionId, $params);
+    }
+
+
+    public function getStaffAttendancesArchive($request)
+    {
+        try {
+            return $this->attendanceRepository->getStaffAttendancesArchive($request);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Attendances Archive List from DB',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Staff Attendances Archive List Not Found');
+        }
+    }
+    //POCOR-8630 end
 
     public function getInstitutionShiftOption($request, $institutionId)
     {
@@ -459,5 +482,50 @@ class AttendanceService extends Controller
             return $this->sendErrorResponse('Staff Attendances Details Not Found');
         }
     }
+
+    //POCOR-8630 STARTS
+    public function getStaffAttendancesImportTemplateData(int $institutionId): array
+    {
+        try {
+            return $this->attendanceRepository->getStaffAttendancesImportTemplateData($institutionId);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch staff attendances import template data from DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            throw $e;
+        }
+    }
+
+
+    public function staffAttendancesImport(array $params)
+    {
+        try {
+            return $this->attendanceRepository->staffAttendancesImport($params);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import staff attendances in DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import staff attendances in DB.');
+        }
+    }
+
+
+    public function getStaffAttendancesExport(array $params): array
+    {
+        try {
+            return $this->attendanceRepository->getStaffAttendancesExport($params);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export staff attendances from DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            throw $e;
+        }
+    }
+
+    //POCOR-8630 ENDS
 
 }

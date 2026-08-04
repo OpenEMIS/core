@@ -130,13 +130,28 @@ class CopyInstitutionProgramsGradesSubjectsCommand extends CopyCommandBase
         $map = [];
         $missing = 0;
         foreach ($fromRows as $r) {
-            $sys = $this->swapTail($r['sys_name'], $fromApName, $toApName);
-            $lvl = $this->swapTail($r['lvl_name'], $fromApName, $toApName);
-            $cyc = $this->swapTail($r['cyc_name'], $fromApName, $toApName);
+            // Only education system names carry the TO academic period suffix.
+            // Levels/cycles keep their original names (any old period suffix stripped).
+            $sys = $this->renameWithAcademicPeriod($r['sys_name'], $fromApName, $toApName);//POCOR-9767
+            $lvl = $this->stripTrailingAcademicPeriod($r['lvl_name'], $toApName);//POCOR-9767
+            $cyc = $this->stripTrailingAcademicPeriod($r['cyc_name'], $toApName);//POCOR-9767
             $key = $this->keyPath($sys, $lvl, $cyc) . '|' . $r['prog_code'] . '|' . $r['grade_code'];
-
+            //POCOR-9767 STARTS
+            // Fallback for structures copied earlier with identical / renamed-everywhere names
+            $keyOriginal = $this->keyPath($r['sys_name'], $r['lvl_name'], $r['cyc_name'])
+                . '|' . $r['prog_code'] . '|' . $r['grade_code'];
+            $keyAllRenamed = $this->keyPath(
+                $sys,
+                $this->renameWithAcademicPeriod($r['lvl_name'], $fromApName, $toApName),
+                $this->renameWithAcademicPeriod($r['cyc_name'], $fromApName, $toApName)
+            ) . '|' . $r['prog_code'] . '|' . $r['grade_code'];
+            //POCOR-9767 ENDS
             if (isset($toIndex[$key])) {
                 $map[(int)$r['grade_id']] = $toIndex[$key];
+            } elseif (isset($toIndex[$keyOriginal])) {
+                $map[(int)$r['grade_id']] = $toIndex[$keyOriginal];//POCOR-9767
+            } elseif (isset($toIndex[$keyAllRenamed])) {
+                $map[(int)$r['grade_id']] = $toIndex[$keyAllRenamed];//POCOR-9767
             } else {
                 $missing++;
                 $this->logMsg( "  ~ No target grade for {$key} (skipping related IG/IPGS rows)");
@@ -423,16 +438,6 @@ class CopyInstitutionProgramsGradesSubjectsCommand extends CopyCommandBase
     private function keyPath(string $sys, string $lvl, string $cyc): string
     {
         return $sys . '|' . $lvl . '|' . $cyc;
-    }
-
-    /**
-     * Replace a trailing " SPACE + fromTail" with " SPACE + toTail", if present.
-     * e.g., "National System 2025" -> "National System 2026"
-     */
-    private function swapTail(string $name, string $fromTail, string $toTail): string
-    {
-        $pattern = '/\s+' . preg_quote($fromTail, '/') . '$/u';
-        return preg_replace($pattern, ' ' . $toTail, $name) ?? $name;
     }
 
 }

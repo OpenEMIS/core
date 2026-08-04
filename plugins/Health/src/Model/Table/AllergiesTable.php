@@ -14,6 +14,7 @@ use Cake\Validation\Validator;
 class AllergiesTable extends ControllerActionTable
 {
     use OptionsTrait;
+    use HealthLookupTrait; //POCOR-9718
 
     public function initialize(array $config): void
     {
@@ -156,6 +157,12 @@ class AllergiesTable extends ControllerActionTable
     {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         return $attr;
+    }
+
+    //POCOR-9718: populate health_allergy_type_id select from Health.AllergyTypes.
+    public function onUpdateFieldHealthAllergyTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.AllergyTypes');
     }
 
     private function setupFields(Entity $entity)

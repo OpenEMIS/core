@@ -11,6 +11,8 @@ use Cake\ORM\Entity;
 
 class ImmunizationsTable extends ControllerActionTable
 {
+    use HealthLookupTrait; //POCOR-9718
+
     public function initialize(array $config): void
     {
         $this->setTable('user_health_immunizations');
@@ -253,5 +255,10 @@ class ImmunizationsTable extends ControllerActionTable
                 return false;
             }
         }
+    }
+    //POCOR-9718: populate health_immunization_type_id select from Health.ImmunizationTypes.
+    public function onUpdateFieldHealthImmunizationTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.ImmunizationTypes');
     }
 }
