@@ -7096,6 +7096,12 @@ class InstitutionsController extends AppController
         if ($identityValidationError instanceof Response) {
             return $identityValidationError;
         }
+        //POCOR-9766: start - stop BEFORE creating the security_users row when the identity number already belongs to another user (each failed retry used to leave a half-created duplicate user behind)
+        $identityConflict = $this->identityOwnedByAnotherUser($requestData, (int)($requestData['staff_id'] ?? 0) ?: null);
+        if ($identityConflict instanceof Response) {
+            return $identityConflict;
+        }
+        //POCOR-9766: end
 //        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
         $staffData = $this->extractSecurityUserData($requestData, $userId, false,true);
@@ -7172,6 +7178,10 @@ class InstitutionsController extends AppController
         }
         if ($is_guardian) {
             $userData['is_guardian'] = 1;
+        }
+        //POCOR-9590: sync_status sent by JS (1 = came from External Search, 0 = manual add)
+        if (isset($requestData['sync_status'])) {
+            $userData['sync_status'] = (int)$requestData['sync_status'];
         }
         return $userData;
     }
@@ -7398,6 +7408,17 @@ class InstitutionsController extends AppController
             && $identity_type_id
             && $nationality_id) { // POCOR-9027 end
             $userIdentities = self::getDynamicTableInstance('User.Identities');
+            //POCOR-9766: start - this user already owns the identity (any nationality, incl. legacy NULL) - nothing to create
+            $ownedBySameUser = $userIdentities->find()
+                ->where([
+                    'security_user_id' => $userRecordId,
+                    'identity_type_id' => $identity_type_id,
+                    'number' => $identity_number,
+                ])->first();
+            if ($ownedBySameUser) {
+                return [];
+            }
+            //POCOR-9766: end
             $checkExistingIdentities = $userIdentities->find()
                 ->where([
                     'nationality_id' => $nationality_id,
@@ -7416,8 +7437,17 @@ class InstitutionsController extends AppController
                 ];
                 $entityIdentitiesData = $userIdentities->newEntity($entityIdentitiesData);
                 if ($entityIdentitiesData->hasErrors()) {
+                    //POCOR-9766: start - surface the actual validation error instead of masking every failure as an invalid number
+                    $message = __('Please enter a valid Identity Number');
+                    foreach ($entityIdentitiesData->getErrors() as $fieldErrors) {
+                        foreach ((array)$fieldErrors as $fieldError) {
+                            $message = __($fieldError);
+                            break 2;
+                        }
+                    }
                     return $this->sendJsonResponse([
-                        'message' => __('Please enter a valid Identity Number'),
+                        'message' => $message,
+                    //POCOR-9766: end
                         'errors' => $entityIdentitiesData->getErrors()
                     ], 422);
                 }
@@ -7436,6 +7466,32 @@ class InstitutionsController extends AppController
         }
         return [];
     }
+
+    //POCOR-9766: start - 422 with the true reason when the submitted identity number/type is already registered to a DIFFERENT user
+    private function identityOwnedByAnotherUser(array $requestData, ?int $excludeUserId = null): ?Response
+    {
+        $identityNumber = trim((string)($requestData['identity_number'] ?? ''));
+        $identityTypeId = (int)($requestData['identity_type_id'] ?? 0);
+        if ($identityNumber === '' || empty($identityTypeId)) {
+            return null;
+        }
+        $userIdentities = self::getDynamicTableInstance('User.Identities');
+        $conditions = [
+            'identity_type_id' => $identityTypeId,
+            'number' => $identityNumber,
+        ];
+        if (!empty($excludeUserId)) {
+            $conditions['security_user_id !='] = $excludeUserId;
+        }
+        $owner = $userIdentities->find()->where($conditions)->first();
+        if (!empty($owner)) {
+            return $this->sendJsonResponse([
+                'message' => __('This identity number is already registered to an existing user. Use the Internal Search step to select that user instead.')
+            ], 422);
+        }
+        return null;
+    }
+    //POCOR-9766: end
 
     /**
      * Handles contacts for a user. POCOR-8231
@@ -8638,7 +8694,10 @@ class InstitutionsController extends AppController
                 return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => $message]);  // POCOR-8989
             }
 
-            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]); // POCOR-8989 invalid ID by configuration
+            //POCOR-9590: identity is well-formed, no DB collision, and pattern check (POCOR-9688) passed —
+            //this is a new identity the wizard is allowed to create. The previous 400 here blocked
+            //every IdentityType without a validation_pattern (e.g. NIN), breaking add-from-external-source.
+            return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 200, 'message' => '']);
         } else {
             return $this->sendJsonResponse(['user_exist' => 0, 'status_code' => 400, 'message' => __('Invalid identity data.')]);
         }

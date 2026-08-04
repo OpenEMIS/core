@@ -14,6 +14,7 @@ use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\ORM\ResultSet;
+use Cake\Log\Log;
 use DateTime;
 
 class LandsTable extends ControllerActionTable
@@ -159,6 +160,35 @@ class LandsTable extends ControllerActionTable
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
         $data['name'] = $data['code'];
+
+        foreach (['start_date', 'end_date', 'new_start_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("LandsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
@@ -625,16 +655,27 @@ class LandsTable extends ControllerActionTable
         return $attr;
     }
 
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
     public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add') {
-            $startDate = $this->currentAcademicPeriod->start_date->format('d-m-Y');
+            [, $editableDateFormat] = $this->getSystemDateFormats();
+            $startDate = $this->currentAcademicPeriod->start_date->format($editableDateFormat);
             /* restrict Start Date from start until end of academic period
             $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
             */
             // temporary restrict until today until have better solution
             $today = new DateTime();
-            $endDate = $today->format('d-m-Y');
+            $endDate = $today->format($editableDateFormat);
 
             $attr['date_options']['startDate'] = $startDate;
             $attr['date_options']['endDate'] = $endDate;
@@ -654,7 +695,8 @@ class LandsTable extends ControllerActionTable
         if ($action == 'view') {
             $attr['visible'] = false;
         } elseif ($action == 'add') {
-            $endDate = $this->currentAcademicPeriod->end_date->format('d-m-Y');
+            [, $editableDateFormat] = $this->getSystemDateFormats();
+            $endDate = $this->currentAcademicPeriod->end_date->format($editableDateFormat);
 
             $attr['type'] = 'hidden';
             $attr['value'] = $endDate;
