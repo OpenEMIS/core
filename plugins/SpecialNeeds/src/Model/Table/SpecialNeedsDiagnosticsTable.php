@@ -52,16 +52,18 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        //POCOR-9715
-        return $validator
+        //POCOR-9674
+        $validator
             ->requirePresence('special_needs_diagnostics_type_id', true)
-            ->notEmptyString('special_needs_diagnostics_type_id', __('Please select a Type of disability'))
+            ->notEmptyString('special_needs_diagnostics_type_id', __('This field cannot be left empty'))
             ->requirePresence('special_needs_diagnostics_degree_id', true)
-            ->notEmptyString('special_needs_diagnostics_degree_id', __('Please select a Disability Degree'))
+            ->notEmptyString('special_needs_diagnostics_degree_id', __('This field cannot be left empty'))
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-            ]); //POCOR-9584: Removed academic period range validation
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.'),
+            ]);
+
+        return $validator;
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -78,7 +80,14 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     public function onUpdateFieldSpecialNeedsDiagnosticsTypeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+        //POCOR-9674
+        if (!isset($attr['attr'])) {
+            $attr['attr'] = [];
+        }
+        $attr['attr']['required'] = true;
+        //POCOR-9674
         $attr['onChangeReload'] = true;
+
         return $attr;
     }
 
@@ -113,6 +122,8 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
                 $attr['value'] = $attr['entity']->special_needs_diagnostics_degree_id;
                 //POCOR-9584: end
             }
+            $attr['attr']['required'] = true;
+
             return $attr;
         }
     }
@@ -167,8 +178,8 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('special_needs_diagnostics_type_id', ['type' => 'select', 'null' => false]); //POCOR-9715
-        $this->field('special_needs_diagnostics_degree_id', ['type' => 'select', 'null' => false]); //POCOR-9715
+        $this->field('special_needs_diagnostics_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
+        $this->field('special_needs_diagnostics_degree_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('comment', ['type' => 'text']);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('file_content', ['null' => true, 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //Modify for POCOR-7147
@@ -179,6 +190,35 @@ class SpecialNeedsDiagnosticsTable extends ControllerActionTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+        foreach (['date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                \Cake\Log\Log::warning("SpecialNeedsDiagnosticsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+
         $sentData = $this->request->getData();
         $alias = $this->getAlias();
         $sentData = $sentData[$alias];

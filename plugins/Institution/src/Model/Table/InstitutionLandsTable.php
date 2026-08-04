@@ -219,6 +219,35 @@ class InstitutionLandsTable extends ControllerActionTable
             }
         }
         //POCOR-7769
+
+        foreach (['start_date', 'end_date', 'new_start_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("InstitutionLandsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
@@ -684,10 +713,21 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         $today = new DateTime();
         // POCOR-8037 removed academic period code
-        $startDate = $today->format('d-m-Y');
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+        $startDate = $today->format($editableDateFormat);
         $attr['date_options']['startDate'] = $startDate;
 
         return $attr;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -712,7 +752,8 @@ class InstitutionLandsTable extends ControllerActionTable
             } else {
                 $start_date = $entity->start_date;
                 if (!empty($start_date)) {
-                    $attr['date_options']['startDate'] = $start_date->format('d-m-Y');
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
+                    $attr['date_options']['startDate'] = $start_date->format($editableDateFormat);
                 }
             }
         }

@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         $template = $this->ControllerAction->getFormTemplate();
         $this->Form->setTemplates($template);
+        $authenticationTypeOptions = $authenticationTypeOptions ?? [];
 
         echo $this->Form->control('config_item_type', [
             'class' => 'form-control chosenSelect', //POCOR-9225
@@ -50,6 +51,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			'url' => $baseUrl,
             'data-named-key' => 'type',
         ]);
+
+        // POCOR-7156 / POCOR-8996: second filter on Authentication view/edit (was idp_controls)
+        if (!empty($authenticationTypeOptions)) {
+            echo $this->Form->control('authentication_type', [
+                'class' => 'form-control chosenSelect',
+                'label' => false,
+                'type' => 'select',
+                'options' => $authenticationTypeOptions,
+                'url' => $baseUrl,
+                'data-named-key' => 'authentication_type',
+                'data-named-group' => 'type',
+            ]);
+        }
 
         // POCOR-8951 start
         if ($this->request->getParam('action') === 'Themes') {
