@@ -1190,6 +1190,7 @@ trait MessagesTrait
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
                         'inTargetSchool' => 'Student is already enrolled in this school.',
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
+                        'inSameProgramme' => 'Student is already enrolled in the same programme.', //POCOR-9355
                     ],
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
                     'ruleCheckAdmissionAgeWithEducationCycleGrade' => 'This student does not fall within the allowed age range for this grade',

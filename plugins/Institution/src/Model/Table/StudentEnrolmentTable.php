@@ -140,11 +140,10 @@ class StudentEnrolmentTable extends ControllerActionTable
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
                     'on' => function ($context) {
                         //POCOR-6172-HINDOL[START]
-                        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-                        $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
-                        $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
-                        // $this->log($multipleInstitutions);
-                        if ($multipleInstitutions) return false;
+                        //POCOR-9355: The multi-institution / multi-programme decision matrix is now fully
+                        // resolved inside ValidationBehavior::studentNotEnrolledInAnyInstitutionAndSameEducationSystem
+                        // and StudentsTable::validateEnrolledInAnyInstitution, so this rule always
+                        // runs and lets that shared logic decide allow/reject for every combination.
                         //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $Institutions = self::getDynamicTableInstance('Institution.Institutions');
