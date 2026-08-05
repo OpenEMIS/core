@@ -7705,6 +7705,12 @@ class InstitutionsController extends AppController
                     'id' => Text::uuid(),
                     'student_status_id' => $requestData['student_status_id'] ?? null,
                     'student_id' => $userRecordId,
+                    //POCOR-9355: StudentsTable::validationDefault() hangs the duplicate-enrolment,
+                    // completed-grade, and admission-age rules off the 'student_name' field.
+                    // CakePHP's Validator skips a field's rules entirely when the key is absent
+                    // from the data array (Validator::validate(), "if (!$keyPresent) continue;"),
+                    // so without this key those checks silently never ran for this save path.
+                    'student_name' => (string)$userRecordId,
                     'education_grade_id' => $educationGradeId,
                     'academic_period_id' => $academicPeriodId,
                     'start_date' => $startDate,
@@ -7722,7 +7728,22 @@ class InstitutionsController extends AppController
                         $saved_student['institution_student'] = $savedResult->toArray();
                     } else {
                         //POCOR-9635: save returned false (validation failure) — toArray() on false caused fatal crash
-                        Log::error('[POCOR-9635] institution_students save failed in saveStudentData for student_id=' . ($entityStudentsData->student_id ?? 'unknown') . ' institution_id=' . ($entityStudentsData->institution_id ?? 'unknown') . ' errors=' . json_encode($entityStudentsData->getErrors()));
+                        $validationErrors = $entityStudentsData->getErrors();
+                        Log::error('[POCOR-9635] institution_students save failed in saveStudentData for student_id=' . ($entityStudentsData->student_id ?? 'unknown') . ' institution_id=' . ($entityStudentsData->institution_id ?? 'unknown') . ' errors=' . json_encode($validationErrors));
+
+                        //POCOR-9355: surface the actual rule message (e.g. "already enrolled in the
+                        // same programme") to the UI instead of a generic failure - the JS layer
+                        // reads saved_student.error when institution_student is missing.
+                        $firstError = null;
+                        foreach ($validationErrors as $fieldErrors) {
+                            foreach ((array)$fieldErrors as $message) {
+                                if (is_string($message)) {
+                                    $firstError = $message;
+                                    break 2;
+                                }
+                            }
+                        }
+                        $saved_student['error'] = $firstError ?? __('Student is not added. Check for errors.');
                     }
                 } catch (\Exception $exception) {
                     Log::debug(__FUNCTION__);
