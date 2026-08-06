@@ -5,8 +5,12 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
+use Cake\Http\ServerRequest;
+use ArrayObject;
+use Cake\Core\Configure;
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -17,13 +21,85 @@ class CounsellingsTable extends ControllerActionTable
         $this->setTable('counsellings');
         parent::initialize($config);
 
-        $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        // POCOR-9771: a counselling record can have multiple guidance types, via the
+        // counselling_guidance_types join table
+        $this->belongsToMany('GuidanceTypes', [
+            'className' => 'Student.GuidanceTypes',
+            'joinTable' => 'counselling_guidance_types',
+            'foreignKey' => 'counselling_id',
+            'targetForeignKey' => 'guidance_type_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+        ]);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
-            'size' => '2MB'
+            'size' => Configure::read('Attachment.fileSize'),
         ]);
+    }
+
+    //POCOR-9771
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['GuidanceTypes']);
+    }
+
+    //POCOR-9771
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['GuidanceTypes']);
+    }
+
+    //POCOR-9771
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['GuidanceTypes']);
+    }
+
+    //POCOR-9771
+    public function onGetGuidanceTypes(EventInterface $event, Entity $entity)
+    {
+        if ($entity->has('guidance_types') && !empty($entity->guidance_types)) {
+            $names = implode(', ', array_map(function ($guidanceType) {
+                return $guidanceType->name;
+            }, $entity->guidance_types));
+            return $names !== '' ? $names : '&nbsp;';
+        }
+        return '&nbsp;';
+    }
+
+    //POCOR-9771
+    public function onUpdateFieldGuidanceTypes(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = true;
+            $attr['select'] = false;
+            $attr['options'] = $this->getGuidanceTypesOptions(null);
+        }
+        return $attr;
+    }
+
+    //POCOR-9771
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('guidance_types', ['visible' => true]);
+        $this->field('guidance_type_id', ['visible' => false]);
+    }
+
+    //POCOR-9771
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('guidance_types');
+        $this->field('guidance_type_id', ['visible' => false]);
+    }
+
+    //POCOR-9771
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('guidance_types');
+        $this->field('guidance_type_id', ['visible' => false]);
     }
 
     public function implementedEvents(): array

@@ -19,7 +19,16 @@ class CounsellingsTable extends AppTable
         $this->setTable('counsellings');
         parent::initialize($config);
 
-        $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        // POCOR-9771: a counselling record can have multiple guidance types, via the
+        // counselling_guidance_types join table (replaces the old single guidance_type_id FK).
+        $this->belongsToMany('GuidanceTypes', [
+            'className' => 'Student.GuidanceTypes',
+            'joinTable' => 'counselling_guidance_types',
+            'foreignKey' => 'counselling_id',
+            'targetForeignKey' => 'guidance_type_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+        ]);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
@@ -41,6 +50,14 @@ class CounsellingsTable extends AppTable
             $event->stopPropagation();
             return true;
         }
+    }
+
+    //POCOR-9771: the Page component's autoContains() only picks up belongsTo (manyToOne)
+    //associations, so GuidanceTypes (belongsToMany) needs to be contained here instead — this
+    //runs on every find() and merges with whatever contain the Page component already set.
+    public function beforeFind(EventInterface $event, Query $query, \ArrayObject $options, $primary)
+    {
+        $query->contain(['GuidanceTypes']);
     }
 
     public function validationDefault(Validator $validator): Validator
