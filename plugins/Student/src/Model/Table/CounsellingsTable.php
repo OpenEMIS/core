@@ -11,6 +11,7 @@ use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\EventInterface;
 use Cake\ORM\Entity;
+use Cake\Core\Configure;
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -41,7 +42,7 @@ class CounsellingsTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
-            'size' => '2MB',
+            'size' => Configure::read('Attachment.fileSize'),
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
@@ -441,6 +442,7 @@ class CounsellingsTable extends ControllerActionTable
         return $data;
     }*/
    
+   //POCOR-9771
     public function onUpdateFieldGuidanceTypes(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if ($action == 'add' || $action == 'edit') {
