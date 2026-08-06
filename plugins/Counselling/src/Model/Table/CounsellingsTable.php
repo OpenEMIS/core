@@ -34,6 +34,7 @@ class CounsellingsTable extends AppTable
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
         ]);
+        $this->Users = TableRegistry::getTableLocator()->get('Security.Users');
     }
 
     public function implementedEvents(): array
@@ -84,30 +85,23 @@ class CounsellingsTable extends AppTable
         return $guidanceTypesOptions;
     }
 
-    public function getCounselorOptions($institutionId)
+    public function getCounselorOptions()
     {
-        // get the staff that assigned from the institution from security user
-        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
-
-        $counselorOptions = $this->Counselors
+        $counselorOptions = $this->Users
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name_with_id'
             ])
-            ->innerJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
-                    [
-                        $InstitutionStaff->aliasField('staff_id = ') . $this->Counselors->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
-                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
-                    ]
-                )
+            ->where([
+                $this->Users->aliasField('status') => 1
+            ])
             ->order([
-                $this->Counselors->aliasField('first_name'),
-                $this->Counselors->aliasField('last_name')
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('last_name')
             ])
             ->toArray();
 
         return $counselorOptions;
     }
+
 }
