@@ -71,10 +71,28 @@ class POCOR9771 extends AbstractMigration
     {
         // Remove junction table
         $this->table('counselling_guidance_types')->drop()->save();
+        $table = $this->table('counsellings');
+        $table->addColumn('guidance_type_id', 'integer', [
+            'limit' => 11,
+            'null' => true,
+            'comment' => 'links to guidance_types.id',
+        ])->update();
+        $this->execute('ALTER TABLE `counsellings` ADD CONSTRAINT `insti_couns_fk_gui_typ_id` FOREIGN KEY (`guidance_type_id`) REFERENCES `guidance_types`(`id`)');
 
-        // Restore original counsellings table data
+        // Restore original counsellings table data .
+        // re-added guidance_type_id column in the table, not in its
         $this->execute('DELETE FROM `counsellings`');
-        $this->execute('INSERT INTO `counsellings` SELECT * FROM `zz_9771_counsellings`');
+        $this->execute('
+            INSERT INTO `counsellings`
+                (id, date, guidance_utilized, description, intervention, comment, file_name,
+                 file_content, counselor_id, student_id, requester_id, guidance_type_id,
+                 modified_user_id, modified, created_user_id, created)
+            SELECT
+                id, date, guidance_utilized, description, intervention, comment, file_name,
+                file_content, counselor_id, student_id, requester_id, guidance_type_id,
+                modified_user_id, modified, created_user_id, created
+            FROM `zz_9771_counsellings`
+        ');
 
         // Remove backup table
         $this->execute('DROP TABLE IF EXISTS `zz_9771_counsellings`');
