@@ -1,17 +1,5 @@
 <?php
 namespace Institution\Model\Table;
-
-use App\Model\Table\ControllerActionTable;
-use Cake\ORM\Table;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Query;
-use Cake\ORM\Entity;
-use Cake\Validation\Validator;
-use Cake\Event\EventInterface;
-use Cake\Http\ServerRequest;
-use ArrayObject;
-use Cake\Core\Configure;
-
 use ArrayObject;
 use stdClass;
 use Cake\ORM\Query;
