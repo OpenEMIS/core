@@ -275,7 +275,7 @@ class StudentAbsencesPerDaysTable extends AppTable
         $extraFields[] = [
             'key' => 'absence_date',
             'field' => 'absence_date',
-            'type' => 'date',
+            'type' => 'string', //POCOR-9758
             'label' => __('Absence Date')
         ];
         $extraFields[] = [
