@@ -17,8 +17,8 @@ class POCOR9355 extends AbstractMigration
     public function up(): void
     {
         // Backup table
-        $this->execute('CREATE TABLE `zz_multiprogenrol_config_items` LIKE `config_items`');
-        $this->execute('INSERT INTO `zz_multiprogenrol_config_items` SELECT * FROM `config_items`');
+        $this->execute('CREATE TABLE `zz_9355_config_items` LIKE `config_items`');
+        $this->execute('INSERT INTO `zz_9355_config_items` SELECT * FROM `config_items`');
         $this->execute("INSERT IGNORE INTO `config_items` (
             name,
             code,
@@ -58,6 +58,6 @@ class POCOR9355 extends AbstractMigration
     {
         // Restore table
         $this->execute('DROP TABLE IF EXISTS `config_items`');
-        $this->execute('RENAME TABLE `zz_multiprogenrol_config_items` TO `config_items`');
+        $this->execute('RENAME TABLE `zz_9355_config_items` TO `config_items`');
     }
 }
