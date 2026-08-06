@@ -28,7 +28,16 @@ class CounsellingsTable extends ControllerActionTable
     {
         $this->setTable('counsellings');
         parent::initialize($config);
-        $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        // POCOR-9771: a counselling record can have multiple guidance types, via the
+        // counselling_guidance_types join table (replaces the old single guidance_type_id FK).
+        $this->belongsToMany('GuidanceTypes', [
+            'className' => 'Student.GuidanceTypes',
+            'joinTable' => 'counselling_guidance_types',
+            'foreignKey' => 'counselling_id',
+            'targetForeignKey' => 'guidance_type_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+        ]);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
         $this->addBehavior('ControllerAction.FileUpload', [
@@ -73,13 +82,51 @@ class CounsellingsTable extends ControllerActionTable
         $counselorOptions = $this->getCounselorOptions($institutionId);
         $this->fields['requester_id']['type'] = 'select';
         $this->fields['requester_id']['options'] = $requestorOptions;
-        $this->fields['guidance_type_id']['type'] = 'select';
         $this->fields['counselor_id']['type'] = 'select';
         $this->fields['counselor_id']['options'] = $counselorOptions;
         $this->fields['date']['type'] = 'date';
         $this->fields['date']['value'] = Time::now()->format('d-m-Y');
-        $this->setFieldOrder(['date','counselor_id','guidance_type_id','requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'attachment']);
-        
+        //POCOR-9771: guidance_type_id (single) replaced by guidance_types (multi-select)
+        $this->field('guidance_types', ['visible' => true]);
+        $this->field('guidance_type_id', ['visible' => false]);
+        $this->setFieldOrder(['date','counselor_id','guidance_types','requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'attachment']);
+
+    }
+
+    //POCOR-9771
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['GuidanceTypes']);
+    }
+
+    //POCOR-9771
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['GuidanceTypes']);
+    }
+
+    //POCOR-9771
+    public function onGetGuidanceTypes(EventInterface $event, Entity $entity)
+    {
+        if ($entity->has('guidance_types') && !empty($entity->guidance_types)) {
+            $names = implode(', ', array_map(function ($guidanceType) {
+                return $guidanceType->name;
+            }, $entity->guidance_types));
+            return $names !== '' ? $names : '&nbsp;';
+        }
+        return '&nbsp;';
+    }
+
+    //POCOR-9771
+    public function onUpdateFieldGuidanceTypes(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = true;
+            $attr['select'] = false;
+            $attr['options'] = $this->getGuidanceTypesOptions(null);
+        }
+        return $attr;
     }
     
     public function getCounselorOptions($institutionId)
@@ -206,7 +253,8 @@ class CounsellingsTable extends ControllerActionTable
                 return __('Guidance Utilized');
             case 'description': 
                 return __('Description'); 
-            case 'guidance_type_id': 
+            case 'guidance_type_id':
+            case 'guidance_types':
                 return __('Guidance Type');
             case 'comment': 
                 return __('Comment');
@@ -228,8 +276,17 @@ class CounsellingsTable extends ControllerActionTable
         $this->field('file_name', ['visible' => false]);
         $this->field('comment', ['visible' => false]);
         $this->field('guidance_utilized', ['visible' => false]);
-        
-        $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_type_id', 'requester_id',  'Actions']);
+        //POCOR-9771: guidance_type_id (single) replaced by guidance_types (multi-select)
+        $this->field('guidance_type_id', ['visible' => false]);
+        $this->field('guidance_types');
+
+        $this->setFieldOrder(['date', 'description', 'intervention', 'counselor_id', 'guidance_types', 'requester_id',  'Actions']);
+    }
+
+    //POCOR-9771
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['GuidanceTypes']);
     }
 
 
