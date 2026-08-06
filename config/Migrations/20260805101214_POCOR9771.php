@@ -35,10 +35,12 @@ class POCOR9771 extends AbstractMigration
             ])
             ->addColumn('created_user_id', 'integer', [
                 'limit' => 11,
-                'null' => false
+                'null' => true,
+                'default' => null
             ])
             ->addColumn('created', 'datetime', [
-                'null' => false
+                'null' => false,
+                'default' => 'CURRENT_TIMESTAMP'
             ])
             ->addIndex(['counselling_id'])
             ->addIndex(['guidance_type_id'])
@@ -61,10 +63,15 @@ class POCOR9771 extends AbstractMigration
         // Remove index and column from counsellings
         $table = $this->table('counsellings');
 
-        $table
-            ->dropForeignKey('guidance_type_id', 'insti_couns_fk_gui_typ_id')
-            ->removeColumn('guidance_type_id')
-            ->update();
+        if ($table->hasForeignKey('guidance_type_id', 'insti_couns_fk_gui_typ_id')) {
+            $table->dropForeignKey('guidance_type_id', 'insti_couns_fk_gui_typ_id');
+        }
+
+        if ($table->hasColumn('guidance_type_id')) {
+            $table->removeColumn('guidance_type_id');
+        }
+
+        $table->update();
     }
 
     public function down()

@@ -169,7 +169,7 @@ class CounsellingsTable extends ControllerActionTable
             ->extract('guidance_type_id')
             ->toArray();
         if (empty($guidanceTypeIds)) {
-            return '';
+            return '&nbsp;';
         }
 
         $guidanceTypes = $this->GuidanceTypes->find()
@@ -180,7 +180,8 @@ class CounsellingsTable extends ControllerActionTable
             ->extract('name')
             ->toArray();
 
-        return implode(', ', $guidanceTypes);
+        $names = implode(', ', $guidanceTypes);
+        return $names !== '' ? $names : '&nbsp;';
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -458,6 +459,19 @@ class CounsellingsTable extends ControllerActionTable
             $attr['options'] = $guidanceTypesOptions;
         }
         return $attr;
+    }
+
+    //POCOR-9771
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $loginUserIdUser = $this->Auth->User('id');
+        $this->CounsellingGuidanceTypes->updateAll(
+            ['created_user_id' => $loginUserIdUser],
+            [
+                'counselling_id' => $entity->id,
+                'created_user_id IS' => null,
+            ]
+        );
     }
 
 }
