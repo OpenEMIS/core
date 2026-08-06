@@ -177,7 +177,7 @@ class CounsellingsTable extends ControllerActionTable
             ->extract('guidance_type_id')
             ->toArray();
         if (empty($guidanceTypeIds)) {
-            return '';
+            return '&nbsp;';
         }
 
         $guidanceTypes = $this->GuidanceTypes->find()
@@ -188,7 +188,8 @@ class CounsellingsTable extends ControllerActionTable
             ->extract('name')
             ->toArray();
 
-        return implode(', ', $guidanceTypes);
+        $names = implode(', ', $guidanceTypes);
+        return $names !== '' ? $names : '&nbsp;';
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -466,6 +467,30 @@ class CounsellingsTable extends ControllerActionTable
             $attr['options'] = $guidanceTypesOptions;
         }
         return $attr;
+    }
+
+    //POCOR-9771
+    //POCOR-9771: belongsToMany's _ids link-save bypasses the junction table's own model
+    //events entirely, so created_user_id/modified_user_id are left NULL. Backfill them here,
+    //targeting only rows this save just touched (created_user_id IS NULL).
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->has('id')) {
+            return;
+        }
+
+        $userId = $this->getUserID();
+        if (empty($userId)) {
+            return;
+        }
+
+        $this->CounsellingGuidanceTypes->updateAll(
+            ['created_user_id' => $userId, 'modified_user_id' => $userId],
+            [
+                'counselling_id' => $entity->id,
+                'created_user_id IS' => null,
+            ]
+        );
     }
 }
 
