@@ -1,26 +1,18 @@
 <?php
 namespace Directory\Model\Table;
 
-use ArrayObject;
-use stdClass;
-use Cake\ORM\Query;
-use Cake\ORM\Entity;
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\EventInterface;
-use Cake\Http\ServerRequest;
-use Cake\Utility\Inflector;
-use Cake\Utility\Text;
+use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Collection\Collection;
-use Cake\I18n\Date;
-use Cake\Log\Log;
-use Cake\Routing\Router;
+use Cake\Http\ServerRequest;
+use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\MessagesTrait;
-use Cake\Datasource\ResultSetInterface;
-use Cake\Http\Session;
-use Cake\I18n\Time;
+use ArrayObject;
+use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
 use Cake\Core\Configure;
+use Cake\Http\Session;
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -87,7 +79,20 @@ class CounsellingsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator->allowEmpty('file_content');
+        $validator->add('file_content', 'invalidExtension', [
+            'rule' => function ($value, $context) {
+                if (empty($value)) {
+                    return true;
+                }
+
+                $extension = strtolower(pathinfo($value->getClientFilename(), PATHINFO_EXTENSION));
+
+                return !in_array($extension, ['mov', 'mp4','.exe'], true);
+            },
+            'message' => __('The file is not supported.')
+        ]);
+
+        return $validator->allowEmptyFile('file_content');
     }
 
     public function getDefaultConfig()
@@ -473,12 +478,11 @@ class CounsellingsTable extends ControllerActionTable
     //POCOR-9771
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $loginUserIdUser = $this->Auth->User('id');
+        $loginUserIdUser = $this->Session->read('Auth.User.id');
         $this->CounsellingGuidanceTypes->updateAll(
-            ['created_user_id' => $userId, 'modified_user_id' => $userId],
+            ['created_user_id' => $loginUserIdUser],
             [
                 'counselling_id' => $entity->id,
-                'created_user_id IS' => null,
             ]
         );
     }
