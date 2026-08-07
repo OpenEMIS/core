@@ -35,7 +35,7 @@ class POCOR9771 extends AbstractMigration
             ])
             ->addColumn('created_user_id', 'integer', [
                 'limit' => 11,
-                'null' => true,
+                'null' => false,
                 'default' => null
             ])
             ->addColumn('created', 'datetime', [
