@@ -885,8 +885,15 @@ class CrudApiController extends Controller
                 ]);
             }
         }
+        //POCOR-9753
+        $paginationEnabled = filter_var(
+            $request->query('pagination', true),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments, 
+            $paginationEnabled);
 
-        return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
+        //return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
     }
 
     /**
@@ -1119,7 +1126,9 @@ class CrudApiController extends Controller
             'page',
             'limit',
             '_scope',
-            '_fields'];
+            '_fields',
+            'pagination',
+            ];
 
         // Parse conditions from the query parameter
         $conditionsParam = $request->input('_conditions');
@@ -1215,6 +1224,10 @@ class CrudApiController extends Controller
     {
         if (!is_string($value)) {
             return $value;
+        }
+
+        if (strpos($value, ',') !== false) {
+            return array_map('trim', explode(',', $value));
         }
 
         $value = trim($value);
@@ -1687,7 +1700,7 @@ class CrudApiController extends Controller
         return $query;
     }
 
-    private function paginateResults($query, $limit, $page, $model, $segments)
+    private function paginateResults($query, $limit, $page, $model, $segments, bool $pagination = true)
     {
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             $record = $this->findRecord($model, $segments);
@@ -1704,7 +1717,17 @@ class CrudApiController extends Controller
         }
 
         // Proceed with pagination if no single valid identifier is found
-        try {
+       try {
+            if (!$pagination) { //POCOR-9753
+                $results = $query->get();
+                return response()->json([
+                    'message' => 'Data retrieved successfully.',
+                    'data' => [
+                        'data' => $results,
+                        'total' => $results->count(),
+                    ]
+                ]);
+            }
             $results = $query->paginate($limit, ['*'], 'page', $page);
 
             // POCOR-9461: Apply afterFetchResults to the collection inside paginator

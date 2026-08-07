@@ -5480,7 +5480,13 @@ class NavigationComponent extends Component
                 $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($id);
             }
             if ($action == 'GuardianStudents') {
-                $userInfo = TableRegistry::getTableLocator()->get('Guardian.Students')->get($securityUserId);
+                // POCOR-9707 starts
+                try {
+                    $userInfo = TableRegistry::getTableLocator()->get('Guardian.Students')->get($securityUserId);
+                } catch (\Throwable $th) {
+                    Log::debug($th->getMessage());
+                }
+                // POCOR-9707 ends
             }
             if ($action == 'StudentGuardians') {
                 $studentId = $id;
