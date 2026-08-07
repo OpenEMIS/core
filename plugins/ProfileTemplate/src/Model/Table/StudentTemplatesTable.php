@@ -68,6 +68,8 @@ class StudentTemplatesTable extends ControllerActionTable
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             // generate_start_date/generate_end_date are marked mandatory (*) in the form. Cake's
             // Validator silently skips custom add() rules (like ruleInAcademicPeriod below) for
             // empty values unless a presence/non-empty rule is also declared, so a blank submission
