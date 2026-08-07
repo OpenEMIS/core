@@ -253,7 +253,7 @@ class InstitutionStaffTable extends AppTable
                             ]
                         )
                         ->where([
-                            $StaffCustomFieldValues->aliasField('staff_id') => $row->user['id'],
+                            $StaffCustomFieldValues->aliasField('staff_id') => $staffUserId,
                         ])->toArray();   
                 }
                 $existingCheckboxValue = '';
