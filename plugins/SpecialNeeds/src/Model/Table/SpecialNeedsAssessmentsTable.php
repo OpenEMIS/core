@@ -14,6 +14,39 @@ use Cake\Validation\Validator;
 class SpecialNeedsAssessmentsTable extends ControllerActionTable
 {
     const COMMENT_MAX_LENGTH = 350;
+
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                \Cake\Log\Log::warning("SpecialNeedsAssessmentsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('user_special_needs_assessments');
@@ -56,19 +89,24 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator
-            // ->notEmpty('assessor_id')//POCOR-9026
-            ->allowEmptyString('comment') //POCOR-9026
+        //POCOR-9674
+        $validator
+            ->requirePresence('assessor_id', true)
+            ->notEmptyString('assessor_id', __('This field cannot be left empty'))
+            ->requirePresence('special_need_type_id', true)
+            ->notEmptyString('special_need_type_id', __('This field cannot be left empty'))
+            ->requirePresence('special_need_difficulty_id', true)
+            ->notEmptyString('special_need_difficulty_id', __('This field cannot be left empty'))
+            ->requirePresence('comment', true)
+            ->notEmptyString('comment', __('This field cannot be left empty'))
             ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-             ])
-//             ->add('date', // POCOR-9061
-//                 'ruleCheckInputWithinRange',
-//                     ['rule' => ['checkInputWithinCurrentAcademicRange', 'date_of_behaviour']]
-//
-//             )
-            ->allowEmpty('file_content');
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.'),
+            ]);
+
+        $validator->allowEmpty('file_content');
+
+        return $validator;
     }
 
     public function implementedEvents(): array
@@ -265,12 +303,12 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
     private function setupFields($entity = null)
     {
         $this->field('date');
-        $this->field('special_need_type_id', ['type' => 'select']);
-        $this->field('special_need_difficulty_id', ['type' => 'select']);
+        $this->field('special_need_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
+        $this->field('special_need_difficulty_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('assessor_id', ['entity' => $entity]);  //POCOR-6873
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['view' => true, 'edit' => true]]);
         $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('comment', ['type' => 'text']);
+        $this->field('comment', ['type' => 'text', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
         $this->setFieldOrder(['date', 'assessor_id', 'special_need_type_id', 'special_need_difficulty_id','file_name', 'file_content', 'comment']); //POCOR-6873
@@ -348,7 +386,10 @@ class SpecialNeedsAssessmentsTable extends ControllerActionTable
             $attr['type'] = 'autocomplete';
             $attr['target'] = ['key' => $dataKey, 'name' => $this->aliasField($dataKey)];
             $attr['noResults'] = __('No User found.');
-            $attr['attr'] = ['placeholder' => __('OpenEMIS ID, Identity Number or Name')];
+            $attr['attr'] = [
+                'placeholder' => __('OpenEMIS ID, Identity Number or Name'), //POCOR-9674
+                'required' => true,
+            ];
             // $attr['onSelect'] = "$('#reload').click();";
 
             $urlAction = $this->getAlias();
