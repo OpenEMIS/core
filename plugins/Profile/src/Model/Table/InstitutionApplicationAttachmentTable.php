@@ -112,9 +112,9 @@ class InstitutionApplicationAttachmentTable extends ControllerActionTable
         if ($field == 'scholarship_attachment_type_id') {
             return __('Type');
         }else if ($field == 'created') {
-            return __('Uploaded By');
-        } else if ($field == 'created_user_id') {
             return __('Uploaded On');
+        } else if ($field == 'created_user_id') {
+            return __('Uploaded By');
         } else if ($field == 'applicant_id') {
             return __('Applicant');
         }else if ($field == 'start_date') {
