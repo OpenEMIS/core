@@ -79,20 +79,7 @@ class CounsellingsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        $validator->add('file_content', 'invalidExtension', [
-            'rule' => function ($value, $context) {
-                if (empty($value)) {
-                    return true;
-                }
-
-                $extension = strtolower(pathinfo($value->getClientFilename(), PATHINFO_EXTENSION));
-
-                return !in_array($extension, ['mov', 'mp4','.exe'], true);
-            },
-            'message' => __('The file is not supported.')
-        ]);
-
-        return $validator->allowEmptyFile('file_content');
+        return $validator->allowEmpty('file_content');
     }
 
     public function getDefaultConfig()
@@ -482,7 +469,7 @@ class CounsellingsTable extends ControllerActionTable
         $this->CounsellingGuidanceTypes->updateAll(
             ['created_user_id' => $loginUserIdUser],
             [
-                'counselling_id' => $entity->id
+                'counselling_id' => $entity->id,
             ]
         );
     }
