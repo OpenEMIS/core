@@ -156,7 +156,10 @@ class ContactsTable extends ControllerActionTable
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         //to check if contact is new for its type. if yes, then set as preferred
-        if ($entity->isNew()) {
+        // POCOR-9760: Respect the user's preferred choice for new email contacts.
+        // Email sync is handled separately in afterSave().
+        //POCOR-9760 --end
+        if ($entity->isNew() && $entity->contact_option_id != $this->contactOptionsArray['EMA']) {
             $contactOption = $entity->contact_option_id;
             $contacts = $this->find()
                 ->matching('ContactTypes', function ($q) use ($contactOption) {
@@ -197,7 +200,29 @@ class ContactsTable extends ControllerActionTable
             // POCOR-8080-1
             // I've checked the new code
             //POCOR-8660 update mobile no in security user table
-            if ($contactOption == $this->contactOptionsArray['EMA'] || $contactOption == $this->contactOptionsArray['MOB'] || $contactOption == $this->contactOptionsArray['PHO']) { //if updating preferred email
+            $isSyncableOption = $contactOption == $this->contactOptionsArray['MOB'] || $contactOption == $this->contactOptionsArray['PHO'];
+            $isEmailOption = $contactOption == $this->contactOptionsArray['EMA'];
+
+            //POCOR-9760 --start
+            //Cache the current email for sync and history checks.
+            $currentEmailOnFile = null;
+            if ($isEmailOption) {
+                $Users = TableRegistry::getTableLocator()->get('User.Users');
+                $currentUser = $Users->find()
+                    ->select(['email'])
+                    ->where([$Users->aliasField($Users->getPrimaryKey()) => $entity->security_user_id])
+                    ->first();
+                $currentEmailOnFile = $currentUser->email ?? null;
+            }
+
+            // POCOR-9760: Preserve the old synced email when an existing contact is edited.
+            if ($isEmailOption && !$entity->isNew() && !empty($currentEmailOnFile) && $currentEmailOnFile !== $entity->value) {
+                $this->preserveEmailInContacts($entity->security_user_id, $currentEmailOnFile, $entity->contact_type_id);
+            }
+            //POCOR-9760 --end
+
+            // POCOR-9760: Sync email only when it meets the preferred/uniqueness rules.
+            if ($isSyncableOption || ($isEmailOption && $this->shouldSyncPreferredEmail($entity, $currentEmailOnFile))) {
                 $key = array_search($contactOption, $this->contactOptionsArray);
                 $entity->set('contact_option_code', $key);
                 //update information on security user table
@@ -212,9 +237,87 @@ class ContactsTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9760 --start
+    /**
+     * Checks whether a preferred email can be synced to security_users.email.
+     * New contacts cannot replace an existing email, and the email must be unique.
+    */
+    private function shouldSyncPreferredEmail(Entity $entity, $currentEmailOnFile): bool
+    {
+        if ((int)$entity->preferred !== 1) {
+            return false;
+        }
+
+        if ($entity->isNew() && !empty($currentEmailOnFile)) {
+            return false;
+        }
+
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
+        $emailTakenByAnotherUser = $Users->exists([
+            'email' => $entity->value,
+            $Users->aliasField($Users->getPrimaryKey()) . ' !=' => $entity->security_user_id,
+        ]);
+
+        return !$emailTakenByAnotherUser;
+    }
+    //POCOR-9760 --end
+
+    //POCOR-9760 --start
+    /**
+     * Keeps an email from disappearing out of the user's contact history when
+     * security_users.email is about to change or be cleared - if no user_contacts
+     * row for this user still holds that value, insert one with Preferred = No.
+     */
+    private function preserveEmailInContacts($securityUserId, $email, $contactTypeId): void
+    {
+        if (empty($email) || empty($contactTypeId)) {
+            return;
+        }
+
+        $stillExists = $this->exists([
+            $this->aliasField('security_user_id') => $securityUserId,
+            $this->aliasField('value') => $email,
+        ]);
+
+        if ($stillExists) {
+            return;
+        }
+
+        $backupContact = $this->newEntity([
+            'contact_option_id' => $this->contactOptionsArray['EMA'],
+            'contact_type_id' => $contactTypeId,
+            'value' => $email,
+            'preferred' => 0,
+            'security_user_id' => $securityUserId,
+        ]);
+        $this->save($backupContact);
+    }
+    //POCOR-9760 --end
+
     public function afterDelete(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $contactOption = $this->getContactOptionID($entity);
+        $isEmailOption = $contactOption == $this->contactOptionsArray['EMA'];
+
+        //POCOR-9760 --start
+        // Clear security_users.email when the synced email is deleted.
+        // Do not preserve it as history; deletion is intentional.
+        if ($isEmailOption && $entity->preferred == 1) {
+            $Users = TableRegistry::getTableLocator()->get('User.Users');
+            $currentUser = $Users->find()
+                ->select(['email'])
+                ->where([$Users->aliasField($Users->getPrimaryKey()) => $entity->security_user_id])
+                ->first();
+
+            if (!empty($currentUser) && $currentUser->email === $entity->value) {
+                $Users->updateAll(
+                    ['email' => null],
+                    [$Users->aliasField($Users->getPrimaryKey()) => $entity->security_user_id]
+                );
+            }
+        }
+        //POCOR-9760 --end
+
         if ($entity->preferred == 1) { //if the preferred contact deleted
 
             $query = $this->find()
@@ -234,12 +337,18 @@ class ContactsTable extends ControllerActionTable
                 );
                 // POCOR-8080-1
                 // I've checked the new code
-                if ($contactOption == $this->contactOptionsArray['EMA']) { //if the deleted contact option is email
-                    //update information on security user table
-                    $listeners = [
-                        TableRegistry::getTableLocator()->get('User.Users')
-                    ];
-                    $this->dispatchEventToModels('Model.UserContacts.onChange', [$query], $this, $listeners);
+                if ($isEmailOption) { //if the deleted contact option is email
+                    //POCOR-9760 --start
+                    // POCOR-9760: Sync the promoted email only if it passes the uniqueness check.
+                    $query->preferred = 1;
+                    if ($this->shouldSyncPreferredEmail($query, null)) {
+                        //update information on security user table
+                        $listeners = [
+                            TableRegistry::getTableLocator()->get('User.Users')
+                        ];
+                        $this->dispatchEventToModels('Model.UserContacts.onChange', [$query], $this, $listeners);
+                    }
+                    //POCOR-9760 --end
                 }
             }
         }
@@ -353,24 +462,29 @@ class ContactsTable extends ControllerActionTable
             ])
             ->add('value', 'unique', [
             'rule' => function ($value, $context) {
-                $users = TableRegistry::getTableLocator()->get('User.Users');
-                if (!$users) {
-                    throw new \RuntimeException('Users table could not be found.');
-                }
                 if (!isset($context['data']['contact_type_id'])) {
                     return false;
                 }
 
-                $userId = $context['data']['security_user_id'] ?? null;
                 $contactTypeId = $context['data']['contact_option_id'];
-                $query = $users->find();
+
+                // POCOR-9760 -- start: Duplicate emails are allowed; uniqueness only controls email sync.
                 if ($contactTypeId == 4) {
-                    $query->where(['email' => $value]);
-                } elseif ($contactTypeId == 1) {
-                    $query->where(['mobile_number' => $value]);
-                } else {
-                    return true; 
+                    return true;
                 }
+                //POCOR-9760 --end
+
+                if ($contactTypeId != 1) {
+                    return true;
+                }
+
+                $users = TableRegistry::getTableLocator()->get('User.Users');
+                if (!$users) {
+                    throw new \RuntimeException('Users table could not be found.');
+                }
+
+                $userId = $context['data']['security_user_id'] ?? null;
+                $query = $users->find()->where(['mobile_number' => $value]);
 
                 // Exclude the current user if editing
                 if (!empty($userId)) {
