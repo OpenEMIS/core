@@ -220,6 +220,13 @@ class TeacherClassesTable extends AppTable
             'label' => __('Teacher Name')
         ];
 
+        $newFields[] = [
+            'key'   => 'openemis_no',
+            'field' => 'openemis_no',
+            'type'  => 'string',
+            'label' => __('Openemis No')
+        ];
+
         $fields->exchangeArray($newFields);
     }
 
