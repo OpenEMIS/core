@@ -68,6 +68,8 @@ class ProfileTemplatesTable extends ControllerActionTable
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             // ->add('generate_start_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             // ])
@@ -79,8 +81,7 @@ class ProfileTemplatesTable extends ControllerActionTable
             //         'rule' => ['compareDateReverse', 'generate_start_date', false]
             //     ]
             // ])
-            ->allowEmpty('excel_template')
-            ->notEmptyString('academic_period_id')
+
             // generate_start_date/generate_end_date are marked mandatory (*) in the form, but
             // nothing previously enforced that: the column is 'datetime', and AppTable's generic
             // schema-driven validationDefault() only auto-handles 'date' typed columns. Leaving

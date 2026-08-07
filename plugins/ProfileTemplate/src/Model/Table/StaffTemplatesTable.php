@@ -68,6 +68,8 @@ class StaffTemplatesTable extends ControllerActionTable
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                 'provider' => 'table'
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             // ->add('generate_start_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             // ])
