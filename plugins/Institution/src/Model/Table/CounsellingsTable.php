@@ -1,25 +1,18 @@
 <?php
 namespace Institution\Model\Table;
-use ArrayObject;
-use stdClass;
-use Cake\ORM\Query;
-use Cake\ORM\Entity;
+
+use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Event\EventInterface;
-use Cake\Http\ServerRequest;
-use Cake\Utility\Inflector;
-use Cake\Utility\Text;
+use Cake\ORM\Query;
 use Cake\Validation\Validator;
-use Cake\Collection\Collection;
-use Cake\I18n\Date;
-use Cake\Log\Log;
-use Cake\Routing\Router;
+use Cake\Http\ServerRequest;
+use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\MessagesTrait;
-use Cake\Datasource\ResultSetInterface;
-use Cake\Http\Session;
-use Cake\I18n\Time;
+use ArrayObject;
+use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
 use Cake\Core\Configure;
+use Cake\Http\Session;
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -86,7 +79,20 @@ class CounsellingsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator->allowEmpty('file_content');
+        $validator->add('file_content', 'invalidExtension', [
+            'rule' => function ($value, $context) {
+                if (empty($value)) {
+                    return true;
+                }
+
+                $extension = strtolower(pathinfo($value->getClientFilename(), PATHINFO_EXTENSION));
+
+                return !in_array($extension, ['mov', 'mp4','.exe'], true);
+            },
+            'message' => __('The file is not supported.')
+        ]);
+
+        return $validator->allowEmptyFile('file_content');
     }
 
     public function getDefaultConfig()
@@ -470,25 +476,13 @@ class CounsellingsTable extends ControllerActionTable
     }
 
     //POCOR-9771
-    //POCOR-9771: belongsToMany's _ids link-save bypasses the junction table's own model
-    //events entirely, so created_user_id/modified_user_id are left NULL. Backfill them here,
-    //targeting only rows this save just touched (created_user_id IS NULL).
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->has('id')) {
-            return;
-        }
-
-        $userId = $this->getUserID();
-        if (empty($userId)) {
-            return;
-        }
-
+        $loginUserIdUser = $this->Session->read('Auth.User.id');
         $this->CounsellingGuidanceTypes->updateAll(
-            ['created_user_id' => $userId, 'modified_user_id' => $userId],
+            ['created_user_id' => $loginUserIdUser],
             [
                 'counselling_id' => $entity->id,
-                'created_user_id IS' => null,
             ]
         );
     }
