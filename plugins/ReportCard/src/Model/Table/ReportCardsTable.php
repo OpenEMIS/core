@@ -71,8 +71,11 @@ class ReportCardsTable extends ControllerActionTable
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                'provider' => 'table'
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             ->notEmpty('name')
             ->notEmpty('academic_period_id')
             ->notEmpty('education_grade_id')
@@ -84,6 +87,7 @@ class ReportCardsTable extends ControllerActionTable
             ->add('start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
+            ->notEmpty('start_date', __('This field cannot be left empty'))
             ->add('end_date', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
@@ -92,6 +96,7 @@ class ReportCardsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
+            ->notEmpty('end_date', __('This field cannot be left empty'))
             ->add('generate_start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
@@ -103,7 +108,7 @@ class ReportCardsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
             ])
-            ->requirePresence('education_programme_id')
+            ->notEmpty('education_programme_id')
             ->allowEmpty('excel_template');
     }
 

@@ -79,17 +79,17 @@ class TextbooksTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                    'provider' => 'table'
-                ]
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
-            ->requirePresence('academic_period_id')
-            ->requirePresence('education_level_id')
-            ->requirePresence('education_programme_id')
-            ->requirePresence('education_grade_id')
-            ->requirePresence('education_subject_id');
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('academic_period_id')
+            ->notEmpty('education_level_id')
+            ->notEmpty('education_programme_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('education_subject_id');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)

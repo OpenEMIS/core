@@ -44,12 +44,12 @@ class ExaminationsTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                    'provider' => 'table'
-                ]
+             ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
             // ->add('registration_start_date', [
             //     'ruleInAcademicPeriod' => [
             //         'rule' => ['inAcademicPeriod', 'academic_period_id', []]
@@ -61,10 +61,12 @@ class ExaminationsTable extends ControllerActionTable {
             // ->add('registration_end_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             // ])
-            ->requirePresence('examination_subjects')
-            ->requirePresence('academic_period_id')
-            ->requirePresence('education_programme_id')
-            ->requirePresence('education_grade_id');
+            ->notEmpty('examination_subjects')
+            ->notEmpty('academic_period_id')
+            ->notEmpty('education_programme_id')
+            ->notEmpty('education_grade_id')
+             ->requirePresence('registration_start_date', 'create')
+            ->notEmpty('registration_end_date', __('This field cannot be left empty'));
     }
 
     public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
@@ -151,6 +153,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+       
         // used to do validation for examination item date
         if (isset($data['examination_subjects'])) {
             $registrationEndDate = $data['registration_end_date'];
