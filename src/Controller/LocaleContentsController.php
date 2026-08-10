@@ -13,6 +13,14 @@ class LocaleContentsController extends AppController
         $this->Locales = $this->fetchTable('Locales');
         $this->LocaleContents = $this->fetchTable('LocaleContents');
         $this->LocaleContentTranslations = $this->fetchTable('LocaleContentTranslations');
+        // POCOR-3673: v3 model routing for import (import tables extend AppTable, not ControllerActionTable)
+        $this->ControllerAction->models = [
+            'ImportLocaleContentsLanguage' => [
+                'className' => 'System.ImportLocaleContentsLanguage',
+                'action'   => 'add'
+            ],
+        ];
+
     }
 
     public function beforeFilter(EventInterface $event)
@@ -20,6 +28,7 @@ class LocaleContentsController extends AppController
         parent::beforeFilter($event);
         $name = $this->name;
         $action  = $this->request->getParam('action');
+        
         $actionName = __(Inflector::humanize($action));
         $header = $name .' - '.$actionName;
         $this->Navigation->addCrumb(__($name), ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' => $action]);
