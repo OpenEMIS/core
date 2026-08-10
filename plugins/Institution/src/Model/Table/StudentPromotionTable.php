@@ -708,137 +708,92 @@ class StudentPromotionTable extends AppTable
 
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $entity = $attr['entity'];
-        $studentStatusId = $entity->has('student_status_id') ? $entity->student_status_id : null;
+        $entity           = $attr['entity'];
+        $studentStatusId  = $entity->has('student_status_id')       ? $entity->student_status_id       : null;
         $academicPeriodId = $entity->has('next_academic_period_id') ? $entity->next_academic_period_id : null;
+        $educationGradeId = $entity->has('grade_to_promote')        ? $entity->grade_to_promote        : null;
 
-        if (!empty($studentStatusId)) {
-
-            $statuses = $this->statuses;
-            $educationGradeId = $entity->has('grade_to_promote') ? $entity->grade_to_promote : null;
-
-            if (!in_array($studentStatusId, [$statuses['REPEATED']])) {
-                $institutionId = $this->institutionId;
-
-                $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
-                if ($isLastGrade) {
-                    // list of next first grades from all next programme available to promote to
-                    // 'true' means get all the grades of the next programmes plus the current programme grades
-                    // 'true' means get first grade only from all available next programme
-                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, true);
-                    //POCOR-6257 when status is Graduated getting To grade option on to academic preiod and next program
-                    $grades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-                    $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-                    $periodGrades = $EducationGrades->find('list', ['keyField' => 'id',
-                                    'valueField' => 'programme_grade_name'])
-                                    ->find('visible')
-                                    ->find('order')
-                                    ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
-                                    ->LeftJoin([$grades->getAlias() => $grades->getTable()],[
-                                            $EducationGrades->aliasField('id').' = ' . $grades->aliasField('education_grade_id')
-                                    ])
-                                    ->where([
-                                        'EducationSystems.academic_period_id' => $academicPeriodId,
-                                        $grades->aliasField('institution_id') => $institutionId
-                                    ])->toArray();
-                    $toGradeOption = array_intersect($periodGrades, $listOfGrades);
-                } else {
-                    // list of grades available to promote to
-                    // 'false' means only displayed the next level within the same grade level.
-                    $listOfGrades = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, false);
-                    //applied new condition for POCOR-6257
-                    $getToAcademicPeriodGrade = $this->EducationGrades->getEducationGradesByPeriod($academicPeriodId, $institutionId);
-                    $toGradeOptionPromoted = array_intersect($listOfGrades, $getToAcademicPeriodGrade);
-
-                    // if is not last grade, listOfGrades show the next grade of the current grade only
-                    //$listOfGrades = [key($listOfGrades) => current($listOfGrades)];
-                }
-
-                // list of grades available in the institution
-                $listOfInstitutionGrades = $this->getListOfInstitutionGrades($institutionId);
-
-                // Only display the options that are available in the institution and also linked to the current programme
-                $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades); //POCOR-6257
-
-                // if no grade option or the next grade is not available in the institution
-                if (count($gradeOptions) == 0 && !empty($gradeOptions)) {
-                    $attr['select'] = false;
-                    $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
-                } else {
-                    // to cater for graduate
-                    //POCOR-6257
-                    if (in_array($studentStatusId, [$statuses['GRADUATED']]) && $isLastGrade) {
-                        $options = $toGradeOption;
-                    }
-                    elseif (in_array($studentStatusId, [$statuses['GRADUATED']]) && !$isLastGrade) {
-                        $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + $gradeOptions;
-                    } elseif (in_array($studentStatusId, [$statuses['PROMOTED']])) {
-                       //POCOR-4746 start
-                       $educationGrades=TableRegistry::getTableLocator()->get('Education.EducationGrades');
-                       $educationProgramme=TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
-                       $data=$educationGrades->find()
-                                             ->select([
-                                                "id"=> $educationGrades->aliasField('id'),
-                                                "grade_name"=> $educationGrades->aliasField('name'),
-                                                "programme_id"=> $educationProgramme->aliasField('id'),
-                                                "same_grade_promotion"=>$educationProgramme->aliasField('same_grade_promotion'),
-                                                "programme"=>$educationProgramme->aliasField('name'),
-                                                      ]
-                                                    )
-                                             ->innerJoin(
-                                                [$educationProgramme->getAlias() => $educationProgramme->getTable()],
-                                                [
-
-                                                    $educationProgramme->aliasField('id = ') . $educationGrades->aliasField('education_programme_id')
-                                                ]
-                                            )
-                                            ->where([$educationGrades->aliasField('id')=>$entity->grade_to_promote])
-                                            ->first();
-                        $connection = ConnectionManager::get('default');
-                        $sql="SELECT academic_periods.id period_id,academic_periods.name period_name,academic_periods.code period_code,education_grades.id grade_id, education_grades.name grade_name, education_programmes.name programme_name
-                                                   FROM education_grades
-                                                   INNER JOIN education_programmes ON education_grades.education_programme_id = education_programmes.id
-                                                   INNER JOIN education_cycles ON education_programmes.education_cycle_id = education_cycles.id
-                                                   INNER JOIN education_levels ON education_cycles.education_level_id = education_levels.id
-                                                   INNER JOIN education_systems ON education_levels.education_system_id = education_systems.id
-                                                   INNER JOIN academic_periods ON academic_periods.id = education_systems.academic_period_id
-                                                   WHERE academic_periods.id=  $academicPeriodId and education_grades.name = '".$data->grade_name."'
-                                                   ORDER BY academic_periods.order ASC,education_levels.order ASC,education_cycles.order ASC,education_programmes.order ASC,education_grades.order ASC;";
-                        $result=$connection->execute($sql)->fetch('assoc');
-                        $newOption=[];
-                        $newOption[$result['grade_id']] = $result['programme_name'] . ' - ' .$result['grade_name'];
-
-                        if($data->same_grade_promotion==1){
-                            $options =   $newOption;
-                        }
-                        else{
-                            $options = $toGradeOptionPromoted;
-                        }
-                    //POCOR-4746 end
-                    } else {
-                        // to cater for promote
-                        $options = $gradeOptions;
-                    }
-                }
-
-                $attr['type'] = 'select';
-                $attr['options'] = ['0' => '-- '.__('Select').' --'] + $options;
-
-                $attr['onChangeReload'] = 'changeToNextGrade';
-            } else {
-                /*POCOR-6319 starts Repeated status than To Grade will be*/
-                $gradeData = $this->EducationGrades->getNextAvailableEducationGradesForRepeated($educationGradeId, $academicPeriodId);
-                $gradeName = (!empty($gradeData))? ($gradeData->programme. ' - ' . $gradeData->grade_name): '';
-                $gradeId = (!empty($gradeData)) ? $gradeData->id : '';
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $gradeName;
-                $this->Session->write('grade_id', $gradeId);
-                /*POCOR-6319 ends*/
-            }
-        } else {
+        // No status selected yet — nothing to display.
+        if (empty($studentStatusId)) {
             $attr['type'] = 'readonly';
             $attr['attr']['value'] = '';
+            return $attr;
         }
+
+        $statuses      = $this->statuses;
+        $institutionId = $this->institutionId;
+
+        // ── REPEATED ──────────────────────────────────────────────────────────
+        // The student repeats the same grade; the target is fixed — display read-only.
+        // POCOR-6319
+        if ($studentStatusId == $statuses['REPEATED']) {
+            $gradeData = $this->EducationGrades->getNextAvailableEducationGradesForRepeated($educationGradeId, $academicPeriodId);
+            $gradeName = !empty($gradeData) ? $gradeData->programme . ' - ' . $gradeData->grade_name : '';
+            $gradeId   = !empty($gradeData) ? $gradeData->id : '';
+
+            $attr['type']          = 'readonly';
+            $attr['attr']['value'] = $gradeName;
+            $this->Session->write('grade_id', $gradeId);
+            return $attr;
+        }
+
+        // ── PROMOTED or GRADUATED ──────────────────────────────────────────────
+        // No grade selected yet — render readonly until the user picks a student.
+        // POCOR-9485: prevents RecordNotFoundException on initial /Promotion/add render,
+        // where student_status_id is seeded from session but grade_to_promote is still null.
+        if (empty($educationGradeId)) {
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = '';
+            return $attr;
+        }
+
+        // Load programme flags for this grade once — both branches below use them.
+        $gradeObj  = $this->EducationGrades->get($educationGradeId, ['contain' => ['EducationProgrammes']]);
+        $programme = $gradeObj->education_programme;
+
+        // POCOR-4746: same_grade_promotion=1 means the student retakes the identical
+        // grade name in the next period rather than advancing to the next sequential grade.
+        $sameGradePromotion = $programme->same_grade_promotion ?? 0;
+
+        // POCOR-9485: controls which grades of the next programme appear on graduation.
+        //   1 = Show One Grade  → first grade of each linked next programme only.
+        //   0 = Show All Grades → all grades of every linked next programme.
+        $nextProgrammeOption = $programme->next_programme_option_id ?? 1;
+
+        $isLastGrade = $this->EducationGrades->isLastGradeInEducationProgrammes($educationGradeId);
+
+        // ── Resolve "To Grade" options by status and grade position ───────────
+
+        if ($studentStatusId == $statuses['GRADUATED'] && $isLastGrade) {
+            // Graduate from the final grade → show grades from the linked next programme.
+            // Scope controlled by next_programme_option_id (POCOR-9485 / POCOR-6257).
+            $options = $this->getGradesForGraduation($educationGradeId, $academicPeriodId, $institutionId, $nextProgrammeOption);
+
+        } elseif ($studentStatusId == $statuses['GRADUATED'] && !$isLastGrade) {
+            // Graduate from a non-final grade (edge case) — prepend a "not enrolled" marker.
+            // POCOR-6257
+            $nextGrades        = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, false);
+            $institutionGrades = $this->getListOfInstitutionGrades($institutionId);
+            $options = [0 => $this->getMessage($this->aliasField('notEnrolled'))] + array_intersect_key($institutionGrades, $nextGrades);
+
+        } elseif ($studentStatusId == $statuses['PROMOTED'] && $sameGradePromotion == 1) {
+            // Promoted with same-grade promotion: match the identical grade name in the next period.
+            // POCOR-4746 (ORM replaces the raw SQL that was previously inline here)
+            $options = $this->findMatchingGradeInPeriod($educationGradeId, $academicPeriodId);
+            if (empty($options)) {
+                // Fallback: standard next-grade list when no matching grade name is found.
+                $options = $this->getStandardPromotionGrades($educationGradeId, $academicPeriodId, $institutionId);
+            }
+
+        } else {
+            // Standard promotion: advance to the next sequential grade in the same programme.
+            // POCOR-6257
+            $options = $this->getStandardPromotionGrades($educationGradeId, $academicPeriodId, $institutionId);
+        }
+
+        $attr['type']           = 'select';
+        $attr['options']        = ['0' => '-- ' . __('Select') . ' --'] + $options;
+        $attr['onChangeReload'] = 'changeToNextGrade';
 
         return $attr;
     }
@@ -1465,6 +1420,128 @@ class StudentPromotionTable extends AppTable
                 # code...
                 break;
         }
+    }
+
+    /**
+     * Returns "To Grade" options when the student graduates from the final grade of a
+     * programme. Options come from the linked next programme(s), filtered by the
+     * next_programme_option_id flag (POCOR-9485) and intersected with grades actually
+     * offered at this institution in the target academic period (POCOR-6257).
+     *
+     *   $nextProgrammeOption = 1 → Show One Grade  → first grade of each next programme only.
+     *   $nextProgrammeOption = 0 → Show All Grades → all grades of every next programme.
+     */
+    private function getGradesForGraduation(int $educationGradeId, $academicPeriodId, int $institutionId, int $nextProgrammeOption): array
+    {
+        $EducationGrades   = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $InstitutionGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
+
+        $firstGradeOnly = ($nextProgrammeOption == 1);
+
+        // Candidate grades from next programmes (no period filter yet).
+        $nextProgrammeGrades = $EducationGrades->getNextAvailableEducationGrades($educationGradeId, true, $firstGradeOnly);
+
+        // All grades offered by this institution in the target period.
+        $periodInstitutionGrades = $EducationGrades->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+            ->find('visible')
+            ->find('order')
+            ->contain(['EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'])
+            ->leftJoin([$InstitutionGrades->getAlias() => $InstitutionGrades->getTable()], [
+                $EducationGrades->aliasField('id') . ' = ' . $InstitutionGrades->aliasField('education_grade_id'),
+            ])
+            ->where([
+                'EducationSystems.academic_period_id'             => $academicPeriodId,
+                $InstitutionGrades->aliasField('institution_id')  => $institutionId,
+            ])
+            ->toArray();
+
+        // Keep target-period grade IDs whose display names appear in the next-programme
+        // candidates — array_intersect by value (POCOR-6257) ensures we return the IDs
+        // the institution actually uses in the target period, not the source-period IDs.
+        return array_intersect($periodInstitutionGrades, $nextProgrammeGrades);
+    }
+
+    /**
+     * Standard promotion list: next sequential grade of the same programme, filtered to
+     * grades offered by this institution in the target academic period.
+     */
+    private function getStandardPromotionGrades(int $educationGradeId, $academicPeriodId, int $institutionId): array
+    {
+        $nextGrades   = $this->EducationGrades->getNextAvailableEducationGradesForPromoted($educationGradeId, $academicPeriodId, false);
+        $periodGrades = $this->EducationGrades->getEducationGradesByPeriod($academicPeriodId, $institutionId);
+        return array_intersect($nextGrades, $periodGrades);
+    }
+
+    /**
+     * For same-grade promotion (POCOR-4746): finds the grade that has the same name as
+     * the given grade but belongs to the target academic period, using ORM queries.
+     * This replaces the raw SQL that was previously embedded inline.
+     *
+     * Produces the same result as the old query:
+     *   SELECT education_grades.id grade_id, education_grades.name grade_name,
+     *          education_programmes.name programme_name
+     *   FROM education_grades
+     *   INNER JOIN education_programmes  ON ...
+     *   INNER JOIN education_cycles      ON ...
+     *   INNER JOIN education_levels      ON ...
+     *   INNER JOIN education_systems     ON ...
+     *   INNER JOIN academic_periods      ON ...
+     *   WHERE academic_periods.id = :academicPeriodId
+     *     AND education_grades.name = :currentGradeName
+     *   ORDER BY academic_periods.order, education_levels.order,
+     *            education_cycles.order, education_programmes.order,
+     *            education_grades.order
+     *   LIMIT 1
+     *
+     * Returns [gradeId => 'Programme - Grade'] or [] when nothing is found.
+     */
+    private function findMatchingGradeInPeriod(int $gradeId, $academicPeriodId): array
+    {
+        $EducationGrades     = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::getTableLocator()->get('Education.EducationProgrammes');
+
+        // Fetch the current grade's name to use as the search anchor.
+        $currentGrade = $EducationGrades->find()
+            ->select(['id' => $EducationGrades->aliasField('id'), 'name' => $EducationGrades->aliasField('name')])
+            ->where([$EducationGrades->aliasField('id') => $gradeId])
+            ->first();
+
+        if (empty($currentGrade)) {
+            return [];
+        }
+
+        // Find a grade with the same name in the target academic period.
+        $matched = $EducationGrades->find()
+            ->select([
+                'grade_id'       => $EducationGrades->aliasField('id'),
+                'grade_name'     => $EducationGrades->aliasField('name'),
+                'programme_name' => $EducationProgrammes->aliasField('name'),
+            ])
+            ->innerJoin([$EducationProgrammes->getAlias() => $EducationProgrammes->getTable()], [
+                $EducationProgrammes->aliasField('id =') . $EducationGrades->aliasField('education_programme_id'),
+            ])
+            ->innerJoin(['EducationCycles'  => 'education_cycles'],  ['EducationCycles.id = '  . $EducationProgrammes->aliasField('education_cycle_id')])
+            ->innerJoin(['EducationLevels'  => 'education_levels'],  ['EducationLevels.id = EducationCycles.education_level_id'])
+            ->innerJoin(['EducationSystems' => 'education_systems'], ['EducationSystems.id = EducationLevels.education_system_id'])
+            ->innerJoin(['AcademicPeriods'  => 'academic_periods'],  ['AcademicPeriods.id = EducationSystems.academic_period_id'])
+            ->where([
+                'AcademicPeriods.id'                 => $academicPeriodId,
+                $EducationGrades->aliasField('name') => $currentGrade->name,
+            ])
+            ->order([
+                'AcademicPeriods.order'                   => 'ASC',
+                'EducationLevels.order'                   => 'ASC',
+                'EducationCycles.order'                   => 'ASC',
+                $EducationProgrammes->aliasField('order') => 'ASC',
+                $EducationGrades->aliasField('order')     => 'ASC',
+            ])
+            ->first();
+
+        if (empty($matched)) {
+            return [];
+        }
+
+        return [$matched->grade_id => $matched->programme_name . ' - ' . $matched->grade_name];
     }
 
     public function getListOfInstitutionGrades($institutionId)
