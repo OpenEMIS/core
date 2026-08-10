@@ -1216,4 +1216,10 @@ class StudentsController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
     }
 
+    //POCOR-4259
+    public function Siblings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Siblings']);
+    }
+
 }
