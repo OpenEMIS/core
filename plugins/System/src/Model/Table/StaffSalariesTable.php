@@ -11,6 +11,7 @@ use Cake\Log\Log;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\RulesChecker;
 
 class StaffSalariesTable extends ControllerActionTable
 {
@@ -117,5 +118,19 @@ class StaffSalariesTable extends ControllerActionTable
             ->lessThanOrEqual('increment', 100, 'Maximum value is 100');
     }
 
+    //POCOR-8211 Start
+    public function buildRules(RulesChecker $rules): RulesChecker
+    {
+        $rules = parent::buildRules($rules);
+
+        $rules->add(
+            $rules->isUnique(['academic_period_id', 'staff_position_grade_id']),
+            'uniquePeriodGrade',
+            ['message' => __('There can only be one increment row per year and Position Grade.')]
+        );
+
+        return $rules;
+    }
+    //POCOR-8211 End
 
 }

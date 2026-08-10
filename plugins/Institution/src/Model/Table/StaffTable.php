@@ -406,6 +406,7 @@ class StaffTable extends ControllerActionTable
                     $this->aliasField('is_homeroom'),
                     $this->aliasField('start_date'),
                     $this->aliasField('end_date'),
+                    $this->aliasField('staff_position_grade_id'), //POCOR-8211
                    'staff_position_grade' => $this->aliasField('staff_position_grade_id') //POCOR-8211
                 ]
             )
