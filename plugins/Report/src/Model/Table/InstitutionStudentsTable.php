@@ -703,7 +703,11 @@ class InstitutionStudentsTable extends AppTable
     {
         $entity->guardian_date_of_birth = '';
         if (!empty($entity->GuardianData[0])) {
-            $entity->guardian_date_of_birth = $entity->GuardianData[0]->date_of_birth->format('F d, Y');
+            $dateOfBirth = $entity->GuardianData[0]->date_of_birth ?? null;
+
+            $entity->guardian_date_of_birth = !empty($dateOfBirth)
+                ? $dateOfBirth->format('F d, Y')
+                : null;
         }
 
         return $entity->guardian_date_of_birth;
