@@ -425,6 +425,40 @@ class PerformanceTable extends AppTable
             if (in_array($feature, ['Report.Performance', 'Report.Assessments', 'Report.PerformanceCompetencies', 'Report.OutcomesResult'])) { //POCOR-8417
                 $attr['attr']['multiple'] = true;
                 unset($institutionOptions['']);
+
+                // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                // still allow "All Institutions" to be picked afterwards. Only once "All
+                // Institutions" itself is selected do the specific institutions become
+                // disabled (and any of them already selected are cleared).
+                if (array_key_exists('0', $institutionOptions)) {
+                    $selectedInstitutionIds = [];
+                    $institutionIdData = isset($request->getData($this->getAlias())['institution_id']) ? $request->getData($this->getAlias())['institution_id'] : null;
+                    if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                        $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                            return $v !== '' && $v !== null;
+                        });
+                    }
+                    $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                    if ($allInstitutionsSelected) {
+                        // "All Institutions" wins - disable every other option and force it
+                        // to be the only value selected.
+                        $formattedInstitutionOptions = [];
+                        foreach ($institutionOptions as $optKey => $optLabel) {
+                            if ((string)$optKey === '0') {
+                                $formattedInstitutionOptions[$optKey] = $optLabel;
+                            } else {
+                                $formattedInstitutionOptions[] = [
+                                    'text' => $optLabel,
+                                    'value' => $optKey,
+                                    'disabled' => 'disabled'
+                                ];
+                            }
+                        }
+                        $institutionOptions = $formattedInstitutionOptions;
+                        $attr['attr']['value'] = ['0'];
+                    }
+                }
             } else {
                 $attr['attr']['multiple'] = false;
             }
@@ -467,7 +501,7 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $institutionId = $request->getData($this->getAlias())['institution_id'];
+        $institutionIdData = $request->getData($this->getAlias())['institution_id'];
         $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
         if(isset($academicPeriodId)){
             $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
@@ -479,20 +513,34 @@ class PerformanceTable extends AppTable
             : null; //POCOR-9404
         
         $gradeTable = $this->Institutions->InstitutionGrades;
+        $condition = [];
         $institutionIds = [];
-        if ($institutionId > 0) {
-            $condition[$gradeTable->aliasField('institution_id')] = $institutionId;
+        // POCOR-Institution-AllExclusivity fix: institution_id is now a multi-select field
+        // (posted as ['_ids' => [...]]) instead of a scalar id. Binding the raw array into a
+        // query condition crashes with "Cannot convert value of type array to string", so
+        // normalize it into a real list of ids first, ignoring the '0' ("All Institutions") marker.
+        if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+            $institutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                return $v !== '' && $v !== null && (string)$v !== '0';
+            });
+        } elseif (!empty($institutionIdData) && (string)$institutionIdData !== '0') {
+            $institutionIds = [$institutionIdData];
+        }
+
+        if (!empty($institutionIds)) {
+            $condition[$gradeTable->aliasField('institution_id IN')] = $institutionIds;
         } else {
             $superAdmin = $this->Auth->user('super_admin');
             $userId = $this->Auth->user('id');
             if (!$superAdmin) {
                 $institutionObj = $this->Institutions->find('byAccess', ['userId' => $userId])->toArray();
+                $accessibleInstitutionIds = [];
                 if (!empty($institutionObj)) {
                     foreach ($institutionObj as $value) {
-                        $institutionIds[] = $value->id;
+                        $accessibleInstitutionIds[] = $value->id;
                     }
                 }
-                $conditions[$gradeTable->aliasField('institution_id IN')] = $institutionIds;
+                $condition[$gradeTable->aliasField('institution_id IN')] = $accessibleInstitutionIds;
             }
         }
         //The grade displayed here, how many grades are assigned in the institution_grade table
@@ -958,7 +1006,7 @@ class PerformanceTable extends AppTable
             $requestData['Performance']['feature'] === 'Report.PerformanceCompetencies'
         ) {
             $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
-            $institutionId    = $request->getData($this->aliasField('institution_id'));
+            $institutionIdData = $request->getData($this->aliasField('institution_id'));
             $educationGradeId = $request->getData($this->aliasField('education_grade_id'));
 
             $CompetencyPeriods = TableRegistry::getTableLocator()
@@ -979,9 +1027,22 @@ class PerformanceTable extends AppTable
             ])
             ->distinct(['CompetencyPeriods.id']);
 
-            if (!empty($institutionId) && $institutionId != -1) {
+            // POCOR-Institution-AllExclusivity fix: institution_id is now a multi-select field
+            // (posted as ['_ids' => [...]]) instead of a scalar id. Binding the raw array into a
+            // query condition crashes with "Cannot convert value of type array to string", so
+            // normalize it into a real list of ids first, ignoring the '0'/'-1' ("All") markers.
+            $institutionIds = [];
+            if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                $institutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                    return $v !== '' && $v !== null && (string)$v !== '0' && (string)$v !== '-1';
+                });
+            } elseif (!empty($institutionIdData) && (string)$institutionIdData !== '0' && (string)$institutionIdData !== '-1') {
+                $institutionIds = [$institutionIdData];
+            }
+
+            if (!empty($institutionIds)) {
                 $query->where([
-                    'InstitutionCompetencyResults.institution_id' => $institutionId
+                    'InstitutionCompetencyResults.institution_id IN' => $institutionIds
                 ]);
             }
 

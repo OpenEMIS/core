@@ -1803,6 +1803,40 @@ class InstitutionsTable extends AppTable
                     if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
+
+                        // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                        // still allow "All Institutions" to be picked afterwards. Only once "All
+                        // Institutions" itself is selected do the specific institutions become
+                        // disabled (and any of them already selected are cleared).
+                        if (array_key_exists('0', $institutionOptions)) {
+                            $selectedInstitutionIds = [];
+                            if (isset($data['institution_id']) && is_array($data['institution_id']) && isset($data['institution_id']['_ids'])) {
+                                $selectedInstitutionIds = array_filter((array)$data['institution_id']['_ids'], function ($v) {
+                                    return $v !== '' && $v !== null;
+                                });
+                            }
+                            $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                            if ($allInstitutionsSelected) {
+                                // "All Institutions" wins - disable every other option and force it
+                                // to be the only value selected (covers the case where both were
+                                // submitted together, e.g. a stale/duplicate selection).
+                                $formattedInstitutionOptions = [];
+                                foreach ($institutionOptions as $optKey => $optLabel) {
+                                    if ((string)$optKey === '0') {
+                                        $formattedInstitutionOptions[$optKey] = $optLabel;
+                                    } else {
+                                        $formattedInstitutionOptions[] = [
+                                            'text' => $optLabel,
+                                            'value' => $optKey,
+                                            'disabled' => 'disabled'
+                                        ];
+                                    }
+                                }
+                                $institutionOptions = $formattedInstitutionOptions;
+                                $attr['attr']['value'] = ['0'];
+                            }
+                        }
                     } else {
                         $attr['attr']['multiple'] = false;
                     }
