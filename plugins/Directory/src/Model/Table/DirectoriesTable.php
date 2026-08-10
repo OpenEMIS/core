@@ -307,7 +307,12 @@ class DirectoriesTable extends ControllerActionTable
         $identityCondition = [];
         if ($identityTypeId && $identityNumber && $nationalityId) {
             $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
-            $identityCondition[$userIdentities->aliasField('nationality_id')] = $nationalityId;
+            //POCOR-9766: start - tolerate identities stored without nationality (legacy/hand-edited rows) so the existing user is still found
+            $identityCondition['OR'] = [
+                $userIdentities->aliasField('nationality_id') => $nationalityId,
+                $userIdentities->aliasField('nationality_id IS') => null
+            ];
+            //POCOR-9766: end
             $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
         } elseif ($identityTypeId && $identityNumber) {
             $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
@@ -2577,9 +2582,50 @@ public function getIdentityTypeData($value_selection)
                 return $this->controller->redirect($urlParams);
             }
         }
+        //POCOR-9735 start
+        $session = $this->request->getSession();
+        $referer = $this->request->referer();
+        if (!empty($referer) &&strpos($referer, '/Student/') !== false) {
+            $extra['toolbarButtons']['back']['url'] =   $referer;
+        } //POCOR-9735 end
 
         $this->setupTabElements($entity);
+        $this->addSyncButton($entity, $extra); //POCOR-9590
     }
+
+    //POCOR-9590: Sync button on the directory General view toolbar
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        //POCOR-9590: delegate to controller when it supports the method (DirectoriesController); fall back for any other controller
+        $permission = method_exists($this->controller, 'syncUserPermission')
+            ? $this->controller->syncUserPermission()
+            : ['Directories', 'Directories', 'add'];
+        if (!$this->AccessControl->check($permission)) {
+            return;
+        }
+        if (!$this->isSyncEligibleUser($entity->id)) {
+            return;
+        }
+        $toolbarButtons = $extra['toolbarButtons'] ?? null;
+        if (!$toolbarButtons || !isset($toolbarButtons['back'])) {
+            return;
+        }
+        $encodedParams = $this->paramsEncode(['user_id' => $entity->id]);
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Directory',
+            'controller' => 'Directories',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
+    }
+
+    //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {

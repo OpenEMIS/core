@@ -5,11 +5,47 @@ use ArrayObject;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\Entity;
 
 class ConsultationsTable extends ControllerActionTable
 {
+    use HealthLookupTrait; //POCOR-9718
+
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("ConsultationsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('user_health_consultations');
@@ -211,6 +247,11 @@ class ConsultationsTable extends ControllerActionTable
         return $query;
     }
 
+    //POCOR-9718: populate health_consultation_type_id select from Health.ConsultationTypes.
+    public function onUpdateFieldHealthConsultationTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.ConsultationTypes');
+    }
 
 
 }
