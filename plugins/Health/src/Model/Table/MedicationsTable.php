@@ -2,7 +2,7 @@
 namespace Health\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
@@ -45,6 +45,7 @@ class MedicationsTable extends ControllerActionTable
 
         return $validator
             ->allowEmpty('file_content')
+            ->notEmpty('name')
             ->allowEmpty('end_date');
             // ->add('end_date', 'ruleCompareDateReverse', [
             //     'rule' => ['compareDateReverse', 'start_date', true]
@@ -230,6 +231,27 @@ class MedicationsTable extends ControllerActionTable
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
+    }
+
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Medications.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
     }
     
 }
