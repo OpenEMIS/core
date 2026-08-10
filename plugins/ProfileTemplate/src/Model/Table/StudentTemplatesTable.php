@@ -90,7 +90,8 @@ class StudentTemplatesTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
             ])
-            ->allowEmptyFile('excel_template');
+            ->requirePresence('excel_template', 'create')
+            ->notEmptyFile('excel_template', __('This field cannot be left empty'));
     }
 
     public function validationSubjects(Validator $validator) {
@@ -104,7 +105,7 @@ class StudentTemplatesTable extends ControllerActionTable
         $this->fields['excel_template_name']['visible'] = false;
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
-        $this->field('excel_template');
+        $this->field('excel_template', ['attr' => ['required' => true]]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -477,20 +478,36 @@ class StudentTemplatesTable extends ControllerActionTable
     }
 
     // Misc
-    private function updateDateRangeField($key, $attr, ServerRequest $request)
+   private function updateDateRangeField($key, $attr, ServerRequest $request)
     {
         $requestData = $request->getData();
-        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+
+        // Get selected academic period ID
+        if (!empty($requestData[$this->getAlias()]['academic_period_id'])) {
             $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
 
-        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        // Get Academic Period safely
+        $selectedPeriod = $this->AcademicPeriods
+            ->find()
+            ->where([
+                $this->AcademicPeriods->aliasField('id') => $selectedPeriodId
+            ])
+            ->first();
+
+        // Fallback to current academic period if selected ID is invalid
+        if (!$selectedPeriod) {
+            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+            $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        }
+
         $attr['type'] = 'date';
         $attr['date_options']['generateStartDate'] = $selectedPeriod->generate_start_date;
         $attr['date_options']['generateEndDate'] = $selectedPeriod->generate_end_date;
-        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
+
+        if (empty($requestData[$this->getAlias()][$key])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
                 $attr['value'] = $selectedPeriod->generate_start_date;
             } else {

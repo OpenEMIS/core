@@ -98,7 +98,8 @@ class ClassTemplatesTable extends ControllerActionTable
             ->notEmpty('generate_start_date', __('This field cannot be left empty'))
             ->requirePresence('generate_end_date', 'create')
             ->notEmpty('generate_end_date', __('This field cannot be left empty'))
-            ->allowEmpty('excel_template');
+            ->requirePresence('excel_template', 'create')
+            ->notEmptyFile('excel_template', __('This field cannot be left empty'));
     }
 
     public function validationSubjects(Validator $validator) {
