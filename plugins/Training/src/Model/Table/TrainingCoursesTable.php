@@ -113,7 +113,6 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ])
             ->requirePresence('target_populations')
-            ->requirePresence('training_course_category_id')
             ->requirePresence('training_providers')
             ->requirePresence('result_types')
             ->add('duration', [
@@ -136,6 +135,8 @@ class TrainingCoursesTable extends ControllerActionTable
                     'message' => __('Experience must be positive with 3 digits at maximum')
                 ]
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('training_course_category_id', __('This field cannot be left empty'))
             ->allowEmpty('file_content');
     }
 
@@ -486,13 +487,14 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ]
         ]);
+        $this->field('file_content', ['after' => 'assignee_id']);
 
         // Field order
         $this->setFieldOrder([
             'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months', 'special_education_needs',
             'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id', 'target_population_selection',
             'target_populations', 'training_providers', 'course_prerequisites', 'specialisations','training_course_category_id', 'result_types',
-            'file_name', 'file_content'
+            'assignee_id', 'file_name', 'file_content'
         ]);
     }
 
