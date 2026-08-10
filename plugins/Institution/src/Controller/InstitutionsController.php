@@ -22,6 +22,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
+use Institution\Model\Traits\StudentCreationCheckTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Auth\DefaultPasswordHasher;
@@ -42,6 +43,7 @@ class InstitutionsController extends AppController
 {
     use OptionsTrait;
     use UtilityTrait;
+    use StudentCreationCheckTrait; //POCOR-9385: single source of truth for the student-creation entry-grade gate
     // POCOR-8231 start
     const STUDENT = 1;
     const STAFF = 2;
@@ -5725,7 +5727,6 @@ class InstitutionsController extends AppController
     public function getEducationGrade()
     {
         $requestData = $this->getRequestData();
-        ////Log::debug('[TEMP-LOG] getEducationGrade requestData=' . json_encode($requestData)); //POCOR-9385
         if (isset($requestData['institution_id'])) {
             $institutionId = $requestData['institution_id'];
         } else {
@@ -5833,41 +5834,20 @@ class InstitutionsController extends AppController
             ];
         }
 
-        //POCOR-9385: start — filter to entry grades when student creation restriction is active
+        //POCOR-9385: filter to entry grades when student creation restriction is active — uses the
+        //same isUserExcludedFromStudentCreationRestriction()/getEntryEducationGradeIds() single
+        //source of truth as the Save check (StudentCreationCheckTrait) so the dropdown can never
+        //offer a grade that Save would reject (no select-then-error).
         $ConfigItems        = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
         $restrictionEnabled = ($ConfigItems->value('restrict_student_creation') == 1); //POCOR-9385
         $isSuperAdmin       = ($this->Auth->user('super_admin') == 1);                 //POCOR-9385
-        //\Cake\Log\Log::debug('[TEMP-LOG] getEducationGrade restrictionEnabled=' . json_encode($restrictionEnabled) . ' isSuperAdmin=' . json_encode($isSuperAdmin) . ' institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId)); //[TEMP-LOG]
 
-        if ($restrictionEnabled && !$isSuperAdmin) { //POCOR-9385: super_admin sees all grades
-            $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
-            $userId = (int)$this->request->getSession()->read('Auth.User.id');
-            $Institutions = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.Institutions');
-            $userRoles = $Institutions->getInstitutionRoles($userId, (int)$institutionId);
-            //\Cake\Log\Log::debug('[TEMP-LOG] getEducationGrade userId=' . $userId . ' userRoles=' . json_encode($userRoles) . ' excludedRaw=' . json_encode($excludedRaw)); //[TEMP-LOG]
-
-            $roleExcluded = false;
-            if (!empty($excludedRaw)) {
-                $excludedIds = array_filter(explode(',', $excludedRaw));
-                foreach ($userRoles as $roleId) {
-                    if (in_array((string)$roleId, $excludedIds, true)) {
-                        $roleExcluded = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!$roleExcluded) {
-                //POCOR-9385: user is restricted — keep only entry grades, using the SAME source of
-                //truth as the Save check (StudentCreationCheckTrait) so the dropdown can never offer
-                //a grade that Save would reject (no select-then-error).
-                $entryIds = $institutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
-                $resultArray = array_values(array_filter($resultArray, function ($row) use ($entryIds) {
-                    return in_array((int)$row['education_grade_id'], $entryIds, true);
-                }));
-            }
+        if ($restrictionEnabled && !$isSuperAdmin && !$this->isUserExcludedFromStudentCreationRestriction((int)$institutionId)) {
+            $entryIds = $institutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
+            $resultArray = array_values(array_filter($resultArray, function ($row) use ($entryIds) {
+                return in_array((int)$row['education_grade_id'], $entryIds, true);
+            }));
         }
-        //POCOR-9385: end
 
         //POCOR-9385: strip internal fields before sending response
         foreach ($resultArray as &$row) {
@@ -5875,7 +5855,6 @@ class InstitutionsController extends AppController
         }
         unset($row);
 
-        //\Cake\Log\Log::debug('[TEMP-LOG] getEducationGrade grades_returned=' . json_encode(array_column($resultArray, 'name'))); //[TEMP-LOG]
         $this->sendJsonResponse($resultArray);
 
     }
@@ -7031,7 +7010,6 @@ class InstitutionsController extends AppController
         $this->savingStudentData = $this->savingStudentData + 1;
 
         $requestData = $this->getRequestData();
-        ////Log::debug('[TEMP-LOG] saveStudentData requestData keys=' . json_encode(array_keys($requestData ?? [])) . ' education_grade_id=' . json_encode($requestData['education_grade_id'] ?? 'MISSING') . ' academic_period_id=' . json_encode($requestData['academic_period_id'] ?? 'MISSING')); //POCOR-9385
         if (empty($requestData)) {
             return $this->sendJsonResponse(['message' => __('Invalid data.')], 400);
         }
@@ -7042,48 +7020,23 @@ class InstitutionsController extends AppController
 //        Log::debug(print_r($requestData, true));
         $userId = $this->request->getSession()->read('Auth.User.id') ?? 1;
 
-        //POCOR-9385: start — student creation restriction check for Angular add form
+        //POCOR-9385: student creation restriction check for Angular add form — delegates to the same
+        //isStudentCreationAllowed()/getEntryEducationGradeIds() single source of truth used by the
+        //dropdown filter (getEducationGrade) and the other 3 entry points, so Save can never reject a
+        //grade the dropdown just offered.
         if (empty($requestData['is_diff_school'])) { //POCOR-9385: transfers bypass grade restriction
-            $ConfigItems            = \Cake\ORM\TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-            $restrictionEnabled     = ($ConfigItems->value('restrict_student_creation') == 1); //POCOR-9385
-            $isSuperAdmin           = ($this->Auth->user('super_admin') == 1);                 //POCOR-9385
-            if ($restrictionEnabled && !$isSuperAdmin) {                                       //POCOR-9385: super_admin bypasses restriction
-                $gradeId          = !empty($requestData['education_grade_id']) ? (int)$requestData['education_grade_id'] : null;
-                $academicPeriodId = !empty($requestData['academic_period_id']) ? (int)$requestData['academic_period_id'] : null;
-                $institutionId    = $this->getInstitutionID(__FUNCTION__ . ':POCOR-9385');
+            $gradeId          = !empty($requestData['education_grade_id']) ? (int)$requestData['education_grade_id'] : null;
+            $academicPeriodId = !empty($requestData['academic_period_id']) ? (int)$requestData['academic_period_id'] : null;
+            $institutionId    = $this->getInstitutionID(__FUNCTION__ . ':POCOR-9385');
 
-                $allowed = false;
-                // Check excluded roles — if user is excluded, always allow //POCOR-9385
-                $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
-                if (!empty($excludedRaw)) {
-                    $excludedIds = array_filter(explode(',', $excludedRaw));
-                    $Institutions = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.Institutions');
-                    $userRoles = $Institutions->getInstitutionRoles($userId, $institutionId);
-                    foreach ($userRoles as $roleId) {
-                        if (in_array((string)$roleId, $excludedIds, true)) {
-                            $allowed = true; //POCOR-9385: excluded role — bypass
-                            break;
-                        }
-                    }
+            if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) {
+                $gradeName = '';
+                if (!empty($gradeId)) {
+                    $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                    $grade = $EducationGrades->find()->select(['name'])->where(['id' => $gradeId])->first();
+                    $gradeName = $grade ? $grade->name : '';
                 }
-
-                if (!$allowed && !empty($gradeId) && !empty($institutionId) && !empty($academicPeriodId)) {
-                    $EducationGrades  = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
-                    $grade = $EducationGrades->find()->where(['id' => $gradeId])->first();
-                    if ($grade) {
-                        $InstitutionGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-                        $minOrder = $InstitutionGrades->find()
-                            ->select(['min_order' => 'MIN(EducationGrades.order)'])
-                            ->join(['EducationGrades' => ['table' => 'education_grades', 'type' => 'INNER', 'conditions' => 'EducationGrades.id = InstitutionGrades.education_grade_id']])
-                            ->where(['InstitutionGrades.institution_id' => $institutionId, 'InstitutionGrades.academic_period_id' => $academicPeriodId, 'EducationGrades.education_programme_id' => $grade->education_programme_id])
-                            ->disableHydration()->first();
-                        $minOrderValue = $minOrder['min_order'] ?? null;
-                        ////Log::debug('[TEMP-LOG] saveStudentData restriction check gradeId=' . $gradeId . ' gradeOrder=' . $grade->order . ' minOrderValue=' . json_encode($minOrderValue) . ' institutionId=' . $institutionId . ' academicPeriodId=' . $academicPeriodId); //POCOR-9385
-                        if ($minOrderValue !== null && (int)$grade->order !== (int)$minOrderValue) {
-                            return $this->sendJsonResponse(['message' => __('New students can only be enrolled in the entry grade. {0} is not an entry grade for this programme.', $grade->name)], 422); //POCOR-9385: cleaner block message
-                        }
-                    }
-                }
+                return $this->sendJsonResponse(['message' => $this->studentCreationBlockMessage($gradeName)], 422); //POCOR-9385
             }
         }
         //POCOR-9385: end — student creation restriction check
