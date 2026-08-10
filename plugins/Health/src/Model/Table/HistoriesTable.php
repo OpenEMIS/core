@@ -14,6 +14,7 @@ use App\Model\Traits\OptionsTrait;
 class HistoriesTable extends ControllerActionTable
 {
     use OptionsTrait;
+    use HealthLookupTrait; //POCOR-9718
 
     public function initialize(array $config): void
     {
@@ -248,5 +249,11 @@ class HistoriesTable extends ControllerActionTable
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
+    }
+
+    //POCOR-9718: populate health_condition_id select from Health.Conditions.
+    public function onUpdateFieldHealthConditionId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.Conditions');
     }
 }

@@ -50,16 +50,18 @@ class SpecialNeedsServicesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator
-            // ->add('description', 'length', [
-            // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-            // 'message' => __('Description must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-            // ])
-            // ->add('comment', 'length', [
-            // 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-            // 'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-            // ])
-            ->allowEmpty('file_content');
+        //POCOR-9674
+        $validator
+            ->requirePresence('academic_period_id', true)
+            ->notEmptyString('academic_period_id', __('This field cannot be left empty'))
+            ->requirePresence('special_needs_service_type_id', true)
+            ->notEmptyString('special_needs_service_type_id', __('This field cannot be left empty'))
+            ->requirePresence('special_needs_service_classification_id', true)
+            ->notEmptyString('special_needs_service_classification_id', __('This field cannot be left empty'));
+
+        $validator->allowEmpty('file_content');
+
+        return $validator;
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -254,6 +256,7 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             // $attr['type'] = 'readonly'; // POCOR-7467
             $attr['value'] = $selectedAcademicPeriodId;
             $attr['attr']['value'] = $academicPeriodName;
+            $attr['attr']['required'] = true;
 
             return $attr;
         }
@@ -261,13 +264,13 @@ class SpecialNeedsServicesTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
-        $this->field('special_needs_service_type_id', ['type' => 'select']);
+        $this->field('academic_period_id', ['type' => 'select', 'entity' => $entity, 'attr' => ['required' => true]]); //POCOR-9674
+        $this->field('special_needs_service_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('description', ['type' => 'text']);
-        $this->field('special_needs_service_classification_id', ['type' => 'select']);
+        $this->field('special_needs_service_classification_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('organization');
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]); //POCOR-9674
         $this->field('comment', ['type' => 'text']);
         $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 

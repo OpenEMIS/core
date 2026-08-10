@@ -38,11 +38,16 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator->setProvider('custom', $this);
-        return $validator
-                ->add('comment', 'length', [
+        //POCOR-9674
+        $validator
+            ->requirePresence('special_needs_device_type_id', true)
+            ->notEmptyString('special_needs_device_type_id', __('This field cannot be left empty'))
+            ->add('comment', 'length', [
                 'rule' => ['maxLength', self::COMMENT_MAX_LENGTH],
-                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.')
-                ]);
+                'message' => __('Comment must not be more then '.self::COMMENT_MAX_LENGTH.' characters.'),
+            ]);
+
+        return $validator;
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
@@ -169,7 +174,7 @@ class SpecialNeedsDevicesTable extends ControllerActionTable
 
     private function setupFields($entity = null)
     {
-        $this->field('special_needs_device_type_id', ['type' => 'select']);
+        $this->field('special_needs_device_type_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9674
         $this->field('comment', ['type' => 'text']);
         $this->field('security_user_id', ['type' => 'hidden']); //POCOR-9584: Hidden - automatically set from getUserID()
 
