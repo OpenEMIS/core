@@ -1793,9 +1793,10 @@ class StudentsTable extends ControllerActionTable
             $this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
             $period = $entity->academic_period;
+            [, $editableDateFormat] = $this->getSystemDateFormats();
             $dateOptions = [
-                'startDate' => $period->start_date->format('d-m-Y'),
-                'endDate' => $period->end_date->format('d-m-Y')
+                'startDate' => $period->start_date->format($editableDateFormat),
+                'endDate' => $period->end_date->format($editableDateFormat)
             ];
 
             $this->fields['start_date']['date_options'] = $dateOptions;
@@ -2177,6 +2178,16 @@ class StudentsTable extends ControllerActionTable
     }
 
     // End PHPOE-1897
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
 
     private function setupTabElements($entity)
     {
@@ -3908,12 +3919,43 @@ class StudentsTable extends ControllerActionTable
      */
 
     //POCOR-8643 -- To resolve Enrolled(Repeater) issue
-    public function getOldRecords($previous_institution_student_id)
+    public function getOldRecordsOld($previous_institution_student_id)
     {
         $connection = ConnectionManager::get('default');
         $sql = "SELECT is3.id, is3.student_id, is3.student_status_id, is3.start_date, is3.end_date FROM institution_students is1 JOIN institution_students is2 ON is1.student_id = is2.student_id AND is1.start_date > is2.start_date JOIN institution_students is3 ON is2.student_id = is3.student_id AND is2.start_date > is3.start_date WHERE is1.student_status_id = 1 AND is2.student_status_id = 3 AND is3.student_status_id = 8 AND is3.start_date < is2.start_date AND is2.start_date < is1.start_date AND is1.previous_institution_student_id IS NOT NULL;";
 
         $result = $connection->execute($sql)->fetchAll('assoc');
+        return $result;
+    }
+
+    //POCOR-9687 -- Updated the query to fetch the old records based on previous_institution_student_id
+    public function getOldRecords($previous_institution_student_id)
+    {
+        $connection = ConnectionManager::get('default');
+
+        $sql = "
+            SELECT
+                current_student.id,
+                current_student.student_id,
+                current_student.education_grade_id,
+                current_student.student_status_id,
+
+                previous_student.id AS previous_student_record_id,
+                previous_student.student_status_id AS previous_status_id,
+                previous_student.education_grade_id AS previous_education_grade_id
+
+            FROM institution_students current_student
+
+            INNER JOIN institution_students previous_student
+                ON current_student.previous_institution_student_id = previous_student.id
+
+            WHERE current_student.previous_institution_student_id = :previousInstitutionStudentId
+        ";
+
+        $result = $connection->execute($sql, [
+            'previousInstitutionStudentId' => $previous_institution_student_id
+        ])->fetchAll('assoc');
+
         return $result;
     }
 
@@ -3936,12 +3978,39 @@ class StudentsTable extends ControllerActionTable
                     $studentId = $studentID->student_id;
                     if (isset($studentId)) {
                         $found = false;
+                        //POCOR-9687 --Start
+                        $allowedStatuses = $this->StudentStatuses->find()
+                            ->select(['id'])
+                            ->where([
+                                'code IN' => [
+                                    'WITHDRAWN',
+                                    'GRADUATED',
+                                    'PROMOTED',
+                                    'REPEATED'
+                                ]
+                            ])
+                            ->enableHydration(false)
+                            ->extract('id')
+                            ->toArray();
                         foreach ($oldStatus as $status) {
-                            if ($status['student_id'] == $studentId) {
+
+                            $sameGrade =
+                                $status['education_grade_id']
+                                == $status['previous_education_grade_id'];
+
+                            $validPreviousStatus =
+                                in_array($status['previous_status_id'], $allowedStatuses);
+
+                            if (
+                                $status['student_id'] == $studentId
+                                && $sameGrade
+                                && $validPreviousStatus
+                            ) {
                                 $found = true;
                                 break;
                             }
                         }
+                        //POCOR-9687 -- end
                         if ($found) {
                             $value = __("Enrolled (Repeater)");
                         }

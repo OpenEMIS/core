@@ -310,7 +310,12 @@ class DirectoriesTable extends ControllerActionTable
         $identityCondition = [];
         if ($identityTypeId && $identityNumber && $nationalityId) {
             $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
-            $identityCondition[$userIdentities->aliasField('nationality_id')] = $nationalityId;
+            //POCOR-9766: start - tolerate identities stored without nationality (legacy/hand-edited rows) so the existing user is still found
+            $identityCondition['OR'] = [
+                $userIdentities->aliasField('nationality_id') => $nationalityId,
+                $userIdentities->aliasField('nationality_id IS') => null
+            ];
+            //POCOR-9766: end
             $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
         } elseif ($identityTypeId && $identityNumber) {
             $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;

@@ -454,14 +454,25 @@ class MealsTable extends AppTable
                     'Report.MealDetails'
                 ])
                 ) {
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
                     $attr['type'] = 'date';
-                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
+                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format($editableDateFormat);
                     $attr['value'] = $selectedPeriod->start_date;
                 }
             }
             return $attr;
         }
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     public function onUpdateFieldReportEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -478,9 +489,10 @@ class MealsTable extends AppTable
                     'Report.MealDetails'
                 ])
                 ) {
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
                     $attr['type'] = 'date';
-                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
+                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format($editableDateFormat);
                     $attr['value'] = $selectedPeriod->end_date;
                 }
             }

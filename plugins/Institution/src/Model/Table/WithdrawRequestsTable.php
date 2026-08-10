@@ -16,6 +16,38 @@ class WithdrawRequestsTable extends ControllerActionTable
 {
     const NEW_REQUEST = 0;
 
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['effective_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("WithdrawRequestsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('institution_student_withdraw');
@@ -218,16 +250,27 @@ class WithdrawRequestsTable extends ControllerActionTable
         $id = $this->getQueryString('institution_student_id');
         $studentData = TableRegistry::getTableLocator()->get('Institution.Students')->get($id);
 
-        $enrolledDate = $studentData['start_date']->format('d-m-Y');
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+        $enrolledDate = $studentData['start_date']->format($editableDateFormat);
         //POCOR-8003:start
         $academicPeriodId = $studentData['academic_period_id'];
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $periodEntity = $AcademicPeriods->get($academicPeriodId);
-        $endDate = $periodEntity->end_date->format('d-m-Y');
+        $endDate = $periodEntity->end_date->format($editableDateFormat);
         $attr['date_options'] = ['startDate' => $enrolledDate, 'endDate' => $endDate];
         //POCOR-8003:end
 
         return $attr;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
 
