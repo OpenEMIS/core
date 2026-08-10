@@ -852,6 +852,7 @@ class WorkflowBehavior extends Behavior
         // setup workflow
         if ($this->attachWorkflow) {
             $workflowStep = $this->getWorkflowStep($entity);
+            $institutionId = $model->getQueryString('institution_id');
             if (!is_null($workflowStep)) {
                 // used to get correct workflow model for StaffTransferIn and StaffTransferOut
                 $modelName = $workflowStep->_matchingData['WorkflowModels']->model;
@@ -942,18 +943,51 @@ class WorkflowBehavior extends Behavior
                                     'workflow_step_id' => $step->id
                                 ])
                                 ->first();
-                            if (!empty($stepRole)) { 
-                                $user = $SecurityGroupUsers->find()
+                           if (!empty($stepRole)) { 
+                                /*$user = $SecurityGroupUsers->find()
                                     ->contain(['Users'])
                                     ->where([
                                         'security_role_id' => $stepRole->security_role_id,
                                     ])
                                     ->order(['SecurityGroupUsers.id ASC'])
-                                    ->first();
-                                if ($user && $user->user) {
+                                    ->first();*/
+                                $user = $SecurityGroupUsers->find()
+                                        ->contain(['Users'])
+                                        ->innerJoin(
+                                            ['SecurityGroupInstitutions' => 'security_group_institutions'],
+                                            'SecurityGroupInstitutions.security_group_id = SecurityGroupUsers.security_group_id'
+                                        )
+                                        ->where([
+                                            'SecurityGroupUsers.security_role_id IS' => $stepRole->security_role_id,
+                                            'SecurityGroupInstitutions.institution_id IS' => $institutionId
+                                        ])
+                                        ->order(['SecurityGroupUsers.id' => 'ASC'])
+                                        ->first();
+                                if ($user && $user->user &&
+                                        (
+                                            $workflowModel == 'Institution.StudentAdmission' ||
+                                            $workflowModel == 'Institution.StudentEnrolment'
+                                        )
+                                ) {
                                     $executerName = $user->user->name;
                                 }else{
-                                    $executerName = $transition->created_user->name;
+                                    //POCOR-9752 start
+                                    if($key === count($transitions) - 1 && !empty($entity->modified_user_id)){
+                                        $Users = TableRegistry::getTableLocator()->get('User.Users');
+                                        $modifiedUser = $Users->find()
+                                            ->where(['id' => $entity->modified_user_id])
+                                            ->first();
+
+                                        if ($modifiedUser) {
+                                            $executerName = trim(implode(' ', array_filter([
+                                                            $modifiedUser->first_name ?? '',
+                                                            $modifiedUser->third_name ?? '',
+                                                            $modifiedUser->last_name ?? ''
+                                                        ])));
+                                        } //POCOR-9752 end
+                                    }else{
+                                        $executerName = $transition->created_user->name;
+                                    }  
                                 }
                             }
                         }

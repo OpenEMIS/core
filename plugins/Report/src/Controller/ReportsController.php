@@ -13,6 +13,8 @@ use Cake\Http\Exception\NotFoundException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Cake\Event\EventInterface;
+use Cake\Routing\Router;
+use Report\Utility\ReportViewFileReader;
 
 class ReportsController extends AppController
 {
@@ -45,6 +47,54 @@ class ReportsController extends AppController
         $this->loadComponent('Navigation');
     }
 
+    public function implementedEvents(): array
+    {
+        $events = parent::implementedEvents();
+        // ViewReport / ajaxViewReportData are top-level actions not listed in security_functions
+        // (_view is e.g. Institutions.index, _execute is Institutions.download). Without this,
+        // non-super-admin roles (e.g. Principal) are redirected to Dashboard.
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    /**
+     * Allow ViewReport when the user can list or download the report module in the query string.
+     */
+    public function isActionIgnored(EventInterface $event, $action)
+    {
+        if (!in_array($action, ['ViewReport', 'ajaxViewReportData'], true)) {
+            return null;
+        }
+
+        $module = $this->getRequest()->getQuery('module');
+        if ($module === null || $module === '') {
+            $module = $this->getRequest()->getQuery('amp;module');
+        }
+        $module = is_string($module) ? trim($module) : '';
+        // Only allow known report module identifiers (prevent open permission bypass).
+        if ($module === '' || !preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $module)) {
+            return false;
+        }
+
+        // Institution Custom/Statistics reports are stored under Institutions permissions
+        // but are opened via Reports/ViewReport.
+        $permissionControllers = ['Reports'];
+        if (in_array($module, ['InstitutionStatistics', 'InstitutionStandards'], true)) {
+            $permissionControllers[] = 'Institutions';
+        }
+
+        foreach ($permissionControllers as $permissionController) {
+            if ($this->AccessControl->check(['controller' => $permissionController, 'action' => $module, 0 => 'index'])) {
+                return true;
+            }
+            if ($this->AccessControl->check(['controller' => $permissionController, 'action' => $module, 0 => 'download'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function beforeFilter(EventInterface $event)
     {
         if ($this->getPlugin() == 'Report') {
@@ -54,7 +104,7 @@ class ReportsController extends AppController
         //POCOR-8034 : start
         $header = __('Reports');
         $action = $this->getRequest()->getParam('action');
-        if ($action != 'ViewReport') {
+        if (!in_array($action, ['ViewReport', 'ajaxViewReportData'], true)) {
             $this->Navigation->addCrumb($header, ['plugin' => $this->getPlugin(), 'controller' => $this->getName(), 'action' =>$this->getRequest()->getParam('action')]);
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($action)));
             $this->Navigation->addCrumb($crumbTitle);
@@ -403,70 +453,201 @@ class ReportsController extends AppController
 
         $inputFileName = $replace_data;
 
-        //POCOR-9567: start - prefer companion CSV (written at generation time, no timeout risk)
+        if (!file_exists($inputFileName) || !is_readable($inputFileName)) {
+            throw new NotFoundException(__('File not found or not readable.'));
+        }
+
+        $rowHeader = [];
+        $newArr2 = [];
+        $reportSections = [];
+        $lazyLoadReportView = false;
+        $viewReportConfig = [];
+
         $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $inputFileName);
-        if (file_exists($csvFileName) && is_readable($csvFileName)) {
-            $csvHandle = fopen($csvFileName, 'r');
-            $rowHeader = null;
-            $rowHeaderNew = [];
-            $newArr2 = [];
-            while (($csvRow = fgetcsv($csvHandle)) !== false) {
-                if ($rowHeader === null) {
-                    $rowHeader = [$csvRow];
-                    $rowHeaderNew = $csvRow;
-                    continue;
-                }
-                if ($this->isEmptyRow($csvRow)) {
-                    continue;
-                }
-                if (count($csvRow) === count($rowHeaderNew)) {
-                    $newArr2[] = array_combine($rowHeaderNew, $csvRow);
-                }
-            }
-            fclose($csvHandle);
-        } else {
-            // POCOR-8289 - for view report change in IOFactory logic
-            // POCOR-9567: use read-data-only mode to skip formatting/formulas — 2-5x faster for large files
+        $csvReadable = file_exists($csvFileName) && is_readable($csvFileName);
+
+        // Multi-sheet workbooks (e.g. Class Attendance Marked): load one section/page at a time.
+        if ($ext === 'xlsx') {
             try {
-                $inputFileType = IOFactory::identify($inputFileName);
-                $objReader = IOFactory::createReader($inputFileType);
-                $objReader->setReadDataOnly(true); //POCOR-9567: skip cell formatting metadata for faster load
-                $spreadsheet = $objReader->load($inputFileName);
+                $xlsxReader = IOFactory::createReader('Xlsx');
+                $xlsxReader->setReadDataOnly(true);
+                $xlsxReader->setReadEmptyCells(false);
+                $worksheetNames = $xlsxReader->listWorksheetNames($inputFileName);
             } catch (\Exception $e) {
                 throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
             }
 
-            $sheet = $spreadsheet->getSheet(0);
-            $highestRow = $sheet->getHighestRow();
-            if ($data['module'] == 'InstitutionStatistics') {
-                $highestRow = $sheet->getHighestRow() + 1;
-            }
-            $highestColumn = $sheet->getHighestColumn();
+            if (count($worksheetNames) > 1) {
+                $sectionMeta = ReportViewFileReader::getMultiSectionMeta(
+                    $inputFileName,
+                    $csvReadable ? $csvFileName : null
+                );
+                $firstSection = ReportViewFileReader::readSectionPage(
+                    $inputFileName,
+                    $csvReadable ? $csvFileName : null,
+                    $dataModule,
+                    0,
+                    $sectionMeta[0]['title'] ?? $worksheetNames[0],
+                    1
+                );
 
-            for ($row = 1; $row <= 1; $row++) {
-                $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-            }
-
-            $rowHeaderNew = $this->array_flatten($rowHeader);
-            $rowData = [];
-            $newArr2 = [];
-            for ($row = 2; $row <= $highestRow - 1; $row++) {
-                $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, NULL, TRUE, FALSE);
-                if ($this->isEmptyRow(reset($currentRow))) {
-                    continue;
-                }
-                foreach ($currentRow as $new_data_arr) {
-                    if (isset($new_data_arr)) {
-                        $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
-                    }
-                }
+                $reportSections[] = $firstSection;
+                $lazyLoadReportView = true;
+                $viewReportConfig = [
+                    'filePath' => $inputFileName,
+                    'module' => $dataModule,
+                    'sections' => $sectionMeta,
+                    'pageSize' => ReportViewFileReader::ROW_PAGE_SIZE,
+                    'ajaxUrl' => Router::url([
+                        'plugin' => $this->getPlugin(),
+                        'controller' => $this->getName(),
+                        'action' => 'ajaxViewReportData',
+                    ]),
+                ];
             }
         }
-        //POCOR-9567: end
 
+        if (!empty($reportSections)) {
+            $first = $reportSections[0];
+            $rowHeader = [isset($first['headers']) ? $first['headers'] : []];
+            $newArr2 = isset($first['rows']) ? $first['rows'] : [];
+        } else {
+            //POCOR-9567: prefer companion CSV for single-sheet xlsx (fast path)
+            if ($csvReadable || $ext === 'xlsx') {
+                $singlePage = ReportViewFileReader::readSingleSheetPage(
+                    $inputFileName,
+                    $dataModule,
+                    1,
+                    $csvReadable
+                );
+                $rowHeader = [$singlePage['headers']];
+                $newArr2 = $singlePage['rows'];
+                if ($singlePage['totalRows'] > ReportViewFileReader::ROW_PAGE_SIZE) {
+                    $lazyLoadReportView = true;
+                    $viewReportConfig = [
+                        'filePath' => $inputFileName,
+                        'module' => $dataModule,
+                        'sections' => [[
+                            'index' => 0,
+                            'title' => $singlePage['title'] ?: __('Report'),
+                            'totalRows' => $singlePage['totalRows'],
+                        ]],
+                        'pageSize' => ReportViewFileReader::ROW_PAGE_SIZE,
+                        'ajaxUrl' => Router::url([
+                            'plugin' => $this->getPlugin(),
+                            'controller' => $this->getName(),
+                            'action' => 'ajaxViewReportData',
+                        ]),
+                    ];
+                }
+            } else {
+                try {
+                    $inputFileType = IOFactory::identify($inputFileName);
+                    $objReader = IOFactory::createReader($inputFileType);
+                    $objReader->setReadDataOnly(true);
+                    $spreadsheet = $objReader->load($inputFileName);
+                } catch (\Exception $e) {
+                    throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+                }
+
+                $sheet = $spreadsheet->getSheet(0);
+                $highestRow = $sheet->getHighestRow();
+                if ($data['module'] == 'InstitutionStatistics') {
+                    $highestRow = $sheet->getHighestRow() + 1;
+                }
+                $highestColumn = $sheet->getHighestColumn();
+
+                for ($row = 1; $row <= 1; $row++) {
+                    $rowHeader = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, null, true, false);
+                }
+
+                $rowHeaderNew = $this->array_flatten($rowHeader);
+                $newArr2 = [];
+                for ($row = 2; $row <= $highestRow - 1; $row++) {
+                    $currentRow = $sheet->rangeToArray('A' . $row . ':' . $highestColumn . $row, null, true, false);
+                    if ($this->isEmptyRow(reset($currentRow))) {
+                        continue;
+                    }
+                    foreach ($currentRow as $new_data_arr) {
+                        if (isset($new_data_arr) && is_array($rowHeaderNew)) {
+                            if (count($new_data_arr) === count($rowHeaderNew)) {
+                                $newArr2[] = array_combine($rowHeaderNew, $new_data_arr);
+                            }
+                        }
+                    }
+                }
+                $spreadsheet->disconnectWorksheets();
+            }
+        }
+
+        $this->set('reportSections', $reportSections);
         $this->set('rowHeader', $rowHeader);
         $this->set('newArr2', $newArr2);
+        $this->set('lazyLoadReportView', $lazyLoadReportView);
+        $this->set('viewReportConfig', $viewReportConfig);
         $this->set('contentHeader', $header);
+    }
+
+    public function ajaxViewReportData()
+    {
+        $this->request->allowMethod(['get']);
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
+        $filePath = $this->resolveViewReportPath($this->request->getQuery('file_path'));
+        $module = $this->request->getQuery('module');
+        if ($module === null && $this->request->getQuery('amp;module') !== null) {
+            $module = $this->request->getQuery('amp;module');
+        }
+        $module = (string)$module;
+        $sectionIndex = max(0, (int)$this->request->getQuery('section_index'));
+        $page = max(1, (int)$this->request->getQuery('page'));
+        $sectionTitle = (string)$this->request->getQuery('section_title');
+
+        $csvFileName = preg_replace('/\.xlsx$/i', '.csv', $filePath);
+        $csvReadable = file_exists($csvFileName) && is_readable($csvFileName);
+
+        try {
+            $xlsxReader = IOFactory::createReader('Xlsx');
+            $xlsxReader->setReadDataOnly(true);
+            $worksheetNames = $xlsxReader->listWorksheetNames($filePath);
+        } catch (\Exception $e) {
+            throw new NotFoundException(__('Error loading file: ') . $e->getMessage());
+        }
+
+        if (count($worksheetNames) > 1) {
+            $payload = ReportViewFileReader::readSectionPage(
+                $filePath,
+                $csvReadable ? $csvFileName : null,
+                $module,
+                $sectionIndex,
+                $sectionTitle,
+                $page
+            );
+        } else {
+            $payload = ReportViewFileReader::readSingleSheetPage($filePath, $module, $page, $csvReadable);
+        }
+
+        $this->viewBuilder()->setClassName('Json');
+        $this->set([
+            'success' => true,
+            'data' => $payload,
+            '_serialize' => ['success', 'data'],
+        ]);
+    }
+
+    private function resolveViewReportPath(?string $filePath): string
+    {
+        if (empty($filePath)) {
+            throw new NotFoundException(__('File not found or not readable.'));
+        }
+
+        $path = str_replace('\\', '/', $filePath);
+        if (!file_exists($path) || !is_readable($path)) {
+            throw new NotFoundException(__('File not found or not readable.'));
+        }
+
+        return $path;
     }
 
     function array_flatten($array)
