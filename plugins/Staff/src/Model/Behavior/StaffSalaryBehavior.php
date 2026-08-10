@@ -15,6 +15,12 @@ use Cake\I18n\FrozenDate;
  */
 class StaffSalaryBehavior extends Behavior
 {
+    // POCOR-8211: request-scoped caches to avoid re-querying the same
+    // academic period / grade / increment rows for every staff position row.
+    private $_academicPeriodCache = [];
+    private $_gradeCache = [];
+    private $_incrementCache = [];
+
     /**
      * Calculate staff position salary.
      *
@@ -30,15 +36,9 @@ class StaffSalaryBehavior extends Behavior
         if (empty($entity->start_date) || empty($entity->staff_position_grade)) {
             return 0;
         }
-       
-        // Tables
-        $gradesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
-        $incrementsTable = TableRegistry::getTableLocator()->get('System.StaffSalaries');
 
         // 1. Base Salary
-
-        $grade = $gradesTable->get($entity->staff_position_grade);
-        $baseSalary = $grade->salary ?? 0;
+        $baseSalary = $this->getGradeSalary($entity->staff_position_grade);
 
         // 2. FTE
         $fte = 100;
@@ -61,17 +61,7 @@ class StaffSalaryBehavior extends Behavior
                 continue; // treat as 0%
             }
 
-            $incrementRow = $incrementsTable->find()
-                ->where([
-                    'staff_position_grade_id' => $entity->staff_position_grade,
-                    'academic_period_id' => $academicPeriodId
-                ])
-                ->select(['increment'])
-                ->first();
-
-            $increment = $incrementRow->increment ?? 0;
-
-            $totalIncrement += $increment;
+            $totalIncrement += $this->getIncrement($entity->staff_position_grade, $academicPeriodId);
         }
         // 5. Apply formula
         $salary = ($totalIncrement / 100) * $baseSalary * $fte/100;
@@ -79,7 +69,54 @@ class StaffSalaryBehavior extends Behavior
     }
 
     /**
-     * Get academic period ID by year.
+     * Get the base salary for a Staff Position Grade, cached per request
+     * so the same grade isn't re-fetched for every staff position row.
+     *
+     * @param int $gradeId Staff Position Grade ID
+     * @return float Base salary
+     */
+    private function getGradeSalary($gradeId)
+    {
+        if (!array_key_exists($gradeId, $this->_gradeCache)) {
+            $gradesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
+            $grade = $gradesTable->get($gradeId);
+            $this->_gradeCache[$gradeId] = $grade->salary ?? 0;
+        }
+
+        return $this->_gradeCache[$gradeId];
+    }
+
+    /**
+     * Get the increment percentage for a grade/academic period, cached per
+     * request so the same combination isn't re-queried for every row.
+     *
+     * @param int $gradeId Staff Position Grade ID
+     * @param int $academicPeriodId Academic Period ID
+     * @return float Increment percentage
+     */
+    private function getIncrement($gradeId, $academicPeriodId)
+    {
+        $cacheKey = $gradeId . ':' . $academicPeriodId;
+
+        if (!array_key_exists($cacheKey, $this->_incrementCache)) {
+            $incrementsTable = TableRegistry::getTableLocator()->get('System.StaffSalaries');
+            $incrementRow = $incrementsTable->find()
+                ->where([
+                    'staff_position_grade_id' => $gradeId,
+                    'academic_period_id' => $academicPeriodId
+                ])
+                ->select(['increment'])
+                ->first();
+
+            $this->_incrementCache[$cacheKey] = $incrementRow->increment ?? 0;
+        }
+
+        return $this->_incrementCache[$cacheKey];
+    }
+
+    /**
+     * Get academic period ID by year, cached per request so the same year
+     * isn't re-queried for every staff position row.
      *
      * Finds the academic period where the start_date
      * belongs to the given year.
@@ -89,13 +126,15 @@ class StaffSalaryBehavior extends Behavior
      */
     private function getAcademicPeriodId($year)
     {
-        $row = $this->_table->getConnection()->execute(
-            "SELECT id FROM academic_periods WHERE YEAR(start_date) = :year LIMIT 1",
-            ['year' => $year]
-        )->fetch('assoc');
+        if (!array_key_exists($year, $this->_academicPeriodCache)) {
+            $row = $this->_table->getConnection()->execute(
+                "SELECT id FROM academic_periods WHERE YEAR(start_date) = :year LIMIT 1",
+                ['year' => $year]
+            )->fetch('assoc');
 
-        return $row['id'] ?? null;
+            $this->_academicPeriodCache[$year] = $row['id'] ?? null;
+        }
+
+        return $this->_academicPeriodCache[$year];
     }
-
-    
 }
