@@ -1798,6 +1798,7 @@ class InstitutionsTable extends AppTable
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        [, $editableDateFormat] = $this->getSystemDateFormats();
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
             if ($selectedAcademicPeriodId) {
@@ -1812,8 +1813,8 @@ class InstitutionsTable extends AppTable
                     'Report.StaffAttendances'
                 ])) {
                     $attr['type'] = 'date';
-                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
+                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format($editableDateFormat);
                     $attr['value'] = $selectedPeriod->start_date;
                 }
                 if (in_array($feature, [
@@ -1821,8 +1822,8 @@ class InstitutionsTable extends AppTable
                     'Report.StudentAbsences'
                 ])) {
                     $attr['type'] = 'date';
-                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
+                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format($editableDateFormat);
                     $attr['attr']['default'] = $selectedPeriod->start_date;
                     $attr['onChangeReload'] = true;
                     if ($attr['value'] > 0) {
@@ -1866,8 +1867,8 @@ class InstitutionsTable extends AppTable
                 $selectedAcademicPeriodId = $AcademicPeriods->getCurrent();
                 $selectedPeriod = $AcademicPeriods->get($selectedAcademicPeriodId);
                 $attr['type'] = 'date';
-                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format($editableDateFormat);
                 $attr['value'] = $selectedPeriod->start_date;
             }
             if (in_array($feature, [
@@ -1967,6 +1968,7 @@ class InstitutionsTable extends AppTable
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
         $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        [, $editableDateFormat] = $this->getSystemDateFormats();
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
             if ($selectedAcademicPeriodId) {
@@ -1981,8 +1983,8 @@ class InstitutionsTable extends AppTable
                     'Report.StaffAttendances'
                 ])) {
                     $attr['type'] = 'date';
-                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
-                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
+                    $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format($editableDateFormat);
                     $attr['value'] = $selectedPeriod->end_date;
                 }
                 if (in_array($feature, [
@@ -1993,10 +1995,18 @@ class InstitutionsTable extends AppTable
                     if ($requestData['report_start_date'] != 0) {
                         $attr['date_options']['startDate'] = $requestData['report_start_date'];
                     } else {
-                        $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                        $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
                     }
                     $date = $attr['date_options']['startDate'];
-                    $reportEndDate = date('d-m-Y', strtotime('+30 days', strtotime($date)));
+                    // parse using the configured date format (not strtotime's format guessing,
+                    // which can misread day/month order for non 'd-m-Y' formats) before adding days
+                    $parsedStartDate = \DateTime::createFromFormat($editableDateFormat, $date);
+                    if ($parsedStartDate !== false) {
+                        $parsedStartDate->modify('+30 days');
+                        $reportEndDate = $parsedStartDate->format($editableDateFormat);
+                    } else {
+                        $reportEndDate = date($editableDateFormat, strtotime('+30 days', strtotime($date)));
+                    }
                     $attr['date_options']['endDate'] = $reportEndDate;
                     if ($selectedAcademicPeriodId == $AcademicPeriods->getCurrent()) {
                         $attr['value'] = $reportEndDate;
@@ -2017,9 +2027,9 @@ class InstitutionsTable extends AppTable
                 if ($requestData['report_start_date'] != 0) {
                     $attr['date_options']['startDate'] = $requestData['report_start_date'];
                 } else {
-                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format('d-m-Y');
+                    $attr['date_options']['startDate'] = ($selectedPeriod->start_date)->format($editableDateFormat);
                 }
-                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format('d-m-Y');
+                $attr['date_options']['endDate'] = ($selectedPeriod->end_date)->format($editableDateFormat);
                 if ($academicPeriodId != $AcademicPeriods->getCurrent()) {
                     $attr['value'] = $selectedPeriod->end_date;
                 } else {
@@ -2617,6 +2627,16 @@ class InstitutionsTable extends AppTable
             return $institution_contact_persons['contact_person'];
         }
         return '';
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     /**

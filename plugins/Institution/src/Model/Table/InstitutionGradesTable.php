@@ -799,9 +799,10 @@ class InstitutionGradesTable extends ControllerActionTable
             $dateOpened = $institution->date_opened;
         }
 
+        [, $editableDateFormat] = $this->getSystemDateFormats();
         $this->fields['start_date']['value'] = isset($entity->start_date) ? $entity->start_date : $dateOpened;
-        $this->fields['start_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');
-        $this->fields['end_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');
+        $this->fields['start_date']['date_options']['startDate'] = $dateOpened->format($editableDateFormat);
+        $this->fields['end_date']['date_options']['startDate'] = $dateOpened->format($editableDateFormat);
     }
 
     public function addOnChangeLevel(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -847,8 +848,9 @@ class InstitutionGradesTable extends ControllerActionTable
 
         $Institution = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institution = $Institution->find()->where([$Institution->aliasField($Institution->getPrimaryKey()) => $this->institutionId])->first();
-        $this->fields['start_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
-        $this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format('d-m-Y');
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+        $this->fields['start_date']['date_options']['startDate'] = $institution->date_opened->format($editableDateFormat);
+        $this->fields['end_date']['date_options']['startDate'] = $institution->date_opened->format($editableDateFormat);
     }
 
     /******************************************************************************************************************
@@ -1489,6 +1491,16 @@ class InstitutionGradesTable extends ControllerActionTable
      * @param  Time $b Time object
      * @return Time    Time object
      */
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
     private function getLowerDate($a, $b)
     {
         if (is_null($a)) {

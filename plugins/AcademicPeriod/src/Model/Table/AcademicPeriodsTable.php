@@ -18,6 +18,7 @@ use Cake\I18n\Date;
 //use Cake\I18n\FrozenDate;
 use Archive\Model\Table\DataManagementConnectionsTable as ArchiveConnections;
 use Cake\Datasource\ConnectionManager;
+use Cake\Chronos\Chronos;
 
 class AcademicPeriodsTable extends ControllerActionTable
 {
@@ -227,6 +228,52 @@ class AcademicPeriodsTable extends ControllerActionTable
                     'message' => __('This field has to be unique')
                 ] //POCOR-8284 -- ends
             ]);
+    }
+
+    // POCOR-9765/POCOR-8286-style fix: the "date" form field (bootstrap-datepicker) submits the
+    // raw text in whatever format is configured in System Configurations > Date Format (e.g.
+    // "July 31, 2026"). Cake's DateType::marshal() only ever accepts the strict 'Y-m-d' format,
+    // so any system date format other than 'Y-m-d' caused start_date/end_date to be marshalled to
+    // null (and silently replaced by a wrong/default date) when adding or editing an Academic Period.
+    // Normalize the submitted value to 'Y-m-d' here, before patchEntity()/marshal() runs.
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        $this->normalizeDateFields($data, ['start_date', 'end_date']);
+    }
+
+    private function normalizeDateFields(ArrayObject $data, array $fields)
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse without "S" (also strip any legacy "31st" input)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        foreach ($fields as $field) {
+            if (!array_key_exists($field, (array)$data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                // already Y-m-d (or not a string we can parse) - leave untouched
+                continue;
+            }
+
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("AcademicPeriodsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)

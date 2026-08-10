@@ -13,9 +13,42 @@ use Cake\I18n\Date;
 use Cake\Core\Configure;
 use Cake\Http\ServerRequest;
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log;
 
 class IndividualPromotionTable extends ControllerActionTable
 {
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['effective_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("IndividualPromotionTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('institution_students');
@@ -540,14 +573,15 @@ class IndividualPromotionTable extends ControllerActionTable
                     $fromAcademicPeriodId = $attr['entity']->academic_period_id;
                     $toPeriodData = $this->AcademicPeriods->get($toAcademicPeriodId);
 
-                    $startDate = $toPeriodData->start_date->format('d-m-Y');
-                    $endDate = $toPeriodData->end_date->format('d-m-Y');
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
+                    $startDate = $toPeriodData->start_date->format($editableDateFormat);
+                    $endDate = $toPeriodData->end_date->format($editableDateFormat);
                     $withFirstDay = Time::parse($toPeriodData->start_date);
-                    $excludeFirstDay = $withFirstDay->modify('+1 day')->format('d-m-Y');
+                    $excludeFirstDay = $withFirstDay->modify('+1 day')->format($editableDateFormat);
 
                     if ($toAcademicPeriodId == $fromAcademicPeriodId) {
                         $attr['type'] = 'date';
-                        $attr['value'] = Time::now()->format('d-m-Y');
+                        $attr['value'] = Time::now()->format($editableDateFormat);
                         $attr['date_options'] = ['startDate' => $excludeFirstDay, 'endDate' => $endDate];
                     } else {
                         // if different academic period chosen, start date is fixed to start date of academic period
@@ -562,6 +596,16 @@ class IndividualPromotionTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     private function checkIsOverStudentClassCapacity($classId)
