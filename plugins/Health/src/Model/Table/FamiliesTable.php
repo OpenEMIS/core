@@ -173,13 +173,15 @@ class FamiliesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
+       $this->field('health_condition_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9507 
+        $this->field('health_relationship_id', ['type' => 'select', 'before' => 'current', 'attr' => ['required' => true]]); //POCOR-9507
         
-        $this->field('health_condition_id', ['type' => 'select', 'after' => 'health_relationship_id', 'attr' => ['required' => true]]); //POCOR-9507
-        $this->field('health_relationship_id', ['type' => 'select', 'before' => 'comment', 'attr' => ['required' => true]]); //POCOR-9507
+
         $this->field('current');
-        $this->field('file_content', ['after' => 'health_condition_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
+        $this->field('current', ['type' => 'select', 'after' => 'health_relationship_id', 'attr' => ['required' => true]]);
     }
 
     public function validationDefault(Validator $validator): Validator

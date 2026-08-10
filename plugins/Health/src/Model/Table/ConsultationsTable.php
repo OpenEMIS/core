@@ -165,8 +165,9 @@ class ConsultationsTable extends ControllerActionTable
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
-        $this->field('health_consultation_type_id', ['type' => 'select', 'after' => 'treatment']);
-        $this->field('file_content', ['after' => 'health_consultation_type_id', 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('health_consultation_type_id', ['type' => 'select', 'after' => 'date']);
+        $this->field('description', ['after' => 'treatment']);
+        $this->field('file_content', ['after' => 'description', 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
@@ -176,7 +177,8 @@ class ConsultationsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
         $validator
             ->allowEmpty('file_content')
-            ->notEmpty('health_consultation_type_id');
+            ->notEmpty('health_consultation_type_id')
+            ->notEmptyDate('date', __('This field cannot be left empty')); //POCOR-9507
         return $validator;
     }
 

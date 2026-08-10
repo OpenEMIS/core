@@ -96,7 +96,10 @@ class ImmunizationsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator->allowEmpty('file_content')
+        ->notEmpty('dosage')
+        ->requirePresence('dosage')
+        ->notEmptyDate('date', __('This field cannot be left empty')); //POCOR-9507
         return $validator;
     }
 
