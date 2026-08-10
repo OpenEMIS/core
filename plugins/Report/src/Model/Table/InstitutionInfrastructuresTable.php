@@ -245,6 +245,40 @@ class InstitutionInfrastructuresTable extends AppTable
                     if (in_array($feature, ['Report.InstitutionAssets', 'Report.Expenditure', 'Report.Income', 'Report.InstitutionInfrastructures', 'Report.InfrastructureNeeds', 'Report.InfrastructureElectricities', 'Report.InfrastructureInternets', 'Report.InfrastructureTelephones', 'Report.WashReports'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
                         unset($institutionOptions['']);
+
+                        // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                        // still allow "All Institutions" to be picked afterwards. Only once "All
+                        // Institutions" itself is selected do the specific institutions become
+                        // disabled (and any of them already selected are cleared).
+                        if (array_key_exists('0', $institutionOptions)) {
+                            $selectedInstitutionIds = [];
+                            $institutionIdData = isset($data['institution_id']) ? $data['institution_id'] : null;
+                            if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                                $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                                    return $v !== '' && $v !== null;
+                                });
+                            }
+                            $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                            if ($allInstitutionsSelected) {
+                                // "All Institutions" wins - disable every other option and force it
+                                // to be the only value selected.
+                                $formattedInstitutionOptions = [];
+                                foreach ($institutionOptions as $optKey => $optLabel) {
+                                    if ((string)$optKey === '0') {
+                                        $formattedInstitutionOptions[$optKey] = $optLabel;
+                                    } else {
+                                        $formattedInstitutionOptions[] = [
+                                            'text' => $optLabel,
+                                            'value' => $optKey,
+                                            'disabled' => 'disabled'
+                                        ];
+                                    }
+                                }
+                                $institutionOptions = $formattedInstitutionOptions;
+                                $attr['attr']['value'] = ['0'];
+                            }
+                        }
                     } else {
                         $attr['attr']['multiple'] = false;
                     }
