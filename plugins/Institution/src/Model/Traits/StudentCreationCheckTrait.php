@@ -20,14 +20,10 @@ trait StudentCreationCheckTrait
      */
     private function isStudentCreationAllowed(?int $gradeId, ?int $institutionId = null, ?int $academicPeriodId = null): bool //POCOR-9385: student creation gate
     {
-        ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed input gradeId=' . json_encode($gradeId) . ' institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId)); //[TEMP-LOG]
-
         $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
 
         // Feature disabled → always allow //POCOR-9385: feature toggle check
         $restrictStudentCreation = $ConfigItems->value('restrict_student_creation');
-        ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed restrict_student_creation=' . json_encode($restrictStudentCreation)); //[TEMP-LOG]
-
         if ($restrictStudentCreation != 1) {
             return true;
         }
@@ -37,39 +33,9 @@ trait StudentCreationCheckTrait
             return true;
         }
 
-        // Excluded roles bypass //POCOR-9385: excluded roles check
-        $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
-        ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed student_creation_excluded_roles=' . json_encode($excludedRaw)); //[TEMP-LOG]
-
-        if (!empty($excludedRaw)) {
-            $excludedIds = array_filter(explode(',', $excludedRaw));
-            $userId = method_exists($this, 'getUserID') ? $this->getUserID() : (int)$this->request->getSession()->read('Auth.User.id');
-            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed userId=' . json_encode($userId)); //[TEMP-LOG]
-
-            $instId  = $institutionId ?? (method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: 0) : 0);
-
-            if ($instId > 0) {
-                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-                $userRoles = $Institutions->getInstitutionRoles($userId, $instId); //POCOR-9385: institution roles
-            } else {
-                $userRoles = $this->AccessControl->getRolesByUser($userId)->toArray(); //POCOR-9385: directory fallback
-            }
-
-            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed userRoles=' . json_encode($userRoles) . ' excludedIds=' . json_encode($excludedIds)); //[TEMP-LOG]
-
-            $roleExcluded = false;
-            foreach ($userRoles as $roleId) {
-                if (in_array((string)$roleId, $excludedIds, true)) {
-                    $roleExcluded = true;
-                    break;
-                }
-            }
-
-            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed roleExcluded=' . json_encode($roleExcluded)); //[TEMP-LOG]
-
-            if ($roleExcluded) {
-                return true; //POCOR-9385: role excluded — bypass restriction
-            }
+        // Excluded roles bypass //POCOR-9385: single source of truth, also used by the dropdown filter
+        if ($this->isUserExcludedFromStudentCreationRestriction($institutionId)) {
+            return true;
         }
 
         // No grade context → block //POCOR-9385: no grade = block
@@ -83,11 +49,8 @@ trait StudentCreationCheckTrait
             ->first();
 
         if (!$grade) {
-            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed grade not found for gradeId=' . json_encode($gradeId)); //[TEMP-LOG]
             return true; //POCOR-9385: grade not found → allow (safe default)
         }
-
-        ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed grade->order=' . json_encode($grade->order) . ' grade->education_programme_id=' . json_encode($grade->education_programme_id)); //[TEMP-LOG]
 
         //POCOR-9385: when institution+period context is available, validate against the SAME
         //entry-grade set that getEducationGrade offers in the dropdown (single source of truth in
@@ -98,19 +61,53 @@ trait StudentCreationCheckTrait
             $entryIds = $InstitutionGrades->getEntryEducationGradeIds((int)$institutionId, (int)$academicPeriodId);
 
             if (empty($entryIds)) {
-                ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed institution has no grades for period, allowing'); //[TEMP-LOG]
                 return true; //POCOR-9385: institution has no grades for this period → allow (safe default)
             }
 
-            $result = in_array((int)$gradeId, $entryIds, true);
-            ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed entryIds=' . json_encode($entryIds) . ' gradeId=' . json_encode((int)$gradeId) . ' result=' . json_encode($result)); //[TEMP-LOG]
-            return $result; //POCOR-9385: gradeId must be an entry grade offered by the dropdown
+            return in_array((int)$gradeId, $entryIds, true); //POCOR-9385: gradeId must be an entry grade offered by the dropdown
         }
 
         // Fallback: global order=1 check (no institution/period context e.g. import without full row data) //POCOR-9385
-        $result = (int)$grade->order === 1;
-        ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed global fallback result (order===1)=' . json_encode($result)); //[TEMP-LOG]
-        return $result;
+        return (int)$grade->order === 1;
+    }
+
+    /**
+     * Returns true if the acting user's role is on the "Excluded Security Roles" list for the
+     * restrict_student_creation config item — meaning they may bypass the entry-grade rule.
+     * Shared by isStudentCreationAllowed() (Save) and InstitutionsController::getEducationGrade()
+     * (dropdown filter) so both read the excluded-roles list the exact same way.
+     *
+     * @param int|null $institutionId when omitted, falls back to $this->getInstitutionID() (if
+     *                                available) and then to the Directory-context AccessControl roles
+     * @return bool
+     */
+    private function isUserExcludedFromStudentCreationRestriction(?int $institutionId = null): bool //POCOR-9385
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
+
+        if (empty($excludedRaw)) {
+            return false;
+        }
+
+        $excludedIds = array_filter(explode(',', $excludedRaw));
+        $userId = method_exists($this, 'getUserID') ? $this->getUserID() : (int)$this->request->getSession()->read('Auth.User.id');
+        $instId = $institutionId ?? (method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: 0) : 0);
+
+        if ($instId > 0) {
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $userRoles = $Institutions->getInstitutionRoles($userId, $instId); //POCOR-9385: institution roles
+        } else {
+            $userRoles = $this->AccessControl->getRolesByUser($userId)->toArray(); //POCOR-9385: directory fallback
+        }
+
+        foreach ($userRoles as $roleId) {
+            if (in_array((string)$roleId, $excludedIds, true)) {
+                return true; //POCOR-9385: role excluded — bypass restriction
+            }
+        }
+
+        return false;
     }
 
     /**
