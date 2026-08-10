@@ -70,6 +70,7 @@ class StudentTemplatesTable extends ControllerActionTable
                 'message' => __('This code already exists for the selected Academic Period.')
             ])
             ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
             ->notEmptyString('academic_period_id')
             // generate_start_date/generate_end_date are marked mandatory (*) in the form. Cake's
             // Validator silently skips custom add() rules (like ruleInAcademicPeriod below) for

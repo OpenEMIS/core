@@ -70,6 +70,7 @@ class StaffTemplatesTable extends ControllerActionTable
                 'message' => __('This code already exists for the selected Academic Period.')
             ])
             ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
             ->notEmptyString('academic_period_id')
             // ->add('generate_start_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
