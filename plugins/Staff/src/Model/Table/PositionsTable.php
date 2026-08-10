@@ -503,11 +503,11 @@ class PositionsTable extends ControllerActionTable {
         } else if ($field == 'end_date') {
             return __('End Date');
         } else if ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         } else if ($field == 'modified_user_id') {
             return __('Modified By');
         } else if ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         } else if ($field == 'created_user_id') {
             return __('Created By');
         } else {

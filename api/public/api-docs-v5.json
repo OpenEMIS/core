@@ -115876,162 +115876,162 @@
                         "description": "Unauthorized"
                     }
                 }
-            },
-            "post": {
-                "tags": [
-                    "SummaryInstitutionStudentAbsences"
-                ],
-                "summary": "Create a new SummaryInstitutionStudentAbsences",
-                "operationId": "76a6a915d225bf9e111879ad4080438f",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "institution_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "institution_code": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "institution_name": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "area_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "area_code": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "area_name": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "area_administrative_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "area_administrative_code": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "area_administrative_name": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "student_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "openemis_no": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "default_identity_number": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "student_name": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "enrol_start_date": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "enrol_end_date": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "academic_period_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "academic_period_code": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "academic_period_name": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "education_grade_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "education_grade_code": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "education_grade_name": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "absent_date": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "absent_days": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "absence_subject_period": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "absence_type_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "absence_type": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "student_absence_reason_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "student_absence_reasons": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "student_status_id": {
-                                        "type": "integer",
-                                        "example": null
-                                    },
-                                    "student_status": {
-                                        "type": "string",
-                                        "example": null
-                                    },
-                                    "created": {
-                                        "type": "string",
-                                        "format": "date-time",
-                                        "example": null
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "Created successfully"
-                    },
-                    "400": {
-                        "description": "Invalid data"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    }
-                }
             }
+            // "post": {
+            //     "tags": [
+            //         "SummaryInstitutionStudentAbsences"
+            //     ],
+            //     "summary": "Create a new SummaryInstitutionStudentAbsences",
+            //     "operationId": "76a6a915d225bf9e111879ad4080438f",
+            //     "requestBody": {
+            //         "required": true,
+            //         "content": {
+            //             "application/json": {
+            //                 "schema": {
+            //                     "properties": {
+            //                         "institution_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "institution_code": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "institution_name": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "area_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "area_code": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "area_name": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "area_administrative_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "area_administrative_code": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "area_administrative_name": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "student_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "openemis_no": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "default_identity_number": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "student_name": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "enrol_start_date": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "enrol_end_date": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "academic_period_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "academic_period_code": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "academic_period_name": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "education_grade_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "education_grade_code": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "education_grade_name": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "absent_date": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "absent_days": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "absence_subject_period": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "absence_type_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "absence_type": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "student_absence_reason_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "student_absence_reasons": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "student_status_id": {
+            //                             "type": "integer",
+            //                             "example": null
+            //                         },
+            //                         "student_status": {
+            //                             "type": "string",
+            //                             "example": null
+            //                         },
+            //                         "created": {
+            //                             "type": "string",
+            //                             "format": "date-time",
+            //                             "example": null
+            //                         }
+            //                     },
+            //                     "type": "object"
+            //                 }
+            //             }
+            //         }
+            //     },
+            //     "responses": {
+            //         "201": {
+            //             "description": "Created successfully"
+            //         },
+            //         "400": {
+            //             "description": "Invalid data"
+            //         },
+            //         "401": {
+            //             "description": "Unauthorized"
+            //         }
+            //     }
+            // }
         },
         "/api/v5/summary-institution-student-subject-results": {
             "get": {
