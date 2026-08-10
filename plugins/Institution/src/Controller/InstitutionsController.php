@@ -5840,7 +5840,7 @@ class InstitutionsController extends AppController
         //\Cake\Log\Log::debug('[TEMP-LOG] getEducationGrade restrictionEnabled=' . json_encode($restrictionEnabled) . ' isSuperAdmin=' . json_encode($isSuperAdmin) . ' institutionId=' . json_encode($institutionId) . ' academicPeriodId=' . json_encode($academicPeriodId)); //[TEMP-LOG]
 
         if ($restrictionEnabled && !$isSuperAdmin) { //POCOR-9385: super_admin sees all grades
-            $excludedRaw = $ConfigItems->value('student_creation_excluded_roles');
+            $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
             $userId = (int)$this->request->getSession()->read('Auth.User.id');
             $Institutions = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.Institutions');
             $userRoles = $Institutions->getInstitutionRoles($userId, (int)$institutionId);
@@ -7054,7 +7054,7 @@ class InstitutionsController extends AppController
 
                 $allowed = false;
                 // Check excluded roles — if user is excluded, always allow //POCOR-9385
-                $excludedRaw = $ConfigItems->value('student_creation_excluded_roles');
+                $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
                 if (!empty($excludedRaw)) {
                     $excludedIds = array_filter(explode(',', $excludedRaw));
                     $Institutions = \Cake\ORM\TableRegistry::getTableLocator()->get('Institution.Institutions');

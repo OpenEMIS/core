@@ -38,7 +38,7 @@ trait StudentCreationCheckTrait
         }
 
         // Excluded roles bypass //POCOR-9385: excluded roles check
-        $excludedRaw = $ConfigItems->value('student_creation_excluded_roles');
+        $excludedRaw = $ConfigItems->valueSelection('restrict_student_creation'); //POCOR-9385: stored on the same row as the toggle
         ///\Cake\Log\Log::debug('@StudentCreationCheckTrait::isStudentCreationAllowed student_creation_excluded_roles=' . json_encode($excludedRaw)); //[TEMP-LOG]
 
         if (!empty($excludedRaw)) {
