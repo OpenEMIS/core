@@ -169,6 +169,21 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         $minutesAgo = (int) $time->diffInMinutes(FrozenTime::now());
         $base = __('Last heartbeat: ') . $this->formatDateTime($time) . ' (' . $time->timeAgoInWords(['accuracy' => 'minute']) . ')';
 
+        //POCOR-9734: mail-config drift is checked BEFORE the on-schedule early-return
+        // below, deliberately — the scheduler can be ticking perfectly on time every
+        // minute (this is exactly what happened on TO MET TST) while every email still
+        // fails, because Laravel is dialing a host baked into a compiled config cache
+        // that no longer matches api/.env. A heartbeat that only measures "did the tick
+        // fire" would report "ok" throughout that entire outage.
+        if (($drift = $this->staleMailConfig()) !== null) {
+            return [
+                'text' => $base . ' — ' . __('the compiled Laravel config cache is stale: ')
+                    . $this->describeMailDrift($drift) . ' '
+                    . __('Run `php artisan config:clear` on the api/ deployment (only re-run `config:cache` afterwards if you intend to keep caching config).'),
+                'severity' => 'attention',
+            ];
+        }
+
         // Beating on schedule — nothing to explain.
         if ($minutesAgo < self::HEARTBEAT_BEHIND_MINUTES) {
             return ['text' => $base, 'severity' => 'ok'];
@@ -277,6 +292,153 @@ class AsyncServicesOverviewTable extends AsyncServicesAdminTable
         }
 
         return null;
+    }
+
+    /**
+     * POCOR-9734: does Laravel's compiled config cache (api/bootstrap/cache/config.php)
+     * disagree with api/.env on which mailer/host to use?
+     *
+     * `php artisan config:cache` freezes every env() call into that one file; every
+     * .env edit made afterwards is silently ignored by the running app until the cache
+     * is cleared. That mismatch is invisible from the UI otherwise — the queue backlog
+     * and failed-job tiles just show generic connection errors, and diagnosing it today
+     * means SSH + `php artisan tinker`.
+     *
+     * Filesystem-only, no framework boot, no network I/O — two small file reads and one
+     * `include` of a plain PHP array literal, executed only when this one admin overview
+     * page renders. Best-effort: any missing file or unparsable cache returns null
+     * (nothing to report) rather than guessing or throwing.
+     *
+     * Params are injectable purely for testability; production callers always use the
+     * real api/ paths via the defaults.
+     *
+     * @return array{cached_mailer: ?string, env_mailer: string, cached_host: ?string, env_host: ?string}|null
+     */
+    private function staleMailConfig(?string $envPath = null, ?string $cachePath = null): ?array
+    {
+        $envPath = $envPath ?? (ROOT . DS . 'api' . DS . '.env');
+        $cachePath = $cachePath ?? (ROOT . DS . 'api' . DS . 'bootstrap' . DS . 'cache' . DS . 'config.php');
+
+        if (!is_file($envPath) || !is_file($cachePath)) {
+            // No compiled cache (common — most installs never run config:cache) means
+            // Laravel reads .env live on every tick; nothing can be stale.
+            return null;
+        }
+
+        $envValues = $this->readDotEnv($envPath);
+
+        //POCOR-9734: Laravel's Dotenv loader prefers .env.{APP_ENV} over the plain
+        // .env when it exists — mirror that so we diff against whichever file is
+        // actually authoritative, not just the one most people edit.
+        $appEnv = $envValues['APP_ENV'] ?? null;
+        if ($appEnv !== null && $appEnv !== '') {
+            $overridePath = dirname($envPath) . DS . '.env.' . $appEnv;
+            if (is_file($overridePath)) {
+                $envValues = $this->readDotEnv($overridePath) + $envValues;
+            }
+        }
+
+        $envMailer = $envValues['MAIL_MAILER'] ?? 'smtp';
+        $envHost = $envValues['MAIL_HOST'] ?? null;
+
+        try {
+            $cached = include $cachePath; // Laravel writes this file as a bare `return [...]`
+        } catch (\Throwable $e) {
+            return null; // corrupt/unreadable cache — don't guess, don't break the dashboard
+        }
+
+        if (!is_array($cached)) {
+            return null;
+        }
+
+        $cachedMailer = $cached['mail']['default'] ?? null;
+        $cachedHost = $cachedMailer !== null
+            ? ($cached['mail']['mailers'][$cachedMailer]['host'] ?? null)
+            : null;
+
+        $mailerDrifted = $cachedMailer !== null && $cachedMailer !== $envMailer;
+        //POCOR-9734: only a real drift if BOTH sides actually have a host to compare —
+        // mailers like 'log'/'array'/'sendmail' have no host at all, and reporting a
+        // mismatch against null would be a false positive on perfectly valid configs.
+        $hostDrifted = $cachedHost !== null && $envHost !== null && $cachedHost !== $envHost;
+
+        if (!$mailerDrifted && !$hostDrifted) {
+            return null;
+        }
+
+        return [
+            'cached_mailer' => $cachedMailer,
+            'env_mailer' => $envMailer,
+            'cached_host' => $cachedHost,
+            'env_host' => $envHost,
+        ];
+    }
+
+    /** POCOR-9734: renders whichever half of the drift (host and/or mailer) actually differs. */
+    private function describeMailDrift(array $drift): string
+    {
+        $parts = [];
+
+        if ($drift['cached_host'] !== null && $drift['cached_host'] !== $drift['env_host']) {
+            $parts[] = sprintf(
+                /* %1$s = cached host, %2$s = current .env host */
+                (string) __('mail host is cached as "%1$s" but api/.env now resolves to "%2$s"'),
+                $drift['cached_host'],
+                $drift['env_host']
+            );
+        }
+
+        if ($drift['cached_mailer'] !== null && $drift['cached_mailer'] !== $drift['env_mailer']) {
+            $parts[] = sprintf(
+                /* %1$s = cached mailer, %2$s = current .env mailer */
+                (string) __('default mailer is cached as "%1$s" but api/.env now resolves to "%2$s"'),
+                $drift['cached_mailer'],
+                $drift['env_mailer']
+            );
+        }
+
+        return implode('; ', $parts) . '.';
+    }
+
+    /**
+     * POCOR-9734: minimal, dependency-free KEY=VALUE parser for .env files — close
+     * enough to phpdotenv for drift detection (skips comments/blank lines, strips an
+     * optional leading `export `, strips surrounding quotes and unquoted inline
+     * comments). Not a full Dotenv implementation — this never feeds real app config,
+     * it only diffs values for the diagnostic above.
+     */
+    private function readDotEnv(string $path): array
+    {
+        $values = [];
+        foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) {
+                continue;
+            }
+            if (str_starts_with($line, 'export ')) {
+                $line = trim(substr($line, 7));
+            }
+
+            [$key, $value] = explode('=', $line, 2);
+            $value = trim($value);
+
+            //POCOR-9734: a quoted value ends at its matching closing quote — anything
+            // after that (including ` # trailing comment`) is NOT part of the value.
+            // Checking the comment marker before unwrapping quotes (as a naive
+            // trim-then-strip would) leaves the closing quote+comment stuck to the
+            // value; match the quoted span explicitly instead.
+            if (($value[0] ?? '') === '"' && preg_match('/^"([^"]*)"/', $value, $m)) {
+                $value = $m[1];
+            } elseif (($value[0] ?? '') === "'" && preg_match("/^'([^']*)'/", $value, $m)) {
+                $value = $m[1];
+            } elseif (str_contains($value, ' #')) {
+                $value = rtrim(substr($value, 0, strpos($value, ' #'))); // strip unquoted inline comment
+            }
+
+            $values[trim($key)] = $value;
+        }
+
+        return $values;
     }
 
     /** POCOR-9734: resolve a path's owning username (falls back to numeric uid). */
