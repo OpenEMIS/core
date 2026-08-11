@@ -94,8 +94,20 @@ class StudentsPhotoDownloadShell extends Shell
             }
 
             $Institutions = TableRegistry::getTableLocator()->get('institutions');
-            if ($institutionId > 0) {
-                $where['institution_id'] = $institutionId;
+            $filterInstitutionIds = [];
+            if (is_object($institutionId) && isset($institutionId->_ids)) {
+                $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                    return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+                }));
+            } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+                $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                    return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+                }));
+            } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+                $filterInstitutionIds = [(int)$institutionId];
+            }
+            if (!empty($filterInstitutionIds)) {
+                $where['institution_id IN'] = $filterInstitutionIds;
             } else {
                 $areaList = [];
                 if ($areaId > 1) {

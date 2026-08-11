@@ -15,7 +15,7 @@ use App\Model\Table\AppTable;
 
 class HealthReportsTable extends AppTable
 {
-    private $institution_id;
+    private $filter_institution_ids = [];
     private $academic_period_id;
     private $area_list;
     private $health_report_type;
@@ -66,6 +66,7 @@ class HealthReportsTable extends AppTable
 //        $this->log(__FUNCTION__, 'debug');
 
         $requestData = json_decode($settings['process']['params']);
+        $this->setHealthReportType($requestData);
         $healthReportType = $this->health_report_type;
 
         $this->setAcademicPeriodID($requestData);
@@ -421,10 +422,18 @@ class HealthReportsTable extends AppTable
     private function setInstitutionID($requestData)
     {
         $institutionId = $requestData->institution_id;
-        if (empty($institutionId) or $institutionId == 0) {
-            $institutionId = -1;
+        $this->filter_institution_ids = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $this->filter_institution_ids = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $this->filter_institution_ids = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $this->filter_institution_ids = [(int)$institutionId];
         }
-        $this->institution_id = $institutionId;
     }
 
     /**
@@ -486,9 +495,8 @@ class HealthReportsTable extends AppTable
             $this->aliasField('academic_period_id') => $academic_period_id,
         ];
 
-        $institution_id = $this->institution_id;
-        if ($institution_id > 0) {
-            $condition[$this->aliasField('institution_id')] = $institution_id;
+        if (!empty($this->filter_institution_ids)) {
+            $condition[$this->aliasField('institution_id') . ' IN'] = $this->filter_institution_ids;
         }
 
         //select current students only in current academic year

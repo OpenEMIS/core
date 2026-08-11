@@ -56,6 +56,24 @@ class StudentAttendanceSummaryTable extends AppTable
         $this->workingDays = $AcademicPeriodTable->getWorkingDaysOfWeek();
     }
 
+    private function parseFilterInstitutionIds($institutionId)
+    {
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        return $filterInstitutionIds;
+    }
+
     public function onExcelBeforeStart(EventInterface $event, ArrayObject $settings, ArrayObject $sheets)
     {
         $requestData = json_decode($settings['process']['params']);
@@ -80,6 +98,7 @@ class StudentAttendanceSummaryTable extends AppTable
         $endDate = $reportEndDate->format('Y-m-d');
 
         $conditions = [];
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
 
         $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $institutionIds = $institutions->find('list', [
@@ -88,15 +107,14 @@ class StudentAttendanceSummaryTable extends AppTable
                                                 ])
                         ->where(['institution_type_id' => $institutionTypeId])
                         ->toArray();
-        if ($institutionId > 0) {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
-        }
-
-        if ($institutionId <= 0
-            && !empty($institutionTypeId)
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
+        } elseif (
+            !empty($institutionTypeId)
             && $institutionTypeId != 0
-            && $institutionTypeId != -1) { //POCOR-7879
-            $conditions[$this->aliasField('institution_id IN')] = $institutionIds;
+            && $institutionTypeId != -1
+        ) { //POCOR-7879
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
         }
 
         if (!empty($academicPeriodId)) {
@@ -331,16 +349,18 @@ class StudentAttendanceSummaryTable extends AppTable
 
     private function getSchoolClosedDate($requestData)
     {
-        $institutionId = [$requestData->institution_id];
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($requestData->institution_id);
+        $institutionList = !empty($filterInstitutionIds) ? $filterInstitutionIds : [$requestData->institution_id];
         $startDate = new DateTime($requestData->report_start_date);
         $endDate = new DateTime($requestData->report_end_date);
-        $closedDates = $this->getInstitutionClosedDates($startDate, $endDate, $institutionId);
+        $closedDates = $this->getInstitutionClosedDates($startDate, $endDate, $institutionList);
         return $closedDates;
     }
 
     private function generateSheetsData($requestData)
     {
         $institutionId = $requestData->institution_id;
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
         $academicPeriodId = $requestData->academic_period_id;
         $educationGradeId = $requestData->education_grade_id;
         $institutionTypeId = $requestData->institution_type_id;
@@ -355,7 +375,15 @@ class StudentAttendanceSummaryTable extends AppTable
                         ->toArray();
 
         $InstitutionGradesTable = TableRegistry::getTableLocator()->get('Institution.InstitutionGrades');
-        $institutionGradeResults = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId, true);
+        if (!empty($filterInstitutionIds)) {
+            $institutionGradeResults = [];
+            foreach ($filterInstitutionIds as $id) {
+                $institutionGradeResults += $InstitutionGradesTable->getGradeOptions($id, $academicPeriodId, true);
+            }
+        } else {
+            $legacyInstitutionId = is_object($institutionId) || is_array($institutionId) ? 0 : $institutionId;
+            $institutionGradeResults = $InstitutionGradesTable->getGradeOptions($legacyInstitutionId, $academicPeriodId, true);
+        }
         $gradeOptions = [];
 
         if ($educationGradeId > 0) {
@@ -389,8 +417,14 @@ class StudentAttendanceSummaryTable extends AppTable
         $sheets = [];
         foreach ($gradeOptions as $gradeId => $gradeName) {
             $where = [];
-            if ($institutionId > 0) {
-                $where[$this->aliasField('institution_id')] = $institutionId;
+            if (!empty($filterInstitutionIds)) {
+                $where[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
+            } elseif (
+                !empty($institutionTypeId)
+                && $institutionTypeId != 0
+                && $institutionTypeId != -1
+            ) {
+                $where[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
             }
             $query = $this
                 ->find()
