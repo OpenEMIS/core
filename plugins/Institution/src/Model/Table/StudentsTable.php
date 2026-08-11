@@ -27,6 +27,8 @@ use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate student status aler
 
 class StudentsTable extends ControllerActionTable
 {
+    use \Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     const PENDING_TRANSFERIN = -1;
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
@@ -240,6 +242,7 @@ class StudentsTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        $events['ControllerAction.Model.add.beforeSave'] = ['callable' => 'addBeforeSave', 'priority' => 500]; //POCOR-9385: student creation restriction check
         return $events;
     }
 
@@ -866,6 +869,28 @@ class StudentsTable extends ControllerActionTable
     }
 
     //End:POCOR-6931
+
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $extra) //POCOR-9385: start — student creation restriction on Add
+    {
+        if (!$entity->isNew()) { //POCOR-9385: only applies to new records
+            return;
+        }
+
+        $gradeId          = !empty($entity->education_grade_id)    ? (int)$entity->education_grade_id    : null;
+        $academicPeriodId = !empty($entity->academic_period_id)    ? (int)$entity->academic_period_id    : null;
+        $institutionId    = method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: null) : null;
+        if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
+            $gradeName = '';
+            if (!empty($gradeId)) {
+                $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                $grade = $EducationGrades->find()->select(['name'])->where(['id' => $gradeId])->first();
+                $gradeName = $grade ? $grade->name : '';
+            }
+            $entity->setError('education_grade_id', [$this->studentCreationBlockMessage($gradeName)]); //POCOR-9385: set validation error
+            $event->stopPropagation();
+            return false;
+        }
+    } //POCOR-9385: end — student creation restriction on Add
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {

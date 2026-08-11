@@ -36,8 +36,8 @@
                             <?php foreach ($attr['formFields'] as $formField) : ?>
                                 <?php if ($attr['fields'][$formField]['type']!='hidden') : ?>
                                     <?php
-                                    $thClass = (isset($attr['fields'][$formField]['required']) && $attr['fields'][$formField]['required']) ? 'required' : '';
-                                    ?>
+                                    // $thClass = (isset($attr['fields'][$formField]['required']) && $attr['fields'][$formField]['required']) ? 'required' : '';
+                                    // ?>
                                     <th class="<?= $thClass ?>"><label class="table-header-label"><?= __(Inflector::humanize($formField)) ?></label></th>
                                     <th></th>
                                 <?php endif; ?>

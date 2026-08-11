@@ -13,9 +13,12 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
 
 class DirectoriesTable extends ControllerActionTable
 {
+    use StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     // public $InstitutionStudent;
 
     // these constants are being used in AdvancedPositionSearchBehavior as well
@@ -2629,6 +2632,16 @@ public function getIdentityTypeData($value_selection)
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-9385: start — student creation restriction on Directory Add
+        if ($entity->isNew() && !empty($entity->is_student)) {
+            if (!$this->isStudentCreationAllowed(null)) {
+                $entity->setError('is_student', [$this->studentCreationBlockMessageNoGrade()]); //POCOR-9385: block directory student creation
+                $event->stopPropagation();
+                return false;
+            }
+        }
+        //POCOR-9385: end — student creation restriction on Directory Add
+
         //POCOR-8059::start
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';

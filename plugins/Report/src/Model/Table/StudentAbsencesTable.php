@@ -75,6 +75,19 @@ class StudentAbsencesTable extends AppTable
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
 
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1';
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1';
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0' && $institutionId != '-1') {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
         // POCOR-7479
         $institutionTypeId = $requestData->institution_type_id;
         $educationGradeId = $requestData->education_grade_id;
@@ -92,8 +105,8 @@ class StudentAbsencesTable extends AppTable
                                                 ])
                         ->where(['institution_type_id' => $institutionTypeId])
                         ->toArray();
-        if ($institutionId > 0) {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
         }
 
         if ($educationGradeId != -1) {
@@ -114,9 +127,6 @@ class StudentAbsencesTable extends AppTable
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
 
-        if (!empty($institutionId) && $institutionId != '-1') {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
-        }
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -145,7 +155,34 @@ class StudentAbsencesTable extends AppTable
                 'identity_number'=> "(SELECT IFNULL(student_identities.identity_number, ''))",   
                 'address'=> "(SELECT IFNULL(Users.address, ''))",   
                 'contacts'=> "(SELECT IFNULL(contact_info.contacts, ''))",
-                'period_name' => "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, CONCAT('Period ', " . $this->aliasField('period') . "))))", // POCOR-8902   
+                //POCOR-9758
+                'period_name' => "(
+                    SELECT
+                        IF(
+                            InstitutionSubjects.name IS NOT NULL,
+                            '',
+                            IFNULL(
+                                (
+                                    SELECT padp.name
+                                    FROM student_mark_type_status_grades s1
+                                    INNER JOIN student_mark_type_statuses s2
+                                        ON s2.id = s1.student_mark_type_status_id
+                                    INNER JOIN student_attendance_mark_types smt
+                                        ON smt.id = s2.student_attendance_mark_type_id
+                                    INNER JOIN student_attendance_per_day_periods padp
+                                        ON padp.student_attendance_mark_type_id = smt.id
+                                    WHERE s1.education_grade_id = " . $this->aliasField('education_grade_id') . "
+                                    AND s2.academic_period_id = " . $this->aliasField('academic_period_id') . "
+                                    AND padp.period = " . $this->aliasField('period') . "
+                                    AND " . $this->aliasField('date') . " BETWEEN s2.date_enabled AND s2.date_disabled
+                                    ORDER BY s2.date_enabled DESC
+                                    LIMIT 1
+                                ),
+                                CONCAT('Period ', " . $this->aliasField('period') . ")
+                            )
+                        )
+                    )",
+                //'period_name' => "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, CONCAT('Period ', " . $this->aliasField('period') . "))))", // POCOR-8902   
                 // 'period_name'=> "(SELECT IF(InstitutionSubjects.name IS NOT NULL, '', IFNULL(period_info.period_name, '')))",   
                 'subject_name' =>"(SELECT IFNULL(InstitutionSubjects.name, ''))",
                 'education_grade_name'=> $grades->aliasField('name'),
@@ -209,25 +246,6 @@ class StudentAbsencesTable extends AppTable
             ->leftJoin([$InstitutionSubjects->getAlias() => $InstitutionSubjects->getTable()], [
                 $InstitutionSubjects->aliasField('id = ') . $this->aliasField('subject_id')
             ]);
-
-            $join['period_info'] = [
-                'type' => 'left',
-                'table' => "(SELECT student_mark_type_status_grades.education_grade_id
-                            ,student_mark_type_statuses.academic_period_id
-                            ,student_attendance_per_day_periods.name period_name
-                            ,student_attendance_per_day_periods.period
-                        FROM student_mark_type_status_grades
-                        INNER JOIN student_mark_type_statuses
-                        ON student_mark_type_statuses.id = student_mark_type_status_grades.student_mark_type_status_id
-                        INNER JOIN student_attendance_mark_types
-                        ON student_attendance_mark_types.id = student_mark_type_statuses.student_attendance_mark_type_id
-                        INNER JOIN student_attendance_per_day_periods
-                        ON student_attendance_per_day_periods.student_attendance_mark_type_id = student_attendance_mark_types.id)" ,
-                        'conditions' => ['period_info.education_grade_id = EducationGrades.id',
-                                        'period_info.academic_period_id = AcademicPeriods.id',
-                                        'period_info.period = ' . $this->aliasField('period'),
-                                        ],  
-            ];
 
             $join['student_identities'] = [
                 'type' => 'left',

@@ -59,11 +59,23 @@ class StudentNotAssignedClassTable extends AppTable
        $analysis = '';
 
        $conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
-            $conditions['Institutions.id'] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions['Institutions.id IN'] = $filterInstitutionIds;
         }
         if (!empty($areaId) && $areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId;
@@ -72,8 +84,8 @@ class StudentNotAssignedClassTable extends AppTable
         if (!empty($academicPeriodId)) {
             $newConditions[$insClassStudent->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
-            $newConditions['Institutions.id'] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $newConditions['Institutions.id IN'] = $filterInstitutionIds;
         }
 
         $subquery = $insClassStudent

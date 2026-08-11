@@ -54,11 +54,24 @@ class StudentContactsTable extends AppTable  {
         $IdentityTypes = TableRegistry::getTableLocator()->get('identity_types');
 
         $conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
         if (!empty($academicPeriodId)) {
             $conditions['InstitutionStudents.academic_period_id'] = $academicPeriodId;
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InstitutionStudents.institution_id'] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions['InstitutionStudents.institution_id IN'] = $filterInstitutionIds;
         }
         if (!empty($enrolled)) {
             $conditions['InstitutionStudents.student_status_id'] = $enrolled;

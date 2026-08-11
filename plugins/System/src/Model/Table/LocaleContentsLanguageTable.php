@@ -10,13 +10,14 @@ use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet; // POCOR-9503 start
+use Cake\Validation\Validator;
 
 class LocaleContentsLanguageTable extends ControllerActionTable
 {
     private $fieldsOrder = ['created', 'message'];
     public function initialize(array $config): void
     {
-        $this->setTable('locale_contents');
+       $this->setTable('locale_contents');
        parent::initialize($config);
        $this->toggle('view', true);
        $this->toggle('edit', true);
@@ -34,6 +35,13 @@ class LocaleContentsLanguageTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+        $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportLocaleContentsLanguage']);
+    }
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator
+            ->notEmptyString('en');
+        return $validator;
     }
 
     public function implementedEvents(): array
@@ -203,10 +211,16 @@ class LocaleContentsLanguageTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        if (!$entity->isNew()) {
-            $localeOptions = $this->Localization->getOptions();
-            $isoLocaleOption = array_keys($localeOptions);
-            foreach ($isoLocaleOption as $iso) {
+        // Skip for new records and import context (Localization component not loaded)
+        if ($entity->isNew() || !isset($this->Localization)) {
+            return;
+        }
+
+        $localeOptions = $this->Localization->getOptions();
+        $isoLocaleOption = array_keys($localeOptions);
+        foreach ($isoLocaleOption as $iso) {
+            // Only update translations for language fields that were actually changed
+            if ($entity->isDirty($iso)) {
                 $this->saveLocaleContentTranslationsTable($entity, $iso);
             }
         }

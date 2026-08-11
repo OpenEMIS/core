@@ -305,24 +305,33 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
 
         $institutionId    = (int) ($item['institution_id'] ?? 0);
         $institutionClassId = (int) ($item['institution_class_id'] ?? 0);
+        $studentId = (int) ($item['student_id'] ?? 0);
 
-        // POCOR-9509: StudentAttendance recipients = this class's staff only + Principal/Deputy Principal at this institution only
-        // Step 1: class teachers (primary + secondary) — only if Teacher(6) or Homeroom Teacher(5) is in alerts_roles
-        $classStaffRoleIds = [5, 6]; // Homeroom Teacher, Teacher
+        // POCOR-9509: StudentAttendance recipients = this class's staff only + Principal/Deputy Principal at this institution only + the student themselves
+        // Role identification is done by `security_roles.code` (not numeric id), since ids are
+        // auto-increment and can differ across environments/deployments. `$this->rule->security_roles`
+        // already carries the full security_roles row (incl. `code`) per AlertCommandBase::prepareContext().
+        $roleCode = function ($role): string {
+            $code = is_array($role) ? ($role['code'] ?? '') : ($role->code ?? '');
+            return strtoupper((string) $code);
+        };
+
+        // Step 1: class teachers (primary + secondary) — only if TEACHER or HOMEROOM_TEACHER is in alerts_roles
+        $classStaffRoleCodes = ['HOMEROOM_TEACHER', 'TEACHER'];
         $hasClassStaffRole = !empty(array_filter(
             $this->rule->security_roles,
-            fn($r) => in_array((int)(is_array($r) ? $r['id'] : $r->id), $classStaffRoleIds, true)
+            fn($r) => in_array($roleCode($r), $classStaffRoleCodes, true)
         ));
         $classContacts = ['email' => [], 'phone' => []];
         if ($institutionClassId && $hasClassStaffRole) {
             $classContacts = $this->recipientResolver->getClassTeacherContactList($institutionClassId);
         }
 
-        // Step 2: Principal (4) + Deputy Principal (11) at this institution — only if present in alerts_roles
-        $managementRoleIds = [4, 11]; // Principal, Deputy Principal
+        // Step 2: PRINCIPAL + DEPUTY_PRINCIPAL at this institution — only if present in alerts_roles
+        $managementRoleCodes = ['PRINCIPAL', 'DEPUTY_PRINCIPAL'];
         $managementRoles = array_values(array_filter(
             $this->rule->security_roles,
-            fn($r) => in_array((int)(is_array($r) ? $r['id'] : $r->id), $managementRoleIds, true)
+            fn($r) => in_array($roleCode($r), $managementRoleCodes, true)
         ));
         $principalContacts = ['email' => [], 'phone' => []];
         if ($institutionId && !empty($managementRoles)) {
@@ -332,9 +341,23 @@ class AlertStudentAbsenceCommand extends AlertCommandBase
             );
         }
 
+        // Step 3: the student themselves — only if STUDENT is present in alerts_roles
+        $studentRoleCodes = ['STUDENT'];
+        $studentRoles = array_values(array_filter(
+            $this->rule->security_roles,
+            fn($r) => in_array($roleCode($r), $studentRoleCodes, true)
+        ));
+        $studentContacts = ['email' => [], 'phone' => []];
+        if ($studentId && !empty($studentRoles)) {
+            $studentContacts = $this->recipientResolver->getStudentAssociatedContactList(
+                $studentRoles,
+                $studentId
+            );
+        }
+
         $contacts = [
-            'email' => array_values(array_unique(array_merge($classContacts['email'], $principalContacts['email']))),
-            'phone' => array_values(array_unique(array_merge($classContacts['phone'], $principalContacts['phone']))),
+            'email' => array_values(array_unique(array_merge($classContacts['email'], $principalContacts['email'], $studentContacts['email']))),
+            'phone' => array_values(array_unique(array_merge($classContacts['phone'], $principalContacts['phone'], $studentContacts['phone']))),
         ];
 
         // //Log::debug('[TEMP-LOG] @AlertStudentAbsenceCommand::resolveRecipients() TOTAL: email=' . count($contacts['email']) . ', phone=' . count($contacts['phone'])); //[TEMP-LOG]
