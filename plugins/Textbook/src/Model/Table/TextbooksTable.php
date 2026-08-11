@@ -276,10 +276,10 @@ class TextbooksTable extends ControllerActionTable {
 
     }
 
-    public function viewAfterAction(EventInterface $event, Entity $entity)
+    /*public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
-    }
+    }*/
 
     public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
