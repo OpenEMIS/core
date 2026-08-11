@@ -684,7 +684,10 @@ class ImportStudentAdmissionTable extends AppTable
         $tempRow['education_grade_code'] = $originalEducationGradeCode;
 
         //POCOR-9385: start — student creation restriction check on import
-        $importInstitutionId = method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: null) : null;
+        //Table classes have no getInstitutionID() (that's a Controller-only method) — this Table
+        //already resolves and caches the current import's institution on $this->institutionId
+        //(see initialize()/onImportModelSpecificValidation), so use that directly instead.
+        $importInstitutionId = !empty($this->institutionId) ? (int)$this->institutionId : null;
         if (!$this->isStudentCreationAllowed((int)$educationGradeId, $importInstitutionId, (int)$academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
             $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
             $grade = $EducationGrades->find()->select(['name'])->where(['id' => $educationGradeId])->first();
