@@ -108,7 +108,7 @@ class ReportCardsTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
             ])
-            ->notEmpty('education_programme_id')
+           ->notEmpty('education_programme_id', __('This field cannot be left empty'), 'create')
             ->allowEmpty('excel_template');
     }
 
@@ -252,7 +252,7 @@ class ReportCardsTable extends ControllerActionTable
         // End
         $this->field('excluded_security_roles');//POCOR-7400
         $this->setupFields($entity);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date',  'excluded_security_roles','education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date',  'excluded_security_roles','education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'pdf_page_number', 'excel_template']);
 
         // Added
         $this->setupTabElements($entity);
@@ -327,7 +327,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
         $this->field('regenerate_gpa', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'overall_result', 'regenerate_gpa', 'regenerate_cumulative_gpa','principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date','excluded_security_roles', 'education_programme_id', 'education_grade_id', 'overall_result', 'regenerate_gpa', 'regenerate_cumulative_gpa','principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'pdf_page_number', 'excel_template']);
     }
 
     public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -351,7 +351,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['code']['type'] = 'readonly';
        // $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'overall_result', 'regenerate_gpa','regenerate_cumulative_gpa','principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template','pdf_page_number']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'generate_start_date', 'generate_end_date', 'education_programme_id', 'education_grade_id', 'overall_result', 'regenerate_gpa','regenerate_cumulative_gpa','principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'pdf_page_number', 'excel_template']);
     }
 
     public function onUpdateFieldExcelTemplate(EventInterface $event, array $attr, $action, ServerRequest $request)
