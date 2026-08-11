@@ -184,15 +184,17 @@ class StudentsTable extends AppTable
         }
         if ($data[$this->getAlias()]['feature'] == 'Report.BodyMassStatusReports') {
             $options['validate'] = 'BodyMassStatusReports';
+        } else if ($data[$this->getAlias()]['feature'] == 'Report.Counsellings') {//POCOR-9756
+            $options['validate'] = 'Counsellings';
         } else if ($data[$this->getAlias()]['feature'] == 'Report.HealthReports') {
             $options['validate'] = 'HealthReports';
-        }else if ($data[$this->getAlias()]['feature'] == 'Report.StudentsRiskAssessment') {
+        } else if ($data[$this->getAlias()]['feature'] == 'Report.StudentsRiskAssessment') {
             $options['validate'] = 'StudentsRiskAssessment';
         } else if ($data[$this->getAlias()]['feature'] == 'Report.SubjectsBookLists') {
             $options['validate'] = 'SubjectsBookLists';
         } else if ($data[$this->getAlias()]['feature'] == 'Report.StudentNotAssignedClass') {
             $options['validate'] = 'StudentNotAssignedClass';
-        }else if ($data[$this->getAlias()]['feature'] == 'Report.Students') {
+        } else if ($data[$this->getAlias()]['feature'] == 'Report.Students') {
             $options['validate'] = 'Students';
         } else if ($data[$this->getAlias()]['feature'] == 'Report.StudentContacts') {
             $options['validate'] = 'StudentContacts';
@@ -239,6 +241,13 @@ class StudentsTable extends AppTable
                         'element'=> 'institutiondropdown',
                     ]);
 
+                    break;
+                case 'Report.Counsellings':
+                    $fieldsOrder[] = 'academic_period_id';
+                    $fieldsOrder[] = 'area_level_id';
+                    $fieldsOrder[] = 'area_education_id';
+                    $fieldsOrder[] = 'institution_id';
+                    $fieldsOrder[] = 'format';
                     break;
             }
             $this->ControllerAction->setFieldOrder($fieldsOrder);
@@ -549,6 +558,17 @@ class StudentsTable extends AppTable
         return $validator;
     }
 
+    public function validationCounsellings(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id')
+            ->notEmpty('institution_id');
+        return $validator;
+    }
+
     public function onUpdateFieldRiskType(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         if (isset($request->getData($this->getAlias())['feature'])) {
@@ -660,6 +680,7 @@ class StudentsTable extends AppTable
             $feature = $this->request->getData($this->getAlias())['feature'];
 
             if (in_array($feature, ['Report.BodyMassStatusReports',
+                                    'Report.Counsellings',
                                     'Report.HealthReports',
                                     'Report.StudentsRiskAssessment',
                                     'Report.InstitutionStudentReports', //POCOR-6970
@@ -787,6 +808,7 @@ class StudentsTable extends AppTable
 
                     if (in_array($feature, [
                         'Report.BodyMassStatusReports',
+                        'Report.Counsellings',
                         'Report.StudentsRiskAssessment',
                         'Report.SubjectsBookLists',
                         'Report.StudentNotAssignedClass',
@@ -1308,6 +1330,7 @@ class StudentsTable extends AppTable
             $feature = $this->request->getData($this->getAlias())['feature'];
 
             if ((in_array($feature, ['Report.BodyMassStatusReports',
+                                      'Report.Counsellings',
                                       'Report.HealthReports',
                                       'Report.StudentsRiskAssessment',
                                       'Report.InstitutionStudentReports', //POCOR-6970
@@ -1363,6 +1386,7 @@ class StudentsTable extends AppTable
                 'Report.StudentContacts',
                 'Report.HealthReports',
                 'Report.BodyMassStatusReports',
+                'Report.Counsellings',
                 'Report.StudentsRiskAssessment',
                 'Report.SubjectsBookLists',
                 'Report.StudentNotAssignedClass',
@@ -1406,6 +1430,7 @@ class StudentsTable extends AppTable
                 'Report.StudentContacts',
                 'Report.HealthReports',
                 'Report.BodyMassStatusReports',
+                'Report.Counsellings',
                 'Report.StudentsRiskAssessment',
                 'Report.SubjectsBookLists',
                 'Report.StudentNotAssignedClass',
