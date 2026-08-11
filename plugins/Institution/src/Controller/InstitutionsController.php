@@ -7027,7 +7027,14 @@ class InstitutionsController extends AppController
         if (empty($requestData['is_diff_school'])) { //POCOR-9385: transfers bypass grade restriction
             $gradeId          = !empty($requestData['education_grade_id']) ? (int)$requestData['education_grade_id'] : null;
             $academicPeriodId = !empty($requestData['academic_period_id']) ? (int)$requestData['academic_period_id'] : null;
-            $institutionId    = $this->getInstitutionID(__FUNCTION__ . ':POCOR-9385');
+            //POCOR-9385: no debug string here — saveStudentData is also reached from Directory's
+            //saveDirectoryData (Directory has no institution_id in query string/session at all).
+            //getInstitutionID($debugString) calls die() when institution_id can't be resolved AND a
+            //debug string is passed; passing one here previously killed the whole request (raw
+            //"For Developer: ..." text response) on every Directory-triggered student save.
+            //isStudentCreationAllowed() already handles a null $institutionId correctly (falls back
+            //to the global entry-grade rule), so just let it be null here instead of dying.
+            $institutionId    = $this->getInstitutionID() ?: null;
 
             if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) {
                 $gradeName = '';
