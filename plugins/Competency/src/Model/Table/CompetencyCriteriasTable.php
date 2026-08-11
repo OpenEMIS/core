@@ -43,7 +43,8 @@ class CompetencyCriteriasTable extends ControllerActionTable
                 ]
             ])
             ->allowEmpty('code')
-            ->notEmpty('competency_item_id');
+            ->notEmpty('competency_item_id')
+            ->notEmpty('competency_grading_type_id');
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
