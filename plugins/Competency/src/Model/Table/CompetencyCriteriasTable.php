@@ -42,7 +42,8 @@ class CompetencyCriteriasTable extends ControllerActionTable
                     'provider' => 'table'
                 ]
             ])
-            ->allowEmpty('code');
+            ->allowEmpty('code')
+            ->notEmpty('competency_item_id');
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)

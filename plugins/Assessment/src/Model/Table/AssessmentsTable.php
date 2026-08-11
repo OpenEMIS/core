@@ -70,6 +70,7 @@ class AssessmentsTable extends ControllerActionTable {
                 'message' => __('This code already exists for the selected Academic Period.')
             ])
             ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
             ->notEmptyString('academic_period_id')
             ->notEmpty('assessment_items')
             ->notEmpty('education_programme_id')

@@ -67,7 +67,7 @@ class OutcomeTemplatesTable extends ControllerActionTable
             ])
             ->notEmpty('code', __('This field cannot be left empty'))
             ->notEmptyString('academic_period_id')
-            ->notEmptyString('education_programme_id')
+           ->notEmpty('education_programme_id', __('This field cannot be left empty'), 'create')
             ->notEmptyString('education_grade_id');
     }
 
