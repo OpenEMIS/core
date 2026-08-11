@@ -4476,6 +4476,14 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
+            // POCOR-8211 Start
+            'Systems.StaffSalaries' => [
+                'title' => 'Salaries',
+                'parent' => 'Administration.Staff',
+                'params' => ['plugin' => 'System'],
+                'link' => true,
+            ],
+            // POCOR-8211 End
             'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',

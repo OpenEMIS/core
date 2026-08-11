@@ -41,6 +41,7 @@ class InstitutionPositionsTable extends AppTable
         ]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Staff.StaffSalary');//POCOR-8211
     }
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
@@ -114,11 +115,14 @@ class InstitutionPositionsTable extends AppTable
                 'birth_certificate' => 'Identities.number',
                 'identity_types_name' => 'IdentityTypes.name', //POCOR-6887
                 'StaffStatuses_name' => 'StaffStatuses.name', //POCOR-6887
-                'InstitutionStaffs_start_date' => 'InstitutionStaffs.start_date ', //POCOR-6887
+                'InstitutionStaffs_start_date' => 'InstitutionStaffs.start_date', //POCOR-6887
                 'InstitutionStaffs_end_date' => 'InstitutionStaffs.end_date', //POCOR-6887
                 'InstitutionStaffs_FTE' => 'InstitutionStaffs.FTE', //POCOR-6887
                 'staff_gender_name' => 'SecurityUsersGender.name', //POCOR-6951
                 'is_homeroom' => 'InstitutionStaffs.is_homeroom', //POCOR-7354
+                'staff_position_grade' => 'InstitutionStaffs.staff_position_grade_id',//POCOR-8211
+                'start_date' => 'InstitutionStaffs.start_date', //POCOR-8211
+                'FTE' => 'InstitutionStaffs.FTE',//POCOR-8211
             ])
             ->contain([
                 'Statuses' => [
@@ -385,6 +389,14 @@ class InstitutionPositionsTable extends AppTable
             'label' => __('Position Category')
         ];
         //End POCOR-6951
+        //POCOR-8211 start
+        $newFields[] = [
+            'key' => 'staff_position_salary',
+            'field' => 'staff_position_salary',
+            'type' => 'string',
+            'label' => __('Staff Position Salary')
+        ];
+        //POCOR-8211 end
     
         /*POCOR-6534 ends*/
         if ($positionFilter == self::POSITION_WITH_STAFF) {
@@ -600,5 +612,13 @@ class InstitutionPositionsTable extends AppTable
         }
         return $idArray;
     }
+
+    //POCOR-8211 Start
+    public function onExcelGetStaffPositionSalary(EventInterface $event, Entity $entity)
+    {
+        $value = $this->calculateStaffPositionSalary($entity);
+        return $value;
+    }
+    //POCOR-8211 End
 
 }
