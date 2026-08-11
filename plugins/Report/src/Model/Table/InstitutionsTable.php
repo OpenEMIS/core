@@ -1808,7 +1808,7 @@ class InstitutionsTable extends AppTable
                         // still allow "All Institutions" to be picked afterwards. Only once "All
                         // Institutions" itself is selected do the specific institutions become
                         // disabled (and any of them already selected are cleared).
-                        if (array_key_exists('0', $institutionOptions)) {
+                        if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
                             $selectedInstitutionIds = [];
                             if (isset($data['institution_id']) && is_array($data['institution_id']) && isset($data['institution_id']['_ids'])) {
                                 $selectedInstitutionIds = array_filter((array)$data['institution_id']['_ids'], function ($v) {

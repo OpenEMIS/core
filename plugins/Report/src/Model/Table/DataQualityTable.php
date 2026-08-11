@@ -367,7 +367,7 @@ class DataQualityTable extends AppTable {
                         // still allow "All Institutions" to be picked afterwards. Only once "All
                         // Institutions" itself is selected do the specific institutions become
                         // disabled (and any of them already selected are cleared).
-                        if (array_key_exists('-1', $institutionOptions)) {
+                        if (is_array($institutionOptions) && array_key_exists('-1', $institutionOptions)) {
                             $selectedInstitutionIds = [];
                             $institutionIdData = isset($request->getData()[$this->getAlias()]['institution_id']) ? $request->getData()[$this->getAlias()]['institution_id'] : null;
                             if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
