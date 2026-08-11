@@ -100,6 +100,20 @@ class InstitutionStudentsTable extends AppTable
         $IdentityType = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $institution_id = $requestData->institution_id;
         $areaLevelId = $requestData->area_level_id; //POCOR-7794
+
+        $filterInstitutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+            $filterInstitutionIds = [(int)$institution_id];
+        }
+
         //POCOR-9478 start
         $selectedArea = $requestData->area_education_id;
         if ($selectedArea != -1 && $selectedArea != '') {
@@ -144,8 +158,8 @@ class InstitutionStudentsTable extends AppTable
             }
         }
         //POCOR-8416[END]
-        if ($institution_id != 0) {
-            $query->where([$this->aliasField('institution_id') => $institution_id]);
+        if (!empty($filterInstitutionIds)) {
+            $query->where([$this->aliasField('institution_id') . ' IN' => $filterInstitutionIds]);
         }
         
         /**POCOR-6919 starts - modified query to fetch result on the basis of selected education level*/

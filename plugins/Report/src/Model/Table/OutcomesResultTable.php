@@ -105,6 +105,18 @@ class OutcomesResultTable extends AppTable
         $outcomePeriod = $requestData->outcome_period;
         $criteriaList =  $settings['criteria_list_entities'];
         $conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
        if (!empty($areaId) && $areaId != 1) {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -115,8 +127,8 @@ class OutcomesResultTable extends AppTable
             }
         }
         $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;
-        if (!empty($institutionId) && $institutionId != 1) {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id IN')] = $filterInstitutionIds;
         }
         if (!empty($educationGradeId) && $educationGradeId != 0) {
             $conditions['InstitutionClassStudents.education_grade_id'] = $educationGradeId;
@@ -130,8 +142,8 @@ class OutcomesResultTable extends AppTable
         $outcomeCommentTable = TableRegistry::getTableLocator()->get('Institution.InstitutionOutcomeSubjectComments');
         $where = [];
         $where[$InstitutionClassStudentsTable->aliasField('academic_period_id')] = $academicPeriodId;
-        if (!empty($institutionId) && $institutionId != 1) {
-            $where[$InstitutionClassStudentsTable->aliasField('institution_id')] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $where[$InstitutionClassStudentsTable->aliasField('institution_id IN')] = $filterInstitutionIds;
         }
         if (!empty($educationGradeId) && $educationGradeId != 0) {
             $where[$InstitutionClassStudentsTable->aliasField('education_grade_id')] = $educationGradeId;
@@ -157,9 +169,9 @@ class OutcomesResultTable extends AppTable
         // Always filter by academic period and outcome period
         $whereClause[$InstitutionOutcomeResultsTable->aliasField('academic_period_id')] = $academicPeriodId;
         $whereClause[$InstitutionOutcomeResultsTable->aliasField('outcome_period_id')] = $outcomePeriod;
-        // Filter by institution only if a specific one is selected
-        if (!empty($institutionId) && $institutionId != 1) {
-            $whereClause[$InstitutionOutcomeResultsTable->aliasField('institution_id')] = $institutionId;
+        // Filter by institution only if specific ones are selected
+        if (!empty($filterInstitutionIds)) {
+            $whereClause[$InstitutionOutcomeResultsTable->aliasField('institution_id IN')] = $filterInstitutionIds;
         }
         // Filter by grade only if a specific one is selected
         if (!empty($educationGradeId) && $educationGradeId != 0) {
@@ -317,7 +329,7 @@ class OutcomesResultTable extends AppTable
             ])
             ->leftJoin(
                 ['InstitutionOutcomeResults' => 'institution_outcome_results'],
-                function ($exp, $q) use ($educationGradeId, $institutionId,  $academicPeriodId) {
+                function ($exp, $q) use ($educationGradeId, $filterInstitutionIds, $academicPeriodId) {
                     $on = [
                         'InstitutionOutcomeResults.student_id = InstitutionClassStudents.student_id',
                         
@@ -326,8 +338,8 @@ class OutcomesResultTable extends AppTable
                         'InstitutionOutcomeResults.education_grade_id  = InstitutionClassStudents.education_grade_id ',
                     ];
 
-                    if (!empty($institutionId) && $institutionId != 1) {
-                    $on[] = $exp->eq('InstitutionOutcomeResults.institution_id', $institutionId);
+                    if (!empty($filterInstitutionIds)) {
+                        $on['InstitutionOutcomeResults.institution_id IN'] = $filterInstitutionIds;
                     }
                     if (!empty($educationGradeId) && $educationGradeId != 0) {
                          $on[] = $exp->eq('InstitutionOutcomeResults.education_grade_id', $educationGradeId);

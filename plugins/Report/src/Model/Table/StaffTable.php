@@ -85,30 +85,468 @@ class StaffTable extends AppTable  {
         
         return $validator;
     }
-    public function validationStaffLeaveReport(Validator $validator): Validator
 
+    public function validationStaffPhoto(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
-        $validator = $validator
+        $validator
             ->notEmpty('academic_period_id')
-            ->notEmpty('institution_id');
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffContacts(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationInstitutionStaffDetailed(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffLeaveReport(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
         return $validator;
     }
 
     public function validationStaffDuties(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
-        $validator = $validator
+        $validator
             ->notEmpty('academic_period_id')
-            ->notEmpty('institution_id');
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffEmploymentStatuses(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffIdentities(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffLicenses(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffQualifications(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffSalaries(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffExtracurriculars(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationPositionSummary(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffPositions(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffSubjects(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
+    }
+
+    public function validationStaffTrainingReports(Validator $validator): Validator
+    {
+        $validator = $this->validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
         return $validator;
     }
 
     public function validationStaffHealthReports(Validator $validator): Validator
     {
         $validator = $this->validationDefault($validator);
-        $validator = $validator
-            ->notEmpty('institution_id');
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id')
+            ->notEmpty('health_report_type');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
         return $validator;
     }
 
@@ -130,6 +568,45 @@ class StaffTable extends AppTable  {
         //POCOR-8417
         if ($data[$this->getAlias()]['feature'] == 'Report.Staff') {
             $options['validate'] = 'Staff';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffPhoto') {
+            $options['validate'] = 'StaffPhoto';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffContacts') {
+            $options['validate'] = 'StaffContacts';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.InstitutionStaffDetailed') {
+            $options['validate'] = 'InstitutionStaffDetailed';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffEmploymentStatuses') {
+            $options['validate'] = 'StaffEmploymentStatuses';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffIdentities') {
+            $options['validate'] = 'StaffIdentities';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffLicenses') {
+            $options['validate'] = 'StaffLicenses';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.PositionSummary') {
+            $options['validate'] = 'PositionSummary';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffQualifications') {
+            $options['validate'] = 'StaffQualifications';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffSalaries') {
+            $options['validate'] = 'StaffSalaries';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffExtracurriculars') {
+            $options['validate'] = 'StaffExtracurriculars';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffPositions') {
+            $options['validate'] = 'StaffPositions';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffSubjects') {
+            $options['validate'] = 'StaffSubjects';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffTrainingReports') {
+            $options['validate'] = 'StaffTrainingReports';
         }
     }
     //POCOR - 7408 start
@@ -448,9 +925,24 @@ class StaffTable extends AppTable  {
 
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
-        $institutionIds = $requestData->institution_id->_ids ?? [];
+        $institutionId = $requestData->institution_id;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        // user_id/super_admin are injected server-side from the authenticated session by
+        // Report.ReportList::addBeforeSave() before the export job is queued - not client input.
+        $userId = $requestData->user_id ?? null;
+        $superAdmin = $requestData->super_admin ?? false;
         $selectedArea = $requestData->area_education_id;
-        $InstitutionStaffTable = TableRegistry::getTableLocator()->get('Institution.Staff');
         $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
@@ -458,36 +950,7 @@ class StaffTable extends AppTable  {
         $startDate = $periodEntity->start_date->format('Y-m-d');
         $endDate = $periodEntity->end_date->format('Y-m-d');
 
-        $userId = $requestData->user_id;
-        $superAdmin = $requestData->super_admin;
         $conditions = [];
-        if ($areaId != -1 && $areaId != '') {
-            $areaIds = [];
-            $allgetArea = $this->getChildren($selectedArea, $areaIds);
-            $selectedArea1[]= $selectedArea;
-            if(!empty($allgetArea)){
-                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
-            }else{
-                $allselectedAreas = $selectedArea1;
-            }
-            $conditions['Institutions.area_id IN'] = $allselectedAreas;
-        }
-        // Institution list based on access
-        $institutionQuery = $InstitutionsTable
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'code_name'
-            ])
-            ->order([
-                $InstitutionsTable->aliasField('code') => 'ASC',
-                $InstitutionsTable->aliasField('name') => 'ASC'
-            ]);
-
-        if (!$superAdmin) {
-            $institutionQuery->find('byAccess', ['userId' => $userId]);
-        }
-        $institutionList = $institutionQuery->toArray();
-        // Academic Period Date Conditions
         if (!empty($academicPeriodId)) {
             $conditions[] = [
                 'OR' => [
@@ -514,20 +977,35 @@ class StaffTable extends AppTable  {
             ];
         }
 
-        // Institution Filter (_ids logic)
-        if (!empty($institutionIds) && $institutionIds !== [0]) {
-            if (in_array(0, $institutionIds)) {
-                if (!$superAdmin) {
-                    $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
-                }
-            } else {
-                $conditions['InstitutionStaff.institution_id IN'] = $institutionIds;
+        if ($areaId != -1 && $areaId != '') {
+            $areaIds = [];
+            $allgetArea = $this->getChildren($selectedArea, $areaIds);
+            $selectedArea1[]= $selectedArea;
+            if(!empty($allgetArea)){
+                $allselectedAreas = array_merge($selectedArea1, $allgetArea);
+            }else{
+                $allselectedAreas = $selectedArea1;
             }
+            $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
 
-        // Area Filter
-        if (!empty($areaId) && $areaId != -1) {
-            $conditions[$InstitutionsTable->aliasField('area_id')] = $areaId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions['InstitutionStaff.institution_id IN'] = $filterInstitutionIds;
+        } elseif (!$superAdmin) {
+            // No specific institution(s) selected - either the field was left on "All
+            // Institutions" (id 0, stripped out above) or nothing at all. For a super admin that
+            // genuinely means "no restriction". For anyone else, scope down to only the
+            // institutions this user has access to, matching the pre-multi-select behavior that
+            // was previously enforced here - otherwise this falls through with zero institution
+            // scoping and the export would include every institution in the system.
+            $institutionQuery = $InstitutionsTable
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->find('byAccess', ['userId' => $userId]);
+            $institutionList = $institutionQuery->toArray();
+            $conditions['InstitutionStaff.institution_id IN'] = array_keys($institutionList);
         }
 
         // Main Query
@@ -907,7 +1385,7 @@ class StaffTable extends AppTable  {
                         'Report.StaffLeaveReport',
                         'Report.StaffDuties',
                         'Report.PositionSummary',
-                      //  'Report.Staff',
+                        'Report.Staff',
                         'Report.StaffPhoto',
                         'Report.StaffIdentities',
                         'Report.StaffContacts',
@@ -939,8 +1417,43 @@ class StaffTable extends AppTable  {
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --', 0 => __('All Institutions')]+ $institutionList ;
                     }
 
-                    if(in_array($feature, ['Report.Staff'])) { //POCOR-8417
+                    if(in_array($feature, ['Report.Staff', 'Report.StaffPhoto', 'Report.StaffContacts', 'Report.StaffIdentities', 'Report.InstitutionStaffDetailed', 'Report.StaffDuties', 'Report.StaffEmploymentStatuses', 'Report.StaffLicenses', 'Report.PositionSummary', 'Report.StaffQualifications', 'Report.StaffSalaries', 'Report.StaffExtracurriculars', 'Report.StaffHealthReports', 'Report.StaffLeaveReport', 'Report.StaffPositions', 'Report.StaffSubjects', 'Report.StaffTrainingReports'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
+                        unset($institutionOptions['']);
+
+                        // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                        // still allow "All Institutions" to be picked afterwards. Only once "All
+                        // Institutions" itself is selected do the specific institutions become
+                        // disabled (and any of them already selected are cleared).
+                        if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
+                            $selectedInstitutionIds = [];
+                            $institutionIdData = isset($this->request->getData($this->getAlias())['institution_id']) ? $this->request->getData($this->getAlias())['institution_id'] : null;
+                            if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                                $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                                    return $v !== '' && $v !== null;
+                                });
+                            }
+                            $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                            if ($allInstitutionsSelected) {
+                                // "All Institutions" wins - disable every other option and force it
+                                // to be the only value selected.
+                                $formattedInstitutionOptions = [];
+                                foreach ($institutionOptions as $optKey => $optLabel) {
+                                    if ((string)$optKey === '0') {
+                                        $formattedInstitutionOptions[$optKey] = $optLabel;
+                                    } else {
+                                        $formattedInstitutionOptions[] = [
+                                            'text' => $optLabel,
+                                            'value' => $optKey,
+                                            'disabled' => 'disabled'
+                                        ];
+                                    }
+                                }
+                                $institutionOptions = $formattedInstitutionOptions;
+                                $attr['attr']['value'] = ['0'];
+                            }
+                        }
                     } else {
                         $attr['attr']['multiple'] = false;
                     }
