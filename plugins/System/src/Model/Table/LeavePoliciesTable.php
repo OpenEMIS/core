@@ -14,6 +14,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\ORM\Exception\PersistenceFailedException;
+use Cake\Validation\Validator;
 
 class LeavePoliciesTable extends ControllerActionTable
 {
@@ -432,6 +433,12 @@ class LeavePoliciesTable extends ControllerActionTable
         return true;
     }
 
-
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+                ->notEmpty('code')
+                ->notEmpty('name');
+    }
 
 }
