@@ -368,6 +368,20 @@ class AppTable extends Table
             if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
                 $label = str_replace(' Id', '', $label);
             }
+            switch ($field) {
+                case "modified_user_id":
+                    $label = "Modified By";
+                    break;
+                case "modified":
+                    $label = "Modified On";
+                    break;
+                case "created_user_id":
+                    $label = "Created By";
+                    break;
+                case "created":
+                    $label = "Created On";
+                    break;
+            }
             $label = __($label);
         }
 
