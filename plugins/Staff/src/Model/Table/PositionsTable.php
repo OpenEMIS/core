@@ -59,6 +59,7 @@ class PositionsTable extends ControllerActionTable {
                 'contain' => []
             ]
         ); // for webhook
+        $this->addBehavior('Staff.StaffSalary');//POCOR-8211
     }
 
     public function implementedEvents(): array
@@ -144,6 +145,14 @@ class PositionsTable extends ControllerActionTable {
             'type' => 'integer',
             'label' => ''
         ];
+        //POCOR-8211 Start
+        $newFields[] = [
+            'key' => 'staff_position_salary',
+            'field' => 'staff_position_salary',
+            'type' => 'string',
+            'label' => __('Staff Position Salary')
+        ];
+        //POCOR-8211 End
 
         $fields->exchangeArray($newFields);
     }
@@ -514,4 +523,21 @@ class PositionsTable extends ControllerActionTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    //POCOR-8211 Start
+    public function onExcelGetStaffPositionSalary(EventInterface $event, Entity $entity)
+    {
+        $positionEntity = $this->find()
+        ->select([
+            'id',
+            'start_date',
+            'staff_position_grade' => $this->aliasField('staff_position_grade_id'),
+            'FTE'
+        ])
+        ->where(['id' => $entity->id])
+        ->first();
+        $value = $this->calculateStaffPositionSalary($positionEntity);
+        return $value;
+    }
+    //POCOR-8211 End
 }
