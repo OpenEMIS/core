@@ -360,6 +360,7 @@ class ExaminationsTable extends AppTable
                         }
                     }
                     $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
                 } else {
                     $attr['attr']['multiple'] = false;
                 }
@@ -431,6 +432,7 @@ class ExaminationsTable extends AppTable
                         }
                     }
                     $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
                 } else {
                     $attr['attr']['multiple'] = false;
                 }
