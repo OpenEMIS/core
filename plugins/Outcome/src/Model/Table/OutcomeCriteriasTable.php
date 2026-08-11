@@ -282,8 +282,8 @@ class OutcomeCriteriasTable extends ControllerActionTable
              return __('Academic Period');
          } elseif ($field == 'name') {
              return __('Name');
-         }elseif ($field == 'Code') {
-             return __('code');
+         }elseif ($field == 'code') {
+             return __('Code');
          }elseif ($field == 'code') {
             $codeName = $LabelTable->find()->where(['module_name' =>'Outcome -> Criterias' , 'field_name' =>'code'])->first();
             if($codeName != null){
