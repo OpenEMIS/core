@@ -695,6 +695,84 @@ class StudentsTable extends ControllerActionTable
         // targetInstitutionId is used to determine the error message, whether it is enrolled in 'this' or 'other' institution
         $targetInstitutionId = (isset($options['targetInstitutionId'])) ? $options['targetInstitutionId'] : null;
 
+        //POCOR-9355: multiple institution / multiple programme enrollment: callers that know about
+        // this feature (ValidationBehavior) always pass these two keys explicitly, even when both
+        // are false, so we can tell them apart from callers that never heard of the feature
+        // (e.g. checkIfCanTransfer) and must keep getting the original single-institution behaviour.
+        $configProvided = array_key_exists('multipleInstitutions', $options) || array_key_exists('multipleProgrammes', $options);
+
+        if ($configProvided) {
+            $multipleInstitutions = !empty($options['multipleInstitutions']);
+            $multipleProgrammes = !empty($options['multipleProgrammes']);
+            $targetProgrammeId = isset($options['targetProgrammeId']) ? $options['targetProgrammeId'] : null;
+
+            // Fetch existing CURRENT enrolments in the same education system as full records
+            // so we can inspect both institution and programme.
+            $recordOptions = array_merge($options, ['getRecords' => true, 'getInstitutions' => false]);
+            $existingRecords = $this->enrolledInAnyInstitution($studentId, $systemId, $recordOptions);
+
+            if (empty($existingRecords)) {
+                return false; // No current enrolment in this education system - allow
+            }
+
+            $enrolledInstitutionIds = [];
+            $enrolledProgrammeIds = [];
+            foreach ($existingRecords as $record) {
+                $enrolledInstitutionIds[$record->institution_id] = true;
+            }
+
+            if ($multipleProgrammes && !empty($targetProgrammeId)) {
+                // Batch-fetch education_programme_id for all enrolled grades (avoids N+1 queries)
+                $gradeIds = array_unique(array_map(function ($r) { return $r->education_grade_id; }, $existingRecords));
+                $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                $gradesMap = $EducationGrades->find()
+                    ->select([$EducationGrades->aliasField('id'), $EducationGrades->aliasField('education_programme_id')])
+                    ->where([$EducationGrades->aliasField('id') . ' IN' => $gradeIds])
+                    ->indexBy('id')
+                    ->toArray();
+
+                foreach ($existingRecords as $record) {
+                    $gradeKey = $record->education_grade_id;
+                    if (isset($gradesMap[$gradeKey])) {
+                        $enrolledProgrammeIds[] = $gradesMap[$gradeKey]->education_programme_id;
+                    }
+                }
+
+                // Rule 4: same programme is always rejected regardless of institution
+                if (in_array($targetProgrammeId, $enrolledProgrammeIds)) {
+                    return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inSameProgramme');
+                }
+
+                // Rule 2: with multi-institution disabled, target institution must be one where student is already enrolled
+                if (!$multipleInstitutions && !empty($targetInstitutionId) && !isset($enrolledInstitutionIds[$targetInstitutionId])) {
+                    return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inAnotherSchool');
+                }
+
+                // Rule 3: multi-institution enabled - institution is unrestricted once programme differs
+                return false;
+            }
+
+            if ($multipleInstitutions) {
+                // Multi-programme is off: only one active programme per institution, but any
+                // number of institutions is allowed - reject only if this exact institution
+                // already has an active enrolment (regardless of programme).
+                if (!empty($targetInstitutionId) && isset($enrolledInstitutionIds[$targetInstitutionId])) {
+                    return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inTargetSchool');
+                }
+                return false;
+            }
+
+            // Multi-institution and multi-programme both off: any existing enrolment in this
+            // education system blocks a new one, whether it's this institution or another
+            // (original single-institution behaviour) - reuse the records already fetched above.
+            if (!empty($targetInstitutionId) && isset($enrolledInstitutionIds[$targetInstitutionId])) {
+                return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inTargetSchool');
+            }
+            return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inAnotherSchool');
+        }
+
+        // Legacy callers that never pass multipleInstitutions/multipleProgrammes at all
+        // (e.g. checkIfCanTransfer) keep the exact original behaviour, untouched.
         $enrolledInstitutionIds = $this->enrolledInAnyInstitution($studentId, $systemId, $options);
 
         if (is_array($enrolledInstitutionIds) && !empty($enrolledInstitutionIds)) {
@@ -715,6 +793,7 @@ class StudentsTable extends ControllerActionTable
         $newOptions['select'] = ['institution_id', 'education_grade_id'];
         $options = array_merge($options, $newOptions);
         $getInstitutions = (isset($options['getInstitutions'])) ? $options['getInstitutions'] : false;
+        $getRecords = !empty($options['getRecords']); //POCOR-9355: returns full record objects for programme-level checks
 
         $EducationGradesTable = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 
@@ -727,6 +806,12 @@ class StudentsTable extends ControllerActionTable
             if ($value->education_system_id == $systemId) {
                 $existingRecordsInSameSystem[] = $value;
             }
+        }
+
+        //POCOR-9355: when getRecords is requested, return the raw record objects so the caller
+        // can inspect institution_id and education_grade_id for programme-level checks.
+        if ($getRecords) {
+            return $existingRecordsInSameSystem;
         }
 
         // returns a true/false if !getInstitutions else returns an array of institution_ids

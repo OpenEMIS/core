@@ -823,6 +823,7 @@ class ValidationBehavior extends Behavior
         }
 
         $Students = TableRegistry::getTableLocator()->get('Institution.Students');
+        $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades'); //POCOR-9355
 
         $educationGradeId = (isset($data['education_grade_id']))? $data['education_grade_id']: null;
         if (empty($educationGradeId)) {
@@ -830,13 +831,29 @@ class ValidationBehavior extends Behavior
             return true;
         }
 
-        $educationSystemId = TableRegistry::getTableLocator()->get('Education.EducationGrades')->getEducationSystemId($educationGradeId);
+        $educationSystemId = $EducationGrades->getEducationSystemId($educationGradeId);
 
         // obtains validation message from this function, false is returned if no validation message
         $validateOptions = ['targetInstitutionId' => $data['institution_id']];
         if (!empty($excludeInstitutions)) {
             $validateOptions['excludeInstitutions'] = $excludeInstitutions;
         }
+
+        //POCOR-9355: multiple institution / multiple programme enrollment - always resolve both
+        // config flags (and the target programme, when the grade resolves) so
+        // validateEnrolledInAnyInstitution can apply the full MI x MP decision matrix
+        // instead of only the education-system-level check.
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $validateOptions['multipleInstitutions'] = ($ConfigItems->value('multiple_institutions_student_enrollment') == "1");
+        $validateOptions['multipleProgrammes'] = ($ConfigItems->value('multiple_institutions_student_program_enrollment') == "1");
+        $grade = $EducationGrades->find()
+            ->select([$EducationGrades->aliasField('education_programme_id')])
+            ->where([$EducationGrades->aliasField('id') => $educationGradeId])
+            ->first();
+        if ($grade) {
+            $validateOptions['targetProgrammeId'] = $grade->education_programme_id;
+        }
+
         $validateEnrolledInAnyInstitution = $Students->validateEnrolledInAnyInstitution(
             $globalData['data']['student_id'],
             $educationSystemId,

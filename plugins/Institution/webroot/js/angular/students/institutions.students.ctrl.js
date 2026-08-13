@@ -60,6 +60,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     userCtrl.guardianStep = 'user_details';
     userCtrl.redirectToGuardian = false;
     userCtrl.multipleInstitutionsStudentEnrollment = true;
+    userCtrl.multipleInstitutionsStudentProgramEnrollment = false; //POCOR-9355
     userCtrl.transferReasonsOptions = [];
     userCtrl.isSameSchool = false;
     userCtrl.isDiffSchool = false;
@@ -207,6 +208,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 });
         }
 
+        //POCOR-9355
+        function getMultipleInstitutionsStudentProgramEnrollment() {
+            return userSvc.getConfigItemValue('multiple_institutions_student_program_enrollment')
+                .then(configValue => {
+                    userCtrl.multipleInstitutionsStudentProgramEnrollment = (configValue === "1");
+                })
+                .catch(error => {
+                    console.error('Error fetching MultipleInstitutionsStudentProgramEnrollment configuration:', error);
+                });
+        }
+
         function getMaxFileSizeConfig() {
             return userSvc.getConfigItemValue('dashboard_img_size_limit')
                 .then(configValue => {
@@ -298,6 +310,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 .then(getContactTypes)
                 .then(getAddNewStudentConfig)
                 .then(getMultipleInstitutionsStudentEnrollment)
+                .then(getMultipleInstitutionsStudentProgramEnrollment) //POCOR-9355
                 .then(getMaxFileSizeConfig)
                 .then(getAcademicPeriods)
                 .then(() => {
@@ -1107,7 +1120,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             return;
         }
 
-        if (userCtrl.studentExistInTheSameSchool()) {
+        //POCOR-9355: multiple programme enrollment - when the student may hold concurrent
+        // programme enrolments, the same-school match alone doesn't mean a duplicate -
+        // defer to the backend (which checks programme) instead of hard-blocking here.
+        const single_institutions_student_program_enrollment =
+            !(userCtrl.multipleInstitutionsStudentProgramEnrollment);
+        if (single_institutions_student_program_enrollment && userCtrl.studentExistInTheSameSchool()) {
             userCtrl.nextStepFromStudentExistInTheSameSchool();
             return;
         }
