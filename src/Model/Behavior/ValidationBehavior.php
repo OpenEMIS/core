@@ -9,6 +9,7 @@ use Cake\Network\Session;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Auth\DefaultPasswordHasher;
 use Cake\Validation\Validation;
 use Cake\Validation\Validator;
 use DateTime;
@@ -1768,6 +1769,48 @@ class ValidationBehavior extends Behavior
         $match = preg_match('/[a-z]/', $field);
         return !empty($match);
     }
+
+    //POCOR-7440
+    public static function checkPasswordRotation($field, array $globalData)
+    {
+        if ($field === '' || $field === null) {
+            return true;
+        }
+
+        $userId = $globalData['data']['id'] ?? null;
+        if (empty($userId)) {
+            return true;
+        }
+
+        $hasher = new DefaultPasswordHasher();
+        $Users = TableRegistry::getTableLocator()->get('User.Users');
+        try {
+            $user = $Users->get($userId, ['fields' => ['id', 'password']]);
+        } catch (\Exception $e) {
+            return true;
+        }
+
+        if (!empty($user->password) && $hasher->check($field, $user->password)) {
+            return false;
+        }
+
+        $SecurityUserPasswords = TableRegistry::getTableLocator()->get('User.SecurityUserPasswords');
+        $oldPasswords = $SecurityUserPasswords
+            ->find()
+            ->select(['old_password'])
+            ->where(['security_user_id' => $userId])
+            ->enableHydration(false)
+            ->toArray();
+
+        foreach ($oldPasswords as $oldPassword) {
+            if (!empty($oldPassword['old_password']) && $hasher->check($field, $oldPassword['old_password'])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    //POCOR-7440
 
     public static function checkEmailFormat($field, array $globalData)
     {
