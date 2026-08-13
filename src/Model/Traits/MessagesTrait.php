@@ -1528,6 +1528,7 @@ trait MessagesTrait
                     'ruleCheckUppercaseExists' => 'Password should contain at least 1 uppercase character',
                     'ruleCheckLowercaseExists' => 'Password should contain at least 1 lowercase character',
                     'ruleCheckNonAlphaExists' => 'Password should contain at least 1 non-alphanumeric character',
+                    'ruleCheckPasswordRotation' => 'New password cannot be the same as a previous password',
                     'ruleCheckLength' => 'Password length should be between %s to %s',
                 ],
                 'retype_password' => [
