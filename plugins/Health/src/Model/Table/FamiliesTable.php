@@ -14,6 +14,7 @@ use App\Model\Traits\OptionsTrait;
 class FamiliesTable extends ControllerActionTable
 {
     use OptionsTrait;
+    use HealthLookupTrait; //POCOR-9718
 
     public function initialize(array $config): void
     {
@@ -159,20 +160,38 @@ class FamiliesTable extends ControllerActionTable
         return $attr;
     }
 
+    //POCOR-9718: populate Health Family selects from their lookup tables.
+    public function onUpdateFieldHealthRelationshipId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.Relationships');
+    }
+
+    public function onUpdateFieldHealthConditionId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.Conditions');
+    }
+
     private function setupFields(Entity $entity)
     {
+       $this->field('health_condition_id', ['type' => 'select', 'attr' => ['required' => true]]); //POCOR-9507 
+        $this->field('health_relationship_id', ['type' => 'select', 'before' => 'current', 'attr' => ['required' => true]]); //POCOR-9507
+        
+
         $this->field('current');
-        $this->field('health_relationship_id', ['type' => 'select', 'after' => 'comment']);
-        $this->field('health_condition_id', ['type' => 'select', 'after' => 'health_relationship_id']);
-        $this->field('file_content', ['after' => 'health_condition_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
+        $this->field('current', ['type' => 'select', 'after' => 'health_relationship_id', 'attr' => ['required' => true]]);
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+            ->allowEmpty('file_content')
+            ->notEmpty('health_relationship_id')
+            ->notEmpty('health_condition_id')
+            ->notEmpty('current');
         return $validator;
     }
 
@@ -196,14 +215,14 @@ class FamiliesTable extends ControllerActionTable
             'key'   => 'health_relationship_id',
             'field' => 'health_relationship_id',
             'type'  => 'string',
-            'label' => __('Health Relationship')
+            'label' => __('Relationship') //POCOR-9507
         ];
 
         $extraField[] = [
             'key'   => 'health_condition_id',
             'field' => 'health_condition_id',
             'type'  => 'string',
-            'label' => __('Health Condition')
+            'label' => __('Condition') //POCOR-9507
         ];
 
         $extraField[] = [
@@ -235,6 +254,10 @@ class FamiliesTable extends ControllerActionTable
     {
         if ($field == 'file_content') {
             return __('Attachment');
+        } elseif ($field == 'health_relationship_id') {
+            return __('Relationship'); //POCOR-9507
+        } elseif ($field == 'health_condition_id') {
+            return __('Condition'); //POCOR-9507
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -245,6 +268,27 @@ class FamiliesTable extends ControllerActionTable
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
+    }
+
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Families.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
     }
 
 }

@@ -421,7 +421,9 @@ class ControllerActionHelper extends Helper
         $alias = $this->_View->get('ControllerAction')['table']->getRegistryAlias();//POCOR-8677
         $session = $this->_View->getRequest()->getSession();
         $limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : 0;
-
+        if(empty($limit)){
+          $limit = $this->_View->getRequest()->getData()['Search']['limit'] ?? 0; //POCOR-9640
+        }
         $config = $this->_View->get('ControllerAction');
         if (!is_null($config['pageOptions'])) {
             $pageOptions = $config['pageOptions'];

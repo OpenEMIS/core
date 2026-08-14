@@ -16,7 +16,6 @@ class LocalesTable extends ControllerActionTable
     private $fieldsOrder = ['iso','name','editable','created']; // POCOR-9504
     public function initialize(array $config): void
     {
-
        parent::initialize($config);
        $this->toggle('view', true);
        $this->toggle('edit', true);

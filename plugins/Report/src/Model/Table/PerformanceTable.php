@@ -58,6 +58,8 @@ class PerformanceTable extends AppTable
             $options['validate'] = 'performance';
         }elseif($data[$this->getAlias()]['feature'] == 'Report.OutcomesResult'){
             $options['validate'] = 'OutcomesResult';
+        }elseif($data[$this->getAlias()]['feature'] == 'Report.PerformanceCompetencies'){
+            $options['validate'] = 'performanceCompetencies';
         }
     }
 
@@ -67,13 +69,29 @@ class PerformanceTable extends AppTable
         $validator = $validator
             ->notEmpty('academic_period_id')
             ->notEmpty('institution_type_id') //POCOR-9451
-            ->notEmpty('institution_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
             ->notEmpty('area_education_id')
             ->notEmpty('education_programme_id') //POCOR-9443
             ->notEmpty('assessment_period_id')
             ->notEmpty('academic_term');
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
        return $validator;
     }
     public function validationPerformance(Validator $validator)
@@ -81,11 +99,27 @@ class PerformanceTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('academic_period_id')
-            ->notEmpty('institution_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
             ->notEmpty('area_education_id')
             ->notEmpty('education_programme_id'); //POCOR-9443
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
        return $validator;
     }
 
@@ -94,12 +128,57 @@ class PerformanceTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('academic_period_id')
-            ->notEmpty('institution_id')
             ->notEmpty('education_grade_id')
             ->notEmpty('area_level_id')
             ->notEmpty('area_education_id')
             ->notEmpty('outcome_period')
             ->notEmpty('education_programme_id'); //POCOR-9443
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+       return $validator;
+    }
+
+    public function validationPerformanceCompetencies(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_education_id')
+            ->notEmpty('education_programme_id');
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
        return $validator;
     }
     public function beforeAction(EventInterface $event)
@@ -341,10 +420,50 @@ class PerformanceTable extends AppTable
             } else {
                 $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
             }
-            
+
+            $feature = $request->getData($this->getAlias())['feature'];
+            if (in_array($feature, ['Report.Performance', 'Report.Assessments', 'Report.PerformanceCompetencies', 'Report.OutcomesResult'])) { //POCOR-8417
+                $attr['attr']['multiple'] = true;
+                unset($institutionOptions['']);
+
+                // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                // still allow "All Institutions" to be picked afterwards. Only once "All
+                // Institutions" itself is selected do the specific institutions become
+                // disabled (and any of them already selected are cleared).
+                if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
+                    $selectedInstitutionIds = [];
+                    $institutionIdData = isset($request->getData($this->getAlias())['institution_id']) ? $request->getData($this->getAlias())['institution_id'] : null;
+                    if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                        $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                            return $v !== '' && $v !== null;
+                        });
+                    }
+                    $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                    if ($allInstitutionsSelected) {
+                        // "All Institutions" wins - disable every other option and force it
+                        // to be the only value selected.
+                        $formattedInstitutionOptions = [];
+                        foreach ($institutionOptions as $optKey => $optLabel) {
+                            if ((string)$optKey === '0') {
+                                $formattedInstitutionOptions[$optKey] = $optLabel;
+                            } else {
+                                $formattedInstitutionOptions[] = [
+                                    'text' => $optLabel,
+                                    'value' => $optKey,
+                                    'disabled' => 'disabled'
+                                ];
+                            }
+                        }
+                        $institutionOptions = $formattedInstitutionOptions;
+                        $attr['attr']['value'] = ['0'];
+                    }
+                }
+            } else {
+                $attr['attr']['multiple'] = false;
+            }
             $attr['type'] = 'chosenSelect';
             $attr['onChangeReload'] = true;
-            $attr['attr']['multiple'] = false;
             $attr['options'] = $institutionOptions;
             $attr['attr']['required'] = true;
         }
@@ -382,7 +501,7 @@ class PerformanceTable extends AppTable
      */
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $institutionId = $request->getData($this->getAlias())['institution_id'];
+        $institutionIdData = $request->getData($this->getAlias())['institution_id'];
         $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
         if(isset($academicPeriodId)){
             $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
@@ -394,20 +513,34 @@ class PerformanceTable extends AppTable
             : null; //POCOR-9404
         
         $gradeTable = $this->Institutions->InstitutionGrades;
+        $condition = [];
         $institutionIds = [];
-        if ($institutionId > 0) {
-            $condition[$gradeTable->aliasField('institution_id')] = $institutionId;
+        // POCOR-Institution-AllExclusivity fix: institution_id is now a multi-select field
+        // (posted as ['_ids' => [...]]) instead of a scalar id. Binding the raw array into a
+        // query condition crashes with "Cannot convert value of type array to string", so
+        // normalize it into a real list of ids first, ignoring the '0' ("All Institutions") marker.
+        if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+            $institutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                return $v !== '' && $v !== null && (string)$v !== '0';
+            });
+        } elseif (!empty($institutionIdData) && (string)$institutionIdData !== '0') {
+            $institutionIds = [$institutionIdData];
+        }
+
+        if (!empty($institutionIds)) {
+            $condition[$gradeTable->aliasField('institution_id IN')] = $institutionIds;
         } else {
             $superAdmin = $this->Auth->user('super_admin');
             $userId = $this->Auth->user('id');
             if (!$superAdmin) {
                 $institutionObj = $this->Institutions->find('byAccess', ['userId' => $userId])->toArray();
+                $accessibleInstitutionIds = [];
                 if (!empty($institutionObj)) {
                     foreach ($institutionObj as $value) {
-                        $institutionIds[] = $value->id;
+                        $accessibleInstitutionIds[] = $value->id;
                     }
                 }
-                $conditions[$gradeTable->aliasField('institution_id IN')] = $institutionIds;
+                $condition[$gradeTable->aliasField('institution_id IN')] = $accessibleInstitutionIds;
             }
         }
         //The grade displayed here, how many grades are assigned in the institution_grade table
@@ -556,14 +689,26 @@ class PerformanceTable extends AppTable
         $academicTerm = $requestData->academic_term;//POCOR-6848
         $institutionIds = [];
         $conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         if ($areaId > 0) {
             $conditions[$this->aliasField('area_id')] = $areaId;
         }
         if ($gradeId > 0) {
             $conditions[$this->aliasField('education_grade_id')] = $gradeId;
         }
-        if ($institutionId > 0) {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id IN')] = $filterInstitutionIds;
         } else {//Added condition to get only user's accessiable institution data
             if (!$superAdmin) {
                 $institutionObj = $this->Institutions->find('byAccess', ['userId' => $userId])->toArray();
@@ -861,7 +1006,7 @@ class PerformanceTable extends AppTable
             $requestData['Performance']['feature'] === 'Report.PerformanceCompetencies'
         ) {
             $academicPeriodId = $request->getData($this->aliasField('academic_period_id'));
-            $institutionId    = $request->getData($this->aliasField('institution_id'));
+            $institutionIdData = $request->getData($this->aliasField('institution_id'));
             $educationGradeId = $request->getData($this->aliasField('education_grade_id'));
 
             $CompetencyPeriods = TableRegistry::getTableLocator()
@@ -882,9 +1027,22 @@ class PerformanceTable extends AppTable
             ])
             ->distinct(['CompetencyPeriods.id']);
 
-            if (!empty($institutionId) && $institutionId != -1) {
+            // POCOR-Institution-AllExclusivity fix: institution_id is now a multi-select field
+            // (posted as ['_ids' => [...]]) instead of a scalar id. Binding the raw array into a
+            // query condition crashes with "Cannot convert value of type array to string", so
+            // normalize it into a real list of ids first, ignoring the '0'/'-1' ("All") markers.
+            $institutionIds = [];
+            if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                $institutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                    return $v !== '' && $v !== null && (string)$v !== '0' && (string)$v !== '-1';
+                });
+            } elseif (!empty($institutionIdData) && (string)$institutionIdData !== '0' && (string)$institutionIdData !== '-1') {
+                $institutionIds = [$institutionIdData];
+            }
+
+            if (!empty($institutionIds)) {
                 $query->where([
-                    'InstitutionCompetencyResults.institution_id' => $institutionId
+                    'InstitutionCompetencyResults.institution_id IN' => $institutionIds
                 ]);
             }
 

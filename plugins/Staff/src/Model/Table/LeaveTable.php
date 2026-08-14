@@ -17,6 +17,39 @@ use Cake\Validation\Validator;
 class LeaveTable extends ControllerActionTable
 {
     use OptionsTrait;
+
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['date_from', 'date_to'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("Staff.LeaveTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('institution_staff_leave');
@@ -930,11 +963,11 @@ class LeaveTable extends ControllerActionTable
         } else if ($field == 'file_content') {
             return __('File Content');
         } else if ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         } else if ($field == 'modified_user_id') {
             return __('Modified By');
         } else if ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         } else if ($field == 'created_user_id') {
             return __('Created By');
         } else {

@@ -50,6 +50,7 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'contain' => []
             ]
         ); // for webhook
+        $this->addBehavior('Staff.StaffSalary');//POCOR-8211
     }
 
     public function beforeAction(EventInterface $event)
@@ -169,6 +170,8 @@ class InstitutionStaffPositionProfileTable extends AppTable
                 'academic_period' => 'AcademicPeriods.name',
                 'academic_id' => 'AcademicPeriods.id',
                 'is_home' => $this->aliasField('is_homeroom'),
+                'staff_position_grade' => $this->aliasField('staff_position_grade_id'),//POCOR-8211
+                'start_date' => $this->aliasField('start_date') //POCOR-8211
                // 'absences_day' => $this->find()->func()->sum('InstitutionStaffLeave.number_of_days'),
             ])
             ->contain([
@@ -383,7 +386,14 @@ class InstitutionStaffPositionProfileTable extends AppTable
             'type'  => 'integer',
             'label' => __('Absences'),
         ];
-
+        //POCOR-8211 Start
+        $newFields[] = [
+            'key' => 'staff_position_salary',
+            'field' => 'staff_position_salary',
+            'type' => 'string',
+            'label' => __('Staff Position Salary')
+        ];
+        //POCOR-8211 End
         $fields->exchangeArray($newFields);
     }
 
@@ -476,4 +486,12 @@ class InstitutionStaffPositionProfileTable extends AppTable
     {
         return $entity->custom_identity_number;
     }
+
+    //POCOR-8211 Start
+    public function onExcelGetStaffPositionSalary(EventInterface $event, Entity $entity)
+    {
+        $value = $this->calculateStaffPositionSalary($entity);
+        return $value;
+    }
+    //POCOR-8211 End
 }

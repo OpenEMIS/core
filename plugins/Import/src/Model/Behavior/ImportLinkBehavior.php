@@ -49,6 +49,9 @@ class ImportLinkBehavior extends Behavior
             $customButton['url'] = $this->_table->url('index');
             $customButton['url']['action'] = $this->getConfig('import_model');
             $customButton['url'][0] = 'add';
+            if($request->getParam('action') == 'LocaleContents'){ //POCOR-3673
+                $customButton['url'][1] = 'add';
+            }
             $this->generateImportButton($extra['toolbarButtons'], $attr, $customButton);
         }
     }

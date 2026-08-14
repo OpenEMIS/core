@@ -203,4 +203,11 @@ class CompetencyItemsTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->notEmpty('name');
+    }
 }

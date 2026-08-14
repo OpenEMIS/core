@@ -324,7 +324,7 @@ class BankAccountsTable extends ControllerActionTable
         if ($field == 'bank_name') {
             return __('Bank Name');
         } elseif ($field == 'bank_branch_id') {
-            return __('	Bank Branch');
+            return __('Bank Branch');
         } elseif ($field == 'account_name') {
             return __('Account Name');
         } elseif ($field == 'account_number') {

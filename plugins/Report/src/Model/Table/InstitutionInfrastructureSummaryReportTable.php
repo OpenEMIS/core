@@ -106,8 +106,22 @@ class InstitutionInfrastructureSummaryReportTable extends AppTable
         if (!empty($academic_period_id)) {
             $where['academic_periods.id'] = $academic_period_id;
         }
-        if ($institution_id != 0) {
-            $where['institutions.id'] = $institution_id;
+
+        $institutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+            $institutionIds = [(int)$institution_id];
+        }
+
+        if (!empty($institutionIds)) {
+            $where['institutions.id IN'] = $institutionIds;
         }
         if (!empty($institution_status_id)) {
             $where['institutions.institution_status_id'] = $institution_status_id;
