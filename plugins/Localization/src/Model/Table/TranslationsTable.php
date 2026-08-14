@@ -8,7 +8,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\EventInterface;
 use Cake\I18n\I18n;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use Cake\Validation\Validator;
 
 class TranslationsTable extends AppTable {
@@ -62,7 +62,7 @@ class TranslationsTable extends AppTable {
 		$this->ControllerAction->field('editable', ['visible' => false]);
 	}
 
-	public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options) {
 		$options['auto_search'] = false;
 		$options['auto_contain'] = false;
 

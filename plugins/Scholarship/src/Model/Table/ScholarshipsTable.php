@@ -140,16 +140,17 @@ class ScholarshipsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                    'provider' => 'table'
-                ]
+             ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
-            ->requirePresence('field_of_studies')
-            ->requirePresence('scholarship_financial_assistance_type_id')
-            ->requirePresence('bond')
-            ->requirePresence('duration')
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('field_of_studies')
+            ->notEmpty('scholarship_financial_assistance_type_id')
+            ->notEmpty('bond')
+            ->notEmpty('duration')
+            ->notEmpty('academic_period_id')
             ->add('field_of_studies', 'notEmpty', [
                 'rule' => function ($value, $context) {
                     return isset($value['_ids']) ? !empty($value['_ids']) : true;
@@ -584,11 +585,11 @@ class ScholarshipsTable extends ControllerActionTable
         }elseif ($field == 'field_of_study_selection') {
             return __('Field Of Studies Selection');
         }elseif ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         }elseif ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         }elseif ($field == 'created_user_id') {
             return __('Created By');
         } else {

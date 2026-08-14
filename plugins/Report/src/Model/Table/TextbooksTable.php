@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class TextbooksTable extends AppTable  {
 
@@ -37,6 +38,42 @@ class TextbooksTable extends AppTable  {
             'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
         ]);
+    }
+
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data[$this->getAlias()]['feature'] == 'Report.InstitutionTextbooks') {
+            $options['validate'] = 'institutionTextbooks';
+        }
+    }
+
+    public function validationInstitutionTextbooks(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->notEmpty('academic_period_id')
+            ->notEmpty('area_level_id')
+            ->notEmpty('area_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
     }
 
     public function beforeAction(EventInterface $event)
@@ -134,13 +171,20 @@ class TextbooksTable extends AppTable  {
                     ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
                     ->order([$Areas->aliasField('level')]);
 
-                $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
-                $attr['select'] = true;
-                $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
-                $attr['onChangeReload'] = true;
-            } else {
-                $attr['type'] = 'hidden';
+                if ($action == 'add') {
+                    $areaOptions = $Areas
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                        ->order([$Areas->aliasField('level')]);
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['select'] = true;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '-1' => __('All Areas Level')] + $areaOptions->toArray();
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['required'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
             }
         }
 
@@ -157,13 +201,20 @@ class TextbooksTable extends AppTable  {
                     ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                     ->order([$Areas->aliasField('order')]);
 
-                $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
-                $attr['select'] = true;
-                $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
-                $attr['onChangeReload'] = true;
-            } else {
-                $attr['type'] = 'hidden';
+                if ($action == 'add') {
+                    $areaOptions = $Areas
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                        ->order([$Areas->aliasField('order')]);
+
+                    $attr['type'] = 'chosenSelect';
+                    $attr['attr']['multiple'] = false;
+                    $attr['select'] = true;
+                    $attr['options'] = ['' => '-- ' . __('Select') . ' --', '0' => __('All Areas')] + $areaOptions->toArray();
+                    $attr['onChangeReload'] = true;
+                    $attr['attr']['required'] = true;
+                } else {
+                    $attr['type'] = 'hidden';
+                }
             }
         }
 
@@ -260,7 +311,42 @@ class TextbooksTable extends AppTable  {
 
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
-                    $attr['attr']['multiple'] = false;
+                    $attr['attr']['multiple'] = true;
+                    unset($institutionOptions['']);
+
+                    // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                    // still allow "All Institutions" to be picked afterwards. Only once "All
+                    // Institutions" itself is selected do the specific institutions become
+                    // disabled (and any of them already selected are cleared).
+                    if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
+                        $selectedInstitutionIds = [];
+                        $institutionIdData = isset($request->getData($this->getAlias())['institution_id']) ? $request->getData($this->getAlias())['institution_id'] : null;
+                        if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                            $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                                return $v !== '' && $v !== null;
+                            });
+                        }
+                        $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                        if ($allInstitutionsSelected) {
+                            // "All Institutions" wins - disable every other option and force it
+                            // to be the only value selected.
+                            $formattedInstitutionOptions = [];
+                            foreach ($institutionOptions as $optKey => $optLabel) {
+                                if ((string)$optKey === '0') {
+                                    $formattedInstitutionOptions[$optKey] = $optLabel;
+                                } else {
+                                    $formattedInstitutionOptions[] = [
+                                        'text' => $optLabel,
+                                        'value' => $optKey,
+                                        'disabled' => 'disabled'
+                                    ];
+                                }
+                            }
+                            $institutionOptions = $formattedInstitutionOptions;
+                            $attr['attr']['value'] = ['0'];
+                        }
+                    }
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }

@@ -54,7 +54,11 @@ class OutcomeCriteriasTable extends ControllerActionTable
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => ['education_subject_id', 'outcome_template_id', 'academic_period_id']]],
                 'provider' => 'table'
-            ]);
+            ])
+        ->notEmpty('outcome_grading_type_id')
+        ->notEmpty('education_subject_id')
+        ->notEmpty('code')
+        ->notEmpty('name');
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
@@ -278,6 +282,8 @@ class OutcomeCriteriasTable extends ControllerActionTable
              return __('Academic Period');
          } elseif ($field == 'name') {
              return __('Name');
+         }elseif ($field == 'code') {
+             return __('Code');
          }elseif ($field == 'code') {
             $codeName = $LabelTable->find()->where(['module_name' =>'Outcome -> Criterias' , 'field_name' =>'code'])->first();
             if($codeName != null){

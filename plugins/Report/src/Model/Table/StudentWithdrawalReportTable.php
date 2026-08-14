@@ -103,10 +103,22 @@ class StudentWithdrawalReportTable extends AppTable
         $Users = TableRegistry::getTableLocator()->get('User.Users');
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $where = [];
-        if ( $institution_id > 0) {
-            $where = [$this->aliasField('institution_id = ') => $institution_id];
-        } else {
-            $where = [];
+
+        $filterInstitutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+            $filterInstitutionIds = [(int)$institution_id];
+        }
+
+        if (!empty($filterInstitutionIds)) {
+            $where[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
         }
 
         if (!empty($academic_period_id)) {

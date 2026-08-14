@@ -10,6 +10,9 @@ use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
 use Cake\Event\EventInterface;
+use Cake\ORM\Entity;
+use Cake\Core\Configure;
+use Cake\Http\Session;
 
 class CounsellingsTable extends ControllerActionTable
 {
@@ -20,7 +23,17 @@ class CounsellingsTable extends ControllerActionTable
         $this->setTable('counsellings');
         parent::initialize($config);
 
-        $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        // one counselling record can have multiple guidance types, via the counselling_guidance_types join table
+
+        //POCOR-9771
+        $this->belongsToMany('GuidanceTypes', [
+            'className' => 'Student.GuidanceTypes',
+            'joinTable' => 'counselling_guidance_types',
+            'foreignKey' => 'counselling_id',
+            'targetForeignKey' => 'guidance_type_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+        ]);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->belongsTo('Requesters', ['className' => 'Security.Users', 'foreign_key' => 'requester_id']);
         /*$this->addBehavior('Page.FileUpload', [
@@ -30,7 +43,7 @@ class CounsellingsTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'file_name',
             'content' => 'file_content',
-            'size' => '2MB',
+            'size' => Configure::read('Attachment.fileSize'),
             'contentEditable' => true,
             'allowable_file_types' => 'all',
             'useDefaultName' => true
@@ -42,6 +55,7 @@ class CounsellingsTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Autocomplete'); //POCOR-9523
         $this->addBehavior('User.AdvancedNameSearch'); //POCOR-9523
         $this->Users = TableRegistry::getTableLocator()->get('Security.Users');
+        $this->CounsellingGuidanceTypes = TableRegistry::getTableLocator()->get('Student.CounsellingGuidanceTypes'); //POCOR-9771
     }
 
     public function implementedEvents(): array
@@ -85,30 +99,22 @@ class CounsellingsTable extends ControllerActionTable
         return $guidanceTypesOptions;
     }
 
-    public function getCounselorOptions($institutionId)
+    public function getCounselorOptions()
     {
-        // get the staff that assigned from the institution from security user
-        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
-
-        $counselorOptions = $this->Counselors
+        $counselorOptions = $this->Users
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name_with_id'
             ])
-            ->innerJoin(
-                    [$InstitutionStaff->getAlias() => $InstitutionStaff->getTable()],
-                    [
-                        $InstitutionStaff->aliasField('staff_id = ') . $this->Counselors->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
-                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
-                    ]
-                )
+            ->where([
+                $this->Users->aliasField('status') => 1
+            ])
             ->order([
-                $this->Counselors->aliasField('first_name'),
-                $this->Counselors->aliasField('last_name')
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('last_name')
             ])
             ->toArray();
-   
+
         return $counselorOptions;
     }
 
@@ -118,7 +124,7 @@ class CounsellingsTable extends ControllerActionTable
         $this->field('description');
         $this->field('intervention');
         $this->field('counselor_id');
-        $this->field('guidance_type_id');
+        $this->field('guidance_types');
         $this->field('requester_id');
         $this->field('guidance_utilized',['visible' => false]);
         $this->field('file_name',['visible' => false]);
@@ -126,10 +132,57 @@ class CounsellingsTable extends ControllerActionTable
         $this->field('comment',['visible' => false]);
     }
 
+    //POCOR-9771
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('date');
+        $this->field('description');
+        $this->field('intervention');
+        $this->field('counselor_id');
+        $this->field('guidance_types');
+        $this->field('requester_id');
+        $this->field('guidance_utilized',['visible' => true]);
+        $this->field('file_name',['visible' => true]);
+        $this->field('file_content',['visible' => true]);
+        $this->field('comment',['visible' => true]);
+        $this->setFieldOrder(['date', 'counselor_id', 'guidance_types', 'requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content']);
+    }
+
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
         $query
+        ->contain(['GuidanceTypes'])
         ->orderDesc($this->aliasField('created'));
+    }
+
+    //POCOR-9771
+    public function editBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['GuidanceTypes']);
+    }
+ 
+    //POCOR-9771
+    public function onGetGuidanceTypes(EventInterface $event, Entity $entity)
+    {
+        $guidanceTypeIds = $this->CounsellingGuidanceTypes->find()
+            ->select(['guidance_type_id'])
+            ->where(['counselling_id' => $entity->id])
+            ->extract('guidance_type_id')
+            ->toArray();
+        if (empty($guidanceTypeIds)) {
+            return '&nbsp;';
+        }
+
+        $guidanceTypes = $this->GuidanceTypes->find()
+            ->select(['name'])
+            ->where([
+                $this->GuidanceTypes->aliasField('id IN') => $guidanceTypeIds
+            ])
+            ->extract('name')
+            ->toArray();
+
+        $names = implode(', ', $guidanceTypes);
+        return $names !== '' ? $names : '&nbsp;';
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -142,27 +195,25 @@ class CounsellingsTable extends ControllerActionTable
         $queryString = $this->getQueryString();
         $institutionId = $queryString['institution_id'];
         $studentId = $queryString['student_id'];
-
-        $counselorOptions = $this->getCounselorOptions($institutionId);
-        
+       /* $counselorOptions = $this->getCounselorOptions();
         $this->fields['counselor_id']['type'] = 'select';
         $this->fields['counselor_id']['options'] = $counselorOptions;
-        $this->fields['counselor_id']['onChangeReload'] = true;
+        $this->fields['counselor_id']['onChangeReload'] = true;*/
         $this->field('counselor_id', ['attr' => ['label' => __('Counselor')]]);
-
-        $this->fields['guidance_type_id']['type'] = 'select';
-        $this->field('guidance_type_id', ['attr' => ['label' => __('Guidance Type')]]);
+        $this->field('counselor_id', ['visible' => true]);
+        $this->field('guidance_types', ['visible' => true]);
+        $this->field('guidance_type_id', ['visible' => false]);
         $this->field('requester_id', ['visible' => true]);
         $this->field('file_name', ['type' => 'hidden', 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
-        $this->field('file_content', ['attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('file_content', ['type' => 'binary', 'attr' => ['label' => __('Attachment'), 'required' => true], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $this->field('student_id', ['type' => 'hidden', 'value'=> $studentId]);
 
-        $this->setFieldOrder(['date', 'counselor_id', 'guidance_type_id', 'requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content']);
+        $this->setFieldOrder(['date', 'counselor_id', 'guidance_types', 'requester_id', 'guidance_utilized', 'description', 'intervention', 'comment', 'file_name', 'file_content']);
     }
 
      
    //POCOR-9523
-   public function onUpdateFieldRequesterId(EventInterface $event,array $attr,$action,ServerRequest $request)
+    public function onUpdateFieldRequesterId(EventInterface $event,array $attr,$action,ServerRequest $request)
     {
         if (in_array($action, ['add', 'edit'])) {
 
@@ -208,6 +259,18 @@ class CounsellingsTable extends ControllerActionTable
         }
 
         return $attr;
+    }
+
+    public function onUpdateFieldCounselorId(EventInterface $event,array $attr,$action,ServerRequest $request)
+    {
+        $counselorOptions = $this->getCounselorOptions();
+        $attr['type'] = 'chosenSelect';
+        $attr['onChangeReload'] = false;
+        $attr['options'] = $counselorOptions;
+        $attr['attr']['required'] = true;
+        $attr['attr']['multiple'] = false;
+        return $attr;
+        
     }
 
     //POCOR-9523
@@ -381,6 +444,34 @@ class CounsellingsTable extends ControllerActionTable
         return $data;
     }*/
    
+   //POCOR-9771
+    public function onUpdateFieldGuidanceTypes(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $guidanceTypesOptions = $this->GuidanceTypes
+                                    ->find('list')
+                                    ->find('visible')
+                                    ->find('order')
+                                    ->toArray();
 
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = true;
+            $attr['select'] = false;
+            $attr['options'] = $guidanceTypesOptions;
+        }
+        return $attr;
+    }
+
+    //POCOR-9771
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $loginUserIdUser = $this->Session->read('Auth.User.id');
+        $this->CounsellingGuidanceTypes->updateAll(
+            ['created_user_id' => $loginUserIdUser],
+            [
+                'counselling_id' => $entity->id,
+            ]
+        );
+    }
 
 }
