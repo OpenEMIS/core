@@ -58,8 +58,10 @@ class InstitutionSubjectsTable extends AppTable  {
             $InstitutionSubjectStudents->aliasField('student_status_id = 1'),
             $InstitutionSubjectStudents->aliasField('academic_period_id = ') . $academicPeriodId,
         ];
-        if ($institutionId > 0) {
-            $total_condition[] = $InstitutionSubjectStudents->aliasField('institution_id = ') . $institutionId;
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
+        if (!empty($filterInstitutionIds)) {
+            $idsList = implode(',', array_map('intval', $filterInstitutionIds));
+            $total_condition[] = $InstitutionSubjectStudents->aliasField('institution_id IN (') . $idsList . ')';
         }
 
         $totalStudentsSubquery = $InstitutionSubjectStudents->find()
@@ -370,14 +372,34 @@ class InstitutionSubjectsTable extends AppTable  {
         return $locator->get($tableFullAlias);
     }
 
+    private function parseFilterInstitutionIds($institutionId)
+    {
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        return $filterInstitutionIds;
+    }
+
     private function buildConditions($academicPeriodId, $institutionId, $educationSubjectId, $areaId)
     {
         $conditions = [];
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
         if (!empty($academicPeriodId)) {
             $conditions[] = $this->aliasField('academic_period_id = ') . $academicPeriodId;
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions[] = 'Institutions.id = ' . $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $idsList = implode(',', array_map('intval', $filterInstitutionIds));
+            $conditions[] = 'Institutions.id IN (' . $idsList . ')';
         } else {
             if (!empty($areaId) && $areaId > 0) {
                 $areaList = $this->getAreaList($areaId);

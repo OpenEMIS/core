@@ -14,6 +14,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
 use Cake\Http\ServerRequest;
 use Cake\View\Helper\UrlHelper;
+use Cake\Validation\Validator;
 
 class LeaveEntitlementsTable extends ControllerActionTable
 {
@@ -46,6 +47,14 @@ class LeaveEntitlementsTable extends ControllerActionTable
         $this->controller->set('contentHeader', $header);
         $this->controller->Navigation->substituteCrumb(__('StaffPolicies'), $header);
         $this->controller->Navigation->substituteCrumb(__('Systems'), __('Staff'));
+    }
+    
+    public function validationDefault(Validator $validator): Validator 
+     {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        return $validator
+            ->requirePresence('staff_leave_type_id');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)

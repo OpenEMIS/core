@@ -117,7 +117,6 @@ class ImportOutcomeTemplatesTable extends AppTable {
         }
     }
 
-
     public function getAcademicPeriod($querystringPeriod, $withOptions = false)
     {
         if ($querystringPeriod) {

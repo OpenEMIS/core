@@ -126,7 +126,7 @@ class InstitutionsTable extends AppTable
                 ->notEmpty('institution_id');
         }
 
-        if ($feature == 'Report.Institutions') { //POCOR-8417
+        if (in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport'])) { //POCOR-8417
             $validator
                 ->notEmpty('area_level_id', __('This field cannot be left empty'))
                 ->notEmpty('area_education_id', __('This field cannot be left empty'));
@@ -168,17 +168,15 @@ class InstitutionsTable extends AppTable
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            ->notEmpty('institution_type_id')
-            ->notEmpty('institution_id');
+            ->notEmpty('institution_type_id');
+
         return $validator;
     }
 
     public function validationBodyMasses(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
-        $validator = $validator
-            //->notEmpty('institution_type_id')
-            ->notEmpty('institution_id');
+
         return $validator;
     }
 
@@ -187,8 +185,8 @@ class InstitutionsTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('education_programme_id')
-            ->notEmpty('institution_id') //POCOR-9345
             ->notEmpty('status');
+
         return $validator;
     }
 
@@ -206,8 +204,8 @@ class InstitutionsTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('institution_type_id')
-            ->notEmpty('institution_id')
             ->notEmpty('education_grade_id');
+
         return $validator;
     }
 
@@ -216,18 +214,15 @@ class InstitutionsTable extends AppTable
         $validator = $this->validationDefault($validator);
         $validator = $validator
             ->notEmpty('institution_type_id')
-            ->notEmpty('institution_id')
             ->notEmpty('education_grade_id');
+
         return $validator;
     }
 
     public function validationStaffAttendances(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
-        $validator = $validator
-            // ->notEmpty('area_level_id')
-            //->notEmpty('area_education_id')
-            ->notEmpty('institution_id');
+
         return $validator;
     }
 
@@ -245,8 +240,26 @@ class InstitutionsTable extends AppTable
     {
         $validator = $this->validationDefault($validator);
         $validator = $validator
-            ->notEmpty('institution_type_id')
-            ->notEmpty('institution_id');
+            ->notEmpty('institution_type_id');
+
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
         return $validator;
     }
 
@@ -262,7 +275,7 @@ class InstitutionsTable extends AppTable
     public function validationStaffLeave(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
-        $validator = $validator->notEmpty('institution_id');
+
         return $validator;
     } //POCOR-5762 ends
 
@@ -686,7 +699,7 @@ class InstitutionsTable extends AppTable
             $fieldsOrder[] = 'format';
             $this->ControllerAction->setFieldOrder($fieldsOrder);
         } //POCOR-6637::END
-        if($feature = 'Report.Institution'){ //POCOR-8417
+        if($feature == 'Report.Institutions'){ //POCOR-8417
             $this->ControllerAction->field('institution_dropdown', [
                 'type' => 'element',
                 'element' => 'institutiondropdown',   
@@ -1284,7 +1297,7 @@ class InstitutionsTable extends AppTable
                 $AcademicPeriodTable = self::getDynamicTableInstance('AcademicPeriod.AcademicPeriods');
                 $currentAcademicPeriodID = $AcademicPeriodTable->getCurrent();
 
-                $institutionId = $data['institution_id'] > 0 ? $data['institution_id'] : -1;
+                $filterInstitutionIds = $this->parseFilterInstitutionIds($data['institution_id'] ?? null);
                 $educationLevelId = $data['education_level_id'] > 0 ? $data['education_level_id'] : -1;
                 $academicPeriodId = $data['academic_period_id'] > 0 ? $data['academic_period_id'] : $currentAcademicPeriodID;
                 $EducationProgrammes = self::getDynamicTableInstance('Education.EducationProgrammes');
@@ -1293,8 +1306,8 @@ class InstitutionsTable extends AppTable
                 $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
                 $condition = [];
                 if ($feature == 'Report.InstitutionSubjects') {
-                    if ($institutionId > 0) {
-                        $condition[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
+                    if (!empty($filterInstitutionIds)) {
+                        $condition[$InstitutionGrades->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
                     }
                 }
                 if ($feature == 'Report.InstitutionStudents') {
@@ -1366,7 +1379,10 @@ class InstitutionsTable extends AppTable
 
                 $InstitutionGrades = self::getDynamicTableInstance('Institution.InstitutionGrades');
                 $conditions = [];
-                if ($institutionId != 0) {
+                $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
+                if (!empty($filterInstitutionIds)) {
+                    $conditions[$InstitutionGrades->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
+                } elseif (!is_array($institutionId) && $institutionId != 0) {
                     $conditions[$InstitutionGrades->aliasField('institution_id')] = $institutionId;
                 }
                 $gradeOptions = $InstitutionGrades
@@ -1413,7 +1429,14 @@ class InstitutionsTable extends AppTable
                     $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
 
                     $InstitutionGradesTable = self::getDynamicTableInstance('Institution.InstitutionGrades');
-                    $gradeList = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
+                    $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
+                    if (!empty($filterInstitutionIds)) {
+                        foreach ($filterInstitutionIds as $id) {
+                            $gradeList += $InstitutionGradesTable->getGradeOptions($id, $academicPeriodId);
+                        }
+                    } elseif (!is_array($institutionId)) {
+                        $gradeList = $InstitutionGradesTable->getGradeOptions($institutionId, $academicPeriodId);
+                    }
                 }
 
                 if (empty($gradeList)) {
@@ -1777,8 +1800,43 @@ class InstitutionsTable extends AppTable
                     if(!$superAdmin){
                         $institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                     }
-                    if(in_array($feature, ['Report.Institutions'])) { //POCOR-8417
+                    if(in_array($feature, ['Report.Institutions', 'Report.InstitutionCases', 'Report.InstitutionClasses', 'Report.InstitutionCommittees', 'Report.Guardians', 'Report.InstitutionAssociations', 'Report.InstitutionInfrastructureSummaryReport', 'Report.InstitutionPositions', 'Report.InstitutionPositionsSummaries', 'Report.InstitutionProgrammes', 'Report.SpecialNeedsFacilities', 'Report.InstitutionStaff', 'Report.StaffAttendances', 'Report.StaffLeave', 'Report.StaffTransfers', 'Report.StudentAbsences', 'Report.StudentAbsencesPerDays', 'Report.StudentAttendanceSummary', 'Report.StudentBehaviours', 'Report.BodyMasses', 'Report.InstitutionStudents', 'Report.InstitutionSubjects', 'Report.StudentWithdrawalReport', 'Report.ClassAttendanceNotMarkedRecords', 'Report.ClassAttendanceMarkedSummaryReport'])) { //POCOR-8417
                         $attr['attr']['multiple'] = true;
+                        unset($institutionOptions['']);
+
+                        // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                        // still allow "All Institutions" to be picked afterwards. Only once "All
+                        // Institutions" itself is selected do the specific institutions become
+                        // disabled (and any of them already selected are cleared).
+                        if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
+                            $selectedInstitutionIds = [];
+                            if (isset($data['institution_id']) && is_array($data['institution_id']) && isset($data['institution_id']['_ids'])) {
+                                $selectedInstitutionIds = array_filter((array)$data['institution_id']['_ids'], function ($v) {
+                                    return $v !== '' && $v !== null;
+                                });
+                            }
+                            $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                            if ($allInstitutionsSelected) {
+                                // "All Institutions" wins - disable every other option and force it
+                                // to be the only value selected (covers the case where both were
+                                // submitted together, e.g. a stale/duplicate selection).
+                                $formattedInstitutionOptions = [];
+                                foreach ($institutionOptions as $optKey => $optLabel) {
+                                    if ((string)$optKey === '0') {
+                                        $formattedInstitutionOptions[$optKey] = $optLabel;
+                                    } else {
+                                        $formattedInstitutionOptions[] = [
+                                            'text' => $optLabel,
+                                            'value' => $optKey,
+                                            'disabled' => 'disabled'
+                                        ];
+                                    }
+                                }
+                                $institutionOptions = $formattedInstitutionOptions;
+                                $attr['attr']['value'] = ['0'];
+                            }
+                        }
                     } else {
                         $attr['attr']['multiple'] = false;
                     }
@@ -2229,9 +2287,23 @@ class InstitutionsTable extends AppTable
         $areaId = $requestData->area_education_id; // area id dropdown
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
-        $institutionIds = $requestData->institution_id->_ids ?? [];
+        $institutionId = $requestData->institution_id;
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
+
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0' && !is_array($institutionId)) {
+            $institutionIds = [(int)$institutionId];
+        }
+
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -2244,13 +2316,14 @@ class InstitutionsTable extends AppTable
             $conditions['Institutions.area_id IN'] = $allselectedAreas;
         }
 
-        if (!empty($institutionIds) && !in_array(0, $institutionIds)) {
-            if (!$superAdmin) {
-                $conditions['Institutions.id IN'] = $institutionIds;
-            } else {
-                $conditions['Institutions.id IN'] = $institutionIds;
+        if (!empty($institutionIds) && !in_array(0, $institutionIds, true) && !in_array('0', $institutionIds, true)) {
+            $filteredIds = array_values(array_filter($institutionIds, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+            if (!empty($filteredIds)) {
+                $conditions['Institutions.id IN'] = $filteredIds;
             }
-        }elseif (!empty($areaId) && $areaId != -1) {
+        } elseif (!empty($areaId) && $areaId != -1) {
             // "All Institutions" selected -> get institutions by area
             $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
             $areaInstitutionIds = $Institutions->find()
@@ -2308,8 +2381,9 @@ class InstitutionsTable extends AppTable
                         $attr['options'] = ['' => __('All Subjects')] + $subjectOptions;
                     } else {
                         $where = [];
-                        if ($institutionId != 0) {
-                            $where['InstitutionSubjects.institution_id'] = $institutionId;
+                        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
+                        if (!empty($filterInstitutionIds)) {
+                            $where['InstitutionSubjects.institution_id IN'] = $filterInstitutionIds;
                         }
                         if (!empty($academicPeriodId)) {
                             $where['InstitutionSubjects.academic_period_id'] = $academicPeriodId;
@@ -2613,8 +2687,7 @@ class InstitutionsTable extends AppTable
     public function validationStudentAbsencesPerDays(Validator $validator)
     {
         $validator = $this->validationDefault($validator);
-        $validator = $validator
-            ->notEmpty('institution_id');
+
         return $validator;
     }
 
@@ -2688,6 +2761,24 @@ class InstitutionsTable extends AppTable
 
         // Return the table instance
         return $locator->get($tableFullAlias);
+    }
+
+    private function parseFilterInstitutionIds($institutionId)
+    {
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0' && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        return $filterInstitutionIds;
     }
 
     public function getChildren($id, $idArray) {
