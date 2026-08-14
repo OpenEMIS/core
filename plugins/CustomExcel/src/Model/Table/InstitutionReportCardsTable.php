@@ -6836,46 +6836,53 @@ class InstitutionReportCardsTable extends AppTable
             return [];
         }
 
+        $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         $StudentBehaviours = TableRegistry::getTableLocator()->get('Student.StudentBehaviours');
         $InstitutionStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionStudents');
         $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
-        
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
 
-        $data = $StudentBehaviours->find()
+        $data = $Institutions->find()
             ->select([
                 'id' => $StudentBehaviours->aliasField('id'),
                 'time_of_behaviour' => $StudentBehaviours->aliasField('time_of_behaviour'),
                 'student_id' => $StudentBehaviours->aliasField('student_id'),
-
                 'first_name' => 'Students.first_name',
                 'last_name' => 'Students.last_name',
-
                 'category_name' => 'StudentBehaviourCategories.name',
-
                 'date_of_behaviour' => $StudentBehaviours->aliasField('date_of_behaviour'),
-
-                'institution_name' => 'Institutions.name',
+                'institution_name' => $Institutions->aliasField('name'),
                 'area_name' => 'Areas.name',
-
                 'academic_period' => 'AcademicPeriods.name',
-
                 'gender' => 'Genders.name',
-
                 'education_grade' => 'EducationGrades.name',
-                
             ])
-            ->contain([
-                'StudentBehaviourCategories',
-                'Students' => ['Genders'],
-                'Institutions' => ['Areas'],
-                'AcademicPeriods'
-            ])
+            ->contain(['Areas'])
+            ->leftJoin(
+                [$StudentBehaviours->getAlias() => $StudentBehaviours->getTable()],
+                [
+                    $StudentBehaviours->aliasField('institution_id') . ' = ' . $Institutions->aliasField('id'),
+                    $StudentBehaviours->aliasField('academic_period_id') => $params['academic_period_id'],
+                ]
+            )
+            ->leftJoin(
+                ['StudentBehaviourCategories' => 'student_behaviour_categories'],
+                ['StudentBehaviourCategories.id = ' . $StudentBehaviours->aliasField('student_behaviour_category_id')]
+            )
+            ->leftJoin(
+                ['Students' => 'security_users'],
+                ['Students.id = ' . $StudentBehaviours->aliasField('student_id')]
+            )
+            ->leftJoin(
+                ['Genders' => 'genders'],
+                ['Genders.id = Students.gender_id']
+            )
             ->leftJoin(
                 [$InstitutionStudents->getAlias() => $InstitutionStudents->getTable()],
                 [
                     $InstitutionStudents->aliasField('student_id') . ' = ' . $StudentBehaviours->aliasField('student_id'),
-                    $InstitutionStudents->aliasField('institution_id') . ' = ' . $StudentBehaviours->aliasField('institution_id'),
-                    $InstitutionStudents->aliasField('academic_period_id') . ' = ' . $StudentBehaviours->aliasField('academic_period_id'),
+                    $InstitutionStudents->aliasField('institution_id') . ' = ' . $Institutions->aliasField('id'),
+                    $InstitutionStudents->aliasField('academic_period_id') => $params['academic_period_id'],
                     $InstitutionStudents->aliasField('student_status_id') => 1
                 ]
             )
@@ -6886,10 +6893,12 @@ class InstitutionReportCardsTable extends AppTable
                     $InstitutionStudents->aliasField('education_grade_id')
                 ]
             )
-
+            ->leftJoin(
+                [$AcademicPeriods->getAlias() => $AcademicPeriods->getTable()],
+                [$AcademicPeriods->aliasField('id') => $params['academic_period_id']]
+            )
             ->where([
-                $StudentBehaviours->aliasField('institution_id') => $params['institution_id'],
-                $StudentBehaviours->aliasField('academic_period_id') => $params['academic_period_id'],
+                $Institutions->aliasField('id') => $params['institution_id'],
             ])
             ->order([
                 $StudentBehaviours->aliasField('date_of_behaviour') => 'DESC'
@@ -6899,6 +6908,7 @@ class InstitutionReportCardsTable extends AppTable
             ])
             ->enableHydration(false)
             ->toArray();
+
             $principal = $this->getInstitutionPrincipals(
                 $params['institution_id'],
                 $params['academic_period_id']
@@ -6923,7 +6933,7 @@ class InstitutionReportCardsTable extends AppTable
                     'area_name' => $row['area_name'] ?? '',
 
                     'date_of_behaviour' => !empty($row['date_of_behaviour'])
-                        ? $row['date_of_behaviour']->format('Y-m-d')
+                        ? date('Y-m-d', strtotime($row['date_of_behaviour']))
                         : '',
 
                     'time_of_behaviour' => !empty($row['time_of_behaviour'])
@@ -6935,8 +6945,6 @@ class InstitutionReportCardsTable extends AppTable
                     'gender' => $row['gender'] ?? '',
 
                     'education_grade' => $row['education_grade'] ?? '',
-
-                    'principal' => $row['principal'],
 
                     'category_name' => $row['category_name'] ?? '',
                     'principal' => $principal,
