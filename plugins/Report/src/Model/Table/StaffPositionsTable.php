@@ -31,7 +31,9 @@ class StaffPositionsTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
-       $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Report.InstitutionSecurity');
+        $this->addBehavior('Staff.StaffSalary');//POCOR-8211
+
     }
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
@@ -50,6 +52,18 @@ class StaffPositionsTable extends AppTable
         $IdentityTypes = TableRegistry::getTableLocator()->get('FieldOption.IdentityTypes');
         $UserIdentities = TableRegistry::getTableLocator()->get('User.Identities');
         $conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         if (!empty($academicPeriodId)) {
                 $conditions['OR'] = [
                     'OR' => [
@@ -75,8 +89,8 @@ class StaffPositionsTable extends AppTable
                     ]
                 ];
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['Institutions.id'] = $institutionId; 
+        if (!empty($filterInstitutionIds)) {
+            $conditions['Institutions.id IN'] = $filterInstitutionIds;
         }
         if (!empty($areaId) && $areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId; 
@@ -99,7 +113,10 @@ class StaffPositionsTable extends AppTable
                 'last_name' => $Staff->aliasField('last_name'),
                 'gender' => $Genders->aliasField('name'),
                 'identity_type' => $IdentityTypes->aliasField('name'),
-                'identity_number' => $UserIdentities->aliasField('number')
+                'identity_number' => $UserIdentities->aliasField('number'),
+                'start_date' => $InstitutionStaff->aliasField('start_date'),//POCOR-8211
+                'FTE' => $InstitutionStaff->aliasField('FTE'),//POCOR-8211
+                'staff_position_grade' => $InstitutionStaff->aliasField('staff_position_grade_id')//POCOR-8211
             ])
             ->contain([
                 'Statuses' => [
@@ -309,7 +326,14 @@ class StaffPositionsTable extends AppTable
             'type' => 'string',
             'label' => __('Identity Number')
         ];
-
+        //POCOR-8211 start
+        $newFields[] = [
+            'key' => 'staff_position_salary',
+            'field' => 'staff_position_salary',
+            'type' => 'string',
+            'label' => __('Staff Position Salary')
+        ];
+        //POCOR-8211 end
         $fields->exchangeArray($newFields);
     }
 
@@ -351,4 +375,12 @@ class StaffPositionsTable extends AppTable
         }
         return '';
     }
+
+    //POCOR-8211 Start
+    public function onExcelGetStaffPositionSalary(EventInterface $event, Entity $entity)
+    {
+        $value = $this->calculateStaffPositionSalary($entity);
+        return $value;
+    }
+    //POCOR-8211 End
 }

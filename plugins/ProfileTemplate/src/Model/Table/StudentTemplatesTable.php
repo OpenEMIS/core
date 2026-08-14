@@ -66,8 +66,12 @@ class StudentTemplatesTable extends ControllerActionTable
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                'provider' => 'table'
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             // generate_start_date/generate_end_date are marked mandatory (*) in the form. Cake's
             // Validator silently skips custom add() rules (like ruleInAcademicPeriod below) for
             // empty values unless a presence/non-empty rule is also declared, so a blank submission
@@ -88,7 +92,8 @@ class StudentTemplatesTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
             ])
-            ->allowEmptyFile('excel_template');
+           ->requirePresence('excel_template', 'create', __('This field cannot be left empty'))
+            ->notEmptyFile('excel_template', __('This field cannot be left empty'), 'create');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -102,7 +107,7 @@ class StudentTemplatesTable extends ControllerActionTable
         $this->fields['excel_template_name']['visible'] = false;
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
-        $this->field('excel_template');
+        $this->field('excel_template', ['attr' => ['required' => true]]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -475,20 +480,36 @@ class StudentTemplatesTable extends ControllerActionTable
     }
 
     // Misc
-    private function updateDateRangeField($key, $attr, ServerRequest $request)
+   private function updateDateRangeField($key, $attr, ServerRequest $request)
     {
         $requestData = $request->getData();
-        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+
+        // Get selected academic period ID
+        if (!empty($requestData[$this->getAlias()]['academic_period_id'])) {
             $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
 
-        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        // Get Academic Period safely
+        $selectedPeriod = $this->AcademicPeriods
+            ->find()
+            ->where([
+                $this->AcademicPeriods->aliasField('id') => $selectedPeriodId
+            ])
+            ->first();
+
+        // Fallback to current academic period if selected ID is invalid
+        if (!$selectedPeriod) {
+            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+            $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        }
+
         $attr['type'] = 'date';
         $attr['date_options']['generateStartDate'] = $selectedPeriod->generate_start_date;
         $attr['date_options']['generateEndDate'] = $selectedPeriod->generate_end_date;
-        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
+
+        if (empty($requestData[$this->getAlias()][$key])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
                 $attr['value'] = $selectedPeriod->generate_start_date;
             } else {

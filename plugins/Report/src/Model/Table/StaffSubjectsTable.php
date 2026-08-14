@@ -169,8 +169,20 @@ class StaffSubjectsTable extends AppTable
             //POCOR-7095 end
         }
 
-        if (!empty($institutionId) && $institutionId != -1) {
-            $conditions['institutions.id'] = $institutionId;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1' && $id !== -1;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1' && $id !== -1;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        if (!empty($filterInstitutionIds)) {
+            $conditions['institutions.id IN'] = $filterInstitutionIds;
         }
         if (!empty($education_grade_id) && $education_grade_id != -1) {
             $conditions['education_grades.id'] = $education_grade_id;

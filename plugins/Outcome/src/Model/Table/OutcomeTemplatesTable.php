@@ -60,10 +60,15 @@ class OutcomeTemplatesTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         return $validator
-            ->add('code', 'ruleUniqueCode', [
+           ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                'provider' => 'table'
-            ]);
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
+            ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
+           ->notEmpty('education_programme_id', __('This field cannot be left empty'), 'create')
+            ->notEmptyString('education_grade_id');
     }
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)

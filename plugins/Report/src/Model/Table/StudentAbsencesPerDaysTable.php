@@ -69,6 +69,19 @@ class StudentAbsencesPerDaysTable extends AppTable
         $selectedArea = $requestData->area_education_id;
         $conditions = [];
 
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
         if ($areaId != -1 && $areaId != '') {
             $areaIds = [];
             $allgetArea = $this->getChildren($selectedArea, $areaIds);
@@ -81,10 +94,11 @@ class StudentAbsencesPerDaysTable extends AppTable
                 //$conditions['institutions.area_id IN'] = $allselectedAreas;
                 $conditions = "AND institutions.area_id IN = ".$allselectedAreas;
         }
-        if (empty($institutionId) && $institutionId == 0) { 
-           $condition = NULL;
-        }else{
-            $condition = "AND institution_student_absence_details.institution_id = ".$institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $idsList = implode(',', array_map('intval', $filterInstitutionIds));
+            $condition = "AND institution_student_absence_details.institution_id IN ({$idsList})";
+        } else {
+            $condition = null;
         }
 
         $subQuery = "(SELECT areas.code area_code
@@ -275,7 +289,7 @@ class StudentAbsencesPerDaysTable extends AppTable
         $extraFields[] = [
             'key' => 'absence_date',
             'field' => 'absence_date',
-            'type' => 'date',
+            'type' => 'string', //POCOR-9758
             'label' => __('Absence Date')
         ];
         $extraFields[] = [

@@ -172,6 +172,8 @@ class StaffTable extends ControllerActionTable
             ],
         ]);
 
+        $this->addBehavior('Staff.StaffSalary');//POCOR-8211
+
         /**
          * Advance Search Types.
          * AdvanceSearchBehavior must be included first before adding other types of advance search.
@@ -436,6 +438,8 @@ class StaffTable extends ControllerActionTable
                     $this->aliasField('is_homeroom'),
                     $this->aliasField('start_date'),
                     $this->aliasField('end_date'),
+                    $this->aliasField('staff_position_grade_id'), //POCOR-8211
+                   'staff_position_grade' => $this->aliasField('staff_position_grade_id') //POCOR-8211
                 ]
             )
             ->where([
@@ -847,7 +851,14 @@ class StaffTable extends ControllerActionTable
             'type' => 'string',
             'label' => __('Teaching')
         ];
-
+        //POCOR-8211 start
+        $extraField[] = [
+            'key' => 'staff_position_salary',
+            'field' => 'staff_position_salary',
+            'type' => 'string',
+            'label' => __('Staff Position Salary')
+        ];
+        //POCOR-8211 End
         $extraField[] = [
             'key' => 'staff_contact_type',
             'field' => 'staff_contact_type',
@@ -1921,7 +1932,8 @@ class StaffTable extends ControllerActionTable
             $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id']);
         } else if ($this->action == 'view') {//POCOR-7238 starts
             $this->field('is_homeroom', ['type' => 'text']);
-            $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_type_id', 'staff_status_id', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'is_homeroom']);//POCOR-7238 ends
+            $this->field('staff_position_salary',['after'=>'staff_position_grade_id']);//POCOR-8211
+            $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_type_id', 'staff_status_id', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'is_homeroom','FTE']);//POCOR-7238 ends      
         }
     }
 
@@ -5132,11 +5144,13 @@ class StaffTable extends ControllerActionTable
     public function onGetStaffPositionGradeId(EventInterface $event, Entity $entity)
     {
         $value = '';
+        $entity->staff_position_grade = $entity->staff_position_grade_id;//POCOR-8211
         if ($entity->staff_position_grade_id) {
             $StaffPositionGradesTable = TableRegistry::getTableLocator()->get('Institution.StaffPositionGrades');
             $StaffPositionGrades = $StaffPositionGradesTable->get($entity->staff_position_grade_id);
             $value = $StaffPositionGrades->name;
         }
+        
         return $value;
     }
 
@@ -5171,6 +5185,19 @@ class StaffTable extends ControllerActionTable
     }
     //POCOR-8790 End
 
+    //POCOR-8211 Start 
+    public function onGetStaffPositionSalary(EventInterface $event, Entity $entity)
+    {
+        $value = $this->calculateStaffPositionSalary($entity);
+        return $value;
+    }
+
+    public function onExcelGetStaffPositionSalary(EventInterface $event, Entity $entity)
+    {
+        $value = $this->calculateStaffPositionSalary($entity);
+        return $value;
+    }
+    //POCOR-8211 End
 //    /**
 //     * @return mixed
 //     * commented for POCOR-9446
