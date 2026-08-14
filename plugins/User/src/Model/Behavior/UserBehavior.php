@@ -59,9 +59,6 @@ class UserBehavior extends Behavior
             $this->_table->addBehavior('Security.Password', [
                 'field' => 'password'
             ]);
-            //POCOR-7440
-            $this->_table->addBehavior('User.PasswordRotation');
-            //POCOR-7440
             $this->_table->addBehavior('Area.Areapicker');
         }
     }
