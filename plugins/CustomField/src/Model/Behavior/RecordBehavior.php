@@ -119,11 +119,28 @@ class RecordBehavior extends Behavior
             $model->associations()->remove($associationName);
         }
 
-        $model->hasMany('CustomFieldValues', $this->getConfig('fieldValueClass'));
+        // POCOR-9718 starts: StudentEnrolment's own primary key is the enrolment record's
+        // id, not the student's id (unlike Student.Students, whose id IS the student id).
+        // hasMany defaults to joining on the parent's primary key, so without pointing
+        // bindingKey at the 'student_id' column (already named in this table's own
+        // 'recordKey' config), CustomFieldValues/CustomTableCells never match the right
+        // rows — fields render but saved values never show. Scoped to this one alias only.
+        $fieldValueAssocConfig = $this->getConfig('fieldValueClass');
+        $tableCellAssocConfig = $this->getConfig('tableCellClass');
+        $recordKey = $this->getConfig('recordKey');
+        if ($model->getAlias() == 'StudentEnrolment' && !empty($recordKey) && $recordKey !== $model->getPrimaryKey()) {
+            $fieldValueAssocConfig['bindingKey'] = $recordKey;
+            if (!is_null($tableCellAssocConfig)) {
+                $tableCellAssocConfig['bindingKey'] = $recordKey;
+            }
+        }
+        // POCOR-9718 ends
+
+        $model->hasMany('CustomFieldValues', $fieldValueAssocConfig);
 
         $this->CustomFieldValues = $model->CustomFieldValues;
-        if (!is_null($this->getConfig('tableCellClass'))) {
-            $model->hasMany('CustomTableCells', $this->getConfig('tableCellClass'));
+        if (!is_null($tableCellAssocConfig)) {
+            $model->hasMany('CustomTableCells', $tableCellAssocConfig);
             $this->CustomTableCells = $model->CustomTableCells;
         }
         $this->firstTabName = null;
@@ -1171,6 +1188,7 @@ class RecordBehavior extends Behavior
     public function getCustomFieldQuery($entity, $params = [])
     {
         $query = null;
+        $customFormIds = [];
         $withContain = $params['withContain'] ?? true;
         $generalOnly = $params['generalOnly'] ?? false;
         // For Institution Survey
@@ -1189,6 +1207,7 @@ class RecordBehavior extends Behavior
             if (empty($model)) {
                 $model =  $this->_table->getRegistryAlias();
             } //END
+            $model = 'Student > Registrations';
             $where = [$this->CustomModules->aliasField('model') => $model];
             $results = $this->CustomModules
                 ->find('all')
@@ -1247,56 +1266,77 @@ class RecordBehavior extends Behavior
             if($model == 'Institution.StudentAdmission' && !empty($customFormIds)){
                 $customFormIds = $this->getcustomFormIdByStudentFormFilters($customFormIds, $entity, $moduleId);
             }//POCOR-8434 ends
+        }
 
-            if (!empty($customFormIds)) {
+        // POCOR-9718 starts: fallback for Student-context tables (behavior => 'Student') —
+        // if nothing was resolved above (e.g. a table's configured model only matches the
+        // generic 'Student' module and never sees the 'Student > Registrations' module),
+        // also check for the 'Student > Registrations' module explicitly so its custom
+        // fields can surface. Only runs when the lookup above found nothing, so any
+        // consumer that already resolves forms (Student or otherwise) is unaffected.
+        if (empty($customFormIds) && $this->getConfig('behavior') == 'Student') {
+            $registrationModule = $this->CustomModules
+                ->find()
+                ->where([$this->CustomModules->aliasField('code') => 'Student > Registrations'])
+                ->first();
+
+            if (!empty($registrationModule)) {
+                $customFormIds = $this->CustomForms
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                    ->where([$this->CustomForms->aliasField($this->getConfig('moduleKey')) => $registrationModule->id])
+                    ->toArray();
+            }
+        }
+        // POCOR-9718 ends
+
+        if (!empty($customFormIds)) {
+            //POCOR-8434 starts
+            $query = $this->CustomFormsFields
+                    ->find('all')
+                    ->find('order')
+                    ->where([
+                        $this->CustomFormsFields->aliasField($this->getConfig('formKey') . ' IN') => $customFormIds
+                    ]);
+                $group = [
+                    $this->CustomFormsFields->aliasField($this->getConfig('fieldKey'))
+                ];
                 //POCOR-8434 starts
-                $query = $this->CustomFormsFields
-                        ->find('all')
-                        ->find('order')
-                        ->where([
-                            $this->CustomFormsFields->aliasField($this->getConfig('formKey') . ' IN') => $customFormIds
-                        ]);
-                    $group = [
-                        $this->CustomFormsFields->aliasField($this->getConfig('fieldKey'))
-                    ];
-                    //POCOR-8434 starts
-                    if ($model == 'Institution.StudentAdmission') {
-                        $group[] = $this->CustomFormsFields->aliasField($this->getConfig('formKey')); // POCOR-8434 add formkey condition
-                    }//POCOR-8434 ends
+                if ($model == 'Institution.StudentAdmission') {
+                    $group[] = $this->CustomFormsFields->aliasField($this->getConfig('formKey')); // POCOR-8434 add formkey condition
+                }//POCOR-8434 ends
 
-                    $query->group($group);
-                    //POCOR-8434 ends
-                    if ($withContain) {
-                    if (is_array($withContain)) {
-                        $query->contain($withContain);
-                    } else {
+                $query->group($group);
+                //POCOR-8434 ends
+                if ($withContain) {
+                if (is_array($withContain)) {
+                    $query->contain($withContain);
+                } else {
+                    $query->contain([
+                        'CustomFields.CustomFieldOptions' => function ($q) {
+                            return $q
+                                ->find('visible')
+                                ->find('order');
+                        }
+                    ]);
+
+                    if (!is_null($this->getConfig('tableColumnKey'))) {
                         $query->contain([
-                            'CustomFields.CustomFieldOptions' => function ($q) {
+                            'CustomFields.CustomTableColumns' => function ($q) {
                                 return $q
                                     ->find('visible')
                                     ->find('order');
                             }
                         ]);
+                    }
 
-                        if (!is_null($this->getConfig('tableColumnKey'))) {
-                            $query->contain([
-                                'CustomFields.CustomTableColumns' => function ($q) {
-                                    return $q
-                                        ->find('visible')
-                                        ->find('order');
-                                }
-                            ]);
-                        }
-
-                        if (!is_null($this->getConfig('tableRowKey'))) {
-                            $query->contain([
-                                'CustomFields.CustomTableRows' => function ($q) {
-                                    return $q
-                                        ->find('visible')
-                                        ->find('order');
-                                }
-                            ]);
-                        }
+                    if (!is_null($this->getConfig('tableRowKey'))) {
+                        $query->contain([
+                            'CustomFields.CustomTableRows' => function ($q) {
+                                return $q
+                                    ->find('visible')
+                                    ->find('order');
+                            }
+                        ]);
                     }
                 }
             }
