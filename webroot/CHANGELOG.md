@@ -1,3 +1,73 @@
+### 5.16.0 - 2026-08-11
+- Bug Fixed: Registrations > Add: No email is received when a student is in Open, Pending Approval, Approved or Pending cancellation state.
+- Bug Fixed: Core>Reports>Institution>Student Absence Report/Student Absence Per day Report:
+- Bug Fixed: Core>Administration>Security >Groups:  In security Group when user tries to search for a user, the system reports an error 404. Any subsequent attempt to return to this group returns a 404 error.
+- Implemented: Add Import function to Translations
+- Implemented: Develop Siblings feature
+- Implemented: Develop system configuration for add student by grade
+- Implemented: Develop changes to health feature
+- Implemented: Develop a migration script to add / update database table descriptions 
+- Bug Fixed: Change field options name 
+- Bug Fixed: Institution > Messaging : Messaging Alerts and SMS need to be triggered automatically.
+- Bug Fixed: Reports: Change the dropdown for selecting institution to multi select dropdown
+- Implemented: Develop migration script to remove summary_institution_student_absences
+- Implemented: Develop Counselling Report
+- Implemented: Develop changes to updates email address from support@openemis.org to updates@openemis.org
+- Bug Fixed: Institutions>Students>Select Student>Counselling
+- Bug Fixed: Core>Administration>Communications>Alert Rules : Security Roles should retrieve all the available roles in the system
+- Bug Fixed: Reports > Institutions > Student Report : Reports get stuck when generating
+- Implemented: Develop enhancement of OpenEMIS Core Staff Salary Module
+- Bug Fixed: Table displaying all records even when selected :  display 10 records.
+- Bug Fixed: Core>Administration: Review mandatory fields
+
+### 5.15.2 - 2026-07-31
+- Bug Fixed: Date is saving the wrong value throughout multiple pages
+- Bug Fixed: Institutions>Students>List: Enrolled(Repeater) will reflect if the previous academic is Repeated/ Withdrawn/ Promoted/ Graduated but yet assign to the same Education Grade.
+- Bug Fixed: Institutions>Staff>Career>Leave Tab: Last executed user does not match the user who executes the workflow
+- Bug Fixed: Institutions>Performance>Report Cards: Report card generation is not found for student that is enrolled during Christmas term
+- Bug Fixed: Institution > student > special needs: Dropdown fields to be marked mandatory
+- Bug Fixed: Core>Directory>Select User type as Guardian>Search>view>Guardian>student:  Left sidebar panel disappears unexpectedly.
+- Bug Fixed: Develop Registrations and Accreditations features-Add buttons are missing
+- Bug Fixed: Administration>System Configuration>Authentication: Dropdown is not working properly when authentication is selected
+- Bug Fixed: 404 Error when workflow state changes from Pending Approval -> Approved
+- Bug Fixed: Reports > Institutions > Classes : Issues in Classes Report
+- Bug Fixed: API: Responses are not showing correctly
+
+### 5.15.1 - 2026-07-21
+- Bug Fixed: Core>Administration>Data Management>Copy : Copying of Institution Programmes, Grades and Subjects is not successful in gy-moe environment
+- Bug Fixed: Migration script to fix the query_sql
+- Bug Fixed: Admissions > Login : Currently when navigating to Admissions users see Administrator credentials in the API payload
+- Bug Fixed: Institution> Attendance> Staff : The staff attendance system is not allowing attendance records to be saved unless AM or PM is manually entered.
+- Bug Fixed: Directory > Users > Edit Page : Date field does not allow user to select other dates outside of today's date
+- Bug Fixed: Institutions > Staff > Add Page : Error message says "Please enter valid Identity number"
+- Bug Fixed: Report generation issue in age outliers and validation report.
+- Bug Fixed: Administration>System Configuration>Themes: OpenEMIS Registration should show OpenEMIS Admissions
+- Bug Fixed: Reports> Institutions : Unable to download report due to Error. The Principal is not able to download despite having the right permissions in Administration.
+
+### [5.15.0] - 2026-07-06
+- Bug Fixed: Core>Administration>System Setup>Attendances>Status: Should be able to modify the Mark Type without encountering any errors.
+- Implemented: Develop configuration for next programme
+- Implemented: Develop formatting changes to the notices
+- Bug Fixed: Personal > Health: 2 fields are missing even when permission from security roles is given for them, when logged as student.
+- Bug Fixed: Institution>Students>Student Profile>Academic>Edit: Clicking on edit button makes no change
+- Bug Fixed: Directory > Advanced Search: Advanced Search does not trim leading/trailing spaces for Name and ID fields
+- Bug Fixed: Institutions > Academic > Subjects > Add : When adding in previous academic year, system will add Institution Subjects and link it to the wrong education_grade_id
+- Bug Fixed: Core>Reports>Data Quality>Validity Report: Everything is showing 0 despite there being data to show on the interface.
+- Bug Fixed: Core>Institutions>Students>General>Guardians tab:All other tabs disappear when one clicks on the Guardians tab
+- Bug Fixed: Administrations > System Setup > Education Structure : Remove the Copy feature at the top
+- Bug Fixed: Directory > Advanced Search > Contact Number : Advanced Search with contact number not working
+
+### [5.14.0] - 2026-06-23
+- Implemented: Develop behaviour placeholders for institution profiles report - part 2
+- Implemented: Develop External Data Source - Sync function
+- Implemented: Develop Staff Attendance feature v4 APIs - Part 2
+- Bug Fixed: Core>Institution>Performance>Assessment:Deleted Marks do not stay deleted
+- Bug Fixed: Institutions>Staff>Health>Allergies, Consultation, Insurances: 404 when adding
+- Bug Fixed: Core>Institutions>Attendance>Student >Edit : When switching between All days and Single Day ,The attendance mark type behaviour does not reflect the same.
+- Bug Fixed: Institution>Students>Select Student>Guardians tab: When clicking on Select > View, the system doesn't show all the guardian information; it shows only the name and the relation
+- Bug Fixed: Directory/Personal > Students > Academic > Assessments: Assessments are not showing up
+- Bug Fixed: DB: Index statuses for report_card_processes and institution_students_report_cards
+
 ### [5.13.0] - 2026-06-10
 - Implemented: Develop change to Reports > Institutions and Reports > Students and and Reports > Staff to include the option to select multiple institutions 
 - Bug Fixed: Institution>Attendance>Staff>Edit: Unable to save record

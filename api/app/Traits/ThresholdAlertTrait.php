@@ -319,14 +319,17 @@ trait ThresholdAlertTrait
      * POCOR-9509: Get alert rule security roles
      *
      * @param int $ruleId Alert rule ID
-     * @return array Array of role objects with 'id' and 'name'
+     * @return array Array of role objects with 'id', 'name', and 'code'.
+     *               'code' is required by RecipientResolver::getStudentAssociatedContactList(),
+     *               which identifies Guardian/Student roles by security_roles.code (matching the
+     *               shape AlertCommandBase::prepareContext() builds via `select('security_roles.*')`).
      */
     protected static function getAlertRuleRoles(int $ruleId): array
     {
         return DB::table('alerts_roles')
             ->join('security_roles', 'security_roles.id', '=', 'alerts_roles.security_role_id')
             ->where('alerts_roles.alert_rule_id', $ruleId)
-            ->select('security_roles.id', 'security_roles.name')
+            ->select('security_roles.id', 'security_roles.name', 'security_roles.code')
             ->get()
             ->toArray();
     }
