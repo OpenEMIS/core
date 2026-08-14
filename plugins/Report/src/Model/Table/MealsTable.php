@@ -513,9 +513,10 @@ class MealsTable extends AppTable
     //POCOR-9268 Starts
     public function onUpdateFieldReportStartDate(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
+
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
-        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : $this->AcademicPeriods->getCurrent(); //POCOR-9743
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
             if ($selectedAcademicPeriodId) {
@@ -550,7 +551,7 @@ class MealsTable extends AppTable
     {
         $requestData = $this->request->getData($this->getAlias());
         $feature = isset($requestData['feature']) ? $requestData['feature'] : null;
-        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : null;
+        $selectedAcademicPeriodId = isset($requestData['academic_period_id']) ? $requestData['academic_period_id'] : $this->AcademicPeriods->getCurrent(); //POCOR-9743
         if ($feature) {
             $attr['value'] = self::NO_FILTER;
             if ($selectedAcademicPeriodId) {
