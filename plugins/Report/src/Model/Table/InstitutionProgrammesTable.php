@@ -42,8 +42,22 @@ class InstitutionProgrammesTable extends AppTable
 		$periodId = $requestData->academic_period_id;
 		$areaId = $requestData->area_education_id;
 		$where = [];
-		if ($institution_id != 0) {
-			$where[$this->aliasField('institution_id')] = $institution_id;
+
+		$institutionIds = [];
+		if (is_object($institution_id) && isset($institution_id->_ids)) {
+			$institutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+				return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+			}));
+		} elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+			$institutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+				return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+			}));
+		} elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+			$institutionIds = [(int)$institution_id];
+		}
+
+		if (!empty($institutionIds)) {
+			$where[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
 		}
 		if ($areaId != -1) {
 			$where['Institutions.area_id'] = $areaId;

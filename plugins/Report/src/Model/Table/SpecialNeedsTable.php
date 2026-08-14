@@ -288,8 +288,20 @@ class SpecialNeedsTable extends AppTable
         $genders = TableRegistry::getTableLocator()->get('genders');
         
         $where = [];
-        if ($institution_id > 0) {
-            array_push($where, [$this->aliasField('institution_id') => $institution_id]);
+        $filterInstitutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id > 0 && !is_array($institution_id)) {
+            $filterInstitutionIds = [(int)$institution_id];
+        }
+        if (!empty($filterInstitutionIds)) {
+            array_push($where, [$this->aliasField('institution_id') . ' IN' => $filterInstitutionIds]);
         }
         // if ($areaId > 0) {
         //     array_push($where, [$this->aliasField('Institutions.area_id') => $areaId]);

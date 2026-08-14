@@ -16,8 +16,10 @@ use Illuminate\Support\Facades\Log;
  */
 class RecipientResolver
 {
-    const GUARDIAN = 9;
-    const STUDENT = 8;
+    // POCOR-9509: role identification is done by security_roles.code (not the auto-increment
+    // id), since ids can differ across environments/deployments while codes are stable.
+    const GUARDIAN_CODE = 'GUARDIAN';
+    const STUDENT_CODE = 'STUDENT';
 
     /**
      * POCOR-9509: Get contact list for users with specific security roles
@@ -304,14 +306,15 @@ class RecipientResolver
     {
         $contactList = ['email' => [], 'phone' => []];
         $recipients = [];
-        $securityRoleIds = [];
+        $securityRoleCodes = [];
 
         foreach ($securityRoles as $role) {
-            $securityRoleIds[] = is_array($role) ? $role['id'] : $role->id;
+            $code = is_array($role) ? ($role['code'] ?? '') : ($role->code ?? '');
+            $securityRoleCodes[] = strtoupper((string) $code);
         }
 
-        // Get guardians if ROLE_GUARDIAN is in the list
-        if (in_array(self::GUARDIAN, $securityRoleIds, true)) {
+        // Get guardians if the GUARDIAN role code is in the list
+        if (in_array(self::GUARDIAN_CODE, $securityRoleCodes, true)) {
             $guardians = DB::table('student_guardians')
                 ->where('student_id', $studentUserId)
                 ->pluck('guardian_id')
@@ -324,8 +327,8 @@ class RecipientResolver
             }
         }
 
-        // Include student if ROLE_STUDENT is in the list
-        if (in_array(self::STUDENT, $securityRoleIds, true)) {
+        // Include student if the STUDENT role code is in the list
+        if (in_array(self::STUDENT_CODE, $securityRoleCodes, true)) {
             $recipients[] = $studentUserId;
         }
 

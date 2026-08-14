@@ -69,7 +69,22 @@ class ExaminationResultsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedExam = $requestData->examination_id;
-        $selectedInstitution = $requestData->institution_id;
+        $institutionId = $requestData->institution_id;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        $filterInstitutionIds = array_map(function ($id) {
+            return ($id === '-1' || $id === -1) ? 0 : (int)$id;
+        }, $filterInstitutionIds);
 
         $query
             ->contain(['Users', 'Institutions'])
@@ -78,9 +93,12 @@ class ExaminationResultsTable extends AppTable
             ->group($this->aliasField('student_id'))
             ->order($this->aliasField('institution_id'));
 
-        if (!empty($selectedInstitution)) {
-            $institutionId = ($selectedInstitution != '-1') ? $selectedInstitution : 0;
-            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        if (!empty($filterInstitutionIds)) {
+            if (count($filterInstitutionIds) === 1) {
+                $query->where([$this->aliasField('institution_id') => $filterInstitutionIds[0]]);
+            } else {
+                $query->where([$this->aliasField('institution_id') . ' IN' => $filterInstitutionIds]);
+            }
         }
     }
 

@@ -192,13 +192,25 @@ private function getData($settings)
    $riskCriterias = TableRegistry::getTableLocator()->get('risk_criterias');
    $enrolledStatus = TableRegistry::getTableLocator()->get('Student.StudentStatuses')->findByCode('CURRENT')->first()->id;
    $conditions = [];
+   $filterInstitutionIds = [];
+   if (is_object($institutionId) && isset($institutionId->_ids)) {
+       $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+           return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+       }));
+   } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+       $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+           return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+       }));
+   } elseif (!empty($institutionId) && $institutionId != '-1' && $institutionId > 0 && !is_array($institutionId)) {
+       $filterInstitutionIds = [(int)$institutionId];
+   }
 
         if (!empty($academicPeriodId)) {
           $conditions['InstitutionStudents.academic_period_id'] = $academicPeriodId;
         }
 
-        if (!empty($institutionId) && $institutionId !='-1') {
-          $conditions['Institutions.id'] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+          $conditions['Institutions.id IN'] = $filterInstitutionIds;
         }
 
         if (!empty($riskType)) {
@@ -212,8 +224,8 @@ private function getData($settings)
         if (!empty($academicPeriodId)) {
             $newConditions[$institutionStudentRisks->aliasField('academic_period_id')] = $academicPeriodId;
         }
-        if (!empty($institutionId)) {
-            $newConditions[$institutionStudentRisks->aliasField('institution_id')] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $newConditions[$institutionStudentRisks->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
         }
         if (!empty($riskType)) {
             $newConditions[$institutionStudentRisks->aliasField('risk_id')] = $riskType;

@@ -158,17 +158,24 @@ class HistoriesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
-        $this->field('current');
-        $this->field('health_condition_id', ['type' => 'select', 'after' => 'comment']);
-        $this->field('file_content', ['after' => 'health_condition_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        
+        $this->field('health_condition_id', ['type' => 'select', 'before' => 'comment']); 
+        $this->field('current', ['type' => 'select', 'after' => 'health_condition_id']); 
+        $this->field('comment', ['after' => 'current']); 
+        
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
+    
     }
 
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+            ->allowEmpty('file_content')
+            ->notEmpty('health_condition_id') //POCOR-9507
+            ->notEmpty('current'); //POCOR-9507
         return $validator;
     }
 
@@ -192,7 +199,7 @@ class HistoriesTable extends ControllerActionTable
             'key'   => 'health_condition_id',
             'field' => 'health_condition_id',
             'type'  => 'string',
-            'label' => __('Health Condition')
+            'label' => __('Condition') //POCOR-9507
         ];
 
         $extraField[] = [
@@ -226,9 +233,7 @@ class HistoriesTable extends ControllerActionTable
         } elseif ($field == 'comment') {
             return __('Comment');
         }elseif ($field == 'health_condition_id') {
-            return __('Health Condition');
-        }elseif ($field == 'health_condition_id') {
-            return __('Health Condition');
+            return __('Condition'); //POCOR-9507
         }elseif ($field == 'file_content') {
             return __('Attachment');
         }elseif ($field == 'modified_user_id') {
@@ -236,7 +241,7 @@ class HistoriesTable extends ControllerActionTable
         } elseif ($field == 'modified') {
             return __('Modified On');
         }elseif ($field == 'created_user_id') {
-            return __('Modified By');
+            return __('Created By');
         } elseif ($field == 'created') {
             return __('Created On');
         }else {
@@ -251,6 +256,26 @@ class HistoriesTable extends ControllerActionTable
         return $query;
     }
 
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Histories.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
+    }
     //POCOR-9718: populate health_condition_id select from Health.Conditions.
     public function onUpdateFieldHealthConditionId(EventInterface $event, array $attr, $action)
     {
