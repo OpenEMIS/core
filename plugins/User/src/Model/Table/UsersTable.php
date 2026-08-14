@@ -84,14 +84,6 @@ class UsersTable extends AppTable
                 'contain' => ''
             ]
         ); // for webhook
-        //POCOR-7440
-        $this->addBehavior('User.PasswordRotation');
-        $this->hasMany('SecurityUserPasswords', [
-            'className' => 'User.SecurityUserPasswords',
-            'foreignKey' => 'security_user_id',
-            'dependent' => true,
-        ]);
-        //POCOR-7440
         $this->getDisplayField('first_name');
     }
 
