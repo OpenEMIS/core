@@ -80,8 +80,10 @@ class RenderFileBehavior extends RenderBehavior
             }
             if (isset($fieldValues[$fieldId]['file'])) {
                 $savedFile = $fieldValues[$fieldId]['file'];
-                $savedValue = $fieldValues[$fieldId]['file_name']; //POCOR-9407
-                
+                // POCOR-9718: not every custom-field-value table has a 'file_name' column
+                // (e.g. student_custom_field_values only stores text_value/file) — fall
+                // back to text_value, the original convention, so the file still renders.
+                $savedValue = $fieldValues[$fieldId]['file_name'] ?? $fieldValues[$fieldId]['text_value'] ?? null;
             }
         }
         // End
