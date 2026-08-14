@@ -172,18 +172,6 @@ class TeacherClassesTable extends AppTable
             'type'  => 'string',
             'label' => __('Academic Period')
         ];
-        $newFields[] = [
-            'key'   => 'area_level',
-            'field' => 'area_level',
-            'type'  => 'string',
-            'label' => __('Area ')
-        ];
-        $newFields[] = [
-            'key'   => 'area_name',
-            'field' => 'area_name',
-            'type'  => 'string',
-            'label' => __('Area Education')
-        ];
 
         $newFields[] = [
             'key'   => 'Institutions.code',
@@ -199,11 +187,17 @@ class TeacherClassesTable extends AppTable
             'label' => __('Institution Name')
         ];
 
-        $newFields[] = [
-            'key'   => 'InstitutionClasses.name',
-            'field' => 'class_name',
+         $newFields[] = [
+            'key'   => 'area_level',
+            'field' => 'area_level',
             'type'  => 'string',
-            'label' => __('Class Name')
+            'label' => __('Area Level ')
+        ];
+        $newFields[] = [
+            'key'   => 'area_name',
+            'field' => 'area_name',
+            'type'  => 'string',
+            'label' => __('Area')
         ];
 
         $newFields[] = [
@@ -214,17 +208,24 @@ class TeacherClassesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key'   => 'Staff.name',
-            'field' => 'teacher_name',
+            'key'   => 'InstitutionClasses.name',
+            'field' => 'class_name',
             'type'  => 'string',
-            'label' => __('Teacher Name')
+            'label' => __('Class Name')
         ];
 
         $newFields[] = [
             'key'   => 'openemis_no',
             'field' => 'openemis_no',
             'type'  => 'string',
-            'label' => __('Openemis No')
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $newFields[] = [
+            'key'   => 'Staff.name',
+            'field' => 'teacher_name',
+            'type'  => 'string',
+            'label' => __('HomeRoomTeacher Name')
         ];
 
         $fields->exchangeArray($newFields);
