@@ -115,13 +115,13 @@ class InstitutionsTable extends AppTable
 
 
         $feature = $this->request->getData($this->getAlias())['feature']; //POCOR-6333
-        if (in_array($feature, ['Report.StaffBehaviours', 'Report.StudentAbsencesPerDays', 'Report.StudentBehaviours',])) {
+        if (in_array($feature, ['Report.StaffBehaviours', 'Report.StudentAbsencesPerDays', 'Report.StudentBehaviours','Report.TeacherClasses'])) {
             $validator = $validator
                 ->notEmpty('area_level_id')
                 ->notEmpty('area_education_id');
         }
 
-        if (in_array($feature, ['Report.WashReports', 'Report.StudentAbsencesPerDaysTable'])) {
+        if (in_array($feature, ['Report.WashReports', 'Report.StudentAbsencesPerDaysTable','Report.TeacherClasses'])) {
             $validator = $validator
                 ->notEmpty('institution_id');
         }
