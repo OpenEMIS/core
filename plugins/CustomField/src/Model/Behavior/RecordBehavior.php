@@ -119,7 +119,7 @@ class RecordBehavior extends Behavior
             $model->associations()->remove($associationName);
         }
 
-        // POCOR-9718 starts: StudentEnrolment's own primary key is the enrolment record's
+        // POCOR-9692 starts: StudentEnrolment's own primary key is the enrolment record's
         // id, not the student's id (unlike Student.Students, whose id IS the student id).
         // hasMany defaults to joining on the parent's primary key, so without pointing
         // bindingKey at the 'student_id' column (already named in this table's own
@@ -135,7 +135,6 @@ class RecordBehavior extends Behavior
                 $tableCellAssocConfig['bindingKey'] = $recordKey;
             }
         } //POCOR-9692
-        // POCOR-9718 ends
 
         $model->hasMany('CustomFieldValues', $fieldValueAssocConfig);
 
@@ -1290,7 +1289,6 @@ class RecordBehavior extends Behavior
                     ->toArray();
             }
         }
-        // POCOR-9718 ends
 
         if (!empty($customFormIds)) {
             //POCOR-8434 starts
