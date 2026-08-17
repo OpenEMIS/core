@@ -128,12 +128,13 @@ class RecordBehavior extends Behavior
         $fieldValueAssocConfig = $this->getConfig('fieldValueClass');
         $tableCellAssocConfig = $this->getConfig('tableCellClass');
         $recordKey = $this->getConfig('recordKey');
+        //POCOR-9692
         if ($model->getAlias() == 'StudentEnrolment' && !empty($recordKey) && $recordKey !== $model->getPrimaryKey()) {
             $fieldValueAssocConfig['bindingKey'] = $recordKey;
             if (!is_null($tableCellAssocConfig)) {
                 $tableCellAssocConfig['bindingKey'] = $recordKey;
             }
-        }
+        } //POCOR-9692
         // POCOR-9718 ends
 
         $model->hasMany('CustomFieldValues', $fieldValueAssocConfig);
@@ -1188,7 +1189,7 @@ class RecordBehavior extends Behavior
     public function getCustomFieldQuery($entity, $params = [])
     {
         $query = null;
-        $customFormIds = [];
+        $customFormIds = []; //POCOR-9692
         $withContain = $params['withContain'] ?? true;
         $generalOnly = $params['generalOnly'] ?? false;
         // For Institution Survey
@@ -1207,7 +1208,9 @@ class RecordBehavior extends Behavior
             if (empty($model)) {
                 $model =  $this->_table->getRegistryAlias();
             } //END
-            $model = 'Student > Registrations';
+            if($this->_table->getRegistryAlias() === 'Institution.StudentEnrolment'){ //POCOR-9692
+                 $model = 'Student > Registrations';
+            }
             $where = [$this->CustomModules->aliasField('model') => $model];
             $results = $this->CustomModules
                 ->find('all')
@@ -1268,7 +1271,7 @@ class RecordBehavior extends Behavior
             }//POCOR-8434 ends
         }
 
-        // POCOR-9718 starts: fallback for Student-context tables (behavior => 'Student') —
+        // POCOR-9692 starts: fallback for Student-context tables (behavior => 'Student') —
         // if nothing was resolved above (e.g. a table's configured model only matches the
         // generic 'Student' module and never sees the 'Student > Registrations' module),
         // also check for the 'Student > Registrations' module explicitly so its custom

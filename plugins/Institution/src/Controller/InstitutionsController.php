@@ -10290,22 +10290,38 @@ class InstitutionsController extends AppController
         if (empty($id)) {
             throw new NotFoundException(__('Invalid file'));
         }
+         $url = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($url, '/StudentEnrolment') !== false) {
+            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+            $getQueryString = $this->getQueryString();
+            $fileRecord = $InstitutionCustomFieldValues->find()
+                            ->where([
+                                'file IS NOT' => null,
+                                'id' => $getQueryString['id']
+                            ])->first();
 
+            if (empty($fileRecord) || empty($fileRecord->file)) {
+                throw new NotFoundException(__('File not found'));
+            }
+            $fileName = uniqid();
+            $fileResource = $fileRecord->file;
+            
+        }else{
         // Load your custom field values table
-        $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
-        $fileRecord = $InstitutionCustomFieldValues->find()
-                        ->where([
-                            'file IS NOT' => null,
-                            'file_name IS NOT' => null,
-                            'institution_id' => $this->getInstitutionID(),
-                        ])->first();
+            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
+            $fileRecord = $InstitutionCustomFieldValues->find()
+                            ->where([
+                                'file IS NOT' => null,
+                                'file_name IS NOT' => null,
+                                'institution_id' => $this->getInstitutionID(),
+                            ])->first();
 
-        if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {
-            throw new NotFoundException(__('File not found'));
+            if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {
+                throw new NotFoundException(__('File not found'));
+            }
+            $fileName = $fileRecord->file_name;
+            $fileResource = $fileRecord->file;
         }
-
-        $fileName = $fileRecord->file_name;
-        $fileResource = $fileRecord->file;
         $this->response = $this->response
             ->withType(mime_content_type($fileResource))
             ->withHeader('Content-Disposition', 'attachment; filename="' . $fileName . '"')
