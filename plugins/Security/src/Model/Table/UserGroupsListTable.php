@@ -254,19 +254,13 @@ class UserGroupsListTable extends ControllerActionTable
     {
         if (isset($options['search'])) {
             $search = $options['search'];
+            // Fix: removed the manual ->join() for 'Users'/'SecurityRoles' -
+            // indexBeforeQuery() already calls $query->contain(['Users','SecurityRoles']), and CakePHP's
+            // default containment strategy for belongsTo associations is a real SQL JOIN using those
+            // exact aliases. Re-joining them here with the same aliases caused
+            // "Not unique table/alias: 'Users'" as soon as a search term was entered. The WHERE
+            // conditions below still resolve correctly against the joins contain() already added.
             $query
-            ->join([
-                [
-                    'table' => 'security_users', 'alias' => 'Users', 'type' => 'LEFT',
-                    'conditions' => ['security_users.id = ' . $this->aliasField('security_user_id')]
-                ],
-                [
-                    'table' => 'security_roles', 'alias' => 'SecurityRoles', 'type' => 'LEFT',
-                    'conditions' => [
-                        'security_roles.id = ' . $this->aliasField('security_role_id')]
-                ],
-
-            ])
             ->where([
                     'OR' => [
                         ['Users.openemis_no LIKE' => '%' . $search . '%'],

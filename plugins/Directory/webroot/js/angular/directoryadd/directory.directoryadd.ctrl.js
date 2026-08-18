@@ -308,9 +308,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
     userCtrl.goToNextStep = async function () {
         if (userCtrl.step === 'confirmation') {
-            const result =
-                await userCtrl.checkUserExistByIdentityFromConfiguration();
-            // if (result) return;
+            const result = await userCtrl.checkUserExistByIdentityFromConfiguration();
+            if (result !== 'ok') {
+                return;
+            }
         }
 
         if (userCtrl.isInternalSearchSelected) {
@@ -451,9 +452,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
         scope.checkUserExistByIdentityFromConfiguration()
             .then(result => {
-                if (!result) {
-                    return scope.getUniqueOpenEmisId();
-    }
+                if (result !== 'ok') {
+                    throw { handledValidation: true };
+                }
+                return scope.getUniqueOpenEmisId();
             })
             .then(() => {
                 return scope.generatePassword();
@@ -473,6 +475,9 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             })
             .catch(error => {
                 UtilsSvc.isAppendLoader(false);
+                if (error && error.handledValidation) {
+                    return;
+                }
                 scope.messageClass = 'alert-danger';
                 scope.message = error.message || error.toString();
                 console.error(error);
@@ -1177,6 +1182,7 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
             photo_name: scope.selectedUserData.photo_name,
             photo_content: scope.selectedUserData.photo_base_64,
+            sync_status: userCtrl.isExternalSearchSelected ? 1 : 0, //POCOR-9590: external search → Synced, manual add → Local
             custom: [],
         };
         if(scope.selectedUserData.user_type_id === USER_TYPES.STUDENT) { // POCOR-9427
@@ -1294,7 +1300,37 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
             UtilsSvc.isAppendLoader(false);
         }, function(error){
             console.error(error);
-            userCtrl.message =  error.data.message || error.statusText || error.toString();
+            const serverMessage = (error && error.data && error.data.message) ? String(error.data.message) : '';
+            const isIdentityValidationError = serverMessage === 'Please enter value'
+                || serverMessage === 'Please enter a valid Identity Number';
+
+            if (isIdentityValidationError) {
+                userCtrl.canSkipIdentity = false;
+                userCtrl.error.identity_number = serverMessage;
+                userCtrl.message = '';
+                userCtrl.messageClass = '';
+                $window.scrollTo({bottom: 0});
+                UtilsSvc.isAppendLoader(false);
+                return;
+            }
+
+            //POCOR-9590: surface server-side field validation errors on the actual fields
+            //and roll the first one into the toast so the user knows which field failed.
+            const fieldErrors = (error && error.data && error.data.errors) ? error.data.errors : null;
+            const firstFieldMessage = (() => {
+                if (!fieldErrors || typeof fieldErrors !== 'object') return '';
+                for (const field of Object.keys(fieldErrors)) {
+                    const rules = fieldErrors[field];
+                    const msg = (rules && typeof rules === 'object') ? Object.values(rules)[0] : rules;
+                    if (msg) {
+                        userCtrl.setError(field, msg);
+                        return `${field}: ${msg}`;
+                    }
+                }
+                return '';
+            })();
+
+            userCtrl.message = firstFieldMessage || serverMessage || error.statusText || error.toString();
             userCtrl.messageClass = 'alert-danger';
             UtilsSvc.isAppendLoader(false);
         });
@@ -1342,17 +1378,22 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
 
     userCtrl.checkUserExistByIdentityFromConfiguration = async function () {
         const {identity_type_id, identity_number} = userCtrl.selectedUserData;
+        const trimmedIdentityNumber = (identity_number || '').toString().trim();
 
         userCtrl.unsetError('identity_type_id');
         userCtrl.unsetError('identity_number');
+        userCtrl.messageClass = '';
+        userCtrl.message = '';
 
         if (!identity_type_id) {
-                return false;
+                return 'ok';
         }
 
-        if (identity_type_id && !identity_number) {
-            userCtrl.error.identity_number = "This field cannot be left empty";
-            return;
+        if (identity_type_id && !trimmedIdentityNumber) {
+            userCtrl.canSkipIdentity = false;
+            userCtrl.error.identity_number = "Please enter value";
+            $window.scrollTo({bottom: 0});
+            return 'invalid';
         }
 
         try {
@@ -1362,12 +1403,20 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 nationality_id: userCtrl.selectedUserData.nationality_id,
         });
 
+            if (result.data && Number(result.data.status_code) === 400 && result.data.message) {
+                userCtrl.canSkipIdentity = false;
+                userCtrl.error.identity_number = result.data.message;
+                $window.scrollTo({bottom: 0});
+                return 'invalid';
+            }
+
             if (result.data.user_exist === 1) {
                 userCtrl.messageClass = 'alert_warn';
                 userCtrl.message = result.data.message;
                 userCtrl.isIdentityUserExist = true;
                 // userCtrl.error.identity_number = result.data.message;
             $window.scrollTo({bottom:0});
+                return 'exists';
 
             } else {
                 userCtrl.messageClass = '';
@@ -1377,10 +1426,10 @@ function DirectoryAddController($scope, $q, $window, $http, $filter, $timeout, U
                 userCtrl.unsetError('identity_number');
 
         }
-        return result.data.user_exist === 1;
+        return 'ok';
         } catch (error) {
             console.error('Error checking user existence:', error);
-            return false;
+            return 'invalid';
     }
 
 }

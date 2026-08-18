@@ -7,6 +7,7 @@ use App\Models\AcademicPeriod;
 use App\Models\ConfigItem;
 use App\Models\CalendarEventDate;
 use App\Models\InstitutionStaffAttendances;
+use App\Models\InstitutionStaffAttendancesArchived;//POCOR-8630
 use App\Models\InstitutionStaffLeave;
 use App\Models\InstitutionStaffLeaveArchive;
 use App\Models\InstitutionPositions;
@@ -46,8 +47,10 @@ use DateTime;
 use DateInterval;
 use DatePeriod;
 use App\Imports\StudentAttendanceImport;
+use App\Imports\StaffAttendanceImport;//POCOR-8630
 use File;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use Illuminate\Support\Str;//POCOR-8630
 
 class AttendanceRepository extends Controller
 {
@@ -415,8 +418,90 @@ class AttendanceRepository extends Controller
         }
     }
 
+    //POCOR-8630 start
+    /**
+     * Validate staff attendance view/edit flags against role permissions and institution scope.
+     *
+     * @return array<string, int>|false Server-resolved flags, or false when access is denied.
+     */
+    public function validateStaffAttendancePermissions(int $institutionId, array $params): array|false
+    {
+        $user = JWTAuth::user();
+        if (!$user) {
+            return false;
+        }
 
-    public function getStaffAttendances($request, $institutionId)
+        if (($user->super_admin ?? 0) != 1) {
+            $hasAccess = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'view'],
+                ['institution_id' => $institutionId]
+            );
+            if (!$hasAccess) {
+                $hasAccess = checkPermission(
+                    ['Institutions', 'InstitutionStaffAttendances', 'index'],
+                    ['institution_id' => $institutionId]
+                );
+            }
+            if (!$hasAccess) {
+                return false;
+            }
+        }
+
+        if (($user->super_admin ?? 0) == 1) {
+            $ownView = (int) ($params['own_attendance_view'] ?? 1);
+            $otherView = (int) ($params['other_attendance_view'] ?? 1);
+            $ownEdit = (int) ($params['own_attendance_edit'] ?? 1);
+            $otherEdit = (int) ($params['other_attendance_edit'] ?? 1);
+        } else {
+            $ownView = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'ownview'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+            $otherView = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'otherview'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+            $ownEdit = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'ownedit'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+            $otherEdit = checkPermission(
+                ['Institutions', 'InstitutionStaffAttendances', 'otheredit'],
+                ['institution_id' => $institutionId]
+            ) ? 1 : 0;
+        }
+
+        if ($ownView === 0 && $otherView === 0) {
+            return false;
+        }
+
+        if ((int) ($params['own_attendance_view'] ?? 0) === 1 && $ownView === 0) {
+            return false;
+        }
+        if ((int) ($params['other_attendance_view'] ?? 0) === 1 && $otherView === 0) {
+            return false;
+        }
+        if ((int) ($params['own_attendance_edit'] ?? 0) === 1 && $ownEdit === 0) {
+            return false;
+        }
+        if ((int) ($params['other_attendance_edit'] ?? 0) === 1 && $otherEdit === 0) {
+            return false;
+        }
+
+        return [
+            'own_attendance_view' => $ownView,
+            'other_attendance_view' => $otherView,
+            'own_attendance_edit' => $ownEdit,
+            'other_attendance_edit' => $otherEdit,
+        ];
+    }
+
+    public function getStaffAttendancesArchive($request)
+    {
+        return $this->getStaffAttendances($request, (int) $request->input('institution_id'), true);
+    }
+
+    public function getStaffAttendances($request, $institutionId, $archive = false)
     {
         try {
             $params = $request->all();
@@ -465,20 +550,48 @@ class AttendanceRepository extends Controller
             list($weekStartDate, $weekEndDate) =
                 $this->resetWeekStartEndForOneDaySearch($dayId, $dayDate, $weekStartDate, $weekEndDate);
 
-            
+            if ($archive && ($dayId === null || $dayId === '')) {
+                $weekStartDate = $params['week_start_day'];
+                $weekEndDate = $params['week_end_day'];
+            }
 
-            $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate, $shiftId);
-            
+            $attendanceByStaffIdRecords = $this->getAttendanceByStaffIdRecordsArray(
+                $institutionId,
+                $academicPeriodId,
+                $weekStartDate,
+                $weekEndDate,
+                $shiftId,
+                $archive
+            );
 
-            $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray($institutionId, $academicPeriodId, $weekStartDate, $weekEndDate);
+            $leaveByStaffIdRecords = $this->getLeaveByStaffIdRecordsArray(
+                $institutionId,
+                $academicPeriodId,
+                $weekStartDate,
+                $weekEndDate,
+                $archive
+            );
 
+            if ($archive) {
+                $staffIdsWithArchivedAttendance = array_values(array_unique(array_map(
+                    'intval',
+                    array_keys($attendanceByStaffIdRecords)
+                )));
+                if ($staffIdsWithArchivedAttendance === []) {
+                    return ['data' => [], 'total' => 0];
+                }
+            }
 
-            $conditionQueryArray = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+            if (!$archive) {
+                $conditionQueryArray = $this->setConditionQueryForDates($weekStartDate, $weekEndDate, $conditionQuery);
+                $conditionQuery = $conditionQueryArray[0] ?? [];
+                $conditionQueryOR = $conditionQueryArray[1] ?? [];
+            }
 
-            $conditionQuery = $conditionQueryArray[0]??[];
-            $conditionQueryOR = $conditionQueryArray[1]??[];
-
-            
+            $absenceTypes = [];
+            if ($archive) {
+                $absenceTypes = AbsenceTypes::query()->pluck('name', 'id')->toArray();
+            }
 
             //Gets all the days in the selected week based on its start date end date
             $workingDaysArr = $this->getWorkingDays($weekStartDate, $weekEndDate);
@@ -496,27 +609,29 @@ class AttendanceRepository extends Controller
             $query = $query->with('user')->join('security_users', 'security_users.id', '=', 'institution_staff.staff_id')->where('institution_staff.institution_id', $institutionId);
 
             if ($superAdmin == 0) {
-                if ($ownAttendanceView == 0 && $otherAttendanceView == 0) {
-                    //
-                }
                 if ($ownAttendanceView == 1 && $otherAttendanceView == 0) {
                     $query = $query->where('institution_staff.staff_id', $user_id);
                 } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 1) {
                     $query = $query->where('institution_staff.staff_id', '!=', $user_id);
+                } elseif ($ownAttendanceView == 0 && $otherAttendanceView == 0) {
+                    $query = $query->whereRaw('1 = 0');
                 }
             }
 
-            if($weekStartDate == $weekEndDate){
-                $query = $query->where('start_date', '<=', $weekStartDate);
+            if ($archive) {
+                $query = $query->whereIn('institution_staff.staff_id', $staffIdsWithArchivedAttendance);
             } else {
-                $query = $query->where('start_date', '<=', $weekStartDate)
+                if ($weekStartDate == $weekEndDate) {
+                    $query = $query->where('start_date', '<=', $weekStartDate);
+                } else {
+                    $query = $query->where('start_date', '<=', $weekStartDate)
                         ->where('start_date', '<=', $weekEndDate);
-            }
-            
+                }
 
-            $query = $query->where(function ($q) use($weekStartDate, $weekEndDate) {
-                $q->where('end_date', Null)->orWhere('end_date', '>=', $weekEndDate);
-            });
+                $query = $query->where(function ($q) use ($weekStartDate, $weekEndDate) {
+                    $q->where('end_date', null)->orWhere('end_date', '>=', $weekEndDate);
+                });
+            }
 
 
             /*$data = $query->orderBy('security_users.first_name')
@@ -596,16 +711,26 @@ class AttendanceRepository extends Controller
 
                         if ($dateStr == $staffAttendanceDate) {
                             $found = true;
+                            $absenceTypeId = $attendanceRecord['absence_type_id'] ?? null;
                             //isNew determines if record is existing data
                             $attendanceData = [
                                 'dateStr' => $dateStr,
                                 'date' => date('F d, Y', strtotime($attendanceRecord['date'])),
-                                'time_in' => date('H:i:s', strtotime($attendanceRecord['time_in'])),
-                                'time_out' => date('H:i:s', strtotime($attendanceRecord['time_out'])),
+                                'time_in' => $attendanceRecord['time_in']
+                                    ? date('H:i:s', strtotime($attendanceRecord['time_in']))
+                                    : null,
+                                'time_out' => $attendanceRecord['time_out']
+                                    ? date('H:i:s', strtotime($attendanceRecord['time_out']))
+                                    : null,
                                 'comment' => $attendanceRecord['comment'],
-                                'absence_type_id' => $attendanceRecord['absence_type_id'],
-                                'isNew' => false
+                                'absence_type_id' => $absenceTypeId,
+                                'isNew' => false,
                             ];
+                            if ($archive) {
+                                $attendanceData['absence_type'] = ($absenceTypeId !== null && isset($absenceTypes[$absenceTypeId]))
+                                    ? $absenceTypes[$absenceTypeId]
+                                    : '';
+                            }
                             break;
                         }
                     }
@@ -618,8 +743,11 @@ class AttendanceRepository extends Controller
                             'time_out' => null,
                             'comment' => null,
                             'absence_type_id' => null,
-                            'isNew' => true
+                            'isNew' => true,
                         ];
+                        if ($archive) {
+                            $attendanceData['absence_type'] = '';
+                        }
                     }
 
                     $staffTimeRecords[$dateStr] = $attendanceData;
@@ -648,33 +776,52 @@ class AttendanceRepository extends Controller
                         
                         if ($dateFrom <= $key && $dateTo >= $key) {
                             $leaveRecord['isFullDay'] = $staffLeaveRecord['full_day'];
-                            $leaveRecord['startTime'] = isset($staffLeaveRecord['start_time']) ? date('H:i:s', strtotime($staffLeaveRecord['start_time'])) : "";
-                            $leaveRecord['endTime'] = isset($staffLeaveRecord['end_time']) ? date('H:i:s', strtotime($staffLeaveRecord['end_time'])) : "";
-                            $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['leave_type_name']??"";
+                            $leaveRecord['comment'] = $staffLeaveRecord['comments'] ?? null;
+                            $leaveRecord['startTime'] = isset($staffLeaveRecord['start_time'])
+                                ? date('H:i:s', strtotime($staffLeaveRecord['start_time']))
+                                : '';
+                            $leaveRecord['endTime'] = isset($staffLeaveRecord['end_time'])
+                                ? date('H:i:s', strtotime($staffLeaveRecord['end_time']))
+                                : '';
+                            $leaveRecord['staffLeaveTypeName'] = $staffLeaveRecord['leave_type_name'] ?? '';
                             $leaveRecords[] = $leaveRecord;
+
+                            if ($archive && !empty($staffLeaveRecord['comments'])) {
+                                $existingComment = trim((string) ($staffTimeRecords[$key]['comment'] ?? ''));
+                                $staffTimeRecords[$key]['comment'] = trim(
+                                    $existingComment . ' ' . $staffLeaveRecord['comments']
+                                );
+                            }
                         }
                     }
 
-                    
-                    //dd($base_url);
-                    /*$url = [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'StaffLeave',
-                        'index',
-                        'user_id' => $staffId
-                    ];*/
-                    $url = "/".$base_url."/Institution/Institutions/StaffLeave/index?user_id=".$staffId;
+                    if ($archive) {
+                        $url = '/' . $base_url . '/Institution/Institutions/ArchivedStaffLeave/index?user_id=' . $staffId;
+                    } else {
+                        $url = '/' . $base_url . '/Institution/Institutions/StaffLeave/index?user_id=' . $staffId;
+                    }
                     $staffTimeRecords[$key]['leave'] = $leaveRecords;
                     $staffTimeRecords[$key]['url'] = $url;
                 }
 
                 $resp[$k]['attendance'] = $staffTimeRecords;
+
+                if ($archive && isset($d['user'])) {
+                    $userData = $d['user'];
+                    $resp[$k]['name'] = $userData['full_name'] ?? trim(
+                        ($userData['first_name'] ?? '') . ' ' . ($userData['last_name'] ?? '')
+                    );
+                    $resp[$k]['staff_name'] = $userData['name_with_id'] ?? '';
+                    $resp[$k]['photo_content'] = '';
+                }
             }
 
             $data['data'] = $resp;
 
-            //$list['total'] = $total;
+            if ($archive) {
+                $data['total'] = count($resp);
+                return $data;
+            }
 
             //For POCOR-8291 start...
             $insId = '{"id":'.$institutionId.'}';
@@ -698,7 +845,7 @@ class AttendanceRepository extends Controller
             return $this->sendErrorResponse('Staff Attendances List Not Found');
         }
     }
-
+    //POCOR-8630 end
 
     public function setConditionQueryForUser($ownAttendanceView, $otherAttendanceView, $user_id, array $conditionQuery)
     {
@@ -833,10 +980,21 @@ class AttendanceRepository extends Controller
             $allStaffLeaves = $allStaffLeaves->get()->toArray();
         }
         if ($archive) {
-            $allStaffLeaves = new InstitutionStaffLeaveArchive();
-            $allStaffLeaves = $allStaffLeaves->where('institution_id', $institutionId)
-                    ->where('academic_period_id', $academicPeriodId);
-
+            //POCOR-8630 start
+            $allStaffLeaves = InstitutionStaffLeaveArchive::query()
+                ->select(
+                    'institution_staff_leave_archived.*',
+                    'staff_leave_types.name as leave_type_name'
+                )
+                ->join(
+                    'staff_leave_types',
+                    'staff_leave_types.id',
+                    '=',
+                    'institution_staff_leave_archived.staff_leave_type_id'
+                )
+                ->where('institution_staff_leave_archived.institution_id', $institutionId)
+                ->where('institution_staff_leave_archived.academic_period_id', $academicPeriodId);
+            //POCOR-8630 end
             if ($weekEndDate == $weekStartDate) {
             
                 $allStaffLeaves = $allStaffLeaves->where('date_to', '>=', $weekEndDate)->where('date_from', '<=', $weekStartDate);
@@ -3397,6 +3555,993 @@ class AttendanceRepository extends Controller
         }
     }
 
+    //POCOR-8630 STARTS
+    /**
+     * Build reference-sheet rows and metadata for the staff attendance import template.
+     *
+     * @param int $institutionId
+     * @return array{institution_name:string,reference_rows:array<int,array<int,string|null>>}
+     */
+    public function getStaffAttendancesImportTemplateData(int $institutionId): array
+    {
+        $institution = Institutions::where('id', $institutionId)->first();
+        if (!$institution) {
+            throw new \RuntimeException('Institution not found.');
+        }
+
+        $staffMembers = InstitutionStaff::query()
+            ->where('institution_staff.institution_id', $institutionId)
+            ->join('security_users', 'security_users.id', '=', 'institution_staff.staff_id')
+            ->select([
+                'security_users.id',
+                'security_users.openemis_no',
+                'security_users.first_name',
+                'security_users.middle_name',
+                'security_users.third_name',
+                'security_users.last_name',
+            ])
+            ->groupBy(
+                'security_users.id',
+                'security_users.openemis_no',
+                'security_users.first_name',
+                'security_users.middle_name',
+                'security_users.third_name',
+                'security_users.last_name',
+            )
+            ->orderBy('security_users.openemis_no')
+            ->get();
+
+        $staffRows = [];
+        foreach ($staffMembers as $staff) {
+            $nameParts = array_filter([
+                $staff->first_name,
+                $staff->middle_name,
+                $staff->third_name,
+                $staff->last_name,
+            ]);
+            $staffRows[] = [
+                'institution' => $institution->name,
+                'name' => trim(implode(' ', $nameParts)),
+                'openemis_no' => $staff->openemis_no,
+            ];
+        }
+
+        $academicPeriods = AcademicPeriod::query()
+            ->where('academic_period_level_id', 1)
+            ->orderByDesc('start_date')
+            ->get(['name', 'start_date', 'end_date', 'code']);
+
+        $periodRows = [];
+        foreach ($academicPeriods as $period) {
+            $periodRows[] = [
+                'name' => $period->name,
+                'start_date' => $this->formatImportTemplateDate($period->start_date),
+                'end_date' => $this->formatImportTemplateDate($period->end_date),
+                'code' => $period->code,
+            ];
+        }
+
+        return [
+            'institution_name' => $institution->name,
+            'reference_rows' => $this->buildStaffAttendancesReferenceRows(
+                $staffRows,
+                $periodRows,
+                $institution->name
+            ),
+        ];
+    }
+
+
+    /**
+     * Merge staff and academic-period reference lists into flat spreadsheet rows.
+     *
+     * @param array<int,array{institution:string,name:string,openemis_no:string|null}> $staffRows
+     * @param array<int,array{name:string,start_date:string,end_date:string,code:string|null}> $periodRows
+     * @param string $institutionName
+     * @return array<int,array<int,string|null>>
+     */
+    private function buildStaffAttendancesReferenceRows(
+        array $staffRows,
+        array $periodRows,
+        string $institutionName
+    ): array {
+        $maxRows = max(count($staffRows), count($periodRows));
+        $rows = [];
+
+        for ($i = 0; $i < $maxRows; $i++) {
+            $staff = $staffRows[$i] ?? null;
+            $period = $periodRows[$i] ?? null;
+
+            $rows[] = [
+                $staff['institution'] ?? $institutionName,
+                $staff['name'] ?? null,
+                $staff['openemis_no'] ?? null,
+                $period['name'] ?? null,
+                $period['start_date'] ?? null,
+                $period['end_date'] ?? null,
+                $period['code'] ?? null,
+            ];
+        }
+
+        return $rows;
+    }
+
+
+    /**
+     * Format a date value for the import template reference sheet (DD/MM/YYYY).
+     *
+     * @param mixed $value
+     * @return string|null
+     */
+    private function formatImportTemplateDate($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value)->format('d/m/Y');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+
+    /**
+     * Import staff attendances from an uploaded Excel template.
+     *
+     * @param array $params
+     * @return array|int
+     */
+    public function staffAttendancesImport(array $params)
+    {
+        try {
+            $validExtension = ['xlsx', 'xls', 'csv'];
+            $extension = strtolower(File::extension($params['file']->getClientOriginalName()));
+
+            if (!in_array($extension, $validExtension, true)) {
+                return 1;
+            }
+
+            $results = StaffAttendanceImport::toArray($params['file']);
+
+            if (empty($results[0][1])) {
+                return 2;
+            }
+
+            if (empty($results[0][2])) {
+                return 3;
+            }
+
+            $columnMap = $this->mapStaffAttendanceHeaderColumns($results[0][1]);
+            if ($columnMap === null) {
+                return 4;
+            }
+
+            $institution = Institutions::where('id', $params['institution_id'])->first();
+            if (!$institution) {
+                return 5;
+            }
+
+            $rowsCount = count($results[0]) - 2;
+            if ($rowsCount > config('constantvalues.importExcelRules.maxRows')) {
+                return 7;
+            }
+
+            return $this->importStaffAttendances($results[0], $params, $columnMap);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import staff attendances in DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import staff attendances in DB.');
+        }
+    }
+
+
+    /**
+     * @param array<int,array<int,mixed>> $sheetRows
+     * @param array $params
+     * @param array<string,int> $columnMap
+     * @return array|false
+     */
+    private function importStaffAttendances(array $sheetRows, array $params, array $columnMap)
+    {
+        DB::beginTransaction();
+
+        try {
+            $headerRow = $sheetRows[1];
+            $labels = $this->buildStaffAttendanceRowLabels($headerRow, $columnMap);
+            $institutionId = (int) $params['institution_id'];
+
+            $validation = [];
+            $addData = [];
+            $updatedData = [];
+            $processedRows = 0;
+
+            foreach ($sheetRows as $rowIndex => $row) {
+                if ($rowIndex < 2) {
+                    continue;
+                }
+
+                if (!is_array($row) || !array_filter($row, static function ($value) {
+                    return $value !== null && $value !== '';
+                })) {
+                    continue;
+                }
+
+                $processedRows++;
+                $rowNumber = $rowIndex + 1;
+                $rowData = $this->extractStaffAttendanceRowData($row, $columnMap, $labels);
+                $errors = $this->validateStaffAttendanceImportRow($rowData, $labels, $institutionId);
+
+                if (!empty($errors)) {
+                    $validation[] = [
+                        'row_number' => $rowNumber,
+                        'data' => $rowData,
+                        'errors' => $errors,
+                    ];
+                    continue;
+                }
+
+                $saveResult = $this->saveStaffAttendanceImportRow(
+                    $rowData,
+                    $institutionId,
+                    (int) $rowData['_staff_id'],
+                    (int) $rowData['_academic_period_id']
+                );
+
+                unset($rowData['_staff_id'], $rowData['_academic_period_id'], $rowData['_parsed_date'], $rowData['_parsed_time_in'], $rowData['_parsed_time_out']);
+
+                if ($saveResult === 'added') {
+                    $addData[] = [
+                        'row_number' => $rowNumber,
+                        'data' => $rowData,
+                        'errors' => [],
+                    ];
+                } else {
+                    $updatedData[] = [
+                        'row_number' => $rowNumber,
+                        'data' => $rowData,
+                        'errors' => [],
+                    ];
+                }
+            }
+
+            $importResponse = [
+                'total_count' => $processedRows,
+                'records_added' => [
+                    'count' => count($addData),
+                    'rows' => $addData,
+                ],
+                'records_updated' => [
+                    'count' => count($updatedData),
+                    'rows' => $updatedData,
+                ],
+                'records_failed' => [
+                    'count' => count($validation),
+                    'rows' => $validation,
+                ],
+            ];
+
+            DB::commit();
+
+            return $importResponse;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error(
+                'Failed in importStaffAttendances method.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return false;
+        }
+    }
+
+
+    /**
+     * @param array<int,mixed> $headerRow
+     * @return array<string,int>|null
+     */
+    private function mapStaffAttendanceHeaderColumns(array $headerRow): ?array
+    {
+        $map = [];
+
+        foreach ($headerRow as $index => $header) {
+            $normalized = strtolower(preg_replace('/\s+/', ' ', trim((string) $header)));
+
+            if ($normalized === '') {
+                continue;
+            }
+
+            if (str_contains($normalized, 'openemis id')) {
+                $map['openemis_id'] = $index;
+            } elseif (str_contains($normalized, 'academic period code')) {
+                $map['academic_period_code'] = $index;
+            } elseif (str_contains($normalized, 'date')) {
+                $map['date'] = $index;
+            } elseif (str_contains($normalized, 'time in')) {
+                $map['time_in'] = $index;
+            } elseif (str_contains($normalized, 'time out')) {
+                $map['time_out'] = $index;
+            } elseif ($normalized === 'comment') {
+                $map['comment'] = $index;
+            }
+        }
+
+        $required = ['openemis_id', 'academic_period_code', 'date', 'time_in'];
+        foreach ($required as $key) {
+            if (!isset($map[$key])) {
+                return null;
+            }
+        }
+
+        return $map;
+    }
+
+
+    /**
+     * @param array<int,mixed> $headerRow
+     * @param array<string,int> $columnMap
+     * @return array<string,string>
+     */
+    private function buildStaffAttendanceRowLabels(array $headerRow, array $columnMap): array
+    {
+        $labels = [];
+        foreach ($columnMap as $key => $index) {
+            $labels[$key] = trim((string) ($headerRow[$index] ?? $key));
+        }
+
+        return $labels;
+    }
+
+
+    /**
+     * @param array<int,mixed> $row
+     * @param array<string,int> $columnMap
+     * @param array<string,string> $labels
+     * @return array<string,mixed>
+     */
+    private function extractStaffAttendanceRowData(array $row, array $columnMap, array $labels): array
+    {
+        $data = [];
+        foreach ($columnMap as $key => $index) {
+            $data[$labels[$key]] = $this->normalizeStaffAttendanceImportCellValue($row[$index] ?? null);
+        }
+
+        return $data;
+    }
+
+
+    /**
+     * @param mixed $value
+     * @return string|null
+     */
+    private function normalizeStaffAttendanceImportCellValue($value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_numeric($value) && !is_string($value)) {
+            if (is_float($value) && floor($value) == $value) {
+                return (string) (int) $value;
+            }
+
+            return trim((string) $value);
+        }
+
+        return trim((string) $value);
+    }
+
+
+    /**
+     * @param array<string,mixed> $rowData
+     * @param array<string,string> $labels
+     * @param int $institutionId
+     * @return array<string,string>
+     */
+    private function validateStaffAttendanceImportRow(array &$rowData, array $labels, int $institutionId): array
+    {
+        $errors = [];
+        $openemisLabel = $labels['openemis_id'] ?? 'Openemis ID';
+        $periodLabel = $labels['academic_period_code'] ?? 'Academic Period Code';
+        $dateLabel = $labels['date'] ?? 'Date ( DD/MM/YYYY )';
+        $timeInLabel = $labels['time_in'] ?? 'Time In (HH:MM AM/PM)';
+        $timeOutLabel = $labels['time_out'] ?? 'Time Out (HH:MM AM/PM)';
+
+        $openemisNo = $rowData[$openemisLabel] ?? null;
+        $periodCode = $rowData[$periodLabel] ?? null;
+        $rawDate = $rowData[$dateLabel] ?? null;
+        $rawTimeIn = $rowData[$timeInLabel] ?? null;
+        $rawTimeOut = $rowData[$timeOutLabel] ?? null;
+
+        if ($openemisNo === null || $openemisNo === '') {
+            $errors[$openemisLabel] = 'Openemis ID is required.';
+        }
+
+        if ($periodCode === null || $periodCode === '') {
+            $errors[$periodLabel] = 'Academic Period Code is required.';
+        }
+
+        if ($rawDate === null || $rawDate === '') {
+            $errors[$dateLabel] = 'Date is required.';
+        }
+
+        if ($rawTimeIn === null || $rawTimeIn === '') {
+            $errors[$timeInLabel] = 'Time In is required.';
+        }
+
+        $parsedDate = null;
+        if (!isset($errors[$dateLabel]) && $rawDate !== null && $rawDate !== '') {
+            $parsedDate = $this->parseStaffAttendanceImportDate($rawDate);
+            if ($parsedDate === false) {
+                $errors[$dateLabel] = 'Invalid date format. Expected DD/MM/YYYY or DD-MM-YYYY.';
+            } else {
+                $rowData[$dateLabel] = Carbon::parse($parsedDate)->format('d/m/Y');
+            }
+        }
+
+        $parsedTimeIn = null;
+        if (!isset($errors[$timeInLabel]) && $rawTimeIn !== null && $rawTimeIn !== '') {
+            $parsedTimeIn = $this->parseStaffAttendanceImportTime($rawTimeIn);
+            if ($parsedTimeIn === false) {
+                $errors[$timeInLabel] = 'Invalid time format. Expected HH:MM AM/PM.';
+            }
+        }
+
+        $parsedTimeOut = null;
+        if ($rawTimeOut !== null && $rawTimeOut !== '') {
+            $parsedTimeOut = $this->parseStaffAttendanceImportTime($rawTimeOut);
+            if ($parsedTimeOut === false) {
+                $errors[$timeOutLabel] = 'Invalid time format. Expected HH:MM AM/PM.';
+            }
+        }
+
+        if ($parsedTimeIn && $parsedTimeOut && strtotime($parsedTimeOut) < strtotime($parsedTimeIn)) {
+            $errors[$timeOutLabel] = 'Time Out is earlier than Time In.';
+        }
+
+        if (!empty($errors)) {
+            return $errors;
+        }
+
+        $user = SecurityUsers::where('openemis_no', $openemisNo)->where('is_staff', 1)->first();
+        if (!$user) {
+            $errors[$openemisLabel] = 'Openemis ID does not exist.';
+            return $errors;
+        }
+
+        $institutionStaff = InstitutionStaff::where('staff_id', $user->id)
+            ->where('institution_id', $institutionId)
+            ->first();
+
+        if (!$institutionStaff) {
+            $errors[$openemisLabel] = 'Staff does not belong to the selected institution.';
+            return $errors;
+        }
+
+        $academicPeriod = AcademicPeriod::where('code', $periodCode)->first();
+        if (!$academicPeriod) {
+            $errors[$periodLabel] = 'Academic Period Code does not exist.';
+            return $errors;
+        }
+
+        if ($parsedDate && ($parsedDate < $academicPeriod->start_date || $parsedDate > $academicPeriod->end_date)) {
+            $errors[$dateLabel] = 'Date should be between '
+                . $academicPeriod->start_date . ' and ' . $academicPeriod->end_date
+                . ' for the selected academic period.';
+            return $errors;
+        }
+
+        $rowData['_staff_id'] = $user->id;
+        $rowData['_academic_period_id'] = $academicPeriod->id;
+        $rowData['_parsed_date'] = $parsedDate;
+        $rowData['_parsed_time_in'] = $parsedTimeIn;
+        $rowData['_parsed_time_out'] = $parsedTimeOut;
+
+        return $errors;
+    }
+
+
+    /**
+     * @param array<string,mixed> $rowData
+     * @param int $institutionId
+     * @param int $staffId
+     * @param int $academicPeriodId
+     * @return string added|updated
+     */
+    private function saveStaffAttendanceImportRow(
+        array $rowData,
+        int $institutionId,
+        int $staffId,
+        int $academicPeriodId
+    ): string {
+        $commentLabel = null;
+
+        foreach ($rowData as $label => $value) {
+            if (strtolower(trim((string) $label)) === 'comment') {
+                $commentLabel = $label;
+                break;
+            }
+        }
+
+        $payload = [
+            'staff_id' => $staffId,
+            'institution_id' => $institutionId,
+            'academic_period_id' => $academicPeriodId,
+            'date' => $rowData['_parsed_date'],
+            'time_in' => $rowData['_parsed_time_in'],
+            'time_out' => $rowData['_parsed_time_out'] ?? null,
+            'comment' => $commentLabel ? ($rowData[$commentLabel] ?? null) : null,
+        ];
+
+        $existing = InstitutionStaffAttendances::where([
+            'staff_id' => $staffId,
+            'institution_id' => $institutionId,
+            'academic_period_id' => $academicPeriodId,
+            'date' => $payload['date'],
+        ])->first();
+
+        if ($existing) {
+            $payload['modified_user_id'] = JWTAuth::user()->id;
+            $payload['modified'] = Carbon::now()->toDateTimeString();
+            $values = removeNonColumnFields($payload, 'institution_staff_attendances');
+
+            InstitutionStaffAttendances::where([
+                'staff_id' => $staffId,
+                'institution_id' => $institutionId,
+                'academic_period_id' => $academicPeriodId,
+                'date' => $payload['date'],
+            ])->update($values);
+
+            return 'updated';
+        }
+
+        $payload['id'] = (string) Str::uuid();
+        $payload['created_user_id'] = JWTAuth::user()->id;
+        $payload['created'] = Carbon::now()->toDateTimeString();
+        $values = removeNonColumnFields($payload, 'institution_staff_attendances');
+        InstitutionStaffAttendances::insert($values);
+
+        return 'added';
+    }
+
+
+    /**
+     * @param mixed $value
+     * @return string|false
+     */
+    private function parseStaffAttendanceImportDate($value)
+    {
+        if ($value === null || $value === '') {
+            return false;
+        }
+
+        try {
+            // Excel numeric serial date
+            if (is_numeric($value)) {
+                return Date::excelToDateTimeObject($value)
+                    ->format('Y-m-d');
+            }
+
+            $value = trim((string)$value);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Handle Excel converted US format like 5/26/2026
+            |--------------------------------------------------------------------------
+            */
+            if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $value)) {
+                $parts = explode('/', $value);
+                /*
+                |--------------------------------------------------------------------------
+                | If middle number > 12 => definitely DD/MM/YYYY
+                |--------------------------------------------------------------------------
+                */
+                if ((int)$parts[1] > 12) {
+                    $date = DateTime::createFromFormat('m/d/Y', $value);
+                } else {
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Default assume DD/MM/YYYY
+                    |--------------------------------------------------------------------------
+                    */
+                    $date = DateTime::createFromFormat('d/m/Y', $value);
+                }
+
+                if ($date instanceof DateTime) {
+                    return $date->format('Y-m-d');
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Handle DD-MM-YYYY
+            |--------------------------------------------------------------------------
+            */
+            $date = DateTime::createFromFormat('d-m-Y', $value);
+            if ($date instanceof DateTime) {
+                return $date->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            return false;
+        }
+        return false;
+    }
+
+
+    /**
+     * @param mixed $value
+     * @return string|false
+     */
+    private function parseStaffAttendanceImportTime($value)
+    {
+        if ($value === null || $value === '') {
+            return false;
+        }
+
+        if (is_numeric($value)) {
+            try {
+                return Date::excelToDateTimeObject((float) $value)->format('H:i:s');
+            } catch (\Exception $e) {
+                return false;
+            }
+        }
+
+        $value = trim((string) $value);
+        $formats = ['h:i A', 'g:i A', 'H:i:s', 'H:i'];
+
+        foreach ($formats as $format) {
+            $time = DateTime::createFromFormat($format, strtoupper($value));
+            if ($time) {
+                return $time->format('H:i:s');
+            }
+        }
+
+        $timestamp = strtotime($value);
+        if ($timestamp !== false) {
+            return date('H:i:s', $timestamp);
+        }
+
+        return false;
+    }
+    /**
+     * Build staff attendance export data (one sheet per month in the academic period).
+     *
+     * @param array $params
+     * @return array{sheets:array<int,array<string,mixed>>}
+     */
+    public function getStaffAttendancesExport(array $params): array
+    {
+        $institutionId = (int) $params['institution_id'];
+        $academicPeriodId = (int) $params['academic_period_id'];
+
+        $academicPeriod = AcademicPeriod::where('id', $academicPeriodId)->first();
+        if (!$academicPeriod) {
+            throw new \RuntimeException('Academic period not found.');
+        }
+
+        $startDate = Carbon::parse($academicPeriod->start_date)->format('Y-m-d');
+        $endDate = Carbon::parse($academicPeriod->end_date)->format('Y-m-d');
+        $workingDays = $this->getWorkingDaysOfWeek();
+        $months = $this->generateMonthsByDates($startDate, $endDate);
+
+        $sheets = [];
+        foreach ($months as $month) {
+            $year = $month['year'];
+            $monthNumber = $month['month']['inNumber'];
+            $sheetName = $month['month']['inString'] . ' ' . $year;
+
+            $days = $this->generateDaysOfMonthForExport($year, $monthNumber, $startDate, $endDate);
+            $workingDayColumns = array_values(array_filter(
+                $days,
+                static function (array $day) use ($workingDays) {
+                    return in_array($day['weekDay'], $workingDays, true);
+                }
+            ));
+
+            if (empty($workingDayColumns)) {
+                continue;
+            }
+
+            $monthStart = $workingDayColumns[0]['date'];
+            $monthEnd = $workingDayColumns[count($workingDayColumns) - 1]['date'];
+
+            $staffMembers = $this->getInstitutionStaffForExport($institutionId, $monthStart, $monthEnd);
+            $attendanceMap = $this->getStaffAttendanceExportMap(
+                $institutionId,
+                $academicPeriodId,
+                $monthStart,
+                $monthEnd
+            );
+            $leaveMap = $this->getStaffLeaveExportMap(
+                $institutionId,
+                $monthStart,
+                $monthEnd,
+                $workingDays
+            );
+
+            $headers = array_merge(
+                ['OpenEMIS ID', 'Staff'],
+                array_column($workingDayColumns, 'label')
+            );
+
+            $rows = [];
+            foreach ($staffMembers as $staffMember) {
+                $row = [
+                    $staffMember['openemis_no'],
+                    $staffMember['name'],
+                ];
+
+                foreach ($workingDayColumns as $day) {
+                    $staffId = $staffMember['staff_id'];
+                    $date = $day['date'];
+                    $attendance = $attendanceMap[$staffId][$date] ?? null;
+                    $leave = $leaveMap[$staffId][$date] ?? null;
+                    $row[] = $this->formatStaffAttendanceExportCell($attendance, $leave);
+                }
+
+                $rows[] = $row;
+            }
+
+            $sheets[] = [
+                'name' => $sheetName,
+                'headers' => $headers,
+                'rows' => $rows,
+            ];
+        }
+
+        return ['sheets' => $sheets];
+    }
+
+
+    /**
+     * @param string $startDate
+     * @param string $endDate
+     * @return array<int,array{month:array{inNumber:string,inString:string},year:string}>
+     */
+    private function generateMonthsByDates(string $startDate, string $endDate): array
+    {
+        $result = [];
+        $stampStartDay = strtotime($startDate);
+        $stampEndDay = strtotime($endDate);
+        $stampFirstDayOfMonth = strtotime('01-' . date('m', $stampStartDay) . '-' . date('Y', $stampStartDay));
+
+        while ($stampFirstDayOfMonth <= $stampEndDay) {
+            $result[] = [
+                'month' => [
+                    'inNumber' => date('m', $stampFirstDayOfMonth),
+                    'inString' => date('F', $stampFirstDayOfMonth),
+                ],
+                'year' => date('Y', $stampFirstDayOfMonth),
+            ];
+            $stampFirstDayOfMonth = strtotime('+1 month', $stampFirstDayOfMonth);
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * @param string|int $year
+     * @param string|int $month
+     * @param string $startDate
+     * @param string $endDate
+     * @return array<int,array{weekDay:string,date:string,day:string,label:string}>
+     */
+    private function generateDaysOfMonthForExport($year, $month, string $startDate, string $endDate): array
+    {
+        $days = [];
+        $stampStartDay = strtotime($startDate);
+        $stampEndDay = strtotime($endDate);
+        $stampFirstDayOfMonth = strtotime($year . '-' . $month . '-01');
+        $stampFirstDayNextMonth = strtotime('+1 month', $stampFirstDayOfMonth);
+        $tempStamp = ($stampFirstDayOfMonth <= $stampStartDay) ? $stampStartDay : $stampFirstDayOfMonth;
+
+        while ($tempStamp <= $stampEndDay && $tempStamp < $stampFirstDayNextMonth) {
+            $weekDay = date('l', $tempStamp);
+            $date = date('Y-m-d', $tempStamp);
+            $day = date('d', $tempStamp);
+
+            $days[] = [
+                'weekDay' => $weekDay,
+                'date' => $date,
+                'day' => $day,
+                'label' => sprintf('%s (%s)', $day, $weekDay),
+            ];
+
+            $tempStamp = strtotime('+1 day', $tempStamp);
+        }
+
+        return $days;
+    }
+
+
+    /**
+     * @param int $institutionId
+     * @param string $startDate
+     * @param string $endDate
+     * @return array<int,array{staff_id:int,openemis_no:string|null,name:string}>
+     */
+    private function getInstitutionStaffForExport(int $institutionId, string $startDate, string $endDate): array
+    {
+        $staff = InstitutionStaff::query()
+            ->where('institution_staff.institution_id', $institutionId)
+            ->where('institution_staff.start_date', '<=', $endDate)
+            ->where(function ($query) use ($startDate) {
+                $query->whereNull('institution_staff.end_date')
+                    ->orWhere('institution_staff.end_date', '>=', $startDate);
+            })
+            ->join('security_users', 'security_users.id', '=', 'institution_staff.staff_id')
+            ->orderBy('security_users.first_name')
+            ->orderBy('security_users.last_name')
+            ->get([
+                'institution_staff.staff_id',
+                'security_users.openemis_no',
+                'security_users.first_name',
+                'security_users.middle_name',
+                'security_users.third_name',
+                'security_users.last_name',
+            ]);
+
+        $result = [];
+        $seenStaffIds = [];
+
+        foreach ($staff as $member) {
+            if (isset($seenStaffIds[$member->staff_id])) {
+                continue;
+            }
+            $seenStaffIds[$member->staff_id] = true;
+
+            $nameParts = array_filter([
+                $member->first_name,
+                $member->middle_name,
+                $member->third_name,
+                $member->last_name,
+            ]);
+
+            $result[] = [
+                'staff_id' => (int) $member->staff_id,
+                'openemis_no' => $member->openemis_no,
+                'name' => trim(implode(' ', $nameParts)),
+            ];
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * @return array<int,array<string,array{time_in:?string,time_out:?string}>>
+     */
+    private function getStaffAttendanceExportMap(
+        int $institutionId,
+        int $academicPeriodId,
+        string $startDate,
+        string $endDate
+    ): array {
+        $records = InstitutionStaffAttendances::query()
+            ->where('institution_id', $institutionId)
+            ->where('academic_period_id', $academicPeriodId)
+            ->where('date', '>=', $startDate)
+            ->where('date', '<=', $endDate)
+            ->get(['staff_id', 'date', 'time_in', 'time_out']);
+
+        $map = [];
+        foreach ($records as $record) {
+            $date = Carbon::parse($record->date)->format('Y-m-d');
+            $map[(int) $record->staff_id][$date] = [
+                'time_in' => $record->time_in,
+                'time_out' => $record->time_out,
+            ];
+        }
+
+        return $map;
+    }
+
+
+    /**
+     * @param array<int,string> $workingDays
+     * @return array<int,array<string,array{full_day:int|bool}>>
+     */
+    private function getStaffLeaveExportMap(
+        int $institutionId,
+        string $startDate,
+        string $endDate,
+        array $workingDays
+    ): array {
+        $leaveRecords = InstitutionStaffLeave::query()
+            ->where('institution_id', $institutionId)
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->where(function ($q) use ($startDate, $endDate) {
+                    $q->where('date_from', '<=', $endDate)
+                        ->where('date_to', '>=', $startDate);
+                });
+            })
+            ->get(['staff_id', 'date_from', 'date_to', 'full_day']);
+
+        $map = [];
+        foreach ($leaveRecords as $leave) {
+            $periodStart = Carbon::parse($leave->date_from)->startOfDay();
+            $periodEnd = Carbon::parse($leave->date_to)->startOfDay();
+
+            while ($periodStart->lte($periodEnd)) {
+                $dateStr = $periodStart->format('Y-m-d');
+                $dayText = $periodStart->format('l');
+
+                if (
+                    in_array($dayText, $workingDays, true)
+                    && $dateStr >= $startDate
+                    && $dateStr <= $endDate
+                ) {
+                    $map[(int) $leave->staff_id][$dateStr] = [
+                        'full_day' => (int) $leave->full_day,
+                    ];
+                }
+
+                $periodStart->addDay();
+            }
+        }
+
+        return $map;
+    }
+
+
+    /**
+     * @param array{time_in:?string,time_out:?string}|null $attendance
+     * @param array{full_day:int|bool}|null $leave
+     */
+    private function formatStaffAttendanceExportCell(?array $attendance, ?array $leave): string
+    {
+        if ($leave !== null) {
+            if (!empty($leave['full_day'])) {
+                return 'Absent Full Day';
+            }
+
+            if ($attendance !== null && !empty($attendance['time_in'])) {
+                return 'Absent Half Day' . "\n" . $this->formatStaffAttendanceExportTimeRange($attendance);
+            }
+
+            return 'Absent Half Day';
+        }
+
+        if ($attendance !== null && !empty($attendance['time_in'])) {
+            return $this->formatStaffAttendanceExportTimeRange($attendance);
+        }
+
+        return 'Attendance Not Marked';
+    }
+
+
+    /**
+     * @param array{time_in:?string,time_out:?string} $attendance
+     */
+    private function formatStaffAttendanceExportTimeRange(array $attendance): string
+    {
+        $timeIn = $this->formatStaffAttendanceExportTime($attendance['time_in']);
+        if (empty($attendance['time_out'])) {
+            return $timeIn;
+        }
+
+        return $timeIn . ' - ' . $this->formatStaffAttendanceExportTime($attendance['time_out']);
+    }
+
+
+    /**
+     * @param mixed $time
+     */
+    private function formatStaffAttendanceExportTime($time): string
+    {
+        if (empty($time)) {
+            return '';
+        }
+
+        return Carbon::parse($time)->format('g:i A');
+    }
+
+    //POCOR-8630 ENDS
 }
 
 

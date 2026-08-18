@@ -158,7 +158,7 @@ class ConfigExternalAlertServiceSmsTable extends ControllerActionTable
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
-        return $event->getSubject()->renderElement('Configuration.external_alert_service_sms', ['attr' => $attr]);
+        return $event->getSubject()->getView()->element('Configuration.external_alert_service_sms', ['attr' => $attr]); //POCOR-9509: use View::element() directly via getView() — HtmlFieldHelper::element() expects Entity not array
 
     }
 

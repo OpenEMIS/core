@@ -27,6 +27,38 @@ class ScholarshipsTable extends ControllerActionTable
     private $interestRateOptions = [];
     private $currency = [];
 
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['application_open_date', 'application_close_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("ScholarshipsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('scholarships');
@@ -108,16 +140,17 @@ class ScholarshipsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                    'provider' => 'table'
-                ]
+             ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
-            ->requirePresence('field_of_studies')
-            ->requirePresence('scholarship_financial_assistance_type_id')
-            ->requirePresence('bond')
-            ->requirePresence('duration')
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('field_of_studies')
+            ->notEmpty('scholarship_financial_assistance_type_id')
+            ->notEmpty('bond')
+            ->notEmpty('duration')
+            ->notEmpty('academic_period_id')
             ->add('field_of_studies', 'notEmpty', [
                 'rule' => function ($value, $context) {
                     return isset($value['_ids']) ? !empty($value['_ids']) : true;
@@ -552,11 +585,11 @@ class ScholarshipsTable extends ControllerActionTable
         }elseif ($field == 'field_of_study_selection') {
             return __('Field Of Studies Selection');
         }elseif ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         }elseif ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         }elseif ($field == 'created_user_id') {
             return __('Created By');
         } else {

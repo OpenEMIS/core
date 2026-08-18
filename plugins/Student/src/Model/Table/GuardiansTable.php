@@ -46,6 +46,11 @@ class GuardiansTable extends ControllerActionTable
                 'contain' => []
             ]
         ); // for webhook
+        $this->addBehavior('Institution.InstitutionTab', [
+            'implementedMethods' => [
+                'setUserTabElements' => 'setUserTabElements',
+            ],
+        ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -92,23 +97,32 @@ class GuardiansTable extends ControllerActionTable
 
     private function setupTabElements($entity = null)
     {
+        $tabElements = [];
+
         if ($this->controller->getName() == 'Scholarships') {
             $tabElements = $this->ScholarshipTabs->getScholarshipApplicationTabs();
-        } else {
+        } elseif ($this->controller->getName() == 'Directories') {
             if ($this->action != 'view') {
-                if ($this->controller->getName() == 'Directories') {
-                    $options['type'] = 'student';
-                    $tabElements = $this->controller->getStudentGuardianTabElements($options);
-                } else {
-                    //$tabElements = $this->controller->getUserTabElements();
-                }
-            } elseif ($this->action == 'view') {
-                if ($this->controller->getName() == 'Directories') {
-//                    $tabElements = $this->controller->getUserTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
-                } elseif ($this->controller->getName() == 'Students') {
-//                    $tabElements = $this->controller->getGuardianTabElements(['entity' => $entity, 'id' => $entity->guardian_id, 'userRole' => 'Guardians']);
-                }
+                $options['type'] = 'student';
+                $tabElements = $this->controller->getStudentGuardianTabElements($options);
+            } elseif ($this->action == 'view' && $entity) {
+                $tabElements = $this->controller->getUserTabElements([
+                    'entity' => $entity,
+                    'id' => $entity->guardian_id,
+                    'userRole' => 'Guardians',
+                ]);
             }
+        } else {
+            $id = $this->request->getQuery('id') ?? 0;
+            $userId = $this->request->getQuery('user_id') ?? 0;
+            $options = [
+                'userRole' => 'Student',
+                'action' => $this->action,
+                'id' => $id,
+                'userId' => $userId,
+            ];
+            $tabElements = $this->setUserTabElements($options);
+            $tabElements = $this->controller->TabPermission->checkTabPermission($tabElements);
         }
 
         $this->controller->set('tabElements', $tabElements);
@@ -509,8 +523,10 @@ class GuardiansTable extends ControllerActionTable
             if (isset($viewUrl['queryString'])) {
                 unset($viewUrl['queryString']);
             }
+            
             $newButtons['view'] = $buttons['view'];
             $newButtons['view']['url'] = $viewUrl;
+            $newButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View Relation');
 //            die(print_r( $newButtons['view'], true));
         }
         if (isset($buttons['edit'])) {
@@ -556,7 +572,7 @@ class GuardiansTable extends ControllerActionTable
                 unset($editUrl['queryString']);
             }
             $newButtons['viewProfile'] = $buttons['edit'];
-            $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
+            $newButtons['viewProfile']['label'] = '<i class="fa fa-pencil"></i>' . __('View Profile');
             $newButtons['viewProfile']['url'] = $editUrl;
 //            die(print_r( $newButtons['view'], true));
         }

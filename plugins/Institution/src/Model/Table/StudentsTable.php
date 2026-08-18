@@ -23,9 +23,12 @@ use Cake\Log\Log;
 use Cake\Datasource\ConnectionManager;
 
 use App\Model\Table\ControllerActionTable;
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate student status alerts through AlertLogsTable helper
 
 class StudentsTable extends ControllerActionTable
 {
+    use \Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     const PENDING_TRANSFERIN = -1;
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
@@ -46,6 +49,9 @@ class StudentsTable extends ControllerActionTable
     private $student_status_codes_array;
     private $student_status_names_array;
     private $previousStudents;
+    //POCOR-9509: refreshed every 10 min — admin change takes effect within 10 min on each worker
+    private static ?bool $studentStatusAlertEnabled = null;
+    private static int $studentStatusAlertCachedAt = 0;
 
     public function initialize(array $config): void
     {
@@ -93,7 +99,7 @@ class StudentsTable extends ControllerActionTable
                 '_function' => 'getNumberOfStudentsByYear',
                 '_defaultColors' => false,
                 'chart' => ['type' => 'column', 'borderWidth' => 1],
-                'xAxis' => ['title' => ['text' => __('Years')]],
+                'xAxis' => ['title' => null, 'labels' => ['enabled' => false]], //POCOR-9636: Hide Years title and year tick
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
             'number_of_students_by_stage' => [
@@ -144,12 +150,12 @@ class StudentsTable extends ControllerActionTable
             'Institution.InstitutionTab',
             ['appliedAction' => [
                 'Students' =>
-                ['student_status_id', 'academic_period_id',],
+                    ['student_status_id', 'academic_period_id',],
                 'StudentUser' =>
-                [
-                    'student_status_id',
-                    'academic_period_id',
-                ]
+                    [
+                        'student_status_id',
+                        'academic_period_id',
+                    ]
             ]]
         );
 
@@ -210,12 +216,12 @@ class StudentsTable extends ControllerActionTable
             'Institution.InstitutionTab',
             ['appliedAction' => [
                 'Students' =>
-                ['student_status_id', 'academic_period_id',],
+                    ['student_status_id', 'academic_period_id',],
                 'StudentUser' =>
-                [
-                    'student_status_id',
-                    'academic_period_id',
-                ]
+                    [
+                        'student_status_id',
+                        'academic_period_id',
+                    ]
             ]]
         );
 
@@ -236,6 +242,7 @@ class StudentsTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        $events['ControllerAction.Model.add.beforeSave'] = ['callable' => 'addBeforeSave', 'priority' => 500]; //POCOR-9385: student creation restriction check
         return $events;
     }
 
@@ -339,8 +346,14 @@ class StudentsTable extends ControllerActionTable
      */
     private static function getRelatedOptions($tableName, $order = '`order`', $where = [])
     {
-        if ($tableName = 'genders') {
+        if ($tableName === 'genders') {
             $tableName = 'User.Genders';
+        } elseif ($tableName === 'area_administratives') {
+            $tableName = 'Area.AreaAdministratives';
+        } elseif ($tableName === 'identity_types') {
+            $tableName = 'FieldOption.IdentityTypes';
+        } elseif ($tableName === 'nationalities') {
+            $tableName = 'FieldOption.Nationalities';
         }
         $Table = TableRegistry::getTableLocator()->get($tableName);
         try {
@@ -355,6 +368,7 @@ class StudentsTable extends ControllerActionTable
             null;
         }
         return null;
+        
     }
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
@@ -856,6 +870,28 @@ class StudentsTable extends ControllerActionTable
 
     //End:POCOR-6931
 
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $extra) //POCOR-9385: start — student creation restriction on Add
+    {
+        if (!$entity->isNew()) { //POCOR-9385: only applies to new records
+            return;
+        }
+
+        $gradeId          = !empty($entity->education_grade_id)    ? (int)$entity->education_grade_id    : null;
+        $academicPeriodId = !empty($entity->academic_period_id)    ? (int)$entity->academic_period_id    : null;
+        $institutionId    = method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: null) : null;
+        if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
+            $gradeName = '';
+            if (!empty($gradeId)) {
+                $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                $grade = $EducationGrades->find()->select(['name'])->where(['id' => $gradeId])->first();
+                $gradeName = $grade ? $grade->name : '';
+            }
+            $entity->setError('education_grade_id', [$this->studentCreationBlockMessage($gradeName)]); //POCOR-9385: set validation error
+            $event->stopPropagation();
+            return false;
+        }
+    } //POCOR-9385: end — student creation restriction on Add
+
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('previous_institution_student_id', ['type' => 'hidden']);
@@ -889,6 +925,7 @@ class StudentsTable extends ControllerActionTable
         // End POCOR-5188
 
     }
+
     /**
      * @param Entity $entity
      * POCOR-8333 -- Initialize for delete.
@@ -1756,9 +1793,10 @@ class StudentsTable extends ControllerActionTable
             $this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
             $period = $entity->academic_period;
+            [, $editableDateFormat] = $this->getSystemDateFormats();
             $dateOptions = [
-                'startDate' => $period->start_date->format('d-m-Y'),
-                'endDate' => $period->end_date->format('d-m-Y')
+                'startDate' => $period->start_date->format($editableDateFormat),
+                'endDate' => $period->end_date->format($editableDateFormat)
             ];
 
             $this->fields['start_date']['date_options'] = $dateOptions;
@@ -1848,6 +1886,12 @@ class StudentsTable extends ControllerActionTable
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
 
+        //POCOR-9509: fire StudentStatus alert when student is new or student_status_id changes
+        if ($entity->isNew() || $entity->isDirty('student_status_id')) {
+            //Log::debug('[TEMP-LOG] @StudentsTable::afterSave() student_status_id dirty or new — triggering StudentStatus alert entity_id=' . ($entity->id ?? 'null') . ' student_status_id=' . ($entity->student_status_id ?? 'null')); //[TEMP-LOG]
+            $this->sendStudentStatusAlert($entity);
+        }
+
         //if new record has no previous_institution_student_id value yet, then try to update it.
         if (!$entity->has('previous_institution_student_id')) {
             $prevInstitutionStudent = $this
@@ -1868,6 +1912,70 @@ class StudentsTable extends ControllerActionTable
                     ['id' => $entity->id]
                 );
             }
+        }
+    }
+
+    /**
+     * POCOR-9509: Sends an alert for student status changes.
+     *
+     * @param \Cake\ORM\Entity $institutionStudent The InstitutionStudent entity.
+     * @return void
+     */
+    public function sendStudentStatusAlert($institutionStudent): void
+    {
+        //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() ENTRY - entity_id=' . ($institutionStudent->id ?? 'null') . ', student_status_id=' . ($institutionStudent->student_status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() entity: ' . json_encode($institutionStudent->toArray())); //[TEMP-LOG]
+
+        //POCOR-9509: re-query at most every 10 min — admin change takes effect within 10 min
+        if (self::$studentStatusAlertEnabled === null || (time() - self::$studentStatusAlertCachedAt) > 600) {
+            $alertsTable = TableRegistry::getTableLocator()->get('Alert.Alerts');
+            $alert = $alertsTable->find()
+                ->select(['name'])
+                ->where(['process_name' => 'AlertStudentStatus'])
+                ->first();
+            if (!$alert) {
+                self::$studentStatusAlertEnabled = false;
+            } else {
+                self::$studentStatusAlertEnabled = (bool) TableRegistry::getTableLocator()
+                    ->get('Alert.AlertRules')
+                    ->find()
+                    ->where(['feature' => $alert->name, 'enabled' => 1])
+                    ->count();
+            }
+            self::$studentStatusAlertCachedAt = time();
+        }
+        if (!self::$studentStatusAlertEnabled) {
+            return;
+        }
+
+        if (empty($institutionStudent->student_id)
+            && empty($institutionStudent->institution_id)
+            && empty($institutionStudent->id)
+            && empty($institutionStudent->created_user_id)) {
+            //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, missing required fields'); //[TEMP-LOG]
+            return;
+        }
+
+        try {
+            // Determine the user ID for the alert
+            $userId = null;
+            if (is_numeric($institutionStudent->modified_user_id)) {
+                $userId = $institutionStudent->modified_user_id;
+            } elseif (is_numeric($institutionStudent->created_user_id)) {
+                $userId = $institutionStudent->created_user_id;
+            }
+
+            //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() userId=' . $userId); //[TEMP-LOG]
+
+            if ($userId) {
+                //POCOR-9509: delegate student status alert triggering to AlertLogsTable helper
+                AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentStatus', $institutionStudent, $userId);
+                //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - triggerLaravelAlertFromCakePHP called'); //[TEMP-LOG]
+            } else {
+                //Log::debug('[TEMP-LOG] @StudentsTable::sendStudentStatusAlert() EXIT - skipping, no userId found'); //[TEMP-LOG]
+            }
+        } catch (\Throwable $e) {
+            Log::error('[POCOR-9509] sendStudentStatusAlert exception: ' . $e->getMessage() . ' entity_id=' . ($institutionStudent->id ?? 'null'));
         }
     }
 
@@ -2070,6 +2178,16 @@ class StudentsTable extends ControllerActionTable
     }
 
     // End PHPOE-1897
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
 
     private function setupTabElements($entity)
     {
@@ -2341,6 +2459,7 @@ class StudentsTable extends ControllerActionTable
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();
+        $params['options']['title'] = ['text' => __('Number of Students')]; //POCOR-9636: Rename chart label
 
         return $params;
     }
@@ -3424,11 +3543,11 @@ class StudentsTable extends ControllerActionTable
             ])
             ->leftJoin([$contact_types->getAlias() => $contact_types->getTable()], [
                 $contact_types->aliasField('id = ')
-                    . $student_contacts->aliasField('contact_type_id'),
+                . $student_contacts->aliasField('contact_type_id'),
             ])
             ->leftJoin([$contact_options->getAlias() => $contact_options->getTable()], [
                 $contact_options->aliasField('id = ')
-                    . $contact_types->aliasField('contact_option_id'),
+                . $contact_types->aliasField('contact_option_id'),
             ])
             ->orderDesc($student_contacts->aliasField('preferred'));
         $contact_type = $contact_types->aliasField('name');
@@ -3441,6 +3560,7 @@ class StudentsTable extends ControllerActionTable
     }
 
     // POCOR-8131 -- START
+
     /**
      * Get custom field options grouped by field ID
      *
@@ -3478,6 +3598,7 @@ class StudentsTable extends ControllerActionTable
             return [];
         }
     }
+
     // POCOR-8131 -- END
 
     private function addStudentCustomFields(Query $query)
@@ -3646,7 +3767,7 @@ class StudentsTable extends ControllerActionTable
         } catch (\Exception $e) {
             Log::error( // POCOR-8683
                 print_r(['Failed to fetch remove from table' =>
-                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
+                    ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]], true)
             );
         }
         return $affected;
@@ -3741,7 +3862,7 @@ class StudentsTable extends ControllerActionTable
                 [$this->getAlias() => $this->getTable()],
                 [
                     $InstitutionStudents->aliasField('id = ')
-                        . $this->aliasField('previous_institution_student_id')
+                    . $this->aliasField('previous_institution_student_id')
                 ]
             )
             ->where([
@@ -3798,12 +3919,43 @@ class StudentsTable extends ControllerActionTable
      */
 
     //POCOR-8643 -- To resolve Enrolled(Repeater) issue
-    public function getOldRecords($previous_institution_student_id)
+    public function getOldRecordsOld($previous_institution_student_id)
     {
         $connection = ConnectionManager::get('default');
         $sql = "SELECT is3.id, is3.student_id, is3.student_status_id, is3.start_date, is3.end_date FROM institution_students is1 JOIN institution_students is2 ON is1.student_id = is2.student_id AND is1.start_date > is2.start_date JOIN institution_students is3 ON is2.student_id = is3.student_id AND is2.start_date > is3.start_date WHERE is1.student_status_id = 1 AND is2.student_status_id = 3 AND is3.student_status_id = 8 AND is3.start_date < is2.start_date AND is2.start_date < is1.start_date AND is1.previous_institution_student_id IS NOT NULL;";
 
         $result = $connection->execute($sql)->fetchAll('assoc');
+        return $result;
+    }
+
+    //POCOR-9687 -- Updated the query to fetch the old records based on previous_institution_student_id
+    public function getOldRecords($previous_institution_student_id)
+    {
+        $connection = ConnectionManager::get('default');
+
+        $sql = "
+            SELECT
+                current_student.id,
+                current_student.student_id,
+                current_student.education_grade_id,
+                current_student.student_status_id,
+
+                previous_student.id AS previous_student_record_id,
+                previous_student.student_status_id AS previous_status_id,
+                previous_student.education_grade_id AS previous_education_grade_id
+
+            FROM institution_students current_student
+
+            INNER JOIN institution_students previous_student
+                ON current_student.previous_institution_student_id = previous_student.id
+
+            WHERE current_student.previous_institution_student_id = :previousInstitutionStudentId
+        ";
+
+        $result = $connection->execute($sql, [
+            'previousInstitutionStudentId' => $previous_institution_student_id
+        ])->fetchAll('assoc');
+
         return $result;
     }
 
@@ -3826,12 +3978,39 @@ class StudentsTable extends ControllerActionTable
                     $studentId = $studentID->student_id;
                     if (isset($studentId)) {
                         $found = false;
+                        //POCOR-9687 --Start
+                        $allowedStatuses = $this->StudentStatuses->find()
+                            ->select(['id'])
+                            ->where([
+                                'code IN' => [
+                                    'WITHDRAWN',
+                                    'GRADUATED',
+                                    'PROMOTED',
+                                    'REPEATED'
+                                ]
+                            ])
+                            ->enableHydration(false)
+                            ->extract('id')
+                            ->toArray();
                         foreach ($oldStatus as $status) {
-                            if ($status['student_id'] == $studentId) {
+
+                            $sameGrade =
+                                $status['education_grade_id']
+                                == $status['previous_education_grade_id'];
+
+                            $validPreviousStatus =
+                                in_array($status['previous_status_id'], $allowedStatuses);
+
+                            if (
+                                $status['student_id'] == $studentId
+                                && $sameGrade
+                                && $validPreviousStatus
+                            ) {
                                 $found = true;
                                 break;
                             }
                         }
+                        //POCOR-9687 -- end
                         if ($found) {
                             $value = __("Enrolled (Repeater)");
                         }

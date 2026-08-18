@@ -148,21 +148,23 @@ class BodyMassesController extends PageController
             'Insurances' => ['text' => __('Insurances')]
         ];
 
+        //POCOR-9718: append $encodedUserId as pass[] so every Health tab carries context.
         foreach ($tabElements as $action => &$obj) {
             if ($action == 'Insurances' || $action == 'BodyMasses') {
-                $url = [
+                $obj['url'] = [
                     'plugin' => $plugin,
                     'controller' => $plugin.$action,
-                    'action' => 'index'
+                    'action' => 'index',
+                    $encodedUserId,
                 ];
-                $obj['url'] = $url;
             } else {
-                $url = [
+                $obj['url'] = [
                     'plugin' => $plugin,
                     'controller' => $pluralPlugin,
-                    'action' => $action, 'index'
+                    'action' => $action,
+                    'index',
+                    $encodedUserId,
                 ];
-                $obj['url'] = $url;
             }
         }
 
@@ -205,23 +207,25 @@ class BodyMassesController extends PageController
             'Insurances' => ['text' => __('Insurances')]
         ];
 
+        //POCOR-9718: append $encodedUserId as pass[] so every Health tab carries context.
         foreach ($tabElements as $action => &$obj) {
             if ($action == 'Insurances' || $action == 'BodyMasses') {
-                $url = [
+                $obj['url'] = [
                     'plugin' => 'Institution',
                     'institutionId' => $encodedInstitutionId,
                     'controller' => $userRole.$action,
-                    'action' => 'index'
+                    'action' => 'index',
+                    $encodedUserId,
                 ];
-                $obj['url'] = $url;
             } else {
-                $url = [
+                $obj['url'] = [
                     'plugin' => $userRole,
                     'institutionId' => $encodedInstitutionId,
                     'controller' => $pluralUserRole,
-                    'action' => $action, 'index'
+                    'action' => $action,
+                    'index',
+                    $encodedUserId,
                 ];
-                $obj['url'] = $url;
             }
         }
 

@@ -5,9 +5,11 @@ namespace App\Models\Api5;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class StaffEmploymentStatuses extends Model
 {
     use HasFactory;
+
 
     protected $table = 'staff_employment_statuses';
 

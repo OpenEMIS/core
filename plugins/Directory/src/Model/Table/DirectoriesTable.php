@@ -13,9 +13,12 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
 
 class DirectoriesTable extends ControllerActionTable
 {
+    use StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     // public $InstitutionStudent;
 
     // these constants are being used in AdvancedPositionSearchBehavior as well
@@ -307,7 +310,12 @@ class DirectoriesTable extends ControllerActionTable
         $identityCondition = [];
         if ($identityTypeId && $identityNumber && $nationalityId) {
             $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
-            $identityCondition[$userIdentities->aliasField('nationality_id')] = $nationalityId;
+            //POCOR-9766: start - tolerate identities stored without nationality (legacy/hand-edited rows) so the existing user is still found
+            $identityCondition['OR'] = [
+                $userIdentities->aliasField('nationality_id') => $nationalityId,
+                $userIdentities->aliasField('nationality_id IS') => null
+            ];
+            //POCOR-9766: end
             $identityCondition[$userIdentities->aliasField('number')] = $identityNumber;
         } elseif ($identityTypeId && $identityNumber) {
             $identityCondition[$userIdentities->aliasField('identity_type_id')] = $identityTypeId;
@@ -459,7 +467,22 @@ class DirectoriesTable extends ControllerActionTable
         $account_type = !empty($accountTypes) ? implode(', ', $accountTypes) : 'Others';
         $contactData = self::getContactData($securityUser['id']);
         // POCOR-8231 for photo
+        //POCOR-9726 Start
+        $nationalityId = !empty($securityUser['MainNationalities_id'])
+            ? intval($securityUser['MainNationalities_id'])
+            : (!empty($securityUser['nationality_id']) ? intval($securityUser['nationality_id']) : null);
+        $nationalityName = $securityUser['MainNationalities_name'] ?? null;
 
+        if (empty($nationalityName) && $nationalityId) {
+            $nationality = $nationalitiesTable
+                ->find()
+                ->select(['name' => $nationalitiesTable->aliasField('name')])
+                ->where([$nationalitiesTable->aliasField('id') => $nationalityId])
+                ->disableHydration()
+                ->first();
+            $nationalityName = $nationality['name'] ?? null;
+        }
+        //POCOR-9726 End
         $userInternalSearchResult = [
             'id' => $securityUser['id'],
             'username' => $securityUser['username'],
@@ -473,8 +496,8 @@ class DirectoriesTable extends ControllerActionTable
             'gender_id' => $securityUser['gender_id'],
             'gender' => $securityUser['Genders_name'] ? __($securityUser['Genders_name']) : null,
             'gender_name' => $securityUser['Genders_name'] ? __($securityUser['Genders_name']) : null,
-            'nationality' => $securityUser['MainNationalities_name'] ? __($securityUser['MainNationalities_name']) : null,
-            'nationality_id' => $securityUser['MainNationalities_id'] ? intval($securityUser['MainNationalities_id']) : null,
+            'nationality' => $nationalityName ? __($nationalityName) : null, //POCOR-9726 updated
+            'nationality_id' => $nationalityId,//POCOR-9726 updated
             'identity_type' => $securityUser['MainIdentityTypes_name'] ? __($securityUser['MainIdentityTypes_name']) : null,
             'identity_type_id' => $securityUser['MainIdentityTypes_id'] ? intval($securityUser['MainIdentityTypes_id']) : null,
             'identity_number' => $securityUser['MainIdentityTypes_number'] ? __($securityUser['MainIdentityTypes_number']) : null,
@@ -1401,7 +1424,20 @@ class DirectoriesTable extends ControllerActionTable
                 'provider' => 'table',
                 'last' => true
             ])
-            ->notEmpty('nationality');
+            ->notEmpty('nationality')
+        ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+        ->allowEmptyString('mobile_number')
+        ->add('mobile_number', 'numeric', [
+            'rule' => 'numeric',
+            'message' => 'Only numbers are allowed'
+        ]); //POCOR-9680
         $BaseUsers = TableRegistry::getTableLocator()->get('User.Users');
         return $BaseUsers->setUserValidation($validator, $this);
     }
@@ -2549,12 +2585,63 @@ public function getIdentityTypeData($value_selection)
                 return $this->controller->redirect($urlParams);
             }
         }
+        //POCOR-9735 start
+        $session = $this->request->getSession();
+        $referer = $this->request->referer();
+        if (!empty($referer) &&strpos($referer, '/Student/') !== false) {
+            $extra['toolbarButtons']['back']['url'] =   $referer;
+        } //POCOR-9735 end
 
         $this->setupTabElements($entity);
+        $this->addSyncButton($entity, $extra); //POCOR-9590
     }
+
+    //POCOR-9590: Sync button on the directory General view toolbar
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        //POCOR-9590: delegate to controller when it supports the method (DirectoriesController); fall back for any other controller
+        $permission = method_exists($this->controller, 'syncUserPermission')
+            ? $this->controller->syncUserPermission()
+            : ['Directories', 'Directories', 'add'];
+        if (!$this->AccessControl->check($permission)) {
+            return;
+        }
+        if (!$this->isSyncEligibleUser($entity->id)) {
+            return;
+        }
+        $toolbarButtons = $extra['toolbarButtons'] ?? null;
+        if (!$toolbarButtons || !isset($toolbarButtons['back'])) {
+            return;
+        }
+        $encodedParams = $this->paramsEncode(['user_id' => $entity->id]);
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Directory',
+            'controller' => 'Directories',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
+    }
+
+    //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-9385: start — student creation restriction on Directory Add
+        if ($entity->isNew() && !empty($entity->is_student)) {
+            if (!$this->isStudentCreationAllowed(null)) {
+                $entity->setError('is_student', [$this->studentCreationBlockMessageNoGrade()]); //POCOR-9385: block directory student creation
+                $event->stopPropagation();
+                return false;
+            }
+        }
+        //POCOR-9385: end — student creation restriction on Directory Add
+
         //POCOR-8059::start
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';

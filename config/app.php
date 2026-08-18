@@ -54,6 +54,14 @@ return [
             'templates' => [APP . 'Template' . DS],
             'locales' => [APP . 'Locale' . DS],
         ],
+        //POCOR-9565[START]
+        /** Static fallback only. The real value is loaded from config_items.time_zone
+         *  at bootstrap (see config/bootstrap.php) so CakePHP, Laravel, MySQL, and
+         *  the UI display all agree on one timezone. Env removed in POCOR-9719. */
+        'defaultTimezone' => 'UTC', //POCOR-9719
+        /** If config_items Time Zone cannot be read, used for display conversion only. */
+        'displayTimezoneFallback' => env('APP_DISPLAY_TIMEZONE_FALLBACK', 'UTC'),
+        //POCOR-9565[END]
     ],
 
     /**
@@ -65,6 +73,14 @@ return [
      */
     'Security' => [
         'salt' => env('SECURITY_SALT', '3b07b2f17a71b29db58115fbea9e2a03385eb4d224c07b5fba3b0f67cddc082f'),
+    ],
+
+     /**
+     * Max upload size for User.Attachments.
+     * Accepts the same size string format as ControllerAction.FileUpload (e.g. '10MB').
+     */
+    'Attachment' => [
+        'fileSize' => env('ATTACHMENT_MAX_FILE_SIZE', '2MB'),
     ],
 
     /**
@@ -135,7 +151,19 @@ return [
             'duration' => '+1 month',
             'groups' => ['labels'],
             'url' => env('CACHE_DEFAULT_URL', null)
-        ]
+        ],
+
+        //POCOR-9565[START]
+        /** Long-lived cache for app config (e.g. display timezone from config_items). */
+        'app_config' => [
+            'className' => 'File',
+            'path' => CACHE . 'persistent/',
+            'prefix' => 'appconfig_',
+            'serialize' => true,
+            'duration' => '+1 year',
+            'url' => env('CACHE_DEFAULT_URL', null),
+        ],
+        //POCOR-9565[END]
     ],
 
     /**

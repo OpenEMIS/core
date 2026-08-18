@@ -17,10 +17,43 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Utility\Text;
 use Cake\ORM\Table;
 use ArrayObject;
+use Cake\Log\Log;
 
 class StaffPositionProfilesTable extends ControllerActionTable
 {
     use OptionsTrait;
+
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['effective_date', 'start_date', 'end_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("StaffPositionProfilesTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
     // Workflow Steps - category
     const TO_DO = 1;
     const IN_PROGRESS = 2;
@@ -417,7 +450,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
         } else {
 
             if ($requestedStaffChangeCode == 'CHANGE_OF_SHIFT') {
-                $entity->status_id = $approved_status;
+                //$entity->status_id = $approved_status;
+                $entity->status_id = $entity->status_id; // POCOR-9722
                 $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
                 $InstitutionPositions = TableRegistry::getTableLocator()->get('Institution.InstitutionPositions');
                 $periodId = $AcademicPeriods->getCurrent();
@@ -426,6 +460,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $InstitutionPositions->updateAll(
                         [
                             'shift_id' => $entity->new_shift,
+                            'assignee_id' => $entity->assignee_id, // POCOR-9722
                             'modified_user_id' => 1,
                             'modified' => new Time('NOW')
                         ],
@@ -436,6 +471,16 @@ class StaffPositionProfilesTable extends ControllerActionTable
         }
 
         return $entity;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     private function getDefaultEndDate($entity)
@@ -1160,7 +1205,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                     $entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
                     $startDateClone = clone ($entity->start_date);
                     $startDate = $startDateClone->modify('+1 day');
-                    $attr['date_options']['startDate'] = $startDate->format('d-m-Y');
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
+                    $attr['date_options']['startDate'] = $startDate->format($editableDateFormat);
                 }
                 $attr['value'] = (new Date())->modify('+1 day');
             } else {
@@ -1268,7 +1314,8 @@ class StaffPositionProfilesTable extends ControllerActionTable
                         $earliestEndDate = $entity->start_date;
                     }
 
-                    $attr['date_options']['startDate'] = $earliestEndDate->format('d-m-Y');
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
+                    $attr['date_options']['startDate'] = $earliestEndDate->format($editableDateFormat);
                     if(isset($entity->end_date)){
                         $attr['value'] = $entity->end_date;
                     }
@@ -1647,7 +1694,7 @@ class StaffPositionProfilesTable extends ControllerActionTable
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
     {
         $staff_change_type_code = $this->getStaffChangeCodeFromRequest();
-        if(($staff_change_type_code == 'CHANGE_OF_SHIFT') || ($staff_change_type_code == 'HOMEROOM_TEACHER')){
+        if(($staff_change_type_code == 'HOMEROOM_TEACHER')){
             $entity->assignee_id = -1;
             return $entity->assignee_id;
         }

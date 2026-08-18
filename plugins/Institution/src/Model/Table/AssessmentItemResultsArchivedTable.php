@@ -70,14 +70,23 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
 
     }
 
+    //POCOR-9620
     public function findStudentResultsArchived(Query $query, array $options)
     {
-        $institutionId = $options['institution_id'];
-        $classId = $options['class_id'];
-        $assessmentId = $options['assessment_id'];
-        $periodId = $options['academic_period_id'];
-        $subjectId = $options['subject_id'];
-        $gradeId = $options['grade_id'];
+        // $institutionId = $options['institution_id'];
+        // $classId = $options['class_id'];
+        // $assessmentId = $options['assessment_id'];
+        // $periodId = $options['academic_period_id'];
+        // $subjectId = $options['subject_id'];
+        // $gradeId = $options['grade_id'];
+
+        $institutionId = (int)$options['institution_id'];
+        $classId = (int)$options['institution_class_id'];
+        $assessmentId = (int)$options['assessment_id'];
+        $periodId = (int)$options['academic_period_id'];
+        $subjectId = (int)$options['institution_subject_id'];
+        $gradeId = (int)$options['education_grade_id'];
+
         $InstitutionSubjectStudents = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStudents');
         $InstitutionSubjects = TableRegistry::getTableLocator()->get('Institution.InstitutionSubjects');
         $educationSubjectId = $InstitutionSubjects->get($subjectId)->education_subject_id;
@@ -144,14 +153,15 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
             ->formatResults(function ($results) {
                 $arrResults = is_array($results) ? $results : $results->toArray();
                 foreach ($arrResults as &$result) {
-                    $result['student_status']['name'] = __($result['student_status']['name']);
+                    // $result['student_status']['name'] = __($result['student_status']['name']);
+                    $result['student_status']['name'] = __($result['StudentStatuses']['name']);
                 }
                 return $arrResults;
             })
             ->formatResults(function ($results1) {
                 $arrResults1 = is_array($results1) ? $results1 : $results1->toArray();
-                foreach ($arrResults1 as &$result) {
-                    $assessmentItemResults = TableRegistry::getTableLocator()->get('assessment_item_results_archived');
+                foreach ($arrResults1 as $result) {
+                    $assessmentItemResults = TableRegistry::getTableLocator()->get('Institution.AssessmentItemResultsArchived');
                     $assessmentItemResultsData = $this->find()
                         ->select([
                             $this->aliasField('marks')
@@ -162,10 +172,14 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                         ])
                         ->where([
                             $this->aliasField('student_id') => $result['student_id'],
-                            $this->aliasField('academic_period_id') => $result['AssessmentItemResults']['academic_period_id'],
-                            $this->aliasField('education_grade_id') => $result['AssessmentItemResults']['education_grade_id'],
-                            $this->aliasField('assessment_period_id') => $result['AssessmentItemResults']['assessment_period_id'],
-                            $this->aliasField('education_subject_id') => $result['AssessmentItemResults']['education_subject_id'],
+                            // $this->aliasField('academic_period_id') => $result['AssessmentItemResults']['academic_period_id'],
+                            // $this->aliasField('education_grade_id') => $result['AssessmentItemResults']['education_grade_id'],
+                            // $this->aliasField('assessment_period_id') => $result['AssessmentItemResults']['assessment_period_id'],
+                            // $this->aliasField('education_subject_id') => $result['AssessmentItemResults']['education_subject_id'],
+                            $this->aliasField('academic_period_id') => $result['academic_period_id'],
+                            $this->aliasField('education_grade_id') => $result['education_grade_id'],
+                            $this->aliasField('assessment_period_id') => $result['assessment_period_id'],
+                            $this->aliasField('education_subject_id') => $result['education_subject_id'],
                         ])
                         ->first();
                     $result['AssessmentItemResults']['marks'] = $assessmentItemResultsData->marks;
@@ -173,6 +187,7 @@ class AssessmentItemResultsArchivedTable extends ControllerActionTable
                 return $arrResults1;
             }); //POCOR-6573 ends;
     }
+    //POCOR-9620
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {

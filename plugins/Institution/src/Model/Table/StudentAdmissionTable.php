@@ -2,6 +2,7 @@
 
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate admission alerts through AlertLogsTable helper
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -671,13 +672,13 @@ class StudentAdmissionTable extends ControllerActionTable
                         try {
                             $this->autoAssignAssignee($entity);
                             $this->save($entity);
-                            $saved = true;
-                        } catch (\Exception $exception) {
-                            try {
+                                                        $saved = true;
+                                                    } catch (\Exception $exception) {
+                                                        try {
                                 $this->save($entity);
-                                $saved = true;
-                            } catch (\Exception $exception) {
-                                $entity->assignee_id = $entity->created_user_id;
+                                                            $saved = true;
+                                                        } catch (\Exception $exception) {
+                                                            $entity->assignee_id = $entity->created_user_id;
                                 $this->save($entity);
                                 $saved = true;
                             }
@@ -1363,6 +1364,16 @@ class StudentAdmissionTable extends ControllerActionTable
 
     //POCOR-6925
 
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
     public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
@@ -1372,10 +1383,11 @@ class StudentAdmissionTable extends ControllerActionTable
             $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
             $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
 
+            [, $editableDateFormat] = $this->getSystemDateFormats();
             $attr['type'] = 'date';
             $attr['date_options'] = [
-                'startDate' => $periodStartDate->format('d-m-Y'),
-                'endDate' => $periodEndDate->format('d-m-Y'),
+                'startDate' => $periodStartDate->format($editableDateFormat),
+                'endDate' => $periodEndDate->format($editableDateFormat),
                 'todayBtn' => false
             ];
             return $attr;
@@ -1475,6 +1487,35 @@ class StudentAdmissionTable extends ControllerActionTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+        foreach (['start_date', 'end_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                \Cake\Log\Log::warning("StudentAdmissionTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+
         //this is meant to force gender_id validation
         $data = $this->checkGender($data);
 
@@ -1544,6 +1585,7 @@ class StudentAdmissionTable extends ControllerActionTable
     // POCOR-9313 start: made a little safer
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options): void
     {
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::afterSave() About to call sendStudentAdmissionAlert()'); //[TEMP-LOG]
         if ($entity->isNew() || $entity->isDirty('status_id')) { // POCOR-9323
             $this->sendStudentAdmissionAlert($entity);
         }
@@ -1626,43 +1668,16 @@ class StudentAdmissionTable extends ControllerActionTable
 
     private function sendStudentAdmissionAlert($entity)
     {
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', status_id=' . ($entity->status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentAdmissionTable::sendStudentAdmissionAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
         if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
             $userId = $entity->modified_user_id;
         } else {
             $userId = $entity->created_user_id;
         }
 
-        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
-        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
-        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
-
-
-        $alert = $alertsTable
-            ->find()
-            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentAdmission',
-                $alertsTable->aliasField('frequency') => 'Once'])
-            ->first();
-        if (!$alert) {
-            Log::error('No Alerts for AlertStudentAdmission'); // POCOR-9323
-            return;
-        }
-        if (!is_array($alert)) {
-            $alert = $alert->toArray();
-        }
-        $activeRules = $alertRulesTable->find()
-            ->where([
-                $alertRulesTable->aliasField('feature') => $alert['name'],
-                $alertRulesTable->aliasField('enabled') => 1
-            ])
-            ->toArray();
-
-//        return;
-        foreach ($activeRules as $rule) {
-            if (!is_array($rule)) {
-                $rule = $rule->toArray();
-            }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['admission_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
-        }
+        //POCOR-9509: delegate admission alert triggering to AlertLogsTable helper
+        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentAdmission', $entity, $userId);
     }
 
     public function findWorkbench(Query $query, array $options)

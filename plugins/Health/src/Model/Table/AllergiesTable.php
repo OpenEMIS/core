@@ -14,6 +14,7 @@ use Cake\Validation\Validator;
 class AllergiesTable extends ControllerActionTable
 {
     use OptionsTrait;
+    use HealthLookupTrait; //POCOR-9718
 
     public function initialize(array $config): void
     {
@@ -45,6 +46,7 @@ class AllergiesTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
+        $this->field('description', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
 
         // Start POCOR-5188
@@ -157,11 +159,19 @@ class AllergiesTable extends ControllerActionTable
         return $attr;
     }
 
+    //POCOR-9718: populate health_allergy_type_id select from Health.AllergyTypes.
+    public function onUpdateFieldHealthAllergyTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.AllergyTypes');
+    }
+
     private function setupFields(Entity $entity)
     {
-        $this->field('severe', ['after' => 'description']);
-        $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
-        $this->field('file_content', ['after' => 'health_allergy_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('health_allergy_type_id', ['type' => 'select', 'before' => 'description']); //POCOR-9507
+        $this->field('severe', ['after' => 'health_allergy_type_id']); //POCOR-9507
+        $this->field('description', ['after' => 'severe']); //POCOR-9507
+        $this->field('comment', ['after' => 'description']); //POCOR-9507
+        $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
@@ -169,7 +179,9 @@ class AllergiesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+            ->allowEmpty('file_content')
+            ->notEmpty('health_allergy_type_id');
         return $validator;
     }
 
@@ -236,12 +248,34 @@ class AllergiesTable extends ControllerActionTable
         }
     }
 
-    //POCOR-8293s
+    //POCOR-8293
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
     }
+
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Allergies.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
+    }
+
 
 
 

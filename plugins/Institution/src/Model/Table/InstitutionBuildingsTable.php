@@ -244,11 +244,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } else if($field == 'building_status_id'){
             return __('Building Status');
         } else if($field == 'modified'){
-            return __('Modified');
+            return __('Modified On');
         } else if($field == 'modified_user_id'){
             return __('Modified By');
         } else if($field == 'created'){
-            return __('Created');
+            return __('Created On');
         } else if($field == 'created_user_id'){
             return __('Created By');
         } else if($field == 'end_date'){
@@ -627,10 +627,21 @@ class InstitutionBuildingsTable extends ControllerActionTable
     {
         $today = new DateTime();
         // POCOR-8037 removed academic period code
-        $startDate = $today->format('d-m-Y');
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+        $startDate = $today->format($editableDateFormat);
         $attr['date_options']['startDate'] = $startDate;
 
         return $attr;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -654,7 +665,8 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 $attr['attr']['value'] = $this->formatDate($today);
             } else {
                 if (!empty($start_date)) {
-                    $attr['date_options']['startDate'] = $start_date->format('d-m-Y');
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
+                    $attr['date_options']['startDate'] = $start_date->format($editableDateFormat);
                 }
             }
         }

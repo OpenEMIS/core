@@ -33,11 +33,23 @@ class StaffExtracurricularsTable extends AppTable  {
         $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.InstitutionStaff');
         $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 		$conditions = [];
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         if (!empty($academicPeriodId)) {
             $conditions[$this->aliasField('academic_period_id')] = $academicPeriodId;     
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions[$Institutions->aliasField('id')] = $institutionId;     
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$Institutions->aliasField('id') . ' IN'] = $filterInstitutionIds;
         }
         if (!empty($areaId) && $areaId != -1) {
             $conditions[$Institutions->aliasField('area_id')] = $areaId;
