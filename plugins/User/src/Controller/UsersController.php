@@ -21,6 +21,7 @@ use Cake\Event\EventDispatcherTrait;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\Http\Exception\ForbiddenException;
+use Security\Model\Table\UsersTable as SecurityUsersTable; //POCOR-9591: status constants
 use Cake\I18n\FrozenTime;
 use Firebase\JWT\Key;
 
@@ -666,10 +667,16 @@ class UsersController extends AppController
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
 
-            if ($userEntity->status == 0) {
+            //POCOR-9591: start - differentiate inactive (admin-disabled) from locked (system-locked)
+            if ($userEntity->status == SecurityUsersTable::STATUS_INACTIVE) {
+                $this->Alert->error('security.login.inactive', ['reset' => true]);
+                return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+            }
+            if ($userEntity->status == SecurityUsersTable::STATUS_LOCKED) {
                 $this->Alert->error('security.login.locked_account', ['reset' => true]);
                 return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
             }
+            //POCOR-9591: end
 
             // Attempt to identify user
             $user = $this->Auth->identify();
@@ -687,7 +694,7 @@ class UsersController extends AppController
             if (!$loginStatus) {
                 if ($noOfPendingAttempts <= 0) {
                     // Lock account after failed attempts
-                    $SecurityUser->updateAll(['status' => 0], ['username' => $username]);
+                    $SecurityUser->updateAll(['status' => SecurityUsersTable::STATUS_LOCKED], ['username' => $username]); //POCOR-9591: set Locked (2), not Inactive (0)
                     $this->Alert->error('security.login.locked_account', ['reset' => true]);
                 } else {
                     $message = __("You have {$noOfPendingAttempts} more login attempts before your account will be locked.");
@@ -925,14 +932,16 @@ class UsersController extends AppController
                 $this->Alert->error($retryMessage, ['type' => 'string', 'reset' => true]);
             } else {
                 //POCOR-2976 start
-                if ($userData->status == 0) {
-                    if (empty($userData)) {
-                        $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
-                    } else {
-                        $this->Alert->error('security.login.locked_account', ['reset' => true]);
-                    }
+                //POCOR-9591: start - check inactive and locked status separately
+                if ($userData->status == SecurityUsersTable::STATUS_INACTIVE) {
+                    $this->Alert->error('security.login.inactive', ['reset' => true]);
                     return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
                 }
+                if ($userData->status == SecurityUsersTable::STATUS_LOCKED) {
+                    $this->Alert->error('security.login.locked_account', ['reset' => true]);
+                    return $this->redirect(['plugin' => 'User', 'controller' => 'Users', 'action' => 'login']);
+                }
+                //POCOR-9591: end
                 // $this->Alert->error('security.login.fail', ['reset' => true]);
                 $session = $this->request->getSession();
                 $noOfPendingAttempts = $session->read('login.attempts');
@@ -940,7 +949,7 @@ class UsersController extends AppController
                 $noOfPendingAttempts--;
                 $session->write('login.attempts', $noOfPendingAttempts);
                 if ($noOfPendingAttempts <= 0) {
-                    $SecurityUser->updateAll(['status' => 0],
+                    $SecurityUser->updateAll(['status' => SecurityUsersTable::STATUS_LOCKED], //POCOR-9591: Locked (2), not Inactive (0)
                         ['username' => $this->request->getData('username')]);
                     if (empty($userData)) {
                         $this->Alert->error('Account does not exist', ['type' => 'string', 'reset' => true]);
