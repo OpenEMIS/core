@@ -9,6 +9,7 @@ use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 use StaffAppraisal\Model\Table\AppraisalNumbersTable as AppraisalNumbers;
+use StaffAppraisal\Model\Table\AppraisalSlidersTable as AppraisalSliders;
 
 class AppraisalCriteriasTable extends ControllerActionTable
 {
@@ -18,6 +19,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
         $this->belongsTo('FieldTypes', ['className' => 'FieldOption.FieldTypes', 'foreignKey' => 'field_type_id']);
         $this->hasOne('AppraisalSliders', ['className' => 'StaffAppraisal.AppraisalSliders', 'foreignKey' => 'appraisal_criteria_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasOne('AppraisalNumbers', ['className' => 'StaffAppraisal.AppraisalNumbers', 'foreignKey' => 'appraisal_criteria_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AppraisalSliderOptions', [
+            'className' => 'StaffAppraisal.AppraisalSliderOptions',
+            'foreignKey' => 'appraisal_criteria_id',
+            'saveStrategy' => 'replace',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
         $this->hasMany('AppraisalDropdownOptions', [
             'className' => 'StaffAppraisal.AppraisalDropdownOptions',
             'foreignKey' => 'appraisal_criteria_id',
@@ -58,7 +66,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['FieldTypes', 'AppraisalSliders', 'AppraisalNumbers', 'AppraisalDropdownOptions.AppraisalDropdownAnswers']);
+        $query->contain(['FieldTypes', 'AppraisalSliders', 'AppraisalNumbers', 'AppraisalDropdownOptions.AppraisalDropdownAnswers', 'AppraisalSliderOptions']);
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -69,9 +77,18 @@ class AppraisalCriteriasTable extends ControllerActionTable
                 // No implementation
                 break;
             case 'SLIDER':
-                $this->field('min', ['after' => 'field_type_id']);
-                $this->field('max', ['after' => 'min']);
-                $this->field('step', ['after' => 'max']);
+                $this->field('slider_type', ['after' => 'field_type_id']);
+                if ($entity->appraisal_slider->slider_type == AppraisalSliders::TEXT) {
+                    $this->field('slider_options', [
+                        'type' => 'element',
+                        'element' => 'StaffAppraisal.slider_options',
+                        'after' => 'slider_type'
+                    ]);
+                } else {
+                    $this->field('min', ['after' => 'slider_type']);
+                    $this->field('max', ['after' => 'min']);
+                    $this->field('step', ['after' => 'max']);
+                }
                 break;
             case 'DROPDOWN':
                 $this->field('options', [
@@ -112,6 +129,13 @@ class AppraisalCriteriasTable extends ControllerActionTable
         return strval($entity->appraisal_slider->step);
     }
 
+    public function onGetSliderType(EventInterface $event, Entity $entity)
+    {
+        $options = $this->AppraisalSliders->getSliderTypeOptions();
+        $sliderType = $entity->appraisal_slider->slider_type ?? null;
+        return $options[$sliderType] ?? '';
+    }
+
     // public function onUpdateFieldFieldTypeId(EventInterface $event, array $attr, $action, Request $request)
     public function onUpdateFieldFieldTypeId(EventInterface $event, array $attr, $action)
     {
@@ -139,21 +163,7 @@ class AppraisalCriteriasTable extends ControllerActionTable
                         // No implementation
                         break;
                     case 'SLIDER':
-                        $this->field('appraisal_slider.min', [
-                            'type' => 'integer',
-                            'attr' => ['label' => __('Min'),
-                            'required' => true]
-                        ]);
-                        $this->field('appraisal_slider.max', [
-                            'type' => 'integer',
-                            'attr' => ['label' => __('Max'),
-                            'required' => true]
-                        ]);
-                        $this->field('appraisal_slider.step', [
-                            'type' => 'integer',
-                            'attr' => ['label' => __('Step'),
-                            'required' => true]
-                        ]);
+                        $this->setupSliderField($entity);
                         break;
                     case 'DROPDOWN':
                         $this->field('options', [
@@ -175,18 +185,36 @@ class AppraisalCriteriasTable extends ControllerActionTable
     public function addEditOnAddOption(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data->offsetExists($this->getAlias())) {//POCOR-9187[START] alias -> getAlias()
-            if (array_key_exists('appraisal_dropdown_options', $data[$this->getAlias()])) {
-                $dropdownOptions = $data[$this->getAlias()]['appraisal_dropdown_options'];
-                $data[$this->getAlias()]['appraisal_dropdown_options'] = array_values($dropdownOptions); // reindex array keys
+            $recordData = $data[$this->getAlias()];
+            $fieldTypeCode = null;
+            if (!empty($recordData['field_type_id'])) {
+                $fieldTypeCode = $this->FieldTypes->get($recordData['field_type_id'])->code;
             }
-            $data[$this->getAlias()]['appraisal_dropdown_options'][] = [
-                'name' => '',
-                'is_default' => 0
-            ];
+
+            if ($fieldTypeCode === 'SLIDER') {
+                if (array_key_exists('appraisal_slider_options', $recordData)) {
+                    $sliderOptions = $recordData['appraisal_slider_options'];
+                    $data[$this->getAlias()]['appraisal_slider_options'] = array_values($sliderOptions); // reindex array keys
+                }
+                $data[$this->getAlias()]['appraisal_slider_options'][] = [
+                    'label' => '',
+                    'value' => ''
+                ];
+            } else {
+                if (array_key_exists('appraisal_dropdown_options', $recordData)) {
+                    $dropdownOptions = $recordData['appraisal_dropdown_options'];
+                    $data[$this->getAlias()]['appraisal_dropdown_options'] = array_values($dropdownOptions); // reindex array keys
+                }
+                $data[$this->getAlias()]['appraisal_dropdown_options'][] = [
+                    'name' => '',
+                    'is_default' => 0
+                ];
+            }
         }
 
         $options['associated'] = [
-            'AppraisalDropdownOptions' => ['validate' => false]
+            'AppraisalDropdownOptions' => ['validate' => false],
+            'AppraisalSliderOptions' => ['validate' => false]
         ];
     }
 
@@ -213,6 +241,23 @@ class AppraisalCriteriasTable extends ControllerActionTable
             } elseif ($fieldTypeCode == 'NUMBER') {
                 if ($data['submit'] == 'save') {
                     $this->AppraisalNumbers->updateData($data);
+                }
+            } elseif ($fieldTypeCode == 'SLIDER') {
+                $sliderType = $data['appraisal_slider']['slider_type'] ?? null;
+                if ($sliderType === null && !empty($data['id'])) {
+                    // Slider Type is read-only after creation, so it may not be resubmitted on
+                    // edit - fall back to what's already saved so option deletions still work.
+                    $existingSlider = $this->AppraisalSliders->find()
+                        ->where([$this->AppraisalSliders->aliasField('appraisal_criteria_id') => $data['id']])
+                        ->first();
+                    $sliderType = $existingSlider->slider_type ?? null;
+                }
+                if ($sliderType == AppraisalSliders::TEXT) {
+                    if (!isset($data['appraisal_slider_options'])) {
+                        $data['appraisal_slider_options'] = []; // enables all rows to be deleted
+                    }
+                } elseif ($sliderType == AppraisalSliders::NUMBER) {
+                    $data['appraisal_slider_options'] = []; // clear any previously saved text options
                 }
             }
         }
@@ -309,6 +354,75 @@ class AppraisalCriteriasTable extends ControllerActionTable
                 break;
         }
     }
+    // Slider field type
+    public function setupSliderField(Entity $entity)
+    {
+        $sliderTypeOptions = $this->AppraisalSliders->getSliderTypeOptions();
+
+        $sliderType = '';
+        if ($entity->has('appraisal_slider')) {
+            $appraisalSlider = $entity->appraisal_slider;
+            if (is_array($appraisalSlider)) {
+                // may still be a plain array (not yet marshalled into an Entity) the first
+                // time 'Slider' is selected, before any appraisal_slider.* data is posted
+                $sliderType = $appraisalSlider['slider_type'] ?? '';
+            } elseif ($appraisalSlider->has('slider_type')) {
+                $sliderType = $appraisalSlider->slider_type;
+            }
+        }
+
+        $sliderTypeAttr = [
+            'type' => 'select',
+            'select' => false,
+            'after' => 'field_type_id',
+            'options' => $sliderTypeOptions,
+            'onChangeReload' => true,
+            'attr' => [
+                'label' => __('Slider Type'),
+                'required' => true
+            ]
+        ];
+
+        if (!$entity->isNew()) { // edit not allowed to change slider type, matching field_type_id
+            $sliderTypeAttr['type'] = 'readonly';
+            $sliderTypeAttr['value'] = $sliderType;
+            $sliderTypeAttr['attr']['value'] = $sliderTypeOptions[$sliderType] ?? $sliderType;
+        }
+
+        $this->field('appraisal_slider.slider_type', $sliderTypeAttr);
+
+        switch ($sliderType) {
+            case AppraisalSliders::TEXT:
+                $this->field('slider_options', [
+                    'type' => 'element',
+                    'element' => 'StaffAppraisal.slider_options',
+                    'after' => 'appraisal_slider.slider_type'
+                ]);
+                break;
+            case AppraisalSliders::NUMBER:
+            default:
+                $this->field('appraisal_slider.min', [
+                    'type' => 'integer',
+                    'after' => 'appraisal_slider.slider_type',
+                    'attr' => ['label' => __('Min'),
+                    'required' => true]
+                ]);
+                $this->field('appraisal_slider.max', [
+                    'type' => 'integer',
+                    'after' => 'appraisal_slider.min',
+                    'attr' => ['label' => __('Max'),
+                    'required' => true]
+                ]);
+                $this->field('appraisal_slider.step', [
+                    'type' => 'integer',
+                    'after' => 'appraisal_slider.max',
+                    'attr' => ['label' => __('Step'),
+                    'required' => true]
+                ]);
+                break;
+        }
+    }
+
     // Start POCOR-5188
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
