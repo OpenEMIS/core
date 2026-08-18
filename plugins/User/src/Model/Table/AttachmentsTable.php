@@ -4,6 +4,7 @@ namespace User\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 use ArrayObject;
+use Cake\Core\Configure;
 use Cake\Event\EventInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
@@ -20,7 +21,7 @@ class AttachmentsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('ControllerAction.FileUpload',
-            ['size' => '2MB',
+            ['size' => Configure::read('Attachment.maxFileSize'),
                 'contentEditable' => false,
                 'allowable_file_types' => 'all',
                 'useDefaultName' => true]
@@ -58,23 +59,68 @@ class AttachmentsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $UserTable = TableRegistry::getTableLocator()->get('User.Users');
-        $userId = $this->getUserID();
-        $user = $UserTable->find()->where(['id' => $userId])->first();
+        $userId    = $this->getUserID();
+        $user      = $UserTable->find()->where(['id' => $userId])->first();
+
         if ($user->is_staff == 1) {
-            $validator->setProvider('custom', $this)->requirePresence('staff_attachment_type_id', 'create')->notEmpty('staff_attachment_type_id');
+            $validator
+                ->setProvider('custom', $this)
+                ->requirePresence('staff_attachment_type_id', 'create')
+                ->notEmpty('staff_attachment_type_id');
         } elseif ($user->is_student == 1) {
-            $validator->setProvider('custom', $this)->requirePresence('student_attachment_type_id', 'create')->notEmpty('student_attachment_type_id');
+            $validator
+                ->setProvider('custom', $this)
+                ->requirePresence('student_attachment_type_id', 'create')
+                ->notEmpty('student_attachment_type_id');
         }
-        // POCOR-9584: Require file during creation
-        $validator->requirePresence('file_content', 'create')->notEmpty('file_content', __('Please select a file to upload'));
+        $validator
+        ->requirePresence('name', 'create');
+        // POCOR-9463
+        $maxSizeReadable = Configure::read('Attachment.maxFileSize');
+        $maxSize = $this->readableSizeToBytes($maxSizeReadable);
+        $validator->add('file_content', 'fileSize', [
+            'rule' => function ($value) use ($maxSize) {
+                if (empty($value)) {
+                    return true;
+                }
+                if ($value instanceof \Psr\Http\Message\UploadedFileInterface) {
+                    return $value->getError() !== UPLOAD_ERR_OK || $value->getSize() <= $maxSize;
+                }
+
+                if (is_array($value) && isset($value['size'])) {
+                    return $value['size'] <= $maxSize;
+                }
+
+                if (is_string($value)) {
+                    return strlen($value) <= $maxSize;
+                }
+                return true;
+            },
+            'message' => sprintf(__('File Size must be <= %s'), $maxSizeReadable)
+        ]);
         return $validator;
     }
 
-    //END:POCOR-5067
+    private function readableSizeToBytes(string $size): int
+    {
+        $unit = strtolower(substr($size, -2));
+        $value = (int)$size;
 
+        switch ($unit) {
+            case 'kb':
+                return $value * 1024;
+            case 'mb':
+                return $value * 1024 * 1024;
+            case 'gb':
+                return $value * 1024 * 1024 * 1024;
+            default:
+                return $value;
+        }
+    }
+
+    //END:POCOR-5067
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
-
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['type' => 'binary', 'visible' => true]);
         $this->field('security_roles', [
@@ -340,7 +386,7 @@ class AttachmentsTable extends ControllerActionTable
         $user_id = $this->getUserID();
         $user = $UserTable->get($user_id); // POCOR-7485
         $this->setFieldOrder([
-            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created'
+            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created', 'description'
         ]);
 
         if ($user->is_staff == 1) {
@@ -390,7 +436,7 @@ class AttachmentsTable extends ControllerActionTable
         $user_id = $this->getUserID();
         $user = $UserTable->get($user_id); // POCOR-7485
         $this->setFieldOrder([
-            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created'
+            'name', 'file_content', 'date_on_file', 'security_roles', 'created_user_id', 'created','description'
         ]);
 
         if ($user->is_staff == 1) {
@@ -506,6 +552,8 @@ class AttachmentsTable extends ControllerActionTable
 
         return $buttons;
     }
+
+
 
 
 }
