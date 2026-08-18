@@ -3,6 +3,13 @@ $this->extend('OpenEmis./Layout/Panel');
 ?>
 <?php
 $this->start('panelBody');
+//POCOR-9783: the controller registers studenttimetable.ctrl/svc as required Angular
+//modules unconditionally, so load their scripts unconditionally too. Otherwise, when a
+//student has no published timetables the element is never rendered, the modules are never
+//defined, and Angular fails with $injector:modulerr (blank page).
+echo $this->Html->script('app/components/alert/alert.svc', ['block' => true]);
+echo $this->Html->script('Profile.angular/studenttimetable.svc', ['block' => true]);
+echo $this->Html->script('Profile.angular/studenttimetable.ctrl', ['block' => true]);
 //POCOR-9594: start - render all timetables grouped by term → shift
 if (!empty($timetables)):
     $termGroups = [];
