@@ -994,20 +994,32 @@ class StudentReportCardsTable extends AppTable
         if (isset($params['institution_id']) && isset($params['education_grade_id']) && isset($params['academic_period_id']) && isset($params['student_id'])) {
             $Counsellings = TableRegistry::getTableLocator()->get('Institution.Counsellings');
 
-            $entity = $Counsellings
+            // guidance_type is now a belongsToMany (a counselling record can have several), so it
+            // can no longer be selected as a flat 'GuidanceTypes.name' column — it's built from the
+            // contained association below instead.
+            $rows = $Counsellings
                 ->find()
                 ->select([
                     'id' => $Counsellings->aliasField('id'),
                     'date' => $Counsellings->aliasField('date'),
                     'intervention' => $Counsellings->aliasField('intervention'),
                     'description' => $Counsellings->aliasField('description'),
-                    'guidance_type' => 'GuidanceTypes.name',
                 ])
                 ->contain(['GuidanceTypes'])
                 ->where([
                     $Counsellings->aliasField('student_id') => $params['student_id'],
                 ])
                 ->toArray();
+
+            $entity = [];
+            foreach ($rows as $row) {
+                $row->guidance_type = !empty($row->guidance_types)
+                    ? implode(', ', array_map(function ($guidanceType) {
+                        return $guidanceType->name;
+                    }, $row->guidance_types))
+                    : '';
+                $entity[] = $row;
+            }
 
             return $entity;
         }

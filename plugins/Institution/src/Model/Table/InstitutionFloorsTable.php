@@ -16,6 +16,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\Routing\Router;
 use Cake\Http\ServerRequest;
+use Cake\Log\Log;
 class InstitutionFloorsTable extends ControllerActionTable
 {
     use OptionsTrait;
@@ -27,6 +28,38 @@ class InstitutionFloorsTable extends ControllerActionTable
     private $Levels = null;
     private $levelOptions = [];
     private $floorLevel = null;
+
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['start_date', 'end_date', 'new_start_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("InstitutionFloorsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
 
     private $canUpdateDetails = true;
     // POCOR-8037 removed academic period code
@@ -238,11 +271,11 @@ class InstitutionFloorsTable extends ControllerActionTable
         } else if ($field == 'new_start_date'){
             return __('New Start Date');
         } else if ($field == 'modified'){
-            return __('Modified');
+            return __('Modified On');
         } else if ($field == 'modified_user_id'){
             return __('Modified By');
         } else if ($field == 'created'){
-            return __('Created');
+            return __('Created On');
         } else if ($field == 'created_user_id'){
             return __('Created By');
         } else {
@@ -591,10 +624,21 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         $today = new DateTime();
         // POCOR-8037 removed academic period code
-        $startDate = $today->format('d-m-Y');
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+        $startDate = $today->format($editableDateFormat);
         $attr['date_options']['startDate'] = $startDate;
 
         return $attr;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     public function onUpdateFieldEndDate(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -618,7 +662,8 @@ class InstitutionFloorsTable extends ControllerActionTable
                 $attr['attr']['value'] = $this->formatDate($today);
             } else {
                 if (!empty($start_date)) {
-                    $attr['date_options']['startDate'] = $start_date->format('d-m-Y');
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
+                    $attr['date_options']['startDate'] = $start_date->format($editableDateFormat);
                 }            }
         }
         // POCOR-8037 removed academic period code end

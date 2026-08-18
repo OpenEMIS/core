@@ -64,10 +64,14 @@ class StaffTemplatesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', 'ruleUniqueCode', [
+           ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                'provider' => 'table'
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             // ->add('generate_start_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             // ])
@@ -79,7 +83,17 @@ class StaffTemplatesTable extends ControllerActionTable
             //         'rule' => ['compareDateReverse', 'generate_start_date', false]
             //     ]
             // ])
-            ->allowEmpty('excel_template');
+            // generate_start_date/generate_end_date are marked mandatory (*) in the form, but
+            // nothing previously enforced that: the column is 'datetime', and AppTable's generic
+            // schema-driven validationDefault() only auto-handles 'date' typed columns. Leaving
+            // these blank marshalled to null and passed validation silently, then crashed at save
+            // with a raw SQL "doesn't have a default value" error instead of a friendly message.
+            ->requirePresence('generate_start_date', 'create')
+            ->notEmpty('generate_start_date', __('This field cannot be left empty'))
+            ->requirePresence('generate_end_date', 'create')
+            ->notEmpty('generate_end_date', __('This field cannot be left empty'))
+           ->requirePresence('excel_template', 'create', __('This field cannot be left empty'))
+            ->notEmptyFile('excel_template', __('This field cannot be left empty'), 'create');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -285,26 +299,43 @@ class StaffTemplatesTable extends ControllerActionTable
         } 
     }
 
-    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
-
-        if (!empty($entity->generate_start_date)) {
-            $entity->generate_start_date = (new FrozenDate($entity->generate_start_date))->modify('+2 day')->format('Y-m-d H:i:s');
-        }
-
-        if (!empty($entity->generate_end_date)) {
-            $entity->generate_end_date = (new FrozenDate($entity->generate_end_date))->modify('+2 day')->format('Y-m-d H:i:s');
-        }        
-
-    } 
+    // Note: previously this method shifted generate_start_date/generate_end_date forward by
+    // '+2 day' before saving, with no corresponding adjustment anywhere on read/display. That made
+    // every saved date land 2 days after what the user actually picked (e.g. selecting July 1
+    // saved as July 3). beforeMarshal() below already normalizes the submitted value correctly, so
+    // no further adjustment is needed here.
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
-        if (!empty($data['generate_start_date'])) {
-            $data['generate_start_date'] = (new FrozenDate($data['generate_start_date']))->format('Y-m-d H:i:s');
-        }
+        foreach (['generate_start_date', 'generate_end_date'] as $field) {
+            if (empty($data[$field])) {
+                continue;
+            }
 
-        if (!empty($data['generate_end_date'])) {
-            $data['generate_end_date'] = (new FrozenDate($data['generate_end_date']))->format('Y-m-d H:i:s');
+            $rawValue = $data[$field];
+            if (is_string($rawValue) && !preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue)) {
+                $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+                $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+                $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+                $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+                $date = false;
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    try {
+                        $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                    } catch (\Exception $e2) {
+                        \Cake\Log\Log::warning("StaffTemplatesTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+                    }
+                }
+
+                if ($date !== false && $date !== null) {
+                    $rawValue = $date->format('Y-m-d');
+                }
+            }
+
+            $data[$field] = (new FrozenDate($rawValue))->format('Y-m-d H:i:s');
         }
     }
 	

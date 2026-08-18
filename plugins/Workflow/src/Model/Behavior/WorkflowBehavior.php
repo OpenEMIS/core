@@ -337,7 +337,7 @@ class WorkflowBehavior extends Behavior
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
         /** POCOR-6928 - added staff_change_type_id condition to skip Change-of-shift from workflow steps*/
-        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN && $entity->staff_change_type_id != 5) {
+        if ($entity->isNew() && $entity->status_id == self::STATUS_OPEN) { //POCOR-9722 - removed && $entity->staff_change_type_id != 5 condition
             $this->setStatusAsOpen($entity);
         }
 
@@ -535,16 +535,9 @@ class WorkflowBehavior extends Behavior
                     $filterOptions = $newEvent->getResult();
                 }
                 // End
-                //POCOR-7263::Start
                 $filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
-                $url = $_SERVER['QUERY_STRING'];
-                $data = explode('=', $url);
-                $filterOne = $data[1];
-                // $filterTwo = $data[2];
-                $firstVal = preg_replace('/\D/', '', $filterOne);
-                $selectedFilter = $firstVal;
-                //POCOR-7263::End
-               // $selectedFilter = $this->_table->queryString('filter', $filterOptions);
+                // Use request query + valid options (QUERY_STRING parsing breaks when institution_id and other params precede filter).
+                $selectedFilter = $this->_table->queryString('filter', $filterOptions);
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
@@ -636,6 +629,9 @@ class WorkflowBehavior extends Behavior
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
+            if ($selectedFilter === null || $selectedFilter === '') {
+                $selectedFilter = $this->_table->request->getQuery('filter');
+            }
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
@@ -856,6 +852,7 @@ class WorkflowBehavior extends Behavior
         // setup workflow
         if ($this->attachWorkflow) {
             $workflowStep = $this->getWorkflowStep($entity);
+            $institutionId = $model->getQueryString('institution_id');
             if (!is_null($workflowStep)) {
                 // used to get correct workflow model for StaffTransferIn and StaffTransferOut
                 $modelName = $workflowStep->_matchingData['WorkflowModels']->model;
@@ -863,6 +860,7 @@ class WorkflowBehavior extends Behavior
 
             $workflowModel = isset($modelName) ? $modelName : $this->getConfig('model');
             $workflow = $this->getWorkflow($workflowModel, $entity);
+            $workflowId = $entity['status']['workflow_id'];
 
             if (!empty($workflow)) {
                 $ControllerAction->field('status_id', ['visible' => false]);
@@ -925,14 +923,83 @@ class WorkflowBehavior extends Behavior
                         $rowData[] = $transitionDisplay;
                         $rowData[] = __($transition->workflow_action_name);
                         $rowData[] = nl2br(htmlspecialchars($transition->comment));
-                        $rowData[] = $transition->created_user->name;
-                        $rowData[] = $transition->created->format('Y-m-d H:i:s');
+                      //  $rowData[] = $transition->created_user->name;
 
+                        // POCOR-9677 Get user from role in the transition (based on step)
+                        $executerName = '';
+                        $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+                        $WorkflowStepRoles = TableRegistry::getTableLocator()->get('Workflow.WorkflowStepsRoles');
+                        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+                        $step = $WorkflowSteps->find()
+                            ->where([
+                                'name' => $transition->workflow_step_name,
+                                'workflow_id' => $workflowId
+                            ])
+                            ->first();
+
+                         if (!empty($step)) { 
+                            $stepRole = $WorkflowStepRoles->find()
+                                ->where([
+                                    'workflow_step_id' => $step->id
+                                ])
+                                ->first();
+                           if (!empty($stepRole)) { 
+                                /*$user = $SecurityGroupUsers->find()
+                                    ->contain(['Users'])
+                                    ->where([
+                                        'security_role_id' => $stepRole->security_role_id,
+                                    ])
+                                    ->order(['SecurityGroupUsers.id ASC'])
+                                    ->first();*/
+                                $user = $SecurityGroupUsers->find()
+                                        ->contain(['Users'])
+                                        ->innerJoin(
+                                            ['SecurityGroupInstitutions' => 'security_group_institutions'],
+                                            'SecurityGroupInstitutions.security_group_id = SecurityGroupUsers.security_group_id'
+                                        )
+                                        ->where([
+                                            'SecurityGroupUsers.security_role_id IS' => $stepRole->security_role_id,
+                                            'SecurityGroupInstitutions.institution_id IS' => $institutionId
+                                        ])
+                                        ->order(['SecurityGroupUsers.id' => 'ASC'])
+                                        ->first();
+                                if ($user && $user->user &&
+                                        (
+                                            $workflowModel == 'Institution.StudentAdmission' ||
+                                            $workflowModel == 'Institution.StudentEnrolment'
+                                        )
+                                ) {
+                                    $executerName = $user->user->name;
+                                }else{
+                                    //POCOR-9752 start
+                                    if($key === count($transitions) - 1 && !empty($entity->modified_user_id)){
+                                        $Users = TableRegistry::getTableLocator()->get('User.Users');
+                                        $modifiedUser = $Users->find()
+                                            ->where(['id' => $entity->modified_user_id])
+                                            ->first();
+
+                                        if ($modifiedUser) {
+                                            $executerName = trim(implode(' ', array_filter([
+                                                            $modifiedUser->first_name ?? '',
+                                                            $modifiedUser->third_name ?? '',
+                                                            $modifiedUser->last_name ?? ''
+                                                        ])));
+                                        } //POCOR-9752 end
+                                    }else{
+                                        $executerName = $transition->created_user->name;
+                                    }  
+                                }
+                            }
+                        }
+                        $rowData[] = $executerName;
+                        if ($key === 0) {
+                            $rowData[] = $entity->created->format('Y-m-d H:i:s');
+                        } else {
+                            $rowData[] = $transition->created->format('Y-m-d H:i:s');
+                        } //end POCOR-9677
                         $tableCells[$key] = $rowData;
                     }
                 }
-
-
                 $ControllerAction->field('workflow_transitions', [
                     'type' => 'element',
                     'element' => 'Workflow.transitions',
@@ -1298,7 +1365,7 @@ class WorkflowBehavior extends Behavior
                 $attr['attr']['value'] = $userEntity->name_with_id;
 
             }
-            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4){
+            else if($request->getData('StaffPositionProfiles')['staff_change_type_id'] == 1 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 2 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 3 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 4 || $request->getData('StaffPositionProfiles')['staff_change_type_id'] == 5 ){ //POCOR-9722
                 $attr['type'] = 'chosenSelect';
                 $attr['attr']['multiple'] = false;
                 $attr['options'] = $assigneeOptions;

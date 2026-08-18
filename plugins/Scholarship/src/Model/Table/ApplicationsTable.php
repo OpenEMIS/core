@@ -607,11 +607,11 @@ class ApplicationsTable extends ControllerActionTable
         }else if ($field == 'academic_period_id') {
             return __('Academic Period');
         }elseif ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         }elseif ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         }elseif ($field == 'created_user_id') {
             return __('Created By');
         }else if ($field == 'financial_assistance_type_id') {

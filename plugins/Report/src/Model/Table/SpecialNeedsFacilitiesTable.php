@@ -92,6 +92,18 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
         $conditionsRooms = [];
         $conditionsBuildings = [];
 
+        $institutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+            $institutionIds = [(int)$institution_id];
+        }
 
         $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
         if (!empty($areaId) && $areaId != -1) {
@@ -112,21 +124,21 @@ class SpecialNeedsFacilitiesTable extends ControllerActionTable
             }
         }
 
-        if (!empty($institution_id)) {
+        if (!empty($institutionIds)) {
             if($query->repository['registryAlias'] ='Report.SpecialNeedsFacilities' ){
-                $conditionsLands[$this->aliasField('institution_id')] = $institution_id;
+                $conditionsLands[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
             }
 
             if($InstitutionFloors){
-               $conditionsFloors[$InstitutionFloors->aliasField('institution_id')] = $institution_id;
+               $conditionsFloors[$InstitutionFloors->aliasField('institution_id') . ' IN'] = $institutionIds;
             }
 
             if($InstitutionRooms){
-                $conditionsRooms[$InstitutionRooms->aliasField('institution_id')] = $institution_id;
+                $conditionsRooms[$InstitutionRooms->aliasField('institution_id') . ' IN'] = $institutionIds;
             }
 
             if($InstitutionBuildings){
-                 $conditionsBuildings[$InstitutionBuildings->aliasField('institution_id')] = $institution_id;
+                 $conditionsBuildings[$InstitutionBuildings->aliasField('institution_id') . ' IN'] = $institutionIds;
             }
         }
 

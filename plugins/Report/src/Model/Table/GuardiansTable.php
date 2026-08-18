@@ -225,8 +225,22 @@ class GuardiansTable extends AppTable
         $academicPeriodId = $requestData->academic_period_id;
         $areaId = $requestData->area_education_id;
         $conditions = [];
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['Institutions.id'] = $institutionId;
+
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0) {
+            $institutionIds = [(int)$institutionId];
+        }
+
+        if (!empty($institutionIds)) {
+            $conditions['Institutions.id IN'] = $institutionIds;
         }
         if (!empty($academicPeriodId) && $academicPeriodId > 0) {
             $conditions['InstitutionClassStudents.academic_period_id'] = $academicPeriodId;

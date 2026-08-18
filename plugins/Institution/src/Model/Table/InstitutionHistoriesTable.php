@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use ArrayObject;
 use Cake\Event\EventInterface;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -33,12 +34,34 @@ class InstitutionHistoriesTable extends ControllerActionTable
         $this->field('operation', ['visible' => false]);
     }
 
+    //POCOR-4681
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $getQueryString = $this->getQueryString();
+        $institutionId = $getQueryString['institution_id'];
+        $queryString = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
+
+        $pdfButton = [
+            'url' => [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'HistoryPdf',
+                 0       => $queryString,
+            ],
+            'type' => 'button',
+            'label' => '<i class="fa fa-file-pdf-o"></i>',
+            'attr' => $this->getButtonAttr(),
+        ];
+        $pdfButton['attr']['title'] = __('Export PDF');
+        $extra['toolbarButtons']['pdfExport'] = $pdfButton;
+    }
+
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'created') {
-            return __('Modified On');
+            return __('Created On');
         } else if ($field == 'created_user_id') {
-            return __('Modified By');
+            return __('Created By');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

@@ -406,7 +406,11 @@ class ValidationBehavior extends Behavior
                 $fieldName = !empty($fieldLabel) ? $fieldLabel : __(Inflector::humanize($globalData['field']));
                 $compareFieldName = !empty($compareFieldLabel) ? $compareFieldLabel : __(Inflector::humanize($compareField));
 
-                return (!$result) ? $fieldName . ' should be earlier than ' . $compareFieldName : true;
+                //POCOR-9635: include actual date values in message so user and logs can diagnose the failure
+                $fieldValue = $field instanceof \DateTime ? $field->format('Y-m-d') : (string)$field;
+                $compareValue = isset($globalData['data'][$compareField]) ? (string)$globalData['data'][$compareField] : '?';
+                if ($compareValue instanceof \DateTime) { $compareValue = $compareValue->format('Y-m-d'); }
+                return (!$result) ? $fieldName . ' (' . $fieldValue . ') should be earlier than ' . $compareFieldName . ' (' . $compareValue . ')' : true;
             }
         } else {
             return true;
@@ -3869,4 +3873,41 @@ class ValidationBehavior extends Behavior
 
         return true;
     }
+
+    //POCOR-9680
+    public static function checkEmailValidation($value, array $context)
+    {
+        $email = $value;
+        $contactType = strtoupper(trim($contactType)) ?? 'Email'; 
+        $contactTypes = TableRegistry::getTableLocator()
+            ->get('User.ContactTypes');
+        $pattern = null;
+        $result = $contactTypes->find()
+            ->select([
+                'ContactTypes.validation_pattern'
+            ])
+            ->join([
+                'ContactOptions' => [
+                    'table' => 'contact_options',
+                    'type' => 'INNER',
+                    'conditions' => 'ContactOptions.id = ContactTypes.contact_option_id'
+                ]
+            ])
+            ->where([
+                'ContactOptions.name' => $contactType,
+                'ContactTypes.visible' => 1
+            ])
+            ->first(); 
+        //Apply DB vaidation pattern if exists
+        if (!empty($result->validation_pattern)) {
+            $pattern = '/' . $result->validation_pattern . '/';
+        }
+        //Fallback regex
+        if (empty($pattern)) {
+            $pattern = '/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/';
+        }
+
+        return (bool) preg_match($pattern, $email);
+    }
+    
 }

@@ -30,6 +30,7 @@ use Cake\Cache\Cache;
 use Cake\ORM\Table;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
+use App\Utility\ApplicationTimezone;
 
 
 /**
@@ -210,21 +211,10 @@ class AppController extends Controller
             $this->getEventManager()->off($this->Csrf);
         }
         $this->loadComponent('TabPermission');
-        // START: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
-        $ConfigItemTable = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
-        $ConfigItem = $ConfigItemTable
-            ->find()
-            ->select(['zonevalue' => 'ConfigItems.value'])
-            ->where([
-                $ConfigItemTable->aliasField('name') => 'Time Zone'
-            ]);
-        //->first();
-        foreach ($ConfigItem->toArray() as $value) {
-            $timezone = $value['zonevalue'];
-            date_default_timezone_set($timezone);
-        }
+        // START: POCOR-6538 — display timezone from config_items (cached; PHP default remains UTC in bootstrap).
+        ApplicationTimezone::registerDisplayTimezone(); //POCOR-9565
         $this->checkAccessControl();
-        // END: POCOR-6538 - Akshay patodi <akshay.patodi@mail.valuecoders.com>
+        // END: POCOR-6538
     }
 
     private function darkenColour($rgb, $darker = 2)
@@ -1018,6 +1008,21 @@ class AppController extends Controller
         }
         //POCOR-7731 end
 
+        // Report ViewReport / ajaxViewReportData are not in security_functions
+        // (_view is Institutions.index, _execute is Institutions.download). Also,
+        // checkAccessControl() runs in initialize() BEFORE Controller event listeners
+        // are registered, so isActionIgnored cannot help here. Map to module rights.
+        if (
+            isset($params['controller'], $params['action']) &&
+            $params['controller'] === 'Reports' &&
+            in_array($params['action'], ['ViewReport', 'ajaxViewReportData'], true)
+        ) {
+            if ($this->canAccessReportView()) {
+                return;
+            }
+            return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+        }
+
         $check = $this->AccessControl->check($params);
         if (!$check && $params['plugin'] != 'GuardianNav') { //POCOR-8596
 // POCOR-8286; POCOR-9100 removed unnecessary logging, may cause merge conflict
@@ -1028,6 +1033,37 @@ class AppController extends Controller
             //$this->Alert->warning('general.notAccess'); //tmp solution
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }
+    }
+
+    /**
+     * Whether the current user may open Reports/ViewReport for the module in the query string.
+     */
+    private function canAccessReportView(): bool
+    {
+        $module = $this->request->getQuery('module');
+        if ($module === null || $module === '') {
+            $module = $this->request->getQuery('amp;module');
+        }
+        $module = is_string($module) ? trim($module) : '';
+        if ($module === '' || !preg_match('/^[A-Za-z][A-Za-z0-9]*$/', $module)) {
+            return false;
+        }
+
+        $permissionControllers = ['Reports'];
+        if (in_array($module, ['InstitutionStatistics', 'InstitutionStandards'], true)) {
+            $permissionControllers[] = 'Institutions';
+        }
+
+        foreach ($permissionControllers as $permissionController) {
+            if ($this->AccessControl->check(['controller' => $permissionController, 'action' => $module, 0 => 'index'])) {
+                return true;
+            }
+            if ($this->AccessControl->check(['controller' => $permissionController, 'action' => $module, 0 => 'download'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -519,11 +519,33 @@ class ReportCardStatusesTable extends ControllerActionTable
         }//POCOR-7212 ends
         //End
         $UsersTable = TableRegistry::getTableLocator()->get('Security.Users');
-        // POCOR-9569: Start
+
         $StudentStatuses = $this->StudentStatuses;
         $where[$StudentStatuses->aliasField('code NOT IN ')] = ['TRANSFERRED', 'WITHDRAWN'];
         $query->contain('StudentStatuses')->where($where);
-        // POCOR-9569: End
+
+        //POCOR-9596 -- start
+        $reportStart = null;
+        $reportEnd = null;
+
+        if (!empty($reportCardEntity)) {
+            $reportStart = $reportCardEntity->start_date->format('Y-m-d');
+            $reportEnd   = $reportCardEntity->end_date->format('Y-m-d');
+        }
+
+        if (!empty($reportStart) && !empty($reportEnd)) {
+            $query->innerJoin(
+                ['InstitutionStudents' => 'institution_students'],
+                [
+                    'InstitutionStudents.student_id = ' . $this->aliasField('student_id'),
+                    'InstitutionStudents.institution_id = ' . $this->aliasField('institution_id'),
+                    'InstitutionStudents.start_date <=' => $reportEnd,
+                    "(InstitutionStudents.end_date IS NULL OR InstitutionStudents.end_date >= '{$reportEnd}')"
+                ]
+            );
+            
+        }
+        //POCOR-9596 -- end
         $query
             ->select([
                 'institution_class_id' => $this->aliasField('institution_class_id'),

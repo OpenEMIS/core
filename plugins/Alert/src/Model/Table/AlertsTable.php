@@ -19,6 +19,15 @@ class AlertsTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    // POCOR-9509: Alert types without Laravel command implementations
+    // These alerts cannot be sent, so they should only have "Never" frequency
+    // Values are the 'name' field from alerts table (feature names), NOT process_name
+    //POCOR-9509: start - updated as new Laravel commands are implemented
+    public const NON_IMPLEMENTED_ALERTS = [
+        'StaffAttendance', // POCOR-9509: No shell exists, no Laravel command
+    ];
+    //POCOR-9509: end
+
     private $statusTypes = [];
 
     public function initialize(array $config): void
@@ -62,31 +71,33 @@ class AlertsTable extends ControllerActionTable
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         // Start POCOR-5188
-		$is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
-		if(!empty($is_manual_exist)){
-			$btnAttr = [
-				'class' => 'btn btn-xs btn-default icon-big',
-				'data-toggle' => 'tooltip',
-				'data-placement' => 'bottom',
-				'escape' => false,
-				'target'=>'_blank'
-			];
+        $is_manual_exist = $this->getManualUrl('Administration','Alerts','Communications');
+        if(!empty($is_manual_exist)){
+            $btnAttr = [
+                'class' => 'btn btn-xs btn-default icon-big',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'target'=>'_blank'
+            ];
 
-			$helpBtn['url'] = $is_manual_exist['url'];
-			$helpBtn['type'] = 'button';
-			$helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
-			$helpBtn['attr'] = $btnAttr;
-			$helpBtn['attr']['title'] = __('Help');
-			$extra['toolbarButtons']['help'] = $helpBtn;
-		}
-		// End POCOR-5188
+            $helpBtn['url'] = $is_manual_exist['url'];
+            $helpBtn['type'] = 'button';
+            $helpBtn['label'] = '<i class="fa fa-question-circle"></i>';
+            $helpBtn['attr'] = $btnAttr;
+            $helpBtn['attr']['title'] = __('Help');
+            $extra['toolbarButtons']['help'] = $helpBtn;
+        }
+        // End POCOR-5188
     }
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
+         $params = $this->request->getQuery();
         if(empty($params)){
             $extra['options']['direction'] = 'asc';
-            $extra['options']['limit'] = 20;
+            // Do not set limit here; IndexBehavior handles "Display" (Search.limit)
+            // and stores it in session. Overriding it here breaks server-side display.
             $extra['options']['sort'] = 'name';
         }
          //POCOR-7558 start
@@ -373,14 +384,22 @@ class AlertsTable extends ControllerActionTable
     {
         // POCOR-8286 start
         $entity = $attr['entity'];
+        // POCOR-9509: Event-based alerts fire on afterSave — daily schedule makes no sense for them
         $oneTimeProcesses = [
             'AlertAttendance',
-            'AlertStudentAbsence', // POCOR-9391
+            'AlertStudentAbsence',      // POCOR-9391
             'AlertStudentAdmission',
-            'AlertStudentEnrolment'
+            'AlertStudentEnrolment',
+            'AlertStudentStatus',       // POCOR-9509: event-based (afterSave)
+            'AlertStaffType',           // POCOR-9509: event-based (afterSave)
         ];
 
-        if (in_array($entity->process_name, $oneTimeProcesses, true)) {
+        // POCOR-9509: Non-implemented alerts can only be "Never"
+        if (in_array($entity->process_name, self::NON_IMPLEMENTED_ALERTS, true)) {
+            $freqOptions = [
+                "Never" => __("Never")
+            ];
+        } elseif (in_array($entity->process_name, $oneTimeProcesses, true)) {
             $freqOptions = [
                 "Never" => __("Never"), // POCOR-8286
                 "Once" => __("Once")

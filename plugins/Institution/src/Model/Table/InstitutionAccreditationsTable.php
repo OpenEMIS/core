@@ -1,0 +1,371 @@
+<?php
+//POCOR-9610: Institution Accreditations tab — read-only view of institution_accreditations, managed via API
+namespace Institution\Model\Table;
+
+use ArrayObject;
+use Cake\I18n\Date;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\Event\EventInterface;
+use App\Model\Table\ControllerActionTable;
+use Cake\Http\ServerRequest ;
+use Cake\ORM\TableRegistry;
+
+
+class InstitutionAccreditationsTable extends ControllerActionTable
+{
+    public function initialize(array $config): void
+    {
+        parent::initialize($config);
+
+        $this->belongsTo('Institutions', [
+            'className'  => 'Institution.Institutions',
+            'foreignKey' => 'institution_id',
+        ]);
+        $this->belongsTo('EducationProgrammes', [
+            'className'  => 'Education.EducationProgrammes',
+            'foreignKey' => 'education_programme_id',
+        ]);
+        $this->belongsTo('ModifiedUser', [
+            'className'  => 'Security.Users',
+            'foreignKey' => 'modified_user_id',
+        ]);
+        $this->belongsTo('CreatedUser', [
+            'className'  => 'Security.Users',
+            'foreignKey' => 'created_user_id',
+        ]);
+
+        $this->addBehavior('Excel', ['pages' => ['index']]);
+        $this->addBehavior('Institution.InstitutionTab', [
+            'appliedAction' => [
+                'Accreditations' => ['id'],
+            ],
+        ]);
+
+        // Read-only: data managed via API; HideButton removes add/edit/delete from UI
+        $this->toggle('add', true);
+        $this->toggle('edit', true);
+        $this->toggle('remove', false);
+       // $this->addBehavior('ControllerAction.HideButton');
+    }
+
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra): void
+    {
+        $this->field('academic_period_id', ['visible' => false]);
+        $this->field('institution_id', ['visible' => false]);
+        $this->field('education_programme_id', ['visible' => false]);
+        $this->field('modified_user_id', ['visible' => false]);
+        $this->field('modified', ['visible' => false]);
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+
+        // visible:true required so isFieldVisible() returns true and onGet* listeners are registered
+        $this->field('programme_code', ['label' => __('Programme Code'), 'visible' => true]);
+        $this->field('programme_name', ['label' => __('Programme Name'), 'visible' => true]);
+        $this->field('status',         ['label' => __('Status'),         'visible' => true]);
+
+        $this->setFieldOrder(['programme_code', 'programme_name', 'valid_from', 'valid_to', 'status']);
+    }
+
+    //POCOR-9708
+    public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('academic_period_id');
+        $this->field('education_programme_id');
+        $this->field('valid_from');
+        $this->field('valid_to');
+
+    }
+
+    public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra): Query
+    {
+        $institutionId = $this->getQueryString('institution_id');
+        if ($institutionId) {
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        }
+        // Explicit field select required — ControllerActionTable beforeFind may strip non-default fields
+        $query->contain([
+            'EducationProgrammes' => function ($q) {
+                return $q->select(['EducationProgrammes.id', 'EducationProgrammes.code', 'EducationProgrammes.name', 'EducationProgrammes.education_cycle_id'])
+                    ->contain(['EducationCycles' => function ($q2) {
+                        return $q2->select(['EducationCycles.id', 'EducationCycles.name', 'EducationCycles.education_level_id'])
+                            ->contain(['EducationLevels' => function ($q3) {
+                                return $q3->select(['EducationLevels.id', 'EducationLevels.name', 'EducationLevels.education_system_id'])
+                                    ->contain(['EducationSystems' => function ($q4) {
+                                        return $q4->select(['EducationSystems.id', 'EducationSystems.name', 'EducationSystems.academic_period_id'])
+                                            ->contain(['AcademicPeriods' => function ($q5) {
+                                                return $q5->select(['AcademicPeriods.id', 'AcademicPeriods.name']);
+                                            }]);
+                                    }]);
+                            }]);
+                    }]);
+            },
+        ]);
+        return $query;
+    }
+
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra): Query
+    {
+        $query->contain(['EducationProgrammes' => ['EducationCycles' => ['EducationLevels' => ['EducationSystems' => ['AcademicPeriods']]]]]);
+        return $query;
+    }
+
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra): void
+    {
+        $this->field('institution_id', ['visible' => false]);
+        $this->field('education_programme_id', ['visible' => false]);
+        $this->field('modified_user_id', ['visible' => false]);
+        $this->field('modified', ['visible' => false]);
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+
+        $this->field('programme_code', ['label' => __('Programme Code'), 'visible' => true]);
+        $this->field('programme_name', ['label' => __('Programme Name'), 'visible' => true]);
+        $this->field('status',         ['label' => __('Status'),         'visible' => true]);
+
+        $this->setFieldOrder(['programme_code', 'programme_name', 'valid_from', 'valid_to', 'status']);
+    }
+
+    public function onGetProgrammeCode(EventInterface $event, Entity $entity): string
+    {
+        $prog = $entity->education_programme ?? null;
+        return $prog ? ((string) ($prog->code ?? '')) : '';
+    }
+
+    public function onGetProgrammeName(EventInterface $event, Entity $entity): string
+    {
+        // Full label: "Name (Level — System — Period)" — mirrors the HTML seed page format
+        $prog = $entity->education_programme ?? null;
+        if (!$prog) {
+            return '';
+        }
+        $name   = (string) ($prog->name ?? '');
+        $cycle  = $prog->education_cycle  ?? null;
+        $level  = $cycle  ? ($cycle->education_level  ?? null) : null;
+        $system = $level  ? ($level->education_system ?? null) : null;
+        $period = $system ? ($system->academic_period ?? null) : null;
+
+        $parts = array_filter([
+            $level  ? (string) ($level->name  ?? '') : '',
+            $system ? (string) ($system->name ?? '') : '',
+            $period ? (string) ($period->name ?? '') : '',
+        ]);
+
+        return $parts ? $name . ' (' . implode(' — ', $parts) . ')' : $name;
+    }
+
+    public function onGetStatus(EventInterface $event, Entity $entity): string
+    {
+        // null valid_to = no expiry = always valid
+        $validTo = $entity->valid_to;
+        if (!$validTo) {
+            return __('Valid');
+        }
+        return ($validTo < new Date()) ? __('Expired') : __('Valid');
+    }
+
+    // Excel: contain full chain, fix date type (force string → onExcelGet*), custom column set
+
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query): void
+    {
+        $institutionId = $this->getQueryString('institution_id');
+        if ($institutionId) {
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
+        }
+        $query->contain(['EducationProgrammes' => ['EducationCycles' => ['EducationLevels' => ['EducationSystems' => ['AcademicPeriods']]]]]);
+    }
+
+    public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields): void
+    {
+        // Keep only date columns (renamed), prepend Programme Code/Name, append Status
+        $keep = ['valid_from', 'valid_to'];
+        $dateCols = new ArrayObject();
+        foreach ($fields->getArrayCopy() as $f) {
+            $col = $f['field'] ?? '';
+            if (!in_array($col, $keep, true)) {
+                continue;
+            }
+            // Force string type so onExcelGet* is called instead of onExcelRenderDate (which returns blank)
+            $f['type'] = 'string';
+            $dateCols[] = $f;
+        }
+
+        $newFields = new ArrayObject();
+        $newFields[] = ['key' => 'InstitutionAccreditations.programme_code', 'field' => 'programme_code', 'type' => 'string', 'label' => __('Programme Code'), 'style' => [], 'formatting' => 'GENERAL'];
+        $newFields[] = ['key' => 'InstitutionAccreditations.programme_name', 'field' => 'programme_name', 'type' => 'string', 'label' => __('Programme Name'), 'style' => [], 'formatting' => 'GENERAL'];
+        foreach ($dateCols->getArrayCopy() as $f) {
+            $newFields[] = $f;
+        }
+        $newFields[] = ['key' => 'InstitutionAccreditations.status', 'field' => 'status', 'type' => 'string', 'label' => __('Status'), 'style' => [], 'formatting' => 'GENERAL'];
+        $fields->exchangeArray($newFields->getArrayCopy());
+    }
+
+    public function onExcelGetValidFrom(EventInterface $event, Entity $entity): string
+    {
+        return $entity->valid_from ? $entity->valid_from->format('Y-m-d') : '';
+    }
+
+    public function onExcelGetValidTo(EventInterface $event, Entity $entity): string
+    {
+        return $entity->valid_to ? $entity->valid_to->format('Y-m-d') : '';
+    }
+
+    public function onExcelGetProgrammeCode(EventInterface $event, Entity $entity): string
+    {
+        return $this->onGetProgrammeCode($event, $entity);
+    }
+
+    public function onExcelGetProgrammeName(EventInterface $event, Entity $entity): string
+    {
+        return $this->onGetProgrammeName($event, $entity);
+    }
+
+    public function onExcelGetStatus(EventInterface $event, Entity $entity): string
+    {
+        return $this->onGetStatus($event, $entity);
+    }
+
+    public function onUpdateActionButtons(EventInterface $event, Entity $entity, array $buttons) 
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        unset($buttons['edit']);
+        return $buttons;
+    }
+
+    //POCOR-9708
+    public function onUpdateFieldAcademicPeriodId(EventInterface $event,array $attr,$action,ServerRequest $request)
+    {
+        $academicPeriods = TableRegistry::getTableLocator()
+            ->get('AcademicPeriod.AcademicPeriods');
+
+        $periodOptions = $academicPeriods->getYearList();
+        $selectedPeriod = $academicPeriods->getCurrent();
+
+        if ($action == 'add' || $action == 'edit') {
+
+            if ($action == 'add') {
+
+                $attr['options'] = $periodOptions;
+                $attr['default'] = $selectedPeriod;
+                $attr['onChangeReload'] = true;
+
+            } else {
+
+                $queryString = $this->getQueryString();
+                $id = $queryString['id'] ?? null;
+                $academicPeriodId = '';
+                $academicPeriodName = '';
+
+                if (!empty($id)) {
+                    $educationProgramme = $this->find()
+                        ->where([
+                            'id' => $id
+                        ])
+                        ->first();
+                    $programmeId = $educationProgramme->education_programme_id ?? null;
+                    if (!empty($programmeId)) {
+
+                        $EducationProgrammes = TableRegistry::getTableLocator()
+                            ->get('Education.EducationProgrammes');
+                        $programmeOptions = $EducationProgrammes
+                            ->find()
+                            ->contain([
+                                'EducationCycles.EducationLevels.EducationSystems'
+                            ])
+                            ->where([
+                                'EducationProgrammes.id' => $programmeId
+                            ])
+                            ->first();
+
+                        if (!empty($programmeOptions)) {
+                            $academicPeriodId =
+                                $programmeOptions->education_cycle->education_level
+                                ->education_system->academic_period_id ?? '';
+                            if (!empty($academicPeriodId)) {
+
+                                $academicPeriod = $academicPeriods
+                                    ->find()
+                                    ->where([
+                                        'id' => $academicPeriodId
+                                    ])
+                                    ->first();
+                                $academicPeriodName =
+                                    $academicPeriod->name ?? '';
+                            }
+                        }
+                    }
+                }
+                $attr['type'] = 'readonly';
+                $attr['value'] = $academicPeriodId;
+                $attr['attr']['value'] = $academicPeriodName;
+            }
+        }
+
+        return $attr;
+    }
+
+    //POCOR-9708
+    public function onUpdateFieldEducationProgrammeId(EventInterface $event,array $attr,$action,ServerRequest $request)
+    {
+        $request = $this->request;
+        if ($action == 'view') {
+            $attr['visible'] = false;
+        } else if ($action == 'add' || $action == 'edit') {
+            $AcademicPeriod = TableRegistry::getTableLocator()
+                ->get('AcademicPeriod.AcademicPeriods');
+            $academicPeriodId =
+                !is_null($request->getData($this->aliasField('academic_period_id')))
+                ? $request->getData($this->aliasField('academic_period_id'))
+                : $AcademicPeriod->getCurrent();
+
+            $EducationProgrammes = TableRegistry::getTableLocator()
+                ->get('Education.EducationProgrammes');
+            if ($action == 'add') {
+                $programmeOptions = $EducationProgrammes
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'cycle_programme_name'
+                    ])
+                    ->find('availableProgrammes')
+                    ->contain([
+                        'EducationCycles.EducationLevels.EducationSystems'
+                    ])
+                    ->where([
+                        'EducationSystems.academic_period_id' => $academicPeriodId
+                    ])
+                    ->toArray();
+                $attr['options'] = $programmeOptions;
+                $attr['onChangeReload'] = 'changeEducationProgrammeId';
+
+            } else {
+                $queryString = $this->getQueryString();
+                $id = $queryString['id'] ?? null;
+                $programmeId = '';
+                $programmeName = '';
+                if (!empty($id)) {
+                    $educationProgramme = $this->find()
+                        ->where([
+                            'id' => $id
+                        ])
+                        ->first();
+                    $programmeId = $educationProgramme->education_programme_id ?? '';
+                    if (!empty($programmeId)) {
+                        $programme =
+                            $EducationProgrammes->find()
+                            ->where([
+                                'id' => $programmeId
+                            ])
+                            ->first();
+                        $programmeName = $programme->name ?? '';
+                    }
+                }
+                $attr['type'] = 'readonly';
+                $attr['value'] = $programmeId;
+                $attr['attr']['value'] = $programmeName;
+            }
+        }
+
+        return $attr;
+    }
+
+}

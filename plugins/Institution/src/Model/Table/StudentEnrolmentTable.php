@@ -1,6 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
+use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate enrolment alerts through AlertLogsTable helper
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
@@ -66,7 +67,6 @@ class StudentEnrolmentTable extends ControllerActionTable
             'Dashboard' => ['index'],
             'Students' => ['index', 'add']
         ]);
-
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             //['appliedAction' => ['StudentAdmission' => ['id']]
@@ -373,14 +373,30 @@ class StudentEnrolmentTable extends ControllerActionTable
             // If already enrolled, reuse the record
             $student = $existingStudent;
         } else {
+            //POCOR-9737[START]
+            $startDate = $entity->start_date;
+            $endDate = $entity->end_date;
+            if ((empty($startDate) || empty($endDate)) && !empty($entity->academic_period_id)
+                && $this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $entity->academic_period_id])
+            ) {
+                $period = $this->AcademicPeriods->get($entity->academic_period_id);
+                if (empty($startDate) && !empty($period->start_date)) {
+                    $startDate = $period->start_date;
+                }
+                if (empty($endDate) && !empty($period->end_date)) {
+                    $endDate = $period->end_date;
+                }
+            }
+            //POCOR-9737[END]
+
             // Create new enrolment (PENDING if available for workflow)
             $incomingStudent = [
                 'student_status_id' => $statusId,
                 'student_id' => $entity->student_id,
                 'education_grade_id' => $entity->education_grade_id,
                 'academic_period_id' => $entity->academic_period_id,
-                'start_date' => $entity->start_date,
-                'end_date' => $entity->end_date,
+                'start_date' => $startDate, // POCOR-9737
+                'end_date' => $endDate, // POCOR-9737
                 'institution_id' => $entity->institution_id
             ];
 
@@ -388,7 +404,7 @@ class StudentEnrolmentTable extends ControllerActionTable
                 $incomingStudent['class'] = $entity->institution_class_id;
             }
 
-            $newEntity = $Students->newEntity($incomingStudent);
+                $newEntity = $Students->newEntity($incomingStudent);
             $student = $Students->save($newEntity);
 
             if (!$student) {
@@ -442,42 +458,15 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     private function sendStudentEnrolmentAlert($entity): void
     {
+        //Log::debug('[TEMP-LOG] @StudentEnrolmentTable::sendStudentEnrolmentAlert() ENTRY - entity_id=' . ($entity->id ?? 'null') . ', status_id=' . ($entity->status_id ?? 'null')); //[TEMP-LOG]
+        //Log::debug('[TEMP-LOG] @StudentEnrolmentTable::sendStudentEnrolmentAlert() entity: ' . json_encode($entity->toArray())); //[TEMP-LOG]
         if (property_exists($entity, 'modified_user_id') && $entity->modified_user_id) {
             $userId = $entity->modified_user_id;
         } else {
             $userId = $entity->created_user_id;
         }
-        $alertsTable = self::getDynamicTableInstance('Alert.Alerts');
-        $alertRulesTable = self::getDynamicTableInstance('Alert.AlertRules');
-        $systemProcessesTable = self::getDynamicTableInstance('SystemProcesses');
-
-
-        $alert = $alertsTable
-            ->find()
-            ->where([$alertsTable->aliasField('process_name') => 'AlertStudentEnrolment',
-                $alertsTable->aliasField('frequency') => 'once'])
-            ->first();
-        if(!$alert){
-            Log::debug('No Alerts for AlertStudentEnrolment');
-            return;
-        }
-        if(!is_array($alert)){
-            $alert = $alert->toArray();
-        }
-        $activeRules = $alertRulesTable->find()
-            ->where([
-                $alertRulesTable->aliasField('feature') => $alert['name'],
-                $alertRulesTable->aliasField('enabled') => 1
-            ])
-            ->toArray();
-
-        foreach ($activeRules as $rule) {
-            if(!is_array($rule)){
-                $rule = $rule->toArray();
-            }
-            DashboardController::triggerSystemProcess($systemProcessesTable, $rule, $alert['process_name'], $userId, ['enrolment_id' => (int) $entity->id, 'status_id' => (int) $entity->status_id]);
-        }
-
+        //POCOR-9509: delegate enrolment alert triggering to AlertLogsTable helper
+        AlertLogsTable::triggerLaravelAlertFromCakePHP('AlertStudentEnrolment', $entity, $userId);
     }
 
     public function studentsAfterSave(EventInterface $event, $student)
@@ -857,6 +846,16 @@ class StudentEnrolmentTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($value, $url);
     }
     //POCOR-7738 end
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
     public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
@@ -866,10 +865,11 @@ class StudentEnrolmentTable extends ControllerActionTable
             $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
             $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
 
+            [, $editableDateFormat] = $this->getSystemDateFormats();
             $attr['type'] = 'date';
             $attr['date_options'] = [
-                'startDate' => $periodStartDate->format('d-m-Y'),
-                'endDate' => $periodEndDate->format('d-m-Y'),
+                'startDate' => $periodStartDate->format($editableDateFormat),
+                'endDate' => $periodEndDate->format($editableDateFormat),
                 'todayBtn' => false
             ];
             return $attr;
@@ -910,6 +910,35 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+        foreach (['start_date', 'end_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                \Cake\Log\Log::warning("StudentEnrolmentTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+
         //this is meant to force gender_id validation
         if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
             if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {
@@ -968,7 +997,11 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
-        $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
+        //Log::debug('[TEMP-LOG] @StudentEnrolmentTable::afterSave() About to call sendStudentEnrolmentAlert()'); //[TEMP-LOG]
+        //POCOR-9509: only fire enrolment alert for new rows or status changes
+        if ($entity->isNew() || $entity->isDirty('status_id')) {
+            $this->sendStudentEnrolmentAlert($entity); // POCOR-9320
+        }
         if ($entity->isNew()) {
             if ($entity->has('action_type') && $entity->action_type == 'imported') { // Import logic
                 $WorkflowActions = self::getDynamicTableInstance('Workflow.WorkflowActions');

@@ -140,8 +140,10 @@ class BankAccountsTable extends ControllerActionTable
 
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('bank_name', ['type' => 'select']);
-        $this->field('bank_branch_id', ['type' => 'select']);
+        $this->field('bank_name', ['type' => 'select', 'attr' => ['required' => true]]);
+        $this->field('bank_branch_id', ['type' => 'select', 'attr' => ['required' => true]]);
+        $this->field('account_name', ['attr' => ['required' => true]]);
+        $this->field('account_number', ['attr' => ['required' => true]]);
 
         $this->setFieldOrder(['bank_name', 'bank_branch_id', 'account_name', 'account_number', 'active']);
     }
@@ -154,9 +156,22 @@ class BankAccountsTable extends ControllerActionTable
 
     public function editOnInitialize(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-        $bankId = $this->BankBranches->get($entity->bank_branch_id)->bank_id;
-        //POCOR-9584: $request is immutable in CakePHP5; bank_option pre-population handled via query param on redirect
-        // original CakePHP3 code: $this->request->getQuery['bank_option'] = $bankId;
+        if (empty($entity->bank_branch_id)) {
+            return;
+        }
+
+        $branch = $this->BankBranches->find()
+            ->select(['bank_id'])
+            ->where([$this->BankBranches->aliasField('id') => $entity->bank_branch_id])
+            ->first();
+        if (!$branch || empty($branch->bank_id)) {
+            return;
+        }
+
+        // CakePHP5 request is immutable; set bank_option explicitly for dependent dropdowns.
+        $query = $this->request->getQueryParams();
+        $query['bank_option'] = $branch->bank_id;
+        $this->request = $this->request->withQueryParams($query);
     }
 
 
@@ -170,7 +185,15 @@ class BankAccountsTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
 
-        return $validator->requirePresence('bank_name');
+        return $validator
+            ->requirePresence('bank_name', 'create')
+            ->notEmptyString('bank_name')
+            ->requirePresence('bank_branch_id', 'create')
+            ->notEmptyString('bank_branch_id')
+            ->requirePresence('account_name', 'create')
+            ->notEmptyString('account_name')
+            ->requirePresence('account_number', 'create')
+            ->notEmptyString('account_number');
     }
 
     public function onGetActive(EventInterface $event, Entity $entity)
@@ -256,6 +279,10 @@ class BankAccountsTable extends ControllerActionTable
         if ($action == 'add' || $action == 'edit') {
             //POCOR-9584: was array_key_exists('bank_option', $request->getQuery) + $request->getQuery['key'] (CakePHP3 syntax)
             $bankId = $request->getQuery('bank_option');
+            if ($bankId === null) {
+                $posted = $request->getData($this->getAlias()) ?? [];
+                $bankId = $posted['bank_name'] ?? null;
+            }
             if ($bankId !== null) {
                 $bankBranches = $this->BankBranches
                     ->find('list')
@@ -266,6 +293,10 @@ class BankAccountsTable extends ControllerActionTable
                 $bankBranches = [];
             }
             $attr['options'] = $bankBranches;
+            if (!empty($request->getData($this->getAlias())['bank_branch_id'])) {
+                $attr['attr']['value'] = $request->getData($this->getAlias())['bank_branch_id'];
+            }
+            $attr['attr']['required'] = true;
         }
         return $attr;
     }
@@ -293,7 +324,7 @@ class BankAccountsTable extends ControllerActionTable
         if ($field == 'bank_name') {
             return __('Bank Name');
         } elseif ($field == 'bank_branch_id') {
-            return __('	Bank Branch');
+            return __('Bank Branch');
         } elseif ($field == 'account_name') {
             return __('Account Name');
         } elseif ($field == 'account_number') {

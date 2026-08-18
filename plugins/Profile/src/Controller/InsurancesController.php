@@ -135,41 +135,9 @@ class InsurancesController extends PageController
         }
     }
 
-    // for Pages
-//    public function setupHealthTabElements($options)
-//    {
-//        $institutionId = null;
-//        $page = $this->Page;
-//        $plugin = $this->getPlugin();
-//        $userId = isset($options['userId']) ? $options['userId'] : 0;
-//        $userRole = isset($options['userRole']) ? $options['userRole'] : '';
-//
-//        $pluralUserRole = Inflector::pluralize($userRole);
-//
-//        $params = ['id' => $userId,
-//            'user_id' => $userId];
-//        if(isset($options['institutionId'])){
-//            $institutionId = $options['institutionId'];
-//            $params['institutionId'] = $institutionId;
-//        }
-//        $queryString = $this->paramsEncode($params);
-//        $pluralPlugin = Inflector::pluralize($plugin);
-//
-//        $tabElements = $this->getHealthTabElements($plugin, $queryString, $pluralPlugin, $userRole, $pluralUserRole, $institutionId);
-//        $tabElements = $this->TabPermission->checkTabPermission($tabElements);
-//
-//        foreach ($tabElements as $tab => $tabAttr) {
-//            $page->addTab($tab)
-//                ->setTitle($tabAttr['text'])
-//                ->setUrl($tabAttr['url']);
-//        }
-//        // set active tab
-//
-//        $page->getTab('Insurances')->setActive('true');
-//
-//    }
-
-
+    //POCOR-9718: removed dead commented-out setupHealthTabElements + getHealthTabElements.
+    //Health tab setup for Profile Insurances now comes through Profile\BodyMassesController::setupTabElements
+    //(which includes 'Insurances' in its tabElements array). Single source of truth.
 
     public function beforeRender(EventInterface $event)
     {
@@ -183,65 +151,4 @@ class InsurancesController extends PageController
 
     }
 
-    /**
-     * @param string $plugin
-     * @param string $queryString
-     * @param string $pluralPlugin
-     * @param string $userRole
-     * @param string $pluralUserRole
-     * @param $institutionId
-     * @return array
-     */
-//    private function getHealthTabElements(string $plugin, string $queryString, string $pluralPlugin, string $userRole, string $pluralUserRole, $institutionId=null): array
-//    {
-//        $tabElements = [
-//            'Healths' => ['text' => __('Overview')],
-//            'HealthAllergies' => ['text' => __('Allergies')],
-//            'HealthConsultations' => ['text' => __('Consultations')],
-//            'HealthFamilies' => ['text' => __('Families')],
-//            'HealthHistories' => ['text' => __('Histories')],
-//            'HealthImmunizations' => ['text' => __('Immunizations')],
-//            'HealthMedications' => ['text' => __('Medications')],
-//            'HealthTests' => ['text' => __('Tests')],
-//            'BodyMasses' => ['text' => __('Body Mass')],
-//            'Insurances' => ['text' => __('Insurances')]
-//        ];
-//
-//        foreach ($tabElements as $action => &$obj) {
-//            $firstURL = [
-//                'plugin' => $plugin,
-//                'controller' => $plugin . $action,
-//                'action' => 'index',
-//                0 => $queryString
-//            ];
-//            $secondURL = [
-//                'plugin' => $plugin,
-//                'controller' => $pluralPlugin,
-//                'action' => $action,
-//                0 => 'index',
-//                1 => $queryString,
-//            ];
-//            if ($institutionId != null) {
-//                $firstURL = [
-//                    'plugin' => 'Institution',
-//                    'controller' => $userRole . $action,
-//                    'action' => 'index',
-//                    0 => $queryString
-//                ];
-//                $secondURL = [
-//                    'plugin' => $userRole,
-//                    'controller' => $pluralUserRole,
-//                    'action' => $action,
-//                    0 => 'index',
-//                    0 => $queryString
-//                ];
-//            }
-//            if ($action == 'Insurances' || $action == 'BodyMasses') {
-//                $obj['url'] = $firstURL;
-//            } else {
-//                $obj['url'] = $secondURL;
-//            }
-//        }
-//        return $tabElements;
-//    }
 }

@@ -217,9 +217,10 @@ class ImportBehavior extends Behavior
         $downloadUrl = $toolbarButtons['back']['url'];
 
         $downloadUrl[0] = 'template';
-
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
             $downloadUrl[1] = $buttons['add']['url'][1];
+        } elseif ($buttons['add']['url']['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673
+            $downloadUrl[1] = 'template';
         } else {
             //POCOR-9584: start - always carry full pass[1] from current request so all context params
             //   (class_id, academic_period_id, competency_template_id, etc.) survive to the template URL.
@@ -586,7 +587,9 @@ class ImportBehavior extends Behavior
                 $tempRow = $tempRow->getArrayCopy();
 
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
+
                 if (!isset($tempRow['entity'])) {
+                    
                     $tableEntity = $activeModel->newEntity([]);
                 } else {
                     if(!isset($tempRow['institution_class_id']) && $activeModel->getAlias() == 'StudentAdmission') {
@@ -798,6 +801,23 @@ class ImportBehavior extends Behavior
             //   (array_merge renumbers integer keys, breaking pass param order)
             $fullEncodedParam = $request->getParam('pass')[1] ?? null;
             // Log::debug('@ImportBehavior::processImport url_before=' . json_encode($url) . ' pass=' . json_encode($request->getParam('pass')) . ' fullEncodedParam=' . json_encode($fullEncodedParam)); //[TEMP-LOG]
+            /**
+             * Custom redirect only for Locale Contents import
+            */
+          
+            if ($url['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673 start
+                $url = [
+                    'plugin' => false,
+                    'controller' => 'LocaleContents',
+                    'action' => 'ImportLocaleContentsLanguage',
+                    1 => 'results'
+                ];
+
+                if ($fullEncodedParam) {
+                    $url[1] = $fullEncodedParam;
+                }
+               return $model->controller->redirect($url); //POCOR-3673 end
+            }
             if ($fullEncodedParam) {
                 $url[1] = $fullEncodedParam;
             } else {
@@ -807,7 +827,6 @@ class ImportBehavior extends Behavior
             unset($url['?']);
             // Log::debug('@ImportBehavior::processImport url_after=' . json_encode($url)); //[TEMP-LOG]
             //POCOR-9584: end
-
             return $model->controller->redirect($url);
         };
     }
@@ -1192,6 +1211,7 @@ class ImportBehavior extends Behavior
         } else {
             $codesData = $this->excelGetCodesData($this->_table);
         }
+
         $lastColumn = -1;
         $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
         foreach ($codesData as $columnOrder => $modelArr) {
@@ -1420,18 +1440,35 @@ class ImportBehavior extends Behavior
         return $header === $cellsValue;
     }
 
+    //POCOR-9236 Start
+    /**
+     * Model name as stored in import_mapping.model (may differ from ORM table model name).
+     */
+    protected function getImportMappingModelName(): string
+    {
+        $modelName = (string)$this->getConfig('model');
+        if ($modelName === 'ExaminationStudentSubjectResults') {
+            return 'ExaminationItemResults';
+        }
+
+        return $modelName;
+    }
+
+    /**
+     * Full import_mapping.model value, e.g. Examination.ExaminationItemResults
+     */
+    protected function getImportMappingModelKey(): string
+    {
+        return $this->getConfig('plugin') . '.' . $this->getImportMappingModelName();
+    }
+    //POCOR-9236 End
+
     public function getMapping()
     {
         $model = $this->_table;
-        //POCOR-8174
-        $modelName = $this->getConfig('model');
-        if (($this->getConfig('model')) == 'ExaminationStudentSubjectResults') {
-            $modelName = "ExaminationItemResults";
-        }
-        //POCOR-8174
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $modelName //POCOR-8174
+                $model->aliasField('model') => $this->getImportMappingModelKey(), //POCOR-9236 
             ])
             ->order($model->aliasField('order'))
             ->toArray();
@@ -1555,13 +1592,21 @@ class ImportBehavior extends Behavior
     {
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model'),
+                $model->aliasField('model') => $this->getImportMappingModelKey(),//POCOR-9236 
                 $model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
             ])
             ->order($model->aliasField('order'))
             ->toArray();
         $data = new ArrayObject;
         foreach ($mapping as $row) {
+            //POCOR-9236 Marks must be free entry; dropdown lists belong on examination_grading_option_id only.
+            if ($row->column_name === 'marks' && preg_match(
+                '/^Examination\\.(ExaminationItemResults|ExaminationStudentSubjectResults)$/',
+                (string)$row->model
+            )) {
+                continue;
+            }
+            //POCOR-9236 End
             $foreignKey = $row->foreign_key;
             $lookupPlugin = $row->lookup_plugin;
             $lookupModel = $row->lookup_model;

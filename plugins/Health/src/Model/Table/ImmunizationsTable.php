@@ -7,9 +7,12 @@ use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Entity;
 
 class ImmunizationsTable extends ControllerActionTable
 {
+    use HealthLookupTrait; //POCOR-9718
+
     public function initialize(array $config): void
     {
         $this->setTable('user_health_immunizations');
@@ -42,8 +45,10 @@ class ImmunizationsTable extends ControllerActionTable
     //POCOR-5890 starts remain work
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
-        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'type' => 'select', 'before' => 'comment']);
-        $this->field('dosage',['visible' => false]);
+        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Type', 'required' => true], 'type' => 'select', 'before' => 'comment']); //POCOR-9507
+        $this->field('dosage', ['after' => 'health_immunization_type_id', 'attr' => ['required' => true]]); //POCOR-9507
+        $this->field('file_name', ['visible' => false]);
+        
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
@@ -53,15 +58,14 @@ class ImmunizationsTable extends ControllerActionTable
     {
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
-        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'before' => 'comment']);
-        $this->field('dosage',['visible' => false]);
+        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Type'], 'before' => 'comment']); //POCOR-9507
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
             case 'health_immunization_type_id':
-                return __('Vaccination Type');
+                return __('Type'); //POCOR-9507
             case 'file_content':
                 return __('Attachment');
             case 'date':
@@ -74,16 +78,16 @@ class ImmunizationsTable extends ControllerActionTable
     }
 
     public function addBeforeAction(EventInterface $event, ArrayObject $extra)
-    {   
-        $this->field('dosage', ['visible' => false]);
+    {
+        $this->field('dosage', ['after' => 'health_immunization_type_id', 'attr' => ['required' => true]]); //POCOR-9507
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
 
     public function viewBeforeAction(EventInterface $event)
     {
-        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Vaccination Type'], 'before' => 'comment']);
-        $this->field('dosage', ['visible' => false]);
+        $this->field('health_immunization_type_id', ['attr'=>['label'=>'Type'], 'before' => 'comment']); //POCOR-9507
+        $this->field('dosage', ['after' => 'health_immunization_type_id']); //POCOR-9507
         $this->field('file_name', ['visible' => false]);
         $this->field('file_content', ['after' => 'comment','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
     }
@@ -92,7 +96,10 @@ class ImmunizationsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator->allowEmpty('file_content')
+        ->notEmpty('dosage')
+        ->requirePresence('dosage')
+        ->notEmptyDate('date', __('This field cannot be left empty')); //POCOR-9507
         return $validator;
     }
 
@@ -109,7 +116,7 @@ class ImmunizationsTable extends ControllerActionTable
             'key'   => 'health_immunization_type_id',
             'field' => 'health_immunization_type_id',
             'type'  => 'string',
-            'label' => __('Vaccination Type')
+            'label' => __('Type') //POCOR-9507
         ];
 
         $extraField[] = [
@@ -230,5 +237,31 @@ class ImmunizationsTable extends ControllerActionTable
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
+    }
+
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Immunizations.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
+    }
+    //POCOR-9718: populate health_immunization_type_id select from Health.ImmunizationTypes.
+    public function onUpdateFieldHealthImmunizationTypeId(EventInterface $event, array $attr, $action)
+    {
+        return $this->populateLookupSelect($attr, $action, 'Health.ImmunizationTypes');
     }
 }

@@ -467,7 +467,19 @@ class ValidationReportTable extends AppTable  {
 
         $areaLevelId      = (int)$requestData->area_level_id;
         $areaId           = (int)$requestData->area_education_id;
-        $institution_id   = (int)$requestData->institution_id;
+        $institutionId    = $requestData->institution_id;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1' && $id !== -1;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0 && $id !== '-1' && $id !== -1;
+            }));
+        } elseif (!empty($institutionId) && (int)$institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         $academic_period_id = (int)$requestData->academic_period_id;
 
         $AreaLvlT = TableRegistry::getTableLocator()->get('area_levels'); 
@@ -567,9 +579,9 @@ class ValidationReportTable extends AppTable  {
             $whereConditions[] = 'areas.id IN (' . implode(',', $finalIds) . ')';
         }
 
-        if ($institution_id != -1 && $institution_id > 0) {
-            $where['institutions.id'] = $institution_id;
-            $whereConditions[] = 'institutions.id = ' . $institution_id;
+        if (!empty($filterInstitutionIds)) {
+            $where['institutions.id IN'] = $filterInstitutionIds;
+            $whereConditions[] = 'institutions.id IN (' . implode(',', $filterInstitutionIds) . ')';
         }
 
         if (!empty($whereConditions)) {

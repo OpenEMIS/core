@@ -56,12 +56,26 @@ class ExaminationsTable extends AppTable
                     }
                     return false;
                 })
-                ->notEmpty('institution_id', __('This field cannot be left empty'), function ($context) {
-                    if (isset($context['data']['feature'])) {
-                        return in_array($context['data']['feature'], ['Report.NotRegisteredStudents', 'Report.ExaminationResults']);
-                    }
-                    return false;
-                });
+                ->add('institution_id', 'required', [
+                    'rule' => function ($value, $context) {
+                        if (!isset($context['data']['feature']) || !in_array($context['data']['feature'], ['Report.NotRegisteredStudents', 'Report.ExaminationResults'])) {
+                            return true;
+                        }
+                        if (!empty($context['data']['reload'])) {
+                            return true;
+                        }
+                        if (empty($value) || !isset($value['_ids'])) {
+                            return false;
+                        }
+                        $ids = (array)$value['_ids'];
+                        $ids = array_filter($ids, function ($v) {
+                            return $v !== '' && $v !== null;
+                        });
+
+                        return !empty($ids);
+                    },
+                    'message' => __('This field cannot be left empty')
+                ]);
     }
 
     public function beforeAction(EventInterface $event)
@@ -307,7 +321,49 @@ class ExaminationsTable extends AppTable
 
                 $attr['options'] = !empty($institutionOptions)? $institutionOptions: [];
                 $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
+                $attr['onChangeReload'] = true;
+                if (in_array($feature, ['Report.ExaminationResults', 'Report.NotRegisteredStudents'])) { //POCOR-8417
+                    $attr['attr']['multiple'] = true;
+                    unset($institutionOptions['']);
+
+                    // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                    // still allow "All Institutions" to be picked afterwards. Only once "All
+                    // Institutions" itself is selected do the specific institutions become
+                    // disabled (and any of them already selected are cleared).
+                    if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
+                        $selectedInstitutionIds = [];
+                        $institutionIdData = isset($request->getData($this->getAlias())['institution_id']) ? $request->getData($this->getAlias())['institution_id'] : null;
+                        if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                            $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                                return $v !== '' && $v !== null;
+                            });
+                        }
+                        $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                        if ($allInstitutionsSelected) {
+                            // "All Institutions" wins - disable every other option and force it
+                            // to be the only value selected.
+                            $formattedInstitutionOptions = [];
+                            foreach ($institutionOptions as $optKey => $optLabel) {
+                                if ((string)$optKey === '0') {
+                                    $formattedInstitutionOptions[$optKey] = $optLabel;
+                                } else {
+                                    $formattedInstitutionOptions[] = [
+                                        'text' => $optLabel,
+                                        'value' => $optKey,
+                                        'disabled' => 'disabled'
+                                    ];
+                                }
+                            }
+                            $institutionOptions = $formattedInstitutionOptions;
+                            $attr['attr']['value'] = ['0'];
+                        }
+                    }
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    $attr['attr']['multiple'] = false;
+                }
                 $attr['select'] = false;
 
             } else if (in_array($feature, ['Report.NotRegisteredStudents'])) {
@@ -337,7 +393,49 @@ class ExaminationsTable extends AppTable
 
                 $attr['options'] = !empty($institutionOptions)? $institutionOptions: [];
                 $attr['type'] = 'chosenSelect';
-                $attr['attr']['multiple'] = false;
+                $attr['onChangeReload'] = true;
+                if (in_array($feature, ['Report.ExaminationResults', 'Report.NotRegisteredStudents'])) { //POCOR-8417
+                    $attr['attr']['multiple'] = true;
+                    unset($institutionOptions['']);
+
+                    // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                    // still allow "All Institutions" to be picked afterwards. Only once "All
+                    // Institutions" itself is selected do the specific institutions become
+                    // disabled (and any of them already selected are cleared).
+                    if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
+                        $selectedInstitutionIds = [];
+                        $institutionIdData = isset($request->getData($this->getAlias())['institution_id']) ? $request->getData($this->getAlias())['institution_id'] : null;
+                        if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                            $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                                return $v !== '' && $v !== null;
+                            });
+                        }
+                        $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                        if ($allInstitutionsSelected) {
+                            // "All Institutions" wins - disable every other option and force it
+                            // to be the only value selected.
+                            $formattedInstitutionOptions = [];
+                            foreach ($institutionOptions as $optKey => $optLabel) {
+                                if ((string)$optKey === '0') {
+                                    $formattedInstitutionOptions[$optKey] = $optLabel;
+                                } else {
+                                    $formattedInstitutionOptions[] = [
+                                        'text' => $optLabel,
+                                        'value' => $optKey,
+                                        'disabled' => 'disabled'
+                                    ];
+                                }
+                            }
+                            $institutionOptions = $formattedInstitutionOptions;
+                            $attr['attr']['value'] = ['0'];
+                        }
+                    }
+                    $attr['options'] = $institutionOptions;
+                    $attr['attr']['required'] = true;
+                } else {
+                    $attr['attr']['multiple'] = false;
+                }
                 $attr['select'] = false;
 
             } else {

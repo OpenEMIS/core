@@ -7,11 +7,17 @@ use App\Http\Controllers\Controller;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use App\Services\PermissionService;
+use App\Services\Security\SuperAdminProbeGuard; //POCOR-9710
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache; //POCOR-9660: cache allowed orderby columns
 
 class CrudApiController extends Controller
 {
     protected $allowedResources = [
+        // POCOR-9694: OpenEMIS Runtime abstraction tables — read-only resources for the Runtime UI
+        'tasks' => \App\Models\Api5\Tasks::class, //POCOR-9694
+        'task-jobs' => \App\Models\Api5\TaskJobs::class, //POCOR-9694
+        'task-failures' => \App\Models\Api5\TaskFailures::class, //POCOR-9694
         'department-staff' => \App\Models\Api5\DepartmentStaff::class, // POCOR_8030
         'institution-departments' => \App\Models\Api5\InstitutionDepartments::class, // POCOR_8030
         'institution-infrastructure-attachments' => \App\Models\InstitutionInfrastructureAttachments::class,
@@ -339,6 +345,10 @@ class CrudApiController extends Controller
         'insurance-types' => \App\Models\Api5\InsuranceTypes::class,
         'insurance-providers' => \App\Models\Api5\InsuranceProviders::class,
         'institutions' => \App\Models\Api5\Institutions::class,
+        //POCOR-9610: start - Expose external registrations integration resources through shared Api5 CRUD routing
+        'institution-registrations' => \App\Models\Api5\InstitutionRegistrations::class,
+        'institution-accreditations' => \App\Models\Api5\InstitutionAccreditations::class,
+        //POCOR-9610: end
         'institution-visit-requests' => \App\Models\Api5\InstitutionVisitRequests::class,
         'institution-units' => \App\Models\Api5\InstitutionUnits::class,
         'institution-types' => \App\Models\Api5\InstitutionTypes::class,
@@ -689,9 +699,13 @@ class CrudApiController extends Controller
         //...
     ];
 
-    public function __construct(PermissionService $permissionService)
+    //POCOR-9710: probe-detection + password carve-out for security-users.
+    protected $probeGuard;
+
+    public function __construct(PermissionService $permissionService, SuperAdminProbeGuard $probeGuard)
     {
         $this->permissionService = $permissionService;
+        $this->probeGuard = $probeGuard;
     }
     /**
      * Common entry point for all CRUD operations.
@@ -732,6 +746,27 @@ class CrudApiController extends Controller
         // POCOR-8966 end
 
 //        Log::info("User authorized for {$model}:{$action}");
+
+        //POCOR-9710: security-users single-target probe gate. Runs ONLY for
+        //the security-users resource and only on GET / PUT / DELETE with a
+        //single id segment. If the target id is a super_admin = 1 row and
+        //the caller isn't super-admin, log the probe + return 404 — never
+        //leak that the row exists. List GETs are not gated here; the
+        //HidesSuperAdmins global scope filters the result naturally and the
+        //two-count list-probe fingerprint runs after parseFilters in
+        //handleGetRequest.
+        if ($resource === 'security-users' && !SuperAdminProbeGuard::isSuperAdmin(auth()->user())) {
+            if (in_array($action, ['view', 'edit', 'delete'], true)
+                && $this->probeGuard->probesSingleSuperAdminTarget($model, $segments)
+            ) {
+                $this->probeGuard->logProbe($request, auth()->user(), [
+                    'resource' => $resource,
+                    'action'   => $action,
+                    'target'   => $segments[0] ?? null,
+                ]);
+                return response()->json(['error' => 'Record not found'], 404);
+            }
+        }
 
         // Handle the request based on method
         return $this->handleRequestByMethod($request, $model, $segments, $method);
@@ -810,14 +845,55 @@ class CrudApiController extends Controller
 
         $pagination = $this->getPaginationParams($request, $segments);
         $filters = $this->parseFilters($request, $segments);
-        $order = $this->parseOrderParams($request, $segments);
-
-        $query = $this->parseSelectParams($request, $segments, $query, $model);
-        $query = $this->applyFilters($query, $filters);
-        $query = $this->applyOrder($query, $order, $model);
+        //POCOR-9660: start - implicit id-list segment (e.g. /resource/4,5,6) → filter
+        try {
+            $implicitIdFilter = $this->parseImplicitIdFilter($model, $segments);
+            if (!empty($implicitIdFilter)) {
+                $filters = array_merge($filters, $implicitIdFilter);
+            }
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
+        //POCOR-9660: end
+        //POCOR-9660+9697: surface invalid orderby/filter column as 400 instead of 500
+        try {
+            $order = $this->parseOrderParams($request, $segments);
+            $query = $this->parseSelectParams($request, $segments, $query, $model);
+            $query = $this->applyFilters($query, $filters, $model); //POCOR-9697: pass $model for allowlist
+            $query = $this->applyOrder($query, $order, $model);
+        } catch (\InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 400);
+        }
         $query = $this->applyInstitutionFilter($query, $model);
 
-        return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
+        //POCOR-9710: list-probe fingerprint for security-users. The
+        //HidesSuperAdmins scope filters the response naturally; here we just
+        //add the audit log when the caller's filter targets super-admins
+        //exclusively (two-count: scope-bypassed total == scope-bypassed
+        //super_admin = 1 total, and total > 0).
+        $modelClass = is_object($model) ? get_class($model) : $model;
+        if ($modelClass === \App\Models\Api5\SecurityUsers::class
+            && !SuperAdminProbeGuard::isSuperAdmin(auth()->user())
+            && !empty($filters)
+        ) {
+            $probeQuery = (clone $query)->withoutGlobalScope('hideSuperAdmins');
+            if ($this->probeGuard->probesOnlySuperAdmins($probeQuery)) {
+                $this->probeGuard->logProbe($request, auth()->user(), [
+                    'resource' => 'security-users',
+                    'action'   => 'list',
+                    'filters'  => $filters,
+                ]);
+            }
+        }
+        //POCOR-9753
+        $paginationEnabled = filter_var(
+            $request->query('pagination', true),
+            FILTER_VALIDATE_BOOLEAN
+        );
+        return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments, 
+            $paginationEnabled);
+
+        //return $this->paginateResults($query, $pagination['limit'], $pagination['page'], $model, $segments);
     }
 
     /**
@@ -831,11 +907,38 @@ class CrudApiController extends Controller
     {
         $data = $request->all();
 
+        //POCOR-9710: Q1 password carve-out. On security-users create, only
+        //super-admin callers may set `password`; otherwise strip silently +
+        //log. The setPasswordAttribute() mutator still hashes anything that
+        //survives — this is defense-in-depth, not the only layer.
+        $data = $this->maybeStripPasswordForSecurityUsers($request, $model, $data);
+
         if ($this->isBatchRequest($data)) {
             return $this->handleBatchCreate($model, $data);
         }
 
         return $this->handleSingleCreate($model, $data);
+    }
+
+    //POCOR-9710: shared helper for the two CRUD paths that mass-assign user
+    //input into security_users. Batch payloads are arrays-of-objects, so the
+    //strip walks every row.
+    private function maybeStripPasswordForSecurityUsers(Request $request, $model, array $data): array
+    {
+        $modelClass = is_object($model) ? get_class($model) : $model;
+        if ($modelClass !== \App\Models\Api5\SecurityUsers::class) {
+            return $data;
+        }
+        $caller = auth()->user();
+        if ($this->isBatchRequest($data)) {
+            foreach ($data as $i => $row) {
+                if (is_array($row)) {
+                    $data[$i] = $this->probeGuard->stripPasswordIfNotSuperAdmin($row, $caller, $request);
+                }
+            }
+            return $data;
+        }
+        return $this->probeGuard->stripPasswordIfNotSuperAdmin($data, $caller, $request);
     }
 
     /**
@@ -858,17 +961,48 @@ class CrudApiController extends Controller
         }
 
         $data = $request->all();
+        //POCOR-9710: Q1 password carve-out — applies symmetrically on update.
+        $data = $this->maybeStripPasswordForSecurityUsers($request, $model, $data);
         $current_user_id = auth()->id(); // Assuming you have a way to get the current user ID
         if (is_string($model)) {
             $model = new $model;
         }
         $this->decodeBlobFields($data); // Decode base64 to binary before update
 
-        if (in_array('modified_user_id', $model->getFillable()) && in_array('modified', $model->getFillable())) {
-            if (!isset($data['modified_user_id'])) {
-                $data['modified_user_id'] = $current_user_id;
+        //POCOR-9697: audit-trail integrity on update — always derive
+        //modified_user_id from the JWT (never trust the request body) and
+        //silent-strip any client-supplied created_user_id since it is
+        //immutable. Logging mirrors the super_admin silent-strip: server-side
+        //warning only, never echoed back to the caller (anti-fingerprinting).
+        $fillable = $model->getFillable();
+        if (in_array('created_user_id', $fillable) && array_key_exists('created_user_id', $data)) {
+            Log::warning(
+                'POCOR-9697: created_user_id supplied on update — silently stripped (immutable)',
+                [
+                    'endpoint'       => $request->path(),
+                    'method'         => $request->method(),
+                    'caller_id'      => $current_user_id,
+                    'ip'             => $request->ip(),
+                    'supplied_value' => $data['created_user_id'],
+                ]
+            );
+            unset($data['created_user_id']);
+        }
+        if (in_array('modified_user_id', $fillable)) {
+            if (array_key_exists('modified_user_id', $data) && (int) $data['modified_user_id'] !== (int) $current_user_id) {
+                Log::warning(
+                    'POCOR-9697: modified_user_id forgery attempt — overwritten with JWT user',
+                    [
+                        'endpoint'       => $request->path(),
+                        'method'         => $request->method(),
+                        'caller_id'      => $current_user_id,
+                        'ip'             => $request->ip(),
+                        'supplied_value' => $data['modified_user_id'],
+                    ]
+                );
             }
-            if (!isset($data['modified'])) {
+            $data['modified_user_id'] = $current_user_id; //POCOR-9697: always from JWT
+            if (in_array('modified', $fillable) && !isset($data['modified'])) {
                 $data['modified'] = Carbon::now();
             }
         }
@@ -992,7 +1126,9 @@ class CrudApiController extends Controller
             'page',
             'limit',
             '_scope',
-            '_fields'];
+            '_fields',
+            'pagination',
+            ];
 
         // Parse conditions from the query parameter
         $conditionsParam = $request->input('_conditions');
@@ -1001,9 +1137,10 @@ class CrudApiController extends Controller
         }
 
         // Parse other filters from query parameters
+        // POCOR-9633: skip params starting with '_' — reserved for scope-consumed params (e.g., _date, _meal_programmes_id)
         foreach ($request->all() as $key => $value) {
-            if (!in_array($key, $excludedParams)) {
-                $filters[$key] = $value;
+            if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) {
+                $filters[$key] = $this->normalizeGetFilterValue($key, $value); //POCOR-9660: normalize comma-separated id values
             }
         }
 
@@ -1022,8 +1159,8 @@ class CrudApiController extends Controller
                     // Decrement $i by 2 to account for the removed elements
                     $i -= 2;
                 } else {
-                    if (!in_array($key, $excludedParams)) {
-                        $filters[$key] = $value;
+                    if (!in_array($key, $excludedParams) && !str_starts_with($key, '_')) { //POCOR-9633: skip _ prefixed scope-consumed params
+                        $filters[$key] = $this->normalizeGetFilterValue($key, $value); //POCOR-9660: normalize comma-separated id values
                     }
                 }
             }
@@ -1058,12 +1195,118 @@ class CrudApiController extends Controller
         foreach ($pairs as $pair) {
             $parts = explode(':', $pair, 2);
             if (count($parts) === 2) {
-                $conditions[$parts[0]] = $parts[1];
+                //POCOR-9660: start - support IN(a,b,c) and comma-separated id lists in _conditions
+                $field = trim($parts[0]);
+                $value = trim($parts[1]);
+
+                $inValues = $this->parseInConditionValues($value);
+                if ($inValues !== null) {
+                    $conditions[$field] = $inValues;
+                } else {
+                    $conditions[$field] = $this->normalizeGetFilterValue($field, $value);
+                }
+                //POCOR-9660: end
             }
         }
 
         return $conditions;
     }
+
+    //POCOR-9660: start - new helper - normalize GET filter values (split id-lists into arrays)
+    /**
+     * Normalize GET filter values before they are applied to the query.
+     *
+     * @param string $field
+     * @param mixed $value
+     * @return mixed
+     */
+    private function normalizeGetFilterValue($field, $value)
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        if (strpos($value, ',') !== false) {
+            return array_map('trim', explode(',', $value));
+        }
+
+        $value = trim($value);
+
+        if (($field === 'id' || str_ends_with($field, '_id')) && strpos($value, ',') !== false) { //POCOR-9660: match bare 'id' and any '*_id' field for multi-value filter
+            $values = $this->splitAndTrimValues($value);
+
+            if (!empty($values) && count(array_filter($values, [$this, 'isValidIdentifier'])) === count($values)) {
+                return $values;
+            }
+        }
+
+        return $value;
+    }
+    //POCOR-9660: end
+
+    //POCOR-9660: start - new helper - split a CSV string, trim each item, and drop empty entries
+    private function splitAndTrimValues(string $csv): array
+    {
+        return array_values(array_filter(array_map('trim', explode(',', $csv)), fn ($v) => $v !== ''));
+    }
+    //POCOR-9660: end
+
+    //POCOR-9660: start - new helper - parse IN(a,b,c) operator from _conditions value
+    /**
+     * Parse IN operator values from _conditions.
+     *
+     * @param string $value
+     * @return array|null
+     */
+    private function parseInConditionValues($value)
+    {
+        if (!str_starts_with($value, 'IN')) {
+            return null;
+        }
+
+        $listValue = trim(substr($value, 2), '()');
+        if ($listValue === '' || preg_match('/^[A-Za-z]/', $listValue)) {
+            return null;
+        }
+
+        $rawValues = array_map('trim', explode(',', $listValue));
+        $values = $this->splitAndTrimValues($listValue);
+
+        return count($values) > 1 && count($values) === count($rawValues) ? $values : null;
+    }
+    //POCOR-9660: end
+
+    //POCOR-9660: start - new helper - parse implicit id-list segment "/resource/4,5,6"
+    /**
+     * Parse an implicit GET identifier segment such as "4,5,6".
+     *
+     * @param string $model Fully qualified model class.
+     * @param array $segments Remaining URL segments.
+     * @return array
+     */
+    private function parseImplicitIdFilter($model, array &$segments)
+    {
+        if (count($segments) !== 1 || strpos($segments[0], ',') === false) {
+            return [];
+        }
+
+        $idField = $this->getPossibleIdField($model);
+        if (!$idField) {
+            return [];
+        }
+
+        $rawValues = array_map('trim', explode(',', $segments[0]));
+        $values = $this->splitAndTrimValues($segments[0]);
+
+        if (count($values) < 2 || count($values) !== count($rawValues) || count(array_filter($values, [$this, 'isValidIdentifier'])) !== count($values)) {
+            throw new \InvalidArgumentException('Invalid identifier list.');
+        }
+
+        $segments = [];
+
+        return [$idField => $values];
+    }
+    //POCOR-9660: end
 
     /**
      * Parse select parameters from the request and segments.
@@ -1154,15 +1397,78 @@ class CrudApiController extends Controller
 
 
     /**
+     * POCOR-9697: Compute the per-model set of columns a v5 read request may
+     * filter on. Returns `$fillable` minus `$hidden`, so the read-side filter
+     * surface is exactly the writable, non-hidden columns.
+     *
+     * Rationale: `$hidden` strips sensitive columns from the response body,
+     * but without this allowlist `_conditions=hiddenfield:value` still executes
+     * as a WHERE clause, allowing membership inference (super_admin) or a
+     * binary-search oracle (password hash). Mirroring the published write
+     * surface keeps the rule internally consistent — a client cannot read-
+     * filter on any column they could not already POST/PUT to.
+     *
+     * @param mixed $model Fully qualified model class name or instance.
+     * @return array<int,string> List of column names allowed in _conditions/filters.
+     */
+    private function getQueryableColumns($model): array
+    {
+        if (is_string($model)) {
+            $model = new $model;
+        }
+        $fillable = method_exists($model, 'getFillable') ? $model->getFillable() : [];
+        $hidden   = method_exists($model, 'getHidden')   ? $model->getHidden()   : [];
+        // Belt-and-braces diff in case a future model author lists a column in both arrays.
+        return array_values(array_diff($fillable, $hidden));
+    }
+
+    //POCOR-9697: fields that are NEVER queryable across any model. Probes against these
+    //are escalated to a higher log severity for SOC alerting (membership inference on
+    //super_admin, binary-search oracle on password). Add credential-bearing columns here
+    //as new models are introduced.
+    private const SENSITIVE_FILTER_FIELDS = ['super_admin', 'password', 'remember_token', 'password_hash'];
+
+    /**
      * Apply filters to the query.
+     *
+     * POCOR-9697: `$model` is now required so we can reject any filter key that
+     * is not in `getQueryableColumns()`. Dropped keys cause a 400 with a generic
+     * message — we never echo the field name back to the caller — and the
+     * server logs the dropped keys for audit. Probes against
+     * SENSITIVE_FILTER_FIELDS are logged at warning level so SOC tooling can alert.
+     *
+     * Rationale for 400 (vs the original silent-drop):
+     *  - Silent-drop quietly swallowed legitimate typos (e.g. `studnet_id` instead
+     *    of `student_id`), returning the wrong dataset and creating a long-lived
+     *    DX trap.
+     *  - 400 + generic message preserves the anti-fingerprinting property: the
+     *    response body is identical for `super_admin`, `password`, or `hubabuba`,
+     *    so the attacker cannot A/B test field existence.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param array $filters
+     * @param mixed $model Fully qualified model class name or instance (POCOR-9697).
      * @return \Illuminate\Database\Eloquent\Builder
+     * @throws \InvalidArgumentException When one or more filter keys are not in the allowlist.
+     *                                   Caller (handleGetRequest) translates this to HTTP 400.
      */
-    private function applyFilters($query, array $filters)
+    private function applyFilters($query, array $filters, $model = null)
     {
+        //POCOR-9697: build allowlist once per call; empty = no allowlist enforced (defensive default for legacy callers)
+        $allowed = $model ? $this->getQueryableColumns($model) : [];
+        $dropped = [];
+        $sensitiveDropped = [];
+
         foreach ($filters as $field => $value) {
+            //POCOR-9697: collect non-allowlist keys; we'll log and 400 after the loop so a
+            //single request lists every offender once (anti-fingerprinting + DX clarity).
+            if (!empty($allowed) && !in_array($field, $allowed, true)) {
+                $dropped[] = $field;
+                if (in_array($field, self::SENSITIVE_FILTER_FIELDS, true)) {
+                    $sensitiveDropped[] = $field;
+                }
+                continue;
+            }
             if (is_array($value)) {
                 $query->whereIn($field, $value);
             } elseif (strpos($value, '>=') === 0) {
@@ -1197,6 +1503,32 @@ class CrudApiController extends Controller
             }
         }
 
+        //POCOR-9697: surface dropped filter keys as a single 400 with a generic
+        //message. The field names appear in server logs only — never in the response.
+        if (!empty($dropped)) {
+            $modelName = is_string($model) ? $model : (is_object($model) ? get_class($model) : null);
+
+            if (!empty($sensitiveDropped)) {
+                //Probe against credential/escalation columns — surface for SOC alerting.
+                Log::warning('POCOR-9697: SENSITIVE filter probe — possible enumeration attempt', [
+                    'model' => $modelName,
+                    'sensitive_fields' => $sensitiveDropped,
+                    'all_dropped' => $dropped,
+                    'ip' => request()->ip(),
+                ]);
+            } else {
+                //Plain non-allowlist field (typo, deprecated column, ill-informed client).
+                Log::info('POCOR-9697: filter dropped — field not queryable', [
+                    'model' => $modelName,
+                    'fields' => $dropped,
+                ]);
+            }
+
+            throw new \InvalidArgumentException(
+                'Request contains filter field names that are not present in this resource. Check API documentation for the fields of this resource.'
+            );
+        }
+
         return $query;
     }
 
@@ -1213,17 +1545,29 @@ class CrudApiController extends Controller
         if (is_string($model)) {
             $model = new $model;
         }
+
+        //POCOR-9660: start - validate orderby column + direction against schema-derived allowlist
+        $allowedColumns = $this->getAllowedOrderColumns($model);
         $hasOrderParam = !empty($order['columns']);
 
-        if (!$hasOrderParam && in_array('order', $model->getFillable())) {
+        if (!$hasOrderParam && in_array('order', $allowedColumns, true)) {
             // Default ordering by 'order' field if no order params are provided
             $query->orderBy('order', 'asc');
         } else {
             foreach ($order['columns'] as $index => $column) {
-                $direction = $order['directions'][$index] ?? 'asc';
+                if (!in_array($column, $allowedColumns, true)) {
+                    throw new \InvalidArgumentException("Invalid orderby column: {$column}");
+                }
+
+                $direction = $order['directions'][$index] ?? 'asc'; //POCOR-9660: already lowercased by parseOrderParams
+                if (!in_array($direction, ['asc', 'desc'], true)) {
+                    throw new \InvalidArgumentException("Invalid order direction: {$direction}");
+                }
+
                 $query->orderBy($column, $direction);
             }
         }
+        //POCOR-9660: end
 
         return $query;
     }
@@ -1281,11 +1625,53 @@ class CrudApiController extends Controller
             }
         }
 
+        //POCOR-9660: start - trim/normalize order columns and directions before validation
+        $orderColumns = array_values(array_filter(array_map('trim', $orderColumns), function ($column) {
+            return $column !== '';
+        }));
+        $orderDirections = array_values(array_filter(array_map(function ($direction) {
+            return strtolower(trim($direction));
+        }, $orderDirections), function ($direction) {
+            return $direction !== '';
+        }));
+        //POCOR-9660: end
+
         return [
             'columns' => $orderColumns,
             'directions' => $orderDirections,
         ];
     }
+
+    //POCOR-9660: start - new helper - cached schema-derived allowlist of sortable columns
+    /**
+     * Resolve the list of columns that may be used for ordering.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return array
+     */
+    private function getAllowedOrderColumns($model)
+    {
+        $cacheKey = 'crud_api_sortable_columns:v3:' . get_class($model) . ':' . $model->getTable(); //POCOR-9660: v3 excludes hidden columns
+
+        return Cache::remember($cacheKey, now()->addMinutes(10), function () use ($model) {
+            try {
+                $schemaColumns = $model->getConnection()
+                    ->getSchemaBuilder()
+                    ->getColumnListing($model->getTable());
+            } catch (\Exception $e) {
+                $schemaColumns = $model->getFillable();
+            }
+
+            $hidden = $model->getHidden(); //POCOR-9660: never reveal hidden columns (e.g. password) via sort order
+
+            return array_values(array_filter(array_unique($schemaColumns), function ($column) use ($hidden) {
+                return is_string($column)
+                    && preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $column)
+                    && !in_array($column, $hidden, true); //POCOR-9660: exclude $hidden fields — sort order exposes values even when field is not returned
+            }));
+        });
+    }
+    //POCOR-9660: end
 
 
     /**
@@ -1314,7 +1700,7 @@ class CrudApiController extends Controller
         return $query;
     }
 
-    private function paginateResults($query, $limit, $page, $model, $segments)
+    private function paginateResults($query, $limit, $page, $model, $segments, bool $pagination = true)
     {
         if (count($segments) === 1 && $this->isValidIdentifier($segments[0])) {
             $record = $this->findRecord($model, $segments);
@@ -1331,7 +1717,17 @@ class CrudApiController extends Controller
         }
 
         // Proceed with pagination if no single valid identifier is found
-        try {
+       try {
+            if (!$pagination) { //POCOR-9753
+                $results = $query->get();
+                return response()->json([
+                    'message' => 'Data retrieved successfully.',
+                    'data' => [
+                        'data' => $results,
+                        'total' => $results->count(),
+                    ]
+                ]);
+            }
             $results = $query->paginate($limit, ['*'], 'page', $page);
 
             // POCOR-9461: Apply afterFetchResults to the collection inside paginator
@@ -1376,16 +1772,17 @@ class CrudApiController extends Controller
                 $model = new $model;
             }
             $records = [];
+            $fillable = $model->getFillable();
             foreach ($data as $recordData) {
                 $this->decodeBlobFields($recordData); //  Decode base64 to binary
-                if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-                    if (!isset($recordData['created_user_id'])) {
-                        $recordData['created_user_id'] = $current_user_id;
-                    }
-                    if (!isset($recordData['created'])) {
-                        $recordData['created'] = Carbon::now();
-                    }
-                }
+                //POCOR-9697: audit-trail integrity on batch create — always
+                //derive created_user_id / modified_user_id from JWT; log any
+                //forgery attempt without echoing the field name back.
+                $recordData = $this->stampAuditFieldsOnCreate(
+                    $recordData,
+                    $fillable,
+                    $current_user_id
+                );
                 $records[] = $model::create($recordData);
             }
             \DB::commit();
@@ -1413,14 +1810,16 @@ class CrudApiController extends Controller
         }
         $this->decodeBlobFields($data); //  Decode base64 to binary
 
-        if (in_array('created_user_id', $model->getFillable()) && in_array('created', $model->getFillable())) {
-            if (!isset($data['created_user_id'])) {
-                $data['created_user_id'] = $current_user_id;
-            }
-            if (!isset($data['created'])) {
-                $data['created'] = Carbon::now();
-            }
-        }
+        //POCOR-9697: audit-trail integrity on single create — always derive
+        //created_user_id and modified_user_id from the JWT user. Any
+        //client-supplied value is silent-stripped with a server-side log so
+        //ops can grep forgery attempts; the response never echoes the field
+        //name (anti-fingerprinting).
+        $data = $this->stampAuditFieldsOnCreate(
+            $data,
+            $model->getFillable(),
+            $current_user_id
+        );
         try {
             $record = $model::create($data);
         } catch (\Exception $e) {
@@ -1428,6 +1827,50 @@ class CrudApiController extends Controller
         }
 
         return $this->successResponse('Record created successfully.', $record, 201);
+    }
+
+    /**
+     * POCOR-9697: stamp created_user_id / modified_user_id from the JWT user
+     * on every create path, log any client-supplied value that differs, and
+     * silent-strip the offending key before persist. Keeps the v5 audit trail
+     * tamper-proof in the same way v4 already enforces it via UserRepository.
+     *
+     * @param array $data         Raw payload from the request.
+     * @param array $fillable     Target model's $fillable allowlist.
+     * @param int|null $currentUserId  Authenticated JWT user id.
+     * @return array              Payload with audit fields overwritten.
+     */
+    private function stampAuditFieldsOnCreate(array $data, array $fillable, $currentUserId)
+    {
+        $request = request();
+        foreach (['created_user_id', 'modified_user_id'] as $auditField) {
+            if (!in_array($auditField, $fillable, true)) {
+                continue;
+            }
+            if (array_key_exists($auditField, $data)
+                && (int) $data[$auditField] !== (int) $currentUserId
+            ) {
+                Log::warning(
+                    'POCOR-9697: ' . $auditField . ' forgery attempt — overwritten with JWT user',
+                    [
+                        'endpoint'       => $request ? $request->path() : null,
+                        'method'         => $request ? $request->method() : null,
+                        'caller_id'      => $currentUserId,
+                        'ip'             => $request ? $request->ip() : null,
+                        'supplied_value' => $data[$auditField],
+                    ]
+                );
+            }
+            $data[$auditField] = $currentUserId; //POCOR-9697: always from JWT
+        }
+        //POCOR-9697: keep the existing created / modified timestamp behaviour.
+        if (in_array('created', $fillable, true) && !isset($data['created'])) {
+            $data['created'] = Carbon::now();
+        }
+        if (in_array('modified', $fillable, true) && !isset($data['modified'])) {
+            $data['modified'] = Carbon::now();
+        }
+        return $data;
     }
 
     /**

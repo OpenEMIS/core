@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\SecurityUsers;
 use App\Services\UserService;
+use App\Services\PermissionService;
+use App\Services\Security\SuperAdminProbeGuard; //POCOR-9710
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\SaveStudentDataRequest;
 use App\Http\Requests\SaveStaffDataRequest;
@@ -16,9 +19,32 @@ class UserController extends Controller
 {
     protected $userService;
 
-    public function __construct(UserService $userService)
+    //POCOR-9697: gate v4 user-write endpoints with the same permission check
+    //v5 enforces via CrudApiController. auth.jwt by itself is not enough —
+    //it grants "logged-in", not "may create or edit security_users".
+    protected $permissionService;
+
+    //POCOR-9710: probe-detection + password carve-out for /api/v4/users — same
+    //rule v5 applies via CrudApiController so the two API versions stay in lockstep.
+    protected $probeGuard;
+
+    public function __construct(UserService $userService, PermissionService $permissionService, SuperAdminProbeGuard $probeGuard)
     {
         $this->userService = $userService;
+        $this->permissionService = $permissionService;
+        $this->probeGuard = $probeGuard;
+    }
+
+    //POCOR-9697: shared 403 gate used by every v4 endpoint that writes to
+    //security_users (directly or indirectly). Returns null on success so
+    //callers can early-return on failure.
+    private function denyIfNoSecurityUserPermission(string $action): ?\Illuminate\Http\JsonResponse
+    {
+        if (!$this->permissionService->checkPermission('SecurityUsers', $action)) {
+            Log::info("POCOR-9697: SecurityUsers:{$action} denied for user " . (JWTAuth::user()->id ?? 'guest'));
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        return null;
     }
 
     /**
@@ -60,7 +86,6 @@ class UserController extends Controller
      *                          type="object",
      *                          @OA\Property(property="id", type="integer", example=1),
      *                          @OA\Property(property="username", type="string", example="admin"),
-     *                          @OA\Property(property="password", type="string", example=""),
      *                          @OA\Property(property="openemis_no", type="string", example="1522271965"),
      *                          @OA\Property(property="first_name", type="string", example="first name"),
      *                          @OA\Property(property="middle_name", type="string", example="last name"),
@@ -174,7 +199,6 @@ class UserController extends Controller
      *                     type="object",
      *                          @OA\Property(property="id", type="integer", example=1),
      *                          @OA\Property(property="username", type="string", example="admin"),
-     *                          @OA\Property(property="password", type="string", example=""),
      *                          @OA\Property(property="openemis_no", type="string", example="1522271965"),
      *                          @OA\Property(property="first_name", type="string", example="first name"),
      *                          @OA\Property(property="middle_name", type="string", example="last name"),
@@ -265,6 +289,21 @@ class UserController extends Controller
      */
     public function getUsersData(int $userId)
     {
+        //POCOR-9710: probe gate — non-super-admin callers who fetch a
+        //super_admin = 1 id by primary key get 404 + an audit log entry,
+        //never the row. Mirrors the v5 gate in CrudApiController::common().
+        $caller = JWTAuth::user();
+        if (!SuperAdminProbeGuard::isSuperAdmin($caller)
+            && $this->probeGuard->idIsSuperAdmin(SecurityUsers::class, $userId)
+        ) {
+            $this->probeGuard->logProbe(request(), $caller, [
+                'resource' => 'v4-users',
+                'action'   => 'view',
+                'target'   => $userId,
+            ]);
+            return $this->sendErrorResponse('Users Data Not Found');
+        }
+
         try {
             $data = $this->userService->getUsersData($userId);
             return $this->sendSuccessResponse("Users Data Found", $data);
@@ -496,6 +535,11 @@ class UserController extends Controller
      */
     public function saveStudentData(SaveStudentDataRequest $request)
     {
+        //POCOR-9697: this endpoint creates a security_users row for the student.
+        if ($denied = $this->denyIfNoSecurityUserPermission('add')) {
+            return $denied;
+        }
+
         try {
             $data = $this->userService->saveStudentData($request);
 
@@ -591,6 +635,11 @@ class UserController extends Controller
      */
     public function saveStaffData(SaveStaffDataRequest $request)
     {
+        //POCOR-9697: this endpoint creates a security_users row for the staff member.
+        if ($denied = $this->denyIfNoSecurityUserPermission('add')) {
+            return $denied;
+        }
+
         try {
             $data = $this->userService->saveStaffData($request);
 
@@ -744,6 +793,11 @@ class UserController extends Controller
      */
     public function saveGuardianData(SaveGuardianDataRequest $request)
     {
+        //POCOR-9697: this endpoint creates a security_users row for the guardian.
+        if ($denied = $this->denyIfNoSecurityUserPermission('add')) {
+            return $denied;
+        }
+
         try {
             $data = $this->userService->saveGuardianData($request);
 
@@ -823,6 +877,14 @@ class UserController extends Controller
      */
     public function addUsers(UsersAddRequest $request)
     {
+        //POCOR-9697: require SecurityUsers add/edit permission. Update path is
+        //gated as 'edit' so a caller with only 'add' cannot mutate existing
+        //users; create path is gated as 'add'.
+        $action = $request->filled('id') ? 'edit' : 'add';
+        if ($denied = $this->denyIfNoSecurityUserPermission($action)) {
+            return $denied;
+        }
+
         try {
             $data = $this->userService->addUsers($request);
 

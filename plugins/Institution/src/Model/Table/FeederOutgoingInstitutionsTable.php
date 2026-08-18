@@ -320,11 +320,11 @@ class FeederOutgoingInstitutionsTable  extends ControllerActionTable
         } else if($field == 'area_education_id'){
             return __('Area Education');
         } else if($field == 'modified'){
-            return __('Modified');
+            return __('Modified On');
         } else if($field == 'modified_user_id'){
-            return __('Area Education');
+            return __('Modified By');
         } else if($field == 'created'){
-            return __('Created');
+            return __('Created On');
         } else if($field == 'created_user_id'){
             return __('Created By');
         }else if($field == 'recipient_institution'){
