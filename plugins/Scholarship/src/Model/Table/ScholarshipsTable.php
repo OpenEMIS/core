@@ -57,6 +57,18 @@ class ScholarshipsTable extends ControllerActionTable
                 Log::warning("ScholarshipsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
             }
         }
+
+        // POCOR-9999: when the last Attachment Type row is removed on the Add/Edit form,
+        // the browser submits no 'attachment_types' key at all (an empty array produces no
+        // form fields), so patchEntity() never touches the association and the entity keeps
+        // whatever was already loaded from the database - the deletion silently has no
+        // effect and the row reappears after Save. Forcing the key to an empty array here
+        // lets the belongsToMany's default 'replace' save strategy correctly clear it.
+        // (Same pattern already used in OutcomeGradingTypesTable::beforeMarshal() for
+        // 'grading_options'.)
+        if (!$data->offsetExists('attachment_types')) {
+            $data->offsetSet('attachment_types', []);
+        }
     }
 
     public function initialize(array $config): void
