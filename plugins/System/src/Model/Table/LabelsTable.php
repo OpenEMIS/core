@@ -77,6 +77,13 @@ class LabelsTable extends ControllerActionTable
             case 'modified_user_id':
                 return __('Modified User');
             case 'created_user_id':
+                return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'processed_date':
+                return __('Process Date');
+            case 'created':
+                return __('Created');
             default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
