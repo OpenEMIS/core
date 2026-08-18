@@ -60,7 +60,7 @@ class InstitutionsTable extends AppTable
             Institutions::ACADEMIC => 'Academic Institution',
             Institutions::NON_ACADEMIC => 'Non-Academic Institution'
         ];
-        $this->addBehavior('ControllerAction.FileUpload');
+       // $this->addBehavior('ControllerAction.FileUpload');
     }
 
     public function validationDefault(Validator $validator): Validator
