@@ -63,6 +63,45 @@ class InstitutionIncomesTable extends ControllerActionTable
         $entity->institution_id = $this->getInstitutionID();
     }
 
+    // The bootstrap-datepicker "date" field renders/accepts text in whatever format is configured
+    // in System Configurations > Date Format (e.g. "July 31, 2026"), not just 'Y-m-d'. Cake's
+    // DateType::marshal() only ever accepts the strict 'Y-m-d' format, so with any other configured
+    // format the submitted value was marshalled to null - and since the 'date' column has no
+    // default, saving then failed with "Field 'date' doesn't have a default value". Normalize the
+    // submitted value to 'Y-m-d' here, before patchEntity()/marshal() runs.
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        $field = 'date';
+        if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+            return;
+        }
+
+        $rawValue = $data[$field];
+        if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+            // already Y-m-d (or not a string we can parse) - leave untouched
+            return;
+        }
+
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+        try {
+            try {
+                $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+            } catch (\Exception $e) {
+                $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+            }
+            if ($date !== false && $date !== null) {
+                $data[$field] = $date->format('Y-m-d');
+            }
+        } catch (\Exception $e) {
+            Log::warning("InstitutionIncomesTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+        }
+    }
+
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);

@@ -242,15 +242,20 @@ class AlertStudentStatusChangeCommand extends AlertCommandBase
         // //Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() ENTRY studentId=' . $studentId . ' institutionId=' . $institutionId); //[TEMP-LOG]
         // //Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() roles: ' . json_encode($this->rule->security_roles)); //[TEMP-LOG]
 
-        //POCOR-9509: split roles into student-associated (Guardian=9, Student=8) vs institution-staff (everything else)
-        $studentRoleIds = [self::ROLE_STUDENT, self::ROLE_GUARDIAN]; // 8, 9
+        //POCOR-9509: split roles into student-associated (Guardian, Student) vs institution-staff (everything else),
+        // identified by security_roles.code rather than the auto-increment id
+        $studentRoleCodes = [self::ROLE_STUDENT_CODE, self::ROLE_GUARDIAN_CODE];
+        $roleCode = function ($role): string {
+            $code = is_array($role) ? ($role['code'] ?? '') : ($role->code ?? '');
+            return strtoupper((string) $code);
+        };
         $studentRoles = array_values(array_filter(
             $this->rule->security_roles,
-            fn($r) => in_array((int)(is_array($r) ? $r['id'] : $r->id), $studentRoleIds, true)
+            fn($r) => in_array($roleCode($r), $studentRoleCodes, true)
         ));
         $staffRoles = array_values(array_filter(
             $this->rule->security_roles,
-            fn($r) => !in_array((int)(is_array($r) ? $r['id'] : $r->id), $studentRoleIds, true)
+            fn($r) => !in_array($roleCode($r), $studentRoleCodes, true)
         ));
 
         // //Log::debug('[TEMP-LOG] @AlertStudentStatusChangeCommand::resolveRecipients() studentRoles=' . count($studentRoles) . ' staffRoles=' . count($staffRoles)); //[TEMP-LOG]
