@@ -773,13 +773,13 @@ class AlertRulesTable extends ControllerActionTable
             case 'enabled':
                 return __('Enabled');
             case 'created':
-                return __('Created On');
+                return __('Created');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'modified':
-                return __('Modified On');
+                return __('Modified');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             case 'message':
                 return __('Message');
             case 'condition':

@@ -596,11 +596,11 @@ class TrainingCoursesTable extends ControllerActionTable
         } else if ($field == 'modified') {
             return __('Modified');
         } else if ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } else if ($field == 'created') {
             return __('Created');
         } else if ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

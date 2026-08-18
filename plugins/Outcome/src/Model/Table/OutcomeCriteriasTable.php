@@ -293,14 +293,14 @@ class OutcomeCriteriasTable extends ControllerActionTable
          } elseif ($field == 'outcome_grading_type_id') {
              return __('Outcome Grading Type');
          }  elseif ($field == 'modified_user_id') {
-             return __('Modified By');
+             return __('Modified User');
          } elseif ($field == 'modified') {
-             return __('Modified On');
+             return __('Modified');
          } elseif ($field == 'created_user_id') {
-             return __('Created By');
+             return __('Created User');
          } elseif ($field == 'created') {
-             return __('Created On');
-         } 
+             return __('Created');
+         }
          elseif ($field == 'code') {
              $LabelsTable = TableRegistry::getTableLocator()->get('Labels');
  

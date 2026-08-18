@@ -14,7 +14,11 @@ use Cake\Cache\Cache;
 
 class LabelsTable extends ControllerActionTable
 {
-    private $fieldsOrder = ['created', 'message'];
+    // 'created' intentionally left out here: forcing it into this explicit order used to be
+    // moot while it was hidden, but now that it's visible on View/Edit it would jump to the
+    // very front of the field list. Leaving it out lets it fall back to the framework's normal
+    // trailing position (after Modified User/Modified/Created User), matching every other page.
+    private $fieldsOrder = ['message'];
     private $excludeList = ['created_user_id', 'created', 'modified_user_id', 'modified'];
     private $defaultConfig = 'labels';
     public function initialize(array $config): void
@@ -38,7 +42,9 @@ class LabelsTable extends ControllerActionTable
         $this->field('visible', ['visible' => false]);
         $this->field('message', ['visible' => false]);
         $this->field('module', ['visible' => false]);
-        $this->field('created', ['visible' => false]);
+        // Previously hidden on every action here (view/edit included). indexBeforeAction()
+        // below already hides 'created' specifically for the index listing, so removing this
+        // blanket hide only reveals the Created date on the View/Edit pages.
         $this->field('field', ['visible' => false]);
     }
 

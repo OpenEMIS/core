@@ -247,13 +247,13 @@ class OutcomeTemplatesTable extends ControllerActionTable
         } elseif ($field == 'date_disabled') {
             return __('Date Disabled');
         }  elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } elseif ($field =='outcome_grading_type_id' ){//POCOR-8435
             return __('Final Result');
         }

@@ -231,13 +231,13 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         } elseif ($field == 'pass_mark') {
             return __('Pass Mark');
         } elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } elseif ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         }elseif ($field == 'grading_options') {
             return __('Grading Options');
         } else {

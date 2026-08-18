@@ -101,7 +101,7 @@ class NoticesTable extends ControllerActionTable
         if ($field == 'status') {
             return __('Enable');
         } else if ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

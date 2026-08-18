@@ -366,13 +366,13 @@ class AlertsTable extends ControllerActionTable
             case 'last_run_date':
                 return __('Last Run');
             case 'created_user_id':
-                return __('Created By');
+                return __('Created User');
             case 'created':
-                return __('Created On');
+                return __('Created');
             case 'modified':
-                return __('Modified By');
+                return __('Modified');
             case 'modified_user_id':
-                return __('Modified On');
+                return __('Modified User');
         default:
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
