@@ -438,7 +438,7 @@ class InstitutionTabBehavior extends Behavior
             $userID = $this->getStudentID();
             //$studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
             $studentLastTabElements = ['Guardians' => ['text' => __('Guardians')],
-                'StudentTransport' => ['text' => __('Transport')]];
+                'StudentTransport' => ['text' => __('Transport')], 'Siblings' => ['text' => __('Siblings')]];
             $tabElements = array_merge($tabElements, $studentLastTabElements);
             $plugin = 'Student';
             $controller = 'Students';

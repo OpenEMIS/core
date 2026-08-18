@@ -42,27 +42,38 @@ class InstitutionCommitteesTable extends AppTable
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+        $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $where = [];
-        if($requestData->institution_id == 0){
-            $institutions_Arr = $institutions
-                                    ->find('list', [
-                                        'keyField' => 'id',
-                                        'valueField' => 'name',
-                                    ])
-                                    ->select([
-                                        'id' => $institutions->aliasField('id'), 
-                                        'name' => $institutions->aliasField('name')])
-                                    ->toArray();
-            if(!empty($institutions_Arr)){
-                $institutions = implode(',', array_keys($institutions_Arr));
-            }
-        }else{
-            $institutions = $requestData->institution_id;
+
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif ($institutionId == 0 || $institutionId === '0') {
+            $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+            $institutionIds = array_keys($Institutions
+                ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+                ->toArray());
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $institutionIds = [(int)$institutionId];
         }
+
         if ($areaId != -1) {
             $where['Institutions.area_id'] = $areaId;
+        }
+
+        $conditions = [
+            $this->aliasField('academic_period_id') => $requestData->academic_period_id,
+            $where
+        ];
+        if (!empty($institutionIds)) {
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
         }
 
         $query
@@ -91,11 +102,7 @@ class InstitutionCommitteesTable extends AppTable
                     ]
                 ]
             ])
-            ->where([
-                $this->aliasField('academic_period_id') => $requestData->academic_period_id,
-                $this->aliasField('institution_id').' IN ('.$institutions. ')',
-                $where
-            ]);
+            ->where($conditions);
     }
 
     public function onExcelRenderStartTime(EventInterface $event, Entity $entity, array $attr)

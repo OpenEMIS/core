@@ -165,8 +165,9 @@ class ConsultationsTable extends ControllerActionTable
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
-        $this->field('health_consultation_type_id', ['type' => 'select', 'after' => 'treatment']);
-        $this->field('file_content', ['after' => 'health_consultation_type_id', 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
+        $this->field('health_consultation_type_id', ['type' => 'select', 'after' => 'date']);
+        $this->field('description', ['after' => 'treatment']);
+        $this->field('file_content', ['after' => 'description', 'attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
     }
@@ -174,7 +175,10 @@ class ConsultationsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
+        $validator
+            ->allowEmpty('file_content')
+            ->notEmpty('health_consultation_type_id')
+            ->notEmptyDate('date', __('This field cannot be left empty')); //POCOR-9507
         return $validator;
     }
 
@@ -253,5 +257,25 @@ class ConsultationsTable extends ControllerActionTable
         return $this->populateLookupSelect($attr, $action, 'Health.ConsultationTypes');
     }
 
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Consultations.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
+    }
 
 }
