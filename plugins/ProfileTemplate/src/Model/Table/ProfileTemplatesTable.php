@@ -66,8 +66,12 @@ class ProfileTemplatesTable extends ControllerActionTable
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                'provider' => 'table'
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
             // ->add('generate_start_date', 'ruleInAcademicPeriod', [
             //     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             // ])
@@ -79,6 +83,7 @@ class ProfileTemplatesTable extends ControllerActionTable
             //         'rule' => ['compareDateReverse', 'generate_start_date', false]
             //     ]
             // ])
+
             // generate_start_date/generate_end_date are marked mandatory (*) in the form, but
             // nothing previously enforced that: the column is 'datetime', and AppTable's generic
             // schema-driven validationDefault() only auto-handles 'date' typed columns. Leaving
@@ -88,7 +93,8 @@ class ProfileTemplatesTable extends ControllerActionTable
             ->notEmpty('generate_start_date', __('This field cannot be left empty'))
             ->requirePresence('generate_end_date', 'create')
             ->notEmpty('generate_end_date', __('This field cannot be left empty'))
-            ->allowEmpty('excel_template');
+            ->requirePresence('excel_template', 'create', __('This field cannot be left empty'))
+            ->notEmptyFile('excel_template', __('This field cannot be left empty'), 'create');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -122,10 +128,10 @@ class ProfileTemplatesTable extends ControllerActionTable
             'status_id' => $institutionPositionsTable->aliasField('status_id')
         ])->innerJoin([$institutionPositionsTable->getAlias() => $institutionPositionsTable->getTable()], [
             $institutionPositionsTable->aliasField('id = ') . $StaffTable->aliasField('institution_position_id'),
-        ])->where([
+        ])/*->where([
             $StaffTable->aliasField('institution_id') => 6,
             $StaffTable->aliasField('staff_id') => 8810,
-        ])
+        ])*/
         // ->hydrate(false)->toArray();
         ->toArray();
         $expectedStaffStatuses = [];

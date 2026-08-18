@@ -327,8 +327,20 @@ class InstitutionAssetsTable extends AppTable
     private function getBasicQuery(Query $query, $institutionId, $institutionTypeId, $areaId,$areaLevelId)
     {
         $conditions = ["1 = 1"];
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions[$this->aliasField('id')] = $institutionId;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('id') . ' IN'] = $filterInstitutionIds;
         }
         if (!empty($institutionTypeId) && $institutionTypeId != -1) {
             $conditions[$this->aliasField('institution_type_id')] = $institutionTypeId;

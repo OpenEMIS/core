@@ -1,3 +1,25 @@
+### 5.16.0 - 2026-08-11
+- Bug Fixed: Registrations > Add: No email is received when a student is in Open, Pending Approval, Approved or Pending cancellation state.
+- Bug Fixed: Core>Reports>Institution>Student Absence Report/Student Absence Per day Report:
+- Bug Fixed: Core>Administration>Security >Groups:  In security Group when user tries to search for a user, the system reports an error 404. Any subsequent attempt to return to this group returns a 404 error.
+- Implemented: Add Import function to Translations
+- Implemented: Develop Siblings feature
+- Implemented: Develop system configuration for add student by grade
+- Implemented: Develop changes to health feature
+- Implemented: Develop a migration script to add / update database table descriptions 
+- Bug Fixed: Change field options name 
+- Bug Fixed: Institution > Messaging : Messaging Alerts and SMS need to be triggered automatically.
+- Bug Fixed: Reports: Change the dropdown for selecting institution to multi select dropdown
+- Implemented: Develop migration script to remove summary_institution_student_absences
+- Implemented: Develop Counselling Report
+- Implemented: Develop changes to updates email address from support@openemis.org to updates@openemis.org
+- Bug Fixed: Institutions>Students>Select Student>Counselling
+- Bug Fixed: Core>Administration>Communications>Alert Rules : Security Roles should retrieve all the available roles in the system
+- Bug Fixed: Reports > Institutions > Student Report : Reports get stuck when generating
+- Implemented: Develop enhancement of OpenEMIS Core Staff Salary Module
+- Bug Fixed: Table displaying all records even when selected :  display 10 records.
+- Bug Fixed: Core>Administration: Review mandatory fields
+
 ### 5.15.2 - 2026-07-31
 - Bug Fixed: Date is saving the wrong value throughout multiple pages
 - Bug Fixed: Institutions>Students>List: Enrolled(Repeater) will reflect if the previous academic is Repeated/ Withdrawn/ Promoted/ Graduated but yet assign to the same Education Grade.

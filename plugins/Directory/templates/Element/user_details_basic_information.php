@@ -1,32 +1,33 @@
 <!-- File: src/Template/Element/user_details_basic_information.php -->
-<div name="UserDetailsBasicInformation">
+<!-- POCOR-9385: derive a context-aware id prefix once (student-/staff-/user-) for stable, automatable input ids -->
+<div name="UserDetailsBasicInformation" ng-init="userFieldIdPrefix = addNewStudentConfig ? 'student' : (addNewStaffConfig ? 'staff' : 'user')">
     <div class="row section-header header-space-lg"><?= __('Search By Basic Information') ?></div>
     <div class="input string" ng-class="{'required': basicFieldsRequired}">
         <label><?= __('First Name') ?></label>
-        <input ng-model="selectedUserData.first_name" ng-change="setName()" type="text" ng-required="basicFieldsRequired">
+        <input ng-model="selectedUserData.first_name" ng-attr-id="{{userFieldIdPrefix}}-first_name" ng-change="setName()" type="text" ng-required="basicFieldsRequired">
         <div ng-if="error.first_name && basicFieldsRequired" class="error-message">
             <p>{{ error.first_name }}</p>
         </div>
     </div>
     <div class="input string">
         <label><?= __('Middle Name') ?></label>
-        <input ng-model="selectedUserData.middle_name" ng-change="setName()" type="string">
+        <input ng-model="selectedUserData.middle_name" ng-attr-id="{{userFieldIdPrefix}}-middle_name" ng-change="setName()" type="string">
     </div>
 
     <div class="input string">
         <label><?= __('Third Name') ?></label>
-        <input ng-model="selectedUserData.third_name" ng-change="setName()" type="string">
+        <input ng-model="selectedUserData.third_name" ng-attr-id="{{userFieldIdPrefix}}-third_name" ng-change="setName()" type="string">
     </div>
     <div class="input string" ng-class="{'required': basicFieldsRequired}">
         <label><?= __('Last Name') ?></label>
-        <input ng-model="selectedUserData.last_name" ng-change="setName()" type="text" ng-required="basicFieldsRequired">
+        <input ng-model="selectedUserData.last_name" ng-attr-id="{{userFieldIdPrefix}}-last_name" ng-change="setName()" type="text" ng-required="basicFieldsRequired">
         <div ng-if="error.last_name && basicFieldsRequired" class="error-message">
             <p>{{ error.last_name }}</p>
         </div>
     </div>
     <div class="input string">
         <label><?= __('Preferred Name') ?></label>
-        <input ng-model="selectedUserData.preferred_name" type="string">
+        <input ng-model="selectedUserData.preferred_name" ng-attr-id="{{userFieldIdPrefix}}-preferred_name" type="string">
     </div>
     <div class="input select error" ng-class="{'required': basicFieldsRequired}">
         <label><?= __('Gender') ?></label>
@@ -51,6 +52,7 @@
         <div class="input-group date" id="User_date_of_birth">
             <input type="text" class="form-control"
                    name="User[date_of_birth]"
+                   ng-attr-id="{{userFieldIdPrefix}}-date_of_birth"
                    ng-model="selectedUserData.date_of_birth"
                    ng-change="changeDateOfBirth()"
                    ng-required="basicFieldsRequired">
