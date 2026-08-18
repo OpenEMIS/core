@@ -203,7 +203,6 @@ class UserBehavior extends Behavior
             $this->_table->fields['status']['visible'] = false;
             $this->_table->fields['preferred_language']['visible'] = false;
             $this->_table->fields['address_area_id']['type'] = 'areapicker';
-            $this->_table->fields['address_area_id']['model'] = 'Users';
             $this->_table->fields['address_area_id']['source_model'] = 'Area.AreaAdministratives';
             $this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
             $this->_table->fields['birthplace_area_id']['source_model'] = 'Area.AreaAdministratives';
@@ -361,6 +360,7 @@ class UserBehavior extends Behavior
                     $field = 'address_area_id';
                     $userTableLabelAlias = 'Users';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->fields[$field]['attr']['label'] = $areaLabel;
                     $this->_table->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $field = 'birthplace_area_id';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
@@ -392,6 +392,7 @@ class UserBehavior extends Behavior
                     $field = 'address_area_id';
                     $userTableLabelAlias = 'Users';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->fields[$field]['attr']['label'] = $areaLabel;
                     $this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $field = 'birthplace_area_id';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
