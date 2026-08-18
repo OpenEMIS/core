@@ -7,7 +7,13 @@ class POCOR7440 extends AbstractMigration
 {
     public function up(): void
     {
+        // Idempotent backup: if a prior run of this migration got this far before failing
+        // later on (e.g. while creating security_user_passwords), CREATE TABLE IF NOT EXISTS
+        // is a no-op against the table left behind, and re-running the INSERT ... SELECT on
+        // top of already-copied rows collides on the primary key. Truncate first so this step
+        // is safe to retry any number of times.
         $this->execute('CREATE TABLE IF NOT EXISTS `zz_9738_config_items` LIKE `config_items`');
+        $this->execute('TRUNCATE TABLE `zz_9738_config_items`');
         $this->execute('INSERT INTO `zz_9738_config_items` SELECT * FROM `config_items`');
         $this->execute('DROP TABLE IF EXISTS `security_user_passwords`');
 
