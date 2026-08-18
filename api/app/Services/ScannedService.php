@@ -77,6 +77,12 @@ class ScannedService extends Controller
     {
         try {
             $data = $this->scannedRepository->institutionScannedDataExport($params);
+            // Repository normally returns a Collection (possibly empty). Guard against any other
+            // return shape (e.g. a JsonResponse on error) so the export always gets a plain array -
+            // InstitutionScannedExport::$params is typed `array` and would otherwise fatal.
+            if (!is_iterable($data)) {
+                return [];
+            }
             $resp = [];
             foreach($data as $key => $value){
                 $resp[$key]['Openemis Id'] = $value['openemis_no'];
