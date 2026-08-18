@@ -95,23 +95,21 @@ class WorkflowReportBehavior extends Behavior
         if (isset($requestData->area)) {
             $areaId = $requestData->area;
         }
-        $institution_id = 0;
-        if (isset($requestData->institution_id)) {
-            $institution_id = $requestData->institution_id;
-        }
+        $institutionId = isset($requestData->institution_id) ? $requestData->institution_id : null;
+        $filterInstitutionIds = $this->parseFilterInstitutionIds($institutionId);
         $conditions = [];
         if ($areaId != 0) {
             $conditions['Institutions.area_id'] = $areaId;
         }
-        if ($institution_id > 0) {
-            $conditions['Institutions.id'] = $institution_id;
+        if (!empty($filterInstitutionIds)) {
+            $conditions['Institutions.id IN'] = $filterInstitutionIds;
         }
         $superAdmin = $requestData->super_admin;
         $userId = $requestData->user_id;
         $institutionIds = [];
         if (!$superAdmin) {
             //POCOR-7433
-            if ($institution_id == 0) {
+            if (empty($filterInstitutionIds)) {
                 $InstitutionsTable = TableRegistry::getTableLocator()->get('Institution.Institutions');
                 $instituitionData = $InstitutionsTable->find('byAccess', ['userId' => $userId])->toArray();
                 if (isset($instituitionData)) {
@@ -133,9 +131,9 @@ class WorkflowReportBehavior extends Behavior
                 $where['OR'][] = ['Institutions.area_id' => $areaId];
                 $where['OR'][] = ['PreviousInstitutions.area_id' => $areaId];
             }
-            if (!empty($institution_id) && $institution_id > 0) {
-                $where['OR'][] = ['Institutions.id' => $institution_id];
-                $where['OR'][] = ['PreviousInstitutions.id' => $institution_id];
+            if (!empty($filterInstitutionIds)) {
+                $where['OR'][] = ['Institutions.id IN' => $filterInstitutionIds];
+                $where['OR'][] = ['PreviousInstitutions.id IN' => $filterInstitutionIds];
             }
             if ($category != -1) {
                 $query
@@ -188,9 +186,9 @@ class WorkflowReportBehavior extends Behavior
                 $newConditions['OR'][] = ['NewInstitutions.area_id' => $areaId];
                 $newConditions['OR'][] = ['PreviousInstitutions.area_id' => $areaId];
             }
-            if (!empty($institution_id) && $institution_id > 0) {
-                $newConditions['OR'][] = ['NewInstitutions.id' => $institution_id];
-                $newConditions['OR'][] = ['PreviousInstitutions.id' => $institution_id];
+            if (!empty($filterInstitutionIds)) {
+                $newConditions['OR'][] = ['NewInstitutions.id IN' => $filterInstitutionIds];
+                $newConditions['OR'][] = ['PreviousInstitutions.id IN' => $filterInstitutionIds];
             }
             if ($category != -1) {
                 $query
@@ -222,5 +220,23 @@ class WorkflowReportBehavior extends Behavior
             }
         }/*POCOR-6296 ends*/
 
+    }
+
+    private function parseFilterInstitutionIds($institutionId): array
+    {
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        return $filterInstitutionIds;
     }
 }

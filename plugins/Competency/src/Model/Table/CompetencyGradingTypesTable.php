@@ -35,7 +35,8 @@ class CompetencyGradingTypesTable extends ControllerActionTable
 
         return $validator
             ->requirePresence('grading_options')
-            ->allowEmpty('code');
+            ->notEmpty('code')
+            ->notEmpty('name');
         // ->add('code', [
         //     'ruleUniqueCode' => [
         //         'rule' => ['checkUniqueCode', ''],

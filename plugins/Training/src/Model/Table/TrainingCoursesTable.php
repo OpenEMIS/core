@@ -106,16 +106,25 @@ class TrainingCoursesTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', [
-                'ruleUnique' => [
-                    'rule' => ['validateUnique'],
-                    'provider' => 'table'
-                ]
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique'],
+                'provider' => 'table',
+                'message' => __('This code already exists')
             ])
-            ->requirePresence('target_populations')
-            ->requirePresence('training_course_category_id')
-            ->requirePresence('training_providers')
+            ->notEmpty('target_populations')
+            ->notEmpty('training_providers')
             ->requirePresence('result_types')
+            ->add('result_types', 'notEmpty', [
+                'on' => 'create',
+                'rule' => function ($value, $context) {
+                    return is_array($value)
+                        && isset($value['_ids'])
+                        && !empty($value['_ids']);
+                },
+                'message' => __('This field cannot be left empty')
+            ])
+            ->notEmptyFile('result_types', __('This field cannot be left empty'))
             ->add('duration', [
                 'num' => [
                     'rule'  => 'numeric',
@@ -136,6 +145,7 @@ class TrainingCoursesTable extends ControllerActionTable
                     'message' => __('Experience must be positive with 3 digits at maximum')
                 ]
             ])
+            ->notEmpty('training_course_category_id', __('This field cannot be left empty'))
             ->allowEmpty('file_content');
     }
 
@@ -486,13 +496,14 @@ class TrainingCoursesTable extends ControllerActionTable
                 ]
             ]
         ]);
+        $this->field('file_content');
 
         // Field order
         $this->setFieldOrder([
             'code', 'name', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months', 'special_education_needs',
             'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id', 'target_population_selection',
             'target_populations', 'training_providers', 'course_prerequisites', 'specialisations','training_course_category_id', 'result_types',
-            'file_name', 'file_content'
+            'assignee_id', 'file_name', 'file_content'
         ]);
     }
 
@@ -594,11 +605,11 @@ class TrainingCoursesTable extends ControllerActionTable
         } else if ($field == 'result_types') {
             return __('Result Types');
         } else if ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         } else if ($field == 'modified_user_id') {
             return __('Modified By');
         } else if ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         } else if ($field == 'created_user_id') {
             return __('Created By');
         } else {
@@ -753,6 +764,12 @@ class TrainingCoursesTable extends ControllerActionTable
             $attr['select'] = false;
             $attr['options'] = ['' => '-- ' . __('Select Assignee') . ' --'] + $assigneeOptions;
             $attr['onChangeReload'] = 'changeStatus';
+
+            // assignee_id is only registered by WorkflowBehavior::addEditAfterAction, which runs
+            // after setupFields(), so 'after' => 'assignee_id' in setupFields() is a no-op there.
+            // Reposition file_content here instead, now that assignee_id actually exists.
+            $this->field('file_content', ['after' => 'assignee_id']);
+
             return $attr;
         }
     }

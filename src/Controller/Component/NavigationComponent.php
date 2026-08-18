@@ -1377,6 +1377,7 @@ class NavigationComponent extends Component
                     'Institutions.StudentUser.pull',
                     'StudentComments',
                     'Students.StudentTransport',
+                    'Students.Siblings',
                     'Students.Demographic',
                     'Guardians.Accounts',
                     'Guardians.Demographic',
@@ -3180,7 +3181,9 @@ class NavigationComponent extends Component
                             'selected' => [
                                 'LocaleContents.index',
                                 'LocaleContents.view',
-                                'LocaleContents.edit'
+                                'LocaleContents.edit',
+                                'LocaleContents.ImportLocaleContentsLanguage'
+                                
                             ]
                         ],
 
@@ -3270,7 +3273,8 @@ class NavigationComponent extends Component
                             'selected' => [
                                 'LocaleContents.index',
                                 'LocaleContents.view',
-                                'LocaleContents.edit'
+                                'LocaleContents.edit',
+                                'LocaleContents.ImportLocaleContentsLanguage'
                             ]
                         ],
                     ];
@@ -3366,7 +3370,8 @@ class NavigationComponent extends Component
                         'selected' => [
                             'LocaleContents.index',
                             'LocaleContents.view',
-                            'LocaleContents.edit'
+                            'LocaleContents.edit',
+                            'LocaleContents.ImportLocaleContentsLanguage'
                         ]
                     ],
 
@@ -4471,6 +4476,14 @@ class NavigationComponent extends Component
                 'parent' => 'Administration',
                 'link' => false,
             ],
+            // POCOR-8211 Start
+            'Systems.StaffSalaries' => [
+                'title' => 'Salaries',
+                'parent' => 'Administration.Staff',
+                'params' => ['plugin' => 'System'],
+                'link' => true,
+            ],
+            // POCOR-8211 End
             'Systems.StaffPolicies' => [
                 'title' => 'Leaves',
                 'parent' => 'Administration.Staff',
@@ -5476,7 +5489,13 @@ class NavigationComponent extends Component
                 $userInfo = TableRegistry::getTableLocator()->get('Security.Users')->get($id);
             }
             if ($action == 'GuardianStudents') {
-                $userInfo = TableRegistry::getTableLocator()->get('Guardian.Students')->get($securityUserId);
+                // POCOR-9707 starts
+                try {
+                    $userInfo = TableRegistry::getTableLocator()->get('Guardian.Students')->get($securityUserId);
+                } catch (\Throwable $th) {
+                    Log::debug($th->getMessage());
+                }
+                // POCOR-9707 ends
             }
             if ($action == 'StudentGuardians') {
                 $studentId = $id;

@@ -20,6 +20,7 @@ class SecuritiesController extends AppController
            // 'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']]
         ];
         $this->attachAngularModules();
+        
     }
 
     // CAv4

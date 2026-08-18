@@ -45,8 +45,20 @@ class InfrastructureNeedsTable extends AppTable  {
         $institutionId = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $conditions = [];
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions['InfrastructureNeeds.institution_id'] = $institutionId;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        if (!empty($filterInstitutionIds)) {
+            $conditions['InfrastructureNeeds.institution_id IN'] = $filterInstitutionIds;
         }
         if (!empty($areaId) && $areaId != -1) {
             $conditions['Institutions.area_id'] = $areaId;

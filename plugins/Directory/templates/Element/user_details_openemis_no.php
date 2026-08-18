@@ -5,7 +5,8 @@
         <label><?= $dynamicOpenemisNoHeader ?></label> <!-- POCOR-8646 -->
         <input ng-init="dynamicOpenemisNoHeader = '<?= $dynamicOpenemisNoHeader ?>';"
             ng-model="selectedUserData.openemis_no"
+               id="user-openemis_no"
                ng-change="unsetAllErrors()"
-               type="string">
+               type="string"><!-- POCOR-9385: stable id for automation/testing -->
     </div>
 </div>

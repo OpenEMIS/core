@@ -66,11 +66,24 @@ class StudentTemplatesTable extends ControllerActionTable
         return $validator
             ->add('code', 'ruleUniqueCode', [
                 'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                'provider' => 'table'
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('name', __('This field cannot be left empty'))
+            ->notEmptyString('academic_period_id')
+            // generate_start_date/generate_end_date are marked mandatory (*) in the form. Cake's
+            // Validator silently skips custom add() rules (like ruleInAcademicPeriod below) for
+            // empty values unless a presence/non-empty rule is also declared, so a blank submission
+            // previously slipped past validation entirely and crashed at save with a raw SQL
+            // "doesn't have a default value" error instead of a friendly message.
+            ->requirePresence('generate_start_date', 'create')
+            ->notEmpty('generate_start_date', __('This field cannot be left empty'))
             ->add('generate_start_date', 'ruleInAcademicPeriod', [
                 'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
+            ->requirePresence('generate_end_date', 'create')
+            ->notEmpty('generate_end_date', __('This field cannot be left empty'))
             ->add('generate_end_date', [
                 'ruleInAcademicPeriod' => [
                     'rule' => ['inAcademicPeriod', 'academic_period_id', []]
@@ -79,7 +92,8 @@ class StudentTemplatesTable extends ControllerActionTable
                     'rule' => ['compareDateReverse', 'generate_start_date', false]
                 ]
             ])
-            ->allowEmptyFile('excel_template');
+           ->requirePresence('excel_template', 'create', __('This field cannot be left empty'))
+            ->notEmptyFile('excel_template', __('This field cannot be left empty'), 'create');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -93,7 +107,7 @@ class StudentTemplatesTable extends ControllerActionTable
         $this->fields['excel_template_name']['visible'] = false;
         $this->field('generate_start_date', ['type' => 'date']);
         $this->field('generate_end_date', ['type' => 'date']);
-        $this->field('excel_template');
+        $this->field('excel_template', ['attr' => ['required' => true]]);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -332,16 +346,41 @@ class StudentTemplatesTable extends ControllerActionTable
     }
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options) {
-        $generate_start_date = $this->request->getData()['StudentTemplates']['generate_start_date'];
-        $generate_end_date = $this->request->getData()['StudentTemplates']['generate_end_date'];
+        $requestData = $this->request->getData($this->getAlias()) ?: [];
+        $generate_start_date = $requestData['generate_start_date'] ?? null;
+        $generate_end_date = $requestData['generate_end_date'] ?? null;
         if (!empty($generate_start_date)) {
-            $entity->generate_start_date = (new FrozenDate($generate_start_date))->format('Y-m-d H:i:s');
-        }  
+            $entity->generate_start_date = $this->parseDisplayDate($generate_start_date)->format('Y-m-d H:i:s');
+        }
         if (!empty($generate_end_date)) {
-            $entity->generate_end_date = (new FrozenDate($generate_end_date))->format('Y-m-d H:i:s');
-        } 
+            $entity->generate_end_date = $this->parseDisplayDate($generate_end_date)->format('Y-m-d H:i:s');
+        }
 
-    } 
+    }
+
+    /**
+     * Parses a date string in the system's configured Date Format (e.g. "d/m/Y" - which PHP's
+     * loose date parser would otherwise misread as month/day) into a FrozenDate, falling back to
+     * PHP's own lenient parser for values already in another recognizable format.
+     */
+    private function parseDisplayDate($value)
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+        $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $value);
+
+        try {
+            $date = FrozenDate::createFromFormat($editableDateFormat, $normalized);
+            if ($date !== false) {
+                return $date;
+            }
+        } catch (\Exception $e) {
+            // fall through to lenient parsing below
+        }
+
+        return new FrozenDate($value);
+    }
     
     private function setupTabElements() {
         $options['type'] = 'StaffTemplates';
@@ -409,8 +448,11 @@ class StudentTemplatesTable extends ControllerActionTable
             $id = $DecodedQueryString['id'];
             $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->generate_start_date;
             $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            // Note: this used to add a stray '+1 day' here with no corresponding shift on save,
+            // which made the edit form display one day later than what was actually saved
+            // (e.g. a stored July 1 showed as July 2).
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
             return $attr;
             
         }
@@ -429,8 +471,8 @@ class StudentTemplatesTable extends ControllerActionTable
             $id = $DecodedQueryString['id'];
             $selectDate = $this->find()->where([$this->aliasField('id') => $id])->first()->generate_end_date;
             $entity = $attr['entity'];
-            $attr['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
-            $attr['attr']['value'] = (new FrozenDate($selectDate))->modify('+1 day')->format('Y-m-d');
+            $attr['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
+            $attr['attr']['value'] = (new FrozenDate($selectDate))->format('Y-m-d');
             return $attr;
             
         }
@@ -438,20 +480,36 @@ class StudentTemplatesTable extends ControllerActionTable
     }
 
     // Misc
-    private function updateDateRangeField($key, $attr, ServerRequest $request)
+   private function updateDateRangeField($key, $attr, ServerRequest $request)
     {
         $requestData = $request->getData();
-        if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('academic_period_id', $requestData[$this->getAlias()])) {
+
+        // Get selected academic period ID
+        if (!empty($requestData[$this->getAlias()]['academic_period_id'])) {
             $selectedPeriodId = $requestData[$this->getAlias()]['academic_period_id'];
         } else {
             $selectedPeriodId = $this->AcademicPeriods->getCurrent();
         }
 
-        $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        // Get Academic Period safely
+        $selectedPeriod = $this->AcademicPeriods
+            ->find()
+            ->where([
+                $this->AcademicPeriods->aliasField('id') => $selectedPeriodId
+            ])
+            ->first();
+
+        // Fallback to current academic period if selected ID is invalid
+        if (!$selectedPeriod) {
+            $selectedPeriodId = $this->AcademicPeriods->getCurrent();
+            $selectedPeriod = $this->AcademicPeriods->get($selectedPeriodId);
+        }
+
         $attr['type'] = 'date';
         $attr['date_options']['generateStartDate'] = $selectedPeriod->generate_start_date;
         $attr['date_options']['generateEndDate'] = $selectedPeriod->generate_end_date;
-        if (!array_key_exists($this->getAlias(), $requestData) || !array_key_exists($key, $requestData[$this->getAlias()])) {
+
+        if (empty($requestData[$this->getAlias()][$key])) {
             if ($selectedPeriodId != $this->AcademicPeriods->getCurrent()) {
                 $attr['value'] = $selectedPeriod->generate_start_date;
             } else {
@@ -464,14 +522,27 @@ class StudentTemplatesTable extends ControllerActionTable
 
     public function onGetGenerateStartDate(EventInterface $event, Entity $entity)
     {
+        // Note: this used to add a stray '+1 day' to both dates with no corresponding shift on
+        // save, making the displayed date one day later than what was actually saved (e.g. a
+        // stored July 1 showed as July 2).
+        //
+        // It also used to hardcode the display format to 'Y-m-d', regardless of the
+        // System Configurations > Date Format setting - so the index/view pages showed
+        // e.g. "2026-07-01" while the add/edit datepicker (which does honour the configured
+        // format) showed "July 31, 2026" for the same field. Use the configured format here too
+        // so add/edit and index/view are consistent.
         $generate_start_date = $entity->generate_start_date;
         $generate_end_date = $entity->generate_end_date;
+
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+
         if (!empty($generate_start_date)) {
-            $entity->generate_start_date = (new FrozenDate($generate_start_date))->modify('+1 day')->format('Y-m-d');
+            $entity->generate_start_date = (new FrozenDate($generate_start_date))->format($systemDateFormat);
         }
 
         if (!empty($generate_end_date)) {
-            $entity->generate_end_date = (new FrozenDate($generate_end_date))->modify('+1 day')->format('Y-m-d');
+            $entity->generate_end_date = (new FrozenDate($generate_end_date))->format($systemDateFormat);
         }
     }
 

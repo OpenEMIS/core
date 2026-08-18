@@ -56,8 +56,20 @@ class PerformanceCompetenciesTable extends AppTable
             $where['Institutions.area_id IN'] = $allAreas;
         }
 
-        if (!empty($institutionId) && $institutionId != -1) {
-            $where['Institutions.id'] = $institutionId;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        if (!empty($filterInstitutionIds)) {
+            $where['Institutions.id IN'] = $filterInstitutionIds;
         }
 
         if (!empty($educationGradeId) && $educationGradeId != -1) {
