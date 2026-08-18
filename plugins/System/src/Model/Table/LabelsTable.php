@@ -73,8 +73,19 @@ class LabelsTable extends ControllerActionTable
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        switch ($field) {
+            case 'modified_user_id':
+                return __('Modified User');
+            case 'created_user_id':
+            default:
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
+
+    // public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    // {
+    //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    // }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
     {
