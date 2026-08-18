@@ -33,6 +33,8 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $validator
             ->allowEmpty('code')
+            ->notEmpty('result_type')
+            ->notEmpty('pass_mark')
             // ->add('code', 'ruleUniqueCode', [
             //     'rule' => ['checkUniqueCode', null]
             // ])

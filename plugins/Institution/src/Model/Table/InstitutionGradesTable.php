@@ -1308,6 +1308,104 @@ class InstitutionGradesTable extends ControllerActionTable
         }
     }
 
+    //POCOR-9385: start — single source of truth for "entry grade" set
+    /**
+     * Return the set of entry education_grade_ids (lowest order per programme) that
+     * the institution actually runs for the given academic period.
+     *
+     * This is the ONE definition of "entry grade" shared by:
+     *   - InstitutionsController::getEducationGrade() — to filter the Add-Student dropdown
+     *   - StudentCreationCheckTrait::isStudentCreationAllowed() — to validate on Save
+     * so the dropdown can never offer a grade that Save would reject (no select-then-error).
+     *
+     * Conditions mirror getEducationGrade exactly: institution + period, the education
+     * system bound to that period, and InstitutionGrades date-window overlap.
+     *
+     * @return int[] entry education_grade_id values (empty array if none configured)
+     */
+    public function getEntryEducationGradeIds(int $institutionId, int $academicPeriodId): array
+    {
+        $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
+        $period = $AcademicPeriods->find()
+            ->select(['start_date', 'end_date'])
+            ->where(['id' => $academicPeriodId])
+            ->first();
+        if (empty($period)) {
+            return []; //POCOR-9385: unknown period → no entry grades
+        }
+        $startDate = date('Y-m-d', strtotime($period->start_date));
+        $endDate   = date('Y-m-d', strtotime($period->end_date));
+
+        $rows = $this->find()
+            ->select([
+                'eg_id'           => 'EducationGrades.id',
+                'eg_order'        => 'EducationGrades.order',
+                'eg_programme_id' => 'EducationGrades.education_programme_id',
+            ])
+            ->innerJoin(['EducationGrades' => 'education_grades'], [
+                'EducationGrades.id = ' . $this->aliasField('education_grade_id')
+            ])
+            ->innerJoin(['EducationProgrammes' => 'education_programmes'], [
+                'EducationProgrammes.id = EducationGrades.education_programme_id'
+            ])
+            ->innerJoin(['EducationCycles' => 'education_cycles'], [
+                'EducationCycles.id = EducationProgrammes.education_cycle_id'
+            ])
+            ->innerJoin(['EducationLevels' => 'education_levels'], [
+                'EducationLevels.id = EducationCycles.education_level_id'
+            ])
+            ->innerJoin(['EducationSystems' => 'education_systems'], [
+                'EducationSystems.id = EducationLevels.education_system_id'
+            ])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                'EducationSystems.academic_period_id' => $academicPeriodId,
+                'OR' => [
+                    [
+                        $this->aliasField('end_date') . ' IS NOT NULL',
+                        $this->aliasField('start_date') . ' <=' => $startDate,
+                        $this->aliasField('end_date') . ' >=' => $startDate
+                    ],
+                    [
+                        $this->aliasField('end_date') . ' IS NOT NULL',
+                        $this->aliasField('start_date') . ' <=' => $endDate,
+                        $this->aliasField('end_date') . ' >=' => $endDate
+                    ],
+                    [
+                        $this->aliasField('end_date') . ' IS NOT NULL',
+                        $this->aliasField('start_date') . ' >=' => $startDate,
+                        $this->aliasField('end_date') . ' <=' => $endDate
+                    ],
+                    [
+                        $this->aliasField('end_date') . ' IS NULL',
+                        $this->aliasField('start_date') . ' <=' => $endDate
+                    ]
+                ]
+            ])
+            ->group([$this->aliasField('education_grade_id')])
+            ->disableHydration()
+            ->toArray();
+
+        // lowest order per programme = that programme's entry grade
+        $minOrderByProgramme = [];
+        foreach ($rows as $r) {
+            $prog = (int)$r['eg_programme_id'];
+            $order = (int)$r['eg_order'];
+            if (!isset($minOrderByProgramme[$prog]) || $order < $minOrderByProgramme[$prog]) {
+                $minOrderByProgramme[$prog] = $order;
+            }
+        }
+        $entryIds = [];
+        foreach ($rows as $r) {
+            if ((int)$r['eg_order'] === $minOrderByProgramme[(int)$r['eg_programme_id']]) {
+                $entryIds[] = (int)$r['eg_id'];
+            }
+        }
+        return array_values(array_unique($entryIds));
+    }
+    //POCOR-9385: end
+
     /**
      * Used by InstitutionClassesTable & InstitutionSubjectsTable.
      * This function resides here instead of inside AcademicPeriodsTable because the first query is to get 'start_date' and 'end_date'

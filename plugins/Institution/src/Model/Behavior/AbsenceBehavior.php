@@ -7,7 +7,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 
 class AbsenceBehavior extends Behavior {
 	public function initialize(array $config): void {
@@ -20,7 +20,7 @@ class AbsenceBehavior extends Behavior {
 		return $events;
 	}
 
-	public function indexBeforePaginate(EventInterface $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(EventInterface $event, ServerRequest $request, Query $query, ArrayObject $options) {
 		$options['auto_search'] = false;
 		$search = $this->_table->ControllerAction->getSearchKey();
 		if (!empty($search)) {

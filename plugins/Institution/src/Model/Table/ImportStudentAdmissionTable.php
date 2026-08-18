@@ -21,6 +21,8 @@ use Cake\Http\ServerRequest;
 
 class ImportStudentAdmissionTable extends AppTable
 {
+    use \Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     private $institutionId;
     private $academicPeriodId;
     private $gradesInInstitution;
@@ -680,6 +682,20 @@ class ImportStudentAdmissionTable extends AppTable
         }
         $tempRow['education_grade_id'] = $educationGradeId;
         $tempRow['education_grade_code'] = $originalEducationGradeCode;
+
+        //POCOR-9385: start — student creation restriction check on import
+        //Table classes have no getInstitutionID() (that's a Controller-only method) — this Table
+        //already resolves and caches the current import's institution on $this->institutionId
+        //(see initialize()/onImportModelSpecificValidation), so use that directly instead.
+        $importInstitutionId = !empty($this->institutionId) ? (int)$this->institutionId : null;
+        if (!$this->isStudentCreationAllowed((int)$educationGradeId, $importInstitutionId, (int)$academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
+            $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+            $grade = $EducationGrades->find()->select(['name'])->where(['id' => $educationGradeId])->first();
+            $gradeName = $grade ? $grade->name : '';
+            $rowInvalidCodeCols['education_grade_id'] = $this->studentCreationBlockMessage($gradeName); //POCOR-9385: block with grade-specific message
+            return false;
+        }
+        //POCOR-9385: end — student creation restriction check
 
         $period = $this->checkAcademicPeriod($tempRow, $rowInvalidCodeCols);
         if (!$period) {

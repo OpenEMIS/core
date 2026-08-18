@@ -10,6 +10,7 @@ use App\Model\Table\AppTable;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 
 class InstitutionRubricsTable extends AppTable {
 	const EXPIRED = -1;
@@ -53,10 +54,41 @@ class InstitutionRubricsTable extends AppTable {
 		$this->ControllerAction->field('format');
 	}
 
-	//POCOR - 7415 start
+    //POCOR - 7415 start
     public function addBeforeAction(EventInterface $event)
     {
         $this->ControllerAction->field('area_education_id', ['type' => 'hidden', 'attr' => ['label'=>'Area Name']]);
+    }
+
+    public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data[$this->getAlias()]['feature']) && $data[$this->getAlias()]['feature'] == $this->getRegistryAlias()) {
+            $options['validate'] = 'InstitutionRubrics';
+        }
+    }
+
+    public function validationInstitutionRubrics(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->add('institution_id', 'required', [
+            'rule' => function ($value, $context) {
+                if (!empty($context['data']['reload'])) {
+                    return true;
+                }
+                if (empty($value) || !isset($value['_ids'])) {
+                    return false;
+                }
+                $ids = (array)$value['_ids'];
+                $ids = array_filter($ids, function ($v) {
+                    return $v !== '' && $v !== null;
+                });
+
+                return !empty($ids);
+            },
+            'message' => __('This field cannot be left empty')
+        ]);
+
+        return $validator;
     }
     //POCOR - 7415 end
 	public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request) {
@@ -83,8 +115,16 @@ class InstitutionRubricsTable extends AppTable {
 				$Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
 				$Areas = TableRegistry::getTableLocator()->get('Institution.Institutions');
 				$where = [];
-				if (!empty($institutionId) && $institutionId != 0) {
-					$where[$this->aliasField('institution_id')] = $institutionId;
+				$filterInstitutionIds = [];
+				if (is_array($institutionId) && isset($institutionId['_ids'])) {
+					$filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+						return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+					}));
+				} elseif (!empty($institutionId) && $institutionId != 0) {
+					$filterInstitutionIds = [(int)$institutionId];
+				}
+				if (!empty($filterInstitutionIds)) {
+					$where[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
 				}
 				if ($feature == $this->getRegistryAlias()) {
 					$templateOptions = $this
@@ -314,9 +354,44 @@ class InstitutionRubricsTable extends AppTable {
                 		$institutionOptions = ['' => '-- ' . __('Select') . ' --'] + $institutionList;
                 	}
                 	/*POCOR-6296 ends*/
+                    $attr['attr']['multiple'] = true; //POCOR-8417
+                    unset($institutionOptions['']);
+
+                    // POCOR-Institution-AllExclusivity: selecting a specific institution should
+                    // still allow "All Institutions" to be picked afterwards. Only once "All
+                    // Institutions" itself is selected do the specific institutions become
+                    // disabled (and any of them already selected are cleared).
+                    if (is_array($institutionOptions) && array_key_exists('0', $institutionOptions)) {
+                        $selectedInstitutionIds = [];
+                        $institutionIdData = isset($request->getData($this->getAlias())['institution_id']) ? $request->getData($this->getAlias())['institution_id'] : null;
+                        if (is_array($institutionIdData) && isset($institutionIdData['_ids'])) {
+                            $selectedInstitutionIds = array_filter((array)$institutionIdData['_ids'], function ($v) {
+                                return $v !== '' && $v !== null;
+                            });
+                        }
+                        $allInstitutionsSelected = in_array('0', $selectedInstitutionIds);
+
+                        if ($allInstitutionsSelected) {
+                            // "All Institutions" wins - disable every other option and force it
+                            // to be the only value selected.
+                            $formattedInstitutionOptions = [];
+                            foreach ($institutionOptions as $optKey => $optLabel) {
+                                if ((string)$optKey === '0') {
+                                    $formattedInstitutionOptions[$optKey] = $optLabel;
+                                } else {
+                                    $formattedInstitutionOptions[] = [
+                                        'text' => $optLabel,
+                                        'value' => $optKey,
+                                        'disabled' => 'disabled'
+                                    ];
+                                }
+                            }
+                            $institutionOptions = $formattedInstitutionOptions;
+                            $attr['attr']['value'] = ['0'];
+                        }
+                    }
                     $attr['type'] = 'chosenSelect';
                     $attr['onChangeReload'] = true;
-                    $attr['attr']['multiple'] = false;
                     $attr['options'] = $institutionOptions;
                     $attr['attr']['required'] = true;
                 }

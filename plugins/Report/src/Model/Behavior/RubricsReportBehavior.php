@@ -42,9 +42,21 @@ class RubricsReportBehavior extends Behavior {
 		/*POCOR-6296 starts*/
         $areaId = $requestData->area_education_id;
         $institutionId = $requestData->institution_id;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
         $newCondition = [];
-        if ($institutionId > 0) {
-            $newCondition[$this->_table->aliasField('institution_id')] = $institutionId;
+        if (!empty($filterInstitutionIds)) {
+            $newCondition[$this->_table->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
         }
         if (!empty($areaId) && $areaId != -1) {
             $newCondition[$this->_table->Institutions->aliasField('area_id')] = $areaId;
@@ -61,10 +73,10 @@ class RubricsReportBehavior extends Behavior {
                 }
             }
         }
-        if ($institutionId == 0) {
+        if (empty($filterInstitutionIds)) {
             if (!empty($institutionIds)) {
                 $newCondition['Institutions.id IN'] = $institutionIds;
-            } else {
+            } else if (!$superAdmin) {
                 // User has no institution access - return no rows (avoid empty IN list)
                 $newCondition[$this->_table->aliasField('institution_id')] = -1;
             }
