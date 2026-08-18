@@ -46,6 +46,9 @@ class AccountBehavior extends Behavior
             'passwordAllowEmpty' => $this->passwordAllowEmpty,
             'createRetype' => true,
         ]);
+        //POCOR-7440
+        $this->table()->addBehavior('User.PasswordRotation');
+        //POCOR-7440
     }
 
     private function setupTabElements($entity)
