@@ -2,17 +2,14 @@
 namespace Textbook\Model\Table;
 
 use ArrayObject;
-
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
 use Cake\Collection\Collection;
 use Cake\Validation\Validator;
 use Cake\View\Helper\UrlHelper;
 use Cake\I18n\Time;
-
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
@@ -82,12 +79,17 @@ class TextbooksTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                    'provider' => 'table'
-                ]
-            ]);
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
+            ])
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('academic_period_id')
+            ->notEmpty('education_level_id')
+            ->notEmpty('education_programme_id')
+            ->notEmpty('education_grade_id')
+            ->notEmpty('education_subject_id');
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -274,10 +276,10 @@ class TextbooksTable extends ControllerActionTable {
 
     }
 
-    public function viewAfterAction(EventInterface $event, Entity $entity)
+    /*public function viewAfterAction(EventInterface $event, Entity $entity)
     {
         $this->setupFields($entity);
-    }
+    }*/
 
     public function viewEditBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {

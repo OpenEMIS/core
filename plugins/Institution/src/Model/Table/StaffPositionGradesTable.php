@@ -91,4 +91,11 @@ class StaffPositionGradesTable extends ControllerActionTable
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
+    
+    //POCOR-8211 Start
+    public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('salary', ['visible' => true, 'after' => 'name']);
+    }
+    //POCOR-8211 End
 }

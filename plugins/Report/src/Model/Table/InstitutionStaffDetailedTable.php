@@ -78,8 +78,20 @@ class InstitutionStaffDetailedTable extends AppTable
         $custom_field = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldValues');
         $StaffCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
         $conditions = [];
-        if ($institutionId != 0) {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
         }
         if ($areaId != -1) {
             $conditions[$this->aliasField('Institutions.area_id')] = $areaId;
