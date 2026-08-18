@@ -10290,7 +10290,7 @@ class InstitutionsController extends AppController
         if (empty($id)) {
             throw new NotFoundException(__('Invalid file'));
         }
-         $url = $_SERVER['REQUEST_URI'] ?? '';
+         $url = $_SERVER['HTTP_REFERER'] ?? '';
         if (strpos($url, '/StudentEnrolment') !== false) {
             $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
             $getQueryString = $this->getQueryString();
@@ -10303,7 +10303,7 @@ class InstitutionsController extends AppController
             if (empty($fileRecord) || empty($fileRecord->file)) {
                 throw new NotFoundException(__('File not found'));
             }
-            $fileName = uniqid();
+            $fileName = $fileRecord->text_value;
             $fileResource = $fileRecord->file;
             
         }else{
