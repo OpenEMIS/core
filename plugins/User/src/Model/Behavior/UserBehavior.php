@@ -203,6 +203,7 @@ class UserBehavior extends Behavior
             $this->_table->fields['status']['visible'] = false;
             $this->_table->fields['preferred_language']['visible'] = false;
             $this->_table->fields['address_area_id']['type'] = 'areapicker';
+            $this->_table->fields['address_area_id']['model'] = 'Users';
             $this->_table->fields['address_area_id']['source_model'] = 'Area.AreaAdministratives';
             $this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
             $this->_table->fields['birthplace_area_id']['source_model'] = 'Area.AreaAdministratives';
