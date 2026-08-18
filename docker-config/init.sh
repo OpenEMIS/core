@@ -13,9 +13,15 @@ if [ -f "$PERSIST_CONFIG_PATH/.env" ]; then
     cp "$PERSIST_CONFIG_PATH/.env" "$API_PATH/.env"
 else
     cp "$API_PATH/.env.example" "$API_PATH/.env"
-    sed -i "s|DB_HOST=.*|DB_HOST=openemis-core-database|g" "$API_PATH/.env"
-    sed -i "s|DB_USERNAME=.*|DB_USERNAME=root|g" "$API_PATH/.env"
-    sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=root|g" "$API_PATH/.env"
+    sed -i "s|DB_HOST=.*|DB_HOST=${DB_HOST}|g" "$API_PATH/.env"
+    sed -i "s|DB_USERNAME=.*|DB_USERNAME=${DB_USERNAME}|g" "$API_PATH/.env"
+    sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=${DB_PASSWORD}|g" "$API_PATH/.env"
+    sed -i "s|MAIL_HOST=.*|MAIL_HOST=${MAIL_HOST}|g" "$API_PATH/.env"
+    sed -i "s|MAIL_PORT=.*|MAIL_PORT=${MAIL_PORT}|g" "$API_PATH/.env"
+    sed -i "s|MAIL_USERNAME=.*|MAIL_USERNAME=${MAIL_USERNAME}|g" "$API_PATH/.env"
+    sed -i "s|MAIL_PASSWORD=.*|MAIL_PASSWORD=${MAIL_PASSWORD}|g" "$API_PATH/.env"
+    sed -i "s|MAIL_FROM_ADDRESS=.*|MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}|g" "$API_PATH/.env"
+    sed -i "s|MAIL_FROM_NAME=.*|MAIL_FROM_NAME=${MAIL_FROM_NAME}|g" "$API_PATH/.env"
     cd "$API_PATH"
     #POCOR-9734: key:generate/jwt:secret must run ONLY on first boot — regenerating
     # them on every restart would invalidate every previously-issued JWT and any

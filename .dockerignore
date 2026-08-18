@@ -1,6 +1,16 @@
-
-
 .git*
 .editorconfig
 docker-compose.yaml
 .dockerignore
+logs/
+frontend/dist
+frontend/node_modules
+api/vendor
+
+# Ignore the entire docker-config directory for general COPY operations
+docker-config/
+
+# EXCEPT for the individual files you need to COPY explicitly
+!docker-config/apache2/000-default.conf
+!docker-config/cron/openemis-core
+!docker-config/init.sh
