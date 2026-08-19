@@ -103,6 +103,7 @@ class InstitutionsController extends AppController
         'InstitutionStudentAbsences',
         'StudentAttendances',
         'InstitutionStudentAbsencesArchived',
+        'InstitutionStudentsReportCardsArchived', //POCOR-8898
 
         'StudentArchive',
 //        'AssessmentsArchive',
@@ -1104,6 +1105,18 @@ class InstitutionsController extends AppController
         // Previously redirecting to ReportCardStatusProgress caused redirect to Dashboard for non-super-admin.
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardStatuses']);
     }//POCOR-6822 Ends
+
+    //POCOR-8898: start
+    public function ReportCardArchives()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentsReportCardsArchives']);
+    }
+
+    public function InstitutionStudentsReportCardsArchived()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentsReportCardsArchived']);
+    }
+    //POCOR-8898: end
 
     public function ReportCardStatusProgress()
     {
