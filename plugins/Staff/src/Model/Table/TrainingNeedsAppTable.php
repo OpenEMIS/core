@@ -52,6 +52,20 @@ class TrainingNeedsAppTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
+            ->requirePresence('type')
+            ->requirePresence('training_priority_id')
+            ->requirePresence('training_course_id', function ($context) {
+                if (array_key_exists('type', $context['data'])) {
+                    $type = $context['data']['type'];
+                    if ($type != self::NEED) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            })
             // for future validation on each user can only submit need to one course at a time.
             // ->add('training_course_id', [
             //     'ruleUnique' => [
@@ -63,10 +77,22 @@ class TrainingNeedsAppTable extends ControllerActionTable
             //         'provider' => 'table'
             //     ]
             // ])
-            ->allowEmpty('training_need_category_id', function ($context) {
+            // ->allowEmpty('training_need_category_id', function ($context) {
+            //     if (array_key_exists('type', $context['data'])) {
+            //         $type = $context['data']['type'];
+            //         if ($type == self::CATALOGUE) {
+            //             return true;
+            //         } else {
+            //             return false;
+            //         }
+            //     } else {
+            //         return false;
+            //     }
+            // })
+            ->requirePresence('training_need_category_id', function ($context) {
                 if (array_key_exists('type', $context['data'])) {
                     $type = $context['data']['type'];
-                    if ($type == self::CATALOGUE) {
+                    if ($type == self::NEED) {
                         return true;
                     } else {
                         return false;
@@ -99,6 +125,15 @@ class TrainingNeedsAppTable extends ControllerActionTable
                     return false;
                 }
             });
+    }
+
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->type != self::NEED) {
+            $entity->training_need_category_id = null;
+            $entity->training_need_competency_id = null;
+            $entity->training_need_sub_standard_id = null;
+        }        
     }
 
     public function onGetType(EventInterface $event, Entity $entity)
@@ -418,8 +453,9 @@ class TrainingNeedsAppTable extends ControllerActionTable
             }
         } else if ($action == 'add' || $action == 'edit') {
             if (!$isNeed) {
-                $attr['type'] = 'hidden';
-                $attr['attr']['value'] = 0;
+                // $attr['type'] = 'hidden';
+                // $attr['attr']['value'] = 0;
+                $attr['visible'] = false;
             }
         }
 

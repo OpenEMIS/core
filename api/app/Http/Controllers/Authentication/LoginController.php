@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
-    
+
 
     /**
      * @OA\Post(
@@ -67,6 +67,14 @@ class LoginController extends Controller
             if (!$userCheck) {
                 return $this->sendErrorResponse("Invalid Username or Password.");
             }
+            //POCOR-9591: start - block locked and inactive accounts before attempting auth
+            if ($userCheck->status === SecurityUsers::STATUS_LOCKED) {
+                return $this->sendErrorResponse('Account is locked.', [], "", 403);
+            }
+            if ($userCheck->status === SecurityUsers::STATUS_INACTIVE) {
+                return $this->sendErrorResponse('Account is inactive.', [], "", 403);
+            }
+            //POCOR-9591: end
             // Validate API key
             $apikey = $request->api_key ?? "";
             $apiCredentials = ApiCredentials::where('api_key', $apikey)->first();
@@ -105,9 +113,26 @@ class LoginController extends Controller
                 'password' => $password
             ];
 
-            if (!$token = JWTAuth::attempt($input)) {
+            $token = JWTAuth::attempt($input);
+
+            if (!$token) {
+                //POCOR-9591: start - increment failed_logins; lock when threshold reached
+                $threshold = (int) DB::table('config_items')->where('code', 'login_attempts')->value('value') ?: 5;
+                $newCount = $userCheck->failed_logins + 1;
+                if ($newCount >= $threshold) {
+                    SecurityUsers::where('id', $userCheck->id)->update([
+                        'failed_logins' => $newCount,
+                        'status'        => SecurityUsers::STATUS_LOCKED,
+                    ]);
+                    return $this->sendErrorResponse('Account is locked due to too many failed login attempts.', [], "", 403);
+                }
+                SecurityUsers::where('id', $userCheck->id)->update(['failed_logins' => $newCount]);
+                //POCOR-9591: end
                 return $this->sendErrorResponse('Invalid Username or Password.');
             }
+            //POCOR-9591: reset failed login counter on successful authentication
+            SecurityUsers::where('id', $userCheck->id)->update(['failed_logins' => 0]);
+
             return $this->sendSuccessResponse(
                 'Logged In successfully',
                 [
