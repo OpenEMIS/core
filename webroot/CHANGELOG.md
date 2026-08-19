@@ -1,3 +1,19 @@
+### 5.17.0 - 2026-08-19
+- Bug Fixed: Docker container not working.
+- Bug Fixed: Core>Directory>Search user records>Merge : Investigate why merge failed
+- Implemented: Develop password rotation policy
+- Implemented: Develop fuction to archive Student Report Cards
+- Implemented: Develop a Teacher Classes report
+- Implemented: Develop system configuration - Administrations > System Setup > System Configurations > Student Settings : Allow users to enrol students to multiple programmes
+- Implemented: Develop an account locked function
+- Bug Fixed: Report: Form pages load a new form on revisit, causing field reshuffling and hidden filters
+- Implemented: Develop changes to user contacts
+- Bug Fixed: Administrations > Profiles > Institutions : Time taken to generate Institution Profile is too long
+- Bug Fixed: Administrations > System Setup > Labels : System does not update Address Area in affected pages
+- Bug Fixed: Institution > Students > Timetables : User sees a blank screen
+- Implemented: Check and remove (where appropriate) the set foreign_key_checks = 0 
+- Implemented: Develop changes to increase attachment size from 2MB to 10MB
+
 ### 5.16.0 - 2026-08-11
 - Bug Fixed: Registrations > Add: No email is received when a student is in Open, Pending Approval, Approved or Pending cancellation state.
 - Bug Fixed: Core>Reports>Institution>Student Absence Report/Student Absence Per day Report:
