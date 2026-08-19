@@ -482,10 +482,6 @@ class AccessControlComponent extends Component
         if ($this->Session->read('Permissions.reportCardGenerateAllowed')) {
             return true;
         }
-        //POCOR-8898
-        if($this->Session->read('Permissions.reportCardArchiveAllowed')){
-            return true;
-        }
 
         return false;
     }

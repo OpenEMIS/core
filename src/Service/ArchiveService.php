@@ -53,8 +53,21 @@ class ArchiveService
         $pid = $caller->pid;
         $processName = $caller->processName;
         $systemProcessId = $caller->systemProcessId;
-        $academic_period_id = $whereCondition['academic_period_id'];
-        $totalRecords = self::getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id);
+
+        // POCOR-8898: snapshot the exact primary-key set to migrate up front, and drive both the
+        // copy and delete phases off that fixed key list instead of a live "academic_period_id ="
+        // re-query. Re-querying live would let a row saved *during* the archive run (same
+        // academic_period_id) slip between the offset-based copy and the final unconditional
+        // deleteAll($whereCondition) -- deleted from the source without ever being copied.
+        // Several archived tables (e.g. institution_students_report_cards) use a composite
+        // primary key, so this must build a tuple match rather than assume a single 'id' column.
+        $primaryKeyCols = (array)$sourceTable->getPrimaryKey();
+        $keysToArchive = $sourceTable->find()
+            ->select($primaryKeyCols)
+            ->where($whereCondition)
+            ->enableHydration(false)
+            ->toArray();
+        $totalRecords = count($keysToArchive);
         try {
             $connection = ConnectionManager::get($targetTableConnection);
             $batchSize = intval(($totalRecords / 100) + 1);
@@ -64,8 +77,11 @@ class ArchiveService
             $i = 1;
             $baseCount = intval($caller->recordsToArchiveTotal);
             $baseCountStr = number_format($baseCount, 0, '', ' ');
-            for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
-                $sql = "INSERT IGNORE INTO $targetTableName SELECT * FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize OFFSET $offset";
+            $keyBatches = array_chunk($keysToArchive, max($batchSize, 1));
+            $colList = implode(', ', $primaryKeyCols);
+            foreach ($keyBatches as $keyBatch) {
+                $tupleList = self::buildTupleList($keyBatch, $primaryKeyCols, $connection);
+                $sql = "INSERT IGNORE INTO $targetTableName SELECT * FROM $table_name WHERE ($colList) IN ($tupleList)";
                 $affectedRecordsCount = $connection->execute($sql)->rowCount();
                 $caller->recordsInArchive = $caller->recordsInArchive + $affectedRecordsCount;
                 $proc = "Copy step:";
@@ -78,8 +94,9 @@ class ArchiveService
             $sourceConnection = ConnectionManager::get('default');
             $i = 1;
 
-            for ($offset = 0; $offset < $totalRecords; $offset += $batchSize) {
-                $sql = "DELETE FROM $table_name where academic_period_id = $academic_period_id LIMIT $batchSize";
+            foreach ($keyBatches as $keyBatch) {
+                $tupleList = self::buildTupleList($keyBatch, $primaryKeyCols, $sourceConnection);
+                $sql = "DELETE FROM $table_name WHERE ($colList) IN ($tupleList)";
                 $affectedBatchRows = $sourceConnection->execute($sql)->rowCount();
                 $caller->recordsToArchive = $caller->recordsToArchive - $affectedBatchRows;
                 $proc = "Delete step:";
@@ -87,7 +104,6 @@ class ArchiveService
                 $i++;
             }
 
-            $sourceTable->deleteAll($whereCondition);
             return true;
         } catch (\Exception $e) {
             Log::write('error', 'I have BAD exception in move records: ' . $e->getMessage());
@@ -101,6 +117,25 @@ class ArchiveService
             $connection->execute("SET FOREIGN_KEY_CHECKS = 1");
             return false;
         }
+    }
+
+    /**
+     * POCOR-8898: build a "(v1,v2,...),(v1,v2,...)" tuple list for a row-value IN() match against
+     * $primaryKeyCols, with each value quoted through the given connection so both integer and
+     * non-integer key columns (e.g. the `date` column in institution_staff_attendances' composite
+     * key) are handled safely without assuming every key column is numeric.
+     */
+    private static function buildTupleList(array $rows, array $primaryKeyCols, $connection): string
+    {
+        $tuples = [];
+        foreach ($rows as $row) {
+            $values = array_map(function ($col) use ($row, $connection) {
+                return $connection->quote($row[$col]);
+            }, $primaryKeyCols);
+            $tuples[] = '(' . implode(',', $values) . ')';
+        }
+
+        return implode(',', $tuples);
     }
 
     public static function setTransferLogsBatch($caller, $step = 1, $proc = "", $baseCount = 0, $baseCountStr = "")
