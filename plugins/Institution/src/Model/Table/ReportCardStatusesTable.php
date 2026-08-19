@@ -1682,9 +1682,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function generate(EventInterface $event, ArrayObject $extra)
     {
-        $params = $this->getQueryString();
+        $queryString = $this->request->getQuery('queryString'); //POCOR-8898
+        $params = $this->getQueryString(null, $queryString);//POCOR-8898
 
-//echo "<pre>"; print_r($params); die;
         $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
