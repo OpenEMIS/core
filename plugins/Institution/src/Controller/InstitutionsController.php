@@ -10326,14 +10326,13 @@ class InstitutionsController extends AppController
             $fileRecord = $InstitutionCustomFieldValues->find()
                             ->where([
                                 'file IS NOT' => null,
-                                'file_name IS NOT' => null,
                                 'institution_id IS' => $this->getInstitutionID(),
                             ])->first();
 
-            if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {
+            if (empty($fileRecord) || empty($fileRecord->file)) {
                 throw new NotFoundException(__('File not found'));
             }
-            $fileName = $fileRecord->file_name;
+            $fileName = $fileRecord->text_value;
             $fileResource = $fileRecord->file;
         }
         $this->response = $this->response
