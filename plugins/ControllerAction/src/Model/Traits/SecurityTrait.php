@@ -77,6 +77,7 @@ trait SecurityTrait
             if ($request) {
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
+                $decodedQuery = null; //POCOR-9715: ensure defined before the referer-fallback check below, regardless of which branch runs
                 if (isset($query[$queryStingParamName])) { //to filter if the URL already contain querystring
                     $queryString = $query[$queryStingParamName];
                 } elseif (isset($query['querystring'])) { //to filter if the URL already contain querystring
