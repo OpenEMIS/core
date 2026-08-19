@@ -114,7 +114,7 @@ class POCOR8898 extends AbstractMigration
                         (NULL,
                          'Student Report Card Archive',
                          'Institutions', 'Institutions', 'Students', {$parentId},
-                         'ReportCardArchives.index',
+                         'ReportCardStatuses.index',
                          NULL, NULL, NULL, NULL,
                          {$newOrder}, 1, NULL,
                          2, NOW(), 1, NOW())"

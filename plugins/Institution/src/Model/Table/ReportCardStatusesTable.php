@@ -440,12 +440,13 @@ class ReportCardStatusesTable extends ControllerActionTable
             $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $currentPeriodId; //POCOR-8898
         } else {
             $academicPeriodOptions = [];
-            $selectedAcademicPeriod = null;
+            // POCOR-8898: no dropdown options to show, but still constrain the list to the
+            // current period (or -1/none if there isn't one) instead of leaving the filter off
+            // entirely -- an unfiltered query would mix records from every academic period.
+            $selectedAcademicPeriod = $currentPeriodId ?: -1;
         }
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        if ($selectedAcademicPeriod) {
-            $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-        }
+        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
 
         $availableGrades = $InstitutionGrades->find()
