@@ -156,7 +156,11 @@ class RenderFileBehavior extends RenderBehavior
             $sessionKey = $model->getRegistryAlias().'.parseFile.'.$fieldId;
             if ($session->check($sessionKey)) {
                 $parseFileData = $session->read($sessionKey);
-                $attr['value'] = $fieldValues[$fieldId]['file_name'];
+                // POCOR-9692: file_name is empty for custom-field-value tables that only
+                // store text_value (e.g. student_custom_field_values) — fall back to
+                // text_value, same convention as the primary resolution above, so an
+                // existing file's name still renders instead of being blanked out.
+                $attr['value'] = $fieldValues[$fieldId]['file_name'] ?? $fieldValues[$fieldId]['text_value'] ?? '';
             }
             // End
 
@@ -324,12 +328,49 @@ class RenderFileBehavior extends RenderBehavior
                 //store both file and file_name
                 $customValue['file']      = $parseFileData['fileContent'];
                 $customValue['file_name'] = $parseFileData['fileName'];
+                // POCOR-9692: file_name has no backing column on either values table —
+                // text_value is where the filename is actually persisted and later read
+                // back for display.
+                $customValue['text_value'] = $parseFileData['fileName'];
                 $uploadNewFile = true;
-              
+
             }
 
             $session->delete($sessionKey);
         }
+
+        // POCOR-9692: an <input type=file> submits an UploadedFile instance even when the
+        // user didn't pick a new file (error === UPLOAD_ERR_NO_FILE). That empty instance is
+        // ALSO what already clobbered $entity->custom_field_values[*]->file during the
+        // earlier patchEntity() call in EditBehavior — the 'file' key is present in the
+        // submitted array (even though empty), so CakePHP's merge overwrote the real stored
+        // blob with this same empty object. So the entity can no longer be trusted as the
+        // source of the existing file; re-fetch it directly from the DB by its known id.
+        if (!$uploadNewFile && isset($customValue['file']) && $customValue['file'] instanceof UploadedFile) {
+            $uploadedFile = $customValue['file'];
+            $isOk = $uploadedFile->getError() === UPLOAD_ERR_OK;
+            if ($isOk) {
+                $customValue['file'] = $uploadedFile->getStream()->getContents();
+                $customValue['file_name'] = $uploadedFile->getClientFilename();
+                $customValue['text_value'] = $uploadedFile->getClientFilename();
+            } else {
+                $customValue['file'] = null;
+                $customValue['file_name'] = null;
+                $customValue['text_value'] = null;
+                if (!empty($customValue['id'])) {
+                    $existingRow = $this->_table->CustomFieldValues
+                        ->find()
+                        ->select(['id', 'file', 'text_value'])
+                        ->where(['id' => $customValue['id']])
+                        ->first();
+                    if (!empty($existingRow)) {
+                        $customValue['file'] = $existingRow->file;
+                        $customValue['text_value'] = $existingRow->text_value;
+                    }
+                }
+            }
+        }
+
         $settings['customValue'] = $customValue;
         $this->processValuesFile($entity, $data, $settings); //POCOR-9407
     }
@@ -351,22 +392,47 @@ class RenderFileBehavior extends RenderBehavior
         //Preserve existing file from entity if no new file
         if (!$uploadNewFile) {
             $foundInEntity = false;
-            foreach ($entity->custom_field_values ?? [] as $cf) {
-                if ($cf[$fieldKey] == $fieldId) {
-                    $existingFile = $cf->file ?? null;
-                    $existingFileName = $cf->file_name ?? null;
 
-                    if ($existingFile instanceof UploadedFile) {
-                        $customValue['file'] = $existingFile->getError() === UPLOAD_ERR_OK
-                            ? $existingFile->getStream()->getContents()
-                            : null;
-                    } else {
-                        $customValue['file'] = $existingFile;
-                    }
-
-                    $customValue['file_name'] = $existingFileName;
+            // POCOR-9692: prefer a direct DB lookup by the row's known id over
+            // $entity->custom_field_values — a <input type=file> submitted alongside this
+            // same row (even an empty one) already overwrites the entity's in-memory 'file'
+            // property during the earlier patchEntity() call, since the 'file' key is present
+            // in the submitted array either way. The DB is the only reliable source here.
+            if (!empty($customValue['id'])) {
+                $existingRow = $this->_table->CustomFieldValues
+                    ->find()
+                    ->select(['id', 'file', 'text_value'])
+                    ->where(['id' => $customValue['id']])
+                    ->first();
+                if (!empty($existingRow)) {
+                    $customValue['file'] = $existingRow->file;
+                    $customValue['file_name'] = $existingRow->text_value;
+                    $customValue['text_value'] = $existingRow->text_value;
                     $foundInEntity = true;
-                    break;
+                }
+            }
+
+            if (!$foundInEntity) {
+                foreach ($entity->custom_field_values ?? [] as $cf) {
+                    if ($cf[$fieldKey] == $fieldId) {
+                        $existingFile = $cf->file ?? null;
+                        // POCOR-9692: file_name has no backing column on either values
+                        // table — the filename convention actually lives in text_value.
+                        $existingFileName = $cf->file_name ?? $cf->text_value ?? null;
+
+                        if ($existingFile instanceof UploadedFile) {
+                            $customValue['file'] = $existingFile->getError() === UPLOAD_ERR_OK
+                                ? $existingFile->getStream()->getContents()
+                                : null;
+                        } else {
+                            $customValue['file'] = $existingFile;
+                        }
+
+                        $customValue['file_name'] = $existingFileName;
+                        $customValue['text_value'] = $existingFileName;
+                        $foundInEntity = true;
+                        break;
+                    }
                 }
             }
 
@@ -374,22 +440,25 @@ class RenderFileBehavior extends RenderBehavior
             if (!$foundInEntity && !isset($customValue['file'])) {
                 $customValue['file'] = null;
                 $customValue['file_name'] = null;
+                $customValue['text_value'] = null;
             }
         }
 
         //Final strict check before saving
         if (isset($customValue['file'])) {
             if ($customValue['file'] instanceof UploadedFile) {
-                
+
                 $uploadedFile = $customValue['file'];
                 $customValue['file'] = $uploadedFile->getError() === UPLOAD_ERR_OK
                     ? $uploadedFile->getStream()->getContents()
                     : null;
                 $customValue['file_name'] = $uploadedFile->getClientFilename();
+                $customValue['text_value'] = $uploadedFile->getClientFilename();
             } elseif (!is_string($customValue['file']) && !is_null($customValue['file'])) {
                 Log::error('Invalid file type detected: ' . gettype($customValue['file']));
                 $customValue['file'] = null;
                 $customValue['file_name'] = null;
+                $customValue['text_value'] = null;
             }
         }
 
