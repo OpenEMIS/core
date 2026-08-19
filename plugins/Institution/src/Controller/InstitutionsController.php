@@ -10292,9 +10292,9 @@ class InstitutionsController extends AppController
         }
          $url = $_SERVER['HTTP_REFERER'] ?? '';
         if (strpos($url, '/StudentEnrolment') !== false) {
-            $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
+            $studentEnrolmentCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentCustomFieldValues');
             $getQueryString = $this->getQueryString();
-            $fileRecord = $InstitutionCustomFieldValues->find()
+            $fileRecord = $studentEnrolmentCustomFieldValues->find()
                             ->where([
                                 'file IS NOT' => null,
                                 'id' => $getQueryString['id']
@@ -10306,6 +10306,20 @@ class InstitutionsController extends AppController
             $fileName = $fileRecord->text_value;
             $fileResource = $fileRecord->file;
             
+        }elseif(strpos($url, '/StudentAdmission') !== false) {
+            $studentAdmissionCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentAdmissionCustomFieldValues');
+            $getQueryString = $this->getQueryString();
+            $fileRecord = $studentAdmissionCustomFieldValues->find()
+                            ->where([
+                                'file IS NOT' => null,
+                                'id' => $getQueryString['id']
+                            ])->first();
+
+            if (empty($fileRecord) || empty($fileRecord->file)) {
+                throw new NotFoundException(__('File not found'));
+            }
+            $fileName = $fileRecord->text_value;
+            $fileResource = $fileRecord->file;
         }else{
         // Load your custom field values table
             $InstitutionCustomFieldValues = TableRegistry::getTableLocator()->get('InstitutionCustomField.InstitutionCustomFieldValues');
@@ -10313,7 +10327,7 @@ class InstitutionsController extends AppController
                             ->where([
                                 'file IS NOT' => null,
                                 'file_name IS NOT' => null,
-                                'institution_id' => $this->getInstitutionID(),
+                                'institution_id IS' => $this->getInstitutionID(),
                             ])->first();
 
             if (empty($fileRecord) || empty($fileRecord->file_name) || empty($fileRecord->file)) {

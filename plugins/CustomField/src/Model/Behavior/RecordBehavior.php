@@ -1270,13 +1270,9 @@ class RecordBehavior extends Behavior
             }//POCOR-8434 ends
         }
 
-        // POCOR-9692 starts: fallback for Student-context tables (behavior => 'Student') —
-        // if nothing was resolved above (e.g. a table's configured model only matches the
-        // generic 'Student' module and never sees the 'Student > Registrations' module),
-        // also check for the 'Student > Registrations' module explicitly so its custom
-        // fields can surface. Only runs when the lookup above found nothing, so any
-        // consumer that already resolves forms (Student or otherwise) is unaffected.
-        if (empty($customFormIds) && $this->getConfig('behavior') == 'Student') {
+        // POCOR-9692 starts: fallback for Pending Enrolment (Institution.StudentEnrolment) and
+        // Student Admission (Institution.StudentAdmission) — both need the 'Student .
+        if (empty($customFormIds) && $this->getConfig('behavior') == 'Student' && in_array($this->_table->getRegistryAlias(), ['Institution.StudentEnrolment', 'Institution.StudentAdmission'], true)) { //POCOR-9692
             $registrationModule = $this->CustomModules
                 ->find()
                 ->where([$this->CustomModules->aliasField('code') => 'Student > Registrations'])
@@ -1368,6 +1364,26 @@ class RecordBehavior extends Behavior
         return $customFormData;
     }//POCOR-8434 ends
 
+    // POCOR-9692: explicit value fetch for Student Admission.
+    private function mergeStudentAdmissionCustomFieldValues(array &$values, $institutionStudentAdmissionId)
+    {
+        $AdmissionCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentAdmissionCustomFieldValues');
+        $fieldKey = $this->getConfig('fieldKey');
+
+        $rows = $AdmissionCustomFieldValues
+            ->find()
+            ->contain(['CustomFields'])
+            ->where([$AdmissionCustomFieldValues->aliasField('institution_student_admission_id') => $institutionStudentAdmissionId])
+            ->all();
+
+        foreach ($rows as $obj) {
+            $fieldId = $obj->{$fieldKey};
+            if (!isset($values[$fieldId])) {
+                $values[$fieldId] = $obj;
+            }
+        }
+    }
+
     public function formatEntity(Entity $entity)
     {
         $model = $this->_table;
@@ -1395,6 +1411,12 @@ class RecordBehavior extends Behavior
                     $values[$fieldId] = $obj;
                 }
             }
+        }
+
+        // POCOR-9692: Student Admission's custom field values live in their own table
+        // (student_admission_custom_field_values, keyed by institution_student_admission_id
+        if ($this->_table->getRegistryAlias() === 'Institution.StudentAdmission' && !empty($id)) {
+            $this->mergeStudentAdmissionCustomFieldValues($values, $id);
         }
 
         $query = $this->getCustomFieldQuery($entity, ['withContain' => ['CustomFields']]);
