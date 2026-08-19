@@ -17,7 +17,7 @@ class StudentAttendanceShell extends Shell
     public function initialize(): void
     {
         parent::initialize();
-        
+
         $this->SystemProcesses = $this->fetchTable('SystemProcesses');
         $this->TransferLogs = $this->fetchTable('Archive.TransferLogs');
     }
@@ -62,7 +62,7 @@ class StudentAttendanceShell extends Shell
 
     }
 
-    
+
     public function moveRecordsToArchive($academicPeriodId, $pid){
         //POCOR-7474-HINDOL get rid of unused connection to backup table and old comments
         $connection = ConnectionManager::get('default');
@@ -112,6 +112,7 @@ class StudentAttendanceShell extends Shell
             $count = $count + $adding->rowCount();
         }
         $sourceTable = null;
+
 
         return $count;
     }

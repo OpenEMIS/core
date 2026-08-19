@@ -360,9 +360,11 @@ class UserBehavior extends Behavior
                     $field = 'address_area_id';
                     $userTableLabelAlias = 'Users';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->fields[$field]['attr']['label'] = $areaLabel;
                     $this->_table->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $field = 'birthplace_area_id';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->fields[$field]['attr']['label'] = $areaLabel;
                     $this->_table->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $this->_table->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                 } else {
@@ -391,9 +393,11 @@ class UserBehavior extends Behavior
                     $field = 'address_area_id';
                     $userTableLabelAlias = 'Users';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->fields[$field]['attr']['label'] = $areaLabel;
                     $this->_table->ControllerAction->field('address_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $field = 'birthplace_area_id';
                     $areaLabel = $this->onGetFieldLabel($event, $userTableLabelAlias, $field, $language, true);
+                    $this->_table->fields[$field]['attr']['label'] = $areaLabel;
                     $this->_table->ControllerAction->field('birthplace_area_section', ['type' => 'section', 'title' => $areaLabel, 'before' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                     $this->_table->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => $field, 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
                 }

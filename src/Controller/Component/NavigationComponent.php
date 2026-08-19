@@ -858,7 +858,13 @@ class NavigationComponent extends Component
                 'parent' => 'Institution.Performance',
                 'selected' => [
                     'Institutions.ReportCardStatuses',
-                    'Institutions.ReportCardStatusProgress'
+                    'Institutions.ReportCardStatusProgress',
+                    'Institutions.ReportCardArchives',//POCOR-8898
+                    'Institutions.ReportCardArchives.index',//POCOR-8898
+                    'Institutions.ReportCardArchives.view',//POCOR-8898
+                    'Institutions.InstitutionStudentsReportCardsArchived',//POCOR-8898
+                    'Institutions.InstitutionStudentsReportCardsArchived.index',//POCOR-8898
+                    'Institutions.InstitutionStudentsReportCardsArchived.view'//POCOR-8898
                 ],
             ],
             'Institutions.ReportCardGpa.index' => [
