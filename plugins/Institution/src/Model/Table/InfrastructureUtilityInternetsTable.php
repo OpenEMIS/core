@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
+use Cake\I18n\FrozenTime;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Table\AppTable;
@@ -143,16 +144,205 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         }
     }
 
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['CreatedUser', 'ModifiedUser']);
+    }
+
+    public function onGetModifiedUserId(EventInterface $event, Entity $entity)
+    {
+        if (!empty($entity->modified_user_id)) {
+            if ($entity->has('modified_user') && $entity->modified_user) {
+                return $entity->modified_user->name;
+            }
+
+            $user = TableRegistry::getTableLocator()->get('User.Users')->find()
+                ->where(['id' => $entity->modified_user_id])
+                ->first();
+            if ($user) {
+                return $user->name;
+            }
+        }
+
+        $audit = $this->getVersioningModifiedAudit($entity);
+
+        return $audit['modified_user_name'] ?? '';
+    }
+
+    public function onGetModified(EventInterface $event, Entity $entity)
+    {
+        if (!empty($entity->modified)) {
+            return $this->formatDateTime($entity->modified);
+        }
+
+        $audit = $this->getVersioningModifiedAudit($entity);
+        if (!empty($audit['modified'])) {
+            return $this->formatDateTime($audit['modified']);
+        }
+
+        return '';
+    }
+
+    /**
+     * Edit-as-insert (POCOR-9475) leaves modified_* null; use current row created audit when a prior version exists.
+     */
+    protected function getVersioningModifiedAudit(Entity $entity): array
+    {
+        if (!$this->hasPreviousUtilityInternetVersion($entity)) {
+            return ['modified_user_name' => '', 'modified' => null];
+        }
+
+        $modifiedUserName = '';
+        if (!empty($entity->created_user_id)) {
+            if ($entity->has('created_user') && $entity->created_user) {
+                $modifiedUserName = $entity->created_user->name;
+            } else {
+                $user = TableRegistry::getTableLocator()->get('User.Users')->find()
+                    ->where(['id' => $entity->created_user_id])
+                    ->first();
+                if ($user) {
+                    $modifiedUserName = $user->name;
+                }
+            }
+        }
+
+        return [
+            'modified_user_name' => $modifiedUserName,
+            'modified' => $entity->created ?? null,
+        ];
+    }
+
+    protected function hasPreviousUtilityInternetVersion(Entity $entity): bool
+    {
+        if (empty($entity->institution_id) || empty($entity->academic_period_id)) {
+            return false;
+        }
+
+        $conditions = [
+            $this->aliasField('institution_id') => $entity->institution_id,
+            $this->aliasField('academic_period_id') => $entity->academic_period_id,
+            $this->aliasField('is_current') => 0,
+        ];
+        $conditions = $this->appendInternetVersionFieldConditions($conditions, $entity, true);
+        if (!empty($entity->id)) {
+            $conditions[$this->aliasField('id !=')] = $entity->id;
+        }
+
+        return $this->exists($conditions);
+    }
+
+    /**
+     * Fields that identify a distinct current internet utility row (POCOR-9475).
+     */
+    protected function getInternetVersionGroupFields(): array
+    {
+        return [
+            'utility_internet_type_id',
+            'internet_purpose',
+            'utility_internet_bandwidth_id',
+        ];
+    }
+
+    protected function getInternetVersionConditions(Entity $entity): array
+    {
+        $conditions = [
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+        ];
+
+        return $this->appendInternetVersionFieldConditions($conditions, $entity, false);
+    }
+
+    /**
+     * @param array $conditions
+     * @param \Cake\ORM\Entity $entity
+     * @param bool $useAlias Use table alias for find()/exists() queries
+     */
+    protected function appendInternetVersionFieldConditions(array $conditions, Entity $entity, bool $useAlias = true): array
+    {
+        foreach ($this->getInternetVersionGroupFields() as $field) {
+            if (!$entity->has($field)) {
+                continue;
+            }
+            $value = $entity->get($field);
+            $key = $useAlias ? $this->aliasField($field) : $field;
+            if ($value === null || $value === '') {
+                $conditions[$key . ' IS'] = null;
+            } else {
+                $conditions[$key] = $value;
+            }
+        }
+
+        return $conditions;
+    }
+
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $query
-        /* ->select([
-            'status' => "(SELECT CASE WHEN internet_purpose = 1 THEN 'Teaching'
-            ELSE 'Non-Teaching' END AS internet_purpose
-            FROM ".$this->table()." where  academic_period_id = ".$extra['selectedAcademicPeriodId'].")"
-        ]) */
-        ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'], $this->aliasField('is_current') => 1])
-        ->orderDesc($this->aliasField('created'));
+        $institutionId = $this->getInstitutionID();
+        if ($institutionId) {
+            $this->repairMultipleInternetCurrentFlags($institutionId, $extra['selectedAcademicPeriodId']);
+        }
+
+        $conditions = [
+            $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'],
+            $this->aliasField('is_current') => 1,
+        ];
+        if ($institutionId) {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+
+        $query->where($conditions)->orderDesc($this->aliasField('created'));
+    }
+
+    /**
+     * POCOR-9475: one current row per institution, period, type, purpose, and bandwidth.
+     * Repairs rows left inactive when add/edit expired all combinations instead of only the same one.
+     */
+    protected function repairMultipleInternetCurrentFlags($institutionId, $academicPeriodId): void
+    {
+        $baseConditions = [
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+        ];
+
+        $groupFields = array_map(function ($field) {
+            return $this->aliasField($field);
+        }, $this->getInternetVersionGroupFields());
+
+        $comboRows = $this->find()
+            ->select($groupFields)
+            ->where($baseConditions)
+            ->group($groupFields)
+            ->all();
+
+        if ($comboRows->count() <= 1) {
+            return;
+        }
+
+        $currentCount = $this->find()
+            ->where($baseConditions + [$this->aliasField('is_current') => 1])
+            ->count();
+
+        if ($currentCount >= $comboRows->count()) {
+            return;
+        }
+
+        foreach ($comboRows as $comboRow) {
+            $comboConditions = $this->appendInternetVersionFieldConditions($baseConditions, $comboRow, true);
+
+            if ($this->exists($comboConditions + [$this->aliasField('is_current') => 1])) {
+                continue;
+            }
+
+            $latest = $this->find()
+                ->where($comboConditions)
+                ->orderDesc($this->aliasField('id'))
+                ->first();
+
+            if ($latest) {
+                $this->updateAll(['is_current' => 1], [$this->aliasField('id') => $latest->id]);
+            }
+        }
     }
     public function onGetInternetPurpose(EventInterface $event, Entity $entity)
     {
@@ -237,13 +427,10 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
     //POCOR-9475
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
-        //Expire old records for same institution + academic year
+        // Expire prior current row for same institution, period, type, purpose, and bandwidth only
         $this->updateAll(
-             ['is_current' => false],
-            [
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id
-            ]
+            ['is_current' => false],
+            $this->getInternetVersionConditions($entity)
         );
 
         //Set dates from academic period
@@ -274,19 +461,23 @@ class InfrastructureUtilityInternetsTable extends ControllerActionTable
         //Store original ID BEFORE unsetting
         $originalId = $entity->id;
 
-        //Expire previous current record for that institution + academic year
+        // Expire previous current record for same institution, period, type, purpose, and bandwidth
         $this->updateAll(
             ['is_current' => false],
-            [
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id
-            ]
+            $this->getInternetVersionConditions($entity)
         );
 
         //Convert EDIT into INSERT
         $entity->setNew(true);
         $entity->unset('id');
-        
+
+        $userId = null;
+        if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User']['id'])) {
+            $userId = $_SESSION['Auth']['User']['id'];
+        }
+        $entity->modified_user_id = $userId ?? 1;
+        $entity->modified = FrozenTime::now();
+
         //Set academic period dates
         $academicPeriods = TableRegistry::getTableLocator()
             ->get('AcademicPeriod.AcademicPeriods');

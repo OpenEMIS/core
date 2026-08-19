@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\Validation\Validator;
 use Cake\Event\EventInterface;
+use Cake\I18n\FrozenTime;
 use App\Model\Table\ControllerActionTable;
 
 use App\Model\Table\AppTable;
@@ -97,6 +98,95 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         // End POCOR-5188
     }
 
+    public function viewBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['CreatedUser', 'ModifiedUser']);
+    }
+
+    public function onGetModifiedUserId(EventInterface $event, Entity $entity)
+    {
+        if (!empty($entity->modified_user_id)) {
+            if ($entity->has('modified_user') && $entity->modified_user) {
+                return $entity->modified_user->name;
+            }
+
+            $user = TableRegistry::getTableLocator()->get('User.Users')->find()
+                ->where(['id' => $entity->modified_user_id])
+                ->first();
+            if ($user) {
+                return $user->name;
+            }
+        }
+
+        $audit = $this->getVersioningModifiedAudit($entity);
+
+        return $audit['modified_user_name'] ?? '';
+    }
+
+    public function onGetModified(EventInterface $event, Entity $entity)
+    {
+        if (!empty($entity->modified)) {
+            return $this->formatDateTime($entity->modified);
+        }
+
+        $audit = $this->getVersioningModifiedAudit($entity);
+        if (!empty($audit['modified'])) {
+            return $this->formatDateTime($audit['modified']);
+        }
+
+        return '';
+    }
+
+    /**
+     * Edit-as-insert (POCOR-9475) leaves modified_* null; use current row created audit when a prior version exists.
+     */
+    protected function getVersioningModifiedAudit(Entity $entity): array
+    {
+        if (!$this->hasPreviousUtilityElectricityVersion($entity)) {
+            return ['modified_user_name' => '', 'modified' => null];
+        }
+
+        $modifiedUserName = '';
+        if (!empty($entity->created_user_id)) {
+            if ($entity->has('created_user') && $entity->created_user) {
+                $modifiedUserName = $entity->created_user->name;
+            } else {
+                $user = TableRegistry::getTableLocator()->get('User.Users')->find()
+                    ->where(['id' => $entity->created_user_id])
+                    ->first();
+                if ($user) {
+                    $modifiedUserName = $user->name;
+                }
+            }
+        }
+
+        return [
+            'modified_user_name' => $modifiedUserName,
+            'modified' => $entity->created ?? null,
+        ];
+    }
+
+    protected function hasPreviousUtilityElectricityVersion(Entity $entity): bool
+    {
+        if (empty($entity->institution_id) || empty($entity->academic_period_id)) {
+            return false;
+        }
+
+        $conditions = [
+            $this->aliasField('institution_id') => $entity->institution_id,
+            $this->aliasField('academic_period_id') => $entity->academic_period_id,
+            $this->aliasField('is_current') => 0,
+        ];
+        if (!empty($entity->utility_electricity_type_id)) {
+            $conditions[$this->aliasField('utility_electricity_type_id')] = $entity->utility_electricity_type_id;
+        }
+        if (!empty($entity->id)) {
+            $conditions[$this->aliasField('id !=')] = $entity->id;
+        }
+
+        return $this->exists($conditions);
+    }
+
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
         switch ($field) {
@@ -125,8 +215,69 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
 
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra)
     {
-        $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'], $this->aliasField('is_current') => 1])
-        ->orderDesc($this->aliasField('created'));
+        $institutionId = $this->getInstitutionID();
+        if ($institutionId) {
+            $this->repairMultipleTypeCurrentFlags($institutionId, $extra['selectedAcademicPeriodId']);
+        }
+
+        $conditions = [
+            $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId'],
+            $this->aliasField('is_current') => 1,
+        ];
+        if ($institutionId) {
+            $conditions[$this->aliasField('institution_id')] = $institutionId;
+        }
+
+        $query->where($conditions)->orderDesc($this->aliasField('created'));
+    }
+
+    /**
+     * POCOR-9475: one current row per institution, academic period, and electricity type.
+     * Repairs rows left inactive when add/edit expired all types instead of only the same type.
+     */
+    protected function repairMultipleTypeCurrentFlags($institutionId, $academicPeriodId): void
+    {
+        $baseConditions = [
+            $this->aliasField('institution_id') => $institutionId,
+            $this->aliasField('academic_period_id') => $academicPeriodId,
+        ];
+
+        $typeRows = $this->find()
+            ->select([$this->aliasField('utility_electricity_type_id')])
+            ->where($baseConditions)
+            ->group([$this->aliasField('utility_electricity_type_id')])
+            ->all();
+
+        if ($typeRows->count() <= 1) {
+            return;
+        }
+
+        $currentCount = $this->find()
+            ->where($baseConditions + [$this->aliasField('is_current') => 1])
+            ->count();
+
+        if ($currentCount >= $typeRows->count()) {
+            return;
+        }
+
+        foreach ($typeRows as $typeRow) {
+            $typeConditions = $baseConditions + [
+                $this->aliasField('utility_electricity_type_id') => $typeRow->utility_electricity_type_id,
+            ];
+
+            if ($this->exists($typeConditions + [$this->aliasField('is_current') => 1])) {
+                continue;
+            }
+
+            $latest = $this->find()
+                ->where($typeConditions)
+                ->orderDesc($this->aliasField('id'))
+                ->first();
+
+            if ($latest) {
+                $this->updateAll(['is_current' => 1], [$this->aliasField('id') => $latest->id]);
+            }
+        }
     }
 
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
@@ -308,12 +459,13 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
     //POCOR-9475
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
-        //Expire old records for same institution + academic year
+        // Expire prior current row for same institution, academic period, and electricity type only
         $this->updateAll(
             ['is_current' => false],
             [
                 'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id
+                'academic_period_id' => $entity->academic_period_id,
+                'utility_electricity_type_id' => $entity->utility_electricity_type_id,
             ]
         );
 
@@ -346,18 +498,26 @@ class InfrastructureUtilityElectricitiesTable extends ControllerActionTable
         //Store original ID BEFORE unsetting
         $originalId = $entity->id;
 
-        //Expire previous current record for that institution + academic year
+        // Expire previous current record for same institution, academic period, and electricity type
         $this->updateAll(
             ['is_current' => false],
             [
                 'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id
+                'academic_period_id' => $entity->academic_period_id,
+                'utility_electricity_type_id' => $entity->utility_electricity_type_id,
             ]
         );
 
         //Convert EDIT into INSERT
         $entity->setNew(true);
         $entity->unset('id');
+
+        $userId = null;
+        if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User']['id'])) {
+            $userId = $_SESSION['Auth']['User']['id'];
+        }
+        $entity->modified_user_id = $userId ?? 1;
+        $entity->modified = FrozenTime::now();
 
         //Set academic period dates
         $academicPeriods = TableRegistry::getTableLocator()
