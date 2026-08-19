@@ -44,4 +44,8 @@ echo $this->Html->script('OpenEmis.../plugins/ag-grid-enterprise/dist/ag-grid-en
 echo $this->Html->script('OpenEmis.../plugins/multi-select-tree/dist/angular-multi-select-tree-0.1.0');
 echo $this->Html->script('OpenEmis.../plugins/multi-select-tree/dist/angular-multi-select-tree-0.1.0.tpl');
 
+//POCOR-9783: load datepicker core before the locale so $.fn.datepicker always exists on
+//pages without a date field (e.g. Student Timetables); otherwise the locale file throws
+//"Cannot set properties of undefined (setting 'en-GB')".
+echo $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepicker.min', ['block' => true]);
 echo $this->Html->script('ControllerAction.../plugins/datepicker/locales/bootstrap-datepicker.'.$dateLanguage.'.min', ['block' => true]);
