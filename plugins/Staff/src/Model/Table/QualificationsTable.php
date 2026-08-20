@@ -234,7 +234,7 @@ class QualificationsTable extends ControllerActionTable
         // }elseif ($field == 'gpa') {
         //     return __('GPA');
         // }elseif ($field == 'created_user_id') {
-        //     return __('Created By');
+        //     return __('Created User');
         // } else if ($field == 'created') {
         //     return  __('Created On');
         // }elseif ($field == 'modified_user_id') {
@@ -269,7 +269,7 @@ class QualificationsTable extends ControllerActionTable
         }elseif ($field == 'gpa') {
             return __('GPA');
         }elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } else if ($field == 'created') {
             return  __('Created On');
         }elseif ($field == 'modified_user_id') {

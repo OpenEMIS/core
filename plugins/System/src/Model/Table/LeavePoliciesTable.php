@@ -63,10 +63,10 @@ class LeavePoliciesTable extends ControllerActionTable
 
     }
 
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
-    {
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-    }
+    // public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    // {
+    //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    // }
 
     public function afterAction(EventInterface $event, ArrayObject $extra)
     {
@@ -430,6 +430,23 @@ class LeavePoliciesTable extends ControllerActionTable
         }
 
         return true;
+    }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
     }
 
 

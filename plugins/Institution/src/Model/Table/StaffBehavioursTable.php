@@ -883,11 +883,11 @@ class StaffBehavioursTable extends ControllerActionTable
             case 'created':
                 return __('Created');
             case 'created_user_id':
-                    return __('Created By');
+                    return __('Created User');
             case 'modified':
                 return __('Modified');
             case 'modified_user_id':
-                return __('Modified By');
+                return __('Modified User');
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

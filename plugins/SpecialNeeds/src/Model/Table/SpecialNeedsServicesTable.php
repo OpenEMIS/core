@@ -80,13 +80,13 @@ class SpecialNeedsServicesTable extends ControllerActionTable
             case 'special_needs_service_classification_id':
                 return __('Classification');
             case 'modified_user_id':
-                return __('Modified By');  //POCOR-6873
+                return __('Modified User');  //POCOR-6873
             case 'modified':
-                return __('Modified On');  //POCOR-6873
+                return __('Modified');  //POCOR-6873
             case 'created_user_id':
-                return __('Created By');  //POCOR-6873
+                return __('Created User');  //POCOR-6873
             case 'created':
-                return __('Created On');  //POCOR-6873
+                return __('Created');  //POCOR-6873
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

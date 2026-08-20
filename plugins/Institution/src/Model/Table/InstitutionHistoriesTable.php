@@ -59,9 +59,9 @@ class InstitutionHistoriesTable extends ControllerActionTable
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'created') {
-            return __('Modified On');
+            return __('Modified');
         } else if ($field == 'created_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }

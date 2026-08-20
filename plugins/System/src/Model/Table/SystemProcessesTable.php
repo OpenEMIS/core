@@ -129,7 +129,7 @@ class SystemProcessesTable extends AsyncServicesAdminTable
             case 'name':            return __('Feature');
             case 'callable_event':  return __('Callable Event');
             case 'executed_count':  return __('Executed Count');
-            case 'created_user_id': return __('Created By');
+            case 'created_user_id': return __('Created User');
             default:                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }

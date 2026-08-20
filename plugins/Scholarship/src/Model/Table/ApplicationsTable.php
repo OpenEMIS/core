@@ -633,11 +633,11 @@ class ApplicationsTable extends ControllerActionTable
         }elseif ($field == 'modified') {
             return __('Modified');
         }elseif ($field == 'modified_user_id') {
-            return __('Modified By');
+            return __('Modified User');
         }elseif ($field == 'created') {
             return __('Created');
         }elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         }else if ($field == 'financial_assistance_type_id') {
             return __('Financial Assistance Type');
         }else if ($field == 'description') {

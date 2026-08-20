@@ -99,14 +99,33 @@ class AccountsTable extends AppTable {
         }
     }
 
-    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true) {
-        if ($this->action == 'view') {
-            switch ($field) {
-                case 'new_password':
-                    return __('Password');
-            }
+    // public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true) {
+    //     if ($this->action == 'view') {
+    //         switch ($field) {
+    //             case 'new_password':
+    //                 return __('Password');
+    //         }
+    //     }
+    //     return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    // }
+
+    public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
+    {
+        switch ($field) {
+            case 'new_password':
+                return __('Password');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
+
+            default:
+                return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity) {

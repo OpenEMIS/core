@@ -2118,6 +2118,14 @@ class AcademicPeriodsTable extends ControllerActionTable
                 return __('End Date');
             case 'academic_period_level_id':
                 return __('Academic Period Level');
+            case 'created':
+                return __('Created');
+            case 'created_user_id':
+                    return __('Created User');
+            case 'modified':
+                return __('Modified');
+            case 'modified_user_id':
+                return __('Modified User');
 
             default:
                 return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
