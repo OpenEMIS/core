@@ -112,7 +112,17 @@ class StaffBehavioursTable extends ControllerActionTable
             ->requirePresence('staff_behaviour_category_id', 'create')
             ->notEmpty('staff_behaviour_category_id', __('This field cannot be left empty'))
             ->requirePresence('behaviour_classification_id', 'create')
-            ->notEmpty('behaviour_classification_id', __('This field cannot be left empty'));
+            ->notEmpty('behaviour_classification_id', __('This field cannot be left empty'))
+            // Description and Action are requested to be mandatory on the Staff Behaviours add/edit form.
+            ->requirePresence('description', 'create')
+            ->notEmpty('description', __('This field cannot be left empty'))
+            ->requirePresence('action', 'create')
+            ->notEmpty('action', __('This field cannot be left empty'))
+            // Academic Period and Staff are also requested to be mandatory on this form.
+            ->requirePresence('academic_period_id', 'create')
+            ->notEmpty('academic_period_id', __('This field cannot be left empty'))
+            ->requirePresence('staff_id', 'create')
+            ->notEmpty('staff_id', __('This field cannot be left empty'));
     }
 
     // The bootstrap-datepicker "date" field for date_of_behaviour renders/accepts text in whatever
@@ -241,6 +251,23 @@ class StaffBehavioursTable extends ControllerActionTable
         }
         if ($this->hasField('behaviour_classification_id')) {
             $this->fields['behaviour_classification_id']['attr']['required'] = true;
+        }
+
+        // Description and Action are now mandatory fields on this form (requested by user);
+        // mark them required so the red asterisk shows up, matching validationDefault() above.
+        if ($this->hasField('description')) {
+            $this->fields['description']['attr']['required'] = true;
+        }
+        if ($this->hasField('action')) {
+            $this->fields['action']['attr']['required'] = true;
+        }
+
+        // Academic Period and Staff are also now mandatory fields on this form (requested by user).
+        if ($this->hasField('academic_period_id')) {
+            $this->fields['academic_period_id']['attr']['required'] = true;
+        }
+        if ($this->hasField('staff_id')) {
+            $this->fields['staff_id']['attr']['required'] = true;
         }
     }
     // End POCOR-7441
