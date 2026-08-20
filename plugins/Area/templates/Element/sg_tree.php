@@ -1,7 +1,7 @@
 <?php $label = isset($attr['label']) ? $attr['label'] : $attr['field']; ?>
 <?php if ($label): ?>
 <div class="input select<?= $attr['null'] == false ? ' required' : '' ?>">
-	<label for="<?= $attr['id'] ?>"><?= $label ?></label>
+	<label for="<?= $attr['id'] ?>"><?= __($label) ?></label>
 <?php endif; ?>
 	<?php
 	$errorMsg = '';

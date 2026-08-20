@@ -27,6 +27,8 @@ use Alert\Model\Table\AlertLogsTable; //POCOR-9509: delegate student status aler
 
 class StudentsTable extends ControllerActionTable
 {
+    use \Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     const PENDING_TRANSFERIN = -1;
     const PENDING_TRANSFEROUT = -2;
     const PENDING_ADMISSION = -3;
@@ -240,6 +242,7 @@ class StudentsTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentRisks.calculateRiskValue'] = 'institutionStudentRiskCalculateRiskValue';
         $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        $events['ControllerAction.Model.add.beforeSave'] = ['callable' => 'addBeforeSave', 'priority' => 500]; //POCOR-9385: student creation restriction check
         return $events;
     }
 
@@ -692,6 +695,84 @@ class StudentsTable extends ControllerActionTable
         // targetInstitutionId is used to determine the error message, whether it is enrolled in 'this' or 'other' institution
         $targetInstitutionId = (isset($options['targetInstitutionId'])) ? $options['targetInstitutionId'] : null;
 
+        //POCOR-9355: multiple institution / multiple programme enrollment: callers that know about
+        // this feature (ValidationBehavior) always pass these two keys explicitly, even when both
+        // are false, so we can tell them apart from callers that never heard of the feature
+        // (e.g. checkIfCanTransfer) and must keep getting the original single-institution behaviour.
+        $configProvided = array_key_exists('multipleInstitutions', $options) || array_key_exists('multipleProgrammes', $options);
+
+        if ($configProvided) {
+            $multipleInstitutions = !empty($options['multipleInstitutions']);
+            $multipleProgrammes = !empty($options['multipleProgrammes']);
+            $targetProgrammeId = isset($options['targetProgrammeId']) ? $options['targetProgrammeId'] : null;
+
+            // Fetch existing CURRENT enrolments in the same education system as full records
+            // so we can inspect both institution and programme.
+            $recordOptions = array_merge($options, ['getRecords' => true, 'getInstitutions' => false]);
+            $existingRecords = $this->enrolledInAnyInstitution($studentId, $systemId, $recordOptions);
+
+            if (empty($existingRecords)) {
+                return false; // No current enrolment in this education system - allow
+            }
+
+            $enrolledInstitutionIds = [];
+            $enrolledProgrammeIds = [];
+            foreach ($existingRecords as $record) {
+                $enrolledInstitutionIds[$record->institution_id] = true;
+            }
+
+            if ($multipleProgrammes && !empty($targetProgrammeId)) {
+                // Batch-fetch education_programme_id for all enrolled grades (avoids N+1 queries)
+                $gradeIds = array_unique(array_map(function ($r) { return $r->education_grade_id; }, $existingRecords));
+                $EducationGrades = TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                $gradesMap = $EducationGrades->find()
+                    ->select([$EducationGrades->aliasField('id'), $EducationGrades->aliasField('education_programme_id')])
+                    ->where([$EducationGrades->aliasField('id') . ' IN' => $gradeIds])
+                    ->indexBy('id')
+                    ->toArray();
+
+                foreach ($existingRecords as $record) {
+                    $gradeKey = $record->education_grade_id;
+                    if (isset($gradesMap[$gradeKey])) {
+                        $enrolledProgrammeIds[] = $gradesMap[$gradeKey]->education_programme_id;
+                    }
+                }
+
+                // Rule 4: same programme is always rejected regardless of institution
+                if (in_array($targetProgrammeId, $enrolledProgrammeIds)) {
+                    return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inSameProgramme');
+                }
+
+                // Rule 2: with multi-institution disabled, target institution must be one where student is already enrolled
+                if (!$multipleInstitutions && !empty($targetInstitutionId) && !isset($enrolledInstitutionIds[$targetInstitutionId])) {
+                    return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inAnotherSchool');
+                }
+
+                // Rule 3: multi-institution enabled - institution is unrestricted once programme differs
+                return false;
+            }
+
+            if ($multipleInstitutions) {
+                // Multi-programme is off: only one active programme per institution, but any
+                // number of institutions is allowed - reject only if this exact institution
+                // already has an active enrolment (regardless of programme).
+                if (!empty($targetInstitutionId) && isset($enrolledInstitutionIds[$targetInstitutionId])) {
+                    return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inTargetSchool');
+                }
+                return false;
+            }
+
+            // Multi-institution and multi-programme both off: any existing enrolment in this
+            // education system blocks a new one, whether it's this institution or another
+            // (original single-institution behaviour) - reuse the records already fetched above.
+            if (!empty($targetInstitutionId) && isset($enrolledInstitutionIds[$targetInstitutionId])) {
+                return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inTargetSchool');
+            }
+            return $this->getMessage('Institution.Students.student_name.ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem.inAnotherSchool');
+        }
+
+        // Legacy callers that never pass multipleInstitutions/multipleProgrammes at all
+        // (e.g. checkIfCanTransfer) keep the exact original behaviour, untouched.
         $enrolledInstitutionIds = $this->enrolledInAnyInstitution($studentId, $systemId, $options);
 
         if (is_array($enrolledInstitutionIds) && !empty($enrolledInstitutionIds)) {
@@ -712,6 +793,7 @@ class StudentsTable extends ControllerActionTable
         $newOptions['select'] = ['institution_id', 'education_grade_id'];
         $options = array_merge($options, $newOptions);
         $getInstitutions = (isset($options['getInstitutions'])) ? $options['getInstitutions'] : false;
+        $getRecords = !empty($options['getRecords']); //POCOR-9355: returns full record objects for programme-level checks
 
         $EducationGradesTable = TableRegistry::getTableLocator()->get('Education.EducationGrades');
 
@@ -724,6 +806,12 @@ class StudentsTable extends ControllerActionTable
             if ($value->education_system_id == $systemId) {
                 $existingRecordsInSameSystem[] = $value;
             }
+        }
+
+        //POCOR-9355: when getRecords is requested, return the raw record objects so the caller
+        // can inspect institution_id and education_grade_id for programme-level checks.
+        if ($getRecords) {
+            return $existingRecordsInSameSystem;
         }
 
         // returns a true/false if !getInstitutions else returns an array of institution_ids
@@ -866,6 +954,28 @@ class StudentsTable extends ControllerActionTable
     }
 
     //End:POCOR-6931
+
+    public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $extra) //POCOR-9385: start — student creation restriction on Add
+    {
+        if (!$entity->isNew()) { //POCOR-9385: only applies to new records
+            return;
+        }
+
+        $gradeId          = !empty($entity->education_grade_id)    ? (int)$entity->education_grade_id    : null;
+        $academicPeriodId = !empty($entity->academic_period_id)    ? (int)$entity->academic_period_id    : null;
+        $institutionId    = method_exists($this, 'getInstitutionID') ? ($this->getInstitutionID() ?: null) : null;
+        if (!$this->isStudentCreationAllowed($gradeId, $institutionId, $academicPeriodId)) { //POCOR-9385: check vs institution's entry grade for this period
+            $gradeName = '';
+            if (!empty($gradeId)) {
+                $EducationGrades = \Cake\ORM\TableRegistry::getTableLocator()->get('Education.EducationGrades');
+                $grade = $EducationGrades->find()->select(['name'])->where(['id' => $gradeId])->first();
+                $gradeName = $grade ? $grade->name : '';
+            }
+            $entity->setError('education_grade_id', [$this->studentCreationBlockMessage($gradeName)]); //POCOR-9385: set validation error
+            $event->stopPropagation();
+            return false;
+        }
+    } //POCOR-9385: end — student creation restriction on Add
 
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
@@ -1768,9 +1878,10 @@ class StudentsTable extends ControllerActionTable
             $this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
             $period = $entity->academic_period;
+            [, $editableDateFormat] = $this->getSystemDateFormats();
             $dateOptions = [
-                'startDate' => $period->start_date->format('d-m-Y'),
-                'endDate' => $period->end_date->format('d-m-Y')
+                'startDate' => $period->start_date->format($editableDateFormat),
+                'endDate' => $period->end_date->format($editableDateFormat)
             ];
 
             $this->fields['start_date']['date_options'] = $dateOptions;
@@ -2152,6 +2263,16 @@ class StudentsTable extends ControllerActionTable
     }
 
     // End PHPOE-1897
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
 
     private function setupTabElements($entity)
     {
@@ -3883,12 +4004,43 @@ class StudentsTable extends ControllerActionTable
      */
 
     //POCOR-8643 -- To resolve Enrolled(Repeater) issue
-    public function getOldRecords($previous_institution_student_id)
+    public function getOldRecordsOld($previous_institution_student_id)
     {
         $connection = ConnectionManager::get('default');
         $sql = "SELECT is3.id, is3.student_id, is3.student_status_id, is3.start_date, is3.end_date FROM institution_students is1 JOIN institution_students is2 ON is1.student_id = is2.student_id AND is1.start_date > is2.start_date JOIN institution_students is3 ON is2.student_id = is3.student_id AND is2.start_date > is3.start_date WHERE is1.student_status_id = 1 AND is2.student_status_id = 3 AND is3.student_status_id = 8 AND is3.start_date < is2.start_date AND is2.start_date < is1.start_date AND is1.previous_institution_student_id IS NOT NULL;";
 
         $result = $connection->execute($sql)->fetchAll('assoc');
+        return $result;
+    }
+
+    //POCOR-9687 -- Updated the query to fetch the old records based on previous_institution_student_id
+    public function getOldRecords($previous_institution_student_id)
+    {
+        $connection = ConnectionManager::get('default');
+
+        $sql = "
+            SELECT
+                current_student.id,
+                current_student.student_id,
+                current_student.education_grade_id,
+                current_student.student_status_id,
+
+                previous_student.id AS previous_student_record_id,
+                previous_student.student_status_id AS previous_status_id,
+                previous_student.education_grade_id AS previous_education_grade_id
+
+            FROM institution_students current_student
+
+            INNER JOIN institution_students previous_student
+                ON current_student.previous_institution_student_id = previous_student.id
+
+            WHERE current_student.previous_institution_student_id = :previousInstitutionStudentId
+        ";
+
+        $result = $connection->execute($sql, [
+            'previousInstitutionStudentId' => $previous_institution_student_id
+        ])->fetchAll('assoc');
+
         return $result;
     }
 
@@ -3911,12 +4063,39 @@ class StudentsTable extends ControllerActionTable
                     $studentId = $studentID->student_id;
                     if (isset($studentId)) {
                         $found = false;
+                        //POCOR-9687 --Start
+                        $allowedStatuses = $this->StudentStatuses->find()
+                            ->select(['id'])
+                            ->where([
+                                'code IN' => [
+                                    'WITHDRAWN',
+                                    'GRADUATED',
+                                    'PROMOTED',
+                                    'REPEATED'
+                                ]
+                            ])
+                            ->enableHydration(false)
+                            ->extract('id')
+                            ->toArray();
                         foreach ($oldStatus as $status) {
-                            if ($status['student_id'] == $studentId) {
+
+                            $sameGrade =
+                                $status['education_grade_id']
+                                == $status['previous_education_grade_id'];
+
+                            $validPreviousStatus =
+                                in_array($status['previous_status_id'], $allowedStatuses);
+
+                            if (
+                                $status['student_id'] == $studentId
+                                && $sameGrade
+                                && $validPreviousStatus
+                            ) {
                                 $found = true;
                                 break;
                             }
                         }
+                        //POCOR-9687 -- end
                         if ($found) {
                             $value = __("Enrolled (Repeater)");
                         }

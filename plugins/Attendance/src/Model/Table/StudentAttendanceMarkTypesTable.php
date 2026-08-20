@@ -302,6 +302,7 @@ class StudentAttendanceMarkTypesTable extends AppTable
                                 ->where([ $DayConditions ])//POCOR-7183
                                 //->order(['order'=>'asc']) //POCOR-6059
                                 //->all()//POCOR-6059
+                                ->group([$StudentAttendancePerDayPeriods->aliasField('id')]) //POCOR-9758
                                 ->toArray();
 
                 $options = [];

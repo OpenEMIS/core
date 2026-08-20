@@ -104,13 +104,4 @@ class AlertRuleCaseEscalationBehavior extends AlertRuleBehavior
     {
         $this->onAlertRuleSetupFields($event, $entity);
     }
-
-    public function onGetCaseThreshold(EventInterface $event, Entity $entity)
-    {
-        $thresholdData = json_decode($entity->threshold, true);
-        return $thresholdData['value'];
-    }
-
-
-
 }

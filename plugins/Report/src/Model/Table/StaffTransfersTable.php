@@ -41,9 +41,23 @@ class StaffTransfersTable extends AppTable {
         $institution_id = $requestData->institution_id;
         $areaId = $requestData->area_education_id;
         $where = []; //POCOR-8247
-        if ($institution_id != 0) {
-            $where['OR'][] = ['NewInstitutions.id' => $institution_id];
-            $where['OR'][] = ['PreviousInstitutions.id' => $institution_id];       
+
+        $institutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+            $institutionIds = [(int)$institution_id];
+        }
+
+        if (!empty($institutionIds)) {
+            $where['OR'][] = ['NewInstitutions.id IN' => $institutionIds];
+            $where['OR'][] = ['PreviousInstitutions.id IN' => $institutionIds];
         }
         if ($areaId != -1) {
             $where['OR'][] = ['NewInstitutions.area_id' => $areaId];

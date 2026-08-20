@@ -332,7 +332,8 @@ class CommentsController extends PageController
         if ($userRole == 'Student') {
             $studentTabElements = [
                 'Guardians' => ['text' => __('Guardians')],
-                'StudentTransport' => ['text' => __('Transport')]
+                'StudentTransport' => ['text' => __('Transport')],
+                'Siblings' => ['text' => __('Siblings')]
             ];
             $tabElements = array_merge($tabElements, $studentTabElements);
         }

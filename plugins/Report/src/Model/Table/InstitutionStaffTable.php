@@ -64,6 +64,19 @@ class InstitutionStaffTable extends AppTable
         $areaLevelId = $requestData->area_level_id; //POCOR-7794
         $academicPeriodId = $requestData->academic_period_id;
 
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $institutionIds = [(int)$institutionId];
+        }
+
         if ($statusId != 0 && $statusId != -1) {
             $query->where([
                 $this->aliasField('staff_status_id') => $statusId
@@ -75,9 +88,9 @@ class InstitutionStaffTable extends AppTable
                 $this->aliasField('staff_type_id') => $typeId
             ]);
         }
-        if ($institutionId != 0) {
+        if (!empty($institutionIds)) {
             $query->where([
-                $this->aliasField('institution_id') => $institutionId
+                $this->aliasField('institution_id') . ' IN' => $institutionIds
             ]);
         }
         //POCOR-7794 start
@@ -221,64 +234,69 @@ class InstitutionStaffTable extends AppTable
                 $staffCustomFieldOptions = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFieldOptions');
                 $staffCustomFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFields');
                 $staffCustomFormsFields = TableRegistry::getTableLocator()->get('StaffCustomField.StaffCustomFormsFields');
-                $staffDetailedData = $StaffCustomFieldValues->find()
-                    ->select([
-                        'id'                             => $StaffCustomFieldValues->aliasField('id'),
-                        'staff_id'                     => $StaffCustomFieldValues->aliasField('staff_id'),
-                        'staff_custom_field_id'        => $StaffCustomFieldValues->aliasField('staff_custom_field_id'),
-                        'text_value'                     => $StaffCustomFieldValues->aliasField('text_value'),
-                        'number_value'                   => $StaffCustomFieldValues->aliasField('number_value'),
-                        'decimal_value'                  => $StaffCustomFieldValues->aliasField('decimal_value'),
-                        'textarea_value'                 => $StaffCustomFieldValues->aliasField('textarea_value'),
-                        'date_value'                     => $StaffCustomFieldValues->aliasField('date_value'),
-                        'time_value'                     => $StaffCustomFieldValues->aliasField('time_value'),
-                        'checkbox_value_text'            => 'staffCustomFieldOptions.name',
-                        'question_name'                  => 'staffCustomField.name',
-                        'field_type'                     => 'staffCustomField.field_type',
-                        'field_description'              => 'staffCustomField.description',
-                        'question_field_type'            => 'staffCustomField.field_type',
-                    ])->leftJoin(
-                        ['staffCustomField' => 'staff_custom_fields'],
-                        [
-                            'staffCustomField.id = '.$StaffCustomFieldValues->aliasField('staff_custom_field_id')
-                        ]
-                    )->leftJoin(
-                        ['staffCustomFieldOptions' => 'staff_custom_field_options'],
-                        [
-                            'staffCustomFieldOptions.id = '.$StaffCustomFieldValues->aliasField('number_value')
-                        ]
-                    )
-                    ->where([
-                        $StaffCustomFieldValues->aliasField('staff_id') => $row->user['id'],
-                    ])->toArray();   
-                    $existingCheckboxValue = '';
-                    foreach ($staffDetailedData as $staffDetailedDataRow) {
-                        $fieldType = $staffDetailedDataRow->field_type;
+                
+                $staffUserId = $row->user['id'] ?? null;
+                $staffDetailedData = [];
+                if (!empty($staffUserId)) {
+                    $staffDetailedData = $StaffCustomFieldValues->find()
+                        ->select([
+                            'id'                             => $StaffCustomFieldValues->aliasField('id'),
+                            'staff_id'                     => $StaffCustomFieldValues->aliasField('staff_id'),
+                            'staff_custom_field_id'        => $StaffCustomFieldValues->aliasField('staff_custom_field_id'),
+                            'text_value'                     => $StaffCustomFieldValues->aliasField('text_value'),
+                            'number_value'                   => $StaffCustomFieldValues->aliasField('number_value'),
+                            'decimal_value'                  => $StaffCustomFieldValues->aliasField('decimal_value'),
+                            'textarea_value'                 => $StaffCustomFieldValues->aliasField('textarea_value'),
+                            'date_value'                     => $StaffCustomFieldValues->aliasField('date_value'),
+                            'time_value'                     => $StaffCustomFieldValues->aliasField('time_value'),
+                            'checkbox_value_text'            => 'staffCustomFieldOptions.name',
+                            'question_name'                  => 'staffCustomField.name',
+                            'field_type'                     => 'staffCustomField.field_type',
+                            'field_description'              => 'staffCustomField.description',
+                            'question_field_type'            => 'staffCustomField.field_type',
+                        ])->leftJoin(
+                            ['staffCustomField' => 'staff_custom_fields'],
+                            [
+                                'staffCustomField.id = '.$StaffCustomFieldValues->aliasField('staff_custom_field_id')
+                            ]
+                        )->leftJoin(
+                            ['staffCustomFieldOptions' => 'staff_custom_field_options'],
+                            [
+                                'staffCustomFieldOptions.id = '.$StaffCustomFieldValues->aliasField('number_value')
+                            ]
+                        )
+                        ->where([
+                            $StaffCustomFieldValues->aliasField('staff_id') => $staffUserId,
+                        ])->toArray();   
+                }
+                $existingCheckboxValue = '';
+                foreach ($staffDetailedData as $staffDetailedDataRow) {
+                    $fieldType = $staffDetailedDataRow->field_type;
 
-                        if ($fieldType == 'TEXT') {
-                            //die($staffDetailedDataRow->text_value);
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->text_value;
-                        } else if ($fieldType == 'CHECKBOX') {
-                            $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id], ',') .','. $staffDetailedDataRow->checkbox_value_text;
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
-                        } else if ($fieldType == 'NUMBER') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->number_value;
-                        } else if ($fieldType == 'DECIMAL') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->decimal_value;
-                        } else if ($fieldType == 'TEXTAREA') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->textarea_value;
-                        } else if ($fieldType == 'DROPDOWN') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->checkbox_value_text;
-                        } else if ($fieldType == 'DATE') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = date('Y-m-d', strtotime($staffDetailedDataRow->date_value));
-                        } else if ($fieldType == 'TIME') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = date('h:i A', strtotime($staffDetailedDataRow->time_value));
-                        } else if ($fieldType == 'COORDINATES') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->text_value;
-                        } else if ($fieldType == 'NOTE') {
-                            $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->field_description;
-                        } //POCOR-9464 end
-                    }
+                    if ($fieldType == 'TEXT') {
+                        //die($staffDetailedDataRow->text_value);
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->text_value;
+                    } else if ($fieldType == 'CHECKBOX') {
+                        $existingCheckboxValue = trim($row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id], ',') .','. $staffDetailedDataRow->checkbox_value_text;
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = trim($existingCheckboxValue, ',');
+                    } else if ($fieldType == 'NUMBER') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->number_value;
+                    } else if ($fieldType == 'DECIMAL') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->decimal_value;
+                    } else if ($fieldType == 'TEXTAREA') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->textarea_value;
+                    } else if ($fieldType == 'DROPDOWN') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->checkbox_value_text;
+                    } else if ($fieldType == 'DATE') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = date('Y-m-d', strtotime($staffDetailedDataRow->date_value));
+                    } else if ($fieldType == 'TIME') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = date('h:i A', strtotime($staffDetailedDataRow->time_value));
+                    } else if ($fieldType == 'COORDINATES') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->text_value;
+                    } else if ($fieldType == 'NOTE') {
+                        $row[$this->_dynamicFieldName.'_'.$staffDetailedDataRow->staff_custom_field_id] = $staffDetailedDataRow->field_description;
+                    } //POCOR-9464 end
+                }
                 return $row;
             });
         });

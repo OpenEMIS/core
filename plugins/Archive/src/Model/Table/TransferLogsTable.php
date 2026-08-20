@@ -53,12 +53,17 @@ class TransferLogsTable extends ControllerActionTable
             ],
             'StudentAssessments' => [
                 'assessment_item_results',
+            ], //POCOR-8898
+            'StudentReportCards' => [
+                'institution_students_report_cards'
             ]
         ],
-        'Shell' =>
-            ['StudentAttendances' => 'ArchiveStudentAttendances',
-                'StaffAttendances' => 'ArchiveStaffAttendances',
-                'StudentAssessments' => 'ArchiveStudentAssessments']
+        'Command' => //POCOR-8898: renamed from 'Shell', values changed to CakePHP command snake_case names
+            ['StudentAttendances' => 'archive_student_attendances', //POCOR-8898
+                'StaffAttendances' => 'archive_staff_attendances', //POCOR-8898
+                'StudentAssessments' => 'archive_student_assessments', //POCOR-8898
+                'StudentReportCards' => 'archive_student_report_cards' //POCOR-8898
+]
 
     ];
 
@@ -198,7 +203,6 @@ class TransferLogsTable extends ControllerActionTable
      * @param EventInterface $event
      * @param Entity $entity
      * @return mixed
-     *
      */
     public function onGetGeneratedBy(EventInterface $event, Entity $entity)
     {
@@ -212,7 +216,6 @@ class TransferLogsTable extends ControllerActionTable
     /**
      * common proc to get the setting from Configuration
      * @return bool
-     *
      */
     public static function hideAcademicPeriod()
     {
@@ -228,7 +231,6 @@ class TransferLogsTable extends ControllerActionTable
     /**
      * common proc to get the setting from Configuration
      * @return bool
-     *
      */
     public static function disableAcademicPeriod()
     {
@@ -245,7 +247,6 @@ class TransferLogsTable extends ControllerActionTable
      * common proc to show related field with id in the index table
      * @param $tableName
      * @param $relatedField
-     *
      */
     private static function getRelatedRecord($tableName, $relatedField)
     {
@@ -310,8 +311,6 @@ class TransferLogsTable extends ControllerActionTable
      * @param EventInterface $event
      * @param Entity $entity
      * @param ArrayObject $data
-     * POCOR-7521-KH
-     *
      */
 
     public function afterSave(EventInterface $event, Entity $entity, ArrayObject $data)
@@ -334,6 +333,9 @@ class TransferLogsTable extends ControllerActionTable
         if ($entity->features == "Student Assessments") {
             $this->archiveStudentAssessments($entity);
         }
+        if ($entity->features == "Student Report Cards") { //POCOR-8898
+            $this->archiveStudentReportCards($entity);
+        }
     }
 
     /**
@@ -345,21 +347,22 @@ class TransferLogsTable extends ControllerActionTable
      */
 
 
-    public function triggerArchiveShell($shellName, $academicPeriodId = null, $pid = null, $recordsToArchive = 0, $recordsInArchive = 0)
+    //POCOR-8898: renamed triggerArchiveShell to triggerArchiveCommand; uses bin/cake with snake_case command name
+    public function triggerArchiveCommand($commandName, $academicPeriodId = null, $pid = null, $recordsToArchive = 0, $recordsInArchive = 0)
     {
-        $this->log("=======>Before $shellName", 'debug');
-        $args = '';
-        $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : ' 0';
-        $args .= !is_null($pid) ? ' ' . $pid : ' 0';
-        $args .= !is_null($recordsToArchive) ? ' ' . $recordsToArchive : ' 0';
-        $args .= !is_null($recordsInArchive) ? ' ' . $recordsInArchive : ' 0';
+        // $this->log("=======>Before $commandName", 'debug'); //POCOR-8898
+        $args = ''; //POCOR-8898
+        $args .= !is_null($academicPeriodId) ? ' ' . $academicPeriodId : ' 0'; //POCOR-8898
+        $args .= !is_null($pid) ? ' ' . $pid : ' 0'; //POCOR-8898
+        $args .= !is_null($recordsToArchive) ? ' ' . $recordsToArchive : ' 0'; //POCOR-8898
+        $args .= !is_null($recordsInArchive) ? ' ' . $recordsInArchive : ' 0'; //POCOR-8898
 
-        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . $args;
-        $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-        exec($shellCmd);
-        Log::write('debug', $shellCmd);
-        $this->log("<<<<<<<<<<======== After $shellName", 'debug');
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $commandName . $args; //POCOR-8898
+        $logs = ROOT . DS . 'logs' . DS . $commandName . '.log & echo $!'; //POCOR-8898
+        $shellCmd = $cmd . ' >> ' . $logs; //POCOR-8898
+        exec($shellCmd); //POCOR-8898
+        // Log::write('debug', $shellCmd); //POCOR-8898
+        // $this->log("<<<<<<<<<<======== After $commandName", 'debug'); //POCOR-8898
     }
 
 
@@ -385,6 +388,7 @@ class TransferLogsTable extends ControllerActionTable
             'Student Attendances' => __('Student Attendances'),
             'Staff Attendances' => __('Staff Attendances'),
             'Student Assessments' => __('Student Assessments'),
+            'Student Report Cards' => __('Student Report Cards')//POCOR-8898
         ];
         return $options;
     }
@@ -411,9 +415,7 @@ class TransferLogsTable extends ControllerActionTable
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KH
-     *
-     * cleaner code
+      * cleaner code
      * Archive following tables
      * institution_class_attendance_records
      * institution_student_absences
@@ -424,14 +426,12 @@ class TransferLogsTable extends ControllerActionTable
     private function archiveStudentAttendances(Entity $entity)
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentAttendances'];
-        $shellName = self::$ArchiveVars['Shell']['StudentAttendances'];
+        $shellName = self::$ArchiveVars['Command']['StudentAttendances']; //POCOR-8898: renamed Shell key to Command
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KH
-     *
      * cleaner code
      * Archive following tables
      * institution_staff_attendances
@@ -440,14 +440,12 @@ class TransferLogsTable extends ControllerActionTable
     private function archiveStaffAttendances(Entity $entity)
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StaffAttendances'];
-        $shellName = self::$ArchiveVars['Shell']['StaffAttendances'];
+        $shellName = self::$ArchiveVars['Command']['StaffAttendances']; //POCOR-8898: renamed Shell key to Command
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
     /**
      * @param Entity $entity
-     * POCOR-7521-KH
-     *
      * cleaner code
      * archive following tables
      * assessment_item_results
@@ -455,18 +453,33 @@ class TransferLogsTable extends ControllerActionTable
     private function archiveStudentAssessments(Entity $entity)
     {
         $tablesToArchive = self::$ArchiveVars['Tables']['StudentAssessments'];
-        $shellName = self::$ArchiveVars['Shell']['StudentAssessments'];
+        $shellName = self::$ArchiveVars['Command']['StudentAssessments']; //POCOR-8898: renamed Shell key to Command
         $this->log((string) self::$ArchiveVars, 'debug');
         $this->log((string) $tablesToArchive, 'debug');
         $this->log((string) $shellName, 'debug');
         $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
     }
 
+    //POCOR-8898 start
+    /**
+     * @param Entity $entity
+     * POCOR-8898
+     * Archive following tables
+     * institution_students_report_cards
+     */
+    private function archiveStudentReportCards(Entity $entity)
+    {
+        $tablesToArchive = self::$ArchiveVars['Tables']['StudentReportCards'];
+        $shellName = self::$ArchiveVars['Command']['StudentReportCards']; //POCOR-8898: renamed Shell key to Command
+        // $this->log((string) self::$ArchiveVars, 'debug'); //POCOR-8898
+        // $this->log((string) $tablesToArchive, 'debug'); //POCOR-8898
+        // $this->log((string) $shellName, 'debug'); //POCOR-8898
+        $this->archiveTableRecords($entity, $tablesToArchive, $shellName);
+    }
+    //POCOR-8898 end
 
     /**
      * @param Entity $entity , $tablesToArchive, $shellName
-     * POCOR-7521-KH
-     *
      * Archive table records
      */
     private function archiveTableRecords(Entity $entity, $tablesToArchive, $shellName)
@@ -516,7 +529,7 @@ class TransferLogsTable extends ControllerActionTable
                 if ($alreadytransferring > 0) {
                     $this->Alert->error('There is an archive process currently running. Please try again later', ['type' => 'string', 'reset' => true]);
                 }
-                $this->triggerArchiveShell($shellName, $academic_period_id, $entity->p_id, $recordsToArchive, $recordsInArchive);
+                $this->triggerArchiveCommand($shellName, $academic_period_id, $entity->p_id, $recordsToArchive, $recordsInArchive); //POCOR-8898: renamed triggerArchiveShell to triggerArchiveCommand
                 $entity->features = $todoing;
                 $entity->process_status = self::IN_PROGRESS;
                 $this->save($entity);
@@ -566,8 +579,6 @@ class TransferLogsTable extends ControllerActionTable
      * @param $table_name
      * @param $academic_period_id
      * @return int
-     * POCOR-7521-KH
-     *
      * cleaner code
      */
     private static function getTableRecordsCountForAcademicPeriod($table_name, $academic_period_id)
@@ -698,6 +709,30 @@ class TransferLogsTable extends ControllerActionTable
                 }
             }
         }
+    }
+
+    //POCOR-8898: Log archive completion alert to transfer log
+    public function logArchiveCompletionAlert($pid, $alert)
+    {
+        /**
+         * Appends an alert message to the transfer log when archiving
+         * will make a year non-editable (all 4 archive types completed).
+         * Alert is logged to notes field so operators are aware.
+         */
+        if (!$alert) { //POCOR-8898
+            return; //POCOR-8898
+        } //POCOR-8898
+
+        $existingRecord = $this->find() //POCOR-8898
+            ->where(['p_id' => $pid]) //POCOR-8898
+            ->first(); //POCOR-8898
+
+        if ($existingRecord) { //POCOR-8898
+            $notes = $existingRecord->notes ?? ''; //POCOR-8898
+            $notes = $notes . "\n[ARCHIVE COMPLETION ALERT]\n" . $alert; //POCOR-8898
+            $this->patchEntity($existingRecord, ['notes' => $notes]); //POCOR-8898
+            $this->save($existingRecord); //POCOR-8898
+        } //POCOR-8898
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)

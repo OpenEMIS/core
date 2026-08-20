@@ -21,6 +21,35 @@ trait OptionsTrait
         //         $workflowDataSelected[$key] =$value;
         //     }
         // }
+        //POCOR-9740 -- start
+        if ($code === 'AlertRules.StudentEnrolment.workflow_steps') {
+
+            $Workflows = TableRegistry::getTableLocator()->get('Workflow.Workflows');
+
+            $workflow = $Workflows->find()
+                ->select(['id'])
+                ->where([
+                    'code' => 'STUDENT-Enrolment-1001'
+                ])
+                ->first();
+
+            if (!$workflow) {
+                return [];
+            }
+
+            $WorkflowSteps = TableRegistry::getTableLocator()->get('Workflow.WorkflowSteps');
+
+            return $WorkflowSteps->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'name'
+                ])
+                ->where([
+                    'workflow_id' => $workflow->id
+                ])
+                ->order(['id' => 'ASC'])
+                ->toArray();
+        }
+        //POCOR-9740 -- end
         $options = [
             'general' => [
                 'active' => [1 => __('Active'), 0 => __('Inactive')],
@@ -250,17 +279,7 @@ trait OptionsTrait
                         84 => __('Pending Cancellation'),
                         85 => __('Cancelled'),
                     ]
-                ],
-                'StudentEnrolment' => [
-                    'workflow_steps' => [
-                        134 => __('Open'),
-                        135 => __('Pending Approval'),
-                        136 => __('Approved'),
-                        137 => __('Rejected'),
-                        138 => __('Pending Cancellation'),
-                        139 => __('Cancelled'),
-                    ]
-                ],
+                ]
                 //POCOR-8869 end
 
             ],

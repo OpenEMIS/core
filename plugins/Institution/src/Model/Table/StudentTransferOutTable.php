@@ -636,6 +636,35 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+        foreach (['requested_date', 'start_date', 'end_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                \Cake\Log\Log::warning("StudentTransferOutTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+
         if ($data->offsetExists('previous_academic_period_id') && $data->offsetExists('academic_period_id')) {
             $previousAcademicPeriodId = $data->offsetGet('previous_academic_period_id');
             $academicPeriodId = $data->offsetGet('academic_period_id');
@@ -840,10 +869,11 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
                     // for date options, date restriction
                     $startDate = ($studentStartDate >= $periodStartDate) ? $studentStartDate : $periodStartDate;
                     $endDate = ($studentEndDate <= $periodStartDate) ? $studentEndDate : $periodEndDate;
+                    [, $editableDateFormat] = $this->getSystemDateFormats();
                     $attr['type'] = 'date';
                     $attr['date_options'] = [
-                        'startDate' => $startDate->format('d-m-Y'),
-                        'endDate' => $endDate->format('d-m-Y'),
+                        'startDate' => $startDate->format($editableDateFormat),
+                        'endDate' => $endDate->format($editableDateFormat),
                         'todayBtn' => false
                     ];
                 } else {
@@ -1330,6 +1360,16 @@ class StudentTransferOutTable extends InstitutionStudentTransfersTable
      * @return Table
      *
      */
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
     private static function getDynamicTableInstance(string $tableName): Table
     {
         $locator = TableRegistry::getTableLocator();;

@@ -14,6 +14,10 @@ class GuidanceTypesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->hasMany('Counsellings', ['className' => 'Institution.Counsellings']);
+        //POCOR-9771: also protect against deleting a guidance type still referenced via the
+        //counselling_guidance_types join table (the multi-select path), not just the legacy
+        //single counsellings.guidance_type_id column covered by the association above.
+        $this->hasMany('CounsellingGuidanceTypes', ['className' => 'Student.CounsellingGuidanceTypes']);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->setDeleteStrategy('restrict');

@@ -19,12 +19,22 @@ class CounsellingsTable extends AppTable
         $this->setTable('counsellings');
         parent::initialize($config);
 
-        $this->belongsTo('GuidanceTypes', ['className' => 'Student.GuidanceTypes', 'foreign_key' => 'guidance_type_id']);
+        // POCOR-9771: a counselling record can have multiple guidance types, via the
+        // counselling_guidance_types join table (replaces the old single guidance_type_id FK).
+        $this->belongsToMany('GuidanceTypes', [
+            'className' => 'Student.GuidanceTypes',
+            'joinTable' => 'counselling_guidance_types',
+            'foreignKey' => 'counselling_id',
+            'targetForeignKey' => 'guidance_type_id',
+            'dependent' => true,
+            'cascadeCallbacks' => true,
+        ]);
         $this->belongsTo('Counselors', ['className' => 'Security.Users', 'foreign_key' => 'counselor_id']);
         $this->addBehavior('Page.FileUpload', [
             'fieldMap' => ['file_name' => 'file_content'],
             'size' => '2MB'
         ]);
+        $this->Users = TableRegistry::getTableLocator()->get('Security.Users');
     }
 
     public function implementedEvents(): array
@@ -41,6 +51,14 @@ class CounsellingsTable extends AppTable
             $event->stopPropagation();
             return true;
         }
+    }
+
+    //POCOR-9771: the Page component's autoContains() only picks up belongsTo (manyToOne)
+    //associations, so GuidanceTypes (belongsToMany) needs to be contained here instead — this
+    //runs on every find() and merges with whatever contain the Page component already set.
+    public function beforeFind(EventInterface $event, Query $query, \ArrayObject $options, $primary)
+    {
+        $query->contain(['GuidanceTypes']);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -67,30 +85,23 @@ class CounsellingsTable extends AppTable
         return $guidanceTypesOptions;
     }
 
-    public function getCounselorOptions($institutionId)
+    public function getCounselorOptions()
     {
-        // get the staff that assigned from the institution from security user
-        $InstitutionStaff = TableRegistry::getTableLocator()->get('Institution.Staff');
-
-        $counselorOptions = $this->Counselors
+        $counselorOptions = $this->Users
             ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'name_with_id'
             ])
-            ->innerJoin(
-                    [$InstitutionStaff->alias() => $InstitutionStaff->table()],
-                    [
-                        $InstitutionStaff->aliasField('staff_id = ') . $this->Counselors->aliasField('id'),
-                        $InstitutionStaff->aliasField('institution_id') => $institutionId,
-                        $InstitutionStaff->aliasField('staff_status_id') => self::ASSIGNED
-                    ]
-                )
+            ->where([
+                $this->Users->aliasField('status') => 1
+            ])
             ->order([
-                $this->Counselors->aliasField('first_name'),
-                $this->Counselors->aliasField('last_name')
+                $this->Users->aliasField('first_name'),
+                $this->Users->aliasField('last_name')
             ])
             ->toArray();
 
         return $counselorOptions;
     }
+
 }

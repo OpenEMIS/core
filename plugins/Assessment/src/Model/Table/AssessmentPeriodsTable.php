@@ -140,6 +140,35 @@ class AssessmentPeriodsTable extends ControllerActionTable
                 $data['academic_term'] = null;
             }
         }
+
+        foreach (['start_date', 'end_date', 'date_enabled', 'date_disabled'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("AssessmentPeriodsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
     }
 
     //Start:POCOR-7387
@@ -696,17 +725,19 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
         $todayDate = Time::now();
 
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+
         if (!$request->is(['post', 'put'])) { //only apply before user submit / validation
             if ($action == 'add') {
                 if ($periodStartDate <= $todayDate && $periodEndDate >= $todayDate) { //if today's date inside the academic period range, then put today as default value.
-                    $attr['value'] = $todayDate->format('d-m-Y');
+                    $attr['value'] = $todayDate->format($editableDateFormat);
                 } else {
-                    $attr['value'] = $periodStartDate->format('d-m-Y');
+                    $attr['value'] = $periodStartDate->format($editableDateFormat);
                 }
             }
         }
 
-        $attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
+        $attr['date_options'] = ['startDate' => $periodStartDate->format($editableDateFormat), 'endDate' => $periodEndDate->format($editableDateFormat)];
         $attr['date_options']['todayBtn'] = false; //since we limit the start date, should as well hide the 'today' button so no extra checking function needed
 
         return $attr;
@@ -722,20 +753,32 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
         $todayDate = Time::now();
 
+        [, $editableDateFormat] = $this->getSystemDateFormats();
+
         if (!$request->is(['post', 'put'])) { //only apply before user submit / validation
             if ($action == 'add') {
                 if ($periodStartDate <= $todayDate && $periodEndDate >= $todayDate) { //if today's date inside the academic period range, then put today as default value.
-                    $attr['value'] = $todayDate->format('d-m-Y');
+                    $attr['value'] = $todayDate->format($editableDateFormat);
                 } else {
-                    $attr['value'] = $periodEndDate->format('d-m-Y');
+                    $attr['value'] = $periodEndDate->format($editableDateFormat);
                 }
             }
         }
 
-        $attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
+        $attr['date_options'] = ['startDate' => $periodStartDate->format($editableDateFormat), 'endDate' => $periodEndDate->format($editableDateFormat)];
         $attr['date_options']['todayBtn'] = false; //since we limit the start date, should as well hide the 'today' button so no extra checking function needed
 
         return $attr;
+    }
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
     }
 
     public function setupFields(Entity $entity)
