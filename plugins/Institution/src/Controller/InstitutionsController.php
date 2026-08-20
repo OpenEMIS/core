@@ -23,6 +23,7 @@ use Cake\Utility\Security;
 use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Institution\Model\Traits\StudentCreationCheckTrait;
+use Institution\Model\Traits\RouteInstitutionIdTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Auth\DefaultPasswordHasher;
@@ -44,6 +45,7 @@ class InstitutionsController extends AppController
     use OptionsTrait;
     use UtilityTrait;
     use StudentCreationCheckTrait; //POCOR-9385: single source of truth for the student-creation entry-grade gate
+    use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
     // POCOR-8231 start
     const STUDENT = 1;
     const STAFF = 2;
@@ -218,6 +220,7 @@ class InstitutionsController extends AppController
             'RubricAnswers' => ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 
             'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+            'ImportHouses' => ['className' => 'Institution.ImportHouses', 'actions' => ['add']], //POCOR-7692
             'ImportInstitutionAssets' => ['className' => 'Institution.ImportInstitutionAssets', 'actions' => ['add']],
             'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
@@ -955,6 +958,11 @@ class InstitutionsController extends AppController
             }
             //POCOR-9691[END]
 
+        }
+        // Associations (Houses) add/edit links use the ':institutionId' route param - getQueryString()/session
+        // above don't read it, so fall back to decoding it here (see RouteInstitutionIdTrait).
+        if (!$institution_id && $this->request->getParam('action') == 'Associations') {
+            $institution_id = $this->resolveRouteInstitutionId($this->request, $this) ?: $institution_id;
         }
         // StaffBehaviours view: if still missing, decode pass[1] or load behaviour by id so view does not redirect to Dashboard
         if (!$institution_id && $this->request->getParam('action') == 'StaffBehaviours') {

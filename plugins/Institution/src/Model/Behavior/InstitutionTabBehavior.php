@@ -10,9 +10,12 @@ use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Http\ServerRequestFactory;
+use Institution\Model\Traits\RouteInstitutionIdTrait;
 
 class InstitutionTabBehavior extends Behavior
 {
+    use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
+
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -136,6 +139,12 @@ class InstitutionTabBehavior extends Behavior
             if ($request instanceof \Cake\Http\ServerRequest) {  // Ensure request exists
                 $institutionID = $request->getQuery('institution_id') ?? $institutionID;
             }
+        }
+        // Associations/Houses add-edit links use the ':institutionId' route param - getQueryString()/getQuery()
+        // above don't read it, so fall back to decoding it (see RouteInstitutionIdTrait). Scoped to the
+        // Associations action so other tabs using this behavior are unaffected.
+        if (empty($institutionID) && !empty($model->request) && ($model->request->getParam('action') === 'Associations' || $model->request->getParam('action') === 'Houses')) {
+            $institutionID = $this->resolveRouteInstitutionId($model->request, $model) ?: $institutionID;
         }
         return $institutionID;
     }
