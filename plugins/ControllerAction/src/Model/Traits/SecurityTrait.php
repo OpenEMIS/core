@@ -77,6 +77,7 @@ trait SecurityTrait
             if ($request) {
                 $params = $request->getAttribute('params');
                 $query = $request->getQuery();
+                $decodedQuery = null; //POCOR-9715: ensure defined before the referer-fallback check below, regardless of which branch runs
                 if (isset($query[$queryStingParamName])) { //to filter if the URL already contain querystring
                     $queryString = $query[$queryStingParamName];
                 } elseif (isset($query['querystring'])) { //to filter if the URL already contain querystring
@@ -94,6 +95,19 @@ trait SecurityTrait
                         }
                     }
                 }
+
+                //POCOR-9715
+                // POCOR-9675: restore staff/institution context from referer on POST/DELETE (e.g. modal delete)
+                if ($decodedQuery == null) {
+                    $referer = $request->getHeaderLine('Referer');
+                    if ($referer && preg_match('#/index/([^/?]+)#', $referer, $matches)) {
+                        try {
+                            $decodedQuery = $this->paramsDecode($matches[1]);
+                        } catch (\Exception $exception) {
+                        }
+                    }
+                }
+                //POCOR-9715
             } else {
 //                $class = __CLASS__;
 //                $line = __LINE__;
