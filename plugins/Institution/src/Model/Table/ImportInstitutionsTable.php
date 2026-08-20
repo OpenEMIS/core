@@ -23,7 +23,7 @@ class ImportInstitutionsTable extends AppTable
 
         // register the target table once
         $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $this->addBehavior('ControllerAction.FileUpload');
+        //$this->addBehavior('ControllerAction.FileUpload');
     }
 
     public function implementedEvents(): array
