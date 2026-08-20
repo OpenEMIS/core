@@ -588,7 +588,12 @@ class InstitutionCasesTable extends ControllerActionTable
 
                             $patchOptions = ['validate' => false];
 
-                            $newEntity = $this->newEntity();
+                            // CakePHP 5: Table::newEntity() requires its $data argument (no more
+                            // default empty-array signature), so the old no-arg call was a latent
+                            // bug that only threw once this code path actually ran (e.g. when a
+                            // matching Workflow Rule triggers case creation on save) - same fix
+                            // already applied in ImportCompetencyResultBehavior (POCOR-9584).
+                            $newEntity = $this->newEntity([]);
                             $newEntity = $this->patchEntity($newEntity, $caseData, $patchOptions);
                             $this->save($newEntity);
 

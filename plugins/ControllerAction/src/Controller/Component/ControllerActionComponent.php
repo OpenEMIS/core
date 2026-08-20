@@ -195,6 +195,14 @@ class ControllerActionComponent extends Component
                             $currentAction = array_shift($this->paramsPass);
                         }
 
+                        //POCOR-9715
+                        $request = $this->getController()->getRequest();
+                        // POCOR-9675: modal delete POSTs to model action without /remove in the URL
+                        if ($request->is('delete') && $currentAction === 'index') {
+                            $currentAction = 'remove';
+                        }
+                        //POCOR-9715
+
                         $actions = isset($attr['actions']) ? $attr['actions'] : $this->defaultActions;
                         $_options = ['deleteStrategy' => 'cascade'];
 
@@ -500,6 +508,22 @@ class ControllerActionComponent extends Component
             $url = array_merge($url, $this->paramsQuery());
         }
         return $url;
+    }
+
+    /**
+     * Index redirect that preserves encoded pass context (e.g. after modal delete).
+     * POCOR-9715
+     */
+    private function getIndexRedirectUrl()
+    {
+        $pass = $this->getController()->getRequest()->getParam('pass') ?? [];
+        $context = $this->getQueryString();
+
+        if (!empty($context) && empty($pass)) {
+            return array_merge($this->url('index', false), [$this->paramsEncode($context)]);
+        }
+
+        return $this->url('index', 'QUERY');
     }
 
     public function buildDefaultValidation()
@@ -1673,7 +1697,10 @@ class ControllerActionComponent extends Component
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
-                return $this->controller->redirect($this->url('index', 'QUERY'));
+                //POCOR-9715
+                //return $this->controller->redirect($this->url('index', 'QUERY'));
+                return $this->controller->redirect($this->getIndexRedirectUrl());
+                //POCOR-9715
             }
         } elseif ($request->is('delete')) {
             $this->autoRender = false;
@@ -1732,7 +1759,10 @@ class ControllerActionComponent extends Component
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
-                return $this->controller->redirect($this->url('index', 'QUERY'));
+                //POCOR-9715
+                // return $this->controller->redirect($this->url('index', 'QUERY'));
+                return $this->controller->redirect($this->getIndexRedirectUrl());
+                //POCOR-9715
             } else {
                 $transferFrom = $this->getIdKeys($model, $request->getData(), false);
                 if ($this->request) {
@@ -1901,12 +1931,18 @@ class ControllerActionComponent extends Component
                     } else {
                         $this->Alert->error('general.delete.failed');
                     }
-                    return $this->controller->redirect($this->url('index', 'QUERY'));
+                    //POCOR-9715
+                    //return $this->controller->redirect($this->url('index', 'QUERY'));
+                    return $this->controller->redirect($this->getIndexRedirectUrl());
+                    //POCOR-9715
                 }
             }
         } else {
             $this->Alert->error('general.delete.failed');
-            return $this->controller->redirect($this->url('index', 'QUERY'));
+            //POCOR-9715
+            // return $this->controller->redirect($this->url('index', 'QUERY'));
+            return $this->controller->redirect($this->getIndexRedirectUrl());
+            //POCOR-9715
         }
     }
 
