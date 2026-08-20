@@ -1767,6 +1767,25 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
 
         $params = $this->getQueryString();
+        // POCOR-9788: getQueryString() decodes the signed `queryString` URL param and
+        // returns null if that decode fails (e.g. the session active at decode time
+        // doesn't match the one active when the link was generated - see
+        // SecurityTrait::paramsDecode()). Previously $params['x'] on a null $params
+        // silently evaluated to null for every key, and CakePHP's query builder threw
+        // an InvalidArgumentException ("... is missing operator (IS, IS NOT) with
+        // `null` value") while assembling the WHERE clause - before any SQL ever ran.
+        // Fail predictably instead of letting that exception surface as a bare 404.
+        $requiredKeys = ['report_card_id', 'student_id', 'institution_id', 'academic_period_id', 'education_grade_id'];
+        $missingKeys = array_filter($requiredKeys, function ($key) use ($params) {
+            return empty($params) || !isset($params[$key]);
+        });
+        if (!empty($missingKeys)) {
+            Log::write('error', 'ReportCardStatuses::viewPDF - missing required param(s) [' . implode(', ', $missingKeys) . ']; queryString likely failed to decode (stale/mismatched session).');
+            $event->stopPropagation();
+            $this->controller->Alert->error('general.notExists');
+            return $this->controller->redirect($this->url('index'));
+        }
+
         $statusArray = [self::GENERATED, self::PUBLISHED];
         $data = $this->StudentsReportCards->find()
             ->contain(['Students', 'ReportCards'])
@@ -1774,7 +1793,6 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
                 $this->StudentsReportCards->aliasField('student_id') => $params['student_id'],
                 $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
-                $this->StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                 $this->StudentsReportCards->aliasField('education_grade_id') => $params['education_grade_id'],
                 $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
