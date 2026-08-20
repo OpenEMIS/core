@@ -72,6 +72,22 @@ class StudentEnrolmentTable extends ControllerActionTable
             //['appliedAction' => ['StudentAdmission' => ['id']]
             ['appliedAction' => ['StudentEnrolment' => ['id']]
         ]);
+
+        $this->addBehavior('CustomField.Record', [
+               'model' => 'Student.Students',
+               'behavior' => 'Student',
+               'fieldKey' => 'student_custom_field_id',
+               'tableColumnKey' => 'student_custom_table_column_id',
+               'tableRowKey' => 'student_custom_table_row_id',
+               'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+               'formKey' => 'student_custom_form_id',
+               'filterKey' => 'student_custom_filter_id',
+               'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+               // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+               'recordKey' => 'student_id',
+                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+               'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+           ]);
     }
 
     public function validationDefault(Validator $validator): Validator
