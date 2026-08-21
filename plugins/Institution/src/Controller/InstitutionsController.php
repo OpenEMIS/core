@@ -977,7 +977,9 @@ class InstitutionsController extends AppController
             }
         }
         if (!$institution_id && $debugString != "") {
-            die($debugString . 'For Developer: You should put institution_id into query string first');
+            // POCOR-9788: see getStudentID() below for why this no longer die()s.
+            Log::write('error', $debugString . ' - missing required "institution_id" in query string (queryString likely failed to decode).');
+            throw new NotFoundException($debugString . ' - missing required "institution_id" in query string.');
         }
         return $institution_id;
     }
@@ -3524,11 +3526,21 @@ class InstitutionsController extends AppController
     function getStudentID($debugString = "")
     {
         // POCOR-8115;
-        // student_id should always be in query string, if not, die as an error
+        // student_id should always be in query string, if not, error out.
         $student_id = $this->getQueryString('student_id');
         if (!$student_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put student_id into query string first');
+                // POCOR-9788: previously die($debugString . '...'), which hard-kills the
+                // request with zero logging (getQueryString() returns null - and thus
+                // !$student_id is true - whenever the signed `queryString` URL param
+                // fails to decode, e.g. a stale/mismatched session; see
+                // SecurityTrait::paramsDecode()). Throwing here instead of die()-ing
+                // keeps the return contract intact for the many callers of
+                // getStudentID() that don't pass a $debugString, gets this logged via
+                // the normal error-handling pipeline, and renders the app's existing
+                // friendly error page instead of a raw dumped string.
+                Log::write('error', $debugString . ' - missing required "student_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "student_id" in query string.');
             }
         }
         return $student_id;
@@ -3538,11 +3550,13 @@ class InstitutionsController extends AppController
     function getStaffID($debugString = "")
     {
         // POCOR-8115;
-        // staff_id should always be in query string, if not, die as an error
+        // staff_id should always be in query string, if not, error out.
         $staff_id = $this->getQueryString('staff_id');
         if (!$staff_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put staff_id into query string first');
+                // POCOR-9788: see getStudentID() above for why this no longer die()s.
+                Log::write('error', $debugString . ' - missing required "staff_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "staff_id" in query string.');
             }
         }
         return $staff_id;
@@ -3554,11 +3568,13 @@ class InstitutionsController extends AppController
     function getClassID($debugString = "")
     {
         // POCOR-8115;
-        // class_id should always be in query string, if not, die as an error
+        // class_id should always be in query string, if not, error out.
         $class_id = $this->getQueryString('class_id');
         if (!$class_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put class_id into query string first');
+                // POCOR-9788: see getStudentID() above for why this no longer die()s.
+                Log::write('error', $debugString . ' - missing required "class_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "class_id" in query string.');
             }
         }
         return $class_id;
@@ -3934,7 +3950,9 @@ class InstitutionsController extends AppController
         }
         if (!$user_id) {
             if ($debugString != "") {
-                die($debugString . 'For Developer: You should put user_id into query string first');
+                // POCOR-9788: see getStudentID() above for why this no longer die()s.
+                Log::write('error', $debugString . ' - missing required "user_id" in query string (queryString likely failed to decode).');
+                throw new NotFoundException($debugString . ' - missing required "user_id" in query string.');
             }
         }
         if (is_numeric($user_id)) {
