@@ -1,5 +1,9 @@
+### 5.17.1 - 2026-08-21
+- Bug Fixed: MySQL 8.4 Upgrade Regression Testing on BS MOE TST
+- Bug Fixed: Administrations > System Configurations : SAML SSO is no longer working upon login
+
 ### 5.17.0 - 2026-08-19
-- Institution Bugs: Gives 404 on addition and deletion, however performs that action.
+- Bug Fixed: Institution Bugs: Gives 404 on addition and deletion, however performs that action.
 - Bug Fixed: Registrations: When registering student with custom field file and file is uploaded, file is not seen in student list page.
 - Bug Fixed: Remove unneccessary files on filesystem
 - Bug Fixed: Docker container not working.
