@@ -271,12 +271,14 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
 
-        $actions = ['view', 'edit'];
-
-        //POCOR-9273
-        if ($this->_table->request->getParam('action') && $this->_table->request->getParam('action') == 'Programmes') {
-            $actions[] = 'remove';
-        }
+        // 'remove' is included unconditionally here (previously added only for the 'Programmes'
+        // page via POCOR-9273). Without it, every other institution-tab page's Delete button
+        // skips this URL rebuild and falls back to AppTable::getEncodedKeys(), which encodes
+        // $entity->getOriginal($primaryKey) instead of the live id used by 'view'/'edit' - the
+        // two can diverge on tables that layer several behaviors (Workflow, AcademicPeriod, etc.)
+        // over the index query, producing a stale id in the Delete link and a false
+        // "The record does not exist." on click (e.g. Institutions > Behaviour > Students).
+        $actions = ['view', 'edit', 'remove'];
 
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
@@ -438,7 +440,7 @@ class InstitutionTabBehavior extends Behavior
             $userID = $this->getStudentID();
             //$studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
             $studentLastTabElements = ['Guardians' => ['text' => __('Guardians')],
-                'StudentTransport' => ['text' => __('Transport')]];
+                'StudentTransport' => ['text' => __('Transport')], 'Siblings' => ['text' => __('Siblings')]];
             $tabElements = array_merge($tabElements, $studentLastTabElements);
             $plugin = 'Student';
             $controller = 'Students';

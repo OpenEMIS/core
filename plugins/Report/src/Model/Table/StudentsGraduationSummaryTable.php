@@ -58,10 +58,23 @@ class StudentsGraduationSummaryTable extends AppTable
             $institutionIds[] = $list->id;
         }
 
-        if ($institutionId <= 0) {
-            $conditions[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $filterInstitutionIds;
         } else {
-            $conditions[$this->aliasField('institution_id')] = $institutionId;
+            $conditions[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
         }
 
 

@@ -25,9 +25,10 @@ use Illuminate\Support\Facades\Log;
  */
 abstract class AlertCommandBase extends Command
 {
-    // Security role constants (matches CakePHP)
-    const ROLE_STUDENT = 8;
-    const ROLE_GUARDIAN = 9;
+    // POCOR-9509: security role identification is done by security_roles.code, not the
+    // auto-increment id, since ids can differ across environments/deployments.
+    const ROLE_STUDENT_CODE = 'STUDENT';
+    const ROLE_GUARDIAN_CODE = 'GUARDIAN';
 
     /**
      * @var string Process name (e.g., 'StudentAbsence')

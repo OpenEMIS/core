@@ -7,7 +7,7 @@ use Cake\Log\Log;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Event\EventInterface;
-use Cake\Network\Request;
+use Cake\Http\ServerRequest;
 use App\Model\Table\AppTable;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table; // POCOR-8929
@@ -70,7 +70,7 @@ class InstitutionClassesTable extends AppTable
         $this->field('institution_course_id', ['visible' => false]);//POCOR-6863
     }
 
-    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
         $attr['options'] = $this->controller->getFeatureOptions('Institutions');
         return $attr;
@@ -114,9 +114,24 @@ class InstitutionClassesTable extends AppTable
         $gradesId = $requestData->education_grade_id;
         $areaId = $requestData->area_education_id;
         $areaLevelId = $requestData->area_level_id;//POCOR-7794
+        $academic_period_id = $requestData->academic_period_id;
         $where = [];
-        if ($institution_id > 0) { // POCOR-8929 escape null
-            $where['Institutions.id'] = $institution_id;
+
+        $institutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+            $institutionIds = [(int)$institution_id];
+        }
+
+        if (!empty($institutionIds)) {
+            $where['Institutions.id IN'] = $institutionIds;
         }
         //POCOR-7794 start
         $areaList = [];
@@ -137,9 +152,9 @@ class InstitutionClassesTable extends AppTable
         if ($gradesId > -1) { // POCOR-8929 escape null
             $where['InstitutionClassGrades.education_grade_id'] = $gradesId;
         }
-
-        $academic_period_id = $requestData->academic_period_id;
+        
         $InstitutionClassesSecondaryStaff = self::getDynamicTableInstance('Institution.InstitutionClassesSecondaryStaff'); // POCOR-8929 removed not used
+        $SummaryStudentAttendances = self::getDynamicTableInstance('Attendance.SummaryStudentAttendances'); 
         $query
             ->select([
                 $this->aliasField('id'),
@@ -169,9 +184,12 @@ class InstitutionClassesTable extends AppTable
                     " ",
                     'SecurityUsers.last_name' => 'literal'
                 ]),
-                'total_male_students' => 'InstitutionClasses.total_male_students',
-                'total_female_students' => 'InstitutionClasses.total_female_students',
-                'total_students' => $query->newExpr('InstitutionClasses.total_male_students + InstitutionClasses.total_female_students')
+                'male_students' => 'InstitutionClasses.total_male_students',
+                'female_students' => 'InstitutionClasses.total_female_students',
+                'all_students' => $query->newExpr('InstitutionClasses.total_male_students + InstitutionClasses.total_female_students'),
+                'summary_male_students' => $query->func()->max('SummaryStudentAttendances.male_count'),
+                'summary_female_students' => $query->func()->max('SummaryStudentAttendances.female_count'),
+                'summary_total_students' => $query->func()->max('SummaryStudentAttendances.total_count'),
             ])
             ->contain([
                 'AcademicPeriods' => [
@@ -219,6 +237,14 @@ class InstitutionClassesTable extends AppTable
                     'InstitutionClassGrades.institution_class_id = ' . $this->aliasField('id')
                 ]
             )
+          ->leftJoin(
+                ['SummaryStudentAttendances' => $SummaryStudentAttendances->getTable()],
+                [
+                    'SummaryStudentAttendances.class_id = InstitutionClasses.id',
+                    'SummaryStudentAttendances.institution_id = InstitutionClasses.institution_id',
+                    'SummaryStudentAttendances.academic_period_id = InstitutionClasses.academic_period_id'
+                ]
+            )
             ->where([
                 'InstitutionClasses.academic_period_id' => $academic_period_id,
                 // 'InstitutionClassGrades.education_grade_id' => $gradesId,
@@ -238,26 +264,27 @@ class InstitutionClassesTable extends AppTable
             return $results->map(function ($row) {
 
                 $class_id = $row['class_id'];
-                //POCOR-9613[START]
-
-                // $femaleCountByClass = self::getFemaleCountByClass($class_id);
-
-                // if ($femaleCountByClass != $row->total_female_students) {
-                //     $this->updateAll(['total_female_students' => $femaleCountByClass], ['id' => $class_id]);
-                //     $row['total_female_students'] = $femaleCountByClass;
-                // }
-                // $maleCountByClass = self::getMaleCountByClass($class_id);
-                // if ($maleCountByClass != $row->total_male_students) {
-                //     $this->updateAll(['total_male_students' => $maleCountByClass], ['id' => $class_id]);
-                //     $row['total_male_students'] = $maleCountByClass;
-                // }
-
-                $row['total_female_students'] = $row['total_female_students'];
+                /*$row['total_female_students'] = $row['total_female_students'];
                 $row['total_male_students'] = $row['total_male_students'];
-                $row['total_students'] = $row['total_male_students'] + $row['total_female_students'];
-                // $row['total_students'] = $maleCountByClass + $femaleCountByClass;
-                //POCOR-9613[END]
+                $row['total_students'] = $row['total_male_students'] + $row['total_female_students'];*/
+                 // If summary table has data use it,
+                // otherwise use InstitutionClasses values
 
+                if (
+                    $row['summary_male_students'] !== null &&
+                    $row['summary_female_students'] !== null
+                ) {
+
+                    $row['total_male_students'] = $row['summary_male_students'];
+                    $row['total_female_students'] = $row['summary_female_students'];
+                    $row['total_students'] = $row['summary_total_students'];
+
+                } else {
+
+                    $row['total_male_students'] = $row['male_students'];
+                    $row['total_female_students'] = $row['female_students'];
+                    $row['total_students'] = $row['all_students'];
+                }
                //POCOR-8739 start
                 $areas1 = TableRegistry::getTableLocator()->get('Area.Areas');
                 $areasData = $areas1

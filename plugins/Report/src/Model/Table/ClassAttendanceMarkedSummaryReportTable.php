@@ -287,9 +287,22 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $this->reportStartDate = (new Date($requestData->report_start_date))->format('Y-m-d');
         $this->reportEndDate = (new Date($requestData->report_end_date))->format('Y-m-d');
 
+        $institutionIds = [];
+        if (is_object($institution_id) && isset($institution_id->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+            $institutionIds = [(int)$institution_id];
+        }
+
         $where = [];
-        if ($institution_id != 0) {
-            $where['Institutions.id'] = $institution_id;
+        if (!empty($institutionIds)) {
+            $where['Institutions.id IN'] = $institutionIds;
         }
         if (!empty($subjects)) {
             $where['StudentAttendanceMarkedRecords.subject_id'] = $subjects;
@@ -307,8 +320,8 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         $institutionCondition;
         $educationCondition;
 
-        if ($institution_id != 0) {
-            $institutionCondition [] = 'AND summary_student_attendances.institution_id = '.$institution_id.'';   
+        if (!empty($institutionIds)) {
+            $institutionCondition [] = 'AND summary_student_attendances.institution_id IN ('.implode(',', array_map('intval', $institutionIds)).')';   
         }
 
         if ($education_grade_id != -1) {
@@ -779,7 +792,7 @@ class ClassAttendanceMarkedSummaryReportTable extends AppTable
         if (!$superAdmin) {
             $query->find('byAccess', [
                 'user_id' => $userId,
-                'institution_field_alias' => $this->aliasField($this->association('Institutions')->foreignKey())
+                'institution_field_alias' => $this->aliasField($this->getAssociation('Institutions')->getForeignKey())
             ]);
         }
             

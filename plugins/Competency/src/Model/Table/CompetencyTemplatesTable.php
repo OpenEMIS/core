@@ -47,7 +47,10 @@ class CompetencyTemplatesTable extends ControllerActionTable
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
-            ]);
+            ])
+            ->notEmpty('name')
+            ->notEmpty('education_programme_id')
+            ->notEmpty('education_grade_id');
     }
 
 
@@ -166,7 +169,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
             $attr['visible'] = false;
         } else if ($action == 'add') {
             $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
-            if (!empty($this->request->getQuery('period')) && empty($request->data($this->aliasField('academic_period_id')))) {
+            if (!empty($this->request->getQuery('period')) && empty($request->getData($this->aliasField('academic_period_id')))) {
                 $academicPeriodId = $this->request->getQuery('period');
             } else {
                 $academicPeriodId = !empty($request->getData($this->aliasField('academic_period_id'))) ? $request->getData($this->aliasField('academic_period_id')) : $AcademicPeriod->getCurrent();    //POCOR-7066

@@ -509,11 +509,13 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
     // on already-24h input.
     function normalizeTo24Hour(timeStr) {
         if (!timeStr || typeof timeStr !== 'string') return timeStr;
-        var m = timeStr.match(/^\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM|am|pm)?\s*$/);
+        //POCOR-9762: minutes optional — "8", "8:", "8 PM" all mean 8:00 (saves the : + 00 keystrokes).
+        var m = timeStr.match(/^\s*(\d{1,2})(?::(\d{0,2}))?(?::(\d{0,2}))?\s*(AM|PM|am|pm)?\s*$/);
         if (!m) return timeStr;
+        function pad2(x) { return (x && x.length) ? (x.length < 2 ? '0' + x : x) : '00'; } //POCOR-9762
         var h = parseInt(m[1], 10);
-        var mm = m[2];
-        var ss = m[3] || '00';
+        var mm = pad2(m[2]);
+        var ss = pad2(m[3]);
         var meridian = (m[4] || '').toUpperCase();
         if (meridian === 'PM' && h < 12) h += 12;
         if (meridian === 'AM' && h === 12) h = 0;
@@ -541,14 +543,20 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
         var wrapperDiv = document.createElement('div');
         wrapperDiv.setAttribute('class', 'input-group time' + (isDisabled ? ' disabled' : ''));
 
+        //POCOR-9762: plain text input (not native <input type="time">). The native picker on a
+        // 12h-locale OS leaves .value empty until AM/PM is picked, which blocked saving, and it
+        // cannot take flexible entry. A text field + tolerant parser (normalizeTo24Hour) lets users
+        // type "9:00 PM", "9:00pm", "07:00", "19:00" or "8:00"; a bare time with no AM/PM is stored
+        // as 24-hour. No library, no popover (unlike the reverted uib-timepicker).
         var inputElement = document.createElement('input');
-        inputElement.setAttribute('type', 'time');
-        inputElement.setAttribute('step', '60');
+        inputElement.setAttribute('type', 'text');
         inputElement.setAttribute('id', timepickerId);
         inputElement.setAttribute('class', 'form-control timPikr');
+        inputElement.setAttribute('autocomplete', 'off');
+        inputElement.setAttribute('placeholder', 'e.g. 8:00 AM');
         if (isDisabled) inputElement.setAttribute('disabled', 'disabled');
-        var existing = normalizeTo24Hour(params.value[timeKey]);
-        if (existing) inputElement.value = existing.substring(0, 5);
+        var existing = params.value[timeKey];
+        if (existing) inputElement.value = convert12Timeformat(existing); // display per time_format
         if (hasError(data, timeKey, timepickerId)) inputElement.className += ' form-error';
 
         var iconSpan = document.createElement('span');
@@ -563,7 +571,7 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             return params.value.time_in !== null && params.value.time_in !== undefined && params.value.time_in !== '';
         }
         function revertInput() {
-            inputElement.value = params.value[timeKey] ? params.value[timeKey].substring(0, 5) : '';
+            inputElement.value = params.value[timeKey] ? convert12Timeformat(params.value[timeKey]) : '';
         }
         function toMinutes(hms) {
             var p = hms.split(':');
@@ -593,8 +601,27 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                 inputElement.value = '';
                 return;
             }
-            var rawValue = inputElement.value;
-            var time24Hour = rawValue ? (rawValue + ':00') : null;
+            //POCOR-9762: parse the free-text entry. normalizeTo24Hour understands "9:00 PM",
+            // "9:00pm", "07:00", "19:00", "8:00" and autocorrects a stray meridian ("20:00 AM" ->
+            // 20:00). A bare time with no AM/PM is taken as 24-hour (07:00 = 7 AM, 19:00 = 7 PM); on
+            // a 12h-configured system we tell the user via meridianNote so they can add AM/PM if the
+            // meant otherwise.
+            var rawText = (inputElement.value || '').trim();
+            var meridianNote = null;
+            var time24Hour = null;
+            if (rawText) {
+                var parsed = normalizeTo24Hour(rawText);
+                if (!isValidHms(parsed)) {
+                    AlertSvc.error(scope, 'Enter a time like 8:00, 08:00 or 8:00 PM.');
+                    revertInput();
+                    setError(data, timeKey, true, {id: timepickerId, elm: inputElement});
+                    return;
+                }
+                time24Hour = parsed;
+                if (!/(am|pm)/i.test(rawText) && _timeFormatIs12h) {
+                    meridianNote = 'AM/PM not entered — ' + parsed.substring(0, 5) + ' saved in 24-hour format.';
+                }
+            }
             var otherTime = (timeKey === 'time_out') ? params.value.time_in : params.value.time_out;
             if (time24Hour !== null && otherTime) {
                 if (timeKey === 'time_out' && time24Hour <= otherTime) {
@@ -635,12 +662,18 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
                         AlertSvc.error(scope, errorMsg);
                         return;
                     }
-                    if (outsideShiftWarning) AlertSvc.warning(scope, 'Saved. ' + outsideShiftWarning);
+                    //POCOR-9762: fold the "saved in 24-hour" note into the same toast so the success
+                    // message doesn't stomp it (same pattern as the outside-shift warning).
+                    var notes = [outsideShiftWarning, meridianNote].filter(Boolean);
+                    if (notes.length) AlertSvc.warning(scope, 'Saved. ' + notes.join(' '));
                     else AlertSvc.success(scope, 'Time record successfully saved.');
                     // POCOR-9700: trust the server's persisted record, not the picked value.
                     var saved = response.data.data || {};
                     if (angular.isDefined(saved.time_in))  params.value.time_in  = normalizeTo24Hour(saved.time_in);
                     if (angular.isDefined(saved.time_out)) params.value.time_out = normalizeTo24Hour(saved.time_out);
+                    //POCOR-9762: normalize the cell display to the canonical configured format
+                    // (e.g. the user's "9:00pm" becomes "09:00 PM", or "07:00" stays "07:00").
+                    if (params.value[timeKey]) inputElement.value = convert12Timeformat(params.value[timeKey]);
                     params.value.isNew = false;
                     setError(data, timeKey, false, {id: timepickerId, elm: inputElement});
                 }, function () {
@@ -654,9 +687,76 @@ function InstitutionStaffAttendancesSvc($http, $q, $filter, $timeout, KdDataSvc,
             }, 600);
         });
 
+        //POCOR-9762: the cell only commits on 'change', which fires on blur. ag-Grid captures Tab
+        // (and Enter) for cell navigation and can swallow the input's blur, so a Tab-to-next-cell
+        // entry was never saved. Force a blur first so the change handler commits before ag-Grid moves.
+        inputElement.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                inputElement.blur();
+            }
+        });
+
+        //POCOR-9762: convenience — prefill an empty cell with the current institution-tz time on
+        // focus (formatted per the system time_format, so morning -> AM, evening -> PM on 12h
+        // systems), giving a sensible starting value the user can accept or type over. Only on 12h
+        // contexts, so 24h tenants get a plain empty field with the placeholder.
+        inputElement.addEventListener('focus', function () {
+            if (isDisabled || inputElement.value) return;
+            if (isTimeOutField && !hasTimeInSelected()) return;
+            getTimeFormatIs12h().then(function (is12h) {
+                if (!(isWidgetTwelveHour() || is12h) || inputElement.value) return;
+                getConfigItemValue('time_zone').then(function (timeZone) {
+                    if (inputElement.value) return; // user typed while we resolved — don't clobber
+                    var hm = nowHmInTz(timeZone);
+                    if (hm) inputElement.value = convert12Timeformat(hm);
+                });
+            });
+        });
+
         wrapperDiv.appendChild(inputElement);
         wrapperDiv.appendChild(iconSpan);
         return wrapperDiv;
+    }
+
+    //POCOR-9762: does the string parse to a real 24-hour time "HH:MM:SS"? Guards the free-text
+    // parser against out-of-range input (e.g. "25:00" would otherwise normalize to "25:00:00").
+    function isValidHms(s) {
+        var m = /^(\d{2}):(\d{2}):(\d{2})$/.exec(s || '');
+        if (!m) return false;
+        var h = parseInt(m[1], 10), mi = parseInt(m[2], 10);
+        return h >= 0 && h <= 23 && mi >= 0 && mi <= 59;
+    }
+
+    //POCOR-9762: (retained) whether the browser/OS renders time widgets 12-hour — used to decide
+    // whether to prefill an empty cell with the current time on focus. Intl exposes it via hour12.
+    function isWidgetTwelveHour() {
+        try {
+            return new Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
+                .resolvedOptions().hour12 === true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    //POCOR-9762: current wall-clock time in the institution timezone as 24h "HH:MM".
+    // Assigning this as a native <input type="time"> value auto-populates the AM/PM segment on
+    // 12h-locale widgets (morning -> AM, evening -> PM), giving the picker a saveable default so
+    // users are never forced to enter AM/PM manually. hourCycle:'h23' + explicit hour/minute are
+    // mandatory — Intl.DateTimeFormat only emits the fields you request (POCOR-9729 lesson).
+    function nowHmInTz(timeZone) {
+        try {
+            var parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+            }).formatToParts(new Date()).reduce(function (acc, p) {
+                if (p.type !== 'literal') acc[p.type] = p.value;
+                return acc;
+            }, {});
+            if (parts.hour == null || parts.minute == null) return '';
+            return parts.hour + ':' + parts.minute;
+        } catch (error) {
+            console.error('nowHmInTz - Invalid timezone:', error.message);
+            return '';
+        }
     }
 
     function convert24Timeformat(hours, minutes, seconds, meridian) {
