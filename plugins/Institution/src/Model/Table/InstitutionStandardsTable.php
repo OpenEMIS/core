@@ -66,7 +66,7 @@ class InstitutionStandardsTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
-        $this->addBehavior('ControllerAction.FileUpload');
+        //$this->addBehavior('ControllerAction.FileUpload');
         $this->addBehavior('ControllerAction.QueryString');
     }
 
