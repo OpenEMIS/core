@@ -1271,6 +1271,13 @@ class NavigationComponent extends Component
             'Institutions.Cases.index' => [
                 'title' => 'Cases',
                 'parent' => 'Institutions.Institutions.index',
+                 'selected' => [
+                    'Institutions.Cases',
+                    'Institutions.Cases.add',
+                    'Institutions.Cases.edit',
+                    'Institutions.Cases.view',
+                    'Institutions.Cases.delete'
+                ]
             ],
             'Institutions.Committees.index' => [
                 'title' => 'Committees',

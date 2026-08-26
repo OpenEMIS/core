@@ -533,7 +533,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                     'name' => 'EducationGrades.name'
                 ])
                 ->contain(['EducationGrades'])
-                ->where(['institution_id' => $institutionId])
+                ->where(['institution_id IS' => $institutionId])
                 ->group('education_grade_id')
                 ->order(['education_grade_id'])
                 ->first();
@@ -557,7 +557,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 'name' => 'EducationGrades.name'
             ])
             ->contain(['EducationGrades'])
-            ->where(['institution_id' => $institutionId])
+            ->where(['institution_id IS' => $institutionId])
             ->group('education_grade_id')
             ->all();
 
@@ -582,7 +582,7 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
                 ])
                 ->where([
                     [$InstitutionClasses->aliasField('academic_period_id') => $selectedAcademicPeriod],
-                    [$InstitutionClasses->aliasField('institution_id') => $institutionId]
+                    [$InstitutionClasses->aliasField('institution_id IS') => $institutionId]
                 ])
                 ->order([$InstitutionClasses->aliasField('id')])
                 ->first();
@@ -810,9 +810,20 @@ class InstitutionStudentAbsencesTable extends ControllerActionTable
         }
         $InstitutionCases = TableRegistry::getTableLocator()->get('Cases.InstitutionCases');
 
+        // POCOR-9788: case_type_id/case_priority_id/description became required (POCOR-7613)
+        // after this method was written, so InstitutionCases->save() was silently failing
+        // validation for every Student Attendance case - default them so the case actually saves.
+        $defaultCaseTypeId = TableRegistry::getTableLocator()->get('Cases.CaseTypes')
+            ->find()->where(['name' => 'Students'])->first();
+        $defaultCasePriorityId = TableRegistry::getTableLocator()->get('Cases.CasePriorities')
+            ->find()->where(['name' => 'Medium'])->first();
+
         $caseData = [
             'case_number' => '',
             'title' => $title,
+            'description' => $title,
+            'case_type_id' => $defaultCaseTypeId ? $defaultCaseTypeId->id : null,
+            'case_priority_id' => $defaultCasePriorityId ? $defaultCasePriorityId->id : null,
             'status_id' => $statusId,
             'assignee_id' => $assigneeId,
             'institution_id' => $institutionId,

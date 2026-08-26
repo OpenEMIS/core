@@ -6,17 +6,21 @@ use Exception;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\I18n\Time;
+use Cake\I18n\FrozenTime;
 use Cake\I18n\Date;
 use Cake\Console\Shell;
 
 class GenerateStudentUnmarkedAttendancesShell extends Shell
 {
+    const PROCESS_NAME = 'GenerateStudentUnmarkedAttendances';
 
     public function initialize(): void
     {
         parent::initialize();
         $this->InstitutionCases = $this->fetchTable('Cases.InstitutionCases');
         $this->InstitutionCaseRecords = $this->fetchTable('Cases.InstitutionCaseRecords');
+        $this->CaseTypes = $this->fetchTable('Cases.CaseTypes');
+        $this->CasePriorities = $this->fetchTable('Cases.CasePriorities');
         $this->ClassAttendanceRecords = $this->fetchTable('Institution.ClassAttendanceRecords');
 		$this->InstitutionClasses = $this->fetchTable('Institution.InstitutionClasses');
 		$this->Institutions = $this->fetchTable('Institution.Institutions');
@@ -27,9 +31,31 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
         $this->SecurityGroupUsers = $this->fetchTable('Security.SecurityGroupUsers');
 
 		$this->AlertLogs = $this->fetchTable('Alert.AlertLogs');
+        $this->SystemProcesses = $this->fetchTable('SystemProcesses');
     }
 
     public function main()
+    {
+        $mypid = getmypid();
+
+        if (!empty($this->SystemProcesses->getRunningProcesses(self::PROCESS_NAME))) {
+            $this->out('A previous run of ' . self::PROCESS_NAME . ' is still marked as running. Skipping this run (' . FrozenTime::now() . ')');
+            return;
+        }
+
+        $systemProcessId = $this->SystemProcesses->addProcess(self::PROCESS_NAME, $mypid, self::PROCESS_NAME);
+        $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING);
+
+        try {
+            $this->generateCases();
+            $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::COMPLETED);
+        } catch (Exception $e) {
+            $this->out('Error in ' . self::PROCESS_NAME . ': ' . $e->getMessage());
+            $this->SystemProcesses->updateProcess($systemProcessId, FrozenTime::now(), $this->SystemProcesses::ERROR);
+        }
+    }
+
+    public function generateCases()
     {
 		$academicPeriodId = $this->AcademicPeriods->getCurrent();
 		$workflowRules = $this->WorkflowRules->find()->where(['feature' => 'StudentUnmarkedAttendances'])
@@ -129,9 +155,18 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 						'feature' => $feature
 					];
 
+					// POCOR-9788: case_type_id/case_priority_id/description became required (POCOR-7613)
+					// after this was written, so save() below was silently failing validation - default
+					// them so the case actually saves.
+					$defaultCaseTypeId = $this->CaseTypes->find()->where(['name' => 'Students'])->first();
+					$defaultCasePriorityId = $this->CasePriorities->find()->where(['name' => 'Medium'])->first();
+
 					$caseData = [
 						'case_number' => '',
 						'title' => $title,
+						'description' => $title,
+						'case_type_id' => $defaultCaseTypeId ? $defaultCaseTypeId->id : null,
+						'case_priority_id' => $defaultCasePriorityId ? $defaultCasePriorityId->id : null,
 						'status_id' => $statusId,
 						'assignee_id' => $assigneeId,
 						'institution_id' => $institutionId,
@@ -143,8 +178,8 @@ class GenerateStudentUnmarkedAttendancesShell extends Shell
 
 					$newEntity = $this->InstitutionCases->newEntity();
 					$newEntity = $this->InstitutionCases->patchEntity($newEntity, $caseData, $patchOptions);
-					$alreadyExistonSameDay = $this->InstitutionCases->find('all',['conditions'=>[strtotime('y-m-d','created')=>date('y-m-d'), 'status_id'=>$statusId, 'assignee_id !=' =>0]])->first();
-					if(empty($alreadyExistonSameDay)){
+					$alreadyExistsCount = $this->InstitutionCaseRecords->find()->where(['record_id' => $recordId, 'feature' => $feature])->count();
+					if ($alreadyExistsCount === 0) {
 						$result = $this->InstitutionCases->save($newEntity);
 
 						$linkedRecords['institution_case_id'] = $result->id;
