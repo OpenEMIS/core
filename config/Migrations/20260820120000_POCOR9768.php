@@ -33,7 +33,7 @@ class POCOR9768 extends AbstractMigration
         $this->execute('ALTER TABLE `staff_duties` ADD CONSTRAINT `staff_dutie_fk_sec_role_id` FOREIGN KEY (`security_role_id`) REFERENCES `security_roles`(`id`)');
 
         // institution_staff_duties: activation status + the security_group_users row granted for it, if any (POCOR-9768)
-        $this->execute("ALTER TABLE `institution_staff_duties` ADD COLUMN `status` ENUM('active','inactive') NOT NULL DEFAULT 'active' AFTER `comment`");
+        $this->execute("ALTER TABLE `institution_staff_duties` ADD COLUMN `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=Active, 0=Inactive' AFTER `comment`");
         $this->execute("ALTER TABLE `institution_staff_duties` ADD COLUMN `security_group_user_id` char(36) DEFAULT NULL COMMENT 'links to security_group_users.id when the duty type carries a security role' AFTER `status`");
 
         // --- One-time cleanup: the ALTER above backfilled every existing row to 'active'. ---
@@ -55,7 +55,7 @@ class POCOR9768 extends AbstractMigration
                 ON ins.staff_id = isd.staff_id
                 AND ins.institution_id = isd.institution_id
                 AND ins.staff_status_id = {$assignedStatusId}
-            WHERE isd.status = 'active'
+            WHERE isd.status = 1
                 AND ins.id IS NULL
         ");
 
@@ -77,7 +77,7 @@ class POCOR9768 extends AbstractMigration
         $this->execute("
             UPDATE `institution_staff_duties` isd
             INNER JOIN `zz_9768_affected_duties` affected ON affected.id = isd.id
-            SET isd.status = 'inactive', isd.security_group_user_id = NULL
+            SET isd.status = 0, isd.security_group_user_id = NULL
         ");
 
         // Remove each affected grant only if no remaining ACTIVE duty still references it
@@ -88,7 +88,7 @@ class POCOR9768 extends AbstractMigration
             WHERE NOT EXISTS (
                 SELECT 1 FROM `institution_staff_duties` remaining
                 WHERE remaining.security_group_user_id = sgu.id
-                    AND remaining.status = 'active'
+                    AND remaining.status = 1
             )
         ");
     }

@@ -271,7 +271,7 @@ class AccountBehavior extends Behavior
                     ->where([
                         $InstitutionStaffDuties->aliasField('staff_id') => $entity->id,
                         $InstitutionStaffDuties->aliasField('institution_id') => $institutionId,
-                        $InstitutionStaffDuties->aliasField('status') => 'active'
+                        $InstitutionStaffDuties->aliasField('status') => \Institution\Model\Table\InstitutionStaffDutiesTable::STATUS_ACTIVE
                     ])
                     ->all();
                 foreach ($dutyRecords as $dutyRecord) {
