@@ -49,7 +49,11 @@ class ArchivedAssessmentsTable extends ControllerActionTable
         $contentHeader = $studentName . ' - ' . $module;
         $this->controller->set('contentHeader', $contentHeader);
         $this->controller->Navigation->substituteCrumb(__('Student Assessment Archived'), $module);
-        $session = $this->controller->request->getSession();
+        //POCOR-9594-2: Controller::$request is protected in this CakePHP version - accessing it as
+        // $this->controller->request silently falls through to Controller::__get() (model-autoloading
+        // only), returning null instead of the real request, hence getSession() on null. Same fix
+        // pattern already used elsewhere on this branch (AssessmentItemResultsArchivedTable.php).
+        $session = $this->controller->getRequest()->getSession();
         $institutionId = $this->getInstitutionID();
         if ($session->check('Institution.Institutions.id')) {
             $institutionId = $session->read('Institution.Institutions.id');
@@ -340,13 +344,18 @@ class ArchivedAssessmentsTable extends ControllerActionTable
             'current !=' => 1,
             'id IN' => $academicPeriodStudentAttendanceArray
         ];
+        //POCOR-9594-2 --start
+        // ServerRequest::$query is protected (and the request itself is immutable)
+        // in this CakePHP version - read via getQuery() and track the fallback
+        // locally instead of writing back into the request object.
+        $selectedPeriod = $this->request->getQuery('academic_period');
         if (sizeof($academicPeriodStudentAttendanceArray) > 0) {
             $academicPeriodOptions = $AcademicPeriod->getYearList(['conditions' => $conditions]);
-            if (empty($this->request->query['academic_period'])) {
-                $this->request->query['academic_period'] = $selectedYear;
+            if (empty($selectedPeriod)) {
+                $selectedPeriod = $selectedYear;
             }
         }
-        $selectedPeriod = $this->request->query['academic_period'];
+        //POCOR-9594-2 --end
 
         $this->advancedSelectOptions($academicPeriodOptions, $selectedPeriod);
         $this->controller->set(compact('academicPeriodOptions', 'selectedPeriod'));

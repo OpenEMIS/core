@@ -11,7 +11,7 @@ use Cake\Event\EventInterface;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use PHPExcel_Worksheet;
+//POCOR-9594-7: removed dead use PHPExcel_Worksheet — class no longer exists after PhpSpreadsheet upgrade
 use Cake\ORM\Locator\TableLocator;
 
 class ImportInstitutionAssetsTable extends AppTable
@@ -19,14 +19,16 @@ class ImportInstitutionAssetsTable extends AppTable
     use OptionsTrait;
     private $institutionId;
 
-    public function initialize(array $config)
+    public function initialize(array $config): void
     {
         $this->setTable('import_mapping');
         parent::initialize($config);
 
         $this->addBehavior('Import.Import', [
             'plugin' => 'Institution',
-            'model' => 'InstitutionAssets'
+            'model' => 'InstitutionAssets',
+            //POCOR-9594-7: explicit back URL so toolbar always returns to InstitutionAssets index
+            'backUrl' => ['controller' => 'Institutions', 'action' => 'InstitutionAssets', 0 => 'index'],
         ]);
         $tableLocator = new TableLocator();
     }
@@ -35,7 +37,7 @@ class ImportInstitutionAssetsTable extends AppTable
      * @return array
      *
      */
-    public function implementedEvents()
+    public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
         //        $events['Model.import.onImportPopulateTextbooksData'] = 'onImportPopulateRemoveData';
@@ -80,7 +82,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportGetAssetTypesId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_types';
-        $table_name = 'AssetTypes';
+        $table_name = 'Institution.AssetTypes';
         $result = $this->checkLookupIdFromTable($cellValue, $table_name);
         return $result;
     }
@@ -94,7 +96,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportGetAssetMakesId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_makes';
-        $table_name = 'AssetMakes';
+        $table_name = 'FieldOption.AssetMakes'; //POCOR-9594-7: AssetMakesTable is in FieldOption plugin
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -107,7 +109,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportGetAssetModelsId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_models';
-        $table_name = 'AssetModels';
+        $table_name = 'FieldOption.AssetModels'; //POCOR-9594-7: AssetModelsTable is in FieldOption plugin
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -120,7 +122,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportGetAssetStatusesId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_statuses';
-        $table_name = 'AssetStatuses';
+        $table_name = 'Institution.AssetStatuses'; //POCOR-9594-7: AssetStatusesTable is in Institution plugin
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -133,7 +135,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportGetAssetConditionsId(EventInterface $event, $cellValue)
     {
         //$table_name = 'asset_conditions';
-        $table_name = 'AssetConditions';
+        $table_name = 'Institution.AssetConditions'; //POCOR-9594-7: AssetConditionsTable is in Institution plugin
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -146,7 +148,7 @@ class ImportInstitutionAssetsTable extends AppTable
     public function onImportGetInstitutionRoomsId(EventInterface $event, $cellValue)
     {
         //$table_name = 'institution_rooms';
-        $table_name = 'InstitutionRooms';
+        $table_name = 'Institution.InstitutionRooms'; //POCOR-9594-7: InstitutionRoomsTable is in Institution plugin
         return $this->checkLookupIdFromTable($cellValue, $table_name);
     }
 
@@ -178,11 +180,15 @@ class ImportInstitutionAssetsTable extends AppTable
      * @param $event
      *
      */
-    public function beforeAction($event)
+    public function beforeAction($event): void
     {
-        $session = $this->request->getSession();
-        if ($session->check('Institution.Institutions.id')) {
-            $this->institutionId = $session->read('Institution.Institutions.id');
+        //POCOR-9594-7: decode institution_id from pass[1] URL param (session breaks with
+        // multiple tabs open at once; getInstitutionID() would need InstitutionTab behavior,
+        // which this table doesn't have)
+        $passParams = $this->request->getAttribute('params')['pass'] ?? [];
+        if (!empty($passParams[1])) {
+            $decoded = $this->paramsDecode($passParams[1]);
+            $this->institutionId = $decoded['institution_id'] ?? ($decoded['id'] ?? null);
         }
     }
 
@@ -269,7 +275,20 @@ class ImportInstitutionAssetsTable extends AppTable
      */
     public function onImportPopulateSelectData(EventInterface $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
+        //POCOR-9594-7 --start
+        // Corrects plugin names that may be stored wrong in the import_mapping DB
+        // config data (that config predates the plugin re-homing this ticket fixed
+        // elsewhere in this file).
+        $tableCorrections = [
+            'FieldOption.AssetTypes'      => 'Institution.AssetTypes',
+            'FieldOption.AssetStatuses'   => 'Institution.AssetStatuses',
+            'FieldOption.AssetConditions' => 'Institution.AssetConditions',
+            'Institution.AssetMakes'      => 'FieldOption.AssetMakes',
+            'Institution.AssetModels'     => 'FieldOption.AssetModels',
+        ];
         $tableName = $lookupPlugin . '.' . $lookupModel;
+        $tableName = $tableCorrections[$tableName] ?? $tableName;
+        //POCOR-9594-7 --end
         //        $this->log($tableName, 'debug');
         $lookedUpTable = TableRegistry::getTableLocator()->get($tableName);
 
@@ -368,13 +387,13 @@ class ImportInstitutionAssetsTable extends AppTable
                 'table' => 'security_users',
                 'alias' => 'su',
                 'type' => 'INNER',
-                'conditions' => 'institution_staff.staff_id = su.id'
+                'conditions' => $staff->aliasField('staff_id') . ' = su.id' //POCOR-9594-7: aliasField avoids raw table name issues
             ])
             ->join([
                 'table' => 'staff_statuses',
                 'alias' => 'ss',
                 'type' => 'INNER',
-                'conditions' => 'institution_staff.staff_status_id = ss.id'
+                'conditions' => $staff->aliasField('staff_status_id') . ' = ss.id' //POCOR-9594-7: aliasField
             ])
             ->where([
                 'ss.id' => 1
@@ -405,13 +424,13 @@ class ImportInstitutionAssetsTable extends AppTable
                 'table' => 'security_users',
                 'alias' => 'su',
                 'type' => 'INNER',
-                'conditions' => 'institution_students.student_id = su.id'
+                'conditions' => $staff->aliasField('student_id') . ' = su.id' //POCOR-9594-7: aliasField avoids raw table name issues
             ])
             ->join([
                 'table' => 'student_statuses',
                 'alias' => 'ss',
                 'type' => 'INNER',
-                'conditions' => 'institution_students.student_status_id = ss.id'
+                'conditions' => $staff->aliasField('student_status_id') . ' = ss.id' //POCOR-9594-7: aliasField
             ])
             ->where([
                 'ss.id' => 1
@@ -466,7 +485,7 @@ class ImportInstitutionAssetsTable extends AppTable
         $lookedUpTable = TableRegistry::getTableLocator()->get($table_name);
         $lookupField = 'name';
         $where = ['1 = 1'];
-        if ($table_name == 'institution_rooms') {
+        if ($table_name == 'Institution.InstitutionRooms') { //POCOR-9594-7: match plugin-prefixed name
             $lookupField = 'code';
             $where = [$lookedUpTable->aliasField('institution_id') => $this->institutionId];
         }
@@ -587,13 +606,13 @@ class ImportInstitutionAssetsTable extends AppTable
             $asset_make_id = $tempRow['asset_make_id'];
             $asset_model_id = $tempRow['asset_model_id'];
             if($asset_model_id){
-                $model = self::getRelatedRecord('asset_models', $asset_model_id);
+                $model = self::getRelatedRecord('FieldOption.AssetModels', $asset_model_id); //POCOR-9594-7: use plugin-prefixed class name
                 $asset_make_id = $model['asset_make_id'];
                 $tempRow['asset_make_id'] = $asset_make_id;
             }
 
             if($asset_make_id){
-                $make = self::getRelatedRecord('asset_makes', $asset_make_id);
+                $make = self::getRelatedRecord('FieldOption.AssetMakes', $asset_make_id); //POCOR-9594-7: use plugin-prefixed class name
                 $asset_type_id = $make['asset_type_id'];
                 $tempRow['asset_type_id'] = $asset_type_id;
             }
