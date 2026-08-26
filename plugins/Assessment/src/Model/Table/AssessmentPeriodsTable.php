@@ -49,7 +49,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'Results' => ['index']
         ]);
         $this->setDeleteStrategy('restrict');
-        
+
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -479,7 +479,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
         $educationSubjects = $entity->education_subjects;
-        usort($educationSubjects, function ($a, $b) {
+        usort((array) $educationSubjects, function ($a, $b) {
             return $a['order'] - $b['order'];
         });
         $entity->education_subjects = $educationSubjects;
@@ -490,7 +490,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if ($this->action == 'edit') {
             //this is to sort array based on certain value on subarray, in this case based on education order value
             $educationSubjects = $entity->education_subjects;
-            usort($educationSubjects, function ($a, $b) {
+            usort((array) $educationSubjects, function ($a, $b) {
                 return $a['order'] - $b['order'];
             });
             $entity->education_subjects = $educationSubjects;
