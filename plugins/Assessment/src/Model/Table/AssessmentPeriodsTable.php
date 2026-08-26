@@ -49,6 +49,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             'Results' => ['index']
         ]);
         $this->setDeleteStrategy('restrict');
+        
     }
 
     public function validationDefault(Validator $validator): Validator
