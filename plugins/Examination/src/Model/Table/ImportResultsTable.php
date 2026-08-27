@@ -22,7 +22,7 @@ class ImportResultsTable extends AppTable
             'model' => 'ExaminationStudentSubjectResults',
             'backUrl' => ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamResults']
         ]);
-        $this->addBehavior('ControllerAction.FileUpload');
+        
         // Fix: Removed - same issue as ImportUsersTable (Directory plugin). ControllerAction.FileUpload
         // requires an unrelated 'file_content' field that is never set to allowEmpty here, so it always
         // injected a spurious "File attachment is required" error on every submission of this form
