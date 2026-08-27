@@ -10,6 +10,15 @@ class POCOR3573 extends AbstractMigration
         $this->backupTables();
 
         $this->execute("ALTER TABLE `examinations` ADD COLUMN `release_results_date` DATE NULL DEFAULT NULL AFTER `registration_end_date`");
+
+        // POCOR-3573: results visibility is gated on release_results_date <= today (NULL excludes
+        // the row from that comparison, i.e. hidden). Before this column existed, results were
+        // visible unconditionally, so every pre-existing examination must backfill to a date that
+        // is already <= today — preserving their current visibility instead of suddenly hiding
+        // previously-published results the moment this deploys. Only rows that predate this
+        // migration are NULL at this point; examinations created afterwards keep the column NULL
+        // by default so users can opt into the new Release Results Date control going forward.
+        $this->execute("UPDATE `examinations` SET `release_results_date` = CURDATE() WHERE `release_results_date` IS NULL");
     }
 
     public function down()
