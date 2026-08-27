@@ -27,6 +27,11 @@ class ImportHousesTable extends AppTable
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateAcademicPeriodsData'] = 'onImportPopulateAcademicPeriodsData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
+        // POCOR-7692: without this, beforeAction() below is never invoked by processAction()
+        // (it dispatches through the model's own EventManager, which only calls registered
+        // listeners), so $this->institutionId stays null and every imported row is rejected
+        // with "No active institution".
+        $events['ControllerAction.Model.beforeAction'] = 'beforeAction';
         return $events;
     }
 
