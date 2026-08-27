@@ -276,9 +276,15 @@ return [
             fwrite($appExtraHandle, $app_extra_text);
             $this->createDb($pdo, $db);
             $this->createDbUser($pdo, $dbUserHostPermission, $dbUser, $dbPassword, $db);
-            $pdo_query = "SET GLOBAL sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '')";
-            $stmt = $pdo->prepare($pdo_query);
-            $stmt->execute(); 
+            // $pdo_query = "SET GLOBAL sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '')";
+            // $stmt = $pdo->prepare($pdo_query);
+            // $stmt->execute(); 
+            // Use a session-level sql_mode setting instead of changing the
+            // server/global configuration. AWS RDS manages server-level
+            // parameters through the RDS parameter group.
+            $pdo->exec(
+                "SET SESSION sql_mode = REPLACE(@@SESSION.sql_mode, 'ONLY_FULL_GROUP_BY', '')"
+            );
             $template = str_replace('{database}', "'$db'", $template);
             $template = str_replace('{user}', "'$dbUser'", $template);
             fwrite($dbFileHandle, $template);
@@ -442,8 +448,8 @@ return [
                     // Set MySQL options
                     mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 600);
                     mysqli_set_charset($conn, 'utf8');
-                    $max_allowed_packet = 20777216;
-                    mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 600);
+                    //$max_allowed_packet = 20777216;
+                    //mysqli_options($conn, MYSQLI_OPT_CONNECT_TIMEOUT, 600);
                     //mysqli_options($conn, MYSQLI_INIT_COMMAND, "SET GLOBAL max_allowed_packet=$max_allowed_packet");//POCOR-9686 commit - setting max_allowed_packet globally can cause issues in shared hosting environments, so commenting out for now
                     
                     // Execute the query
