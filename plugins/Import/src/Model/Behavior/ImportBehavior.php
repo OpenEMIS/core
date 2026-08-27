@@ -1392,7 +1392,12 @@ class ImportBehavior extends Behavior
     {
 
         $cellsState = [];
-        for ($col = 0; $col < $totalColumns; $col++) {
+        // Fix: PhpSpreadsheet's getCellByColumnAndRow() columns are 1-based (1 = column A).
+        // Looping from 0 checked a bogus "column 0" (which PhpSpreadsheet resolves to column Z)
+        // and never checked the real last column, so a row with data only in that last column
+        // (or a sheet where the shifted range missed the filled cells) was wrongly treated as blank
+        // and silently skipped instead of being imported or reported as failed.
+        for ($col = 1; $col <= $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $value = $cell->getValue();
             if(is_string($value)){
