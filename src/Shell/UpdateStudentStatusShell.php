@@ -23,6 +23,27 @@ class UpdateStudentStatusShell extends Shell
         if (!empty($this->args[0])) {
             $exit = false;
             $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
+
+            // POCOR-9770: cron calls this shell directly, bypassing
+            // StudentStatusUpdatesTable::triggerUpdateStudentStatusShell()'s own overlap
+            // guard, so this shell needs its own check to avoid two runs stacking up.
+            // Mirrors that method's own 30-minute staleness purge so a crashed/hung run
+            // (e.g. a fatal error the try/catch below can't stop) doesn't permanently
+            // block every future scheduled run.
+            $runningProcesses = $this->SystemProcesses->getRunningProcesses($this->args[0]);
+            foreach ($runningProcesses as $processData) {
+                $expiryDate = clone($processData['created']);
+                $expiryDate = $expiryDate->addMinutes(30);
+                if ($expiryDate < Time::now()) {
+                    $this->SystemProcesses->updateProcess($processData['id'], Time::now(), $this->SystemProcesses::COMPLETED);
+                    $this->SystemProcesses->killProcess(!empty($processData['process_id']) ? $processData['process_id'] : 0);
+                }
+            }
+            if (!empty($this->SystemProcesses->getRunningProcesses($this->args[0]))) {
+                $this->out('A previous run of UpdateStudentStatus is still marked as running. Skipping this run ('.Time::now().')');
+                return;
+            }
+
             $this->out('Initializing Update of Student Withdrawal Status ('.Time::now().')');
 
             $systemProcessId = $this->SystemProcesses->addProcess('UpdateStudentStatus', getmypid(), $this->args[0]);
@@ -33,13 +54,17 @@ class UpdateStudentStatusShell extends Shell
                 $this->out($recordToProcess);
                 if (!empty($recordToProcess)) {
                     try {
-                        $this->out('Dispatching event to update student withdrawal records for '.$recordToProcess[' security_user_id']);
+                        $this->out('Dispatching event to update student withdrawal records for '.$recordToProcess['security_user_id']);
                         $event = $this->StudentWithdraw->dispatchEvent('Shell.StudentWithdraw.updateStudentStatusId', [$recordToProcess]);
                         $this->out('End Update for Student Withdrawal Status '.$recordToProcess['security_user_id'].' ('. Time::now() .')');
                     } catch (\Exception $e) {
                         $this->out('Error Update Student Status ' . $recordToProcess['security_user_id']);
                         $this->out($e->getMessage());
-                        $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
+                        // POCOR-9770: stop instead of retrying the same failing record forever -
+                        // also this previously referenced an undefined $SystemProcesses variable,
+                        // so a real failure here fatally crashed before ever recording ERROR status.
+                        $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::ERROR);
+                        $exit = true;
                     }
                 } else {
                     $this->out('No records to update ('.Time::now().')');

@@ -167,11 +167,6 @@ class StudentWithdrawTable extends ControllerActionTable
         $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
         $statuses = $StudentStatuses->findCodeList();
 
-        $currentAcademicPeriod = $this->AcademicPeriods->getCurrent();
-        $academicPeriodDetail = $this->AcademicPeriods->get($currentAcademicPeriod);
-        $academicPeriodEffectiveDate = $academicPeriodDetail->start_date->format('Y-m-d');
-        $academicPeriodEndDate = $academicPeriodDetail->end_date->format('Y-m-d');
-
         $statusId = $entity->status_id;
         $existingStudentEntity = $Students->find()->where([
             $Students->aliasField('institution_id') => $entity->institution_id,
@@ -193,7 +188,14 @@ class StudentWithdrawTable extends ControllerActionTable
         $today = Time::now();
         $today = $today->format('Y-m-d');
 
-        if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
+        // POCOR-9770: this used to compare today against the CURRENT academic period's
+        // start/end dates, which has nothing to do with whether this specific withdrawal
+        // is due - it must check the record's own effective_date instead (the same field
+        // StudentStatusUpdatesTable::getStudentWithdrawalRecords() already filters on to
+        // select this record in the first place).
+        $effectiveDate = $entity->effective_date ? $entity->effective_date->format('Y-m-d') : null;
+
+        if (!empty($effectiveDate) && $effectiveDate <= $today) {
             $StudentStatusUpdates->updateAll(['execution_status' => 2], ['id' => $entity->id]);
         }else{
             $StudentStatusUpdates->updateAll(['execution_status' => 1], ['id' => $entity->id]);
