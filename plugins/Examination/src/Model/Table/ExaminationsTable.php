@@ -173,7 +173,7 @@ class ExaminationsTable extends ControllerActionTable {
         $this->field('education_grade_id', ['type' => 'select', 'entity' => $entity, 'empty' => true]);
         $this->field('registration_start_date');
         $this->field('registration_end_date');
-        $this->field('release_results_date'); //POCOR-3573: results visible on student Exams tab once current date >= this date (empty = never released)
+        $this->field('release_results_date', ['type' => 'date']); //POCOR-3573: results visible on student Exams tab once current date >= this date (empty = never released)
         $this->field('examination_subjects', [
             'type' => 'element',
             'element' => 'Examination.examination_subjects'
