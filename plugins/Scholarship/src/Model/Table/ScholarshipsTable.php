@@ -27,6 +27,50 @@ class ScholarshipsTable extends ControllerActionTable
     private $interestRateOptions = [];
     private $currency = [];
 
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['application_open_date', 'application_close_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("ScholarshipsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+
+        // POCOR-9999: when the last Attachment Type row is removed on the Add/Edit form,
+        // the browser submits no 'attachment_types' key at all (an empty array produces no
+        // form fields), so patchEntity() never touches the association and the entity keeps
+        // whatever was already loaded from the database - the deletion silently has no
+        // effect and the row reappears after Save. Forcing the key to an empty array here
+        // lets the belongsToMany's default 'replace' save strategy correctly clear it.
+        // (Same pattern already used in OutcomeGradingTypesTable::beforeMarshal() for
+        // 'grading_options'.)
+        if (!$data->offsetExists('attachment_types')) {
+            $data->offsetSet('attachment_types', []);
+        }
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('scholarships');
@@ -108,16 +152,17 @@ class ScholarshipsTable extends ControllerActionTable
         $validator = parent::validationDefault($validator);
 
         return $validator
-            ->add('code', [
-                'ruleUniqueCode' => [
-                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
-                    'provider' => 'table'
-                ]
+             ->add('code', 'ruleUniqueCode', [
+                'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                'provider' => 'table',
+                'message' => __('This code already exists for the selected Academic Period.')
             ])
-            ->requirePresence('field_of_studies')
-            ->requirePresence('scholarship_financial_assistance_type_id')
-            ->requirePresence('bond')
-            ->requirePresence('duration')
+            ->notEmpty('code', __('This field cannot be left empty'))
+            ->notEmpty('field_of_studies')
+            ->notEmpty('scholarship_financial_assistance_type_id')
+            ->notEmpty('bond')
+            ->notEmpty('duration')
+            ->notEmpty('academic_period_id')
             ->add('field_of_studies', 'notEmpty', [
                 'rule' => function ($value, $context) {
                     return isset($value['_ids']) ? !empty($value['_ids']) : true;
@@ -475,7 +520,7 @@ class ScholarshipsTable extends ControllerActionTable
     {
         /** Start POCOR-7158 */
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');//POCOR-9151
         /** End POCOR-7158 */
 
         if ($entity->has('field_of_study_selection') && $entity->field_of_study_selection == self::SELECT_ALL_FIELD_OF_STUDIES) {
@@ -552,11 +597,11 @@ class ScholarshipsTable extends ControllerActionTable
         }elseif ($field == 'field_of_study_selection') {
             return __('Field Of Studies Selection');
         }elseif ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         }elseif ($field == 'modified_user_id') {
             return __('Modified By');
         }elseif ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         }elseif ($field == 'created_user_id') {
             return __('Created By');
         } else {
@@ -661,28 +706,42 @@ class ScholarshipsTable extends ControllerActionTable
         }
         return $attr;
     }
-
-    public function addEditOnSelectAttachmentType(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    //POCOR-9715 : Initially function name addEditOnSelectAttachmentType
+    public function addEditOnSelectAttachment(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $fieldKey = 'attachment_types';
+        $alias = $this->getAlias();
 
-        if (!isset($data[$this->getAlias()][$fieldKey])) {
-            $data[$this->getAlias()][$fieldKey] = [];
+        if (!isset($data[$alias][$fieldKey])) {
+            $data[$alias][$fieldKey] = [];
         }
 
-        if (isset($data[$this->getAlias()]['attachment_type_id'])) {
-            $selectedAttachmentType = $data[$this->getAlias()]['attachment_type_id'];
+        if (!empty($data[$alias]['attachment_type_id'])) {
+            $selectedAttachmentType = $data[$alias]['attachment_type_id'];
             $attachmentTypeEntity = $this->AttachmentTypes->get($selectedAttachmentType);
 
-            $data[$this->getAlias()][$fieldKey][] = [
-                'id' => $attachmentTypeEntity->id,
-                'name' => $attachmentTypeEntity->name,
-                'visible' => $attachmentTypeEntity->visible,
-                '_joinData' => [
-                    'is_mandatory' => 0
-                ]
-            ];
+            $exists = false;
+            foreach ($data[$alias][$fieldKey] as $existing) {
+                if ((int)$existing['id'] === (int)$attachmentTypeEntity->id) {
+                    $exists = true;
+                    break;
+                }
+            }
+
+            if (!$exists) {
+                $data[$alias][$fieldKey][] = [
+                    'id' => $attachmentTypeEntity->id,
+                    'name' => $attachmentTypeEntity->name,
+                    'visible' => $attachmentTypeEntity->visible,
+                    '_joinData' => [
+                        'is_mandatory' => 0
+                    ]
+                ];
+            }
         }
+
+        $data[$alias]['attachment_type_id'] = '';
+        $this->request = $this->request->withData($alias, $data[$alias]);
     }
 
     public function onGetCustomAttachmentTypeElement(EventInterface $event, $action, $entity, $attr, $options = [])
@@ -966,6 +1025,12 @@ class ScholarshipsTable extends ControllerActionTable
 
     public function getUsedAttachmentTypes($scholarshipId)
     {
+        //POCOR-9715
+        if (empty($scholarshipId)) {
+            return [];
+        }
+        //POCOR-9715
+
         $types = $this->AttachmentTypes->find()
             ->innerJoinWith('ApplicationAttachments', function ($q) use ($scholarshipId) {
                 return $q->where(['ApplicationAttachments.scholarship_id' => $scholarshipId]);

@@ -227,5 +227,153 @@ abstract class CopyCommandBase extends Command
         }
         return $this->conn;
     }
+    //POCOR-9767 starts
+    /** @var string[]|null Cached academic period names (longest first) */
+    protected ?array $academicPeriodNames = null;
 
+    /**
+     * Rewrite education structure names for the target academic period.
+     *
+     * Works with any academic period name format, e.g.:
+     *   "2025", "2025-2026", "2025-new-academic-period", "2026-new-academic-one"
+     *
+     * Rules:
+     * 1. Already ends with TO period name → unchanged
+     * 2. Name equals FROM period name → TO period name
+     * 3. Ends with " " + FROM period name → replace trailing FROM with TO
+     * 4. FROM period appears as a standalone segment → replace that segment with TO
+     *    (avoids partial matches, e.g. FROM "2025" must not alter "... 2025-2026")
+     * 5. Name ends with ANY known academic period name (e.g. an older period like
+     *    "2024-2025" baked in from a previous copy) → strip it and append TO period
+     * 6. Otherwise → append " " + TO period name
+     */
+    protected function renameWithAcademicPeriod(string $name, string $fromApName, string $toApName): string
+    {
+        $name = trim($name);
+        $fromApName = trim($fromApName);
+        $toApName = trim($toApName);
+
+        if ($name === '' || $toApName === '' || $fromApName === $toApName) {
+            return $name;
+        }
+
+        if ($this->endsWithAcademicPeriodSuffix($name, $toApName)) {
+            return $name;
+        }
+
+        if ($fromApName !== '') {
+            if ($name === $fromApName) {
+                return $toApName;
+            }
+
+            if ($this->endsWithAcademicPeriodSuffix($name, $fromApName)) {
+                return mb_substr($name, 0, mb_strlen($name) - mb_strlen($fromApName)) . $toApName;
+            }
+
+            if ($this->containsStandaloneAcademicPeriod($name, $fromApName)) {
+                return $this->replaceStandaloneAcademicPeriod($name, $fromApName, $toApName);
+            }
+        }
+
+        // Name may carry an older period suffix (e.g. copied earlier from "2024-2025").
+        // Strip a trailing known academic period name before appending the TO period.
+        $base = $this->stripTrailingAcademicPeriod($name, $toApName);
+
+        return $base . ' ' . $toApName;
+    }
+
+    /**
+     * If $name ends with " " + any known academic period name, remove that suffix.
+     * Uses the longest matching period name so "System 2024-2025" strips fully
+     * rather than leaving a fragment. The TO period is skipped (handled elsewhere).
+     */
+    protected function stripTrailingAcademicPeriod(string $name, string $toApName): string
+    {
+        foreach ($this->getAcademicPeriodNames() as $periodName) {
+            if ($periodName === '' || $periodName === $toApName) {
+                continue;
+            }
+
+            if ($this->endsWithAcademicPeriodSuffix($name, $periodName)) {
+                $stripped = mb_substr($name, 0, mb_strlen($name) - mb_strlen($periodName));
+
+                return rtrim($stripped);
+            }
+        }
+
+        return $name;
+    }
+
+    /**
+     * All academic period names, ordered longest first so the most specific
+     * suffix is matched before a shorter, partially-overlapping one.
+     *
+     * @return string[]
+     */
+    protected function getAcademicPeriodNames(): array
+    {
+        if ($this->academicPeriodNames !== null) {
+            return $this->academicPeriodNames;
+        }
+
+        $names = [];
+        try {
+            $rows = $this->getConnection()
+                ->execute('SELECT name FROM academic_periods WHERE name IS NOT NULL')
+                ->fetchAll('assoc');
+
+            foreach ($rows as $row) {
+                $value = trim((string)($row['name'] ?? ''));
+                if ($value !== '') {
+                    $names[$value] = $value;
+                }
+            }
+        } catch (\Throwable $e) {
+            // If the lookup fails, fall back to no stripping.
+            $names = [];
+        }
+
+        $names = array_values($names);
+        usort($names, static fn($a, $b) => mb_strlen($b) <=> mb_strlen($a));
+
+        return $this->academicPeriodNames = $names;
+    }
+
+    /**
+     * True when $name is exactly $period, or ends with " " + $period.
+     */
+    protected function endsWithAcademicPeriodSuffix(string $name, string $period): bool
+    {
+        if ($period === '') {
+            return false;
+        }
+
+        return $name === $period || mb_substr($name, -mb_strlen(' ' . $period)) === (' ' . $period);
+    }
+
+    /**
+     * True when $period appears as a full segment bounded by start/end or whitespace.
+     * Prevents FROM "2025" matching inside "2025-2026".
+     */
+    protected function containsStandaloneAcademicPeriod(string $name, string $period): bool
+    {
+        if ($period === '' || mb_strpos($name, $period) === false) {
+            return false;
+        }
+
+        $pattern = '/(?:^|\s)' . preg_quote($period, '/') . '(?:$|\s)/u';
+
+        return preg_match($pattern, $name) === 1;
+    }
+
+    /**
+     * Replace standalone occurrences of FROM period with TO period.
+     */
+    protected function replaceStandaloneAcademicPeriod(string $name, string $fromPeriod, string $toPeriod): string
+    {
+        $pattern = '/(?<=^|\s)' . preg_quote($fromPeriod, '/') . '(?=$|\s)/u';
+
+        return preg_replace($pattern, $toPeriod, $name) ?? $name;
+    }
+    //POCOR-9767 ends    
 }

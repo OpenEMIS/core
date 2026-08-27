@@ -82,9 +82,24 @@ class StaffAttendancesTable extends ControllerActionTable
         $startMonth = date('m', strtotime($startDate));
         $endMonth = date('m', strtotime($endDate));
         $conditions = [];
-        if (!empty($institutionId) && $institutionId != 0) {
-            $conditions[] = ['Institutions.id = ' . $institutionId];
-            $conditionSQL = "AND institution_staff_attendances.institution_id = {$institutionId}";
+
+        $institutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $institutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $institutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $institutionIds = [(int)$institutionId];
+        }
+
+        if (!empty($institutionIds)) {
+            $conditions[] = ['Institutions.id IN' => $institutionIds];
+            $idsList = implode(',', array_map('intval', $institutionIds));
+            $conditionSQL = "AND institution_staff_attendances.institution_id IN ({$idsList})";
         } else {
             $conditionSQL = '';
         }
