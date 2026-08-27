@@ -186,6 +186,13 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             'type' => 'select',
             'options' => $staffOption
         ]);
+        // POCOR-9768: beforeAction()'s field definition doesn't carry through to add/edit on its
+        // own (same reason academic_period_id/staff_duties_id/staff_id are re-declared above) —
+        // without this it renders as a plain text input instead of the Active/Inactive dropdown.
+        $this->field('status', [
+            'type' => 'select',
+            'options' => [self::STATUS_ACTIVE => __('Active'), self::STATUS_INACTIVE => __('Inactive')]
+        ]);
     }
     /**
      * Get staff list for drop down
