@@ -22,8 +22,14 @@ class ImportResultsTable extends AppTable
             'model' => 'ExaminationStudentSubjectResults',
             'backUrl' => ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamResults']
         ]);
-
-        $this->addBehavior('ControllerAction.FileUpload');
+        
+        // Fix: Removed - same issue as ImportUsersTable (Directory plugin). ControllerAction.FileUpload
+        // requires an unrelated 'file_content' field that is never set to allowEmpty here, so it always
+        // injected a spurious "File attachment is required" error on every submission of this form
+        // (which only ever posts 'select_file', handled entirely by the Import.Import behavior above).
+        // That extra error made ImportBehavior::addBeforeSave() think the entity was invalid and
+        // short-circuit before ever processing the uploaded rows, so exam results import would always
+        // fail with a generic "select a file to upload" error instead of reaching the Import Results screen.
     }
 
     public function implementedEvents(): array
