@@ -1,3 +1,6 @@
+### 5.17.3 - 2026-08-28
+- Bug Fixed: Core>Directory>import: When a file with inadequate information was uploaded the system did not show the error fields with and error report
+
 ### 5.17.2 - 2026-08-26
 - Bug Fixed: Administrations > Performances > Assessment > Assessment Periods : 404 Error usort(): Argument #1 ($array) must be of type array, null given
 
