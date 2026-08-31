@@ -35,7 +35,7 @@ class StaffTrainingNeedsTable extends TrainingNeedsAppTable
         //echo "<pre>"; print_r($queryString); die;
         /** Start POCOR-7158 */
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');
         /** End POCOR-7158 */
 
         $modelAlias = 'Needs';

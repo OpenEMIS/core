@@ -756,7 +756,7 @@ class AlertRulesTable extends ControllerActionTable
         $roleOptions = $this->getVisibleSecurityRoles();
 
         $filteredRoles = array_filter($roleOptions, function ($roleName) {
-            return in_array($roleName, ['Principal', 'Deputy Principal', 'Homeroom Teacher', 'Teacher'], true);
+            return in_array($roleName, ['Principal', 'Deputy Principal', 'Homeroom Teacher', 'Teacher', 'Student'], true);
         });
 
         $translatedRoles = array_map(function ($roleName) {

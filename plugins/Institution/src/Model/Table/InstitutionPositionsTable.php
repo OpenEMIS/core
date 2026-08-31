@@ -42,14 +42,14 @@ class InstitutionPositionsTable extends ControllerActionTable
         $this->hasMany('InstitutionStaff', ['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffPositions', ['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferIn', ['className' => 'Institution.StaffTransferIn', 'foreignKey' => 'new_institution_position_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->addBehavior('ControllerAction.FileUpload');
+        //$this->addBehavior('ControllerAction.FileUpload');
         $this->addBehavior('Workflow.Workflow');
         $this->setDeleteStrategy('restrict');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-            $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionPositions']);
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportInstitutionPositions']);
         $this->addBehavior('Excel', [
             'pages' => ['index']
         ]);

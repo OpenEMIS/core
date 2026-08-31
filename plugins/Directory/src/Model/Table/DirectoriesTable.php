@@ -13,9 +13,13 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
+use Institution\Model\Traits\StudentCreationCheckTrait; //POCOR-9385: student creation gate
+use Security\Model\Table\UsersTable as SecurityUsersTable;
 
 class DirectoriesTable extends ControllerActionTable
 {
+    use StudentCreationCheckTrait; //POCOR-9385: student creation gate
+
     // public $InstitutionStudent;
 
     // these constants are being used in AdvancedPositionSearchBehavior as well
@@ -27,6 +31,11 @@ class DirectoriesTable extends ControllerActionTable
     const OTHER = 4;
     const STUDENTNOTINSCHOOL = 5;
     const STAFFNOTINSCHOOL = 6;
+    //POCOR-9591: start - user account status constants (mirrors Security\UsersTable::STATUS_*)
+    const STATUS_ACTIVE   = 1; // active account
+    const STATUS_INACTIVE = 0; // admin-disabled
+    const STATUS_LOCKED   = 2; // system-locked after exceeding login attempts
+    //POCOR-9591: end
 
     private $dashboardQuery;
 
@@ -1311,7 +1320,7 @@ class DirectoriesTable extends ControllerActionTable
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
-            'user_type', 'first_name', 'middle_name', 'third_name', 'last_name',
+            'user_type', 'status', 'first_name', 'middle_name', 'third_name', 'last_name', //POCOR-9591: added status
             'openemis_no', 'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
@@ -1488,6 +1497,7 @@ class DirectoriesTable extends ControllerActionTable
             }
             return $conditions;
         }
+
     }
 
 
@@ -1543,10 +1553,10 @@ class DirectoriesTable extends ControllerActionTable
         $filters['user_type'] = [
             'label' => __('User Type'),
             'options' => [
-                self::STAFF => __('Staff'),
-                self::STUDENT => __('Students'),
+                self::STAFF    => __('Staff'),
+                self::STUDENT  => __('Students'),
                 self::GUARDIAN => __('Guardians'),
-                self::OTHER => __('Others')
+                self::OTHER    => __('Others')
             ]
         ];
         return $filters;
@@ -1578,11 +1588,13 @@ class DirectoriesTable extends ControllerActionTable
         $notSuperAdminCondition = [
             $this->aliasField('super_admin') => 0
         ];
-        $onlyActive = [
-            $this->aliasField('status') => 1
+        //POCOR-9591: start - include Locked (2) alongside Active (1); Inactive (0) remains hidden
+        $visibleStatuses = [
+            $this->aliasField('status') . ' IN' => [self::STATUS_ACTIVE, self::STATUS_LOCKED]
         ];
+        //POCOR-9591: end
         $conditions = array_merge($conditions, $notSuperAdminCondition);
-        $conditions = array_merge($conditions, $onlyActive);
+        $conditions = array_merge($conditions, $visibleStatuses);
 
         // POCOR-2547 sort list of staff and student by name
         $orders = [];
@@ -2629,6 +2641,16 @@ public function getIdentityTypeData($value_selection)
 
     public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
     {
+        //POCOR-9385: start — student creation restriction on Directory Add
+        if ($entity->isNew() && !empty($entity->is_student)) {
+            if (!$this->isStudentCreationAllowed(null)) {
+                $entity->setError('is_student', [$this->studentCreationBlockMessageNoGrade()]); //POCOR-9385: block directory student creation
+                $event->stopPropagation();
+                return false;
+            }
+        }
+        //POCOR-9385: end — student creation restriction on Directory Add
+
         //POCOR-8059::start
         if ($entity->isNew()) {
             $entity->preferred_language = 'en';

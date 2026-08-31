@@ -72,6 +72,22 @@ class StudentEnrolmentTable extends ControllerActionTable
             //['appliedAction' => ['StudentAdmission' => ['id']]
             ['appliedAction' => ['StudentEnrolment' => ['id']]
         ]);
+
+        $this->addBehavior('CustomField.Record', [
+               'model' => 'Student.Students',
+               'behavior' => 'Student',
+               'fieldKey' => 'student_custom_field_id',
+               'tableColumnKey' => 'student_custom_table_column_id',
+               'tableRowKey' => 'student_custom_table_row_id',
+               'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+               'formKey' => 'student_custom_form_id',
+               'filterKey' => 'student_custom_filter_id',
+               'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+               // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+               'recordKey' => 'student_id',
+                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+               'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+           ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -140,11 +156,10 @@ class StudentEnrolmentTable extends ControllerActionTable
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
                     'on' => function ($context) {
                         //POCOR-6172-HINDOL[START]
-                        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-                        $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
-                        $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
-                        // $this->log($multipleInstitutions);
-                        if ($multipleInstitutions) return false;
+                        //POCOR-9355: The multi-institution / multi-programme decision matrix is now fully
+                        // resolved inside ValidationBehavior::studentNotEnrolledInAnyInstitutionAndSameEducationSystem
+                        // and StudentsTable::validateEnrolledInAnyInstitution, so this rule always
+                        // runs and lets that shared logic decide allow/reject for every combination.
                         //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $Institutions = self::getDynamicTableInstance('Institution.Institutions');

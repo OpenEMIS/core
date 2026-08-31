@@ -33,7 +33,24 @@
 
 <?php 
 if(!empty($attr['results']['passedExcelFile'])) {
-	$passedRecordsLink = $this->Html->link('<i class="fa kd-download-success"></i> '.$this->Label->get('Import.download_passed_records'), $attr['results']['passedExcelFile'], ['class'=>"btn btn-green", 'escape'=>false]);
+	//POCOR-3673 start
+    if ($attr['results']['passedExcelFile']['action'] === 'ImportLocaleContentsLanguage') {
+        $filename = $attr['results']['passedExcelFile'][1];
+        $passedRecordsLink = '<a href="' .
+            $this->request->getAttribute('base') .
+            '/LocaleContents/ImportLocaleContentsLanguage/downloadPassed/' .
+            $filename .
+            '" class="btn btn-green">
+                <i class="fa kd-download-success"></i> ' .
+                $this->Label->get('Import.download_passed_records') .
+            '</a>'; //POCOR-3673 end
+    } else {
+        $passedRecordsLink = $this->Html->link(
+            '<i class="fa kd-download-success"></i> ' . $this->Label->get('Import.download_passed_records'),
+            $attr['results']['passedExcelFile'],
+            ['class' => 'btn btn-green', 'escape' => false]
+        );
+    }
 } else {
 	$passedRecordsLink = '';
 }
@@ -84,8 +101,31 @@ if(!empty($attr['results']['failedExcelFile'])):
 </div>
 
 <div class="form-buttons">
-	<?= $this->Html->link('<i class="fa kd-download-fail"></i> '.$this->Label->get('Import.download_failed_records'), $attr['results']['failedExcelFile'], ['class'=>"btn btn-red", 'escape'=>false]); ?>
-	<?= $passedRecordsLink; ?>
+	<?php
+        //POCOR-3673 start
+        if (
+            !empty($attr['results']['failedExcelFile']['action']) &&
+            $attr['results']['failedExcelFile']['action'] === 'ImportLocaleContentsLanguage'
+        ) {
+            $filename = $attr['results']['failedExcelFile'][1];
+            $failedRecordsLink = '<a href="' .
+                $this->request->getAttribute('base') .
+                '/LocaleContents/ImportLocaleContentsLanguage/downloadFailed/' .
+                $filename .
+                '" class="btn btn-red">
+                    <i class="fa kd-download-fail"></i> ' .
+                    $this->Label->get('Import.download_failed_records') .
+                '</a>';  //POCOR-3673 end
+        } else {
+            $failedRecordsLink = $this->Html->link(
+                '<i class="fa kd-download-fail"></i> ' . $this->Label->get('Import.download_failed_records'),
+                $attr['results']['failedExcelFile'],
+                ['class' => 'btn btn-red', 'escape' => false]
+            );
+        }
+        ?>
+        <?= $failedRecordsLink; ?>
+        <?= $passedRecordsLink; ?>
 </div>
 
 <?php

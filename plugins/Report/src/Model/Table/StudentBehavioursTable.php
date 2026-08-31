@@ -61,6 +61,19 @@ class StudentBehavioursTable extends AppTable  {
         $area_level_id = $requestData->area_level_id;
         $institutionId = $requestData->institution_id;
 
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId != 0 && $institutionId != '0') {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+
         $selectedArea = $requestData->area_education_id;
         if ($areaId != -1 && !empty($areaId)) {
             $areaIds = [];
@@ -97,9 +110,9 @@ class StudentBehavioursTable extends AppTable  {
                 $Statuses1->aliasField('id')."=(`StudentBehaviours`.`status_id`)"
         ])      
         ->where([$where]);
-        if ($institutionId != 0) {
+        if (!empty($filterInstitutionIds)) {
             $query->where([
-                $this->aliasField('institution_id') => $institutionId
+                $this->aliasField('institution_id') . ' IN' => $filterInstitutionIds
             ]);
         }
      

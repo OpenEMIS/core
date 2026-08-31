@@ -599,8 +599,20 @@ class WashReportsTable extends AppTable
         if (!empty($academicPeriodId)) {
             $conditions['AcademicPeriods.id'] = $academicPeriodId;
         }
-        if (!empty($institutionId) && $institutionId > 0) {
-            $conditions[$this->aliasField('id')] = $institutionId;
+        $filterInstitutionIds = [];
+        if (is_object($institutionId) && isset($institutionId->_ids)) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId->_ids, function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (is_array($institutionId) && isset($institutionId['_ids'])) {
+            $filterInstitutionIds = array_values(array_filter((array)$institutionId['_ids'], function ($id) {
+                return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+            }));
+        } elseif (!empty($institutionId) && $institutionId > 0 && !is_array($institutionId)) {
+            $filterInstitutionIds = [(int)$institutionId];
+        }
+        if (!empty($filterInstitutionIds)) {
+            $conditions[$this->aliasField('id') . ' IN'] = $filterInstitutionIds;
         }
         if (!empty($allselectedAreas) && count($allselectedAreas) > 0) {//POCOR-8161 starts
             $conditions[$this->aliasField('area_id IN')] = $allselectedAreas;

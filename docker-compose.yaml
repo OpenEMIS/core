@@ -27,9 +27,11 @@ services:
     - openemis-core-database    # Specifies the container dependency for start up order
     environment:
     - DB_HOST=openemis-core-database    # Specifies the DB_Host as DB container
+    - DB_USERNAME=root    # Specifies the DB_Username as root
+    - DB_PASSWORD=root 
+    env_file:
+      - docker-config/.env
     volumes:
-      # - openemis-core-config:/var/www/html/core/config/app_local.php    # Volume mounting for config
-      # - openemis-core-config:/var/www/html/api/.env
       - openemis-core-config:/config
     networks:
       - openemis-network    # Specifies the network

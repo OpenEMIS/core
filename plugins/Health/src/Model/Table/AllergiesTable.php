@@ -46,6 +46,7 @@ class AllergiesTable extends ControllerActionTable
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $this->field('file_name', ['visible' => false]);
+        $this->field('description', ['visible' => false]);
         $this->field('file_content', ['visible' => false]);
 
         // Start POCOR-5188
@@ -166,8 +167,9 @@ class AllergiesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity)
     {
+        $this->field('description', ['null' => false]); //POCOR-9715
         $this->field('severe', ['after' => 'description']);
-        $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment']);
+        $this->field('health_allergy_type_id', ['type' => 'select', 'after' => 'comment', 'null' => false]); //POCOR-9715
         $this->field('file_content', ['after' => 'health_allergy_type_id','attr' => ['label' => __('Attachment')], 'visible' => ['add' => true, 'view' => true, 'edit' => true]]);
         $userID = $this->getUserID();
         $this->field('security_user_id', ['after' => 'file_content', 'attr' => ['value' => $userID], 'type' => 'hidden']);
@@ -176,8 +178,13 @@ class AllergiesTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-        $validator->allowEmpty('file_content');
-        return $validator;
+        //POCOR-9715
+        return $validator
+            ->requirePresence('description', true)
+            ->notEmptyString('description', __('This field cannot be left empty'))
+            ->requirePresence('health_allergy_type_id', true)
+            ->notEmptyString('health_allergy_type_id', __('Please select a Health Allergy Type'))
+            ->allowEmpty('file_content');
     }
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)
@@ -243,12 +250,34 @@ class AllergiesTable extends ControllerActionTable
         }
     }
 
-    //POCOR-8293s
+    //POCOR-8293
     public function indexBeforeQuery(EventInterface $event, Query $query, ArrayObject $extra) {
         $userId = $this->getUserID();
         $query->where([ $this->aliasField('security_user_id') => $userId]);
         return $query;
     }
+
+    //POCOR-9507
+    public function beforeSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $file = $this->request->getData('Allergies.file_content');
+
+        if (!empty($file) && is_object($file) && method_exists($file, 'getClientFilename')) {
+
+            $filename = $file->getClientFilename();
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['exe', 'zip','mov'])) {
+                $entity->setError(
+                    'file_content',
+                    __('This file is not allowed.')
+                );
+                $event->stopPropagation();
+                return false;
+            }
+        }
+    }
+
 
 
 

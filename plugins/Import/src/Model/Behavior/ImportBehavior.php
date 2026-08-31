@@ -217,9 +217,10 @@ class ImportBehavior extends Behavior
         $downloadUrl = $toolbarButtons['back']['url'];
 
         $downloadUrl[0] = 'template';
-
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
             $downloadUrl[1] = $buttons['add']['url'][1];
+        } elseif ($buttons['add']['url']['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673
+            $downloadUrl[1] = 'template';
         } else {
             //POCOR-9584: start - always carry full pass[1] from current request so all context params
             //   (class_id, academic_period_id, competency_template_id, etc.) survive to the template URL.
@@ -586,7 +587,9 @@ class ImportBehavior extends Behavior
                 $tempRow = $tempRow->getArrayCopy();
 
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
+
                 if (!isset($tempRow['entity'])) {
+                    
                     $tableEntity = $activeModel->newEntity([]);
                 } else {
                     if(!isset($tempRow['institution_class_id']) && $activeModel->getAlias() == 'StudentAdmission') {
@@ -798,6 +801,23 @@ class ImportBehavior extends Behavior
             //   (array_merge renumbers integer keys, breaking pass param order)
             $fullEncodedParam = $request->getParam('pass')[1] ?? null;
             // Log::debug('@ImportBehavior::processImport url_before=' . json_encode($url) . ' pass=' . json_encode($request->getParam('pass')) . ' fullEncodedParam=' . json_encode($fullEncodedParam)); //[TEMP-LOG]
+            /**
+             * Custom redirect only for Locale Contents import
+            */
+          
+            if ($url['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673 start
+                $url = [
+                    'plugin' => false,
+                    'controller' => 'LocaleContents',
+                    'action' => 'ImportLocaleContentsLanguage',
+                    1 => 'results'
+                ];
+
+                if ($fullEncodedParam) {
+                    $url[1] = $fullEncodedParam;
+                }
+               return $model->controller->redirect($url); //POCOR-3673 end
+            }
             if ($fullEncodedParam) {
                 $url[1] = $fullEncodedParam;
             } else {
@@ -807,7 +827,6 @@ class ImportBehavior extends Behavior
             unset($url['?']);
             // Log::debug('@ImportBehavior::processImport url_after=' . json_encode($url)); //[TEMP-LOG]
             //POCOR-9584: end
-
             return $model->controller->redirect($url);
         };
     }
@@ -1192,6 +1211,7 @@ class ImportBehavior extends Behavior
         } else {
             $codesData = $this->excelGetCodesData($this->_table);
         }
+
         $lastColumn = -1;
         $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
         foreach ($codesData as $columnOrder => $modelArr) {
