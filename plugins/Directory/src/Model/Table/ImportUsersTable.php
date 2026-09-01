@@ -104,7 +104,13 @@ class ImportUsersTable extends AppTable
                 'prefix' => $prefix,
             ]
         ];
-        $this->addBehavior('ControllerAction.FileUpload');
+        // Fix: Removed - ControllerAction.FileUpload requires an unrelated 'file_content'
+        // field to be present (and it is never set to allowEmpty here), so it always injected a
+        // spurious "File attachment is required" error on every submission of this form (which only
+        // ever posts 'select_file', handled entirely by the Import.Import behavior below). That extra
+        // error made Import\Model\Behavior\ImportBehavior::addBeforeSave() think the entity was invalid
+        // and short-circuit before ever processing the uploaded rows, so users always saw a generic
+        // "select a file to upload" error instead of the per-row Import Results screen.
     }
 
     public function implementedEvents(): array
