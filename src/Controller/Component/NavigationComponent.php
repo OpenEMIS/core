@@ -677,7 +677,7 @@ class NavigationComponent extends Component
             'Institutions.Associations.index' => [
                 'title' => 'Houses',
                 'parent' => 'Institution.Academic',
-                'selected' => ['Institutions.Associations'],
+                'selected' => ['Institutions.Associations', 'Institutions.ImportHouses'],
             ],
 
             'Institutions.InstitutionCurriculars.index' => [ //POCOR-6673
