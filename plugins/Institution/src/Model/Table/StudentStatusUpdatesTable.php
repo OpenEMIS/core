@@ -89,7 +89,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         return '<span class="status highlight">'.$status.'</span>';
     }
 
-    public function getStudentWithdrawalRecords($first = false)
+    public function getStudentWithdrawalRecords($first = false, $excludeIds = [])
     {
 
         $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -108,12 +108,21 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 //             Log::write('debug', $academicPeriodEffectiveDate);
 //             Log::write('debug', 'Today date');
 //             Log::write('debug', $today);
+            // POCOR-9770: only process withdrawals belonging to the current academic
+            // period (per academic_periods.current) - old/closed periods can carry
+            // years of never-executed backlog with stale/inconsistent student data
+            // that should be reviewed separately, not swept up automatically here.
+            $conditions = [
+                $this->aliasField('effective_date <= ') => $today,
+                $this->aliasField('execution_status') => self::NOT_EXECUTED,
+                $this->aliasField('academic_period_id') => $currentAcademicPeriod
+            ];
+            if (!empty($excludeIds)) {
+                $conditions[$this->aliasField('id NOT IN')] = $excludeIds;
+            }
             $query = $this
                 ->find()
-                ->where([
-                    $this->aliasField('effective_date <= ') => $today,
-                    $this->aliasField('execution_status') => self::NOT_EXECUTED
-                ])
+                ->where($conditions)
                 ->order(['created' => 'asc']);
             if ($first) {
                 $studentWithdrawRecords = $query->first();

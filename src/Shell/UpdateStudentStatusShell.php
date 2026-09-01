@@ -10,6 +10,10 @@ use Cake\Datasource\ConnectionManager;
 
 class UpdateStudentStatusShell extends Shell
 {
+    // POCOR-9770: circuit breaker so a run with widespread data problems can't spin
+    // through the entire backlog failing on every record.
+    const MAX_FAILURES_PER_RUN = 100;
+
     public function initialize(): void
     {
         parent::initialize();
@@ -49,22 +53,32 @@ class UpdateStudentStatusShell extends Shell
             $systemProcessId = $this->SystemProcesses->addProcess('UpdateStudentStatus', getmypid(), $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
 
+            $processedCount = 0;
+            $failedIds = [];
+
             while (!$exit) {
-                $recordToProcess = $StudentStatusUpdates->getStudentWithdrawalRecords(true);
+                $recordToProcess = $StudentStatusUpdates->getStudentWithdrawalRecords(true, $failedIds);
                 $this->out($recordToProcess);
                 if (!empty($recordToProcess)) {
                     try {
                         $this->out('Dispatching event to update student withdrawal records for '.$recordToProcess['security_user_id']);
                         $event = $this->StudentWithdraw->dispatchEvent('Shell.StudentWithdraw.updateStudentStatusId', [$recordToProcess]);
                         $this->out('End Update for Student Withdrawal Status '.$recordToProcess['security_user_id'].' ('. Time::now() .')');
+                        $processedCount++;
                     } catch (\Exception $e) {
                         $this->out('Error Update Student Status ' . $recordToProcess['security_user_id']);
                         $this->out($e->getMessage());
-                        // POCOR-9770: stop instead of retrying the same failing record forever -
-                        // also this previously referenced an undefined $SystemProcesses variable,
-                        // so a real failure here fatally crashed before ever recording ERROR status.
-                        $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::ERROR);
-                        $exit = true;
+                        // POCOR-9770: skip this specific record (its stored execution_status
+                        // is untouched, so it stays retriable on a future run) and keep going
+                        // instead of one bad record permanently blocking every record behind
+                        // it in created-order - also this previously referenced an undefined
+                        // $SystemProcesses variable, so a real failure here fatally crashed
+                        // before ever recording anything.
+                        $failedIds[] = $recordToProcess['id'];
+                        if (count($failedIds) >= self::MAX_FAILURES_PER_RUN) {
+                            $this->out('Too many failures this run (' . count($failedIds) . '), stopping (' . Time::now() . ')');
+                            $exit = true;
+                        }
                     }
                 } else {
                     $this->out('No records to update ('.Time::now().')');
@@ -72,8 +86,11 @@ class UpdateStudentStatusShell extends Shell
                 }
             }
             $this->out('End Update for Student Withdrawal Status ('.Time::now().')');
+            if (!empty($failedIds)) {
+                $this->out('Completed with ' . count($failedIds) . ' failed record(s), still Not Executed and retriable: ' . implode(', ', $failedIds));
+            }
             $event = $StudentStatusUpdates->dispatchEvent('Shell.StudentWithdraw.writeLastExecutedDateToFile');
-            $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED);
+            $this->SystemProcesses->updateProcess($systemProcessId, Time::now(), $this->SystemProcesses::COMPLETED, $processedCount);
         }
     }
 }
