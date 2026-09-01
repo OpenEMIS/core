@@ -48,7 +48,10 @@ class Kernel extends ConsoleKernel
         $schedule->exec(base_path('../bin/cake') . ' InactiveRoleRemoval')
             ->dailyAt('00:01')
             ->withoutOverlapping(120)
-            ->runInBackground();
+            ->runInBackground()
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('[InactiveRoleRemovalScheduler] bin/cake InactiveRoleRemoval failed');
+            });
     }
 
     /**
