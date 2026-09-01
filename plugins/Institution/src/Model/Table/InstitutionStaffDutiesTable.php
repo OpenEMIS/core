@@ -269,6 +269,11 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
                 ['security_group_user_id' => $sharedGrant->security_group_user_id],
                 ['id' => $entity->id]
             );
+            // POCOR-9768: keep the in-memory entity in sync with the updateAll() write above —
+            // otherwise a caller reading $entity->security_group_user_id right after save() (e.g.
+            // a controller, another shell step) sees stale/empty data even though the DB row is correct.
+            $entity->security_group_user_id = $sharedGrant->security_group_user_id;
+            $entity->setDirty('security_group_user_id', false);
             return;
         }
 
@@ -282,6 +287,9 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         $saved = $SecurityGroupUsers->save($newGroupUser);
         if ($saved) {
             $this->updateAll(['security_group_user_id' => $saved->id], ['id' => $entity->id]);
+            // POCOR-9768: same sync as the shared-grant branch above.
+            $entity->security_group_user_id = $saved->id;
+            $entity->setDirty('security_group_user_id', false);
         }
     }
 
@@ -315,6 +323,10 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
         }
 
         $this->updateAll(['security_group_user_id' => null], ['id' => $entity->id]);
+        // POCOR-9768: keep the in-memory entity in sync with the updateAll() write above — see
+        // the matching comment in grantDutyRole().
+        $entity->security_group_user_id = null;
+        $entity->setDirty('security_group_user_id', false);
     }
 
     // POCOR-9768: auto-deactivate duties when the staff member's assignment ends (edit path).
