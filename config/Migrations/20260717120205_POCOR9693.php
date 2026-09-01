@@ -26,7 +26,7 @@ class POCOR9693 extends AbstractMigration
                 `_edit`            = 'StaffBehaviourAttachments.edit',
                 `_add`             = 'StaffBehaviourAttachments.add',
                 `_delete`          = 'StaffBehaviourAttachments.delete'
-            WHERE `name` = 'Staff Behaviour Attachments Old'
+            WHERE `name` = 'Staff Behaviour Attachments'
               AND `module` = 'Institutions'
               AND `category` = 'Staff'
         ");
