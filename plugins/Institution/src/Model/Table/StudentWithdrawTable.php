@@ -177,11 +177,6 @@ class StudentWithdrawTable extends ControllerActionTable
         ->first();
 
         Log::write('debug', 'Updating Student StatusId >>>>>>>>>>>>>>>>>>>>>> ');
-        // POCOR-9770: Log::write() requires a string message - passing the raw entity (or
-        // null, when no matching Students record is found, as happens here for records
-        // whose institution/academic_period/education_grade no longer has a matching
-        // Students row) threw an uncaught TypeError that crashed the whole shell before it
-        // ever reached the effective_date check below.
         Log::write('debug', $existingStudentEntity ? json_encode($existingStudentEntity) : 'No matching Students record found');
 
         if ($existingStudentEntity && $entity->status_id == $statuses['WITHDRAWN']) {
