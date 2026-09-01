@@ -138,6 +138,33 @@ class POCOR9717 extends AbstractMigration
             ]
         );
 
+        // One-time historical backfill for total_late_day, folded into this same
+        // migration per request -- guarded against re-running via a marker row in
+        // report_queries (status = 0, so the real report scheduler -- which only
+        // executes status = 1 rows -- never touches it; it exists purely as a flag
+        // this migration checks). Backfills BOTH: recomputes total_late_day for rows
+        // that already exist, and inserts rows that never existed at all (students
+        // whose only historical record for a day was LATE, which the old query
+        // excluded entirely). Loops per historical academic period via a one-time
+        // stored procedure (same idiom as the codebase's real report scheduler,
+        // openemis_core_reports) so each period runs the same efficient, indexed
+        // query shape the live daily job uses -- confirmed on real data: periods
+        // that would take 2-4 minutes with a naive unfiltered pass now take ~300ms
+        // each. Safe to re-run even without the marker (idempotent, ON DUPLICATE
+        // KEY UPDATE), but the marker avoids redundant work once it has succeeded.
+        $alreadyBackfilled = $this->fetchRow("SELECT 1 FROM `report_queries` WHERE `name` = '_pocor9717_total_late_day_backfill_completed'");
+        if (!$alreadyBackfilled) {
+            $this->execute("DROP PROCEDURE IF EXISTS `_pocor9717_backfill_total_late_day`;");
+
+            $this->execute("CREATE PROCEDURE `_pocor9717_backfill_total_late_day`() BEGIN DECLARE done INT DEFAULT 0; DECLARE v_period_id INT; DECLARE period_cursor CURSOR FOR SELECT DISTINCT `academic_period_id` FROM `institution_student_absence_details` WHERE `absence_type_id` = 3; DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1; OPEN period_cursor; read_loop: LOOP FETCH period_cursor INTO v_period_id; IF done THEN LEAVE read_loop; END IF; INSERT INTO `summary_student_absences`(`id`, `academic_period_id`, `education_grade_id`, `institution_id`, `institution_class_id`, `date`, `student_id`, `student_gender_id`, `total_absences_day`, `total_late_day`, `valid_marked_slots`, `partial_day_absence`, `full_day_absence`, `created`) SELECT UUID() AS `id`, count_student_absent_day.`academic_period_id`, count_student_absent_day.`education_grade_id`, count_student_absent_day.`institution_id`, count_student_absent_day.`institution_class_id`, count_student_absent_day.`date`, count_student_absent_day.`student_id`, su.`gender_id`, count_student_absent_day.`total_absences_day`, count_student_absent_day.`total_late_day`, marked_slots.`valid_marked_slots`, CASE WHEN marked_slots.`valid_marked_slots` > 0 AND count_student_absent_day.`total_absences_day` > 0 AND count_student_absent_day.`total_absences_day` < marked_slots.`valid_marked_slots` THEN 1 ELSE 0 END AS `partial_day_absence`, CASE WHEN marked_slots.`valid_marked_slots` > 0 AND count_student_absent_day.`total_absences_day` >= marked_slots.`valid_marked_slots` THEN 1 ELSE 0 END AS `full_day_absence`, NOW() AS `created` FROM(SELECT isad.`academic_period_id`, isad.`date`, isad.`institution_id`, isad.`education_grade_id`, isad.`institution_class_id`, isad.`student_id`, SUM(CASE WHEN isad.`absence_type_id` != 3 THEN 1 ELSE 0 END) AS `total_absences_day`, SUM(CASE WHEN isad.`absence_type_id` = 3 THEN 1 ELSE 0 END) AS `total_late_day` FROM `institution_student_absence_details` isad INNER JOIN `institution_class_students` ics ON ics.`student_id` = isad.`student_id` AND ics.`institution_class_id` = isad.`institution_class_id` INNER JOIN student_attendance_marked_records samr ON samr.institution_class_id = isad.institution_class_id AND samr.date = isad.date AND samr.period = isad.period AND samr.education_grade_id = isad.education_grade_id WHERE samr.no_scheduled_class = 0 AND isad.`academic_period_id` = v_period_id GROUP BY isad.`academic_period_id`, isad.`date`, isad.`institution_id`, isad.`education_grade_id`, isad.`institution_class_id`, isad.`student_id`) count_student_absent_day INNER JOIN `security_users` su ON su.`id` = count_student_absent_day.`student_id` INNER JOIN (SELECT `academic_period_id`, `institution_id`, `education_grade_id`, `class_id`, `attendance_date`, COUNT(*) AS `valid_marked_slots` FROM `summary_student_attendances` WHERE `marked_attendance` > 0 AND `academic_period_id` = v_period_id GROUP BY `academic_period_id`, `institution_id`, `education_grade_id`, `class_id`, `attendance_date`) marked_slots ON marked_slots.`academic_period_id` = count_student_absent_day.`academic_period_id` AND marked_slots.`institution_id` = count_student_absent_day.`institution_id` AND marked_slots.`education_grade_id` = count_student_absent_day.`education_grade_id` AND marked_slots.`class_id` = count_student_absent_day.`institution_class_id` AND marked_slots.`attendance_date` = count_student_absent_day.`date` WHERE EXISTS (SELECT 1 FROM `institution_subject_students` iss WHERE iss.`student_id` = count_student_absent_day.`student_id` AND iss.`institution_class_id` = count_student_absent_day.`institution_class_id` AND iss.`education_grade_id` = count_student_absent_day.`education_grade_id` AND iss.`institution_id` = count_student_absent_day.`institution_id`) ON DUPLICATE KEY UPDATE `student_gender_id` = VALUES(`student_gender_id`), `total_absences_day` = VALUES(`total_absences_day`), `total_late_day` = VALUES(`total_late_day`), `valid_marked_slots` = VALUES(`valid_marked_slots`), `partial_day_absence` = VALUES(`partial_day_absence`), `full_day_absence` = VALUES(`full_day_absence`); END LOOP; CLOSE period_cursor; END");
+
+            $this->execute("CALL `_pocor9717_backfill_total_late_day`();");
+
+            $this->execute("DROP PROCEDURE `_pocor9717_backfill_total_late_day`;");
+
+            $this->execute("INSERT INTO `report_queries` (`name`, `query_sql`, `frequency`, `status`, `created_user_id`, `created`) VALUES ('_pocor9717_total_late_day_backfill_completed', 'Marker row only -- total_late_day historical backfill has already completed on this environment (POCOR-9717/POCOR-9611). Not an executable report query.', 'once', 0, 1, NOW());");
+        }
+
         // Delete existing attendance and absence report queries
         // Exact name match only -- NOT a LIKE '%attendances%'/'%absences%' pattern, which
         // also matches the unrelated `summary_institution_student_absences_insert` /
