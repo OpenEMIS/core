@@ -10,8 +10,6 @@ use Cake\Datasource\ConnectionManager;
 
 class UpdateStudentStatusShell extends Shell
 {
-    // POCOR-9770: circuit breaker so a run with widespread data problems can't spin
-    // through the entire backlog failing on every record.
     const MAX_FAILURES_PER_RUN = 100;
 
     public function initialize(): void
@@ -28,12 +26,8 @@ class UpdateStudentStatusShell extends Shell
             $exit = false;
             $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
 
-            // POCOR-9770: cron calls this shell directly, bypassing
-            // StudentStatusUpdatesTable::triggerUpdateStudentStatusShell()'s own overlap
-            // guard, so this shell needs its own check to avoid two runs stacking up.
-            // Mirrors that method's own 30-minute staleness purge so a crashed/hung run
-            // (e.g. a fatal error the try/catch below can't stop) doesn't permanently
-            // block every future scheduled run.
+            // POCOR-9770: cron calls this shell directly
+            // StudentStatusUpdatesTable::triggerUpdateStudentStatusShell()'s 
             $runningProcesses = $this->SystemProcesses->getRunningProcesses($this->args[0]);
             foreach ($runningProcesses as $processData) {
                 $expiryDate = clone($processData['created']);
@@ -68,12 +62,7 @@ class UpdateStudentStatusShell extends Shell
                     } catch (\Exception $e) {
                         $this->out('Error Update Student Status ' . $recordToProcess['security_user_id']);
                         $this->out($e->getMessage());
-                        // POCOR-9770: skip this specific record (its stored execution_status
-                        // is untouched, so it stays retriable on a future run) and keep going
-                        // instead of one bad record permanently blocking every record behind
-                        // it in created-order - also this previously referenced an undefined
-                        // $SystemProcesses variable, so a real failure here fatally crashed
-                        // before ever recording anything.
+                        // POCOR-9770:  specific record (its stored execution_status
                         $failedIds[] = $recordToProcess['id'];
                         if (count($failedIds) >= self::MAX_FAILURES_PER_RUN) {
                             $this->out('Too many failures this run (' . count($failedIds) . '), stopping (' . Time::now() . ')');
