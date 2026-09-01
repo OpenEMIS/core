@@ -190,9 +190,6 @@ class StudentWithdrawTable extends ControllerActionTable
 
         // POCOR-9770: this used to compare today against the CURRENT academic period's
         // start/end dates, which has nothing to do with whether this specific withdrawal
-        // is due - it must check the record's own effective_date instead (the same field
-        // StudentStatusUpdatesTable::getStudentWithdrawalRecords() already filters on to
-        // select this record in the first place).
         $effectiveDate = $entity->effective_date ? $entity->effective_date->format('Y-m-d') : null;
 
         if (!empty($effectiveDate) && $effectiveDate <= $today) {
