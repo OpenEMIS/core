@@ -109,6 +109,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
 //             Log::write('debug', 'Today date');
 //             Log::write('debug', $today);
             // POCOR-9770: only process withdrawals belonging to the current academic
+            // period, so stale records from past periods aren't picked up by the retry/cron path
             $conditions = [
                 $this->aliasField('effective_date <= ') => $today,
                 $this->aliasField('execution_status') => self::NOT_EXECUTED,
