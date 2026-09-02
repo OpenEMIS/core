@@ -339,3 +339,9 @@ a.btn {
   font-size: 0 !important;
   z-index: 1 !important;
 } */
+
+.header-navigation .btn-group {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
