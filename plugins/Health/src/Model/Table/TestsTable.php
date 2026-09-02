@@ -227,7 +227,7 @@ class TestsTable extends ControllerActionTable
         } elseif ($field == 'modified') {
             return __('Modified');
         }elseif ($field == 'created_user_id') {
-            return __('Created By');
+            return __('Created User');
         } elseif ($field == 'created') {
             return __('Created');
         }else {
