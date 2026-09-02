@@ -963,11 +963,11 @@ class LeaveTable extends ControllerActionTable
         } else if ($field == 'file_content') {
             return __('File Content');
         } else if ($field == 'modified') {
-            return __('Modified On');
+            return __('Modified');
         } else if ($field == 'modified_user_id') {
             return __('Modified User');
         } else if ($field == 'created') {
-            return __('Created On');
+            return __('Created');
         } else if ($field == 'created_user_id') {
             return __('Created User');
         } else {

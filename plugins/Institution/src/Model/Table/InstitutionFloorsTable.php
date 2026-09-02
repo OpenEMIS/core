@@ -271,11 +271,11 @@ class InstitutionFloorsTable extends ControllerActionTable
         } else if ($field == 'new_start_date'){
             return __('New Start Date');
         } else if ($field == 'modified'){
-            return __('Modified On');
+            return __('Modified');
         } else if ($field == 'modified_user_id'){
             return __('Modified User');
         } else if ($field == 'created'){
-            return __('Created On');
+            return __('Created');
         } else if ($field == 'created_user_id'){
             return __('Created User');
         } else {
