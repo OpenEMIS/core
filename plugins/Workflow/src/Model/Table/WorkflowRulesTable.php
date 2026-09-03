@@ -363,7 +363,19 @@ class WorkflowRulesTable extends ControllerActionTable
         } else if ($action == 'add' || $action == 'edit') {
             $entity = $attr['attr']['entity'];
             if ($action == 'add') {
+                // POCOR-7626: on the AJAX reload triggered by changing the Feature select,
+                // there is no '?feature=' in the URL for getQuery() to read - only the POST
+                // body has it (addOnChangeFeature() tries to bridge this via
+                // $request->getQuery['feature'] = ..., but that's a property write on a
+                // method name, so it never reaches getQuery()). Same fallback already used
+                // by onUpdateFieldWorkflowId() above for this exact reason.
                 $feature = $request->getQuery('feature');
+                if ($feature == null) {
+                    $requestData = $request->getData();
+                    if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('feature', $requestData[$this->getAlias()])) {
+                        $feature = $requestData[$this->getAlias()]['feature'];
+                    }
+                }
             } else if ($action == 'edit') {
                 $feature = $entity->feature;
             }
@@ -405,7 +417,11 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function addEditOnAddEvent(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        if (array_key_exists($this->getAlias(), $data)) {
+        // POCOR-7626: $data is an ArrayObject (per the method signature above), but
+        // array_key_exists() requires a real array for its 2nd argument as of PHP 8 -
+        // this was previously unreachable (the Add Event dropdown never had any options
+        // to select), so the TypeError only surfaces now that selecting an event is possible.
+        if ($data->offsetExists($this->getAlias())) {
             if (array_key_exists('event_method_key', $data[$this->getAlias()])) {
                 $methodKey = $data[$this->getAlias()]['event_method_key'];
                 if (!empty($methodKey)) {
