@@ -147,11 +147,7 @@ class InstitutionConsumableTransactionsTable extends ControllerActionTable
             return  __('Minimum');
         } else if ($field == 'balance') {
             return  __('Balance');
-        }
-        else if ($field == 'created_user_id') {
-            return  __('Created By');
-        } 
-        else if ($field == 'modified_user_id') {
+        } else if ($field == 'modified_user_id') {
             return __('Modified User');
         } else if ($field == 'modified') {
             return __('Modified');

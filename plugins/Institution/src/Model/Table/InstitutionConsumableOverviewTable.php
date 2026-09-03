@@ -196,8 +196,6 @@ class InstitutionConsumableOverviewTable extends ControllerActionTable
             return  __('Date');
         } else if ($field == 'init') {
             return  __('Init');
-        } else if ($field == 'created_user_id') {
-            return  __('Created By');
         }
         //  else if ($field == 'amount' && $this->action == 'index') {
         //     if (!empty($module) && $module == 'InstitutionIncomes') {
