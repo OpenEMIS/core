@@ -19,6 +19,7 @@ use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Query;
 use InvalidArgumentException;
+use Cake\Core\Configure;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
@@ -44,6 +45,16 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentAttendances' => ['index', 'view', 'add']
         ]);
+
+        //POCOR-9594-1 --start
+        // Attendance marking moved to this table from InstitutionStudentAbsencesTable,
+        // but the Risk trigger chain was never attached here - saving a new absence
+        // never fired a risk recalculation, so Risk > View stayed blank for students
+        // whose attendance was only ever recorded after the move.
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
+        //POCOR-9594-1 --end
     }
 
 //    public function validationDefault(Validator $validator): Validator

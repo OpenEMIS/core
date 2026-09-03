@@ -410,7 +410,29 @@ class StaffUserTable extends ControllerActionTable
             ->add('mobile_number', 'numeric', [
                 'rule' => 'numeric',
                 'message' => 'Only numbers are allowed'
-            ]); //POCOR-9680
+            ]) //POCOR-9680
+            // POCOR-9793: security_users.mobile_number carries a DB-level UNIQUE index
+            // (unique_mobile). Unlike Students, two Staff accounts must not share a
+            // mobile number (confirmed requirement). Previously this field had no
+            // uniqueness check at all, so editing the Overview tab to a number already
+            // used by another account sailed past validation and crashed with an
+            // uncaught PDOException at the DB layer. Add a proper validation rule so
+            // this fails gracefully instead, consistent with how the Contacts tab
+            // already reports "This Record is already in use." for Staff.
+            ->add('mobile_number', 'ruleUniqueMobileNumber', [
+                'rule' => function ($value, $context) {
+                    if (empty($value)) {
+                        return true;
+                    }
+                    $securityUsers = TableRegistry::getTableLocator()->get('User.Users');
+                    $conditions = ['mobile_number' => $value];
+                    if (!empty($context['data']['id'])) {
+                        $conditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $context['data']['id'];
+                    }
+                    return !$securityUsers->exists($conditions);
+                },
+                'message' => 'This Record is already in use.'
+            ]);
         return $validator;
     }
 

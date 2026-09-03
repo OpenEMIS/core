@@ -1517,8 +1517,20 @@ class UsersTable extends AppTable
         $contactOptionCode = $entity->contact_option_code;
         if ($contactOptionCode == 'MOB' || $contactOptionCode == 'PHO') {
             $phone = $entity->value;
-            // update the user mobile_number with preferred mobile_number
-            $this->updateAll(['mobile_number' => $phone], ['id' => $securityUserId]);
+            // POCOR-9793: security_users.mobile_number carries a DB-level unique index (it's used
+            // for account identification/authentication), but the same number can legitimately be
+            // shared by different people in their Contacts tab (e.g. a shared family phone). Only
+            // sync it onto this account when no other account already owns it, otherwise leave this
+            // account's mobile_number untouched - previously this ran unconditionally and the
+            // unique constraint threw an uncaught PDOException when two users shared a number.
+            $alreadyUsedByAnotherAccount = $this->exists([
+                'mobile_number' => $phone,
+                $this->aliasField($this->getPrimaryKey()) . ' !=' => $securityUserId,
+            ]);
+            if (!$alreadyUsedByAnotherAccount) {
+                // update the user mobile_number with preferred mobile_number
+                $this->updateAll(['mobile_number' => $phone], ['id' => $securityUserId]);
+            }
         }
         //POCOR-8660 end
         else {
