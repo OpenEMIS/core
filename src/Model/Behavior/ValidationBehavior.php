@@ -2584,6 +2584,12 @@ class ValidationBehavior extends Behavior
         $weekStartDate = $data['date_from'];
         $weekEndDate = $data['date_to'];
 
+        //POCOR-9715
+        if (empty($weekStartDate) || empty($weekEndDate)) {
+            return true;
+        }
+        //POCOR-9715
+
         $staffAttendances = $InstitutionStaffAttendances
             ->find()
             ->where([

@@ -430,7 +430,7 @@ class SpecialNeedsReferralsTable extends ControllerActionTable
         $this->setFieldOrder(['academic_period_id', 'referrer_id', 'special_needs_referrer_type_id', 'date', 'reason_type_id', 'comment', 'file_name', 'file_content']);
     }
 
-    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
+    public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query) 
     {
         $institutionId = $this->getInstitutionID();
         $academicPeriodId = $this->request->getQuery('academic_period_id');

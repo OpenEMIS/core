@@ -1,4 +1,16 @@
+### 5.17.3 - 2026-08-28
+- Bug Fixed: Core>Directory>import: When a file with inadequate information was uploaded the system did not show the error fields with and error report
+
+### 5.17.2 - 2026-08-26
+- Bug Fixed: Administrations > Performances > Assessment > Assessment Periods : 404 Error usort(): Argument #1 ($array) must be of type array, null given
+
+### 5.17.1 - 2026-08-21
+- Bug Fixed: MySQL 8.4 Upgrade Regression Testing on BS MOE TST
+- Bug Fixed: Administrations > System Configurations : SAML SSO is no longer working upon login
+
 ### 5.17.0 - 2026-08-19
+- Bug Fixed: Institution Bugs: Gives 404 on addition and deletion, however performs that action.
+- Bug Fixed: Registrations: When registering student with custom field file and file is uploaded, file is not seen in student list page.
 - Bug Fixed: Remove unneccessary files on filesystem
 - Bug Fixed: Docker container not working.
 - Bug Fixed: Core>Directory>Search user records>Merge : Investigate why merge failed
