@@ -550,6 +550,19 @@ class StaffTable extends AppTable  {
         return $validator;
     }
 
+    //POCOR-FIX: Staff Out of School only needs academic_period_id; it has no
+    //area/institution filter fields on the form, so it must not inherit the
+    //area_level_id / area_education_id requirement from validationDefault.
+    public function validationStaffOutOfSchool(Validator $validator): Validator
+    {
+        $validator = parent::validationDefault($validator);
+        $validator->setProvider('custom', $this);
+        $validator
+            ->notEmpty('academic_period_id');
+
+        return $validator;
+    }
+
      public function addBeforePatch(EventInterface $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if ($data[$this->getAlias()]['feature'] == 'Report.StaffDuties') {
@@ -607,6 +620,9 @@ class StaffTable extends AppTable  {
         }
         if ($data[$this->getAlias()]['feature'] == 'Report.StaffTrainingReports') {
             $options['validate'] = 'StaffTrainingReports';
+        }
+        if ($data[$this->getAlias()]['feature'] == 'Report.StaffOutOfSchool') {
+            $options['validate'] = 'StaffOutOfSchool';
         }
     }
     //POCOR - 7408 start
