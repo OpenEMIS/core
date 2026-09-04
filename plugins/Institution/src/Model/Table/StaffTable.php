@@ -1546,7 +1546,8 @@ class StaffTable extends ControllerActionTable
 
         $listeners = [
             TableRegistry::getTableLocator()->get('Institution.InstitutionSubjectStaff'),
-            TableRegistry::getTableLocator()->get('Institution.StaffUser')
+            TableRegistry::getTableLocator()->get('Institution.StaffUser'),
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties') // POCOR-9768: auto-deactivate duties on end of assignment
         ];
         $this->dispatchEventToModels('Model.Staff.afterSave', [$entity], $this, $listeners);
     }
@@ -2276,7 +2277,8 @@ class StaffTable extends ControllerActionTable
     {
         $broadcaster = $this;
         $listeners = [
-            TableRegistry::getTableLocator()->get('Institution.StaffLeave')    // Staff Leave associated to institution must be deleted.
+            TableRegistry::getTableLocator()->get('Institution.StaffLeave'),    // Staff Leave associated to institution must be deleted.
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties') // POCOR-9768: auto-deactivate duties when staff record is deleted outright
         ];
         $this->dispatchEventToModels('Model.InstitutionStaff.afterDelete', [$entity], $broadcaster, $listeners);
 
@@ -3941,6 +3943,10 @@ class StaffTable extends ControllerActionTable
                 foreach ($resultSet as $entity) {
                     $this->removeStaffRole($entity);
                     $this->updateStaffStatus($entity, $this->endOfAssignment);
+                    // POCOR-9768: this bulk sweep bypasses save(), so Model.Staff.afterSave never
+                    // fires here — deactivate duties directly instead.
+                    TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties')
+                        ->deactivateDuties($entity->staff_id, $entity->institution_id);
                 }
             }
         }
@@ -3971,6 +3977,9 @@ class StaffTable extends ControllerActionTable
                 [$this->getPrimaryKey() => $entity->id]
             );
             $this->updateStaffStatus($entity, $this->endOfAssignment);
+            // POCOR-9768: this path bypasses save() too — deactivate duties directly.
+            TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties')
+                ->deactivateDuties($entity->staff_id, $entity->institution_id);
         }
     }
 

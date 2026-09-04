@@ -38,6 +38,20 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping(60)
             ->runInBackground();
+
+        //POCOR-9768: daily sweep for staff whose institution_staff.end_date has passed with no
+        // approval workflow and no login to trigger the existing per-login cleanup — invokes the
+        // existing, already-tested CakePHP shell (Institution.Staff::removeInactiveStaffSecurityRole(),
+        // which also deactivates any duties tied to that assignment) via `exec` rather than
+        // duplicating that business logic in this codebase. withoutOverlapping() gives it the
+        // proper locking the old per-login exec() trigger never had.
+        $schedule->exec(base_path('../bin/cake') . ' InactiveRoleRemoval')
+            ->dailyAt('00:01')
+            ->withoutOverlapping(120)
+            ->runInBackground()
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('[InactiveRoleRemovalScheduler] bin/cake InactiveRoleRemoval failed');
+            });
     }
 
     /**
