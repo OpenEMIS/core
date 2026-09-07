@@ -181,7 +181,21 @@ class StudentWithdrawTable extends ControllerActionTable
 
         if ($existingStudentEntity && $entity->status_id == $statuses['WITHDRAWN']) {
             $existingStudentEntity['student_status_id'] = $statuses['WITHDRAWN'];
-            $Students->save($existingStudentEntity);
+            try {
+                $Students->save($existingStudentEntity);
+            } catch (\Exception $e) {
+                // POCOR-9770: unique_institution_students fires on the exact values
+                // being written, so this specific collision can only mean another
+                // institution_students row already has this institution/student/
+                // grade/period/date-range combination marked WITHDRAWN - the intended
+                // end state already exists via a duplicate row. Retrying would hit
+                // the same deterministic collision every time, so don't let this
+                // block execution_status below or be treated as a transient failure.
+                if (strpos($e->getMessage(), 'unique_institution_students') === false) {
+                    throw $e;
+                }
+                Log::write('error', 'StudentWithdraw: student ' . $entity->security_user_id . ' already withdrawn via a duplicate institution_students row (institution ' . $entity->institution_id . ', grade ' . $entity->education_grade_id . ', period ' . $entity->academic_period_id . '); skipping the save. ' . $e->getMessage());
+            }
         }
 
         Log::write('debug', 'Updating Student Status Updates Entity: '.$entity->security_user_id);
