@@ -130,7 +130,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
             }
 
             Log::write('debug', 'studentWithdrawRecords');
-            Log::write('debug', $studentWithdrawRecords);
+            Log::write('debug', 'excludeIds: ' . print_r($studentWithdrawRecords, true));
         }
         return $studentWithdrawRecords;
 
