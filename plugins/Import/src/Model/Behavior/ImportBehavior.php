@@ -584,6 +584,14 @@ class ImportBehavior extends Behavior
                 $extra['entityValidate'] = true;
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
+                // POCOR-9796: some validation branches (e.g. account_type not matching any known
+                // code) record an error in rowInvalidCodeCols without also flipping entityValidate,
+                // which let patchEntity()/save() still run on incomplete/invalid data below and
+                // occasionally throw an uncaught error instead of surfacing the row as failed.
+                if ($rowInvalidCodeCols->count() > 0) {
+                    $extra['entityValidate'] = false;
+                }
+
                 if ($rowPass !== NULL && !$rowPass) {
                     $activeModel->setImportValidationFailed();
                 } else {
@@ -700,7 +708,9 @@ class ImportBehavior extends Behavior
                             // Log::debug('@ImportBehavior::processImport merged_errors=' . json_encode($errors)); //[TEMP-LOG]
                             //$model->log('@ImportBehavior merged errors=' . json_encode($errors), 'debug');
                         }
-                    } catch (Exception $e) {
+                    } catch (\Throwable $e) {
+                        // POCOR-9796: catch any error (not just Exception) during save so a bad
+                        // row is reported in the Import Results screen instead of crashing the request.
                         $newEntity = false;
                         $message = $e->getMessage();
                         $matches = '';
@@ -1254,7 +1264,9 @@ class ImportBehavior extends Behavior
                     $objPHPExcel->setActiveSheetIndex(0);
                     $objValidation = $objPHPExcel->getActiveSheet()->getCell($alpha . $i)->getDataValidation();
                     $objValidation->setType(DataValidation::TYPE_LIST);
-                    $objValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
+                    // POCOR-9796: STYLE_STOP rejects values not in the reference list (STYLE_INFORMATION
+                    // only warned, letting free text like "abc" through for Account Type Code etc.)
+                    $objValidation->setErrorStyle(DataValidation::STYLE_STOP);
                     $objValidation->setAllowBlank(false);
                     $objValidation->setShowInputMessage(true);
                     $objValidation->setShowErrorMessage(true);
