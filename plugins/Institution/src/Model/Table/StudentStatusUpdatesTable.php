@@ -10,7 +10,6 @@ use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
-use Cake\Log\Log;
 
 class StudentStatusUpdatesTable extends ControllerActionTable
 {
@@ -119,7 +118,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 $conditions[$this->aliasField('id NOT IN')] = $excludeIds;
             }
             Log::write('debug', 'excludeIds');
-            Log::write('debug', $excludeIds);
+            Log::write('debug', 'excludeIds: ' . print_r($excludeIds, true));
             $query = $this
                 ->find()
                 ->where($conditions)
