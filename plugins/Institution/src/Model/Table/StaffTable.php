@@ -47,6 +47,7 @@ class StaffTable extends ControllerActionTable
     const PENDING_TRANSFEROUT = -3;
     const PENDING_RELEASEIN = -4;
     const PENDING_RELEASEOUT = -5;
+    const ALL_STATUS = 0;
     private $dashboardQuery = null;
     private $institution_id;
     private $academic_period_id;
