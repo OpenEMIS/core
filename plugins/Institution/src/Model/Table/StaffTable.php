@@ -1229,7 +1229,7 @@ class StaffTable extends ControllerActionTable
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
         }*///PCOOR-7115 comment code ends
 
-        $statusOptions = $this->StaffStatuses->find('list')->toArray();
+        $statusOptions = [self::ALL_STATUS => __('All Status')] + $this->StaffStatuses->find('list')->toArray();
 
         $approvedStatus = $this->Workflow->getStepsByModelCode('Institution.StaffPositionProfiles', 'APPROVED');
         $closedStatus = $this->Workflow->getStepsByModelCode($this->getRegistryAlias(), 'CLOSED');
@@ -1273,13 +1273,20 @@ class StaffTable extends ControllerActionTable
 
 
         $selectedStatus = $this->queryString('staff_status_id', $statusOptions);
+        if (is_null($this->request->getQuery('staff_status_id'))) {
+            $selectedStatus = $this->assigned;
+        }
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         // $request->query['staff_status_id'] = $selectedStatus;
         $queryParams = $this->request->getQueryParams();
         $queryParams['staff_status_id'] = $selectedStatus;
         $this->request = $this->request->withQueryParams($queryParams);
 
-        $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+        if ($selectedStatus != self::ALL_STATUS) {
+            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+        }
+
+        // $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
 
         // POCOR-2547 sort list of staff and student by name
         if (!isset($request->getQuery['sort'])) {
@@ -1292,11 +1299,13 @@ class StaffTable extends ControllerActionTable
             // Starts POCOR-6532
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
             // Ends POCOR-6532 //POCOR-7278
-            $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+            if ($selectedStatus != self::ALL_STATUS) {
+                $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+            }
         } else {
             //POCOR-5690 remove check isAdvancedSearchEnabled for search data from list
             //if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
-            if ($selectedStatus != -1) {
+            if ($selectedStatus != -1 && $selectedStatus != self::ALL_STATUS) {
                 $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
             }
         }//PCOOR-7115 ends
