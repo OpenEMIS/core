@@ -51,6 +51,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
             'AssociationStudent' => ['index','add','view', 'edit'],
         ]);
         $this->addBehavior('Institution.InstitutionTab');
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportHouses']); //POCOR-7692
     }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
@@ -304,7 +305,7 @@ class InstitutionAssociationsTable extends ControllerActionTable
                 }
                 return implode(', ', $staffList);
             } else {
-                //return $this->getMessage($this->aliasField('noTeacherAssigned'));
+                return '&nbsp;';
             }
         }
     }

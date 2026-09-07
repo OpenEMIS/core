@@ -255,14 +255,21 @@ class ImportBehavior extends Behavior
         // Log::debug('@ImportBehavior::setupBackButtonUrl start backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null) . ' institutionId=' . json_encode($this->institutionId) . ' pass=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
-            //POCOR-9584: start - only add encoded [1] when institutionId is set; otherwise clear stale pass params
-            if ($this->institutionId) {
+            //POCOR-9594-7: start - same "preserve full pass[1]" pattern already applied to the
+            // other branches of this function by POCOR-9584 - this branch (tables that supply an
+            // explicit backUrl config, e.g. ImportInstitutionAssetsTable) was missed, so it only
+            // re-encoded institution_id and dropped any other context (e.g. the imported record's
+            // own id) that pass[1] originally carried.
+            $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+            if ($fullEncodedParam) {
+                $toolbarButtons['back']['url'][1] = $fullEncodedParam;
+            } elseif ($this->institutionId) {
                 $toolbarButtons['back']['url'][1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
             } else {
                 unset($toolbarButtons['back']['url'][0]);
                 unset($toolbarButtons['back']['url'][1]);
             }
-            //POCOR-9584: end
+            //POCOR-9594-7: end
             return;
         }
 
@@ -1392,7 +1399,12 @@ class ImportBehavior extends Behavior
     {
 
         $cellsState = [];
-        for ($col = 0; $col < $totalColumns; $col++) {
+        // Fix: PhpSpreadsheet's getCellByColumnAndRow() columns are 1-based (1 = column A).
+        // Looping from 0 checked a bogus "column 0" (which PhpSpreadsheet resolves to column Z)
+        // and never checked the real last column, so a row with data only in that last column
+        // (or a sheet where the shifted range missed the filled cells) was wrongly treated as blank
+        // and silently skipped instead of being imported or reported as failed.
+        for ($col = 1; $col <= $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $value = $cell->getValue();
             if(is_string($value)){

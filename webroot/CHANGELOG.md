@@ -1,3 +1,21 @@
+### 5.18.0 - 2026-09-03
+- Bug Fixed: CLONE - Upgrade OpenEMIS Core to CakePHP 5-(Institutions) : When logged in as a teacher part two
+- Implemented: Develop Duties feature enhancements
+- Bug Fixed: Institutions > Scanned : UI buttons are not following the System Theme, Scanned documents do not show up and Export button does not export an Excel file.
+- Bug Fixed: Institution > Students  > Contacts : 404 error when adding same contacts
+- Bug Fixed: Institution > Meals > Students > View : KD Minidashboard and Classdropdown error.
+- Bug Fixed: Institutions > Students > Risk > View: Data should be showing for all columns
+- Bug Fixed: Update summary_student_attendances and summary_area_institution_grade_attendances tables to only generate current academic_period
+- Bug Fixed: Reports>Staff : Got error on generating the Staff out of school report.
+- Implemented: Control over the exam result release
+- Implemented: Develop an import function for the houses feature
+
+### 5.17.3 - 2026-08-28
+- Bug Fixed: Core>Directory>import: When a file with inadequate information was uploaded the system did not show the error fields with and error report
+
+### 5.17.2 - 2026-08-26
+- Bug Fixed: Administrations > Performances > Assessment > Assessment Periods : 404 Error usort(): Argument #1 ($array) must be of type array, null given
+
 ### 5.17.1 - 2026-08-21
 - Bug Fixed: MySQL 8.4 Upgrade Regression Testing on BS MOE TST
 - Bug Fixed: Administrations > System Configurations : SAML SSO is no longer working upon login
