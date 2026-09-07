@@ -10,9 +10,12 @@ use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Http\ServerRequestFactory;
+use Institution\Model\Traits\RouteInstitutionIdTrait;
 
 class InstitutionTabBehavior extends Behavior
 {
+    use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
+
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -42,6 +45,7 @@ class InstitutionTabBehavior extends Behavior
             $toolbarButtons = new ArrayObject([]);
         }
         //POCOR-9661
+        $toolbarButtons = $extra['toolbarButtons'];
         $redirectURL = $extra['redirect'];
 
         if ($model->action == 'edit' || $model->action == 'remove') {
@@ -136,12 +140,20 @@ class InstitutionTabBehavior extends Behavior
                 $institutionID = $request->getQuery('institution_id') ?? $institutionID;
             }
         }
+        // Associations/Houses add-edit links use the ':institutionId' route param - getQueryString()/getQuery()
+        // above don't read it, so fall back to decoding it (see RouteInstitutionIdTrait). Scoped to the
+        // Associations action so other tabs using this behavior are unaffected.
+        if (empty($institutionID) && !empty($model->request) && ($model->request->getParam('action') === 'Associations' || $model->request->getParam('action') === 'Houses')) {
+            $institutionID = $this->resolveRouteInstitutionId($model->request, $model) ?: $institutionID;
+        }
         return $institutionID;
     }
 
     public function fixAddDeleteRedirectURL()
     {
         $model = $this->_table;
+        // $url = $model->url('index');
+        // $queryString = $model->getQueryString();
         //POCOR-9661
         if (method_exists($model, 'url')) {
             $url = $model->url('index');
@@ -172,6 +184,7 @@ class InstitutionTabBehavior extends Behavior
             $url['?'] = $queryString;
         }
         //POCOR-9661
+        // $url['1'] = $model->paramsEncode($queryString);
         return $url;
     }
 
@@ -267,12 +280,14 @@ class InstitutionTabBehavior extends Behavior
         $model = $this->_table;
         $institutionID = $this->getInstitutionID();
 
-        $actions = ['view', 'edit'];
-
-        //POCOR-9273
-        if ($this->_table->request->getParam('action') && $this->_table->request->getParam('action') == 'Programmes') {
-            $actions[] = 'remove';
-        }
+        // 'remove' is included unconditionally here (previously added only for the 'Programmes'
+        // page via POCOR-9273). Without it, every other institution-tab page's Delete button
+        // skips this URL rebuild and falls back to AppTable::getEncodedKeys(), which encodes
+        // $entity->getOriginal($primaryKey) instead of the live id used by 'view'/'edit' - the
+        // two can diverge on tables that layer several behaviors (Workflow, AcademicPeriod, etc.)
+        // over the index query, producing a stale id in the Delete link and a false
+        // "The record does not exist." on click (e.g. Institutions > Behaviour > Students).
+        $actions = ['view', 'edit', 'remove'];
 
         foreach ($actions as $action) {
             if (isset($buttons[$action])) {
@@ -382,36 +397,19 @@ class InstitutionTabBehavior extends Behavior
 
     public function addDeleteBeforeAction(EventInterface $event = null, ArrayObject $extra = null)
     {
+        //echo "<pre>"; print_r($this->_table->ControllerAction); echo'test'; die;
         if ($extra == null) {
             return;
         }
         $model = $this->_table;
-        //POCOR-9661
-        if (method_exists($model, 'url')) {
-            $url = $model->url('index');
-        } else {
-            $request = $model->request ?? null;
-            $url = [
-                'plugin' => $request ? $request->getParam('plugin') : null,
-                'controller' => $request ? $request->getParam('controller') : null,
-                'action' => $request ? $request->getParam('action') : 'index',
-            ];
-        }
-        //POCOR-9661
+        $url = $model->url('index');
         $institutionID = $this->getInstitutionID();
-        $queryString = method_exists($model, 'getQueryString') ? $model->getQueryString() : [];
-        if (!is_array($queryString)) {
-            $queryString = [];
-        }
+        $queryString = $model->getQueryString();
         if (isset($url[2])) {
             unset($url[2]);
         }
         $queryString['institution_id'] = $institutionID;
-        if (method_exists($model, 'paramsEncode')) {
-            $url[1] = $model->paramsEncode($queryString);
-        } else {
-            $url['?'] = $queryString;
-        }
+        $url[1] = $model->paramsEncode($queryString);
         $extra['redirect'] = $url;
     }
 
@@ -451,7 +449,7 @@ class InstitutionTabBehavior extends Behavior
             $userID = $this->getStudentID();
             //$studentLastFirstElements = ['Students' => ['text' => __('Academic')]];
             $studentLastTabElements = ['Guardians' => ['text' => __('Guardians')],
-                'StudentTransport' => ['text' => __('Transport')]];
+                'StudentTransport' => ['text' => __('Transport')], 'Siblings' => ['text' => __('Siblings')]];
             $tabElements = array_merge($tabElements, $studentLastTabElements);
             $plugin = 'Student';
             $controller = 'Students';

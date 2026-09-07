@@ -217,9 +217,10 @@ class ImportBehavior extends Behavior
         $downloadUrl = $toolbarButtons['back']['url'];
 
         $downloadUrl[0] = 'template';
-
         if ($buttons['add']['url']['action'] === 'ImportInstitutionSurveys') {
             $downloadUrl[1] = $buttons['add']['url'][1];
+        } elseif ($buttons['add']['url']['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673
+            $downloadUrl[1] = 'template';
         } else {
             //POCOR-9584: start - always carry full pass[1] from current request so all context params
             //   (class_id, academic_period_id, competency_template_id, etc.) survive to the template URL.
@@ -254,14 +255,21 @@ class ImportBehavior extends Behavior
         // Log::debug('@ImportBehavior::setupBackButtonUrl start backUrl=' . json_encode($toolbarButtons['back']['url'] ?? null) . ' institutionId=' . json_encode($this->institutionId) . ' pass=' . json_encode($this->_table->request->getParam('pass'))); //[TEMP-LOG]
         if (!empty($this->getConfig('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->getConfig('backUrl'));
-            //POCOR-9584: start - only add encoded [1] when institutionId is set; otherwise clear stale pass params
-            if ($this->institutionId) {
+            //POCOR-9594-7: start - same "preserve full pass[1]" pattern already applied to the
+            // other branches of this function by POCOR-9584 - this branch (tables that supply an
+            // explicit backUrl config, e.g. ImportInstitutionAssetsTable) was missed, so it only
+            // re-encoded institution_id and dropped any other context (e.g. the imported record's
+            // own id) that pass[1] originally carried.
+            $fullEncodedParam = $this->_table->request->getParam('pass')[1] ?? null;
+            if ($fullEncodedParam) {
+                $toolbarButtons['back']['url'][1] = $fullEncodedParam;
+            } elseif ($this->institutionId) {
                 $toolbarButtons['back']['url'][1] = $this->_table->paramsEncode(['institution_id' => $this->institutionId]);
             } else {
                 unset($toolbarButtons['back']['url'][0]);
                 unset($toolbarButtons['back']['url'][1]);
             }
-            //POCOR-9584: end
+            //POCOR-9594-7: end
             return;
         }
 
@@ -586,7 +594,9 @@ class ImportBehavior extends Behavior
                 $tempRow = $tempRow->getArrayCopy();
 
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
+
                 if (!isset($tempRow['entity'])) {
+                    
                     $tableEntity = $activeModel->newEntity([]);
                 } else {
                     if(!isset($tempRow['institution_class_id']) && $activeModel->getAlias() == 'StudentAdmission') {
@@ -798,6 +808,23 @@ class ImportBehavior extends Behavior
             //   (array_merge renumbers integer keys, breaking pass param order)
             $fullEncodedParam = $request->getParam('pass')[1] ?? null;
             // Log::debug('@ImportBehavior::processImport url_before=' . json_encode($url) . ' pass=' . json_encode($request->getParam('pass')) . ' fullEncodedParam=' . json_encode($fullEncodedParam)); //[TEMP-LOG]
+            /**
+             * Custom redirect only for Locale Contents import
+            */
+          
+            if ($url['action'] === 'ImportLocaleContentsLanguage') { //POCOR-3673 start
+                $url = [
+                    'plugin' => false,
+                    'controller' => 'LocaleContents',
+                    'action' => 'ImportLocaleContentsLanguage',
+                    1 => 'results'
+                ];
+
+                if ($fullEncodedParam) {
+                    $url[1] = $fullEncodedParam;
+                }
+               return $model->controller->redirect($url); //POCOR-3673 end
+            }
             if ($fullEncodedParam) {
                 $url[1] = $fullEncodedParam;
             } else {
@@ -807,7 +834,6 @@ class ImportBehavior extends Behavior
             unset($url['?']);
             // Log::debug('@ImportBehavior::processImport url_after=' . json_encode($url)); //[TEMP-LOG]
             //POCOR-9584: end
-
             return $model->controller->redirect($url);
         };
     }
@@ -1192,6 +1218,7 @@ class ImportBehavior extends Behavior
         } else {
             $codesData = $this->excelGetCodesData($this->_table);
         }
+
         $lastColumn = -1;
         $currentRowHeight = $objPHPExcel->getActiveSheet()->getRowDimension(2)->getRowHeight();
         foreach ($codesData as $columnOrder => $modelArr) {
@@ -1372,7 +1399,12 @@ class ImportBehavior extends Behavior
     {
 
         $cellsState = [];
-        for ($col = 0; $col < $totalColumns; $col++) {
+        // Fix: PhpSpreadsheet's getCellByColumnAndRow() columns are 1-based (1 = column A).
+        // Looping from 0 checked a bogus "column 0" (which PhpSpreadsheet resolves to column Z)
+        // and never checked the real last column, so a row with data only in that last column
+        // (or a sheet where the shifted range missed the filled cells) was wrongly treated as blank
+        // and silently skipped instead of being imported or reported as failed.
+        for ($col = 1; $col <= $totalColumns; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
             $value = $cell->getValue();
             if(is_string($value)){
@@ -1420,18 +1452,35 @@ class ImportBehavior extends Behavior
         return $header === $cellsValue;
     }
 
+    //POCOR-9236 Start
+    /**
+     * Model name as stored in import_mapping.model (may differ from ORM table model name).
+     */
+    protected function getImportMappingModelName(): string
+    {
+        $modelName = (string)$this->getConfig('model');
+        if ($modelName === 'ExaminationStudentSubjectResults') {
+            return 'ExaminationItemResults';
+        }
+
+        return $modelName;
+    }
+
+    /**
+     * Full import_mapping.model value, e.g. Examination.ExaminationItemResults
+     */
+    protected function getImportMappingModelKey(): string
+    {
+        return $this->getConfig('plugin') . '.' . $this->getImportMappingModelName();
+    }
+    //POCOR-9236 End
+
     public function getMapping()
     {
         $model = $this->_table;
-        //POCOR-8174
-        $modelName = $this->getConfig('model');
-        if (($this->getConfig('model')) == 'ExaminationStudentSubjectResults') {
-            $modelName = "ExaminationItemResults";
-        }
-        //POCOR-8174
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $modelName //POCOR-8174
+                $model->aliasField('model') => $this->getImportMappingModelKey(), //POCOR-9236 
             ])
             ->order($model->aliasField('order'))
             ->toArray();
@@ -1555,13 +1604,21 @@ class ImportBehavior extends Behavior
     {
         $mapping = $model->find('all')
             ->where([
-                $model->aliasField('model') => $this->getConfig('plugin') . '.' . $this->getConfig('model'),
+                $model->aliasField('model') => $this->getImportMappingModelKey(),//POCOR-9236 
                 $model->aliasField('foreign_key') . ' IN' => [self::FIELD_OPTION, self::DIRECT_TABLE, self::NON_TABLE_LIST]
             ])
             ->order($model->aliasField('order'))
             ->toArray();
         $data = new ArrayObject;
         foreach ($mapping as $row) {
+            //POCOR-9236 Marks must be free entry; dropdown lists belong on examination_grading_option_id only.
+            if ($row->column_name === 'marks' && preg_match(
+                '/^Examination\\.(ExaminationItemResults|ExaminationStudentSubjectResults)$/',
+                (string)$row->model
+            )) {
+                continue;
+            }
+            //POCOR-9236 End
             $foreignKey = $row->foreign_key;
             $lookupPlugin = $row->lookup_plugin;
             $lookupModel = $row->lookup_model;

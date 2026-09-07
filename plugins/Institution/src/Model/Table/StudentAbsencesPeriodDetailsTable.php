@@ -19,6 +19,7 @@ use Cake\Utility\Inflector;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Query;
 use InvalidArgumentException;
+use Cake\Core\Configure;
 
 class StudentAbsencesPeriodDetailsTable extends AppTable
 {
@@ -44,6 +45,16 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StudentAttendances' => ['index', 'view', 'add']
         ]);
+
+        //POCOR-9594-1 --start
+        // Attendance marking moved to this table from InstitutionStudentAbsencesTable,
+        // but the Risk trigger chain was never attached here - saving a new absence
+        // never fired a risk recalculation, so Risk > View stayed blank for students
+        // whose attendance was only ever recorded after the move.
+        if (!in_array('Risks', (array)Configure::read('School.excludedPlugins'))) {
+            $this->addBehavior('Risk.Risks');
+        }
+        //POCOR-9594-1 --end
     }
 
 //    public function validationDefault(Validator $validator): Validator
@@ -147,6 +158,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         if ($entity->absence_type_id == 0) {
             // Log::debug('[SAVE PHP] absence_type_id == 0 → DELETING record (PRESENT)');
             $this->delete($entity);
+            $this->clearNoScheduledClass($entity); //POCOR-9652: reset flag when student marked present
             $event->stopPropagation();
             // Log::debug('[SAVE PHP] Record deleted, event stopped');
             // Log::debug('========================================');
@@ -210,6 +222,7 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         // Log::debug('========================================');
 
         $this->sendStudentAbsenceAlert($entity); // POCOR-9392 commented out alerts for absence
+        $this->clearNoScheduledClass($entity); //POCOR-9652: reset flag when absence is saved
         return $entity;
     }
 
@@ -327,6 +340,26 @@ class StudentAbsencesPeriodDetailsTable extends AppTable
         // Log::debug('@StudentAbsencesPeriodDetailsTable::sendStudentAbsenceAlert() EXIT'); //[TEMP-LOG]
     }
 
+
+    //POCOR-9652: start - clear no_scheduled_class flag when attendance is marked on a previously-blocked day
+    private function clearNoScheduledClass(Entity $entity): void
+    {
+        $date = is_object($entity->date) ? $entity->date->format('Y-m-d') : (string)$entity->date;
+        // Log::debug('[TEMP-LOG] clearNoScheduledClass: START student=' . $entity->student_id . ' class=' . $entity->institution_class_id . ' date=' . $date);
+        $MarkedRecords = TableRegistry::getTableLocator()->get('Attendance.StudentAttendanceMarkedRecords');
+        $updated = $MarkedRecords->updateAll(
+            ['no_scheduled_class' => 0],
+            [
+                'institution_id'       => (int)$entity->institution_id,
+                'academic_period_id'   => (int)$entity->academic_period_id,
+                'institution_class_id' => (int)$entity->institution_class_id,
+                'date'                 => $date,
+                'no_scheduled_class'   => 1,
+            ]
+        );
+        // Log::debug('[TEMP-LOG] clearNoScheduledClass: updated=' . $updated . ' rows');
+    }
+    //POCOR-9652: end
 
     /**
      * Get a dynamic table instance with all associations.

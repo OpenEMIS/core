@@ -457,9 +457,10 @@ class StudentsTable extends ControllerActionTable
             $this->field('student_status_id', ['type' => 'readonly', 'attr' => ['value' => $entity->student_status->name]]);
 
             $period = $entity->academic_period;
+            [, $editableDateFormat] = $this->getSystemDateFormats();
             $dateOptions = [
-                'startDate' => $period->start_date->format('d-m-Y'),
-                'endDate' => $period->end_date->format('d-m-Y')
+                'startDate' => $period->start_date->format($editableDateFormat),
+                'endDate' => $period->end_date->format($editableDateFormat)
             ];
 
             $this->fields['start_date']['date_options'] = $dateOptions;
@@ -680,6 +681,16 @@ class StudentsTable extends ControllerActionTable
         return $buttons;
     }
     // End PHPOE-1897
+
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
 
     private function setupTabElements($entity)
     {
@@ -1533,11 +1544,11 @@ class StudentsTable extends ControllerActionTable
         } else if ($field == 'date_from') {
             return __('Date From');
         } else if ($field == 'modified') {
-            return __('Modified');
+            return __('Modified On');
         } else if ($field == 'modified_user_id') {
             return __('Modified By');
         } else if ($field == 'created') {
-            return __('Created');
+            return __('Created On');
         } else if ($field == 'created_user_id') {
             return __('Created By');
         } else {

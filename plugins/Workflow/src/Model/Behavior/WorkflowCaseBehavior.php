@@ -513,16 +513,8 @@ class WorkflowCaseBehavior extends Behavior
                     $filterOptions = $newEvent->result;
                 }
                 // End
-                //POCOR-7263::Start
                 $filterOptions = ['-1' => '-- ' . __('Select') . ' --'] + $filterOptions;
-                $url = $_SERVER['QUERY_STRING'];
-                $data = explode('=', $url);
-                $filterOne = $data[1];
-                $filterTwo = $data[2];
-                $firstVal = preg_replace('/\D/', '', $filterOne);
-                $selectedFilter = $firstVal;
-                //POCOR-7263::End
-               // $selectedFilter = $this->_table->queryString('filter', $filterOptions);
+                $selectedFilter = $this->_table->queryString('filter', $filterOptions);
                 $this->_table->advancedSelectOptions($filterOptions, $selectedFilter);
                 $this->_table->controller->set(compact('filterOptions', 'selectedFilter'));
                 // End
@@ -613,12 +605,15 @@ class WorkflowCaseBehavior extends Behavior
         $filter = $workflowModel->filter;
         if ($filterConfig['type'] && !empty($filter)) {
             $selectedFilter = $this->_table->ControllerAction->getVar('selectedFilter');
+            if ($selectedFilter === null || $selectedFilter === '') {
+                $selectedFilter = $this->_table->request->getQuery('filter');
+            }
 
             // Filter key
             list(, $base) = pluginSplit($filter);
             $filterKey = Inflector::underscore(Inflector::singularize($base)) . '_id';
 
-            if ($selectedFilter != -1) {
+            if ($selectedFilter != -1 && !empty($selectedFilter)) {
                 $query->where([
                     $this->_table->aliasField($filterKey) => $selectedFilter
                 ]);
@@ -1321,15 +1316,44 @@ class WorkflowCaseBehavior extends Behavior
         ];
 
         if ($isSchoolBased) {
+            //POCOR-9594-12 --start
+            // Cases > Add reaches this before the entity carries an institution_id,
+            // and the old code's only other source was the session - if that
+            // wasn't set (e.g. institution_id arrived via the pass[1] encoded
+            // queryString instead), $params['institution_id'] never got set at
+            // all, so getAssigneeList() below returned nothing and the Assignee
+            // dropdown stayed empty even with correctly-configured Workflow Steps.
+            $institutionId = null;
             if ($entity->has('institution_id')) {
-                $params['institution_id'] = $entity->institution_id;
-            } else {
+                $institutionId = $entity->institution_id;
+            }
+            if (!$institutionId && method_exists($this->_table, 'getInstitutionID')) {
+                $institutionId = $this->_table->getInstitutionID();
+            }
+            if (!$institutionId) {
+                $pass = $request->getAttribute('params')['pass'] ?? [];
+                if (isset($pass[1])) {
+                    $decoded = $this->_table->paramsDecode($pass[1]);
+                    $institutionId = $decoded['institution_id'] ?? null;
+                }
+            }
+            if (!$institutionId) {
+                $rawInstitutionId = $request->getAttribute('params')['institutionId'] ?? null;
+                if ($rawInstitutionId) {
+                    $decoded = $this->_table->paramsDecode($rawInstitutionId);
+                    $institutionId = $decoded['id'] ?? null;
+                }
+            }
+            if (!$institutionId) {
                 $session = $request->getSession();
                 if ($session->check('Institution.Institutions.id')) {
                     $institutionId = $session->read('Institution.Institutions.id');
-                    $params['institution_id'] = $institutionId;
                 }
             }
+            if ($institutionId) {
+                $params['institution_id'] = $institutionId;
+            }
+            //POCOR-9594-12 --end
         }
 
         $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');

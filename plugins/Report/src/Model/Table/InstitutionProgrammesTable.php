@@ -42,16 +42,30 @@ class InstitutionProgrammesTable extends AppTable
 		$periodId = $requestData->academic_period_id;
 		$areaId = $requestData->area_education_id;
 		$where = [];
-		if ($institution_id != 0) {
-			$where[$this->aliasField('institution_id')] = $institution_id;
+
+		$institutionIds = [];
+		if (is_object($institution_id) && isset($institution_id->_ids)) {
+			$institutionIds = array_values(array_filter((array)$institution_id->_ids, function ($id) {
+				return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+			}));
+		} elseif (is_array($institution_id) && isset($institution_id['_ids'])) {
+			$institutionIds = array_values(array_filter((array)$institution_id['_ids'], function ($id) {
+				return $id !== '' && $id !== null && $id !== '0' && $id !== 0;
+			}));
+		} elseif (!empty($institution_id) && $institution_id != 0 && $institution_id != '0') {
+			$institutionIds = [(int)$institution_id];
+		}
+
+		if (!empty($institutionIds)) {
+			$where[$this->aliasField('institution_id') . ' IN'] = $institutionIds;
 		}
 		if ($areaId != -1) {
 			$where['Institutions.area_id'] = $areaId;
 		}
 
 		$query
-			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems.AcademicPeriods'])
-			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'programmes' => 'EducationProgrammes.name', 'academic_period' => 'AcademicPeriods.name'])
+			->contain(['Institutions.Areas', 'Institutions.AreaAdministratives', 'EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems.AcademicPeriods', 'Institutions.InstitutionTypes'])
+			->select(['area_code' => 'Areas.code', 'area_name' => 'Areas.name', 'area_administrative_code' => 'AreaAdministratives.code', 'area_administrative_name' => 'AreaAdministratives.name', 'programmes' => 'EducationProgrammes.name', 'academic_period' => 'AcademicPeriods.name', 'institution_type' => 'InstitutionTypes.name'])
 			->where(['AcademicPeriods.id' => $periodId, $where]);
 	}
 
@@ -117,6 +131,12 @@ class InstitutionProgrammesTable extends AppTable
 					'field' => 'area_administrative_name',
 					'type' => 'string',
 					'label' => __('Area Administrative')
+				];
+				$newFields[] = [
+					'key' => 'InstitutionTypes.name',
+					'field' => 'institution_type',
+					'type' => 'string',
+					'label' => __('Institution Type')
 				];
 
 				//POCOR-9302 start

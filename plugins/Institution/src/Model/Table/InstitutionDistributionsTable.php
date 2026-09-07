@@ -19,6 +19,38 @@ use Cake\I18n\Date;
 class InstitutionDistributionsTable extends ControllerActionTable
 {
 
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach (['date_received'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                Log::warning("InstitutionDistributionsTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+    }
+
     /**
      * Initialize method
      *
@@ -32,7 +64,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
         $this->belongsTo('MealProgrammes', ['className' => 'Meal.MealProgrammes','foreignKey' => 'meal_programmes_id']);
         $this->belongsTo('MealStatus', ['className' => 'Meal.MealStatusTypes','foreignKey' => 'delivery_status_id']);
-        // $this->belongsTo('MealRatings', ['className' => 'Meal.MealRatings', 'foreignKey' => 'meal_rating_id']);//POCOR-7363 // Commented for POCOR-7484
+        $this->belongsTo('MealRatings', ['className' => 'Meal.MealRatings', 'foreignKey' => 'meal_rating_id']); //POCOR-7363 //POCOR-9594-8: restored — rating select had no options without this association
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->MealProgrammes = TableRegistry::getTableLocator()->get('Meal.MealProgrammes');
@@ -77,7 +109,8 @@ class InstitutionDistributionsTable extends ControllerActionTable
         ->requirePresence('meal_programmes_id')
         ->requirePresence('quantity_received')
         ->requirePresence('delivery_status_id')
-        ->requirePresence('date_received', 'create')->notEmpty('date_received');
+        ->requirePresence('date_received', 'create')->notEmptyDate('date_received')
+        ->requirePresence('meal_rating_id')->notEmptyString('meal_rating_id'); //POCOR-9594-8: rating is required
         return $validator;
         //END: POCOR-6681
     }
@@ -176,7 +209,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $extra['selectedPeriod'] = $selectedPeriod;
         $data['periodOptions'] = $periodOptions;
         $data['selectedPeriod'] = $selectedPeriod;
-        $session = $this->request->getSession();
+        //POCOR-9594-8: removed dead $session assignment — institution ID already via getInstitutionID()
         $institutionId = $this->getInstitutionID();
         $options['academid_period_id'] = $selectedPeriod;
         $options['institution_id'] = $institutionId;
@@ -202,8 +235,13 @@ class InstitutionDistributionsTable extends ControllerActionTable
         $data['levelOptions'] = $levelOptions;
         $data['selectedLevel'] = $selectedLevel;
 
-        //week
+        //POCOR-9594-8: institution_id must always be in the encoded params (pass[1])
+        // When arriving via ?institution_id=6 (no encoded string), getQueryString() returns []
+        // and re-encoding without institution_id breaks all subsequent filter links
         $queryString = $this->getQueryString();
+        if (empty($queryString['institution_id'])) {
+            $queryString['institution_id'] = $institutionId;
+        }
         $encodedQueryString = $this->paramsEncode($queryString);
         if ($selectedPeriod) {
             $programmeOptions = $this->getMealWeekOptions($selectedPeriod);
@@ -315,7 +353,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
         $this->field('comment',['type' => 'text']);
         $this->field('quantity_received');
-         $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'comment']);
+         $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'meal_rating_id', 'comment']); //POCOR-9594-8: added meal_rating_id between date and comment
     }
 
     public function onUpdateFieldAcademicPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
@@ -328,17 +366,43 @@ class InstitutionDistributionsTable extends ControllerActionTable
             //END:POCOR:6609
 
             $attr['onChangeReload'] = $selectedPeriod;
-        } else if ($action == 'edit') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'readonly';
-            $attr['value'] = $entity->academic_period_id;
-            $attr['attr']['value'] = $entity->academic_period->name;
-            $attr['onChangeReload'] = 'changeShiftOption';
         }
+        // edit: academic_period_id is hidden; virtual 'academic_period' field shows the name instead
 
         return $attr;
     }
+
+    //POCOR-9594-8 --start
+    // virtual field for displaying academic period name in view/index/edit (avoids InvalidPrimaryKeyException on null)
+    public function onGetAcademicPeriod(EventInterface $event, Entity $entity)
+    {
+        $result = $this->AcademicPeriods
+            ->find()
+            ->select(['name'])
+            ->where(['id' => $entity->academic_period_id])
+            ->first();
+        return $result ? $result->name : '';
+    }
+
+    public function onUpdateFieldAcademicPeriod(EventInterface $event, array $attr, $action, ServerRequest $request)
+    {
+        if ($action == 'add') {
+            $attr['type'] = 'hidden';
+        }
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $result = $this->AcademicPeriods
+                ->find()
+                ->select(['name'])
+                ->where(['id' => $entity->academic_period_id])
+                ->first();
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $result ? $result->name : '';
+        }
+        return $attr;
+    }
+    //POCOR-9594-8 --end
 
     public function getAcademicPeriodOptions($querystringPeriod)
     {
@@ -370,7 +434,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
 
     public function onUpdateFieldMealProgrammesId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $session = $this->request->getSession();
+        //POCOR-9594-8: removed dead $session assignment — institution ID already via getInstitutionID()
         $institutionId = $this->getInstitutionID();
         //POCOR-6434[START]
         // $institutionId = $request->data['InstitutionDistributions'];
@@ -516,7 +580,7 @@ class InstitutionDistributionsTable extends ControllerActionTable
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
         $AcademicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
         $academicPeriodId =  ($this->request->getQuery('period')) ? $this->request->getQuery('period') : $AcademicPeriod->getCurrent();
-        $session = $this->request->getSession();
+        //POCOR-9594-8: removed dead $session assignment — institution ID already via getInstitutionID()
         $institutionId  = $this->getInstitutionID();
         $MealInstitutionProgrammes = TableRegistry::getTableLocator()->get('Meal.MealInstitutionProgrammes');
         $query
@@ -530,12 +594,45 @@ class InstitutionDistributionsTable extends ControllerActionTable
             $this->aliasField('institution_id') => $institutionId
         ]);
     }
+
+    //POCOR-9594-8 --start
+    // hide academic_period_id; show virtual academic_period name field in view and edit.
+    // A real hidden input (not 'visible' => false) is used on edit so
+    // academic_period_id - a required column - still posts back with the form;
+    // 'visible' => false removes the input from the form entirely and the save
+    // then failed validation with "This field is required".
+    public function viewBeforeAction(EventInterface $event, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['visible' => false]);
+        $this->field('academic_period', ['type' => 'string']);
+        $this->setFieldOrder(['academic_period', 'meal_programmes_id', 'quantity_received', 'delivery_status_id', 'date_received', 'meal_rating_id', 'comment']);
+    }
+
+    public function editAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['type' => 'hidden']);
+        $this->field('academic_period', ['entity' => $entity, 'attr' => ['visible' => true, 'entity' => $entity]]);
+
+        $this->setFieldOrder(['academic_period', 'meal_programmes_id', 'quantity_received', 'delivery_status_id', 'date_received', 'meal_rating_id', 'comment']);
+    }
+    //POCOR-9594-8 --end
+
     //POCOR-7363 start
     public function addEditAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
     {
-		$this->field('meal_rating_id',["type"=>"select"]);
+        $this->field('meal_rating_id', ['type' => 'select']); //POCOR-9594-8: options + select=false owned by onUpdateFieldMealRatingId
         $this->setFieldOrder(['academic_period_id', 'meal_programmes_id','quantity_received','delivery_status_id','date_received', 'meal_rating_id','comment']);
+    }
 
+    //POCOR-9594-8: supply options explicitly so ControllerAction's select=false branch runs (it only checks
+    // select when options are already in $attr; auto-loaded options bypass the check and always prepend "-- Select --")
+    public function onUpdateFieldMealRatingId(EventInterface $event, array $attr, $action, $request)
+    {
+        if ($action === 'add' || $action === 'edit') {
+            $attr['options'] = $this->MealRatings->find('list')->toArray();
+            $attr['select']  = false;
+        }
+        return $attr;
     }
     //POCOR-7363 end
 }

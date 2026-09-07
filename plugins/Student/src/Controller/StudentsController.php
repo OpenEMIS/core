@@ -11,9 +11,18 @@ use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use User\Controller\SyncUserTrait; //POCOR-9590
 
 class StudentsController extends AppController
 {
+    use SyncUserTrait; //POCOR-9590
+
+    //POCOR-9590: public — also called by StudentUserTable::addSyncButton to avoid duplicating the ACL triple
+    public function syncUserPermission(): array
+    {
+        return ['Institutions', 'Students', 'add'];
+    }
+
     private $features = [
         // General
         'Identities',
@@ -386,7 +395,7 @@ class StudentsController extends AppController
         }
 
     }
-    
+
     //POCOR-9661
     /**
      * Import competency results from Student > Competencies context.
@@ -1205,6 +1214,12 @@ class StudentsController extends AppController
     public function StudentGpa()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentGpa']);
+    }
+
+    //POCOR-4259
+    public function Siblings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Siblings']);
     }
 
 }

@@ -391,8 +391,9 @@ class InstitutionTestCommitteesTable extends ControllerActionTable
     // POCOR-6171 start
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query)
     {
-        // $institutionId = $this->Session->read('Institution.Institutions.id');
-        $institutionId = $this->Session->read('Institution.Institutions.primaryKey.institution_id');
+        //POCOR-9594-13: $this->Session was never a valid property on a Table class -
+        // ->read() on null threw a fatal error on every export attempt.
+        $institutionId = $this->getInstitutionID();
         $requestQuery = $this->request->getQuery();
 
         $academicPeriod = !empty($requestQuery['period']) ? $requestQuery['period'] : $this->AcademicPeriods->getCurrent();

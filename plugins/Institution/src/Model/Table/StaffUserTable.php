@@ -398,7 +398,41 @@ class StaffUserTable extends ControllerActionTable
                     return ($context['newRecord'] && array_key_exists('academic_period_id', $context['data']));
                 }
             ])*/
-        ;
+            ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ]) //POCOR-9680
+            ->allowEmptyString('mobile_number')
+            ->add('mobile_number', 'numeric', [
+                'rule' => 'numeric',
+                'message' => 'Only numbers are allowed'
+            ]) //POCOR-9680
+            // POCOR-9793: security_users.mobile_number carries a DB-level UNIQUE index
+            // (unique_mobile). Unlike Students, two Staff accounts must not share a
+            // mobile number (confirmed requirement). Previously this field had no
+            // uniqueness check at all, so editing the Overview tab to a number already
+            // used by another account sailed past validation and crashed with an
+            // uncaught PDOException at the DB layer. Add a proper validation rule so
+            // this fails gracefully instead, consistent with how the Contacts tab
+            // already reports "This Record is already in use." for Staff.
+            ->add('mobile_number', 'ruleUniqueMobileNumber', [
+                'rule' => function ($value, $context) {
+                    if (empty($value)) {
+                        return true;
+                    }
+                    $securityUsers = TableRegistry::getTableLocator()->get('User.Users');
+                    $conditions = ['mobile_number' => $value];
+                    if (!empty($context['data']['id'])) {
+                        $conditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $context['data']['id'];
+                    }
+                    return !$securityUsers->exists($conditions);
+                },
+                'message' => 'This Record is already in use.'
+            ]);
         return $validator;
     }
 
@@ -421,7 +455,47 @@ class StaffUserTable extends ControllerActionTable
 
         $this->addTransferButton($entity, $extra);
         $this->addReleaseButton($entity, $extra);
+        $this->addSyncButton($entity, $extra); //POCOR-9590
     }
+
+    //POCOR-9590: Sync button on the staff General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        //POCOR-9590: delegate to controller when it supports the method (StaffController); fall back for InstitutionsController and others
+        $permission = method_exists($this->controller, 'syncUserPermission')
+            ? $this->controller->syncUserPermission()
+            : ['Institutions', 'Staff', 'add'];
+        if (!$this->AccessControl->check($permission)) {
+            return;
+        }
+        //POCOR-9590: institution_staff.id is a UUID — the security_user_id lives under staff_id
+        $securityUserId = $entity->staff_id ?? $entity->id;
+        if (!$this->isSyncEligibleUser($securityUserId)) {
+            return;
+        }
+        $toolbarButtons = $extra['toolbarButtons'];
+        //POCOR-9590: encode full context so syncUser can redirect back to the same view
+        $encodedParams = $this->paramsEncode([
+            'user_id'              => $securityUserId,
+            'staff_id'             => $securityUserId,
+            'institution_id'       => $this->getInstitutionID(),
+            'institution_staff_id' => $entity->id,
+        ]);
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Staff',
+            'controller' => 'Staff',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
+    }
+
+    //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
 
     private function setupTabElements($entity)
     {

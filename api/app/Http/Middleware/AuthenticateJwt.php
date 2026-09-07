@@ -9,6 +9,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
 use Illuminate\Support\Facades\Log;
+use App\Models\Api5\SecurityUsers; //POCOR-9591: status constants for account lock check
 
 // POCOR-9092 added some login
 class AuthenticateJwt
@@ -25,6 +26,15 @@ class AuthenticateJwt
                 ]);
                 return response()->json(['error' => 'Unauthorized (no user)'], 401);
             }
+
+            //POCOR-9591: start - reject locked or inactive accounts even with a valid token
+            if ($user->status === SecurityUsers::STATUS_LOCKED) {
+                return response()->json(['error' => 'Account is locked'], 401);
+            }
+            if ($user->status === SecurityUsers::STATUS_INACTIVE) {
+                return response()->json(['error' => 'Account is inactive'], 401);
+            }
+            //POCOR-9591: end
 
         } catch (TokenExpiredException $e) {
             Log::warning('AuthenticateJwt: Token expired.', [

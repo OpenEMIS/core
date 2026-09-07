@@ -26,33 +26,32 @@ class Kernel extends ConsoleKernel
                 // \Illuminate\Support\Facades\Log::debug('[WebhookScheduler] Webhook queue processor completed successfully');
             });
 
-        //POCOR-9509: alerts:check — ALERT_CHECK_DAILY=true → daily at ALERT_CHECK_DAILY_TIME, false → hourly
-        if (env('ALERT_CHECK_DAILY', true)) { //POCOR-9509
-            $schedule->command('alerts:check') //POCOR-9509: renamed from alerts:check-and-queue
-                ->dailyAt(env('ALERT_CHECK_DAILY_TIME', '02:00')) //POCOR-9509
-                ->weekdays()
-                ->withoutOverlapping(120)
-                ->runInBackground();
-        } else { //POCOR-9509: fallback — run every 10 min if daily schedule is disabled
-            $schedule->command('alerts:check')
-                ->everyTenMinutes()
-                ->withoutOverlapping(120)
-                ->runInBackground();
-        }
+        //POCOR-9719: alerts:check — fills alert_queue from rules; once a day is enough for scheduled-type alerts.
+        $schedule->command('alerts:check')
+            ->dailyAt('02:00')
+            ->weekdays()
+            ->withoutOverlapping(120)
+            ->runInBackground();
 
-        //POCOR-9509: alerts:send — ALERT_SEND_DAILY=true → daily at ALERT_SEND_DAILY_TIME; false/missing → every 10 min
-        if (env('ALERT_SEND_DAILY', false)) { //POCOR-9509: default false — event-based alerts (attendance, admission) need prompt sending
-            $schedule->command('alerts:send', ['--limit' => env('ALERT_SEND_LIMIT', 50)]) //POCOR-9509: ALERT_SEND_LIMIT=0 sends all
-                ->dailyAt(env('ALERT_SEND_DAILY_TIME', '07:00')) //POCOR-9509
-                ->weekdays()
-                ->withoutOverlapping(60)
-                ->runInBackground();
-        } else { //POCOR-9509: default — run every 10 minutes
-            $schedule->command('alerts:send', ['--limit' => env('ALERT_SEND_LIMIT', 50)]) //POCOR-9509: ALERT_SEND_LIMIT=0 sends all
-                ->everyTenMinutes()
-                ->withoutOverlapping(60)
-                ->runInBackground();
-        }
+        //POCOR-9719: alerts:send — every cron tick; delivery latency = cron cadence, no hard-coded throttle.
+        $schedule->command('alerts:send', ['--limit' => env('ALERT_SEND_LIMIT', 50)])
+            ->everyMinute()
+            ->withoutOverlapping(60)
+            ->runInBackground();
+
+        //POCOR-9768: daily sweep for staff whose institution_staff.end_date has passed with no
+        // approval workflow and no login to trigger the existing per-login cleanup — invokes the
+        // existing, already-tested CakePHP shell (Institution.Staff::removeInactiveStaffSecurityRole(),
+        // which also deactivates any duties tied to that assignment) via `exec` rather than
+        // duplicating that business logic in this codebase. withoutOverlapping() gives it the
+        // proper locking the old per-login exec() trigger never had.
+        $schedule->exec(base_path('../bin/cake') . ' InactiveRoleRemoval')
+            ->dailyAt('00:01')
+            ->withoutOverlapping(120)
+            ->runInBackground()
+            ->onFailure(function () {
+                \Illuminate\Support\Facades\Log::error('[InactiveRoleRemovalScheduler] bin/cake InactiveRoleRemoval failed');
+            });
     }
 
     /**

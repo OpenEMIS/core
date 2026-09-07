@@ -19,6 +19,11 @@ use App\Http\Requests\StudentAttendancesNoScheduledClassRequest;
 use Illuminate\Support\Facades\Log;
 use App\Exports\StudentAttendancesExport;
 use App\Exports\StudentAttendanceArchiveExport;
+use App\Http\Requests\StaffAttendancesImportTemplateRequest;//POCOR-8630
+use App\Http\Requests\StaffAttendanceImportRequest;//POCOR-8630
+use App\Http\Requests\StaffAttendancesExportRequest;//POCOR-8630
+use App\Exports\StaffAttendancesImportTemplateExport;//POCOR-8630
+use App\Exports\StaffAttendancesExport;//POCOR-8630
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -329,6 +334,57 @@ class AttendanceController extends Controller
         }
     }
 
+    //POCOR-8630 start
+    /**
+     * @OA\Get(
+     *     path="/api/v4/staff/attendance/archive",
+     *     summary="Get archived staff attendances",
+     *     description="Returns archived staff attendance records for an institution and date window, matching the Staff Attendance Archived web screen.",
+     *     tags={"Attendance"},
+     *     @OA\Parameter(name="institution_id", in="query", required=true, @OA\Schema(type="integer", example=6)),
+     *     @OA\Parameter(name="academic_period_id", in="query", required=true, @OA\Schema(type="integer", example=33)),
+     *     @OA\Parameter(name="week_id", in="query", required=true, @OA\Schema(type="integer", example=41)),
+     *     @OA\Parameter(name="week_start_day", in="query", required=true, @OA\Schema(type="string", format="date", example="2024-10-07")),
+     *     @OA\Parameter(name="week_end_day", in="query", required=true, @OA\Schema(type="string", format="date", example="2024-10-13")),
+     *     @OA\Parameter(name="day_id", in="query", required=true, @OA\Schema(type="integer", example=2)),
+     *     @OA\Parameter(name="shift_id", in="query", required=true, @OA\Schema(type="integer", example=-1)),
+     *     @OA\Parameter(name="day_date", in="query", required=true, @OA\Schema(type="string", format="date", example="2024-10-08")),
+     *     @OA\Parameter(name="own_attendance_view", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="own_attendance_edit", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="other_attendance_view", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="other_attendance_edit", in="query", @OA\Schema(type="integer", example=1)),
+     *     @OA\Response(response=200, description="Successful."),
+     *     @OA\Response(response=403, description="Unauthorized."),
+     *     @OA\Response(response=422, description="Validation error.")
+     * )
+     */
+    public function getStaffAttendancesArchive(StaffAttendanceRequest $request)
+    {
+        try {
+            $institutionId = (int) $request->input('institution_id');
+            $flags = $this->attendanceService->validateStaffAttendancePermissions(
+                $institutionId,
+                $request->all()
+            );
+
+            if ($flags === false) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            $request->merge($flags);
+            $data = $this->attendanceService->getStaffAttendancesArchive($request);
+
+            return $this->sendSuccessResponse('Staff Attendances Archive List Found', $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch Staff Attendances Archive List from DB',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Staff Attendances Archive List Not Found');
+        }
+    }
+    //POCOR-8630 end
     
     /**
      * @OA\Get(
@@ -2114,7 +2170,6 @@ class AttendanceController extends Controller
      *                             type="object",
      *                             @OA\Property(property="id", type="integer", example=12026),
      *                             @OA\Property(property="username", type="string", example="1611035663"),
-     *                             @OA\Property(property="password", type="string", example="$2y$10$g2iBADn0H/kqBwsHkf66xOgJIBDRLHN396FTdcSr/VIFiib4OPjzy"),
      *                             @OA\Property(property="openemis_no", type="string", example="1611035663"),
      *                             @OA\Property(property="first_name", type="string", example="Adi"),
      *                             @OA\Property(property="middle_name", type="string", nullable=true, example=""),
@@ -2133,7 +2188,6 @@ class AttendanceController extends Controller
      *                             @OA\Property(property="identity_type_id", type="integer", example=162),
      *                             @OA\Property(property="identity_number", type="string", example="1302042293"),
      *                             @OA\Property(property="external_reference", type="string", nullable=true, example=null),
-     *                             @OA\Property(property="super_admin", type="boolean", example=0),
      *                             @OA\Property(property="status", type="integer", example=1),
      *                             @OA\Property(property="last_login", type="string", format="date-time", nullable=true, example=null),
      *                             @OA\Property(property="failed_logins", type="integer", example=0),
@@ -2307,4 +2361,240 @@ class AttendanceController extends Controller
             return $this->sendErrorResponse('Staff Attendances Details Not Found');
         }
     }
+
+    //POCOR-8630 STARTS
+    /**
+     * @OA\Get(
+     *     path="/api/v4/staff/attendance/export",
+     *     summary="Export staff attendance records",
+     *     description="Export staff attendance records as an Excel workbook with one sheet per month in the academic period.",
+     *     tags={"Attendance"},
+     *     @OA\Parameter(
+     *         name="institution_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="The ID of the institution"
+     *     ),
+     *     @OA\Parameter(
+     *         name="academic_period_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="The ID of the academic period"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error."
+     *     )
+     * )
+     */
+    public function getStaffAttendancesExport(StaffAttendancesExportRequest $request)
+    {
+        try {
+            $institutionId = (int) $request->input('institution_id');
+
+            $checkPermission = checkPermission(
+                ['Institutions', 'StaffAttendances', 'excel'],
+                ['institution_id' => $institutionId]
+            );
+
+            if (!$checkPermission) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            $data = $this->attendanceService->getStaffAttendancesExport($request->all());
+
+            $fileName = 'StaffAttendances_' . date('Ymd\THis') . '.xlsx';
+            $spreadsheet = (new StaffAttendancesExport($data))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'staff_attendance_export_');
+            $writer->save($tempFile);
+
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to export staff attendances from DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to export staff attendances from DB.');
+        }
+    }
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/v4/staff/attendance/import-template",
+     *     summary="Download staff attendance import template",
+     *     description="Generate and download the staff attendance import Excel template for a specific institution.",
+     *     tags={"Attendance"},
+     *     @OA\Parameter(
+     *         name="institution_id",
+     *         in="query",
+     *         required=true,
+     *         @OA\Schema(type="integer"),
+     *         description="The ID of the institution"
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful.",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Successful."),
+     *             @OA\Property(property="data", type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized."
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error."
+     *     )
+     * )
+     */
+    public function getStaffAttendancesImportTemplate(StaffAttendancesImportTemplateRequest $request)
+    {
+        try {
+            $institutionId = (int) $request->input('institution_id');
+
+            $checkPermission = checkPermission(
+                ['Institutions', 'ImportStaffAttendances', 'template'],
+                ['institution_id' => $institutionId]
+            );
+
+            if (!$checkPermission) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            $templateData = $this->attendanceService->getStaffAttendancesImportTemplateData($institutionId);
+
+            $fileName = 'OpenEMIS_Core_Import_Institution_Staff_Attendances_Template.xlsx';
+            $spreadsheet = (new StaffAttendancesImportTemplateExport($templateData))->build();
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $tempFile = tempnam(sys_get_temp_dir(), 'staff_attendance_template_');
+            $writer->save($tempFile);
+
+            return response()->download($tempFile, $fileName, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to fetch staff attendances import template data from DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+            return $this->sendErrorResponse('Failed to fetch staff attendances import template data from DB.');
+        }
+    }
+    /**
+     * @OA\Post(
+     *     path="/api/v4/staff/attendance/import",
+     *     summary="Import staff attendance records",
+     *     description="Import staff attendance records from an Excel file.",
+     *     tags={"Attendance"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 type="object",
+     *                 required={"file", "institution_id"},
+     *                 @OA\Property(
+     *                     property="file",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="The Excel file containing staff attendance records"
+     *                 ),
+     *                 @OA\Property(
+     *                     property="institution_id",
+     *                     type="integer",
+     *                     example=6
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful."
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Unsuccessful."
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized."
+     *     )
+     * )
+     */
+    public function staffAttendancesImport(StaffAttendanceImportRequest $request)
+    {
+        try {
+            $institutionId = (int) $request->input('institution_id');
+
+            $checkPermission = checkPermission(
+                ['Institutions', 'ImportStaffAttendances', 'add'],
+                ['institution_id' => $institutionId]
+            );
+
+            if (!$checkPermission) {
+                return $this->sendAuthorizationErrorResponse();
+            }
+
+            $data = $this->attendanceService->staffAttendancesImport($request->all());
+
+            if (!is_array($data)) {
+                return $this->sendErrorResponse(
+                    $this->getStaffAttendanceImportErrorMessage((int) $data)
+                );
+            }
+
+            return $this->sendSuccessResponse('Staff attendance imported.', $data);
+        } catch (\Exception $e) {
+            Log::error(
+                'Failed to import staff attendances in DB.',
+                ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]
+            );
+
+            return $this->sendErrorResponse('Failed to import staff attendances in DB.');
+        }
+    }
+
+    /**
+     * @param int $code
+     * @return string
+     */
+    private function getStaffAttendanceImportErrorMessage(int $code): string
+    {
+        $messages = [
+            1 => 'Invalid file extension.',
+            2 => 'Header is not present.',
+            3 => 'Imported file is empty.',
+            4 => 'Not a valid heading.',
+            5 => 'Institution not found.',
+            7 => 'Uploaded file exceeds maximum no of records limit ('
+                . config('constantvalues.importExcelRules.maxRows') . ').',
+        ];
+
+        return $messages[$code] ?? 'Staff attendance not imported.';
+    }
+
+    //POCOR-8630 ENDS
 }

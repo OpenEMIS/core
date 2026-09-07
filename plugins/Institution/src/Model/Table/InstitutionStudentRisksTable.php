@@ -44,6 +44,12 @@ class InstitutionStudentRisksTable extends ControllerActionTable
         // student absence and attendance
         $events['Model.InstitutionStudentAbsences.afterSave'] = 'afterSaveOrDelete';
         $events['Model.InstitutionStudentAbsences.afterDelete'] = 'afterSaveOrDelete';
+        //POCOR-9594-1 --start
+        // Attendance now saves through StudentAbsencesPeriodDetailsTable - without
+        // this, new attendance records never reached afterSaveOrDelete() at all.
+        $events['Model.StudentAbsencesPeriodDetails.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.StudentAbsencesPeriodDetails.afterDelete'] = 'afterSaveOrDelete';
+        //POCOR-9594-1 --end
 
         // student behaviour
         $events['Model.StudentBehaviours.afterSave'] = 'afterSaveOrDelete';
@@ -309,6 +315,17 @@ class InstitutionStudentRisksTable extends ControllerActionTable
             if (in_array($criteriaModel, $consolidatedModel)) {
                 $criteriaModel = 'Institution.Students';
             }
+
+            //POCOR-9594-1 --start
+            // The criteria registry (Risk.Risks::$criteriaTypes) and
+            // institutionStudentRiskCalculateRiskValue() are both still keyed to
+            // the old model name - remap here rather than touch that registry, so
+            // both the old and new attendance tables resolve to the same criteria
+            // lookup and calculation logic.
+            if ($criteriaModel === 'Institution.StudentAbsencesPeriodDetails') {
+                $criteriaModel = 'Institution.InstitutionStudentAbsences';
+            }
+            //POCOR-9594-1 --end
 
             $RiskCriterias = TableRegistry::getTableLocator()->get('Risk.RiskCriterias');
             $criteriaTable = TableRegistry::getTableLocator()->get($criteriaModel);

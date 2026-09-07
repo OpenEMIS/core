@@ -22,8 +22,14 @@ class ImportResultsTable extends AppTable
             'model' => 'ExaminationStudentSubjectResults',
             'backUrl' => ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamResults']
         ]);
-
-        $this->addBehavior('ControllerAction.FileUpload');
+        
+        // Fix: Removed - same issue as ImportUsersTable (Directory plugin). ControllerAction.FileUpload
+        // requires an unrelated 'file_content' field that is never set to allowEmpty here, so it always
+        // injected a spurious "File attachment is required" error on every submission of this form
+        // (which only ever posts 'select_file', handled entirely by the Import.Import behavior above).
+        // That extra error made ImportBehavior::addBeforeSave() think the entity was invalid and
+        // short-circuit before ever processing the uploaded rows, so exam results import would always
+        // fail with a generic "select a file to upload" error instead of reaching the Import Results screen.
     }
 
     public function implementedEvents(): array
@@ -86,12 +92,12 @@ class ImportResultsTable extends AppTable
             ->order($order);
         
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 4;
-        $data[$columnOrder]['data'][] = [ __('Examination Id'), $translatedReadableCol, __('Code'), $translatedCol];
+        $data[$columnOrder]['lookupColumn'] = 3;
+        $data[$columnOrder]['data'][] = [ $translatedReadableCol, __('Code'), $translatedCol];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
-                    $row->_matchingData[$Examinations->getAlias()]->id,
+                    //$row->_matchingData[$Examinations->getAlias()]->id,
                     $row->_matchingData[$lookedUpTable->getAlias()]->name,
                     $row->_matchingData[$lookedUpTable->getAlias()]->code,
                     $row->_matchingData[$lookedUpTable->getAlias()]->{$lookupColumn}
@@ -128,7 +134,7 @@ class ImportResultsTable extends AppTable
     {
         $lookedUpTable = TableRegistry::getTableLocator()->get($lookupPlugin . '.' . $lookupModel);
         $ExaminationGradingTypes = TableRegistry::getTableLocator()->get('Examination.ExaminationGradingTypes');
-        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $ExaminationGradingTypes->aliasField('code'), $ExaminationGradingTypes->aliasField('name')];
+        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $ExaminationGradingTypes->aliasField('code'), $ExaminationGradingTypes->aliasField('name'), $ExaminationGradingTypes->aliasField('id')];
         $order = [$ExaminationGradingTypes->aliasField('name'), $lookupModel.'.order'];
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
@@ -136,15 +142,17 @@ class ImportResultsTable extends AppTable
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 3;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading Type')];
+        $data[$columnOrder]['lookupColumn'] = 4;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading ID'),  __('Grading Type'),__('Grading Type Id')]; //POCOR-9236
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
                     $row->code,
+                    $row->{$lookupColumn}, //POCOR-9236
                     $row->{$lookupColumn},
-                    $row->_matchingData[$ExaminationGradingTypes->getAlias()]->name
+                    $row->_matchingData[$ExaminationGradingTypes->getAlias()]->name,
+                    $row->_matchingData[$ExaminationGradingTypes->getAlias()]->id
                 ];
             }
         }

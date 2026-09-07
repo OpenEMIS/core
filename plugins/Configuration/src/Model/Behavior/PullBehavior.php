@@ -267,7 +267,8 @@ class PullBehavior extends Behavior
     		$queryString['identities'] = [
 	    		[
 	    			'identity_type_id' => $queryString['identity_type_id'],
-	    			'number' => $queryString['identity_number']
+	    			'number' => $queryString['identity_number'],
+	    			'preferred' => 1 //POCOR-9590: mark as preferred so the per-row Status badge can match the active source
 	    		]
 	    	];
     	}

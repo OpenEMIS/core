@@ -240,8 +240,20 @@ class StudentUserTable extends ControllerActionTable
             ->add('identity_number', 'ruleCheckUniqueIdentityNumber', [
                 'rule' => ['checkUniqueIdentityNumber'],
                 'on' => 'create'
-            ])//POCOR-5924 ends
-        ;
+            ])
+            ->allowEmptyString('email')
+            ->add('email', 'validEmailCustom', [
+                'rule' => ['checkEmailValidation'],
+                'message' => 'Please enter a valid email',
+                'on' => function ($context) {
+                    return !empty($context['data']['email']);
+                }
+            ])//POCOR-9680
+            ->allowEmptyString('mobile_number')
+            ->add('mobile_number', 'numeric', [
+                'rule' => 'numeric',
+                'message' => 'Only numbers are allowed'
+            ]); //POCOR-9680
         return $validator;
     }
 
@@ -549,6 +561,29 @@ class StudentUserTable extends ControllerActionTable
                 return $this->controller->redirect($url);
             }
         }
+
+        //POCOR-9590: drift detection now lives in UserBehavior::beforeSave (1→2 on dirty general field). Removed older reset-to-0 rule which contradicted the 3-state model.
+
+        // POCOR-9793: security_users.mobile_number carries a DB-level UNIQUE index
+        // (unique_mobile), used for account identification/authentication. Students may
+        // legitimately share a number with a family member (e.g. siblings using a
+        // parent's phone) - the validator for this field only checks it's numeric, so
+        // editing the Overview tab to a number already used by another account used to
+        // sail past validation and crash with an uncaught PDOException at the DB layer.
+        // Mirror the same skip-and-allow behaviour already applied on the Add Student
+        // wizard (InstitutionsController::saveSecurityUser): if the submitted
+        // mobile_number collides with a different account, drop it from this save so the
+        // rest of the record still saves - the number itself is still recorded via the
+        // Contacts tab regardless.
+        if ($entity->isDirty('mobile_number') && !empty($entity->mobile_number)) {
+            $conditions = ['mobile_number' => $entity->mobile_number];
+            if (!$entity->isNew()) {
+                $conditions[$this->aliasField($this->getPrimaryKey()) . ' !='] = $entity->id;
+            }
+            if ($this->exists($conditions)) {
+                $entity->unset('mobile_number');
+            }
+        }
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)
@@ -599,6 +634,7 @@ class StudentUserTable extends ControllerActionTable
     private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
     {
         $toolbarButtons = $extra['toolbarButtons'];
+        $this->addSyncButton($entity, $extra);
         $toolbarButtons['back']['url']['action'] = 'Students';
 
         // Export execute permission.
@@ -608,6 +644,7 @@ class StudentUserTable extends ControllerActionTable
             }
         }
         $status_can_be_changed = $this->checkStatusCanBeChanged($extra); //        POCOR-8003 refactured
+        
         if ($status_can_be_changed) {
             $this->addPromoteButton($entity, $extra);
             $this->addTransferButton($entity, $extra);
@@ -663,6 +700,7 @@ class StudentUserTable extends ControllerActionTable
         ]);
 
     }
+
 
     //POCOR-9393
     public function studentsAfterSave(EventInterface $event)
@@ -1435,6 +1473,48 @@ class StudentUserTable extends ControllerActionTable
             //End
         }
     }
+
+    //POCOR-9590: Sync button on the student General view toolbar — visible only when user has a preferred identity matching the active external data source's identity_type_id
+    private function addSyncButton(Entity $entity, ArrayObject $extra)
+    {
+        //POCOR-9590: delegate to controller when it supports the method (StudentsController); fall back for InstitutionsController and others
+        $permission = method_exists($this->controller, 'syncUserPermission')
+            ? $this->controller->syncUserPermission()
+            : ['Institutions', 'Students', 'add'];
+        if (!$this->AccessControl->check($permission)) {
+            return;
+        }
+        //POCOR-9590: institution_students.id is a UUID — the security_user_id lives under student_id
+        $securityUserId = $entity->student_id ?? $entity->id;
+        if (!$this->isSyncEligibleUser($securityUserId)) {
+            return; //POCOR-9590: hide button for Local users (no preferred external identity, or no active source)
+        }
+
+        $toolbarButtons = $extra['toolbarButtons'];
+
+        //POCOR-9590: encode full context (user + institution + institution_student) so syncUser can redirect back to the same view
+        $encodedParams = $this->paramsEncode([
+            'user_id'                => $securityUserId,
+            'student_id'             => $securityUserId,
+            'institution_id'         => $this->getInstitutionID(),
+            'institution_student_id' => $entity->id,
+        ]);
+
+        $syncButton = $toolbarButtons['back'];
+        $syncButton['type']          = 'button';
+        $syncButton['label']         = '<i class="fa fa-refresh"></i>';
+        $syncButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+        $syncButton['attr']['title'] = __('Sync');
+        $syncButton['url'] = [
+            'plugin'     => 'Student',
+            'controller' => 'Students',
+            'action'     => 'SyncUser',
+            0            => $encodedParams,
+        ];
+        $toolbarButtons['sync'] = $syncButton;
+    }
+
+    //POCOR-9590: isSyncEligibleUser + getActiveExternalSourceIdentityTypeId moved to User\Model\Behavior\UserBehavior
 
     // needs to migrate
 

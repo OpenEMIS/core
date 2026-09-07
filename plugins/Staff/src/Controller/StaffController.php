@@ -11,9 +11,18 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
 use Cake\Utility\Inflector;
+use User\Controller\SyncUserTrait; //POCOR-9590
 
 class StaffController extends AppController
 {
+    use SyncUserTrait; //POCOR-9590
+
+    //POCOR-9590: public — also called by StaffUserTable::addSyncButton to avoid duplicating the ACL triple
+    public function syncUserPermission(): array
+    {
+        return ['Institutions', 'Staff', 'add'];
+    }
+
     const APPROVED = 1;
     private $features = [
         // General
@@ -597,30 +606,39 @@ class StaffController extends AppController
             return;
         }
         parent::beforeFilter($event);
-
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
-
         //$institutionName = $session->read('Institution.Institutions.name');
         $institutionId = $this->getInstitutionID();
         $staffId = $this->getStaffID();
 
         $this->Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
-        $activeInstitution = $this->Institutions->get($institutionId);
-        $institutionName = $activeInstitution->name;
-        $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId ,'institution_id' => $institutionId]);
-        $this->Navigation->addCrumb($institutionName,
-            ['plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'dashboard',
-                'institutionId' => $institutionId,
-                $encodedInstitutionId]);
-        $this->Navigation->addCrumb('Staff',
-            ['plugin' => 'Institution',
-                'institutionId' => $institutionId,
-                'controller' => 'Institutions',
-                'action' => 'Staff',
-                'index',
-                $encodedInstitutionId]);
+        //POCOR-9715
+        if (!empty($institutionId)) {
+            $activeInstitution = $this->Institutions->get($institutionId);
+            $institutionName = $activeInstitution->name;
+            $encodedInstitutionId = $this->paramsEncode(['id' => $institutionId, 'institution_id' => $institutionId]);
+            $this->Navigation->addCrumb($institutionName,
+                ['plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'dashboard',
+                    'institutionId' => $institutionId,
+                    $encodedInstitutionId]);
+            $this->Navigation->addCrumb('Staff',
+                ['plugin' => 'Institution',
+                    'institutionId' => $institutionId,
+                    'controller' => 'Institutions',
+                    'action' => 'Staff',
+                    'index',
+                    $encodedInstitutionId]);
+        }
+        //POCOR-9715
+        //POCOR-9718: guard against NULL institution_id. Without this, any internal redirect that
+        //lands on /Staff/Staff without an encoded pass[1] token crashes with InvalidPrimaryKeyException
+        //(seen after a successful save to Health/SpecialNeeds Add — the post-save redirect doesn't
+        //carry the full encoded context, falls through onInitialize's bare-redirect, ends up here).
+        if (empty($institutionId)) {
+            return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+        }
         $action = $this->request->getAttribute('params')['action'];
         $header = __('Staff');
 
@@ -640,7 +658,7 @@ class StaffController extends AppController
                 $header = $name . ' - ' . __('Overview');
                 //$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
                 $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view',
-                 $this->ControllerAction->paramsEncode(['id' => $id,'institution_id' => $institutionId,'staff_id' => $id])]);
+                $this->ControllerAction->paramsEncode(['id' => $id,'institution_id' => $institutionId,'staff_id' => $id])]);
             }
         }
         $this->set('contentHeader', $header);
@@ -1138,9 +1156,17 @@ class StaffController extends AppController
         if ($pass[0] == 'template'){
             return true;
         }
-        if (in_array($pass[0], ['add', 'results', 'downloadFailed', 'downloadPassed']) //POCOR-9584: results + downloadFailed have no staff_id in URL
+        //POCOR-9718: scope the 'add' skip to context-less /add URLs only.
+        //Skip onInitialize ONLY when there is no encoded context token at pass[1].
+        //ImportStaff/add (no token) → still skips, original POCOR-9584 intent preserved.
+        //HealthAllergies/add/<encoded>, SpecialNeedsReferrals/add/<encoded>, etc. → has token,
+        //runs onInitialize so the staff/institution context is wired up.
+        if ($pass[0] === 'add' && empty($pass[1])
+            && $plugin === 'Staff' && $controller === 'Staff') {
+            return true;
+        }
+        if (in_array($pass[0], ['results', 'downloadFailed', 'downloadPassed']) //POCOR-9584: results + downloadFailed have no staff_id in URL
             && ($plugin == 'Staff') && ($controller == 'Staff')) {
-
             return true;
         }
 

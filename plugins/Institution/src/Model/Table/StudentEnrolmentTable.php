@@ -67,12 +67,27 @@ class StudentEnrolmentTable extends ControllerActionTable
             'Dashboard' => ['index'],
             'Students' => ['index', 'add']
         ]);
-
         $this->toggle('add', true);
         $this->addBehavior('Institution.InstitutionTab',
             //['appliedAction' => ['StudentAdmission' => ['id']]
             ['appliedAction' => ['StudentEnrolment' => ['id']]
         ]);
+
+        $this->addBehavior('CustomField.Record', [
+               'model' => 'Student.Students',
+               'behavior' => 'Student',
+               'fieldKey' => 'student_custom_field_id',
+               'tableColumnKey' => 'student_custom_table_column_id',
+               'tableRowKey' => 'student_custom_table_row_id',
+               'fieldClass' => ['className' => 'StudentCustomField.StudentCustomFields'],
+               'formKey' => 'student_custom_form_id',
+               'filterKey' => 'student_custom_filter_id',
+               'formFieldClass' => ['className' => 'StudentCustomField.StudentCustomFormsFields'],
+               // 'formFilterClass' => ['className' => 'StudentCustomField.StudentCustomFormsFilters'],
+               'recordKey' => 'student_id',
+                'fieldValueClass' => ['className' => 'StudentCustomField.StudentCustomFieldValues', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true],
+               'tableCellClass' => ['className' => 'StudentCustomField.StudentCustomTableCells', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true, 'saveStrategy' => 'replace']
+           ]);
     }
 
     public function validationDefault(Validator $validator): Validator
@@ -141,11 +156,10 @@ class StudentEnrolmentTable extends ControllerActionTable
                     'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
                     'on' => function ($context) {
                         //POCOR-6172-HINDOL[START]
-                        $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
-                        $multipleInstitutions = $ConfigItems->value('multiple_institutions_student_enrollment');
-                        $multipleInstitutions = ($multipleInstitutions == "1") ? true : false ;
-                        // $this->log($multipleInstitutions);
-                        if ($multipleInstitutions) return false;
+                        //POCOR-9355: The multi-institution / multi-programme decision matrix is now fully
+                        // resolved inside ValidationBehavior::studentNotEnrolledInAnyInstitutionAndSameEducationSystem
+                        // and StudentsTable::validateEnrolledInAnyInstitution, so this rule always
+                        // runs and lets that shared logic decide allow/reject for every combination.
                         //POCOR-6172-HINDOL[END]
                         if (array_key_exists('institution_id', $context['data']) && !empty($context['data']['institution_id']) && array_key_exists('education_grade_id', $context['data']) && !empty($context['data']['education_grade_id'])) {
                             $Institutions = self::getDynamicTableInstance('Institution.Institutions');
@@ -374,14 +388,30 @@ class StudentEnrolmentTable extends ControllerActionTable
             // If already enrolled, reuse the record
             $student = $existingStudent;
         } else {
+            //POCOR-9737[START]
+            $startDate = $entity->start_date;
+            $endDate = $entity->end_date;
+            if ((empty($startDate) || empty($endDate)) && !empty($entity->academic_period_id)
+                && $this->AcademicPeriods->exists([$this->AcademicPeriods->getPrimaryKey() => $entity->academic_period_id])
+            ) {
+                $period = $this->AcademicPeriods->get($entity->academic_period_id);
+                if (empty($startDate) && !empty($period->start_date)) {
+                    $startDate = $period->start_date;
+                }
+                if (empty($endDate) && !empty($period->end_date)) {
+                    $endDate = $period->end_date;
+                }
+            }
+            //POCOR-9737[END]
+
             // Create new enrolment (PENDING if available for workflow)
             $incomingStudent = [
                 'student_status_id' => $statusId,
                 'student_id' => $entity->student_id,
                 'education_grade_id' => $entity->education_grade_id,
                 'academic_period_id' => $entity->academic_period_id,
-                'start_date' => $entity->start_date,
-                'end_date' => $entity->end_date,
+                'start_date' => $startDate, // POCOR-9737
+                'end_date' => $endDate, // POCOR-9737
                 'institution_id' => $entity->institution_id
             ];
 
@@ -831,6 +861,16 @@ class StudentEnrolmentTable extends ControllerActionTable
         return $event->getSubject()->HtmlField->link($value, $url);
     }
     //POCOR-7738 end
+    private function getSystemDateFormats(): array
+    {
+        $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+        $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+        // bootstrap-datepicker cannot emit ordinals; parse/format without "S" (strip legacy "31st" input too)
+        $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+
+        return [$systemDateFormat, $editableDateFormat];
+    }
+
     public function onUpdateFieldStartDate(EventInterface $event, array $attr, $action, $request)
     {
         if ($action == 'edit') {
@@ -840,10 +880,11 @@ class StudentEnrolmentTable extends ControllerActionTable
             $periodStartDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
             $periodEndDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
 
+            [, $editableDateFormat] = $this->getSystemDateFormats();
             $attr['type'] = 'date';
             $attr['date_options'] = [
-                'startDate' => $periodStartDate->format('d-m-Y'),
-                'endDate' => $periodEndDate->format('d-m-Y'),
+                'startDate' => $periodStartDate->format($editableDateFormat),
+                'endDate' => $periodEndDate->format($editableDateFormat),
                 'todayBtn' => false
             ];
             return $attr;
@@ -884,6 +925,35 @@ class StudentEnrolmentTable extends ControllerActionTable
 
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options)
     {
+        foreach (['start_date', 'end_date'] as $field) {
+            if (!array_key_exists($field, (array) $data) || empty($data[$field])) {
+                continue;
+            }
+
+            $rawValue = $data[$field];
+            if (!is_string($rawValue) || preg_match('/^\d{4}-\d{2}-\d{2}$/', $rawValue)) {
+                continue;
+            }
+
+            $ConfigItems = TableRegistry::getTableLocator()->get('Configuration.ConfigItems');
+            $systemDateFormat = $ConfigItems->value('date_format') ?: 'd-m-Y';
+            $editableDateFormat = preg_replace('/\s+/', ' ', trim(str_replace('S', '', $systemDateFormat))) ?: 'd-m-Y';
+            $normalized = preg_replace('/(\d+)(st|nd|rd|th)\b/i', '$1', $rawValue);
+
+            try {
+                try {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($editableDateFormat, $normalized);
+                } catch (\Exception $e) {
+                    $date = \Cake\Chronos\Chronos::createFromFormat($systemDateFormat, $rawValue);
+                }
+                if ($date !== false && $date !== null) {
+                    $data[$field] = $date->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                \Cake\Log\Log::warning("StudentEnrolmentTable: Invalid date '{$rawValue}' for field '{$field}' with format '{$systemDateFormat}'");
+            }
+        }
+
         //this is meant to force gender_id validation
         if ($data->offsetExists('student_id') && !empty($data['student_id'])) {
             if ($this->Users->exists([$this->Users->getPrimaryKey() => $data['student_id']])) {

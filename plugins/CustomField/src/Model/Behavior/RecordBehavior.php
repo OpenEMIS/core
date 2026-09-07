@@ -119,11 +119,28 @@ class RecordBehavior extends Behavior
             $model->associations()->remove($associationName);
         }
 
-        $model->hasMany('CustomFieldValues', $this->getConfig('fieldValueClass'));
+        // POCOR-9692 starts: StudentEnrolment's own primary key is the enrolment record's
+        // id, not the student's id (unlike Student.Students, whose id IS the student id).
+        // hasMany defaults to joining on the parent's primary key, so without pointing
+        // bindingKey at the 'student_id' column (already named in this table's own
+        // 'recordKey' config), CustomFieldValues/CustomTableCells never match the right
+        // rows — fields render but saved values never show. Scoped to this one alias only.
+        $fieldValueAssocConfig = $this->getConfig('fieldValueClass');
+        $tableCellAssocConfig = $this->getConfig('tableCellClass');
+        $recordKey = $this->getConfig('recordKey');
+        //POCOR-9692
+        if ($model->getAlias() == 'StudentEnrolment' && !empty($recordKey) && $recordKey !== $model->getPrimaryKey()) {
+            $fieldValueAssocConfig['bindingKey'] = $recordKey;
+            if (!is_null($tableCellAssocConfig)) {
+                $tableCellAssocConfig['bindingKey'] = $recordKey;
+            }
+        } //POCOR-9692
+
+        $model->hasMany('CustomFieldValues', $fieldValueAssocConfig);
 
         $this->CustomFieldValues = $model->CustomFieldValues;
-        if (!is_null($this->getConfig('tableCellClass'))) {
-            $model->hasMany('CustomTableCells', $this->getConfig('tableCellClass'));
+        if (!is_null($tableCellAssocConfig)) {
+            $model->hasMany('CustomTableCells', $tableCellAssocConfig);
             $this->CustomTableCells = $model->CustomTableCells;
         }
         $this->firstTabName = null;
@@ -1171,6 +1188,7 @@ class RecordBehavior extends Behavior
     public function getCustomFieldQuery($entity, $params = [])
     {
         $query = null;
+        $customFormIds = []; //POCOR-9692
         $withContain = $params['withContain'] ?? true;
         $generalOnly = $params['generalOnly'] ?? false;
         // For Institution Survey
@@ -1189,6 +1207,9 @@ class RecordBehavior extends Behavior
             if (empty($model)) {
                 $model =  $this->_table->getRegistryAlias();
             } //END
+            if($this->_table->getRegistryAlias() === 'Institution.StudentEnrolment'){ //POCOR-9692
+                 $model = 'Student > Registrations';
+            }
             $where = [$this->CustomModules->aliasField('model') => $model];
             $results = $this->CustomModules
                 ->find('all')
@@ -1247,56 +1268,72 @@ class RecordBehavior extends Behavior
             if($model == 'Institution.StudentAdmission' && !empty($customFormIds)){
                 $customFormIds = $this->getcustomFormIdByStudentFormFilters($customFormIds, $entity, $moduleId);
             }//POCOR-8434 ends
+        }
 
-            if (!empty($customFormIds)) {
+        // POCOR-9692 starts: fallback for Pending Enrolment (Institution.StudentEnrolment) and
+        // Student Admission (Institution.StudentAdmission) — both need the 'Student .
+        if (empty($customFormIds) && $this->getConfig('behavior') == 'Student' && in_array($this->_table->getRegistryAlias(), ['Institution.StudentEnrolment', 'Institution.StudentAdmission'], true)) { //POCOR-9692
+            $registrationModule = $this->CustomModules
+                ->find()
+                ->where([$this->CustomModules->aliasField('code') => 'Student > Registrations'])
+                ->first();
+
+            if (!empty($registrationModule)) {
+                $customFormIds = $this->CustomForms
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                    ->where([$this->CustomForms->aliasField($this->getConfig('moduleKey')) => $registrationModule->id])
+                    ->toArray();
+            }
+        }
+
+        if (!empty($customFormIds)) {
+            //POCOR-8434 starts
+            $query = $this->CustomFormsFields
+                    ->find('all')
+                    ->find('order')
+                    ->where([
+                        $this->CustomFormsFields->aliasField($this->getConfig('formKey') . ' IN') => $customFormIds
+                    ]);
+                $group = [
+                    $this->CustomFormsFields->aliasField($this->getConfig('fieldKey'))
+                ];
                 //POCOR-8434 starts
-                $query = $this->CustomFormsFields
-                        ->find('all')
-                        ->find('order')
-                        ->where([
-                            $this->CustomFormsFields->aliasField($this->getConfig('formKey') . ' IN') => $customFormIds
-                        ]);
-                    $group = [
-                        $this->CustomFormsFields->aliasField($this->getConfig('fieldKey'))
-                    ];
-                    //POCOR-8434 starts
-                    if ($model == 'Institution.StudentAdmission') {
-                        $group[] = $this->CustomFormsFields->aliasField($this->getConfig('formKey')); // POCOR-8434 add formkey condition
-                    }//POCOR-8434 ends
+                if ($model == 'Institution.StudentAdmission') {
+                    $group[] = $this->CustomFormsFields->aliasField($this->getConfig('formKey')); // POCOR-8434 add formkey condition
+                }//POCOR-8434 ends
 
-                    $query->group($group);
-                    //POCOR-8434 ends
-                    if ($withContain) {
-                    if (is_array($withContain)) {
-                        $query->contain($withContain);
-                    } else {
+                $query->group($group);
+                //POCOR-8434 ends
+                if ($withContain) {
+                if (is_array($withContain)) {
+                    $query->contain($withContain);
+                } else {
+                    $query->contain([
+                        'CustomFields.CustomFieldOptions' => function ($q) {
+                            return $q
+                                ->find('visible')
+                                ->find('order');
+                        }
+                    ]);
+
+                    if (!is_null($this->getConfig('tableColumnKey'))) {
                         $query->contain([
-                            'CustomFields.CustomFieldOptions' => function ($q) {
+                            'CustomFields.CustomTableColumns' => function ($q) {
                                 return $q
                                     ->find('visible')
                                     ->find('order');
                             }
                         ]);
+                    }
 
-                        if (!is_null($this->getConfig('tableColumnKey'))) {
-                            $query->contain([
-                                'CustomFields.CustomTableColumns' => function ($q) {
-                                    return $q
-                                        ->find('visible')
-                                        ->find('order');
-                                }
-                            ]);
-                        }
-
-                        if (!is_null($this->getConfig('tableRowKey'))) {
-                            $query->contain([
-                                'CustomFields.CustomTableRows' => function ($q) {
-                                    return $q
-                                        ->find('visible')
-                                        ->find('order');
-                                }
-                            ]);
-                        }
+                    if (!is_null($this->getConfig('tableRowKey'))) {
+                        $query->contain([
+                            'CustomFields.CustomTableRows' => function ($q) {
+                                return $q
+                                    ->find('visible')
+                                    ->find('order');
+                            }
+                        ]);
                     }
                 }
             }
@@ -1327,6 +1364,26 @@ class RecordBehavior extends Behavior
         return $customFormData;
     }//POCOR-8434 ends
 
+    // POCOR-9692: explicit value fetch for Student Admission.
+    private function mergeStudentAdmissionCustomFieldValues(array &$values, $institutionStudentAdmissionId)
+    {
+        $AdmissionCustomFieldValues = TableRegistry::getTableLocator()->get('StudentCustomField.StudentAdmissionCustomFieldValues');
+        $fieldKey = $this->getConfig('fieldKey');
+
+        $rows = $AdmissionCustomFieldValues
+            ->find()
+            ->contain(['CustomFields'])
+            ->where([$AdmissionCustomFieldValues->aliasField('institution_student_admission_id') => $institutionStudentAdmissionId])
+            ->all();
+
+        foreach ($rows as $obj) {
+            $fieldId = $obj->{$fieldKey};
+            if (!isset($values[$fieldId])) {
+                $values[$fieldId] = $obj;
+            }
+        }
+    }
+
     public function formatEntity(Entity $entity)
     {
         $model = $this->_table;
@@ -1354,6 +1411,12 @@ class RecordBehavior extends Behavior
                     $values[$fieldId] = $obj;
                 }
             }
+        }
+
+        // POCOR-9692: Student Admission's custom field values live in their own table
+        // (student_admission_custom_field_values, keyed by institution_student_admission_id
+        if ($this->_table->getRegistryAlias() === 'Institution.StudentAdmission' && !empty($id)) {
+            $this->mergeStudentAdmissionCustomFieldValues($values, $id);
         }
 
         $query = $this->getCustomFieldQuery($entity, ['withContain' => ['CustomFields']]);
@@ -1552,88 +1615,99 @@ class RecordBehavior extends Behavior
             // retrieve saved values
             $values = new ArrayObject([]);
             $cells = new ArrayObject([]);
+            
 
-            if (isset($entity->id)) {
-                $fieldKey = $this->getConfig('fieldKey');
-                $tableRowKey = $this->getConfig('tableRowKey');
-                $tableColumnKey = $this->getConfig('tableColumnKey');
+            //POCOR-9676[START]
+            $fieldKey = $this->getConfig('fieldKey');
+            $tableRowKey = $this->getConfig('tableRowKey');
+            $tableColumnKey = $this->getConfig('tableColumnKey');
 
-                if ($entity->has('custom_field_values')) {
-                    foreach ($entity->custom_field_values as $key => $obj) {
-                        if (isset($obj->id)) {
-                            $fieldId = $obj->{$fieldKey};
-                            $fieldData = ['id' => $obj->id];
+            if ($entity->has('custom_field_values')) {
+                foreach ($entity->custom_field_values as $key => $obj) {
+                    if (!isset($obj->{$fieldKey})) {
+                        continue;
+                    }
+                    // Rows without a persisted answer id must still appear on add and after validation
+                    // failures (e.g. missing Assignee), so Text/Number values are not cleared on re-render.
+                    if (!(isset($obj->id) || $entity->isNew() || $model->request->is(['post', 'put']))) {
+                        continue;
+                    }
 
-                            if ($model->request->is(['get'])) {
-                                $fieldData['text_value'] = $obj->text_value;
-                                $fieldData['number_value'] = $obj->number_value;
-                                $fieldData['decimal_value'] = $obj->decimal_value;
-                                $fieldData['textarea_value'] = $obj->textarea_value;
-                                $fieldData['date_value'] = $obj->date_value;
-                                $fieldData['time_value'] = $obj->time_value;
-                                $fieldData['file'] = $obj->file;
-                                $fieldData['file_name'] = $obj->file_name; //POCOR-9407
+                    $fieldId = $obj->{$fieldKey};
+                    $fieldData = [];
+                    if (isset($obj->id)) {
+                        $fieldData['id'] = $obj->id;
+                    }
 
-                                // logic for Initialize
-                                $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
-                                $settings = new ArrayObject([
-                                    'recordKey' => $this->getConfig('recordKey'),
-                                    'fieldKey' => $this->getConfig('fieldKey'),
-                                    'tableColumnKey' => $this->getConfig('tableColumnKey'),
-                                    'tableRowKey' => $this->getConfig('tableRowKey'),
-                                    'customValue' => $obj
-                                ]);
-                                $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
-                                if ($event->isStopped()) {
-                                    return $event->getResult();
-                                }
-                                // End
-                            } else if ($model->request->is(['post', 'put'])) {
-                                // onPost, no actions
-                                // POCOR-8352 Start
-                                $fieldData['text_value'] = $obj->text_value;
-                                $fieldData['number_value'] = $obj->number_value;
-                                $fieldData['decimal_value'] = $obj->decimal_value;
-                                $fieldData['textarea_value'] = $obj->textarea_value;
-                                $fieldData['date_value'] = $obj->date_value;
-                                $fieldData['time_value'] = $obj->time_value;
-                                $fieldData['file'] = $obj->file;
-                                $fieldData['file_name'] = $obj->file_name; //POCOR-9407
+                    if ($model->request->is(['get'])) {
+                        $fieldData['text_value'] = $obj->text_value;
+                        $fieldData['number_value'] = $obj->number_value;
+                        $fieldData['decimal_value'] = $obj->decimal_value;
+                        $fieldData['textarea_value'] = $obj->textarea_value;
+                        $fieldData['date_value'] = $obj->date_value;
+                        $fieldData['time_value'] = $obj->time_value;
+                        $fieldData['file'] = $obj->file;
+                        $fieldData['file_name'] = $obj->file_name; //POCOR-9407
 
-                                // logic for Initialize
-                                $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
-                                $settings = new ArrayObject([
-                                    'recordKey' => $this->getConfig('recordKey'),
-                                    'fieldKey' => $this->getConfig('fieldKey'),
-                                    'tableColumnKey' => $this->getConfig('tableColumnKey'),
-                                    'tableRowKey' => $this->getConfig('tableRowKey'),
-                                    'customValue' => $obj
-                                ]);
-                                $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
-                                if ($event->isStopped()) {
-                                    return $event->getResult();
-                                }
-                                // POCOR-8352 End
-                            }
-                            $values[$fieldId] = $fieldData;
+                        // logic for Initialize
+                        $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
+                        $settings = new ArrayObject([
+                            'recordKey' => $this->getConfig('recordKey'),
+                            'fieldKey' => $this->getConfig('fieldKey'),
+                            'tableColumnKey' => $this->getConfig('tableColumnKey'),
+                            'tableRowKey' => $this->getConfig('tableRowKey'),
+                            'customValue' => $obj
+                        ]);
+                        $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
+                        if ($event->isStopped()) {
+                            return $event->getResult();
                         }
-                    }
-                }
+                        // End
+                    } elseif ($model->request->is(['post', 'put'])) {
+                        // onPost, no actions
+                        // POCOR-8352 Start
+                        $fieldData['text_value'] = $obj->text_value;
+                        $fieldData['number_value'] = $obj->number_value;
+                        $fieldData['decimal_value'] = $obj->decimal_value;
+                        $fieldData['textarea_value'] = $obj->textarea_value;
+                        $fieldData['date_value'] = $obj->date_value;
+                        $fieldData['time_value'] = $obj->time_value;
+                        $fieldData['file'] = $obj->file;
+                        $fieldData['file_name'] = $obj->file_name; //POCOR-9407
 
-                if ($entity->has('custom_table_cells')) {
-                    foreach ($entity->custom_table_cells as $key => $obj) {
-                        $fieldId = $obj->{$fieldKey};
-                        $rowId = $obj->{$tableRowKey};
-                        $columnId = $obj->{$tableColumnKey};
-
-                        $cells[$fieldId][$rowId][$columnId] = [
-                            'text_value' => $obj['text_value'],
-                            'number_value' => $obj['number_value'],
-                            'decimal_value' => $obj['decimal_value']
-                        ];
+                        // logic for Initialize
+                        $fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
+                        $settings = new ArrayObject([
+                            'recordKey' => $this->getConfig('recordKey'),
+                            'fieldKey' => $this->getConfig('fieldKey'),
+                            'tableColumnKey' => $this->getConfig('tableColumnKey'),
+                            'tableRowKey' => $this->getConfig('tableRowKey'),
+                            'customValue' => $obj
+                        ]);
+                        $event = $model->dispatchEvent('Render.on'.$fieldType.'Initialize', [$entity, $settings], $model);
+                        if ($event->isStopped()) {
+                            return $event->getResult();
+                        }
+                        // POCOR-8352 End
                     }
+                    $values[$fieldId] = $fieldData;
                 }
             }
+
+            if (isset($entity->id) && $entity->has('custom_table_cells')) {
+                foreach ($entity->custom_table_cells as $key => $obj) {
+                    $fieldId = $obj->{$fieldKey};
+                    $rowId = $obj->{$tableRowKey};
+                    $columnId = $obj->{$tableColumnKey};
+
+                    $cells[$fieldId][$rowId][$columnId] = [
+                        'text_value' => $obj['text_value'],
+                        'number_value' => $obj['number_value'],
+                        'decimal_value' => $obj['decimal_value']
+                    ];
+                }
+            }
+            //POCOR-9676[END]
 
             $valuesArray = $values->getArrayCopy();
             $cellsArray = $cells->getArrayCopy();

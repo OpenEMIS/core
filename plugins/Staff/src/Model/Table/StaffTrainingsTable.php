@@ -41,8 +41,10 @@ class StaffTrainingsTable extends ControllerActionTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator = parent::validationDefault($validator);
-
+        //POCOR-9715
         return $validator
+            ->requirePresence('name', true)
+            ->notEmptyString('name', __('This field cannot be left empty'))
             ->requirePresence('staff_training_category_id')
             ->add('credit_hours', [
                 'ruleRange' => [
@@ -173,7 +175,7 @@ class StaffTrainingsTable extends ControllerActionTable
     public function beforeAction(EventInterface $event, ArrayObject $extra)
     {
         $connection = ConnectionManager::get('default');
-        $connection->execute('SET foreign_key_checks = 0');
+        //$connection->execute('SET foreign_key_checks = 0');//POCOR-9151
         $session = $this->request->getSession();
         $queryString = $this->getQueryString();
         $data['staff_id'] = $queryString['staff_id'];
@@ -204,7 +206,7 @@ class StaffTrainingsTable extends ControllerActionTable
     public function setupFields(Entity $entity)
     {
         $this->field('code');
-        $this->field('name');
+        $this->field('name', ['null' => false]); //POCOR-9715
         $this->field('description');
         $this->field('staff_training_category_id', ['type' => 'select']);
         $this->field('training_field_of_study_id', ['type' => 'select']);

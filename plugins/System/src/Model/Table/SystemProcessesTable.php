@@ -15,6 +15,7 @@ use Cake\Http\ServerRequest;
 use Cake\Http\Response;
 use Cake\Mailer\Mailer;
 use App\Model\Table\ControllerActionTable;
+use System\Model\Table\AsyncServicesAdminTable; //POCOR-9719
 
 /**
  * System Processes Table
@@ -26,8 +27,12 @@ use App\Model\Table\ControllerActionTable;
  * @author    divya.vishwakarma@dataforall.org
  * @property \Cake\ORM\Association\BelongsTo $CreatedUsers
  */
-class SystemProcessesTable extends ControllerActionTable
+//POCOR-9719: extends AsyncServicesAdminTable so breadcrumb + read-only
+//toggles (view/add/edit/remove) match the other Async Services tabs.
+class SystemProcessesTable extends AsyncServicesAdminTable
 {
+    use AsyncTabsTrait; //POCOR-9719
+
     protected $statusMap = [
         1  => 'New',
         2  => 'Running',
@@ -36,18 +41,21 @@ class SystemProcessesTable extends ControllerActionTable
         -2 => 'Error'
     ];
 
+    //POCOR-9694: humanise the page header — "Systems - SystemProcesses" → "Completed Background Tasks"
+    protected function pageTitle(): string
+    {
+        return 'Completed Background Tasks';
+    }
+
     public function initialize(array $config): void
     {
         $this->setTable('system_processes');
         parent::initialize($config);
-        $this->toggle('view', true);
-        $this->toggle('add', false);
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra)
     {
+        $this->setupAsyncTabs(); //POCOR-9719: horizontal tab bar
         $this->field('created_user_id', ['visible' => false, 'sort' => false]);
         $this->field('params',          ['visible' => false, 'sort' => true]);
         $this->field('process',         ['visible' => false, 'sort' => true]);
