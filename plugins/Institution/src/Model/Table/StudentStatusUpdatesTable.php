@@ -10,6 +10,7 @@ use Cake\Filesystem\File;
 use Cake\Filesystem\Folder;
 use Cake\ORM\TableRegistry;
 use App\Model\Table\ControllerActionTable;
+use Cake\Log\Log;
 
 class StudentStatusUpdatesTable extends ControllerActionTable
 {
@@ -128,7 +129,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
             } else {
                 $studentWithdrawRecords = $query->toArray();
             }
-            
+
             Log::write('debug', 'studentWithdrawRecords');
             Log::write('debug', $studentWithdrawRecords);
         }
