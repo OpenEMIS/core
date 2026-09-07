@@ -563,6 +563,27 @@ class StudentUserTable extends ControllerActionTable
         }
 
         //POCOR-9590: drift detection now lives in UserBehavior::beforeSave (1→2 on dirty general field). Removed older reset-to-0 rule which contradicted the 3-state model.
+
+        // POCOR-9793: security_users.mobile_number carries a DB-level UNIQUE index
+        // (unique_mobile), used for account identification/authentication. Students may
+        // legitimately share a number with a family member (e.g. siblings using a
+        // parent's phone) - the validator for this field only checks it's numeric, so
+        // editing the Overview tab to a number already used by another account used to
+        // sail past validation and crash with an uncaught PDOException at the DB layer.
+        // Mirror the same skip-and-allow behaviour already applied on the Add Student
+        // wizard (InstitutionsController::saveSecurityUser): if the submitted
+        // mobile_number collides with a different account, drop it from this save so the
+        // rest of the record still saves - the number itself is still recorded via the
+        // Contacts tab regardless.
+        if ($entity->isDirty('mobile_number') && !empty($entity->mobile_number)) {
+            $conditions = ['mobile_number' => $entity->mobile_number];
+            if (!$entity->isNew()) {
+                $conditions[$this->aliasField($this->getPrimaryKey()) . ' !='] = $entity->id;
+            }
+            if ($this->exists($conditions)) {
+                $entity->unset('mobile_number');
+            }
+        }
     }
 
     public function viewAfterAction(EventInterface $event, Entity $entity, ArrayObject $extra)

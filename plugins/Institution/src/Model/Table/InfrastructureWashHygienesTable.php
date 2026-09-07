@@ -253,7 +253,6 @@ class InfrastructureWashHygienesTable extends ControllerActionTable {
     public function addEditBeforeAction(EventInterface $event, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
-        $SanitationQuantitiesTable = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashSanitationQuantities');
 
         $this->fields['academic_period_id']['type'] = 'select';
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
@@ -268,17 +267,67 @@ class InfrastructureWashHygienesTable extends ControllerActionTable {
         $this->fields['infrastructure_wash_hygiene_education_id']['type'] = 'select';
         $this->field('infrastructure_wash_hygiene_education_id', ['attr' => ['label' => __('Hygiene Education')]]);
 
-        $this->field('infrastructure_wash_hygiene_male_functional', ['type' => 'integer','attr' => ['label' => __('Male (Functional)'), 'value' => 0]]);
+        //POCOR-9594-6 --start
+        // These fields aren't real columns on this table - the actual saved values
+        // live in InfrastructureWashHygieneQuantities, keyed by gender_id +
+        // functional. The previous code also queried the wrong table entirely
+        // (InfrastructureWashSanitationQuantities - a copy-paste leftover from the
+        // Sanitation table's version of this same method) and never used it. The
+        // hardcoded 'value' => 0 below applied unconditionally on both add and
+        // edit, so the edit form always showed 0 regardless of what was saved.
+        $HygieneQuantitiesTable = TableRegistry::getTableLocator()->get('Institution.InfrastructureWashHygieneQuantities');
+        $quantityDefaults = [
+            'infrastructure_wash_hygiene_male_functional'      => 0,
+            'infrastructure_wash_hygiene_male_nonfunctional'   => 0,
+            'infrastructure_wash_hygiene_female_functional'    => 0,
+            'infrastructure_wash_hygiene_female_nonfunctional' => 0,
+            'infrastructure_wash_hygiene_mixed_functional'     => 0,
+            'infrastructure_wash_hygiene_mixed_nonfunctional'  => 0,
+        ];
+        //POCOR-9594-6-2: the 'id' key in this app's encoded queryString is also
+        // used to carry the institution_id on Add (see e.g.
+        // InstitutionTabBehavior::fixAddDeleteRedirectURL()), and navigating here
+        // from an Edit page can carry that same encoded blob forward - so a
+        // decoded id alone doesn't reliably mean "this is the record being
+        // edited". Gate on the actual current action instead.
+        $passParams = $this->request->getAttribute('params')['pass'] ?? [];
+        if ($this->action === 'edit' && !empty($passParams[1])) {
+            $decoded = $this->paramsDecode($passParams[1]);
+            $recordId = $decoded['id'] ?? null;
+            if ($recordId) {
+                $quantities = $HygieneQuantitiesTable->find()
+                    ->where(['infrastructure_wash_hygiene_id' => $recordId])
+                    ->all();
+                foreach ($quantities as $qty) {
+                    if ($qty->gender_id == 1 && $qty->functional == 1) {
+                        $quantityDefaults['infrastructure_wash_hygiene_male_functional'] = $qty->value;
+                    } elseif ($qty->gender_id == 1 && $qty->functional == 0) {
+                        $quantityDefaults['infrastructure_wash_hygiene_male_nonfunctional'] = $qty->value;
+                    } elseif ($qty->gender_id == 2 && $qty->functional == 1) {
+                        $quantityDefaults['infrastructure_wash_hygiene_female_functional'] = $qty->value;
+                    } elseif ($qty->gender_id == 2 && $qty->functional == 0) {
+                        $quantityDefaults['infrastructure_wash_hygiene_female_nonfunctional'] = $qty->value;
+                    } elseif ($qty->gender_id == 3 && $qty->functional == 1) {
+                        $quantityDefaults['infrastructure_wash_hygiene_mixed_functional'] = $qty->value;
+                    } elseif ($qty->gender_id == 3 && $qty->functional == 0) {
+                        $quantityDefaults['infrastructure_wash_hygiene_mixed_nonfunctional'] = $qty->value;
+                    }
+                }
+            }
+        }
+        //POCOR-9594-6 --end
 
-        $this->field('infrastructure_wash_hygiene_male_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Male (Non-functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_hygiene_male_functional', ['type' => 'integer','attr' => ['label' => __('Male (Functional)'), 'value' => $quantityDefaults['infrastructure_wash_hygiene_male_functional']]]);
 
-        $this->field('infrastructure_wash_hygiene_female_functional', ['type' => 'integer','attr' => ['label' => __('Female (Functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_hygiene_male_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Male (Non-functional)'), 'value' => $quantityDefaults['infrastructure_wash_hygiene_male_nonfunctional']]]);
 
-        $this->field('infrastructure_wash_hygiene_female_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Female (Non-functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_hygiene_female_functional', ['type' => 'integer','attr' => ['label' => __('Female (Functional)'), 'value' => $quantityDefaults['infrastructure_wash_hygiene_female_functional']]]);
 
-        $this->field('infrastructure_wash_hygiene_mixed_functional', ['type' => 'integer','attr' => ['label' => __('Mixed (Functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_hygiene_female_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Female (Non-functional)'), 'value' => $quantityDefaults['infrastructure_wash_hygiene_female_nonfunctional']]]);
 
-        $this->field('infrastructure_wash_hygiene_mixed_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Mixed (Non-functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_hygiene_mixed_functional', ['type' => 'integer','attr' => ['label' => __('Mixed (Functional)'), 'value' => $quantityDefaults['infrastructure_wash_hygiene_mixed_functional']]]);
+
+        $this->field('infrastructure_wash_hygiene_mixed_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Mixed (Non-functional)'), 'value' => $quantityDefaults['infrastructure_wash_hygiene_mixed_nonfunctional']]]);
 
         $this->field('infrastructure_wash_hygiene_total_male', ['visible' => false]);
         $this->field('infrastructure_wash_hygiene_total_female', ['visible' => false]);

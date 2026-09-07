@@ -8,10 +8,13 @@ use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\Event\EventInterface;
 use Cake\Validation\Validator;
+use Cake\ORM\RulesChecker;
 use App\Model\Table\ControllerActionTable;
 
 class InstitutionStaffDutiesTable extends ControllerActionTable
 {
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 1;
     public function initialize(array $config): void
     {
         $this->setTable('institution_staff_duties');
@@ -34,6 +37,9 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
     public function implementedEvents(): array
     {
         $events = parent::implementedEvents();
+        // POCOR-9768: staff end-of-assignment/transfer/removal must auto-deactivate their duties
+        $events['Model.Staff.afterSave'] = 'staffAfterSave';
+        $events['Model.InstitutionStaff.afterDelete'] = 'institutionStaffAfterDelete';
         return $events;
     }
 
@@ -43,6 +49,44 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 		return $validator
 			->add('staff_duties_id', 'not-blank', ['rule' => 'notBlank']);
 	}
+
+    // POCOR-9768: Application Rule (not a Validator rule) so this is enforced on every save() —
+    // checkRules() runs unconditionally inside Table::_processSave(), regardless of whether the
+    // entity was built via patchEntity()/newEntity() or by mutating an already-fetched entity
+    // directly (e.g. AccountBehavior::editAfterSaveDuties() reactivating an existing row).
+    public function buildRules(RulesChecker $rules): RulesChecker
+    {
+        $rules = parent::buildRules($rules);
+        $rules->add([$this, 'checkStaffActiveForActivation'], 'ruleStaffMustBeActiveToActivate', [
+            'errorField' => 'status',
+            'message' => __('This duty cannot be activated because the staff member no longer has an active assignment at this institution.')
+        ]);
+        return $rules;
+    }
+
+    // POCOR-9768
+    public function checkStaffActiveForActivation(Entity $entity, array $options)
+    {
+        if ($entity->status != self::STATUS_ACTIVE) {
+            return true; // deactivating is always allowed
+        }
+
+        $staffId = $entity->staff_id;
+        $institutionId = $entity->institution_id;
+        if (empty($staffId) || empty($institutionId)) {
+            return true; // let the not-blank/required rules handle missing data
+        }
+
+        $Staff = TableRegistry::getTableLocator()->get('Institution.Staff');
+        $StaffStatuses = TableRegistry::getTableLocator()->get('Institution.StaffStatuses');
+        return $Staff->find()
+            ->where([
+                $Staff->aliasField('institution_id') => $institutionId,
+                $Staff->aliasField('staff_id') => $staffId,
+                $Staff->aliasField('staff_status_id') => $StaffStatuses->getIdByCode('ASSIGNED')
+            ])
+            ->count() > 0;
+    }
 
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize=true)
     {
@@ -66,21 +110,39 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             return __('Created');
         }else if ($field == 'created_user_id') {
             return __('Created User');
+        }else if ($field == 'status') { // POCOR-9768
+            return __('Status');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
         //print_r($field); exit;
 
     }
+
+    // POCOR-9768
+    public function onGetStatus(EventInterface $event, Entity $entity)
+    {
+        return $entity->status == self::STATUS_ACTIVE ? __('Active') : __('Inactive');
+    }
+
+    public function beforeAction(EventInterface $event, ArrayObject $extra) // POCOR-9768
+    {
+        $this->field('status', [
+            'type' => 'select',
+            'options' => [self::STATUS_ACTIVE => __('Active'), self::STATUS_INACTIVE => __('Inactive')],
+            'select' => false
+        ]);
+    }
+
     public function viewBeforeAction(EventInterface $event)
     {
 
-        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment','institutions.name']);
+        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'status', 'comment','institutions.name']); // POCOR-9768
     }
 
     public function indexBeforeAction(EventInterface $event, ArrayObject $extra) {
         $this->field('Institution');
-        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'comment','Institution']);
+        $this->setFieldOrder(['academic_period_id', 'staff_duties_id', 'staff_id', 'status', 'comment','Institution']); // POCOR-9768
     }
 
     public function onGetStaffId(EventInterface $event, Entity $entity)
@@ -104,7 +166,7 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
 
         $this->setFieldOrder([
             'academic_period_id', 'staff_duties_id',
-            'staff_id','comment','institution_id'
+            'staff_id', 'status', 'comment','institution_id' // POCOR-9768
         ]);
     }
 
@@ -123,6 +185,13 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
          $this->field('staff_id', [
             'type' => 'select',
             'options' => $staffOption
+        ]);
+        // POCOR-9768: beforeAction()'s field definition doesn't carry through to add/edit on its
+        // own (same reason academic_period_id/staff_duties_id/staff_id are re-declared above) —
+        // without this it renders as a plain text input instead of the Active/Inactive dropdown.
+        $this->field('status', [
+            'type' => 'select',
+            'options' => [self::STATUS_ACTIVE => __('Active'), self::STATUS_INACTIVE => __('Inactive')]
         ]);
     }
     /**
@@ -152,6 +221,145 @@ class InstitutionStaffDutiesTable extends ControllerActionTable
             }
 
             return $staffOptions;
+    }
+
+    // POCOR-9768: grant/revoke the duty type's linked security role in step with this record's status.
+    public function afterSave(EventInterface $event, Entity $entity, ArrayObject $options)
+    {
+        $this->syncDutyRole($entity);
+    }
+
+    private function syncDutyRole(Entity $entity)
+    {
+        $duty = $this->StaffDuties->get($entity->staff_duties_id);
+        if (empty($duty->security_role_id)) {
+            return; // this duty type carries no security role
+        }
+
+        if ($entity->status == self::STATUS_ACTIVE) {
+            $this->grantDutyRole($entity, $duty->security_role_id);
+        } else {
+            $this->revokeDutyRoleIfUnused($entity);
+        }
+    }
+
+    // POCOR-9768: if another active duty for this staff at this institution already grants the same
+    // security role, reuse its grant instead of creating a duplicate security_group_users row.
+    private function grantDutyRole(Entity $entity, $securityRoleId)
+    {
+        if (!empty($entity->security_group_user_id)) {
+            return; // already has a grant (own or shared)
+        }
+
+        $sharedGrant = $this->find()
+            ->matching('StaffDuties', function ($q) use ($securityRoleId) {
+                return $q->where(['StaffDuties.security_role_id' => $securityRoleId]);
+            })
+            ->where([
+                $this->aliasField('staff_id') => $entity->staff_id,
+                $this->aliasField('institution_id') => $entity->institution_id,
+                $this->aliasField('status') => self::STATUS_ACTIVE,
+                $this->aliasField('id !=') => $entity->id,
+            ])
+            ->whereNotNull($this->aliasField('security_group_user_id'))
+            ->first();
+
+        if (!empty($sharedGrant)) {
+            $this->updateAll(
+                ['security_group_user_id' => $sharedGrant->security_group_user_id],
+                ['id' => $entity->id]
+            );
+            // POCOR-9768: keep the in-memory entity in sync with the updateAll() write above —
+            // otherwise a caller reading $entity->security_group_user_id right after save() (e.g.
+            // a controller, another shell step) sees stale/empty data even though the DB row is correct.
+            $entity->security_group_user_id = $sharedGrant->security_group_user_id;
+            $entity->setDirty('security_group_user_id', false);
+            return;
+        }
+
+        $institution = TableRegistry::getTableLocator()->get('Institution.Institutions')->get($entity->institution_id);
+        $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+        $newGroupUser = $SecurityGroupUsers->newEntity([
+            'security_role_id' => $securityRoleId,
+            'security_group_id' => $institution->security_group_id,
+            'security_user_id' => $entity->staff_id
+        ]);
+        $saved = $SecurityGroupUsers->save($newGroupUser);
+        if ($saved) {
+            $this->updateAll(['security_group_user_id' => $saved->id], ['id' => $entity->id]);
+            // POCOR-9768: same sync as the shared-grant branch above.
+            $entity->security_group_user_id = $saved->id;
+            $entity->setDirty('security_group_user_id', false);
+        }
+    }
+
+    // POCOR-9768: only revoke the shared grant once no other active duty at this institution still needs it.
+    private function revokeDutyRoleIfUnused(Entity $entity)
+    {
+        if (empty($entity->security_group_user_id)) {
+            return;
+        }
+
+        $groupUserId = $entity->security_group_user_id;
+
+        $stillNeededByAnotherDuty = $this->find()
+            ->where([
+                $this->aliasField('staff_id') => $entity->staff_id,
+                $this->aliasField('institution_id') => $entity->institution_id,
+                $this->aliasField('status') => self::STATUS_ACTIVE,
+                $this->aliasField('id !=') => $entity->id,
+                $this->aliasField('security_group_user_id') => $groupUserId
+            ])
+            ->count() > 0;
+
+        if (!$stillNeededByAnotherDuty) {
+            $SecurityGroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');
+            $groupUser = $SecurityGroupUsers->find()
+                ->where(['id' => $groupUserId])
+                ->first();
+            if (!empty($groupUser)) {
+                $SecurityGroupUsers->delete($groupUser);
+            }
+        }
+
+        $this->updateAll(['security_group_user_id' => null], ['id' => $entity->id]);
+        // POCOR-9768: keep the in-memory entity in sync with the updateAll() write above — see
+        // the matching comment in grantDutyRole().
+        $entity->security_group_user_id = null;
+        $entity->setDirty('security_group_user_id', false);
+    }
+
+    // POCOR-9768: auto-deactivate duties when the staff member's assignment ends (edit path).
+    public function staffAfterSave(EventInterface $event, $staffEntity)
+    {
+        $isStillActive = empty($staffEntity->end_date) || $staffEntity->end_date->isToday() || $staffEntity->end_date->isFuture();
+        if (!$isStillActive) {
+            $this->deactivateDuties($staffEntity->staff_id, $staffEntity->institution_id);
+        }
+    }
+
+    // POCOR-9768: auto-deactivate duties when the staff assignment record is deleted outright (e.g. transfer).
+    public function institutionStaffAfterDelete(EventInterface $event, $staffEntity)
+    {
+        $this->deactivateDuties($staffEntity->staff_id, $staffEntity->institution_id);
+    }
+
+    // POCOR-9768: public so bulk/cron paths that end an assignment via updateAll() instead of
+    // save() (e.g. StaffTable::removeInactiveStaffSecurityRole()) can still trigger this directly.
+    public function deactivateDuties($staffId, $institutionId)
+    {
+        $activeDuties = $this->find()
+            ->where([
+                $this->aliasField('staff_id') => $staffId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('status') => self::STATUS_ACTIVE
+            ])
+            ->all();
+
+        foreach ($activeDuties as $dutyRecord) {
+            $dutyRecord->status = self::STATUS_INACTIVE;
+            $this->save($dutyRecord);
+        }
     }
 
     public function onExcelUpdateFields(EventInterface $event, ArrayObject $settings, ArrayObject $fields)

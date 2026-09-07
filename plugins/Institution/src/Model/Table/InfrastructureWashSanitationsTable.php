@@ -280,17 +280,65 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
         $this->fields['infrastructure_wash_sanitation_use_id']['type'] = 'select';
         $this->field('infrastructure_wash_sanitation_use_id', ['attr' => ['label' => __('Use')]]);
 
-        $this->field('infrastructure_wash_sanitation_male_functional', ['type' => 'integer','attr' => ['label' => __('Male (Functional)'), 'value' => 0]]);
+        //POCOR-9594-5 --start
+        // These fields aren't real columns on this table - the actual saved values
+        // live in InfrastructureWashSanitationQuantities, keyed by gender_id +
+        // functional. The hardcoded 'value' => 0 below applied unconditionally on
+        // both add and edit, so the edit form always showed 0 regardless of what
+        // was actually saved. When a real record id decodes from the URL (edit),
+        // look up its saved quantities and use those as the field defaults instead.
+        $quantityDefaults = [
+            'infrastructure_wash_sanitation_male_functional'      => 0,
+            'infrastructure_wash_sanitation_male_nonfunctional'   => 0,
+            'infrastructure_wash_sanitation_female_functional'    => 0,
+            'infrastructure_wash_sanitation_female_nonfunctional' => 0,
+            'infrastructure_wash_sanitation_mixed_functional'     => 0,
+            'infrastructure_wash_sanitation_mixed_nonfunctional'  => 0,
+        ];
+        //POCOR-9594-5-2: the 'id' key in this app's encoded queryString is also
+        // used to carry the institution_id on Add (see e.g.
+        // InstitutionTabBehavior::fixAddDeleteRedirectURL()), and navigating here
+        // from an Edit page can carry that same encoded blob forward - so a
+        // decoded id alone doesn't reliably mean "this is the record being
+        // edited". Gate on the actual current action instead.
+        $passParams = $this->request->getAttribute('params')['pass'] ?? [];
+        if ($this->action === 'edit' && !empty($passParams[1])) {
+            $decoded = $this->paramsDecode($passParams[1]);
+            $recordId = $decoded['id'] ?? null;
+            if ($recordId) {
+                $quantities = $SanitationQuantitiesTable->find()
+                    ->where(['infrastructure_wash_sanitation_id' => $recordId])
+                    ->all();
+                foreach ($quantities as $qty) {
+                    if ($qty->gender_id == 1 && $qty->functional == 1) {
+                        $quantityDefaults['infrastructure_wash_sanitation_male_functional'] = $qty->value;
+                    } elseif ($qty->gender_id == 1 && $qty->functional == 0) {
+                        $quantityDefaults['infrastructure_wash_sanitation_male_nonfunctional'] = $qty->value;
+                    } elseif ($qty->gender_id == 2 && $qty->functional == 1) {
+                        $quantityDefaults['infrastructure_wash_sanitation_female_functional'] = $qty->value;
+                    } elseif ($qty->gender_id == 2 && $qty->functional == 0) {
+                        $quantityDefaults['infrastructure_wash_sanitation_female_nonfunctional'] = $qty->value;
+                    } elseif ($qty->gender_id == 3 && $qty->functional == 1) {
+                        $quantityDefaults['infrastructure_wash_sanitation_mixed_functional'] = $qty->value;
+                    } elseif ($qty->gender_id == 3 && $qty->functional == 0) {
+                        $quantityDefaults['infrastructure_wash_sanitation_mixed_nonfunctional'] = $qty->value;
+                    }
+                }
+            }
+        }
+        //POCOR-9594-5 --end
 
-        $this->field('infrastructure_wash_sanitation_male_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Male (Non-functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_sanitation_male_functional', ['type' => 'integer','attr' => ['label' => __('Male (Functional)'), 'value' => $quantityDefaults['infrastructure_wash_sanitation_male_functional']]]);
 
-        $this->field('infrastructure_wash_sanitation_female_functional', ['type' => 'integer','attr' => ['label' => __('Female (Functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_sanitation_male_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Male (Non-functional)'), 'value' => $quantityDefaults['infrastructure_wash_sanitation_male_nonfunctional']]]);
 
-        $this->field('infrastructure_wash_sanitation_female_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Female (Non-functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_sanitation_female_functional', ['type' => 'integer','attr' => ['label' => __('Female (Functional)'), 'value' => $quantityDefaults['infrastructure_wash_sanitation_female_functional']]]);
 
-        $this->field('infrastructure_wash_sanitation_mixed_functional', ['type' => 'integer','attr' => ['label' => __('Mixed (Functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_sanitation_female_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Female (Non-functional)'), 'value' => $quantityDefaults['infrastructure_wash_sanitation_female_nonfunctional']]]);
 
-        $this->field('infrastructure_wash_sanitation_mixed_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Mixed (Non-functional)'), 'value' => 0]]);
+        $this->field('infrastructure_wash_sanitation_mixed_functional', ['type' => 'integer','attr' => ['label' => __('Mixed (Functional)'), 'value' => $quantityDefaults['infrastructure_wash_sanitation_mixed_functional']]]);
+
+        $this->field('infrastructure_wash_sanitation_mixed_nonfunctional', ['type' => 'integer','attr' => ['label' => __('Mixed (Non-functional)'), 'value' => $quantityDefaults['infrastructure_wash_sanitation_mixed_nonfunctional']]]);
 
         $this->field('infrastructure_wash_sanitation_total_male', ['visible' => false]);
         $this->field('infrastructure_wash_sanitation_total_female', ['visible' => false]);
@@ -427,8 +475,9 @@ class InfrastructureWashSanitationsTable extends ControllerActionTable {
     // POCOR-6146 start
 
     public function onExcelBeforeQuery(EventInterface $event, ArrayObject $settings, Query $query){
-        $session = $this->request->session();
-        //$institutionId = $session->read('Institution.Institutions.id');
+        //POCOR-9594-4: $this->request->session() no longer exists in this CakePHP
+        // version (only getSession() does) - calling it threw a fatal error on
+        // every export attempt. $session was never actually used below anyway.
         $institutionId  = $this->getInstitutionID();
         $selectedAcademicPeriod = !is_null($this->request->getQuery('academic_period_id')) ? $this->request->getQuery('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $query

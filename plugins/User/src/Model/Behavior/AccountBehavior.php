@@ -121,6 +121,8 @@ class AccountBehavior extends Behavior
     // called manually cos need to use $entity
     private function afterActionCode(EventInterface $event, Entity $entity)
     {
+        // POCOR-9768: duties are assigned/managed only through Institutions > Duties, never edited
+        // here — the Account tab is a read-only, system-managed reflection of active duty roles.
         $fieldsNeeded = ['username','password', 'roles', 'new_password', 'retype_password'];
         foreach ($this->_table->fields as $key => $value) {
             if (!in_array($key, $fieldsNeeded)) {
@@ -248,6 +250,33 @@ class AccountBehavior extends Behavior
         $SecurityGroupInstitutions->aliasField('institution_id')
     ])
     ->all();
+
+                // POCOR-9768: show the duty's own name (staff_duties.name) for every active duty at this
+                // institution, regardless of whether the duty type carries a security role — the linked
+                // role (if any) already surfaces separately via the join above once granted.
+                $InstitutionStaffDuties = TableRegistry::getTableLocator()->get('Institution.InstitutionStaffDuties');
+                $StaffDuties = TableRegistry::getTableLocator()->get('Institution.StaffDuties');
+                $Institutions = TableRegistry::getTableLocator()->get('Institution.Institutions');
+                $dutyRecords = $InstitutionStaffDuties->find()
+                    ->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'StaffDuties.name'])
+                    ->innerJoin(['StaffDuties' => $StaffDuties->getTable()], [
+                        'StaffDuties.id = ' . $InstitutionStaffDuties->aliasField('staff_duties_id')
+                    ])
+                    ->innerJoin(['Institutions' => $Institutions->getTable()], [
+                        'Institutions.id = ' . $InstitutionStaffDuties->aliasField('institution_id')
+                    ])
+                    ->innerJoin(['SecurityGroups' => $SecurityGroups->getTable()], [
+                        $SecurityGroups->aliasField('id') . ' = Institutions.security_group_id'
+                    ])
+                    ->where([
+                        $InstitutionStaffDuties->aliasField('staff_id') => $entity->id,
+                        $InstitutionStaffDuties->aliasField('institution_id') => $institutionId,
+                        $InstitutionStaffDuties->aliasField('status') => \Institution\Model\Table\InstitutionStaffDutiesTable::STATUS_ACTIVE
+                    ])
+                    ->all();
+                foreach ($dutyRecords as $dutyRecord) {
+                    $tableCells[] = [$dutyRecord->group_name, $dutyRecord->role_name];
+                }
 
             }else{//POCOR-7309 ends
                 $GroupUsers = TableRegistry::getTableLocator()->get('Security.SecurityGroupUsers');

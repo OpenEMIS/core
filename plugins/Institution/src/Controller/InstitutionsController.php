@@ -23,6 +23,7 @@ use Cake\Utility\Security;
 use Cake\Utility\Text;
 use ControllerAction\Model\Traits\UtilityTrait;
 use Institution\Model\Traits\StudentCreationCheckTrait;
+use Institution\Model\Traits\RouteInstitutionIdTrait;
 use Exception;
 use PHPExcel_IOFactory;
 use Cake\Auth\DefaultPasswordHasher;
@@ -44,6 +45,7 @@ class InstitutionsController extends AppController
     use OptionsTrait;
     use UtilityTrait;
     use StudentCreationCheckTrait; //POCOR-9385: single source of truth for the student-creation entry-grade gate
+    use RouteInstitutionIdTrait; //POCOR-7692: shared ':institutionId' route param decode (Houses/Associations add-edit links)
     // POCOR-8231 start
     const STUDENT = 1;
     const STAFF = 2;
@@ -218,6 +220,7 @@ class InstitutionsController extends AppController
             'RubricAnswers' => ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
 
             'ImportInstitutions' => ['className' => 'Institution.ImportInstitutions', 'actions' => ['add']],
+            'ImportHouses' => ['className' => 'Institution.ImportHouses', 'actions' => ['add']], //POCOR-7692
             'ImportInstitutionAssets' => ['className' => 'Institution.ImportInstitutionAssets', 'actions' => ['add']],
             'ImportStaffAttendances' => ['className' => 'Institution.ImportStaffAttendances', 'actions' => ['add']],
             'ImportStudentAttendances' => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
@@ -955,6 +958,11 @@ class InstitutionsController extends AppController
             }
             //POCOR-9691[END]
 
+        }
+        // Associations (Houses) add/edit links use the ':institutionId' route param - getQueryString()/session
+        // above don't read it, so fall back to decoding it here (see RouteInstitutionIdTrait).
+        if (!$institution_id && $this->request->getParam('action') == 'Associations') {
+            $institution_id = $this->resolveRouteInstitutionId($this->request, $this) ?: $institution_id;
         }
         // StaffBehaviours view: if still missing, decode pass[1] or load behaviour by id so view does not redirect to Dashboard
         if (!$institution_id && $this->request->getParam('action') == 'StaffBehaviours') {
@@ -7246,6 +7254,38 @@ class InstitutionsController extends AppController
         $existing = $securityUsers->find()
             ->where(['openemis_no' => $userData['openemis_no'] ?? null])
             ->first();
+
+        // POCOR-9793 start: security_users.mobile_number carries a genuine UNIQUE
+        // index (unique_mobile) because it doubles as an account identifier for
+        // authentication (e.g. OTP/login lookups), so it must stay unique here.
+        // But the Add Student/Guardian wizards populate it straight from the
+        // "contact number" field on the form, and that number is very often shared
+        // between family members (e.g. siblings using a parent's phone) - the same
+        // sharing POCOR-9793 explicitly allows in the Contacts tab. Previously that
+        // collision surfaced as an uncaught PDOException ("Duplicate entry ... for
+        // key unique_mobile"), which aborted the whole save and blocked creating the
+        // student/guardian record entirely. Since the Contacts tab entry for this
+        // number is saved separately via handleContacts() regardless, we can safely
+        // just skip writing the conflicting value onto this particular account's
+        // mobile_number instead of failing the save - the number stays unique in
+        // security_users (so authentication is unaffected) and the record still
+        // gets created.
+        // Staff are intentionally excluded from this relaxation - per explicit
+        // requirement, two staff accounts must not share a mobile number, so a
+        // staff save with a colliding number is left to fail below exactly as
+        // before (raising the "Duplicate mobile number" response).
+        $isStaffAccount = !empty($userData['is_staff']);
+        if (!$isStaffAccount && !empty($userData['mobile_number'])) {
+            $mobileConditions = ['mobile_number' => $userData['mobile_number']];
+            if ($existing) {
+                $mobileConditions[$securityUsers->aliasField($securityUsers->getPrimaryKey()) . ' !='] = $existing->id;
+            }
+            $mobileTakenByAnotherAccount = $securityUsers->exists($mobileConditions);
+            if ($mobileTakenByAnotherAccount) {
+                unset($userData['mobile_number']);
+            }
+        }
+        // POCOR-9793 end
 
         if ($existing) {
             // Prevent accidental username/password overwrite during update
