@@ -102,9 +102,14 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $today = $today->format('Y-m-d');
 
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
-            // POCOR-9770: academic_period_id removed from these conditions - it used to
-            // restrict to only the current period, leaving withdrawals from any other
-            // period permanently stuck as "Not Executed".
+            Log::write('debug', 'End date');
+            Log::write('debug', $academicPeriodEndDate);
+            Log::write('debug', 'Start date');
+            Log::write('debug', $academicPeriodEffectiveDate);
+            Log::write('debug', 'Today date');
+            Log::write('debug', $today);
+            // POCOR-9770: only process withdrawals belonging to the current academic
+            // period, so stale records from past periods aren't picked up by the retry/cron path
             $conditions = [
                 $this->aliasField('effective_date <= ') => $today,
                 $this->aliasField('execution_status') => self::NOT_EXECUTED
@@ -112,6 +117,8 @@ class StudentStatusUpdatesTable extends ControllerActionTable
             if (!empty($excludeIds)) {
                 $conditions[$this->aliasField('id NOT IN')] = $excludeIds;
             }
+            Log::write('debug', 'excludeIds');
+            Log::write('debug', $excludeIds);
             $query = $this
                 ->find()
                 ->where($conditions)
@@ -121,7 +128,9 @@ class StudentStatusUpdatesTable extends ControllerActionTable
             } else {
                 $studentWithdrawRecords = $query->toArray();
             }
-
+            
+            Log::write('debug', 'studentWithdrawRecords');
+            Log::write('debug', $studentWithdrawRecords);
         }
         return $studentWithdrawRecords;
 

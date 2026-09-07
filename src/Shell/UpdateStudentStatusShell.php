@@ -26,8 +26,9 @@ class UpdateStudentStatusShell extends Shell
             $exit = false;
             $StudentStatusUpdates = TableRegistry::getTableLocator()->get('Institution.StudentStatusUpdates');
 
-            // POCOR-9770: cron calls this shell directly
-            // StudentStatusUpdatesTable::triggerUpdateStudentStatusShell()'s 
+            // POCOR-9770: cron calls this shell directly, in parallel with
+            // StudentStatusUpdatesTable::triggerUpdateStudentStatusShell()'s own trigger from
+            // afterSave() - re-check and clear out any stale/expired process record here too
             $runningProcesses = $this->SystemProcesses->getRunningProcesses($this->args[0]);
             foreach ($runningProcesses as $processData) {
                 $expiryDate = clone($processData['created']);
@@ -63,7 +64,8 @@ class UpdateStudentStatusShell extends Shell
                     } catch (\Exception $e) {
                         $this->out('Error Update Student Status ' . $recordToProcess['security_user_id']);
                         $this->out($e->getMessage());
-                        // POCOR-9770:  specific record (its stored execution_status
+                        // POCOR-9770: skip this specific record on the next loop iteration (its stored execution_status
+                        // stays Not Executed so it remains retriable on the next scheduled run) instead of aborting the whole run
                         $failedIds[] = $recordToProcess['id'];
                         if (count($failedIds) >= self::MAX_FAILURES_PER_RUN) {
                             $this->out('Too many failures this run (' . count($failedIds) . '), stopping (' . Time::now() . ')');
