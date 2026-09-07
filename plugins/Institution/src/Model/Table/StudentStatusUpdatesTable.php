@@ -102,17 +102,12 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $today = $today->format('Y-m-d');
 
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
-//             Log::write('debug', 'End date');
-//             Log::write('debug', $academicPeriodEndDate);
-//             Log::write('debug', 'Start date');
-//             Log::write('debug', $academicPeriodEffectiveDate);
-//             Log::write('debug', 'Today date');
-//             Log::write('debug', $today);
-            // POCOR-9770: only process withdrawals belonging to the current academic
+            // POCOR-9770: academic_period_id removed from these conditions - it used to
+            // restrict to only the current period, leaving withdrawals from any other
+            // period permanently stuck as "Not Executed".
             $conditions = [
                 $this->aliasField('effective_date <= ') => $today,
-                $this->aliasField('execution_status') => self::NOT_EXECUTED,
-                $this->aliasField('academic_period_id') => $currentAcademicPeriod
+                $this->aliasField('execution_status') => self::NOT_EXECUTED
             ];
             if (!empty($excludeIds)) {
                 $conditions[$this->aliasField('id NOT IN')] = $excludeIds;

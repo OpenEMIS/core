@@ -43,6 +43,7 @@ class UpdateStudentStatusShell extends Shell
             }
 
             $this->out('Initializing Update of Student Withdrawal Status ('.Time::now().')');
+            $this->out('cron update withdrawal Status');
 
             $systemProcessId = $this->SystemProcesses->addProcess('UpdateStudentStatus', getmypid(), $this->args[0]);
             $this->SystemProcesses->updateProcess($systemProcessId, null, $this->SystemProcesses::RUNNING, 0);
