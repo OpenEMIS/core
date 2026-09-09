@@ -406,6 +406,25 @@ class WorkflowRulesTable extends ControllerActionTable
             }
 
             $workflowId = $entity->workflow_id;
+            if ($action == 'add' && empty($workflowId)) {
+                // POCOR-7626: on Add, workflow_id only reaches $entity once the Workflow
+                // select itself fires a reload - but when a feature has only one Workflow
+                // option (e.g. the single "Cases - General" workflow every Institutions >
+                // Cases feature is tied to today), a native <select> never fires 'change'
+                // for its only option, so workflow_id is never (re)submitted and $entity
+                // stays empty for the whole Add lifecycle. Same fallback already used for
+                // $feature above - read it straight from the posted form data instead.
+                $requestData = $request->getData();
+                if (array_key_exists($this->getAlias(), $requestData) && array_key_exists('workflow_id', $requestData[$this->getAlias()])) {
+                    $workflowId = $requestData[$this->getAlias()]['workflow_id'];
+                }
+                if (empty($workflowId)) {
+                    $workflowOptions = $this->getWorkflowOptions($feature);
+                    if (count($workflowOptions) === 1) {
+                        $workflowId = key($workflowOptions);
+                    }
+                }
+            }
             $eventOptionsBySecurityRoles = $this->getAvailableEventOptionsBySecurityRoles($eventOptions, $workflowId);
             $eventSelectOptions = array_intersect_key($eventSelectOptions, $eventOptionsBySecurityRoles);
 

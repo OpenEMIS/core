@@ -36,6 +36,20 @@ class InstitutionStudentUnmarkedAttendancesTable extends ControllerActionTable
     // no equivalent of.
     private $workflowRuleEvents = [
         [
+            'value' => 'Workflow.onAssignToHomeRoomTeacher',
+            'text' => 'Assign to Home Room Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Home Room Teacher',
+            'method' => 'onAssignToHomeRoomTeacher',
+            'roleCode' => 'HOMEROOM_TEACHER'
+        ],
+        [
+            'value' => 'Workflow.onAssignToSecondaryTeacher',
+            'text' => 'Assign to Secondary Teacher',
+            'description' => 'Triggering this rule will assign the case to the respective Secondary Teacher',
+            'method' => 'onAssignToSecondaryTeacher',
+            'roleCode' => 'HOMEROOM_TEACHER'
+        ],
+        [
             'value' => 'Workflow.onAssignToPrincipal',
             'text' => 'Assign to Principal',
             'description' => 'Triggering this rule will assign the case to Principal',
