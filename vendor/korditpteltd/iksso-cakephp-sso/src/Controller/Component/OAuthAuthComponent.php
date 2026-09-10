@@ -493,7 +493,7 @@ class OAuthAuthComponent extends Component
                 isset($user[$statusField]) &&
                 (int)$user[$statusField] !== 1
             ) {
-                $extra['status'] = false;
+                $extra['status'] = true;
             } else {
                 $this->Auth->setUser($user);
 

@@ -249,7 +249,7 @@ class Custom_Client extends Google_Client
    * Construct the OAuth 2.0 authorization request URI.
    * @return string
    */
-    public function createAuthUrl()
+    public function createAuthUrl($scope = null)
     {
         $scopes = $this->prepareScopes();
         return $this->getAuth()->createAuthUrl($scopes);

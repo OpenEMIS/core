@@ -145,7 +145,7 @@ class SamlAuthComponent extends Component
             $this->processResponse();
 
             return $this->isAuthenticated();
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             $this->login();
 
             return false;
