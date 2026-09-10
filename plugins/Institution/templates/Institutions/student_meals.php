@@ -33,5 +33,7 @@
         echo $this->Html->script(BUILD_RUNTIME);
         echo $this->Html->script(BUILD_SCRIPTS);
         echo $this->Html->css(STYLE_GUIDE);
+        // POCOR-9801
+        echo $this->element('OpenEmis.angular_theme_colour');
     ?>
 </div>

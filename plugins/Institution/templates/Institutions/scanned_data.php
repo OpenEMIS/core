@@ -26,5 +26,7 @@
         echo $this->Html->script(BUILD_RUNTIME);
         echo $this->Html->script(BUILD_SCRIPTS);
         echo $this->Html->css(STYLE_GUIDE);
+        // POCOR-9801: after STYLE_GUIDE so custom Colour (e.g. #07AEBE) wins over Angular palette defaults
+        echo $this->element('OpenEmis.angular_theme_colour');
     ?>
 </div>

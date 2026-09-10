@@ -137,6 +137,9 @@ class AppController extends Controller
             'productName' => $this->productName
         ]);
         $themeData = $this->getTheme(); // POCOR-8951
+        // POCOR-9801: expose product colour for Angular pages (datepicker buttons)
+        $productColour = ltrim((string)($themeData['colour'] ?? '6699CC'), '#');
+        $this->set('productColour', $productColour);
         $this->loadComponent('OpenEmis.OpenEmis', [
             'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
             'headerMenu' => [
@@ -304,8 +307,12 @@ class AppController extends Controller
         }
         Log::write('debug', 'Theme data: ' . print_r($themes, true));
         // Modify CSS template
-        $colour = $themes['colour'] ?? '000000';
-        $secondaryColour = $this->darkenColour($colour);
+        // POCOR-9801: never fall back to black; strip accidental leading '#'
+        $colour = ltrim((string)($themes['colour'] ?? '6699CC'), '#');
+        if (!preg_match('/^[0-9A-Fa-f]{6}$/', $colour)) {
+            $colour = '6699CC';
+        }
+        $secondaryColour = ltrim((string)$this->darkenColour($colour), '#');
 
         $customPath = ROOT . DS . 'plugins' . DS . 'OpenEmis' . DS . 'webroot' . DS . 'css' . DS . 'themes' . DS . 'custom' . DS;
         $basePath = Router::url(['controller' => '', 'action' => 'index', 'plugin' => false]) . '/';
