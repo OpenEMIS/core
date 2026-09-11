@@ -227,19 +227,19 @@ class ImportUsersTable extends AppTable
         $accountTypeIndex = key($accountType->toArray()) + 1;
         $accountType = $sheet->getCellByColumnAndRow($accountTypeIndex, $row)->getValue();
         $accountTypeId = $this->getAccountTypeId($accountType);
-// POCOR-8835 start
-//        if (!$user) {
-//            if ($openemisNo) {
-//                $rowInvalidCodeCols['openemis_no'] = __('No Such User 1');
-//                return false;
-//            }
+        // POCOR-8835 start
+        //        if (!$user) {
+        //            if ($openemisNo) {
+        //                $rowInvalidCodeCols['openemis_no'] = __('No Such User 1');
+        //                return false;
+        //            }
         // POCOR-8835 end
             try{
                 // POCOR-8683 start
                 // POCOR-8835 start
-//                $newOpenemisNo = "";
+                // $newOpenemisNo = "";
 
-//                $newOpenemisNo = $this->Users->nextOpenEmisNo();;
+                // $newOpenemisNo = $this->Users->nextOpenEmisNo();;
                 $tempRow['openemis_no'] = $newOpenemisNo;
                 $tempRow['username'] = $username ?? $newOpenemisNo;
                 //POCOR-9327 start
@@ -287,11 +287,11 @@ class ImportUsersTable extends AppTable
             $tempRow[$tempRow['account_type']] = 1;
         }
         // POCOR-8835 start
-//        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
-//            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
-//            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
-//            return false;
-//        }
+        //        if (in_array($openemisNo, $importedUniqueCodes->getArrayCopy())) {
+        //            $rowInvalidCodeCols['openemis_no'] = __('This OpenEMIS No is Already Present');//$this->getExcelLabel('Import', 'duplicate_unique_key');
+        //            $tempRow['duplicates'] = $rowInvalidCodeCols['openemis_no'] ;
+        //            return false;
+        //        }
         // POCOR-8835 end
 
     }
@@ -447,6 +447,12 @@ class ImportUsersTable extends AppTable
         if ($isStaff) {
             $tempRow['staff_id'] = $tempRow['security_user_id'] ?? null;
             $have_error = $have_error || $this->checkStaffIdentityNationality($tempRow, $rowInvalidCodeCols);
+            // POCOR-9796: Institution Code was only ever validated for Student rows - an invalid
+            // code on a Staff row produced no error at all. Validate it here too (skipping the
+            // gender-restriction rule, which is a Student-admission concern only). This only
+            // confirms the code resolves to a real institution and records institution_id on
+            // the row; it does not create any staff-institution assignment record.
+            $have_error = $have_error || $this->checkInstitution($tempRow, $rowInvalidCodeCols, true);
         }
 
         if ($isStudent) {
@@ -1205,7 +1211,10 @@ class ImportUsersTable extends AppTable
         }
     }
 
-    private function checkInstitution(&$tempRow, &$rowInvalidCodeCols): bool
+    // POCOR-9796: $skipGenderRestriction lets Staff rows reuse this same institution-code lookup
+    // without also enforcing the institution's gender restriction - that rule ("Institution only
+    // accepts Female students") is a Student-admission business rule and doesn't apply to Staff.
+    private function checkInstitution(&$tempRow, &$rowInvalidCodeCols, bool $skipGenderRestriction = false): bool
     {
         $institution_code = $tempRow['institution_code'] ?? '';
         $gender_id = $tempRow['gender_id'] ?? '';
@@ -1221,7 +1230,7 @@ class ImportUsersTable extends AppTable
             return false;
         }
 
-        $institution = $this->getInstitutionByCodeAndGender($institution_code, $gender_id);
+        $institution = $this->getInstitutionByCodeAndGender($institution_code, $gender_id, $skipGenderRestriction);
 
         if (empty($institution)) {
             $this->addError($rowInvalidCodeCols, 'institution_code', __('Institution With This Code Not Found'));
@@ -1237,7 +1246,7 @@ class ImportUsersTable extends AppTable
         }
         return true;
     }
-    private function getInstitutionByCodeAndGender(string $code, string $gender_id): array
+    private function getInstitutionByCodeAndGender(string $code, string $gender_id, bool $skipGenderRestriction = false): array
     {
         $Institutions = self::getDynamicTableInstance('institutions');
         $query = $Institutions->find()
@@ -1261,7 +1270,7 @@ class ImportUsersTable extends AppTable
         $institution_gender = $query->gender_name;
         $institution_gender_id = $query->gender_id;
         $institution_gender_code = $query->gender_code;
-        if ($institution_gender_code == 'X') { //if mixed then always true
+        if ($skipGenderRestriction || $institution_gender_code == 'X') { //if mixed (or Staff, which isn't subject to this rule) then always true
             return ['id' => $institution_id];
         } else {
             if ($gender_id != $institution_gender_id) {
