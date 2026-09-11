@@ -16,10 +16,25 @@
  */
 
 use Cake\Http\Client;
+use Cake\Log\Log;
 
 /**
- * Authentication class that deals with the OAuth 2 web-server authentication flow
+ * POCOR-9799: This file originally depended on the Google API PHP Client v1
+ * scaffolding classes (Google_Auth_Abstract, Google_Http_Request,
+ * Google_IO_Abstract, Google_Cache_Abstract, Google_Logger_Abstract,
+ * Google_Auth_Exception, Google_Auth_AssertionCredentials, Google_Utils).
+ * None of those classes exist in the v2 library (google/apiclient 2.12.3)
+ * that is actually installed, so this file was never loadable in this
+ * environment ("Class ... not found" fatals).
  *
+ * Every method and code path that existed before is kept - nothing has
+ * been removed - but the v1 scaffolding classes are replaced with small,
+ * compatible equivalents defined at the bottom of this file
+ * (Google_Http_Request, Google_IO_Http, Google_Cache_Null, Google_Logger,
+ * Google_Auth_Exception, Google_Auth_AssertionCredentials, Google_Utils),
+ * whose actual HTTP transport runs through Cake\Http\Client and whose
+ * logging runs through Cake\Log\Log, matching how the rest of this plugin
+ * already talks to the framework.
  */
 class Custom_Auth_OAuth2 extends Google_Auth_Abstract
 {
@@ -47,7 +62,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
     private $token = array();
 
   /**
-   * @var Google_Client the base client
+   * @var Custom_Client the base client
    */
     private $client;
 
@@ -151,7 +166,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
         } else {
             $decodedResponse = json_decode($response->getResponseBody(), true);
             $errorText = '';
-            if ($decodedResponse != null && $decodedResponse['error']) {
+            if (!empty($decodedResponse['error'])) {
                 $errorText = $decodedResponse['error'];
                 if (isset($decodedResponse['error_description'])) {
                     $errorText .= ": " . $decodedResponse['error_description'];
@@ -457,9 +472,20 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
   // are PEM encoded certificates.
     private function getFederatedSignOnCerts()
     {
-        return $this->retrieveCertsFromLocation(
-        $this->client->getClassConfig($this, 'federated_signon_certs_url')
-        );
+        $url = $this->client->getClassConfig($this, 'federated_signon_certs_url');
+
+        if (empty($url)) {
+            // POCOR-9799: 'federated_signon_certs_url' is never configured
+            // anywhere in this codebase - only 'jwks_uri' is, via
+            // setJwksUri(). verifySignedJwtWithCerts() below fetches its
+            // own keys from $this->OAUTH2_JWKS_URI and does not use the
+            // value this method returns, so there is nothing to fetch
+            // here; return an empty list instead of failing the whole
+            // verifyIdToken() call on a config key that was never wired up.
+            return [];
+        }
+
+        return $this->retrieveCertsFromLocation($url);
     }
 
   /**
@@ -518,7 +544,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
         if (!$id_token) {
             $id_token = $this->token['id_token'];
         }
-        $certs = $this->getFederatedSignonCerts();
+        $certs = $this->getFederatedSignOnCerts();
         if (!$audience) {
             $audience = $this->client->getClassConfig($this, 'client_id');
         }
@@ -573,7 +599,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
 
         $response = $http->get($this->OAUTH2_JWKS_URI, [], ['redirect' => 3]);
         if ($response->getStatusCode() == 200) {
-            $body = json_decode($response->body(), true);
+            $body = json_decode($response->getStringBody(), true);
             if (isset($body['keys'])) {
                 $keys = $body['keys'];
             }
@@ -703,5 +729,382 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
             $params[$name] = $param;
         }
         return $params;
+    }
+}
+
+/**
+ * POCOR-9799 compatibility layer.
+ *
+ * The classes below replace the Google API PHP Client v1 scaffolding that
+ * Custom_Auth_OAuth2 (and Client.php's Custom_Client) were written against
+ * and that no longer exists in the installed v2 library. Each one keeps
+ * the same public surface the original v1 class exposed at its call
+ * sites in this plugin, so every method above keeps working exactly as
+ * originally written - only the underlying transport/logging/caching is
+ * now real, framework-backed code (Cake\Http\Client, Cake\Log\Log)
+ * instead of the removed Google_IO_* / Google_Logger_Abstract classes.
+ */
+
+/**
+ * Minimal replacement for the removed Google_Auth_Abstract (v1 API).
+ * Nothing in this plugin calls any parent-inherited behavior - every
+ * method Custom_Auth_OAuth2 needs is declared on itself - so this exists
+ * purely so `extends Google_Auth_Abstract` keeps compiling.
+ */
+abstract class Google_Auth_Abstract
+{
+}
+
+/**
+ * Minimal replacement for the removed Google_Auth_Exception (v1 API).
+ */
+class Google_Auth_Exception extends \Exception
+{
+}
+
+/**
+ * Minimal replacement for the removed Google_Auth_LoginTicket (v1 API).
+ * Preserves the exact same public surface the SSO plugin relies on:
+ * getAttributes() returning ['envelope' => ..., 'payload' => ...], which
+ * SSO\Auth\OAuthAuthenticate and SSO\Controller\Component\OAuthAuthComponent
+ * read as $tokenData['payload'].
+ */
+class Google_Auth_LoginTicket
+{
+    private $envelope;
+    private $payload;
+
+    public function __construct($envelope, $payload)
+    {
+        $this->envelope = $envelope;
+        $this->payload = $payload;
+    }
+
+    public function getAttributes()
+    {
+        return [
+            'envelope' => $this->envelope,
+            'payload' => $this->payload,
+        ];
+    }
+
+    public function getUserId()
+    {
+        return $this->payload['sub'] ?? null;
+    }
+}
+
+/**
+ * Minimal replacement for the removed Google_Utils (v1 API). Only the
+ * base64url helpers this plugin actually uses are implemented.
+ */
+class Google_Utils
+{
+    public static function urlSafeB64Decode($b64)
+    {
+        $b64 = str_replace(array('-', '_'), array('+', '/'), $b64);
+        return (string) base64_decode($b64);
+    }
+
+    public static function urlSafeB64Encode($data)
+    {
+        return rtrim(strtr(base64_encode((string) $data), '+/', '-_'), '=');
+    }
+}
+
+/**
+ * Minimal replacement for the removed Google_Http_Request (v1 API).
+ * Acts as both the outgoing request description and, once
+ * Google_IO_Http::makeRequest() has run, the response container -
+ * exactly like the original v1 class did (callers read
+ * getResponseHttpCode()/getResponseBody() off the same object they built
+ * the request with).
+ */
+class Google_Http_Request
+{
+    private $url;
+    private $requestMethod;
+    private $requestHeaders;
+    private $postBody;
+    private $queryParams = array();
+    private $gzipDisabled = false;
+    private $responseHttpCode;
+    private $responseBody;
+
+    public function __construct($url, $method = 'GET', $headers = array(), $postBody = null)
+    {
+        $this->url = $url;
+        $this->requestMethod = $method;
+        $this->requestHeaders = (array) $headers;
+        $this->postBody = $postBody;
+    }
+
+    public function disableGzip()
+    {
+        $this->gzipDisabled = true;
+    }
+
+    public function isGzipDisabled()
+    {
+        return $this->gzipDisabled;
+    }
+
+    public function setQueryParam($key, $value)
+    {
+        $this->queryParams[$key] = $value;
+    }
+
+    public function getQueryParams()
+    {
+        return $this->queryParams;
+    }
+
+    public function setRequestHeaders(array $headers)
+    {
+        $this->requestHeaders = array_merge($this->requestHeaders, $headers);
+    }
+
+    public function getRequestHeaders()
+    {
+        return $this->requestHeaders;
+    }
+
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    public function getRequestMethod()
+    {
+        return $this->requestMethod;
+    }
+
+    public function getPostBody()
+    {
+        return $this->postBody;
+    }
+
+    public function setResponseHttpCode($code)
+    {
+        $this->responseHttpCode = $code;
+    }
+
+    public function getResponseHttpCode()
+    {
+        return $this->responseHttpCode;
+    }
+
+    public function setResponseBody($body)
+    {
+        $this->responseBody = $body;
+    }
+
+    public function getResponseBody()
+    {
+        return $this->responseBody;
+    }
+}
+
+/**
+ * Replacement for the removed Google_IO_Curl/Google_IO_Stream (v1 API).
+ * Executes a Google_Http_Request over Cake\Http\Client - the same HTTP
+ * client already used elsewhere in this plugin (e.g.
+ * SSO\Auth\OAuthAuthenticate, SSO\Controller\Component\OAuthAuthComponent)
+ * - instead of the removed Google_IO_* curl/stream wrappers, and writes
+ * the result back onto the same request object, matching the original
+ * makeRequest() contract.
+ */
+class Google_IO_Http
+{
+    public function __construct($client = null)
+    {
+        // $client accepted for constructor-signature compatibility with
+        // the removed Google_IO_Abstract subclasses; unused.
+    }
+
+    public function makeRequest(Google_Http_Request $request)
+    {
+        $http = new Client();
+
+        $url = $request->getUrl();
+        $params = $request->getQueryParams();
+        if (!empty($params)) {
+            $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($params);
+        }
+
+        $options = [
+            'headers' => $request->getRequestHeaders(),
+            'redirect' => 3,
+        ];
+
+        $method = strtoupper((string) $request->getRequestMethod());
+        $body = $request->getPostBody();
+
+        switch ($method) {
+            case 'POST':
+                $response = $http->post($url, $body, $options);
+                break;
+            case 'PUT':
+                $response = $http->put($url, $body, $options);
+                break;
+            case 'DELETE':
+                $response = $http->delete($url, $body, $options);
+                break;
+            case 'GET':
+            default:
+                $response = $http->get($url, [], $options);
+                break;
+        }
+
+        $request->setResponseHttpCode($response->getStatusCode());
+        $request->setResponseBody($response->getStringBody());
+
+        return $request;
+    }
+}
+
+/**
+ * Replacement for the removed Google_Cache_Abstract (v1 API). Used only
+ * by the assertion-credentials (service-account) refresh path, which
+ * nothing in this codebase currently configures - a safe no-op cache
+ * (always a miss) keeps that path correct (it will simply always fetch a
+ * fresh token via refreshTokenRequest()) without needing a persistence
+ * backend wired up.
+ */
+class Google_Cache_Null
+{
+    public function __construct($client = null)
+    {
+        // Unused; accepted for constructor-signature compatibility.
+    }
+
+    public function get($key, $expiration = null)
+    {
+        return null;
+    }
+
+    public function set($key, $value)
+    {
+        // No-op.
+    }
+
+    public function delete($key)
+    {
+        // No-op.
+    }
+}
+
+/**
+ * Replacement for the removed Google_Logger_Abstract (v1 API). Delegates
+ * to Cake\Log\Log, the same logger the rest of this plugin already uses
+ * (e.g. SSO\Model\Table\SingleLogoutTable).
+ */
+class Google_Logger
+{
+    public function __construct($client = null)
+    {
+        // Unused; accepted for constructor-signature compatibility.
+    }
+
+    public function debug($message)
+    {
+        Log::write('debug', (string) $message);
+    }
+
+    public function info($message)
+    {
+        Log::write('info', (string) $message);
+    }
+
+    public function warning($message)
+    {
+        Log::write('warning', (string) $message);
+    }
+
+    public function error($message)
+    {
+        Log::write('error', (string) $message);
+    }
+}
+
+/**
+ * Replacement for the removed Google_Auth_AssertionCredentials (v1 API),
+ * used for the service-account / JWT Bearer Grant flow (RFC 7523). No
+ * service-account credentials are configured anywhere in this codebase
+ * today, so this path is not exercised in production, but the class is
+ * kept fully implemented (not stubbed) so setAssertionCredentials() /
+ * refreshTokenWithAssertion() above keep working if that flow is
+ * configured in the future. Signing uses the same phpseclib RSA API
+ * already used for ID-token verification in verifySignedJwtWithCerts()
+ * above.
+ */
+class Google_Auth_AssertionCredentials
+{
+    public $serviceAccountName;
+    public $scopes;
+    public $privateKey;
+    public $privateKeyPassword;
+    public $assertionType = 'http://oauth.net/grant_type/jwt/1.0/bearer';
+    public $sub;
+    public $prn;
+
+    public function __construct(
+        $serviceAccountName,
+        $scopes,
+        $privateKey,
+        $privateKeyPassword = 'notasecret',
+        $signingAlgorithm = 'RS256',
+        $sub = null
+    ) {
+        $this->serviceAccountName = $serviceAccountName;
+        $this->scopes = is_array($scopes) ? implode(' ', $scopes) : $scopes;
+        $this->privateKey = $privateKey;
+        $this->privateKeyPassword = $privateKeyPassword;
+        $this->sub = $sub;
+        $this->prn = $sub;
+    }
+
+    public function getCacheKey()
+    {
+        return $this->serviceAccountName . ':' . md5($this->scopes . ($this->sub ?: ''));
+    }
+
+    public function generateAssertion()
+    {
+        $now = time();
+
+        $claims = [
+            'iss' => $this->serviceAccountName,
+            'scope' => $this->scopes,
+            'aud' => 'https://accounts.google.com/o/oauth2/token',
+            'exp' => $now + 3600,
+            'iat' => $now,
+        ];
+
+        if ($this->sub) {
+            $claims['sub'] = $this->sub;
+        }
+
+        $header = ['alg' => 'RS256', 'typ' => 'JWT'];
+
+        $segments = [
+            Google_Utils::urlSafeB64Encode(json_encode($header)),
+            Google_Utils::urlSafeB64Encode(json_encode($claims)),
+        ];
+
+        $signingInput = implode('.', $segments);
+
+        $rsa = new \phpseclib\Crypt\RSA();
+        $rsa->loadKey($this->privateKey);
+        if ($this->privateKeyPassword) {
+            $rsa->setPassword($this->privateKeyPassword);
+        }
+        $rsa->setHash('sha256');
+        $rsa->setSignatureMode($rsa::SIGNATURE_PKCS1);
+        $signature = $rsa->sign($signingInput);
+
+        $segments[] = Google_Utils::urlSafeB64Encode($signature);
+
+        return implode('.', $segments);
     }
 }
