@@ -72,11 +72,16 @@ class AppController extends Controller
      */
     public function initialize(): void
     {
-        if (!file_exists(CONFIG . 'app_local.php')) {
+        // POCOR-9686: redirect to the installer when either of the two
+        // bootstrap configuration files is missing (app_local.php for the
+        // CakePHP core app, api/.env for the Laravel API).
+        $appLocalMissing = !file_exists(CONFIG . 'app_local.php');
+        $envMissing = !file_exists(ROOT . DS . 'api' . DS . '.env');
+        if ($appLocalMissing || $envMissing) {
             $url = Router::url(['plugin' => 'Installer', 'controller' => 'Installer', 'action' => 'index'], true);
             header('Location: ' . $url);
             die;
-        }
+        }// POCOR-9686 ends
 
         if (Configure::read('schoolMode')) {
             $this->productName = 'OpenEMIS School';
