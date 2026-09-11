@@ -209,7 +209,7 @@ class Custom_Client extends Google_Client
    * Set the authenticator object
    * @param Google_Auth_Abstract $auth
    */
-    public function setAuth(Google_Auth_Abstract $auth)
+    public function setAuth($auth)
     {
         $this->config->setAuthClass(get_class($auth));
         $this->auth = $auth;
@@ -229,7 +229,7 @@ class Custom_Client extends Google_Client
    * Set the Cache object
    * @param Google_Cache_Abstract $cache
    */
-    public function setCache(Google_Cache_Abstract $cache)
+    public function setCache($cache)
     {
         $this->config->setCacheClass(get_class($cache));
         $this->cache = $cache;
@@ -239,7 +239,7 @@ class Custom_Client extends Google_Client
    * Set the Logger object
    * @param Google_Logger_Abstract $logger
    */
-    public function setLogger(Google_Logger_Abstract $logger)
+    public function setLogger($logger)
     {
         $this->config->setLoggerClass(get_class($logger));
         $this->logger = $logger;
