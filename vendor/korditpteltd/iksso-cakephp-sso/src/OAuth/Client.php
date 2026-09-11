@@ -16,57 +16,61 @@
  */
 namespace SSO\OAuth;
 
-use Google_Client;
-use Google_Config;
-use Google_Exception;
-use Google_Auth_Exception;
-use Google_Auth_Abstract;
-use Google_IO_Abstract;
-use Google_Cache_Abstract;
-use Google_Logger_Abstract;
-use Google_Auth_AssertionCredentials;
 use Custom_Auth_OAuth2;
 
 /**
  * The Google API Client
  * https://github.com/google/google-api-php-client
+ *
+ * POCOR-9799: This class originally extended the Google API PHP Client v1
+ * `Google_Client` and relied on the v1 `Google_Config`/`Google_IO_*`
+ * scaffolding classes. None of those classes exist in the v2 library
+ * (`google/apiclient` 2.12.3) that is actually installed, so the class was
+ * never loadable in this environment (fatal "Declaration ... must be
+ * compatible with" / "Class ... not found" errors). This version keeps the
+ * exact same public API and OAuth2 semantics used by
+ * SSO\Controller\Component\OAuthAuthComponent and SSO\Auth\OAuthAuthenticate,
+ * but replaces the removed v1 scaffolding with a plain configuration array
+ * (in place of Google_Config) and no longer extends Google_Client (nothing
+ * usable was actually inherited from it - every method consumers call was
+ * already overridden here).
  */
-class Custom_Client extends Google_Client
+class Custom_Client
 {
     const LIBVER = "1.1.5";
     const USER_AGENT_SUFFIX = "google-api-php-client/";
+
   /**
-   * @var Google_Auth_Abstract $auth
+   * @var Custom_Auth_OAuth2 $auth
    */
     private $auth;
 
   /**
-   * @var Google_IO_Abstract $io
+   * @var \Google_IO_Http $io
    */
     private $io;
 
   /**
-   * @var Google_Cache_Abstract $cache
+   * @var \Google_Cache_Null $cache
    */
     private $cache;
 
   /**
-   * @var Google_Config $config
-   */
-    private $config;
-
-  /**
-   * @var Google_Logger_Abstract $logger
+   * @var \Google_Logger $logger
    */
     private $logger;
 
   /**
-   * @var boolean $deferExecution
+   * Flat key/value configuration store, replacing the removed
+   * Google_Config object. Written to by the setXxx() methods below and
+   * read back via getClassConfig()/setClassConfig(), matching the exact
+   * key names Custom_Auth_OAuth2 already reads.
+   *
+   * @var array
    */
-    private $deferExecution = false;
+    private $classConfig = [];
 
-  /** @var array $scopes */
-  // Scopes requested by the client
+  /** @var array $requestedScopes Scopes requested by the client */
     protected $requestedScopes = array();
 
   // definitions of services that are discovered.
@@ -80,38 +84,13 @@ class Custom_Client extends Google_Client
   /**
    * Construct the Google Client.
    *
-   * @param $config Google_Config or string for the ini file to load
+   * @param $config Unused; retained for call-site compatibility
+   *   (callers always pass null: `new Custom_Client(null, $oAuthAttributes)`).
+   * @param array $oAuthAttributes
    */
     public function __construct($config = null, $oAuthAttributes = [])
     {
-        if (is_string($config) && strlen($config)) {
-            $config = new Google_Config($config);
-        } else if (!($config instanceof Google_Config)) {
-            $config = new Google_Config();
-
-            if ($this->isAppEngine()) {
-                // Automatically use Memcache if we're in AppEngine.
-                $config->setCacheClass('Google_Cache_Memcache');
-            }
-
-            if (version_compare(phpversion(), "5.3.4", "<=") || $this->isAppEngine()) {
-                // Automatically disable compress.zlib, as currently unsupported.
-                $config->setClassConfig('Google_Http_Request', 'disable_gzip', true);
-            }
-        }
-
-        if ($config->getIoClass() == Google_Config::USE_AUTO_IO_SELECTION) {
-            if (function_exists('curl_version') && function_exists('curl_exec')
-              && !$this->isAppEngine()) {
-                $config->setIoClass("Google_IO_Curl");
-            } else {
-                $config->setIoClass("Google_IO_Stream");
-            }
-        }
-
         $this->oAuthAttributes = $oAuthAttributes;
-
-        $this->config = $config;
     }
 
   /**
@@ -130,7 +109,7 @@ class Custom_Client extends Google_Client
    * the request_uri argument
    * Helper wrapped around the OAuth 2.0 implementation.
    *
-   * @param $code string code from accounts.google.com
+   * @param $code string code from the IdP
    * @param $crossClient boolean, whether this is a cross-client authentication
    * @return string token
    */
@@ -142,18 +121,15 @@ class Custom_Client extends Google_Client
 
   /**
    * Set the auth config from the JSON string provided.
-   * This structure should match the file downloaded from
-   * the "Download JSON" button on in the Google Developer
-   * Console.
    * @param string $json the configuration json
-   * @throws Google_Exception
+   * @throws \Google_Exception
    */
     public function setAuthConfig($json)
     {
         $data = json_decode($json);
         $key = isset($data->installed) ? 'installed' : 'web';
         if (!isset($data->$key)) {
-            throw new Google_Exception("Invalid client secret JSON file.");
+            throw new \Google_Exception("Invalid client secret JSON file.");
         }
         $this->setClientId($data->$key->client_id);
         $this->setClientSecret($data->$key->client_secret);
@@ -163,10 +139,7 @@ class Custom_Client extends Google_Client
     }
 
   /**
-   * Set the auth config from the JSON file in the path
-   * provided. This should match the file downloaded from
-   * the "Download JSON" button on in the Google Developer
-   * Console.
+   * Set the auth config from the JSON file in the path provided.
    * @param string $file the file location of the client json
    */
     public function setAuthConfigFile($file)
@@ -175,14 +148,41 @@ class Custom_Client extends Google_Client
     }
 
   /**
-   * @throws Google_Auth_Exception
+   * Set the scopes to be requested. Must be called before createAuthUrl().
+   * Will remove any previously configured scopes.
+   * @param string|array $scope_or_scopes
+   */
+    public function setScopes($scope_or_scopes)
+    {
+        $this->requestedScopes = array();
+        $this->addScope($scope_or_scopes);
+    }
+
+  /**
+   * Adds a scope to be requested as part of the OAuth2.0 flow.
+   * Will append any scopes not previously requested to the scope parameter.
+   * @param string|array $scope_or_scopes
+   */
+    public function addScope($scope_or_scopes)
+    {
+        if (is_string($scope_or_scopes) && !in_array($scope_or_scopes, $this->requestedScopes)) {
+            $this->requestedScopes[] = $scope_or_scopes;
+        } elseif (is_array($scope_or_scopes)) {
+            foreach ($scope_or_scopes as $scope) {
+                $this->addScope($scope);
+            }
+        }
+    }
+
+  /**
+   * @throws \Google_Auth_Exception
    * @return array
    * @visible For Testing
    */
     public function prepareScopes()
     {
         if (empty($this->requestedScopes)) {
-            throw new Google_Auth_Exception("No scopes specified");
+            throw new \Google_Auth_Exception("No scopes specified");
         }
         $scopes = implode(' ', $this->requestedScopes);
         return $scopes;
@@ -190,7 +190,7 @@ class Custom_Client extends Google_Client
 
   /**
    * Set the OAuth 2.0 access token using the string that resulted from calling createAuthUrl()
-   * or Google_Client#getAccessToken().
+   * or Custom_Client#getAccessToken().
    * @param string $accessToken JSON encoded string containing in the following format:
    * {"access_token":"TOKEN", "refresh_token":"TOKEN", "token_type":"Bearer",
    *  "expires_in":3600, "id_token":"TOKEN", "created":1320790426}
@@ -203,45 +203,39 @@ class Custom_Client extends Google_Client
         $this->getAuth()->setAccessToken($accessToken);
     }
 
-
-
   /**
    * Set the authenticator object
-   * @param Google_Auth_Abstract $auth
+   * @param mixed $auth
    */
-    public function setAuth(Google_Auth_Abstract $auth)
+    public function setAuth($auth)
     {
-        $this->config->setAuthClass(get_class($auth));
         $this->auth = $auth;
     }
 
   /**
    * Set the IO object
-   * @param Google_IO_Abstract $io
+   * @param \Google_IO_Http $io
    */
-    public function setIo(Google_IO_Abstract $io)
+    public function setIo($io)
     {
-        $this->config->setIoClass(get_class($io));
         $this->io = $io;
     }
 
   /**
    * Set the Cache object
-   * @param Google_Cache_Abstract $cache
+   * @param \Google_Cache_Null $cache
    */
-    public function setCache(Google_Cache_Abstract $cache)
+    public function setCache($cache)
     {
-        $this->config->setCacheClass(get_class($cache));
         $this->cache = $cache;
     }
 
   /**
    * Set the Logger object
-   * @param Google_Logger_Abstract $logger
+   * @param \Google_Logger $logger
    */
-    public function setLogger(Google_Logger_Abstract $logger)
+    public function setLogger($logger)
     {
-        $this->config->setLoggerClass(get_class($logger));
         $this->logger = $logger;
     }
 
@@ -249,15 +243,17 @@ class Custom_Client extends Google_Client
    * Construct the OAuth 2.0 authorization request URI.
    * @return string
    */
-    public function createAuthUrl()
+    public function createAuthUrl($scope = null)
     {
-        $scopes = $this->prepareScopes();
-        return $this->getAuth()->createAuthUrl($scopes);
+        if (empty($scope)) {
+            $scope = $this->prepareScopes();
+        }
+        return $this->getAuth()->createAuthUrl($scope);
     }
 
   /**
    * Get the OAuth 2.0 access token.
-   * @return string $accessToken JSON encoded string in the following format:
+   * @return string|null $accessToken JSON encoded string in the following format:
    * {"access_token":"TOKEN", "refresh_token":"TOKEN", "token_type":"Bearer",
    *  "expires_in":3600,"id_token":"TOKEN", "created":1320790426}
    */
@@ -265,14 +261,12 @@ class Custom_Client extends Google_Client
     {
         $token = $this->getAuth()->getAccessToken();
         // The response is json encoded, so could be the string null.
-        // It is arguable whether this check should be here or lower
-        // in the library.
         return (null == $token || 'null' == $token || '[]' == $token) ? null : $token;
     }
 
   /**
    * Get the OAuth 2.0 refresh token.
-   * @return string $refreshToken refresh token or null if not available
+   * @return string|null $refreshToken refresh token or null if not available
    */
     public function getRefreshToken()
     {
@@ -290,7 +284,6 @@ class Custom_Client extends Google_Client
 
   /**
    * Set OAuth 2.0 "state" parameter to achieve per-request customization.
-   * @see http://tools.ietf.org/html/draft-ietf-oauth-v2-22#section-3.1.2.2
    * @param string $state
    */
     public function setState($state)
@@ -300,22 +293,22 @@ class Custom_Client extends Google_Client
 
   /**
    * @param string $accessType Possible values for access_type include:
-   *  {@code "offline"} to request offline access from the user.
-   *  {@code "online"} to request online access from the user.
+   *  "offline" to request offline access from the user.
+   *  "online" to request online access from the user.
    */
     public function setAccessType($accessType)
     {
-        $this->config->setAccessType($accessType);
+        $this->classConfig['access_type'] = $accessType;
     }
 
   /**
    * @param string $approvalPrompt Possible values for approval_prompt include:
-   *  {@code "force"} to force the approval UI to appear. (This is the default value)
-   *  {@code "auto"} to request auto-approval when possible.
+   *  "force" to force the approval UI to appear. (This is the default value)
+   *  "auto" to request auto-approval when possible.
    */
     public function setApprovalPrompt($approvalPrompt)
     {
-        $this->config->setApprovalPrompt($approvalPrompt);
+        $this->classConfig['approval_prompt'] = $approvalPrompt;
     }
 
   /**
@@ -324,7 +317,7 @@ class Custom_Client extends Google_Client
    */
     public function setLoginHint($loginHint)
     {
-        $this->config->setLoginHint($loginHint);
+        $this->classConfig['login_hint'] = $loginHint;
     }
 
   /**
@@ -333,7 +326,7 @@ class Custom_Client extends Google_Client
    */
     public function setApplicationName($applicationName)
     {
-        $this->config->setApplicationName($applicationName);
+        $this->classConfig['application_name'] = $applicationName;
     }
 
   /**
@@ -342,7 +335,7 @@ class Custom_Client extends Google_Client
    */
     public function setClientId($clientId)
     {
-        $this->config->setClientId($clientId);
+        $this->classConfig['client_id'] = $clientId;
     }
 
   /**
@@ -351,7 +344,7 @@ class Custom_Client extends Google_Client
    */
     public function setClientSecret($clientSecret)
     {
-        $this->config->setClientSecret($clientSecret);
+        $this->classConfig['client_secret'] = $clientSecret;
     }
 
   /**
@@ -360,15 +353,12 @@ class Custom_Client extends Google_Client
    */
     public function setRedirectUri($redirectUri)
     {
-        $this->config->setRedirectUri($redirectUri);
+        $this->classConfig['redirect_uri'] = $redirectUri;
     }
 
   /**
    * If 'plus.login' is included in the list of requested scopes, you can use
    * this method to define types of app activities that your app will write.
-   * You can find a list of available types here:
-   * @link https://developers.google.com/+/api/moment-types
-   *
    * @param array $requestVisibleActions Array of app activity types
    */
     public function setRequestVisibleActions($requestVisibleActions)
@@ -376,39 +366,36 @@ class Custom_Client extends Google_Client
         if (is_array($requestVisibleActions)) {
             $requestVisibleActions = join(" ", $requestVisibleActions);
         }
-        $this->config->setRequestVisibleActions($requestVisibleActions);
+        $this->classConfig['request_visible_actions'] = $requestVisibleActions;
     }
 
   /**
    * Set the developer key to use, these are obtained through the API Console.
-   * @see http://code.google.com/apis/console-help/#generatingdevkeys
    * @param string $developerKey
    */
     public function setDeveloperKey($developerKey)
     {
-        $this->config->setDeveloperKey($developerKey);
+        $this->classConfig['developer_key'] = $developerKey;
     }
 
   /**
-   * Set the hd (hosted domain) parameter streamlines the login process for
-   * Google Apps hosted accounts. By including the domain of the user, you
-   * restrict sign-in to accounts at that domain.
+   * The hd (hosted domain) parameter streamlines the login process for
+   * hosted accounts. By including the domain of the user, you restrict
+   * sign-in to accounts at that domain.
    * @param $hd string - the domain to use.
    */
     public function setHostedDomain($hd)
     {
-        $this->config->setHostedDomain($hd);
+        $this->classConfig['hd'] = $hd;
     }
 
   /**
    * Set the prompt hint. Valid values are none, consent and select_account.
-   * If no value is specified and the user has not previously authorized
-   * access, then the user is shown a consent screen.
    * @param $prompt string
    */
     public function setPrompt($prompt)
     {
-        $this->config->setPrompt($prompt);
+        $this->classConfig['prompt'] = $prompt;
     }
 
   /**
@@ -419,18 +406,18 @@ class Custom_Client extends Google_Client
    */
     public function setOpenidRealm($realm)
     {
-        $this->config->setOpenidRealm($realm);
+        $this->classConfig['openid.realm'] = $realm;
     }
 
   /**
    * If this is provided with the value true, and the authorization request is
    * granted, the authorization will include any previous authorizations
    * granted to this user/application combination for other scopes.
-   * @param $include boolean - the URL-space to use.
+   * @param $include boolean
    */
     public function setIncludeGrantedScopes($include)
     {
-        $this->config->setIncludeGrantedScopes($include);
+        $this->classConfig['include_granted_scopes'] = $include;
     }
 
   /**
@@ -445,7 +432,6 @@ class Custom_Client extends Google_Client
   /**
    * Revoke an OAuth2 access token or refresh token. This method will revoke the current access
    * token, if a token isn't provided.
-   * @throws Google_Auth_Exception
    * @param string|null $token The token (access token or a refresh token) that should be revoked.
    * @return boolean Returns True if the revocation was successful, otherwise False.
    */
@@ -457,10 +443,8 @@ class Custom_Client extends Google_Client
   /**
    * Verify an id_token. This method will verify the current id_token, if one
    * isn't provided.
-   * @throws Google_Auth_Exception
    * @param string|null $token The token (id_token) that should be verified.
-   * @return Google_Auth_LoginTicket Returns an apiLoginTicket if the verification was
-   * successful.
+   * @return \Google_Auth_LoginTicket Returns a login ticket if the verification was successful.
    */
     public function verifyIdToken($token = null)
     {
@@ -484,28 +468,26 @@ class Custom_Client extends Google_Client
             $audience = $this->getClassConfig($auth, 'client_id');
         }
         if (is_null($issuer)) {
-            $issuer = $this->oAuthAttributes['issuer'];
+            $issuer = $this->oAuthAttributes['issuer'] ?? null;
         }
         $certs = [];
         return $auth->verifySignedJwtWithCerts($id_token, $certs, $audience, $issuer, $max_expiry);
     }
 
   /**
-   * @param $creds Google_Auth_AssertionCredentials
+   * @param $creds \Google_Auth_AssertionCredentials
    */
-    public function setAssertionCredentials(Google_Auth_AssertionCredentials $creds)
+    public function setAssertionCredentials($creds)
     {
         $this->getAuth()->setAssertionCredentials($creds);
     }
 
   /**
-   * @return Google_Auth_Abstract Authentication implementation
+   * @return Custom_Auth_OAuth2 Authentication implementation
    */
     public function getAuth()
     {
-
         if (!isset($this->auth)) {
-            $this->config->setAuthClass('Custom_Auth_OAuth2');
             $this->auth = new Custom_Auth_OAuth2($this);
 
             $oAuthAttributes = $this->oAuthAttributes;
@@ -534,70 +516,70 @@ class Custom_Client extends Google_Client
     }
 
   /**
-   * @return Google_IO_Abstract IO implementation
+   * @return \Google_IO_Http IO implementation
    */
     public function getIo()
     {
         if (!isset($this->io)) {
-            $class = $this->config->getIoClass();
-            $this->io = new $class($this);
+            $this->io = new \Google_IO_Http($this);
         }
         return $this->io;
     }
 
   /**
-   * @return Google_Cache_Abstract Cache implementation
+   * @return \Google_Cache_Null Cache implementation
    */
     public function getCache()
     {
         if (!isset($this->cache)) {
-            $class = $this->config->getCacheClass();
-            $this->cache = new $class($this);
+            $this->cache = new \Google_Cache_Null($this);
         }
         return $this->cache;
     }
 
   /**
-   * @return Google_Logger_Abstract Logger implementation
+   * @return \Google_Logger Logger implementation
    */
     public function getLogger()
     {
         if (!isset($this->logger)) {
-            $class = $this->config->getLoggerClass();
-            $this->logger = new $class($this);
+            $this->logger = new \Google_Logger($this);
         }
         return $this->logger;
     }
 
   /**
    * Retrieve custom configuration for a specific class.
-   * @param $class string|object - class or instance of class to retrieve
+   * The $class argument is accepted for call-site compatibility but is
+   * not used to scope storage - this codebase only ever configures a
+   * single OAuth2 handler instance per client.
+   * @param $class string|object - unused, kept for compatibility
    * @param $key string optional - key to retrieve
-   * @return array
+   * @return mixed
    */
     public function getClassConfig($class, $key = null)
     {
-        if (!is_string($class)) {
-            $class = get_class($class);
+        if ($key === null) {
+            return $this->classConfig;
         }
-        return $this->config->getClassConfig($class, $key);
+        return $this->classConfig[$key] ?? null;
     }
 
   /**
    * Set configuration specific to a given class.
-   * $config->setClassConfig('Google_Cache_File',
-   *   array('directory' => '/tmp/cache'));
-   * @param $class string|object - The class name for the configuration
+   * @param $class string|object - unused, kept for compatibility
    * @param $config string key or an array of configuration values
    * @param $value string optional - if $config is a key, the value
-   *
    */
     public function setClassConfig($class, $config, $value = null)
     {
-        if (!is_string($class)) {
-            $class = get_class($class);
+        if (is_array($config)) {
+            foreach ($config as $configKey => $configValue) {
+                $this->classConfig[$configKey] = $configValue;
+            }
+            return;
         }
-        $this->config->setClassConfig($class, $config, $value);
+        $this->classConfig[$config] = $value;
     }
 
   /**
@@ -605,7 +587,7 @@ class Custom_Client extends Google_Client
    */
     public function getBasePath()
     {
-        return $this->config->getBasePath();
+        return $this->classConfig['base_path'] ?? '';
     }
 
   /**
@@ -613,7 +595,7 @@ class Custom_Client extends Google_Client
    */
     public function getApplicationName()
     {
-        return $this->config->getApplicationName();
+        return $this->classConfig['application_name'] ?? '';
     }
 
   /**

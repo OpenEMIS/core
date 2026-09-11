@@ -9,25 +9,29 @@ class IdpSamlTable extends Table
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->hasOne('SystemAuthentications', ['className' => 'SSO.SystemAuthentications', 'foreignKey' => 'id']);
+
+        $this->hasOne('SystemAuthentications', [
+            'className' => 'SSO.SystemAuthentications',
+            'foreignKey' => 'id',
+        ]);
     }
 
-    public function validationDefault(Validator $validator) : Validator
+    public function validationDefault(Validator $validator): Validator
     {
         return $validator
             ->requirePresence('idp_entity_id')
-            ->notEmpty('idp_entity_id')
+            ->notEmptyString('idp_entity_id')
             ->requirePresence('idp_sso')
-            ->notEmpty('idp_sso_binding')
+            ->notEmptyString('idp_sso')
             ->requirePresence('idp_slo')
-            ->notEmpty('idp_slo_binding')
+            ->notEmptyString('idp_slo')
             ->requirePresence('idp_x509cert')
-            ->notEmpty('idp_x509cert')
+            ->notEmptyString('idp_x509cert')
             ->requirePresence('sp_entity_id')
-            ->notEmpty('sp_entity_id')
+            ->notEmptyString('sp_entity_id')
             ->requirePresence('sp_acs')
-            ->notEmpty('sp_acs')
+            ->notEmptyString('sp_acs')
             ->requirePresence('sp_slo')
-            ->notEmpty('sp_slo');
+            ->notEmptyString('sp_slo');
     }
 }

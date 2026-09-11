@@ -2,28 +2,30 @@
 namespace SSO\Model\Table;
 
 use Cake\ORM\Table;
-use Cake\ORM\Entity;
-use ArrayObject;
 
 class AuthenticationTypesTable extends Table
 {
     public function initialize(array $config): void
     {
         parent::initialize($config);
-        $this->hasMany('SystemAuthentications', ['className' => 'SSO.SystemAuthentications']);
+
+        $this->hasMany('SystemAuthentications', [
+            'className' => 'SSO.SystemAuthentications',
+        ]);
     }
 
-    public function getId($authenticationName)
+    public function getId(string $authenticationName): ?int
     {
-        return $this
+        $entity = $this
             ->find()
             ->select([
-                $this->aliasField('id')
+                $this->aliasField('id'),
             ])
             ->where([
-                $this->aliasField('name') => $authenticationName
+                $this->aliasField('name') => $authenticationName,
             ])
-            ->first()
-            ->id;
+            ->first();
+
+        return $entity ? (int)$entity->id : null;
     }
 }
