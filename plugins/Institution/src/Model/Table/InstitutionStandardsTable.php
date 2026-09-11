@@ -12,6 +12,7 @@ use App\Model\Table\AppTable;
 use Cake\Log\Log;
 use Cake\Validation\Validator;
 use Cake\Database\Expression\QueryExpression;
+use Cake\Datasource\ConnectionManager; //POCOR-9611
 
 /**
  *
@@ -24,6 +25,25 @@ class InstitutionStandardsTable extends AppTable
 {
     // Used to get the dynamic fields from database
     private $_dynamicFieldName = 'custom_field_data';
+
+    //POCOR-9611: Feature group constants — centralise the "which features need which filters" logic
+    private const FEATURES_WITH_GRADE = [
+        'Institution.InstitutionStandardStudentAbsences',
+        'Institution.InstitutionStandardStudentAbsenceType',
+        'Institution.InstitutionStudentWeeklyAttendance',
+        'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
+    ];
+    private const FEATURES_WITH_CLASS = [
+        'Institution.InstitutionStandardStudentAbsences',
+        'Institution.InstitutionStandardStudentAbsenceType',
+        'Institution.InstitutionStudentWeeklyAttendance',
+        'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
+    ];
+    private const FEATURES_WITH_MONTH = [
+        'Institution.InstitutionStandardStudentAbsences',
+        'Institution.StudentAttendanceSummary',
+        'Institution.InstitutionStudentMonthlyAttendance', //POCOR-9611
+    ];
 
     /**
      * Initializing the dependencies
@@ -46,7 +66,7 @@ class InstitutionStandardsTable extends AppTable
             'autoFields' => false
         ]);
         $this->addBehavior('Report.ReportList');
-        $this->addBehavior('ControllerAction.FileUpload');
+        //$this->addBehavior('ControllerAction.FileUpload');
         $this->addBehavior('ControllerAction.QueryString');
     }
 
@@ -92,6 +112,7 @@ class InstitutionStandardsTable extends AppTable
         $this->ControllerAction->field('education_grade_id', ['type' => 'hidden']);
         $this->ControllerAction->field('institution_class_id', ['type' => 'hidden']);
         $this->ControllerAction->field('month', ['type' => 'hidden', 'after' => 'institution_class_id']);  // POCOR-6871
+        $this->ControllerAction->field('week_start_day', ['type' => 'hidden', 'after' => 'month']); //POCOR-9611: week filter for Students Weekly Attendance report
         $this->ControllerAction->field('username', ['type' => 'hidden']);
         $this->ControllerAction->field('openemis_no', ['type' => 'hidden']);
         $this->ControllerAction->field('first_name', ['type' => 'hidden', 'value' => 'x']);
@@ -199,8 +220,8 @@ class InstitutionStandardsTable extends AppTable
      */
     public function onUpdateFieldEducationGradeId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $report = ($this->request->getData($this->getAlias())['feature']);
-        if ($report == 'Institution.InstitutionStandardStudentAbsences' || $report == 'Institution.InstitutionStandardStudentAbsenceType') {
+        $report = ($this->request->getData($this->getAlias())['feature'] ?? ''); //POCOR-9611: null-safe
+        if (in_array($report, self::FEATURES_WITH_GRADE)) { //POCOR-9611: use constant group
             $feature = $this->request->getData($this->getAlias())['feature'];
             $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
             $institutionId = $this->request->getData($this->getAlias())['institution_id'];
@@ -224,10 +245,16 @@ class InstitutionStandardsTable extends AppTable
                     'EducationGrades.name' => 'ASC'
                 ])
                 ->toArray();
-            $attr['type'] = 'select';
-            $attr['select'] = false;
-            $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+            $attr['type']           = 'select';
+            $attr['select']         = false;
             $attr['onChangeReload'] = true;
+            //POCOR-9611: Weekly/Monthly Attendance requires a specific grade — no "All Grades" option
+            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
+                $attr['options']          = $gradeOptions;
+                $attr['attr']['required'] = true;
+            } else {
+                $attr['options'] = ['-1' => __('All Grades')] + $gradeOptions;
+            }
             return $attr;
         }
     }
@@ -266,30 +293,46 @@ class InstitutionStandardsTable extends AppTable
      */
     public function onUpdateFieldInstitutionClassId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $report = ($this->request->getData($this->getAlias())['feature']);
-        if ($report == 'Institution.InstitutionStandardStudentAbsences' || $report == 'Institution.InstitutionStandardStudentAbsenceType') {
+        $report = ($this->request->getData($this->getAlias())['feature'] ?? ''); //POCOR-9611: null-safe
+        if (in_array($report, self::FEATURES_WITH_CLASS)) { //POCOR-9611: use constant group
             $academicPeriodId = $this->request->getData($this->getAlias())['academic_period_id'];
             $educationgradeid = $this->request->getData($this->getAlias())['education_grade_id'];
             $institutionId = $this->request->getData($this->getAlias())['institution_id'];
             $InstitutionClass = TableRegistry::getTableLocator()->get('Institution.InstitutionClasses');
             $InstitutionClassGrades = TableRegistry::getTableLocator()->get('Institution.InstitutionClassGrades');
-            $classes = $InstitutionClass
+            //POCOR-9611: Filter classes by grade via InstitutionClassGrades join when a specific grade is selected
+            $classQuery = $InstitutionClass
                 ->find('list')
                 ->select([
-                    'id' => 'id',
-                    'name' => 'name',
+                    'id' => $InstitutionClass->aliasField('id'),
+                    'name' => $InstitutionClass->aliasField('name'),
                 ])
                 ->where([
                     $InstitutionClass->aliasField('institution_id') => $institutionId,
                     $InstitutionClass->aliasField('academic_period_id') => $academicPeriodId,
-                    // 'InstitutionClassGrades.education_grade_id' => $educationgradeid,
                 ])
-                ->order($InstitutionClass->aliasField('name'))
-                ->toArray();
-            $attr['type'] = 'select';
+                ->order($InstitutionClass->aliasField('name'));
+
+            if (!empty($educationgradeid) && $educationgradeid != '-1') {
+                $classQuery->innerJoin(
+                    [$InstitutionClassGrades->getAlias() => $InstitutionClassGrades->getTable()],
+                    [
+                        $InstitutionClassGrades->aliasField('institution_class_id') . ' = ' . $InstitutionClass->aliasField('id'),
+                        $InstitutionClassGrades->aliasField('education_grade_id') => $educationgradeid,
+                    ]
+                );
+            }
+            $classes        = $classQuery->toArray();
+            $attr['type']   = 'select';
             $attr['select'] = false;
-            $attr['options'] = ['0' => __('All Classes')] + $classes;
             $attr['onChangeReload'] = true;
+            //POCOR-9611: Weekly/Monthly Attendance requires a specific class — mixed modes per class
+            if (in_array($report, ['Institution.InstitutionStudentWeeklyAttendance', 'Institution.InstitutionStudentMonthlyAttendance'], true)) {
+                $attr['options']          = $classes;
+                $attr['attr']['required'] = true;
+            } else {
+                $attr['options'] = ['0' => __('All Classes')] + $classes;
+            }
             return $attr;
         }
     }
@@ -299,7 +342,7 @@ class InstitutionStandardsTable extends AppTable
     */
     public function onUpdateFieldAssessmentPeriodId(EventInterface $event, array $attr, $action, ServerRequest $request)
     {
-        $report = ($this->request->getData($this->getAlias())['feature']);
+        $report = ($this->request->getData($this->getAlias())['feature'] ?? ''); //POCOR-9611: null-safe
         if ($report == 'Institution.InstitutionStandardMarksEntered') {
             $feature  = $this->request->getData($this->getAlias())['feature'];
             $assessmentId =  $this->request->getData($this->getAlias())['assessment_id'];
@@ -963,15 +1006,120 @@ class InstitutionStandardsTable extends AppTable
     {
         $alias = $this->getAlias();
         $data = $this->request->getData($alias);
-        if (($data['feature']) == 'Institution.InstitutionStandardStudentAbsences'  || ($data['feature']) == 'Institution.StudentAttendanceSummary') {
+        if (in_array($data['feature'] ?? '', self::FEATURES_WITH_MONTH)) { //POCOR-9611: use constant group
             $monthoption = ['01' => "January", '02' => "February", '03' => "March", '04' => "April", '05' => "May", '06' => "June", '07' => "July", '08' => "August", '09' => "September", 10 => "October", 11 => "November", 12 => "December"];
             $attr['options']        = $monthoption;
             $attr['type']           = 'select';
             $attr['select']         = false;
             $attr['onChangeReload'] = true;
+            //POCOR-9611: Monthly Attendance requires a specific month
+            if (($data['feature'] ?? '') === 'Institution.InstitutionStudentMonthlyAttendance') {
+                $attr['attr']['required'] = true;
+            }
+            //POCOR-9611: Default to current month — attr.attr.value is merged into Form->input options, overriding POST/entity (month not in POST on first render)
+            if (empty($data['month'])) {
+                $data['month'] = date('m');
+                $this->request = $this->request->withData($alias, $data);
+            }
+            $attr['attr']['value'] = $data['month'];
             return $attr;
         }
     }
+    //POCOR-9611: Week dropdown for Students Weekly Attendance report — mirrors Laravel getAttendanceWeeks logic
+    public function onUpdateFieldWeekStartDay(EventInterface $event, array $attr, $action, $request)
+    {
+        $alias = $this->getAlias();
+        $data = $this->request->getData($alias);
+        if (($data['feature'] ?? '') !== 'Institution.InstitutionStudentWeeklyAttendance') { //POCOR-9611
+            return $attr; // hidden for other features
+        }
+
+        $academicPeriodId = (int)($data['academic_period_id'] ?? 0);
+        $weekOptions    = [];
+        $currentWeekKey = null; //POCOR-9611: declared at function scope so the default-inject below always sees it
+
+        if ($academicPeriodId > 0) {
+            $conn = ConnectionManager::get('default');
+
+            //POCOR-9611: Get academic period dates
+            $stmt = $conn->execute('SELECT start_date, end_date FROM academic_periods WHERE id = ? LIMIT 1', [$academicPeriodId]);
+            $period = $stmt->fetch('assoc');
+
+            //POCOR-9611: Get first_day_of_week config (0=Sun→7, 1=Mon, ..., 6=Sat)
+            $stmt = $conn->execute("SELECT value FROM config_items WHERE code = 'first_day_of_week' LIMIT 1");
+            $cfg = $stmt->fetch('assoc');
+            $firstDayOfWeek = ($cfg && $cfg['value'] !== '') ? (int)$cfg['value'] : 1;
+            if ($firstDayOfWeek === 0) {
+                $firstDayOfWeek = 7; // Sunday treated as 7 so Sunday ends the week
+            }
+            // Last day of week index (ISO: 1=Mon…7=Sun); end of week = day before firstDayOfWeek
+            $lastDayIndex = $firstDayOfWeek - 1;
+            if ($lastDayIndex === 0) {
+                $lastDayIndex = 7;
+            }
+
+            if ($period) {
+                $todayStr = date('Y-m-d');
+                $current = new DateTime($period['start_date']);
+                $periodEnd = new DateTime($period['end_date']);
+                $weekIndex = 1;
+
+                do {
+                    //POCOR-9611: Advance to the last-day-of-week (same algorithm as Laravel next('Sunday'))
+                    $weekEnd = clone $current;
+                    $dow = (int)$weekEnd->format('N'); // 1=Mon…7=Sun
+                    if ($dow !== $lastDayIndex) {
+                        $daysToEnd = ($lastDayIndex - $dow + 7) % 7;
+                        if ($daysToEnd === 0) {
+                            $daysToEnd = 7;
+                        }
+                        $weekEnd->modify("+{$daysToEnd} days");
+                    }
+                    if ($weekEnd > $periodEnd) {
+                        $weekEnd = clone $periodEnd;
+                    }
+
+                    $startStr = $current->format('Y-m-d');
+                    $endStr   = $weekEnd->format('Y-m-d');
+                    $startFmt = $current->format('d/m/Y');
+                    $endFmt   = $weekEnd->format('d/m/Y');
+
+                    if ($todayStr >= $startStr && $todayStr <= $endStr) {
+                        $label = sprintf(__('Current Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
+                        $currentWeekKey = $startStr; //POCOR-9611: today falls in this week
+                    } elseif ($todayStr > $endStr) {
+                        $currentWeekKey = $startStr; //POCOR-9611: keep advancing — last past week becomes default when today is beyond the period
+                        $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
+                    } else {
+                        $label = sprintf(__('Week') . ' %d (%s - %s)', $weekIndex, $startFmt, $endFmt);
+                    }
+
+                    $weekOptions[$startStr] = $label;
+                    $weekIndex++;
+
+                    $current = clone $weekEnd;
+                    $current->modify('+1 day');
+
+                } while ($weekEnd < $periodEnd);
+            }
+        }
+
+        $attr['options']          = $weekOptions;
+        $attr['type']             = 'select';
+        $attr['select']           = false;
+        $attr['onChangeReload']   = false;
+        $attr['attr']['required'] = true; //POCOR-9611: week is required for this report
+        //POCOR-9611: Default to current/latest past week
+        if (empty($data['week_start_day']) && $currentWeekKey !== null) {
+            $data['week_start_day'] = $currentWeekKey;
+            $this->request = $this->request->withData($alias, $data);
+        }
+        if (!empty($data['week_start_day'])) {
+            $attr['attr']['value'] = $data['week_start_day']; //POCOR-9611: attr.attr.value overrides POST/entity for first render
+        }
+        return $attr;
+    }
+
     public function onGetFieldLabel(EventInterface $event, $module, $field, $language, $autoHumanize = true)
     {
         switch ($field) {
@@ -989,6 +1137,8 @@ class InstitutionStandardsTable extends AppTable
                 return __('Education Grade');
             case 'month':
                 return __('Month');
+            case 'week_start_day': //POCOR-9611
+                return __('Week');
             case 'format':
                 return __('Format');
 
