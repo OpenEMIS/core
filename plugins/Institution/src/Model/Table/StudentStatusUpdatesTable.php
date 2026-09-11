@@ -89,7 +89,7 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         return '<span class="status highlight">'.$status.'</span>';
     }
 
-    public function getStudentWithdrawalRecords($first = false)
+    public function getStudentWithdrawalRecords($first = false, $excludeIds = [])
     {
 
         $academicPeriod = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -102,18 +102,26 @@ class StudentStatusUpdatesTable extends ControllerActionTable
         $today = $today->format('Y-m-d');
 
         if($academicPeriodEndDate >= $today && $academicPeriodEffectiveDate <= $today){
-//             Log::write('debug', 'End date');
-//             Log::write('debug', $academicPeriodEndDate);
-//             Log::write('debug', 'Start date');
-//             Log::write('debug', $academicPeriodEffectiveDate);
-//             Log::write('debug', 'Today date');
-//             Log::write('debug', $today);
+            Log::write('debug', 'End date');
+            Log::write('debug', $academicPeriodEndDate);
+            Log::write('debug', 'Start date');
+            Log::write('debug', $academicPeriodEffectiveDate);
+            Log::write('debug', 'Today date');
+            Log::write('debug', $today);
+            // POCOR-9770: only process withdrawals belonging to the current academic
+            // period, so stale records from past periods aren't picked up by the retry/cron path
+            $conditions = [
+                $this->aliasField('effective_date <= ') => $today,
+                $this->aliasField('execution_status') => self::NOT_EXECUTED
+            ];
+            if (!empty($excludeIds)) {
+                $conditions[$this->aliasField('id NOT IN')] = $excludeIds;
+            }
+            Log::write('debug', 'excludeIds');
+            Log::write('debug', 'excludeIds: ' . print_r($excludeIds, true));
             $query = $this
                 ->find()
-                ->where([
-                    $this->aliasField('effective_date <= ') => $today,
-                    $this->aliasField('execution_status') => self::NOT_EXECUTED
-                ])
+                ->where($conditions)
                 ->order(['created' => 'asc']);
             if ($first) {
                 $studentWithdrawRecords = $query->first();
@@ -121,6 +129,8 @@ class StudentStatusUpdatesTable extends ControllerActionTable
                 $studentWithdrawRecords = $query->toArray();
             }
 
+            Log::write('debug', 'studentWithdrawRecords');
+            Log::write('debug', 'excludeIds: ' . print_r($studentWithdrawRecords, true));
         }
         return $studentWithdrawRecords;
 

@@ -89,6 +89,10 @@ COPY ./docker-config/init.sh /usr/bin/init.sh
 COPY ./docker-config/cron/openemis-core /etc/cron.d/openemis-core
 RUN chmod 0644 /etc/cron.d/openemis-core
 
+# POCOR-9770: daily Student Status Updates catch-up (see file header for why)
+COPY ./docker-config/cron/openemis-core-student-status /etc/cron.d/openemis-core-student-status
+RUN chmod 0644 /etc/cron.d/openemis-core-student-status
+
 RUN chmod 755 /usr/bin/init.sh
 
 # Container Start Command

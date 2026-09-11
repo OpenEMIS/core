@@ -1,0 +1,16 @@
+# POCOR-9770: daily catch-up for Institution > Student Status Updates.
+#
+# UpdateStudentStatusShell is normally triggered once via
+# StudentStatusUpdatesTable::afterSave() when a withdrawal is approved. If the
+# withdrawal's effective_date is still in the future at that moment, that one-shot
+# run correctly finds nothing to do yet - but nothing ever rechecks it again once
+# the date arrives, since the retry path in checkRequireUpdate() (and its old
+# Dashboard-page-load caller, disabled under POCOR-9509 for CPU reasons) are both
+# intentionally left disabled. This cron entry replaces that retry path without
+# reintroducing the page-load trigger.
+#
+# This file is installed at /etc/cron.d/openemis-core-student-status in the Docker image.
+# Format for /etc/cron.d/: minute hour dom month dow USER command
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+0  3  *  *  *  www-data  cd /var/www/html/core && bin/cake UpdateStudentStatus Institution.StudentStatusUpdates >> logs/UpdateStudentStatus.log 2>&1
