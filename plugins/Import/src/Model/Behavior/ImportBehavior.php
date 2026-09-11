@@ -439,7 +439,7 @@ class ImportBehavior extends Behavior
      * @param EventInterface $event Event object
      * @param Entity $entity Entity object containing the uploaded file parameters
      * @param ArrayObject $data Event object
-     * @return Response             Response object
+     *            Response object
      */
     public function addBeforeSave(EventInterface $event, Entity $entity, ArrayObject $data)
     {
@@ -583,6 +583,11 @@ class ImportBehavior extends Behavior
                 $checkCustomColumn = new ArrayObject;
                 $extra['entityValidate'] = true;
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
+                // POCOR-9796 [TEMP-LOG]: checkpoint right after _extractRecord() returns, to
+                // narrow down whether execution continues on to the patchEntity/save block below.
+                Log::debug('@ImportBehavior::processImport CHECKPOINT-A row=' . $row
+                    . ' rowPass=' . json_encode($rowPass)
+                    . ' rowInvalidCodeColsCount=' . $rowInvalidCodeCols->count());
 
                 // POCOR-9796: some validation branches (e.g. account_type not matching any known
                 // code) record an error in rowInvalidCodeCols without also flipping entityValidate,
@@ -614,7 +619,19 @@ class ImportBehavior extends Behavior
                     unset($tempRow['entity']);
                 }
                 $feature = $this->_table->request->getData()['ImportStaff']['feature'] ?? null;
-                if ($extra['entityValidate'] == true) {
+                // POCOR-9796: patchEntity() (unlike save() below) never writes to the database -
+                // it only builds an in-memory entity and runs its validator, which is exactly what
+                // produces accurate per-field error messages. Skipping it whenever this row already
+                // had some other unrelated error (the old `entityValidate == true` gate around this
+                // whole block) left $tableEntity as a completely empty, never-patched entity - so its
+                // "required" errors were always artifacts of that emptiness, not of the real data,
+                // and worse, any *other* genuinely-blank required field on the same row (one with no
+                // dedicated per-column check of its own) never got reported at all. Always patch here
+                // - inside a try/catch, since this is exactly the "patchEntity on unexpected data
+                // shapes can throw" case the entityValidate flag was originally introduced to guard
+                // against - and keep the actual save() below gated behind entityValidate, so a row
+                // already known to have a problem is still never written to the database.
+                try {
                     //POCOR-9394[START]
                     //POCOR-9417[START]
                     $AcademicPeriods = TableRegistry::getTableLocator()->get('AcademicPeriod.AcademicPeriods');
@@ -658,9 +675,21 @@ class ImportBehavior extends Behavior
                     // Log::debug('@ImportBehavior::processImport patchEntity with tempRow=' . json_encode($tempRow)); //[TEMP-LOG]
                     //$activeModel->patchEntity($tableEntity, $tempRow);
                     $tableEntity = $activeModel->patchEntity($tableEntity, $tempRow);
+                } catch (\Throwable $e) {
+                    // POCOR-9796: patchEntity() choked on this row's data shape - fall back to the
+                    // pre-existing behaviour (leave $tableEntity as the empty entity) rather than
+                    // letting the exception bubble up and abort the whole import.
+                    Log::error('@ImportBehavior::processImport patchEntity threw for row=' . $row . ': ' . $e->getMessage());
                 }
 
                 $errors = $tableEntity->getErrors();
+                // POCOR-9796 [TEMP-LOG]: what actually went into patchEntity for this row,
+                // and what Cake's own entity validator made of it.
+                Log::debug('@ImportBehavior::processImport row=' . $row
+                    . ' tempRow.username=' . json_encode($tempRow['username'] ?? '(unset)')
+                    . ' tempRow.gender_id=' . json_encode($tempRow['gender_id'] ?? '(unset)')
+                    . ' entityValidateFlag=' . json_encode($extra['entityValidate'])
+                    . ' entityErrors=' . json_encode($errors));
                 // Log::debug('@ImportBehavior::processImport errors_after_patchEntity=' . json_encode($errors)); //[TEMP-LOG]
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
@@ -737,8 +766,30 @@ class ImportBehavior extends Behavior
                 if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
                     $rowCodeError = '';
                     $rowCodeErrorForExcel = [];
+                    // POCOR-9796: build the report from our own per-column checks ($rowInvalidCodeCols)
+                    // FIRST - those carry the actual, specific reason a value was rejected (e.g. "value
+                    // not in list", "Institution With This Code Not Found"). The generic Cake entity
+                    // validator below only ever produces its framework-default "This field is required"
+                    // for the same field whenever that field ended up empty on $tempRow, which used to
+                    // take priority and silently swallow the real explanation - always showing the
+                    // unhelpful generic message instead of the one that actually says what's wrong.
+                    if (!empty($rowInvalidCodeCols)) {
+                        foreach ($rowInvalidCodeCols as $field => $errMessage) {
+                            $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
+                            $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
+                            $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
+                        }
+                    }
+                    // POCOR-9796: patchEntity() now always runs (see the try/catch above), so $errors
+                    // always reflects this row's real, patched data - genuinely missing/invalid required
+                    // fields that have no dedicated per-column check of their own (e.g. a blank Last
+                    // Name) are only ever caught here, so this must not be conditioned on entityValidate
+                    // (that flag now only controls whether save() below is attempted).
                     if (!empty($errors)) {
                         foreach ($errors as $field => $arr) {
+                            if (isset($rowInvalidCodeCols[$field])) {
+                                continue; // already reported above with a more specific message
+                            }
                             $arr = array_reverse($arr, true);
                             if (in_array($field, $columns)) {
                                 $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
@@ -754,15 +805,6 @@ class ImportBehavior extends Behavior
                                     $rowCodeErrorForExcel[] = $arr[key($arr)];
                                 }
                                 $model->log('@ImportBehavior line ' . __LINE__ . ': ' . $activeModel->getRegistryAlias() . ' -> ' . $field . ' => ' . $arr[key($arr)], 'info');
-                            }
-                        }
-                    }
-                    if (!empty($rowInvalidCodeCols)) {
-                        foreach ($rowInvalidCodeCols as $field => $errMessage) {
-                            $fieldName = $this->getExcelLabel($activeModel->getRegistryAlias(), $field);
-                            if (!isset($errors[$field])) {
-                                $rowCodeError .= '<li>' . $fieldName . ' => ' . $errMessage . '</li>';
-                                $rowCodeErrorForExcel[] = $fieldName . ' => ' . $errMessage;
                             }
                         }
                     }
@@ -2005,12 +2047,24 @@ class ImportBehavior extends Behavior
                         $dateObject->setDate((int)$split[2], (int)$split[1], (int)$split[0]);
 
                         // compare the date input and new formatted date to cater (31/02/2016 changed to 02/03/2016)
-                        if ($val != $dateObject->format('d/m/Y')) {
+                        $roundTripped = $dateObject->format('d/m/Y');
+                        if (in_array($columnName, ['date_of_birth', 'guardian_date_of_birth', 'start_date'], true)) {
+                            // POCOR-9796 [TEMP-LOG]: this date round-trip check is rejecting some
+                            // apparently well-formed dd/mm/yyyy dates - capture the exact input,
+                            // parsed parts, and round-tripped output to see where they diverge.
+                            Log::debug('@ImportBehavior::_extractRecord DATE-ROUNDTRIP col=' . $col
+                                . ' columnName=' . json_encode($columnName)
+                                . ' val=' . json_encode($val)
+                                . ' split=' . json_encode($split)
+                                . ' roundTripped=' . json_encode($roundTripped)
+                                . ' match=' . json_encode($val === $roundTripped));
+                        }
+                        if ($val != $roundTripped) {
                             $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
                             $rowPass = false;
                             $extra['entityValidate'] = false;
                         } else {
-                            $originalRow[$col] = $dateObject->format('d/m/Y');
+                            $originalRow[$col] = $roundTripped;
                         }
                     } else {
                         // string input without the correct format (not dd/mm/yyyy)
@@ -2028,6 +2082,16 @@ class ImportBehavior extends Behavior
             }
 
             if ($foreignKey == self::FIELD_OPTION) {
+                if (in_array($columnName, ['username', 'gender_id', 'guardian_gender_id'], true)) {
+                    // POCOR-9796 [TEMP-LOG]: trace exactly what this column's cell resolves to
+                    // and whether it matches a key in the generated lookup table.
+                    Log::debug('@ImportBehavior::_extractRecord FIELD_OPTION col=' . $col
+                        . ' columnName=' . json_encode($columnName)
+                        . ' rawCellValue=' . json_encode($cellValue)
+                        . ' isOptional=' . json_encode($isOptional)
+                        . ' lookupKeysForCol=' . json_encode(isset($lookup[$col]) ? array_keys($lookup[$col]) : '(no lookup for this col)')
+                        . ' matchFound=' . json_encode(isset($lookup[$col][$cellValue])));
+                }
                 if (!empty($cellValue)) {
                     if (isset($lookup[$col][$cellValue])) {
                         $val = $lookup[$col][$cellValue]['id'];

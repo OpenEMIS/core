@@ -156,6 +156,12 @@ class ImportUsersTable extends AppTable
         $usernameNoIndex   = key($extractedUsername->toArray()) + 1;
         $username          = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
         $username          = is_string($username) ? trim($username) : $username;
+        // POCOR-9796 [TEMP-LOG]: confirm the 'username' column is actually being located in
+        // the sheet and what raw value is read from it before any auto-generation/validation.
+        Log::debug('@ImportUsersTable::onImportCheckUnique row=' . $row
+            . ' usernameColumnFound=' . json_encode(!$extractedUsername->isEmpty())
+            . ' usernameNoIndex=' . json_encode($usernameNoIndex)
+            . ' rawUsername=' . json_encode($username));
 
         $extractedPassword = $columns->filter(fn($v) => strtolower(trim($v)) === 'password');
         $passwordColIndex  = key($extractedPassword->toArray()) + 1;
@@ -410,6 +416,25 @@ class ImportUsersTable extends AppTable
      */
     public function onImportModelSpecificValidation(EventInterface $event, $references, $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
+        // POCOR-9796: Username is not meant to be mandatory - onImportCheckUnique() already
+        // auto-generates one when the sheet leaves it blank, but ImportBehavior::_extractRecord()
+        // runs afterwards and re-copies every mapped column's raw cell value (blank included) back
+        // onto $tempRow, clobbering the generated value whenever the "Username" column isn't marked
+        // optional in the import mapping config. Re-assert it here, right before the row is
+        // validated/saved, so a blank Username in the sheet never blocks record creation.
+        // POCOR-9796 [TEMP-LOG]: snapshot of the exact values this row carries into save,
+        // right where "Username"/"Gender" have last been touched by earlier hooks.
+        Log::debug('@ImportUsersTable::onImportModelSpecificValidation ENTRY'
+            . ' username=' . json_encode($tempRow['username'] ?? '(unset)')
+            . ' gender_id=' . json_encode($tempRow['gender_id'] ?? '(unset)')
+            . ' guardian_gender_id=' . json_encode($tempRow['guardian_gender_id'] ?? '(unset)')
+            . ' account_type=' . json_encode($tempRow['account_type'] ?? '(unset)'));
+
+        if (empty($tempRow['username'])) {
+            $tempRow['username'] = $this->Users->ensureUniqueUsername(
+                $tempRow['openemis_no'] ?? $this->Users->nextOpenEmisNo()
+            );
+        }
 
         $ConfigItems = self::getDynamicTableInstance('Configuration.ConfigItems');
         $isStaff = ($tempRow['account_type'] == self::IS_STAFF);
@@ -444,26 +469,28 @@ class ImportUsersTable extends AppTable
         }
 
         $tempRow['record_source'] = 'import_user';
-        if (0 == $rowInvalidCodeCols->count()) {
-            if ($isStudent) {
-                //POCOR-9385: start — student creation restriction (no institution/grade context)
-                if (!isset($tempRow['institution_code']) || empty($tempRow['institution_code'])) {
-                    if (!$this->isStudentCreationAllowed(null)) { //POCOR-9385: no grade = blanket block
-                        $rowInvalidCodeCols['is_student'] = $this->studentCreationBlockMessageNoGrade();
-                        return false;
-                    }
-                }
-                //POCOR-9385: end — student creation restriction (no institution/grade context)
-
-                if (!$have_error) {
-
-                    list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
-
-                }
-                if (!$have_error) {
-                    list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+        // POCOR-9796: this used to be wrapped in `if (0 == $rowInvalidCodeCols->count())`, so a
+        // single earlier error anywhere above (e.g. a blank Identity Number) skipped the ENTIRE
+        // admission+guardian check block below - meaning Start Date, Class Name, and every Guardian
+        // field (Last Name, Date of Birth, Gender...) never even got checked, let alone reported,
+        // on that same row. checkNewAdmission()/checkNewGuardian() and everything they call already
+        // guard their own actual database writes behind their own prerequisites being met (e.g.
+        // checkAdmission won't attempt to save when its own required fields are blank), so running
+        // them regardless of earlier errors is safe and just means more of the row's real problems
+        // get surfaced together instead of one hiding all the rest.
+        if ($isStudent) {
+            //POCOR-9385: start — student creation restriction (no institution/grade context)
+            if (!isset($tempRow['institution_code']) || empty($tempRow['institution_code'])) {
+                if (!$this->isStudentCreationAllowed(null)) { //POCOR-9385: no grade = blanket block
+                    $rowInvalidCodeCols['is_student'] = $this->studentCreationBlockMessageNoGrade();
+                    return false;
                 }
             }
+            //POCOR-9385: end — student creation restriction (no institution/grade context)
+
+            list($tempRow, $rowInvalidCodeCols, $admissionHasError) = $this->checkNewAdmission($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+            list($tempRow, $rowInvalidCodeCols, $guardianHasError) = $this->checkNewGuardian($have_error, $tempRow, $rowInvalidCodeCols, $originalRow);
+            $have_error = $have_error || $admissionHasError || $guardianHasError;
         }
         if($have_error){
             return false;
@@ -1516,7 +1543,22 @@ class ImportUsersTable extends AppTable
                     $tempRow['security_user_id'] = $newId;
                     $tempRow['entity'] = $newEntity;
                 }else{
-                    $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error';
+                    // POCOR-9796: surface the entity's actual validation errors instead of a bare
+                    // "New Student Creation Error" - without this, the real reason the row failed
+                    // (e.g. an invalid identity number, a duplicate, whatever it actually was) was
+                    // never shown, and this row also being the only entry in $rowInvalidCodeCols
+                    // tripped the "skip patchEntity()" guard in ImportBehavior, so the report only
+                    // ever showed a wall of unrelated "This field is required" noise instead.
+                    $newEntityErrors = $newEntity->getErrors();
+                    if (!empty($newEntityErrors)) {
+                        $flatMessages = [];
+                        foreach ($newEntityErrors as $field => $fieldErrors) {
+                            $flatMessages[] = $field . ': ' . implode(', ', (array) $fieldErrors);
+                        }
+                        $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error - ' . implode('; ', $flatMessages);
+                    } else {
+                        $rowInvalidCodeCols['openemis_no'] = 'New Student Creation Error';
+                    }
                     $have_error = true;
                 }
 
@@ -1584,17 +1626,16 @@ class ImportUsersTable extends AppTable
 //                    $newGuardian = $this->Users->patchEntity($tempRow['guardian_entity'], $guardian); // POCOR-8835
                 } else {
                     $newGuardian = $this->Users->newEntity($guardian);
-                    if ($newGuardian->getErrors()) { // POCOR-7973
-
-                        $errorMessages = array_reduce(
-                            $newGuardian->getErrors(),
-                            function ($carry, $errors) {
-                                return array_merge($carry, $errors);
-                            },
-                            []
-                        );
-
-                        $rowInvalidCodeCols['guardian_openemis_no'] = implode(',', $errorMessages);
+                    $newGuardianErrors = $newGuardian->getErrors();
+                    if ($newGuardianErrors) { // POCOR-7973
+                        // POCOR-9796: report each guardian field's own error under its own
+                        // "guardian_<field>" key (e.g. "Guardian Date Of Birth => This field is
+                        // required") instead of dumping every message into one generic
+                        // "guardian_openemis_no" bucket, which hid exactly which guardian field
+                        // was actually the problem.
+                        foreach ($newGuardianErrors as $field => $fieldErrors) {
+                            $this->addError($rowInvalidCodeCols, 'guardian_' . $field, implode(', ', (array) $fieldErrors));
+                        }
                         $tempRow['guardian_error'] = true;
                         $have_error = true;
                     }
@@ -1711,15 +1752,23 @@ class ImportUsersTable extends AppTable
                 }
                 //POCOR-9385: end — student creation restriction check with institution-aware grade context
 
-                $have_error = $have_error || $this->checkClassName($tempRow, $rowInvalidCodeCols);
-
-
-                $have_error = $have_error || $this->checkStartDate($tempRow, $rowInvalidCodeCols);
-
+                // POCOR-9796: checkClassName/checkStartDate are pure validation (no DB writes) -
+                // call both unconditionally so a Class Name problem doesn't hide behind a Start
+                // Date problem or vice versa (the old `$have_error || $this->check...()` chain
+                // short-circuited: as soon as one check failed, `||` never even called the next
+                // one, so only the first blank/invalid mandatory field on a row ever got reported).
+                $classNameHasError = $this->checkClassName($tempRow, $rowInvalidCodeCols);
+                $startDateHasError = $this->checkStartDate($tempRow, $rowInvalidCodeCols);
+                $have_error = $have_error || $classNameHasError || $startDateHasError;
 
                 $tempRow['assignee_id'] = $this->Auth->user('id'); // Assignee as current user
 
-                $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
+                // checkAdmission() actually creates/saves records (student + admission), so it
+                // stays gated behind $have_error - never attempt a save once we already know
+                // this row has a problem elsewhere.
+                if (!$have_error) {
+                    $have_error = $have_error || $this->checkAdmission($tempRow, $rowInvalidCodeCols); // TODO check
+                }
 
 
             }
@@ -1812,12 +1861,19 @@ class ImportUsersTable extends AppTable
 
     private function checkNewRelationship(&$tempRow, &$rowInvalidCodeCols): bool
     {
-        $have_error = false;
-        list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $have_error);
-        if ($have_error) {
-            return true;
-        }
-        list($tempRow, $rowInvalidCodeCols, $have_error) = $this->checkCreateNewGuardian($tempRow, $rowInvalidCodeCols, $have_error);
+        // POCOR-9796: checkCreateNewGuardian() used to be skipped outright whenever
+        // checkCreateNewStudent() already failed (e.g. a bad Username/First Name) - so a row
+        // with both a student problem AND a guardian problem (e.g. a malformed Guardian Date of
+        // Birth) only ever reported the student-side issue, never even attempting to validate
+        // the guardian side. Run both and combine their results, same as the admission/guardian
+        // split above this.
+        $studentHasError = false;
+        list($tempRow, $rowInvalidCodeCols, $studentHasError) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $studentHasError);
+
+        $guardianHasError = false;
+        list($tempRow, $rowInvalidCodeCols, $guardianHasError) = $this->checkCreateNewGuardian($tempRow, $rowInvalidCodeCols, $guardianHasError);
+
+        $have_error = $studentHasError || $guardianHasError;
         if ($have_error) {
             return true;
         }
