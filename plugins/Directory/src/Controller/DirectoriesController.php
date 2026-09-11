@@ -976,7 +976,7 @@ class DirectoriesController extends AppController
                 }
                 $this->Navigation->addCrumb($model->getHeader($alias));
                 $directoryUrl =  $this->request->getAttribute('params')['pass'][0] ?? null;
-                // POCOR-9795: the base "/Directory/Directories/" listing route has no pass
+                // POCOR-9796: the base "/Directory/Directories/" listing route has no pass
                 // segment at all (see plugins/Directory/config/routes.php), so pass[0] is
                 // undefined rather than the literal string 'index' there - treat it as index
                 // too, but only for the base listing itself. Other sub-action tabs (Student
