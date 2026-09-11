@@ -571,26 +571,10 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             $totalLate    = 0;
             $totalAbsent  = 0;
 
-            //POCOR-9611: One column per day — collapsed across slots. The first slot in the
-            //            (deterministic) slots list represents the day when several periods/
-            //            subjects are marked; totals use the same representative status.
-            $daySlot = $slots[0];
-
+            //POCOR-9611(fix): One column per day — collapsed across slots per the "Mark present
+            //            if one or more records present" rule. See resolveDayStatus() below.
             foreach ($days as $dayKey => $date) {
-                $mrKey  = "{$date}|{$daySlot['mr_period']}|{$daySlot['mr_subject_id']}";
-                $abKey  = "{$studentId}|{$date}|{$daySlot['abd_period']}|{$daySlot['abd_subject_id']}";
-                $mr     = $mrIndex[$mrKey]  ?? null;
-                $ab     = $abIndex[$abKey]  ?? null;
-
-                if ($mr === null) {
-                    $status = 'NOTMARKED';
-                } elseif ((int)$mr['no_scheduled_class'] === 1) {
-                    $status = 'NO CLASS';
-                } elseif ($ab !== null) {
-                    $status = $absenceTypeMap[(int)$ab['absence_type_id']] ?? 'PRESENT';
-                } else {
-                    $status = 'PRESENT';
-                }
+                $status = self::resolveDayStatus($slots, $date, $studentId, $mrIndex, $abIndex, $absenceTypeMap);
 
                 $colAlias = "col_{$dayKey}";
                 $cols[]   = $firstRow ? "'{$status}' AS {$colAlias}" : "'{$status}'";
@@ -621,6 +605,74 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         }
 
         return implode("\nUNION ALL\n", $unionParts);
+    }
+
+    /**
+     * POCOR-9611(fix): Collapses one day's several period/subject slots into a single status.
+     *
+     * Priority, evaluated across ALL slots for the day (not just the first one):
+     *   1. PRESENT or LATE wins outright - "mark present if one or more records present".
+     *   2. Otherwise, any slot that was genuinely marked with a real absence (EXCUSED/UNEXCUSED)
+     *      wins over a slot that was simply never marked at all - a day where one period has no
+     *      mark record but another period has a real recorded absence must show that absence,
+     *      not NOTMARKED (found via a live-data check: a student unmarked in Period 1 but marked
+     *      Excused in Period 2 was wrongly showing NOTMARKED for the whole day, discarding the
+     *      one real record that existed).
+     *   3. Only when nothing on any slot is present/late/excused/unexcused (e.g. every slot is
+     *      genuinely NOTMARKED, or NO CLASS) does this fall back to the first slot's own status,
+     *      to stay deterministic.
+     *
+     * Pure/static and DB-free by design so it can be unit tested without a database connection -
+     * callers pass in the already-fetched mark/absence indexes rather than this method querying
+     * them itself.
+     *
+     * @param array  $slots          Ordered list of ['mr_period', 'mr_subject_id', 'abd_period', 'abd_subject_id']
+     * @param string $date           The day being resolved, in the same format used as the mark-index key
+     * @param mixed  $studentId      Student id, used to key into $abIndex
+     * @param array  $mrIndex        Marked-records index, keyed "date|period|subject_id"
+     * @param array  $abIndex        Absence-details index, keyed "studentId|date|period|subject_id"
+     * @param array  $absenceTypeMap Map of absence_type_id => status label
+     * @return string One of PRESENT, LATE, EXCUSED, UNEXCUSED, NO CLASS, NOTMARKED
+     */
+    public static function resolveDayStatus(
+        array $slots,
+        string $date,
+        $studentId,
+        array $mrIndex,
+        array $abIndex,
+        array $absenceTypeMap
+    ): string {
+        $fallbackStatus = 'NOTMARKED';
+        $bestAbsenceStatus = null;
+
+        foreach ($slots as $slotIndex => $slot) {
+            $mrKey = "{$date}|{$slot['mr_period']}|{$slot['mr_subject_id']}";
+            $abKey = "{$studentId}|{$date}|{$slot['abd_period']}|{$slot['abd_subject_id']}";
+            $mr    = $mrIndex[$mrKey] ?? null;
+            $ab    = $abIndex[$abKey] ?? null;
+
+            if ($mr === null) {
+                $slotStatus = 'NOTMARKED';
+            } elseif ((int)$mr['no_scheduled_class'] === 1) {
+                $slotStatus = 'NO CLASS';
+            } elseif ($ab !== null) {
+                $slotStatus = $absenceTypeMap[(int)$ab['absence_type_id']] ?? 'PRESENT';
+            } else {
+                $slotStatus = 'PRESENT';
+            }
+
+            if ($slotIndex === 0) {
+                $fallbackStatus = $slotStatus; // preserves prior behaviour when nothing is present/marked
+            }
+            if (in_array($slotStatus, ['PRESENT', 'LATE'], true)) {
+                return $slotStatus; // any period present is enough to mark the whole day present
+            }
+            if ($bestAbsenceStatus === null && in_array($slotStatus, ['EXCUSED', 'UNEXCUSED'], true)) {
+                $bestAbsenceStatus = $slotStatus; // a real recorded absence beats an unmarked slot
+            }
+        }
+
+        return $bestAbsenceStatus ?? $fallbackStatus;
     }
 
     /**
