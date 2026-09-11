@@ -545,6 +545,10 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
 
         //POCOR-9611: absence_type_id → status label
         $absenceTypeMap = [1 => 'EXCUSED', 2 => 'UNEXCUSED', 3 => 'LATE'];
+        //POCOR-9611(fix): same calculate_daily_attendance read as InstitutionStudentAbsencesTable
+        //            ::getDailyAttendanceConfig() - governs resolveDayStatus()'s present-vs-absence
+        //            priority below (1=once: absence wins; 2=all periods: present wins).
+        $dailyAttendanceMode = self::getDailyAttendanceMode();
 
         $unionParts  = [];
         $firstRow    = true;
@@ -574,7 +578,7 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             //POCOR-9611(fix): One column per day — collapsed across slots per the "Mark present
             //            if one or more records present" rule. See resolveDayStatus() below.
             foreach ($days as $dayKey => $date) {
-                $status = self::resolveDayStatus($slots, $date, $studentId, $mrIndex, $abIndex, $absenceTypeMap);
+                $status = self::resolveDayStatus($slots, $date, $studentId, $mrIndex, $abIndex, $absenceTypeMap, $dailyAttendanceMode);
 
                 $colAlias = "col_{$dayKey}";
                 $cols[]   = $firstRow ? "'{$status}' AS {$colAlias}" : "'{$status}'";
@@ -608,30 +612,54 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
     }
 
     /**
+     * POCOR-9611(fix): calculate_daily_attendance config (1=once, 2=all periods) - same read
+     * pattern as InstitutionStudentAbsencesTable::getDailyAttendanceConfig() (and
+     * StudentAttendanceSummaryTable, ReportCardsTable, StudentAbsencesPerDaysTable, which all
+     * branch on this same global config item). Defaults to 2 ("all periods") when unset, matching
+     * this table's original present-wins-only behaviour.
+     */
+    private static function getDailyAttendanceMode(): int
+    {
+        return (int)(TableRegistry::getTableLocator()->get('Configuration.ConfigItems')
+            ->find()
+            ->select(['value'])
+            ->where(['code' => 'calculate_daily_attendance'])
+            ->first()['value'] ?? 2);
+    }
+
+    /**
      * POCOR-9611(fix): Collapses one day's several period/subject slots into a single status.
      *
-     * Priority, evaluated across ALL slots for the day (not just the first one):
-     *   1. PRESENT or LATE wins outright - "mark present if one or more records present".
-     *   2. Otherwise, any slot that was genuinely marked with a real absence (EXCUSED/UNEXCUSED)
-     *      wins over a slot that was simply never marked at all - a day where one period has no
-     *      mark record but another period has a real recorded absence must show that absence,
-     *      not NOTMARKED (found via a live-data check: a student unmarked in Period 1 but marked
-     *      Excused in Period 2 was wrongly showing NOTMARKED for the whole day, discarding the
-     *      one real record that existed).
-     *   3. Only when nothing on any slot is present/late/excused/unexcused (e.g. every slot is
-     *      genuinely NOTMARKED, or NO CLASS) does this fall back to the first slot's own status,
-     *      to stay deterministic.
+     * Priority depends on the institution-wide `calculate_daily_attendance` config item (see
+     * InstitutionStudentAbsencesTable::getDailyAttendanceConfig() for the same read pattern,
+     * reused by several other tables too - StudentAttendanceSummaryTable, ReportCardsTable,
+     * StudentAbsencesPerDaysTable):
+     *   - mode 2 ("all periods"): PRESENT/LATE wins - "mark present if one or more records
+     *     present". This is the only priority the original fix here supported; it is only
+     *     correct for this config value.
+     *   - mode 1 ("once"): the opposite priority - any single recorded absence (EXCUSED/
+     *     UNEXCUSED) on the day marks the whole day absent, even if another period that same
+     *     day is present. Reviewer-flagged gap: with mode 1 configured, the mode-2-only logic
+     *     silently returned PRESENT on days the institution's own rule says are ABSENT.
+     *
+     * Evaluated across ALL slots for the day (not just the first one) either way; only when
+     * nothing on any slot is present/late/excused/unexcused (e.g. every slot is genuinely
+     * NOTMARKED, or NO CLASS) does this fall back to the first slot's own status, to stay
+     * deterministic.
      *
      * Pure/static and DB-free by design so it can be unit tested without a database connection -
-     * callers pass in the already-fetched mark/absence indexes rather than this method querying
-     * them itself.
+     * callers pass in the already-fetched mark/absence indexes (and the resolved config value)
+     * rather than this method querying them itself.
      *
-     * @param array  $slots          Ordered list of ['mr_period', 'mr_subject_id', 'abd_period', 'abd_subject_id']
-     * @param string $date           The day being resolved, in the same format used as the mark-index key
-     * @param mixed  $studentId      Student id, used to key into $abIndex
-     * @param array  $mrIndex        Marked-records index, keyed "date|period|subject_id"
-     * @param array  $abIndex        Absence-details index, keyed "studentId|date|period|subject_id"
-     * @param array  $absenceTypeMap Map of absence_type_id => status label
+     * @param array  $slots               Ordered list of ['mr_period', 'mr_subject_id', 'abd_period', 'abd_subject_id']
+     * @param string $date                The day being resolved, in the same format used as the mark-index key
+     * @param mixed  $studentId           Student id, used to key into $abIndex
+     * @param array  $mrIndex             Marked-records index, keyed "date|period|subject_id"
+     * @param array  $abIndex             Absence-details index, keyed "studentId|date|period|subject_id"
+     * @param array  $absenceTypeMap      Map of absence_type_id => status label
+     * @param int    $dailyAttendanceMode calculate_daily_attendance config value: 1=once (any
+     *                                    absence wins), 2=all periods (any present wins) - default
+     *                                    2 preserves this method's original (mode-2-only) behaviour
      * @return string One of PRESENT, LATE, EXCUSED, UNEXCUSED, NO CLASS, NOTMARKED
      */
     public static function resolveDayStatus(
@@ -640,9 +668,11 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
         $studentId,
         array $mrIndex,
         array $abIndex,
-        array $absenceTypeMap
+        array $absenceTypeMap,
+        int $dailyAttendanceMode = 2
     ): string {
         $fallbackStatus = 'NOTMARKED';
+        $bestPresentStatus = null;
         $bestAbsenceStatus = null;
 
         foreach ($slots as $slotIndex => $slot) {
@@ -664,15 +694,26 @@ class InstitutionStudentWeeklyAttendanceTable extends AppTable
             if ($slotIndex === 0) {
                 $fallbackStatus = $slotStatus; // preserves prior behaviour when nothing is present/marked
             }
-            if (in_array($slotStatus, ['PRESENT', 'LATE'], true)) {
-                return $slotStatus; // any period present is enough to mark the whole day present
+            if ($bestPresentStatus === null && in_array($slotStatus, ['PRESENT', 'LATE'], true)) {
+                $bestPresentStatus = $slotStatus;
             }
             if ($bestAbsenceStatus === null && in_array($slotStatus, ['EXCUSED', 'UNEXCUSED'], true)) {
                 $bestAbsenceStatus = $slotStatus; // a real recorded absence beats an unmarked slot
             }
+            // Once both a present and an absent slot have been seen, neither priority mode can
+            // learn anything new from further slots - the winner between them is already fixed.
+            if ($bestPresentStatus !== null && $bestAbsenceStatus !== null) {
+                break;
+            }
         }
 
-        return $bestAbsenceStatus ?? $fallbackStatus;
+        if ($dailyAttendanceMode === 1) {
+            // "once": any single recorded absence marks the whole day absent, even over a present period.
+            return $bestAbsenceStatus ?? $bestPresentStatus ?? $fallbackStatus;
+        }
+
+        // "all periods" (default/mode 2): any present period marks the whole day present.
+        return $bestPresentStatus ?? $bestAbsenceStatus ?? $fallbackStatus;
     }
 
     /**
