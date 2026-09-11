@@ -156,12 +156,6 @@ class ImportUsersTable extends AppTable
         $usernameNoIndex   = key($extractedUsername->toArray()) + 1;
         $username          = $sheet->getCellByColumnAndRow($usernameNoIndex, $row)->getValue();
         $username          = is_string($username) ? trim($username) : $username;
-        // POCOR-9796 [TEMP-LOG]: confirm the 'username' column is actually being located in
-        // the sheet and what raw value is read from it before any auto-generation/validation.
-        Log::debug('@ImportUsersTable::onImportCheckUnique row=' . $row
-            . ' usernameColumnFound=' . json_encode(!$extractedUsername->isEmpty())
-            . ' usernameNoIndex=' . json_encode($usernameNoIndex)
-            . ' rawUsername=' . json_encode($username));
 
         $extractedPassword = $columns->filter(fn($v) => strtolower(trim($v)) === 'password');
         $passwordColIndex  = key($extractedPassword->toArray()) + 1;
@@ -422,14 +416,6 @@ class ImportUsersTable extends AppTable
         // onto $tempRow, clobbering the generated value whenever the "Username" column isn't marked
         // optional in the import mapping config. Re-assert it here, right before the row is
         // validated/saved, so a blank Username in the sheet never blocks record creation.
-        // POCOR-9796 [TEMP-LOG]: snapshot of the exact values this row carries into save,
-        // right where "Username"/"Gender" have last been touched by earlier hooks.
-        Log::debug('@ImportUsersTable::onImportModelSpecificValidation ENTRY'
-            . ' username=' . json_encode($tempRow['username'] ?? '(unset)')
-            . ' gender_id=' . json_encode($tempRow['gender_id'] ?? '(unset)')
-            . ' guardian_gender_id=' . json_encode($tempRow['guardian_gender_id'] ?? '(unset)')
-            . ' account_type=' . json_encode($tempRow['account_type'] ?? '(unset)'));
-
         if (empty($tempRow['username'])) {
             $tempRow['username'] = $this->Users->ensureUniqueUsername(
                 $tempRow['openemis_no'] ?? $this->Users->nextOpenEmisNo()
@@ -1870,19 +1856,24 @@ class ImportUsersTable extends AppTable
 
     private function checkNewRelationship(&$tempRow, &$rowInvalidCodeCols): bool
     {
-        // POCOR-9796: checkCreateNewGuardian() used to be skipped outright whenever
-        // checkCreateNewStudent() already failed (e.g. a bad Username/First Name) - so a row
-        // with both a student problem AND a guardian problem (e.g. a malformed Guardian Date of
-        // Birth) only ever reported the student-side issue, never even attempting to validate
-        // the guardian side. Run both and combine their results, same as the admission/guardian
-        // split above this.
+        // POCOR-9796: checkCreateNewGuardian() is not a pure validation check - unlike
+        // checkAdmission() (which checks its own required fields before ever attempting a save),
+        // it unconditionally calls Users->newEntity()/save() as soon as the guardian's own data
+        // is valid. Calling it regardless of checkCreateNewStudent()'s outcome let a row whose
+        // student creation fails (e.g. a duplicate identity number) still create and persist a
+        // real guardian security_users record - an orphaned account, since it can never be linked
+        // to a student that was never created. Bail out here before ever calling
+        // checkCreateNewGuardian() if the student side already failed.
         $studentHasError = false;
         list($tempRow, $rowInvalidCodeCols, $studentHasError) = $this->checkCreateNewStudent($tempRow, $rowInvalidCodeCols, $studentHasError);
+        if ($studentHasError) {
+            return true;
+        }
 
         $guardianHasError = false;
         list($tempRow, $rowInvalidCodeCols, $guardianHasError) = $this->checkCreateNewGuardian($tempRow, $rowInvalidCodeCols, $guardianHasError);
 
-        $have_error = $studentHasError || $guardianHasError;
+        $have_error = $guardianHasError;
         if ($have_error) {
             return true;
         }

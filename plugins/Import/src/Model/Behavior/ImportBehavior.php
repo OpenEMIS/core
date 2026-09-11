@@ -583,11 +583,6 @@ class ImportBehavior extends Behavior
                 $checkCustomColumn = new ArrayObject;
                 $extra['entityValidate'] = true;
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
-                // POCOR-9796 [TEMP-LOG]: checkpoint right after _extractRecord() returns, to
-                // narrow down whether execution continues on to the patchEntity/save block below.
-                Log::debug('@ImportBehavior::processImport CHECKPOINT-A row=' . $row
-                    . ' rowPass=' . json_encode($rowPass)
-                    . ' rowInvalidCodeColsCount=' . $rowInvalidCodeCols->count());
 
                 // POCOR-9796: some validation branches (e.g. account_type not matching any known
                 // code) record an error in rowInvalidCodeCols without also flipping entityValidate,
@@ -683,13 +678,6 @@ class ImportBehavior extends Behavior
                 }
 
                 $errors = $tableEntity->getErrors();
-                // POCOR-9796 [TEMP-LOG]: what actually went into patchEntity for this row,
-                // and what Cake's own entity validator made of it.
-                Log::debug('@ImportBehavior::processImport row=' . $row
-                    . ' tempRow.username=' . json_encode($tempRow['username'] ?? '(unset)')
-                    . ' tempRow.gender_id=' . json_encode($tempRow['gender_id'] ?? '(unset)')
-                    . ' entityValidateFlag=' . json_encode($extra['entityValidate'])
-                    . ' entityErrors=' . json_encode($errors));
                 // Log::debug('@ImportBehavior::processImport errors_after_patchEntity=' . json_encode($errors)); //[TEMP-LOG]
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
 
@@ -2048,17 +2036,6 @@ class ImportBehavior extends Behavior
 
                         // compare the date input and new formatted date to cater (31/02/2016 changed to 02/03/2016)
                         $roundTripped = $dateObject->format('d/m/Y');
-                        if (in_array($columnName, ['date_of_birth', 'guardian_date_of_birth', 'start_date'], true)) {
-                            // POCOR-9796 [TEMP-LOG]: this date round-trip check is rejecting some
-                            // apparently well-formed dd/mm/yyyy dates - capture the exact input,
-                            // parsed parts, and round-tripped output to see where they diverge.
-                            Log::debug('@ImportBehavior::_extractRecord DATE-ROUNDTRIP col=' . $col
-                                . ' columnName=' . json_encode($columnName)
-                                . ' val=' . json_encode($val)
-                                . ' split=' . json_encode($split)
-                                . ' roundTripped=' . json_encode($roundTripped)
-                                . ' match=' . json_encode($val === $roundTripped));
-                        }
                         if ($val != $roundTripped) {
                             $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
                             $rowPass = false;
@@ -2082,16 +2059,6 @@ class ImportBehavior extends Behavior
             }
 
             if ($foreignKey == self::FIELD_OPTION) {
-                if (in_array($columnName, ['username', 'gender_id', 'guardian_gender_id'], true)) {
-                    // POCOR-9796 [TEMP-LOG]: trace exactly what this column's cell resolves to
-                    // and whether it matches a key in the generated lookup table.
-                    Log::debug('@ImportBehavior::_extractRecord FIELD_OPTION col=' . $col
-                        . ' columnName=' . json_encode($columnName)
-                        . ' rawCellValue=' . json_encode($cellValue)
-                        . ' isOptional=' . json_encode($isOptional)
-                        . ' lookupKeysForCol=' . json_encode(isset($lookup[$col]) ? array_keys($lookup[$col]) : '(no lookup for this col)')
-                        . ' matchFound=' . json_encode(isset($lookup[$col][$cellValue])));
-                }
                 if (!empty($cellValue)) {
                     if (isset($lookup[$col][$cellValue])) {
                         $val = $lookup[$col][$cellValue]['id'];
